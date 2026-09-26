@@ -71,8 +71,10 @@ The long form, for the material itself, is `PROTOCOL.md`, section **How you stud
   step text), three sizes, three greys; no second style inside one section. He noticed and
   disliked mixed fonts and boxes.
 - **Links are verified or absent.** Fetch every outside URL before adding it. AI Engineering
-  from Scratch lessons (`rohitg00/ai-engineering-from-scratch`) verified with
-  `gh api repos/rohitg00/ai-engineering-from-scratch/contents/phases/<phase>`. DDIA is
+  from Scratch lessons link to the website, never GitHub (he cannot read the repo view):
+  `https://aiengineeringfromscratch.com/lesson?path=phases%2F<phase>%2F<lesson>`. Verify
+  the path is listed in the site's `data.js` (or with
+  `gh api repos/rohitg00/ai-engineering-from-scratch/contents/phases/<phase>`). DDIA is
   cited as "DDIA, 2e: <topic>", never with 1st-edition chapter numbers. Link guide
   techniques at `SYSTEM%20DESIGN.html#/patterns/<pattern>/<technique>`.
 - **Quizzes**: open questions only, one at a time in a pop-up, at most eight. No blanks, no

@@ -312,3 +312,9 @@ each with its point, its figure and the words behind a toggle, then the numbers 
 ready and a comparison with Kitaru. Four alfred_ figures and one that maps alfred_'s
 records onto Kitaru's are new. Content modules can now carry an `OWN` block for the next
 loop. No change to the plan or to `CHARTER.md`.
+
+**2026-09-26 — AI Engineering from Scratch links open the website, not GitHub.**
+Asked for by Pranav: the GitHub folder view is hard to read and navigate. All 115 lesson
+links (57 distinct lessons) in the reading, the figure notes and the study list now point
+at the lesson's page on aiengineeringfromscratch.com. Every path was checked against the
+site's own catalog, and three were opened. No change to the plan or to `CHARTER.md`.

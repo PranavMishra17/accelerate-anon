@@ -177,7 +177,7 @@ To check the file still parses, extract its script and run `node --check`.
 - Icons: [Lucide](https://lucide.dev) (ISC), bundled in `figures/icons.js`.
 - Typefaces: Atkinson Hyperlegible, JetBrains Mono and Kalam (SIL Open Font License).
 - Reading draws on *Designing Data-Intensive Applications* (2nd edition) and
-  [AI Engineering from Scratch](https://github.com/rohitg00/ai-engineering-from-scratch).
+  [AI Engineering from Scratch](https://aiengineeringfromscratch.com).
 
 The one-line version: four to six hours a week, one track at a time, mathematics every
 week, interruptions expected and planned for, artifacts over credentials.

@@ -68,7 +68,7 @@ Practice:
 Practice:
 - [ ] Say the headline in one breath  _(10m)_
   - Read: [Hamel Husain: your AI product needs evals](https://hamel.dev/blog/posts/evals/index.html)  (22m)
-  - Read: [AI Engineering from Scratch, phase 14, lesson 30: eval-driven agent development](https://github.com/rohitg00/ai-engineering-from-scratch/tree/main/phases/14-agent-engineering/30-eval-driven-agent-development)  (5m)
+  - Read: [AI Engineering from Scratch, phase 14, lesson 30: eval-driven agent development](https://aiengineeringfromscratch.com/lesson?path=phases%2F14-agent-engineering%2F30-eval-driven-agent-development)  (5m)
   - Guide: [Technique: Environment snapshots](SYSTEM%20DESIGN.html#/patterns/agent-durability/env-snapshots). The bench's frozen world is this technique: the agent runs against a copy, never the real inbox.
   - Guide: [Technique: Eval suites as release gates](SYSTEM%20DESIGN.html#/patterns/grounding/eval-gate). What the bench became: the thing that signed off the orchestration rewrite.
 - [ ] Learn the fact sheet cold  _(20m)_
@@ -78,11 +78,11 @@ Practice:
 - [ ] Walk the five-minute version in nine beats  _(20m)_
 - [ ] Answer the follow-ups, number first  _(20m)_
   - Read: [Eugene Yan: evaluating LLM evaluators, agreement with human labels](https://eugeneyan.com/writing/llm-evaluators/)  (38m)
-  - Read: [AI Engineering from Scratch, phase 14, lesson 52: designing success metrics](https://github.com/rohitg00/ai-engineering-from-scratch/tree/main/phases/14-agent-engineering/52-design-success-metrics)  (3m)
+  - Read: [AI Engineering from Scratch, phase 14, lesson 52: designing success metrics](https://aiengineeringfromscratch.com/lesson?path=phases%2F14-agent-engineering%2F52-design-success-metrics)  (3m)
   - Guide: [Technique: Shadow mode and online signals](SYSTEM%20DESIGN.html#/patterns/grounding/shadow-online). Where the scanner's production signals come from, and why they over-fire.
 - [ ] Draw the bench as a system, on paper  _(10m)_
-  - Read: [AI Engineering from Scratch, phase 14, lesson 31: the agent workbench, why models fail](https://github.com/rohitg00/ai-engineering-from-scratch/tree/main/phases/14-agent-engineering/31-agent-workbench-why-models-fail)  (15m)
-  - Read: [AI Engineering from Scratch, phase 11, lesson 10: evaluating LLM applications](https://github.com/rohitg00/ai-engineering-from-scratch/tree/main/phases/11-llm-engineering/10-evaluation)  (20m)
+  - Read: [AI Engineering from Scratch, phase 14, lesson 31: the agent workbench, why models fail](https://aiengineeringfromscratch.com/lesson?path=phases%2F14-agent-engineering%2F31-agent-workbench-why-models-fail)  (15m)
+  - Read: [AI Engineering from Scratch, phase 11, lesson 10: evaluating LLM applications](https://aiengineeringfromscratch.com/lesson?path=phases%2F11-llm-engineering%2F10-evaluation)  (20m)
   - Guide: [alfred_, high-level design](SYSTEM%20DESIGN.html#/designs/alfred/hld). Draw the bench as a box beside this: scanner, judge, reconciler, snapshot, replay.
 - [ ] What is the one-sentence headline of the bench?
 - [ ] How is authoring cost best stated?
@@ -136,14 +136,14 @@ Practice:
 Practice:
 - [ ] Requirements in five minutes  _(10m)_
   - Read: [Temporal: what durable execution is](https://docs.temporal.io/evaluate/understanding-temporal)  (9m)
-  - Read: [AI Engineering from Scratch, phase 15, lesson 12: durable execution](https://github.com/rohitg00/ai-engineering-from-scratch/tree/main/phases/15-autonomous-systems/12-durable-execution)  (6m)
+  - Read: [AI Engineering from Scratch, phase 15, lesson 12: durable execution](https://aiengineeringfromscratch.com/lesson?path=phases%2F15-autonomous-systems%2F12-durable-execution)  (6m)
 - [ ] Entities, API and the high-level design  _(15m)_
   - Read: [Temporal: workflow execution, event history and replay](https://docs.temporal.io/workflow-execution)  (3m)
-  - Read: [AI Engineering from Scratch, phase 15, lesson 16: checkpoints and rollback](https://github.com/rohitg00/ai-engineering-from-scratch/tree/main/phases/15-autonomous-systems/16-checkpoints-rollback)  (6m)
+  - Read: [AI Engineering from Scratch, phase 15, lesson 16: checkpoints and rollback](https://aiengineeringfromscratch.com/lesson?path=phases%2F15-autonomous-systems%2F16-checkpoints-rollback)  (6m)
 - [ ] Deep dive: divergence, the better the change the worse the replay  _(15m)_
   - Read: [TigerBeetle: deterministic simulation testing, and why determinism is the whole game](https://tigerbeetle.com/blog/2026-08-20-protocol-aware-dst/)  (11m)
 - [ ] Deep dive: trust and provenance  _(10m)_
-  - Read: [AI Engineering from Scratch, phase 14, lesson 24: agent observability platforms](https://github.com/rohitg00/ai-engineering-from-scratch/tree/main/phases/14-agent-engineering/24-agent-observability-platforms)  (4m)
+  - Read: [AI Engineering from Scratch, phase 14, lesson 24: agent observability platforms](https://aiengineeringfromscratch.com/lesson?path=phases%2F14-agent-engineering%2F24-agent-observability-platforms)  (4m)
   - Guide: [Technique: Enforced citations and verification](SYSTEM%20DESIGN.html#/patterns/grounding/citations). Trust in a replay is provenance on every node, the same move as citing every claim.
 - [ ] Deep dive: the worker queue and concurrency  _(10m)_
   - Read: [Temporal: worker slots and concurrency on a task queue](https://docs.temporal.io/develop/worker-performance)  (2m)
@@ -225,7 +225,7 @@ Practice:
 - [ ] Work the send-succeeded-but-response-timed-out case
 - [ ] Connect it to durable execution
   - Read: [Temporal docs: activities, where side effects live](https://docs.temporal.io/activities)  (3m)
-  - Read: [AI Engineering from Scratch, phase 15, lesson 12: durable execution](https://github.com/rohitg00/ai-engineering-from-scratch/tree/main/phases/15-autonomous-systems/12-durable-execution)  (6m)
+  - Read: [AI Engineering from Scratch, phase 15, lesson 12: durable execution](https://aiengineeringfromscratch.com/lesson?path=phases%2F15-autonomous-systems%2F12-durable-execution)  (6m)
 - [ ] Say the whole design out loud, then write what it does not solve
 - [ ] A forked replay issues a refund the recording never saw. What should happen by default?
 - [ ] What is an idempotency key for a side-effecting tool call typically built from?
@@ -290,7 +290,7 @@ Practice:
   - Read: [tau-bench paper: tool, agent and a simulated user, and pass^k](https://arxiv.org/abs/2406.12045)  (10m)
 - [ ] Design the simulated user properly
 - [ ] Name the risks and the calibration that answers them
-  - Read: [AI Engineering from Scratch, phase 14, lesson 19: agent benchmarks](https://github.com/rohitg00/ai-engineering-from-scratch/tree/main/phases/14-agent-engineering/19-benchmarks-swebench-gaia)  (5m)
+  - Read: [AI Engineering from Scratch, phase 14, lesson 19: agent benchmarks](https://aiengineeringfromscratch.com/lesson?path=phases%2F14-agent-engineering%2F19-benchmarks-swebench-gaia)  (5m)
 - [ ] Connect it to promoting a session into a world
 - [ ] Say it out loud in six minutes, then write the open questions
 - [ ] Why hold the simulated user fixed across baseline and fork?
