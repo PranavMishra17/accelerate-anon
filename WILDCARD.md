@@ -81,7 +81,9 @@ Opened 22 September 2026 for two loops.
   round 2, the eval bench story and the critique fixed, side effects inside replay,
   multi-turn replay, Kitaru internals, designing replay evals, backend depth, DevEx,
   ZenML context for the CTO, and a full mock. Its page is `interviews/zenml-round3.html`;
-  the flat checklist is `STUDY-LIST.md`.
+  the flat checklist is `STUDY-LIST.md`. The page's Design tab draws Kitaru from the
+  teardown in eleven figures; its alfred_ tab walks your own system part by part and sets
+  it against Kitaru, so both are fresh on the day.
 
 Fold candidate once the ZenML side-effects session closes: week 4's systems session
 on failure, retries and idempotency, which it covers in more depth.

@@ -3,7 +3,8 @@
     python interviews/build.py zenml_round3      -> interviews/zenml-round3.html
 
 A content module (see zenml_round3.py) holds the loop's brief, spoken scripts,
-technical questions, drills, questions to ask, traps and tables. Sessions still
+technical questions, drills, questions to ask, traps and tables, and optionally
+OWN: your own system, walked part by part, set against theirs. Sessions still
 held in the tracker are read from index.html (SESSION_IDS), and each session's
 quiz is built from its own questions: open questions with a model answer only,
 no blanks and no one-word answers, at most eight. Past mocks live in
@@ -99,6 +100,13 @@ def build(module_name):
                 if missing:
                     sys.exit("QA_EXTRA reading not in data/reading.js: %s" % missing)
                 it["learn"] = {"figs": qx[k].get("figs", []), "read": [known[u] for u in qx[k].get("read", [])], "sdLinks": sd[k]}
+    # Your own system (OWN): each part's guide references resolve the same way.
+    own = getattr(m, "OWN", None)
+    if own:
+        sd = json.loads(subprocess.run(["node", os.path.join(HERE, "extract.js"), "--sd"], input=json.dumps({p["id"]: p.get("sd", []) for p in own["parts"]}),
+                                       capture_output=True, text=True, encoding="utf-8", check=True).stdout)
+        for p in own["parts"]:
+            p["learn"] = {"figs": p.get("figs", []), "sdLinks": sd[p["id"]]}
     mocks_path = os.path.join(HERE, module_name + ".mocks.json")
     mocks = json.load(io.open(mocks_path, encoding="utf-8")) if os.path.exists(mocks_path) else []
     data = {
@@ -111,7 +119,7 @@ def build(module_name):
         "figures": L.get("figures", []), "mockHow": getattr(m, "MOCK_HOW", ""), "mocks": mocks[-2:],
         "planKicker": L.get("plan_kicker", ""), "mechTitle": L.get("mech_title", ""),
         "designLink": L.get("design_link"), "extra": L.get("extra", ""),
-        "emphasis": getattr(m, "EMPHASIS", []),
+        "emphasis": getattr(m, "EMPHASIS", []), "own": own,
     }
     tpl = io.open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")

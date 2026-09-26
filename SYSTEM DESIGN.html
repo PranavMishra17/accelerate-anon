@@ -6,6 +6,10 @@
 <title>System design delivery, worked end to end</title>
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="figures/viewer.css">
+<link rel="stylesheet" href="figures/figures.css">
+<script src="figures/icons.js"></script>
+<script src="figures/figures.js"></script>
+<script src="figures/notes.js" defer></script>
 <script src="figures/notes-sd.js" defer></script>
 <script src="figures/viewer.js" defer></script>
 <link rel="icon" type="image/svg+xml" href="brand/system-design.svg">
@@ -395,6 +399,10 @@ a.nn-chip:hover { background: var(--teal-soft); }
   font-family: var(--font-body); font-size: 11.5px; fill: var(--muted);
   paint-order: stroke; stroke: var(--board); stroke-width: 5px; stroke-linejoin: round;
 }
+/* A figure from the shared registry (figures/figures.js): drawn in the tracker's classes, always on white. */
+.diagram.shared .fig-svg { background: #fff; border-radius: 8px; padding: 12px; --faint: #a2a09a; --dim: #6b6a65; --line: #c3c0b7; --ink: #1a1a19; --live: #fffdf5; }
+.diagram.shared svg { min-width: 560px; }
+.diagram.shared figcaption { color: var(--muted); font-size: 14.5px; margin-top: 8px; max-width: 84ch; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; list-style: none; padding: 0; margin: 10px 0 0; font-size: 14px; color: var(--muted); }
 .legend li { display: flex; align-items: center; gap: 8px; margin: 0; }
 .swatch { width: 20px; height: 13px; border-radius: 3px; border: 1.6px solid var(--ink); background: var(--board); flex: none; }
@@ -3322,7 +3330,8 @@ GUIDE.examples.push({
           { term: "ReplayConfig", desc: "Overrides, a tool policy, and evaluators." },
           { term: "Replay, Experiment, ExperimentRun", desc: "One baseline session and one config; a numbered run replays each cohort session once." },
           { term: "Job, Task", desc: "Agent, evaluator, importer or analyzer work, leased to a worker." }
-        ]}
+        ]},
+        { type: "fig", key: "kitaruModel" }
       ],
       reasoning: [
         "Call out SessionNode: it is both the recording and the lookup index, through cache_key.",
@@ -3463,11 +3472,14 @@ sha256(tool_name + "\\0" + json.dumps(args, sort_keys=True,
           { name: "Freeze the world (the alfred_ bench)", take: "Tools run real queries against a queryable snapshot built from about twenty-five real instances plus distractors; any path gets a truthful answer. Costs hours of authoring per case." },
           { name: "Promote on fork", take: "Keep import free; when a forked session misses, offer to promote that one session into a small queryable world from its recording plus sessions with the same intent." }
         ], pick: "Ship the productive miss first, then promote-on-fork, so the common case stays free and only the sessions people explore pay the authoring cost." },
+        { type: "fig", key: "kitaruKey" },
         { type: "dive", title: "Provenance: no silent live calls", nfr: "No silent production calls", problem: "Under on_miss passthrough, or a tool with no policy, the call reaches the live provider and the node carries no mocked attribute, so a reader cannot tell recorded from live. Provider-native tools bypass the policy entirely.", options: [
           { name: "Status quo", take: "Correct behaviour, invisible to the reader: a hidden false pass." },
           { name: "Stamp served-by on every node", take: "recorded, static, fuzzy with distance, or live, shown in the diff a reviewer reads." },
           { name: "Default write tools to fail", take: "Classify tools by effect; anything with an external effect never passes through by default." }
         ], pick: "Served-by on every node first, then effect classes for defaults. Small, and everything else depends on a reader trusting where an answer came from." },
+        { type: "fig", key: "kitaruPolicy" },
+        { type: "fig", key: "kitaruLive" },
         { type: "dive", title: "Repeated calls, scope and concurrency", nfr: "Faithful under change", problem: "Under baseline scope the nth identical call returns the nth recorded node, ordered by started_at; under agent or cohort scope it is the latest completed node every time. The client reads its occurrence counter, awaits the lookup, then writes, so two concurrent identical calls could take the same ordinal.", options: [
           { name: "Client-side counter (today)", take: "Simple; ambiguous for concurrent identical calls, a limitation the Claude SDK docs state openly." },
           { name: "Server-assigned occurrence", take: "The server claims the next ordinal atomically per replay and key, so concurrency cannot double-consume." },
@@ -3478,6 +3490,7 @@ sha256(tool_name + "\\0" + json.dumps(args, sort_keys=True,
           { name: "Stateful world across turns (the bench)", take: "Writes at turn two are visible at turn three; still no answer when the user would have replied differently." },
           { name: "A calibrated simulated user", take: "Goal and persona from the recording, judged against real replies before it is trusted." }
         ], pick: "A simulated user behind calibration, scoped to sessions that actually fork at an early turn." },
+        { type: "fig", key: "kitaruTurns" },
         { type: "dive", title: "Nondeterminism and cost", nfr: "Bounded cost per replay", problem: "Model calls are always live, so an unchanged replay is billed and not deterministic, and an experiment run replays each session exactly once.", options: [
           { name: "One run per session (today)", take: "Cheap, but a flip may be sampling noise." },
           { name: "k runs with a pass rate", take: "Separates regressions from noise; k times the cost, so reserve it for sessions that flip." },
@@ -3490,7 +3503,9 @@ sha256(tool_name + "\\0" + json.dumps(args, sort_keys=True,
           { term: "Off-path call", desc: "Kitaru: a miss, handled by on_miss. The bench: a truthful answer from the snapshot." },
           { term: "Completeness checks", desc: "Kitaru: no ground truth to count against. The bench: assert against what the fixture holds." },
           { term: "Scale", desc: "Kitaru: designed for thousands of sessions and frozen cohorts. The bench: a hundred-plus cases." }
-        ]}
+        ]},
+        { type: "fig", key: "kitaruScale" },
+        { type: "fig", key: "alfredVsKitaru" }
       ],
       reasoning: [
         "Lead with divergence; it is the product's defining trade-off.",
@@ -4352,7 +4367,17 @@ const BLOCK_RENDERERS = {
     block.conclusion ? h("p", { class: "conclusion" }, inline(block.conclusion)) : null),
   note: (block) => h("p", { class: "blk blk-note" }, inline(block.text)),
   diagram: renderDiagram,
-  dive: renderDive
+  dive: renderDive,
+  /* { type: "fig", key } draws FIGURES.DIA[key] from figures/figures.js, the same figure the tracker and loop pages show. */
+  fig: (block) => {
+    const f = window.FIGURES && window.FIGURES.DIA[block.key];
+    if (!f) throw new Error(`No shared figure ${block.key}`);
+    const art = h("div", { class: "fig-svg" });
+    art.innerHTML = f.svg();
+    const cap = h("figcaption");
+    cap.innerHTML = f.cap;
+    return h("div", { class: "blk blk-diagram" }, blockTitle(block.title || f.title), h("figure", { class: "diagram shared", "data-fig": block.key }, art, cap));
+  }
 };
 
 function renderBlock(block, context) {

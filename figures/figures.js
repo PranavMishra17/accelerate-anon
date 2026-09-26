@@ -1361,5 +1361,312 @@ var FIGURES = (function () {
     }
   };
 
+  /* ---- Kitaru, from the teardown sections that had no drawing (2026-09-26) ---- */
+
+  DIA.kitaruModel = {
+    title: "One recursive table: the SessionNode tree",
+    cap: "<b>Import, replay and evaluation all read the same tree.</b> A session is a tree of nodes joined by parent_external_id: spans, model calls, tool calls and subagent calls. The importer writes nodes, replay joins a new tool call to a recorded one on cache_key, and an evaluator pins its verdict to a JSON path inside a node's payload rather than copying the text out.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "session", x: 0, y: 20, w: 220, h: 46, label: "Session", sub: "imported, recorded or replay", tone: "sys", icon: "database" });
+      b += S.box({ id: "span", x: 40, y: 104, w: 150, h: 40, label: "span", sub: "the root of a turn", tone: "flat" });
+      b += S.box({ id: "llm", x: 0, y: 180, w: 120, h: 44, label: "llm_call", sub: "always live", tone: "flat", icon: "brain" });
+      b += S.box({ id: "tool", x: 135, y: 180, w: 170, h: 44, label: "tool_call", sub: "cache_key, started_at", tone: "math", icon: "key" });
+      b += S.box({ id: "subagent", x: 320, y: 180, w: 150, h: 44, label: "subagent_call", sub: "a nested tree", tone: "flat", icon: "bot" });
+      b += S.box({ id: "nested", x: 330, y: 258, w: 130, h: 40, label: "llm_call", sub: "inside the subagent", tone: "flat" });
+      b += S.arrow(110, 68, 115, 102, {});
+      b += S.arrow(90, 146, 60, 178, {});
+      b += S.arrow(130, 146, 210, 178, {});
+      b += S.arrow(180, 146, 380, 178, {});
+      b += S.arrow(395, 226, 395, 256, {});
+      b += S.box({ id: "importer", x: 500, y: 20, w: 140, h: 46, label: "Importer", sub: "from trace stores", tone: "req", icon: "inbox" });
+      b += S.box({ id: "replay", x: 500, y: 104, w: 140, h: 46, label: "Replay", sub: "joins on the key", tone: "iv", icon: "history" });
+      b += S.box({ id: "evaluator", x: 500, y: 256, w: 140, h: 44, label: "Evaluator", sub: "a JSON path", tone: "iv", icon: "scale" });
+      b += S.arrow(498, 43, 224, 43, { label: "writes nodes" });
+      b += S.arrow(498, 132, 307, 190, { label: "cache_key" });
+      b += S.arrow(498, 278, 462, 278, {});
+      b += S.text(0, 322, "parent_external_id builds the tree; started_at orders repeated calls.", "d-t-s");
+      return S.frame(640, 332, b);
+    }
+  };
+
+  DIA.kitaruPolicy = {
+    title: "How one tool call is answered on replay",
+    cap: "<b>Provider-native tools skip the policy, and the default policy is passthrough.</b> A registered tool's policy is found by exact name, then the default. history and static answer from recordings; passthrough runs the real tool; llm is modelled in the API and raises in the PydanticAI adapter. A miss goes to on_miss, whose passthrough value calls production just as the default policy does, and neither leaves a mocked mark on the node.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "call", x: 0, y: 16, w: 130, h: 44, label: "Tool call", tone: "flat", icon: "bot" });
+      b += S.box({ id: "native", x: 0, y: 100, w: 130, h: 50, label: "Provider-native?", sub: "hosted search, code", tone: "alaap" });
+      b += S.box({ id: "policy", x: 170, y: 100, w: 170, h: 50, label: "Policy lookup", sub: "exact name, then default", tone: "sys" });
+      b += S.box({ id: "passthrough", x: 150, y: 190, w: 110, h: 44, label: "passthrough", sub: "the default", tone: "alaap" });
+      b += S.box({ id: "history", x: 270, y: 190, w: 110, h: 44, label: "history", sub: "by cache_key", tone: "math" });
+      b += S.box({ id: "static", x: 390, y: 190, w: 110, h: 44, label: "static", sub: "first case wins", tone: "math" });
+      b += S.box({ id: "llm", x: 510, y: 190, w: 110, h: 44, label: "llm", sub: "adapter raises", tone: "flat" });
+      b += S.box({ id: "live", x: 0, y: 272, w: 220, h: 48, label: "Runs live", sub: "no mocked mark on the node", tone: "alaap", icon: "zap" });
+      b += S.box({ id: "hit", x: 250, y: 272, w: 120, h: 48, label: "Hit", sub: "recorded result", tone: "now", icon: "check" });
+      b += S.box({ id: "miss", x: 390, y: 272, w: 230, h: 48, label: "Miss", sub: "on_miss decides", tone: "alaap", icon: "triangle-alert" });
+      b += S.arrow(65, 62, 65, 98, {});
+      b += S.arrow(132, 125, 168, 125, { label: "no" });
+      b += S.arrow(40, 152, 40, 270, { label: "yes" });
+      b += S.arrow(205, 152, 205, 188, {});
+      b += S.arrow(260, 152, 320, 188, {});
+      b += S.arrow(300, 152, 440, 188, {});
+      b += S.arrow(335, 152, 560, 188, {});
+      b += S.arrow(200, 236, 170, 270, {});
+      b += S.arrow(310, 236, 305, 270, {});
+      b += S.arrow(350, 236, 430, 270, {});
+      b += S.arrow(420, 236, 355, 270, {});
+      b += S.arrow(460, 236, 490, 270, {});
+      b += S.text(390, 340, "fail: the run dies. error_result: an invented error.", "d-t-s");
+      b += S.text(390, 355, "passthrough: production, unmarked.", "d-t-s");
+      return S.frame(640, 364, b);
+    }
+  };
+
+  DIA.kitaruKey = {
+    title: "The replay join is one SHA-256, with no tolerance",
+    cap: "<b>Any change to an argument is indistinguishable from a call that was never recorded.</b> The key is sha256 of the tool name, a NUL byte and canonical JSON (sorted keys, compact separators). Key order and formatting wash out; a space inside a string, 1 against 1.0, or true against 1 do not. NaN or infinity produce no key at all and fall to on_miss with no diagnostic.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "recorded", x: 0, y: 16, w: 200, h: 50, label: "Recorded call", sub: "lookup_order, order_id 4417", tone: "flat" });
+      b += S.box({ id: "replayed", x: 0, y: 116, w: 200, h: 50, label: "Replayed call", sub: "the new agent's arguments", tone: "flat" });
+      b += S.box({ id: "canon", x: 240, y: 66, w: 170, h: 50, label: "Canonical JSON", sub: "sorted keys, no spaces", tone: "sys" });
+      b += S.box({ id: "hash", x: 450, y: 66, w: 170, h: 50, label: "SHA-256", sub: "name + NUL + JSON", tone: "math", icon: "key" });
+      b += S.arrow(202, 41, 238, 80, {});
+      b += S.arrow(202, 141, 238, 104, {});
+      b += S.arrow(412, 91, 448, 91, {});
+      b += S.box({ id: "nokey", x: 0, y: 206, w: 190, h: 50, label: "No key at all", sub: "NaN or infinity", tone: "alaap", icon: "x" });
+      b += S.box({ id: "same", x: 230, y: 206, w: 190, h: 50, label: "Same key: hit", sub: "key order, formatting", tone: "now", icon: "check" });
+      b += S.box({ id: "differ", x: 450, y: 206, w: 190, h: 50, label: "New key: miss", sub: "1 vs 1.0, inner space", tone: "alaap", icon: "triangle-alert" });
+      b += S.arrow(260, 118, 120, 204, {});
+      b += S.arrow(490, 118, 360, 204, {});
+      b += S.arrow(545, 118, 545, 204, {});
+      b += S.text(0, 280, "Non-ASCII matches only within one adapter language: Python escapes it, a JS adapter may not.", "d-t-s");
+      return S.frame(640, 290, b);
+    }
+  };
+
+  DIA.kitaruTurns = {
+    title: "Multi-turn replay re-executes only the last turn",
+    cap: "<b>Earlier turns are canned text; only the final turn runs.</b> Recorded user messages are replayed verbatim and earlier assistant turns are flattened to text, with their tool calls and results dropped. So a fork never writes its own earlier replies: its last turn runs on top of the old agent's history, with no evidence it ever looked anything up.",
+    svg: function () {
+      var b = "";
+      b += S.tag(0, 16, "Frozen: injected as canned text");
+      b += S.tag(535, 16, "Runs live");
+      var xs = [0, 107, 214, 321, 428, 535];
+      var lab = [["u1", "User 1", "verbatim"], ["a1", "Agent 1", "text only"], ["u2", "User 2", "verbatim"],
+                 ["a2", "Agent 2", "text only"], ["u3", "User 3", "verbatim"], ["a3", "Agent 3", "the fork"]];
+      lab.forEach(function (l, i) {
+        var live = i === 5;
+        b += S.box({ id: l[0], x: xs[i], y: 28, w: 95, h: 50, label: l[1], sub: l[2], tone: live ? "iv" : "flat", dash: !live && i % 2 === 1 });
+        if (i < 5) { b += S.arrow(xs[i] + 96, 53, xs[i + 1] - 2, 53, {}); }
+      });
+      b += S.box({ id: "dropped", x: 0, y: 150, w: 300, h: 50, label: "Their tool calls and results", sub: "dropped from the replayed context", tone: "alaap", icon: "x" });
+      b += S.box({ id: "fork", x: 330, y: 150, w: 310, h: 50, label: "The fork only writes turn 3", sub: "on the old agent's history", tone: "alaap", icon: "message-square" });
+      b += S.arrow(154, 80, 150, 148, { dash: true });
+      b += S.arrow(368, 80, 260, 148, { dash: true });
+      b += S.arrow(582, 80, 560, 148, {});
+      return S.frame(640, 212, b);
+    }
+  };
+
+  DIA.kitaruLive = {
+    title: "What runs live whatever you configure",
+    cap: "<b>Only registered function tools pass through the policy.</b> Model calls are always live, so an unchanged baseline is billed and nondeterministic. Provider-native tools are recorded but never checked, so a history policy on one is a silent no-op. A bare HTTP call or database write is not a tool, so no hook fires and Kitaru never sees it. That is where \"no card gets refunded twice\" stops holding.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "agent", x: 0, y: 118, w: 140, h: 50, label: "Agent", sub: "your subprocess", tone: "sys", icon: "bot" });
+      b += S.box({ id: "hook", x: 200, y: 16, w: 200, h: 46, label: "Registered tool", sub: "the hook applies policy", tone: "math", icon: "filter" });
+      b += S.box({ id: "model", x: 200, y: 86, w: 200, h: 46, label: "Model call", sub: "every replay, billed", tone: "alaap", icon: "brain" });
+      b += S.box({ id: "native", x: 200, y: 156, w: 200, h: 46, label: "Provider-native tool", sub: "recorded, never checked", tone: "alaap", icon: "globe" });
+      b += S.box({ id: "bare", x: 200, y: 226, w: 200, h: 46, label: "Bare HTTP or DB write", sub: "not a tool, no hook", tone: "alaap", icon: "send" });
+      b += S.box({ id: "answered", x: 440, y: 16, w: 200, h: 46, label: "Answered from log", sub: "history or static", tone: "now", icon: "check" });
+      b += S.box({ id: "provider", x: 440, y: 86, w: 200, h: 46, label: "Model provider", sub: "nondeterministic", tone: "alaap", icon: "cloud" });
+      b += S.box({ id: "hosted", x: 440, y: 156, w: 200, h: 46, label: "Hosted tool, live", sub: "a history policy is a no-op", tone: "alaap", icon: "zap" });
+      b += S.box({ id: "prod", x: 440, y: 226, w: 200, h: 46, label: "Production", sub: "Kitaru never sees it", tone: "alaap", icon: "server" });
+      b += S.arrow(142, 125, 198, 42, {});
+      b += S.arrow(142, 135, 198, 110, {});
+      b += S.arrow(142, 152, 198, 176, {});
+      b += S.arrow(142, 162, 198, 246, {});
+      b += S.arrow(402, 39, 438, 39, {});
+      b += S.arrow(402, 109, 438, 109, {});
+      b += S.arrow(402, 179, 438, 179, {});
+      b += S.arrow(402, 249, 438, 249, {});
+      return S.frame(640, 284, b);
+    }
+  };
+
+  DIA.kitaruScale = {
+    title: "What breaks when each design grows",
+    cap: "<b>The two designs fail in complementary directions.</b> Your snapshot bench hits the authoring wall, schema drift and a growing store of near-production data before any technical limit. Kitaru's call-log replay punishes the divergence it exists to measure, has no machinery for variance, and pays a live run per session. Neither simulates the user, so both share the multi-turn ceiling.",
+    svg: function () {
+      var b = "";
+      b += S.tag(0, 14, "Your snapshot bench, at 10x then 100x");
+      b += S.tag(340, 14, "Kitaru call-log replay, at the same scale");
+      var L = [["authoring", "Fixture authoring", "expert work per case: the wall", "notebook-pen"],
+               ["drift", "Schema drift", "every migration rots old snapshots", "layers"],
+               ["redaction", "Redaction", "near-production data, growing", "lock"],
+               ["kruns", "k runs per case", "cases times k model calls", "repeat"]];
+      var R = [["divergence", "Better change, worse replay", "an improved call is a miss", "shuffle"],
+               ["variance", "No variance machinery", "one replay per session", "activity"],
+               ["cost", "Cost per cohort", "500 sessions, 500 live runs", "gauge"],
+               ["adapters", "Cross-adapter keys", "canonical JSON can differ", "split"]];
+      L.forEach(function (r, i) { b += S.box({ id: r[0], x: 0, y: 24 + i * 52, w: 300, h: 42, label: r[1], sub: r[2], tone: "req", icon: r[3] }); });
+      R.forEach(function (r, i) { b += S.box({ id: r[0], x: 340, y: 24 + i * 52, w: 300, h: 42, label: r[1], sub: r[2], tone: "alaap", icon: r[3] }); });
+      b += S.box({ id: "multiturn", x: 160, y: 254, w: 320, h: 44, label: "Both: multi-turn divergence", sub: "neither one simulates the user", tone: "iv", icon: "users" });
+      b += S.arrow(150, 226, 220, 252, {});
+      b += S.arrow(490, 226, 420, 252, {});
+      return S.frame(640, 308, b);
+    }
+  };
+
+  /* ---- alfred_, the system you own, for the ZenML loop (drawn from the guide's alfred_ design) ---- */
+
+  DIA.alfredHld = {
+    title: "alfred_: three doors, one brain, one tool package",
+    cap: "<b>Two loops share one tool layer.</b> SMS, web and MCP converge on packages/tools; a background pipeline watches the mailbox, triages, and acts alone, but never sends. Everything lives in one Supabase project: Postgres with RLS, pg_cron and pgmq, and Deno edge functions. The eval scanner turns real failing turns into regression cases.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "sms", x: 0, y: 10, w: 200, h: 44, label: "SMS", sub: "conv-v6 ingress, jobs, turn", tone: "iv", icon: "message-square" });
+      b += S.box({ id: "web", x: 0, y: 62, w: 200, h: 44, label: "Web + mobile", sub: "conv-v6-web, SSE", tone: "iv", icon: "layout-grid" });
+      b += S.box({ id: "mcp", x: 0, y: 114, w: 200, h: 44, label: "Claude via MCP", sub: "mcp-exec, allowlisted", tone: "iv", icon: "bot" });
+      b += S.box({ id: "tools", x: 250, y: 50, w: 160, h: 66, label: "packages/tools", sub: "one registry, wrappers", tone: "math", icon: "package" });
+      b += S.box({ id: "models", x: 460, y: 10, w: 180, h: 44, label: "Models", sub: "cached prompt prefix", tone: "flat", icon: "brain" });
+      b += S.box({ id: "prov", x: 460, y: 90, w: 180, h: 44, label: "Google, Microsoft", sub: "mail, calendar, Zoom", tone: "flat", icon: "cloud" });
+      b += S.box({ id: "pg", x: 250, y: 160, w: 160, h: 46, label: "Postgres", sub: "RLS, pg_cron, pgmq", tone: "math", icon: "database" });
+      b += S.box({ id: "eval", x: 0, y: 176, w: 200, h: 44, label: "Eval scanner", sub: "failing turns to cases", tone: "req", icon: "scan-text" });
+      b += S.box({ id: "notify", x: 0, y: 256, w: 140, h: 44, label: "Notify + send", sub: "send after approval", tone: "iv", icon: "send" });
+      b += S.box({ id: "act", x: 160, y: 256, w: 150, h: 44, label: "Executor", sub: "silent acts, drafts", tone: "sys" });
+      b += S.box({ id: "triage", x: 330, y: 256, w: 140, h: 44, label: "donna-triage", sub: "rules, then model", tone: "sys" });
+      b += S.box({ id: "ingest", x: 490, y: 256, w: 150, h: 44, label: "Ingestion", sub: "push and poll", tone: "sys", icon: "inbox" });
+      b += S.arrow(202, 32, 248, 62, {});
+      b += S.arrow(202, 84, 248, 84, {});
+      b += S.arrow(202, 136, 248, 106, {});
+      b += S.arrow(412, 62, 458, 36, { label: "loop" });
+      b += S.arrow(412, 98, 458, 110, {});
+      b += S.arrow(330, 118, 330, 158, { label: "traces, effects" });
+      b += S.arrow(248, 186, 202, 196, {});
+      b += S.arrow(560, 136, 560, 254, { label: "push, pull" });
+      b += S.arrow(488, 278, 472, 278, {});
+      b += S.arrow(328, 278, 312, 278, {});
+      b += S.arrow(158, 278, 142, 278, {});
+      b += S.arrow(390, 254, 380, 208, {});
+      return S.frame(640, 310, b);
+    }
+  };
+
+  DIA.alfredTurn = {
+    title: "alfred_: one chat turn, in layer order",
+    cap: "<b>Acknowledge fast, then lease, trace, prompt, loop, guard, reply.</b> The SMS webhook gets a 200 at once and becomes a job row; the turn takes a lease on the conversation so two isolates cannot both answer, builds a four-block cached prompt, and runs a loop of at most 12 steps. Every tool call goes through the compose() wrappers and writes the effects ledger. The web surface skips ingress and jobs; MCP skips the loop.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "linq", x: 0, y: 20, w: 110, h: 44, label: "Linq SMS", sub: "signed webhook", tone: "iv" });
+      b += S.box({ id: "ingress", x: 130, y: 20, w: 120, h: 44, label: "Ingress", sub: "HMAC, dedupe", tone: "sys" });
+      b += S.box({ id: "job", x: 270, y: 20, w: 120, h: 44, label: "Job row", sub: "SKIP LOCKED", tone: "sys", icon: "list" });
+      b += S.box({ id: "turn", x: 410, y: 20, w: 120, h: 44, label: "Turn", sub: "lease, trace", tone: "sys", icon: "lock" });
+      b += S.box({ id: "prompt", x: 550, y: 20, w: 90, h: 44, label: "Prompt", sub: "4 blocks", tone: "flat" });
+      b += S.box({ id: "loop", x: 520, y: 120, w: 120, h: 44, label: "runAgent loop", sub: "max 12 steps", tone: "sys" });
+      b += S.box({ id: "wrappers", x: 350, y: 120, w: 150, h: 44, label: "compose()", sub: "gate, preview, replay", tone: "math" });
+      b += S.box({ id: "tools", x: 180, y: 120, w: 150, h: 44, label: "packages/tools", sub: "ToolDef registry", tone: "flat" });
+      b += S.box({ id: "effects", x: 0, y: 120, w: 160, h: 44, label: "Effects ledger", sub: "turn_effects", tone: "math", icon: "database" });
+      b += S.box({ id: "guards", x: 520, y: 220, w: 120, h: 44, label: "Turn guards", sub: "fabrication", tone: "req", icon: "shield" });
+      b += S.box({ id: "outbound", x: 350, y: 220, w: 150, h: 44, label: "Outbound", sub: "tone filter", tone: "sys" });
+      b += S.box({ id: "reply", x: 180, y: 220, w: 150, h: 44, label: "Reply", sub: "back through Linq", tone: "iv", icon: "send" });
+      b += S.arrow(111, 42, 128, 42, {});
+      b += S.arrow(251, 42, 268, 42, {});
+      b += S.arrow(391, 42, 408, 42, {});
+      b += S.arrow(531, 42, 548, 42, {});
+      b += S.arrow(595, 66, 595, 118, {});
+      b += S.arrow(518, 142, 502, 142, {});
+      b += S.arrow(348, 142, 332, 142, {});
+      b += S.arrow(178, 142, 162, 142, {});
+      b += S.arrow(580, 166, 580, 218, { label: "before reply" });
+      b += S.arrow(518, 242, 502, 242, {});
+      b += S.arrow(348, 242, 332, 242, {});
+      b += S.text(0, 30 + 262, "200 goes back to the webhook before any work; the job row carries the turn.", "d-t-s");
+      return S.frame(640, 302, b);
+    }
+  };
+
+  DIA.alfredWrap = {
+    title: "alfred_: what one tool call passes through",
+    cap: "<b>No surface calls execute(); every call goes through one wrapper stack.</b> The model's tool_use is validated, gated by the tool's declared capability, previewed and confirmed by the user if it writes, replayed from its idempotency key if it is a retry, then executed with a timeout and logged with its effects. Kitaru's adapter hook sits at the same seam, answering from a recording instead of executing.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "model", x: 0, y: 20, w: 100, h: 44, label: "Model", sub: "tool_use", tone: "flat", icon: "brain" });
+      b += S.box({ id: "schema", x: 120, y: 20, w: 100, h: 44, label: "Schema", sub: "zod", tone: "math" });
+      b += S.box({ id: "gate", x: 240, y: 20, w: 120, h: 44, label: "Capability", sub: "read, write, bulk", tone: "math" });
+      b += S.box({ id: "preview", x: 380, y: 20, w: 120, h: 44, label: "Preview", sub: "confirm first", tone: "math" });
+      b += S.box({ id: "idem", x: 520, y: 20, w: 120, h: 44, label: "Idempotency", sub: "replay on retry", tone: "math" });
+      b += S.box({ id: "user", x: 380, y: 124, w: 120, h: 44, label: "User", sub: "confirms", tone: "iv", icon: "user" });
+      b += S.box({ id: "execute", x: 520, y: 124, w: 120, h: 44, label: "Execute", sub: "with timeout", tone: "sys", icon: "zap" });
+      b += S.box({ id: "log", x: 520, y: 220, w: 120, h: 44, label: "Log + effects", sub: "v6_tool_executions", tone: "math" });
+      b += S.box({ id: "kitaru", x: 0, y: 214, w: 440, h: 50, label: "Kitaru's adapter hook sits at this seam", sub: "it answers from the recorded log instead of executing", tone: "iv", dash: true, icon: "history" });
+      b += S.arrow(101, 42, 118, 42, {});
+      b += S.arrow(221, 42, 238, 42, {});
+      b += S.arrow(361, 42, 378, 42, {});
+      b += S.arrow(501, 42, 518, 42, {});
+      b += S.arrow(425, 66, 425, 122, {});
+      b += S.arrow(460, 122, 460, 66, {});
+      b += S.text(418, 98, "preview", "d-t-s", "end");
+      b += S.text(467, 98, "confirmed", "d-t-s");
+      b += S.arrow(580, 66, 580, 122, {});
+      b += S.arrow(580, 170, 580, 218, {});
+      b += S.arrow(442, 226, 518, 158, { dash: true });
+      return S.frame(640, 276, b);
+    }
+  };
+
+  DIA.alfredPipe = {
+    title: "alfred_: the pipeline acts on mail, and never sends",
+    cap: "<b>Nine steps, two model calls, and no send path in the executor.</b> Mail lands in staging through a queue or the poller; deterministic rules fire before triage; triage writes one pending action per email with a category and an autonomy level. Silent actions are archive, label and move. Only one function sends, after the user approves, and a reconciler checks every effect against the provider.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "provider", x: 0, y: 20, w: 130, h: 44, label: "Gmail, Outlook", sub: "IMAP too", tone: "flat", icon: "mail" });
+      b += S.box({ id: "staging", x: 160, y: 20, w: 140, h: 44, label: "Staging", sub: "idempotent upsert", tone: "math", icon: "inbox" });
+      b += S.box({ id: "rules", x: 330, y: 20, w: 130, h: 44, label: "Email rules", sub: "fire first", tone: "req", icon: "filter" });
+      b += S.box({ id: "triage", x: 490, y: 20, w: 150, h: 44, label: "donna-triage", sub: "category, autonomy", tone: "sys", icon: "brain" });
+      b += S.box({ id: "pending", x: 450, y: 110, w: 190, h: 44, label: "Pending actions", sub: "one row per email", tone: "math", icon: "database" });
+      b += S.box({ id: "exec", x: 250, y: 110, w: 170, h: 44, label: "Executor", sub: "archive, label, move", tone: "sys" });
+      b += S.box({ id: "drafter", x: 250, y: 190, w: 170, h: 44, label: "donna-worker", sub: "writes the draft", tone: "sys", icon: "brain" });
+      b += S.box({ id: "user", x: 0, y: 190, w: 190, h: 44, label: "User approves", sub: "SMS, app, email", tone: "iv", icon: "user" });
+      b += S.box({ id: "send", x: 0, y: 270, w: 190, h: 44, label: "Send approved draft", sub: "the only send path", tone: "req", icon: "send" });
+      b += S.box({ id: "reconcile", x: 450, y: 190, w: 190, h: 44, label: "Reconciler", sub: "verify, or reverse", tone: "req", icon: "undo-2" });
+      b += S.arrow(132, 42, 158, 42, {});
+      b += S.arrow(302, 42, 328, 42, {});
+      b += S.arrow(462, 42, 488, 42, {});
+      b += S.arrow(565, 66, 565, 108, {});
+      b += S.arrow(448, 124, 422, 124, {});
+      b += S.arrow(460, 156, 422, 200, {});
+      b += S.arrow(248, 212, 192, 212, { label: "draft" });
+      b += S.arrow(95, 236, 95, 268, {});
+      b += S.arrow(250, 126, 70, 66, { dash: true, label: "write back" });
+      b += S.arrow(545, 188, 545, 156, {});
+      return S.frame(640, 326, b);
+    }
+  };
+
+  DIA.alfredVsKitaru = {
+    title: "What alfred_ records, and where Kitaru keeps the same thing",
+    cap: "<b>The two systems keep the same records for different jobs.</b> alfred_'s turn traces and tool executions are what Kitaru's sessions and nodes would import. The idempotency key and the cache key are both a hash of a call's arguments: one replays a retry, the other replays a recording. The effects ledger is what Kitaru lacks: a record of what actually changed, which would answer the provenance gap.",
+    svg: function () {
+      var b = "";
+      b += S.tag(0, 14, "alfred_ in production");
+      b += S.tag(440, 14, "Kitaru at replay");
+      var rows = [["a-trace", "v6_turn_traces", "one row per turn", "k-session", "Session", "one run, a tree", "a unit of work"],
+                  ["a-exec", "v6_tool_executions", "latency, preview", "k-node", "tool_call node", "inputs, outputs", "one tool call"],
+                  ["a-idem", "Idempotency key", "replays a retry", "k-key", "cache_key", "replays a recording", "a hash of the args"],
+                  ["a-cap", "Capability", "read, write, bulk", "k-policy", "Tool policy", "default passthrough", "what a call may do"],
+                  ["a-effects", "turn_effects", "what changed", "k-mocked", "mocked attribute", "absent on passthrough", "what happened"]];
+      rows.forEach(function (r, i) {
+        var y = 26 + i * 54;
+        b += S.box({ id: r[0], x: 0, y: y, w: 200, h: 42, label: r[1], sub: r[2], tone: i === 4 ? "now" : "math" });
+        b += S.box({ id: r[3], x: 440, y: y, w: 200, h: 42, label: r[4], sub: r[5], tone: i === 4 ? "alaap" : "iv" });
+        b += S.arrow(202, y + 21, 438, y + 21, { label: r[6] });
+      });
+      return S.frame(640, 300, b);
+    }
+  };
+
   return { S: S, DIA: DIA, slug: slug };
 })();

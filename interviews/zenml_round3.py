@@ -16,7 +16,8 @@ LOOP = {
     "format": "Ninety minutes, technical, in depth. Expect them to go down, not sideways: mechanism, storage, failure, and whether each claim survives one 'how exactly?' and one 'how big?'.",
     "bar": "Every claim survives one 'how exactly?' and one 'how big?'. When pushed, go down, not sideways. Volunteer the limit before they find it. Reach for a number unprompted.",
     # Diagrams tab: keys into figures/figures.js (drawn from the Kitaru teardown).
-    "figures": ["kitaruPlanes", "kitaruReplay", "kitaruOrder", "kitaruFreeze", "kitaruPosition"],
+    "figures": ["kitaruPlanes", "kitaruReplay", "kitaruModel", "kitaruPolicy", "kitaruKey", "kitaruOrder",
+                "kitaruTurns", "kitaruLive", "kitaruFreeze", "kitaruScale", "kitaruPosition"],
     "plan_kicker": "Friday to Sunday",
     "mech_title": "Kitaru, mechanism by mechanism",
     "design_link": {"text": "The worked design, six steps and five deep dives:", "label": "Kitaru in your system design guide",
@@ -291,6 +292,84 @@ KITARU_LEAD = ("Kitaru spawns your agent as an ordinary subprocess in your own e
                "against a recorded call log. The diagrams are from your teardown; the tables are the mechanisms "
                "they will probe.")
 
+# Your own system, fresh before you walk in: alfred_ as the guide draws it, then set against
+# Kitaru. Figures are keys into figures/figures.js; "sd" resolves through extract.js like
+# QA_EXTRA. The spoken lines are the guide's alfred_ scripts.
+OWN = {
+    "tab": "alfred_",
+    "kicker": "The system you own",
+    "title": "alfred_, fresh in your head",
+    "lead": ["They will ask about your day-to-day, and every Kitaru question has an alfred_ answer next to it. "
+             "Two loops share one tool layer: an agent the user talks to over SMS, web and MCP, and a background pipeline that acts on mail alone and never sends.",
+             "Open one part at a time: the point, the figure, then say it before you open the answer."],
+    "parts": [
+        {"id": "doors", "title": "Three doors, one brain, one tool package", "meta": "about 45 seconds",
+         "point": "SMS, web and MCP converge on packages/tools; the pipeline is its own row; everything is one Supabase project.",
+         "figs": ["alfredHld"], "sd": [{"v": "alfred", "a": "hld", "why": "The full high-level design, 23 boxes."}],
+         "say": ["Three doors, one brain, one tool package. SMS goes through a webhook and a job queue because the reply can take longer than a webhook should. Web streams directly. MCP runs single tools as the user, behind an allowlist.",
+                 "The background pipeline is a separate row: ingestion stages mail, triage decides, the executor and the worker act, notify tells the user, and a reconciler checks the provider afterwards.",
+                 "Everything is one Supabase project: Postgres with row-level security, pg_cron for schedules, pgmq for the event bus, and Deno edge functions for compute. That is a deliberate choice for a small team; the trade-off is that one database carries every workload."]},
+        {"id": "turn", "title": "One chat turn, in layer order", "meta": "about 40 seconds",
+         "point": "Acknowledge fast, then lease, trace, prompt, loop, guard, reply. The layer order is the senior signal.",
+         "figs": ["alfredTurn"], "sd": [{"v": "alfred", "a": "dataflow", "why": "The turn and the pipeline, step by step."}],
+         "say": ["For chat: acknowledge the webhook, enqueue a job, and let the turn function take a lease on the conversation, open a trace, build a cached prompt, run a bounded loop where every tool call goes through the wrapper stack, then filter tone and send.",
+                 "Retries come from three places, so I need three layers: dedupe the webhook, lease the conversation, and key every write. A lock in memory would guard nothing across a provider call."]},
+        {"id": "wrap", "title": "What one tool call passes through", "meta": "about 30 seconds",
+         "point": "No surface calls execute(). One wrapper stack decides preview, confirmation and replay from what the tool declares; Kitaru's hook sits at the same seam.",
+         "figs": ["alfredWrap"], "sd": [{"v": "alfred", "a": "deepdives", "why": "Action safety without a risk score."}],
+         "say": ["I do not gate on a risk score. Every tool declares what class of side effect it has, and one wrapper stack around every call decides whether it previews, confirms, or replays. On top of that, the background executor has no send path at all.",
+                 "It is the same seam Kitaru's adapter hooks. We execute there; Kitaru answers from the recording there. The difference is that every write we have goes through it, so there is no side door."]},
+        {"id": "pipe", "title": "The pipeline acts on mail, and never sends", "meta": "about 40 seconds",
+         "point": "Nine steps, two model calls, and only one function that sends, after approval.",
+         "figs": ["alfredPipe"], "sd": [{"v": "alfred", "a": "dataflow", "why": "The nine steps, tagged code or model."}],
+         "say": ["This is a pipeline, so I will list the steps and mark which ones are model calls. Nine steps, two model calls: triage and drafting. Everything that touches the provider is code.",
+                 "Silent actions are archive, label, move. Drafts wait for the user. Sending is a separate function that only runs after approval, and a reconciler verifies every silent effect against the provider afterwards."]},
+        {"id": "cost", "title": "Cost is a cache layout", "meta": "about 30 seconds",
+         "point": "The shared prefix is about 107k tokens a call, so Block 1 is byte-identical for every user and cached for an hour.",
+         "figs": [], "sd": [{"v": "alfred", "a": "deepdives", "why": "The cost dive, with the measured hit rates."}],
+         "say": ["Cost is a cache layout problem. The shared prefix is about a hundred thousand tokens, so it has to be byte-identical across users and cached for an hour, with the per-user part in its own slot.",
+                 "Measured on the first model call of each turn: 91.4% cached inside five minutes, 62% outside it. A test guards the byte-identical block, because one formatter change broke it on main."]},
+        {"id": "quality", "title": "Production failures become eval cases", "meta": "about 30 seconds",
+         "point": "The scanner turns real failing turns into cases, and the effects ledger, not the reply text, decides whether an action happened.",
+         "figs": ["benchLoop"], "sd": [{"v": "alfred", "a": "deepdives", "why": "The quality-gate dive."}],
+         "say": ["For quality, real failing turns get scanned, classified, and promoted into the eval suite, so the regression set is what users actually do.",
+                 "Two rules a whiteboard design forgets: a refusal is not an outcome, so check the retry; and the effects ledger, not the assistant's text, decides whether an action happened."]},
+        {"id": "ceiling", "title": "The honest ceiling: one Postgres", "meta": "about 20 seconds",
+         "point": "Volunteer the limit before they find it, with the signal that would make you split it.",
+         "figs": [], "sd": [{"v": "alfred", "a": "deepdives", "why": "One Postgres for everything."}],
+         "say": ["It is one Postgres. That is right for this team size, isolated in the schema: partitioned event tables, partial indexes on hot statuses, SKIP LOCKED consumers.",
+                 "The day chat latency moves with triage batch size is the day the pipeline gets its own instance."]},
+    ],
+    "numbers": [
+        ["Edge functions", "about 370 Deno functions, about 250 cron registrations, one Postgres"],
+        ["Chat volume", "about 310 turns a day fleet-wide, one every 4.6 minutes"],
+        ["Prompt prefix", "about 107k cacheable tokens a call; 4 blocks, 3 cache breakpoints"],
+        ["Cache hit", "91.4% inside 5 minutes at $0.38 per Mtok; 62% outside it at $1.04"],
+        ["Agent loop", "at most 12 steps a turn"],
+        ["Pipeline", "9 steps, 2 model calls, 1 send path"],
+        ["Accounts", "up to six Gmail, Outlook or IMAP accounts a user"],
+    ],
+    "compare_figs": ["alfredVsKitaru"],
+    "compare": {"head": ["Question", "alfred_", "Kitaru"],
+                "rows": [["Where a tool call is caught", "`compose()` around every call; no surface calls execute()", "The adapter hook, on registered function tools only"],
+                         ["Default for a write", "Preview, confirm, then an idempotency key", "passthrough: the real tool runs"],
+                         ["What proves an action happened", "The `turn_effects` ledger, and a reconciler that checks the provider", "The mocked attribute, absent on passthrough"],
+                         ["Retries and repeats", "Event dedupe, a conversation lease, idempotency keys", "An occurrence counter: read, await, then write"],
+                         ["Where traces live", "Own tables in Postgres, read by the scanner", "A SessionNode tree, imported from trace stores"],
+                         ["Replay for evals", "Real failures replayed against a frozen world", "A cohort replayed from the call log"]]},
+    "bridges": [
+        {"id": "b-prov", "title": "Provenance: what you would bring from alfred_",
+         "point": "The effects ledger is the record Kitaru lacks.",
+         "say": ["In alfred_ we never trusted the assistant's text to say an action happened; the effects ledger did. A replay node should carry the same: which policy answered it, and whether anything left the process. That turns the provenance gap into a field."]},
+        {"id": "b-writes", "title": "Side effects: why passthrough would not have passed your review",
+         "point": "A write is declared as a write, and a fork should fail closed on it.",
+         "say": ["Our write tools declare a capability class and carry an idempotency key, so a default that runs the real tool would not have passed review. On a forked replay I would default writes to fail closed, and let a read fall through only if it is marked safe."]},
+        {"id": "b-import", "title": "Import: the traces you already have",
+         "point": "Your turn traces and tool executions are what Kitaru's importer would ingest; the scanner picks which are worth replaying.",
+         "say": ["Our turn traces and tool executions are exactly what an importer would ingest. The part I would keep is the scanner: most traces are not worth replaying, and picking the failing ones is where the value was."]},
+    ],
+}
+
 # Phrases bolded wherever they appear in what you say: the ideas the interviewer must hear.
 EMPHASIS = [
     "frozen snapshot of the user's world", "only the call out to", "Only the provider call is swapped", "the only thing swapped",
@@ -304,6 +383,8 @@ EMPHASIS = [
     "fidelity", "execution truth", "a framework, a runtime for stateful agents, and the observability-and-eval product",
     "our own tables in Supabase Postgres", "divergence", "I never instrumented it", "estimate", "5,000-plus",
     "WheelPrice", "INFORMS Analytics+", "MockFlow-AI", "MetaRAG", "not looking to urgently leave",
+    "Three doors, one brain", "no send path", "three layers", "byte-identical", "effects ledger", "fail closed",
+    "no side door", "Volunteer the limit",
 ]
 
 
@@ -313,6 +394,7 @@ EMPHASIS = [
 # minutes come from there); guide links resolve through extract.js.
 QA_EXTRA = {
     "Walk me through your day-to-day": {
+        "figs": ["alfredHld"],
         "sd": [{"v": "alfred", "a": "deepdives", "why": "The system you own, drawn from your own code."}]},
     "When you replay a case": {
         "figs": ["harnessSeam"],
@@ -348,7 +430,7 @@ QA_EXTRA = {
     "Was it gating deploys": {
         "sd": [{"p": "grounding", "t": "eval-gate", "why": "Eval suites as release gates, and what a hard gate costs."}]},
     "A side-effecting tool call fails halfway": {
-        "figs": ["zenEffects"],
+        "figs": ["zenEffects", "alfredWrap"],
         "read": ["https://stripe.com/blog/idempotency", "https://brandur.org/idempotency-keys"],
         "sd": [{"p": "multi-step", "t": "idempotency", "why": "Where the key lives decides whether a retry is safe."},
                {"p": "agent-durability", "t": "unknown-results", "why": "The send succeeded but the response timed out."}]},
@@ -367,16 +449,17 @@ QA_EXTRA = {
     "What's the difference between LangChain, LangGraph and LangSmith": {
         "sd": [{"p": "agent-durability", "t": "transcript-checkpoint", "why": "What LangGraph's checkpointers are, in the guide's terms."}]},
     "What's your experience with trace stores": {
+        "figs": ["kitaruModel", "alfredVsKitaru"],
         "sd": [{"v": "kitaru", "a": "hld", "why": "Where imported traces land in Kitaru."}]},
     "What's hard about replay": {
-        "figs": ["forkReplay", "kitaruFreeze"],
+        "figs": ["forkReplay", "kitaruKey", "kitaruFreeze"],
         "read": ["https://docs.temporal.io/workflow-execution"],
         "sd": [{"v": "kitaru", "a": "deepdives", "why": "Divergence, drawn for both designs."}]},
     "Multi-turn: the agent's reply changes at turn two": {
-        "figs": ["multiturn"],
+        "figs": ["kitaruTurns", "multiturn"],
         "read": ["https://arxiv.org/abs/2406.12045"],
         "sd": [{"v": "kitaru", "a": "deepdives", "why": "Multi-turn replay is one of the deep dives."}]},
     "If you ran Kitaru for a quarter": {
-        "figs": ["missFlow"],
+        "figs": ["missFlow", "kitaruLive"],
         "sd": [{"v": "kitaru", "a": "deepdives", "why": "Provenance and misses, as design problems."}]},
 }

@@ -348,6 +348,7 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
     { id: "overview", label: "Overview", show: function () { return true; } },
     { id: "prep", label: "Prep", show: function () { return LOOP.scripts.length || LOOP.drills.length || LOOP.qa.length || LOOP.ask.length; } },
     { id: "design", label: "Design", show: function () { return LOOP.tables.length || LOOP.figures.length; } },
+    { id: "own", label: (LOOP.own && LOOP.own.tab) || "Yours", show: function () { return !!LOOP.own; } },
     { id: "sessions", label: "Sessions", show: function () { return LOOP.sessions.length; } },
     { id: "mocks", label: "Mocks", show: function () { return !!LOOP.mockHow; } }
   ].filter(function (t) { return t.show(); });
@@ -540,6 +541,38 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
       });
     }
     if (LOOP.admire) { host.appendChild(el("p", "bar", "<b>Admire first.</b> " + inl(LOOP.admire))); }
+  }
+
+  /* ---------------------------------------------------------------- your own system, then set against theirs */
+  function ownItem(host, id, x) {
+    var b = el("div", "sbody");
+    b.appendChild(el("p", "point", "<b>The point.</b> " + inl(x.point)));
+    learn(b, x.learn || {});
+    b.appendChild(sayToggle("What you would say", transcript(x.say, "You", "")));
+    host.appendChild(item(id, x.title, x.meta ? esc(x.meta.charAt(0).toUpperCase() + x.meta.slice(1)) + "." : "", b));
+    nav.push([id, x.title, true]);
+  }
+  function tabOwn(host) {
+    var A = LOOP.own;
+    var s = heading(host, "own", A.kicker, A.title);
+    A.lead.forEach(function (p) { s.appendChild(el("p", "lead", inl(p))); });
+    bulk(s);
+    A.parts.forEach(function (p) { ownItem(s, "own-" + p.id, p); });
+    if (A.numbers && A.numbers.length) {
+      var n = heading(host, "numbers", "Reach for a number unprompted", "Numbers to have ready");
+      var dl = el("dl", "facts");
+      dl.innerHTML = A.numbers.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + inl(r[1]) + "</dd>"; }).join("");
+      n.appendChild(dl);
+    }
+    if (A.compare) {
+      var c = heading(host, "against", "Two designs, one seam", "Against Kitaru");
+      (A.compare_figs || []).forEach(function (k) { var f = figNode(k, 0); if (f) { c.appendChild(f); } });
+      var table = el("table");
+      table.innerHTML = "<thead><tr>" + A.compare.head.map(function (x) { return "<th>" + esc(x) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+        A.compare.rows.map(function (r) { return "<tr>" + r.map(function (x) { return "<td>" + inl(x) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody>";
+      c.appendChild(table);
+      (A.bridges || []).forEach(function (x) { ownItem(c, x.id, x); });
+    }
   }
 
   /* ---------------------------------------------------------------- sessions, one at a time */
@@ -813,6 +846,7 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
       if (r.tab === "overview") { tabOverview(main); }
       else if (r.tab === "prep") { tabPrep(main); }
       else if (r.tab === "design") { tabDesign(main); }
+      else if (r.tab === "own") { tabOwn(main); }
       else if (r.tab === "sessions") { tabSessions(main, r.anchor); }
       else if (r.tab === "mocks") { tabMocks(main); }
     } catch (err) {

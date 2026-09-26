@@ -297,3 +297,18 @@ pages and the current session shape, `MILESTONE-1.md` records the three Oxus des
 sessions now in weeks 2 to 4, `STUDY-LIST.md` is regenerated with each step's reading and
 guide links, and of eight 1st-edition DDIA chapter references in the reading, five that
 duplicated a 2nd-edition entry were removed and three were rewritten as 2nd-edition topics.
+
+**2026-09-26 — Kitaru drawn from the teardown; alfred_ fresh for the ZenML round.**
+Asked for by Pranav, choices picked from a list. Six new figures come from the teardown
+sections that had only prose or tables: the SessionNode tree, how one tool call is
+answered on replay, the one-hash join, last-turn-only multi-turn, what runs live whatever
+you configure, and what breaks as each design grows. Each is drawn once in
+`figures/figures.js` with notes on every part. They show on the ZenML page's Design tab and
+on its Prep questions, and on the Kitaru deep dives in the system design guide, which can
+now show any shared figure through a `fig` block. The ZenML page gains an alfred_ tab: the
+system you own in seven parts (three doors and one tool package, one chat turn, the wrapper
+stack, the pipeline that never sends, cost, the eval scanner, the one-Postgres ceiling),
+each with its point, its figure and the words behind a toggle, then the numbers to have
+ready and a comparison with Kitaru. Four alfred_ figures and one that maps alfred_'s
+records onto Kitaru's are new. Content modules can now carry an `OWN` block for the next
+loop. No change to the plan or to `CHARTER.md`.
