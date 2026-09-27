@@ -373,3 +373,9 @@ steps, final state over path, pass^k, leases and process trees, the isolation la
 durable execution against replay, fakes against record-replay, traces as a tree); deeper
 answers on side effects, SQLite and providers; and mock 1's answers on scoring and misses.
 No change to the plan or to `CHARTER.md`.
+
+**2026-09-27 — The one-screen panel on warm paper.**
+Asked for by Pranav: pure white was hard on the eyes, and the dark sheet ran to the
+panel's edge like a box with a stretched header. The panel and its list are now a warm
+off-white, and the dark sheet is a rounded card set inside the panel with even margins.
+No change to the plan or to `CHARTER.md`.

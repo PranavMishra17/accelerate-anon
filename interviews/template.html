@@ -216,7 +216,7 @@ details.fold > summary:hover .ft { color: var(--accent); }
 /* the conversation: one screen, always light whatever the page's theme. Turns on the
    left, a small header, what you said on paper, and what to say on a dark typewriter sheet. */
 dialog.convo {
-  --bg: #FFFFFF; --ink: #15141A; --soft: #3F3E48; --muted: #6B6A76; --rule: #E6E5EA; --tint: #F3F3F6;
+  --bg: #FBF8F1; --ink: #1D1B17; --soft: #45413A; --muted: #736D62; --rule: #E7E0D2; --tint: #F2ECE0;
   --accent: #0A5BD3; --ok: #1A7F4B; --hamza: #9A5B13; --alex: #2F6DB5; --v-landed: #1A7F4B; --v-partly: #B7791F; --v-missed: #C23B22;
   --sheet: #1C1B19; --sheet-ink: #EEE9DE; --sheet-soft: #BDB6A8; --sheet-muted: #8C8679; --sheet-rule: #3A3732; --sheet-mark: #F2C66D;
   color-scheme: light;
@@ -225,12 +225,12 @@ dialog.convo {
 dialog.convo::backdrop { background: rgba(10, 10, 14, 0.62); }
 .cv { display: grid; grid-template-columns: 250px minmax(0, 1fr); height: 100%; }
 
-.cv-rail { background: #FAFAFB; border-right: 1px solid var(--rule); overflow-y: auto; padding: 16px 10px 16px 12px; display: flex; flex-direction: column; }
+.cv-rail { background: #F5F0E6; border-right: 1px solid var(--rule); overflow-y: auto; padding: 16px 10px 16px 12px; display: flex; flex-direction: column; }
 .cv-title { padding: 2px 8px 12px; border-bottom: 1px solid var(--rule); margin-bottom: 6px; font-size: 14px; line-height: 1.4; }
 .cv-title span { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
 .cv-rail .turn { grid-template-columns: 22px 14px minmax(0, 1fr); border-radius: 6px; border-bottom: 0; margin-top: 1px; font-size: 14.5px; padding: 8px 8px; }
 .cv-rail .turn .tw { display: none; }
-.cv-rail .turn.on { background: #ECECF1; }
+.cv-rail .turn.on { background: #E9E1D1; }
 .cv-rail .turn.on .tl { font-weight: 700; }
 .cv-keys { margin-top: auto; padding: 12px 8px 0; font-size: 12.5px; color: var(--muted); }
 
@@ -244,7 +244,7 @@ dialog.convo::backdrop { background: rgba(10, 10, 14, 0.62); }
 .cv-tests { margin: 3px 0 0 14px; font-size: 13px; color: var(--muted); }
 .cv-tests b { color: var(--soft); }
 
-.cv-cols { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); flex: 1; min-height: 0; }
+.cv-cols { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 8px; flex: 1; min-height: 0; padding: 0 16px 16px 0; }
 .cv-col { overflow-y: auto; padding: 18px 26px 32px; }
 .cv-h { font-size: 12.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
 .cv-col .lab { font-size: 13px; font-weight: 700; color: var(--muted); margin: 18px 0 6px; }
@@ -252,7 +252,8 @@ dialog.convo::backdrop { background: rgba(10, 10, 14, 0.62); }
 .cv-said .ex-said { font-size: 15.5px; }
 
 /* what to say: a dark sheet in a typewriter face, the one place on the screen that is dark */
-.cv-say { background: var(--sheet); color: var(--sheet-ink); scrollbar-color: var(--sheet-rule) transparent; }
+.cv-say { background: var(--sheet); color: var(--sheet-ink); scrollbar-color: var(--sheet-rule) transparent; border-radius: 10px; margin-top: 16px; padding: 22px 28px 32px;
+  box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 6px 18px rgba(40,30,10,.10); }
 .cv-say .cv-h, .cv-say .lab { color: var(--sheet-muted); }
 .cv-say .mk-list { color: var(--sheet-soft); }
 .cv-say .mk-list li::marker { color: var(--sheet-muted); }
@@ -269,14 +270,14 @@ dialog.convo::backdrop { background: rgba(10, 10, 14, 0.62); }
 .cv-col figure { padding: 12px; margin: 18px 0 0; }
 .cv-col figure svg { min-width: 0; }
 
-.cv-close { position: absolute; top: 12px; right: 14px; z-index: 2; background: #fff; border: 1px solid var(--rule); color: var(--soft);
+.cv-close { position: absolute; top: 12px; right: 14px; z-index: 2; background: var(--bg); border: 1px solid var(--rule); color: var(--soft);
   border-radius: 6px; padding: 3px 10px; font-size: 13px; }
 .cv-close:hover { color: var(--ink); border-color: var(--ink); }
 @media (max-width: 860px) {
   dialog.convo { width: 100vw; height: 100vh; border-radius: 0; }
   .cv { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
   .cv-rail { max-height: 28vh; border-right: 0; border-bottom: 1px solid var(--rule); }
-  .cv-cols { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
+  .cv-cols { grid-template-columns: minmax(0, 1fr); overflow-y: auto; padding: 0 12px 12px; }
   .cv-col { overflow: visible; }
   .cv-head { padding-right: 80px; }
 }
