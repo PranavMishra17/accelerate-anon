@@ -357,3 +357,19 @@ small strip (who, the question, the verdict, what they were testing), and the tu
 fits all ten turns. What to say is the one dark area: the point to land, then the answer
 in a typewriter face with the key phrases in amber. No change to the plan or to
 `CHARTER.md`.
+
+**2026-09-27 — The ZenML Prep tab rebuilt as a hub; the role, in depth.**
+Asked for by Pranav: the tab was one long scroll, and the non-technical side of a product
+engineer role was thin. It now opens with how to show up (ten points, several from mock
+1), then the question banks as rows, each opening in the same one-screen panel as the
+mocks: the nuance, figures and reading on the light side, the answer on the dark sheet,
+with a mark for each question revised and a search across every bank. Drills, questions
+to ask, traps and sources fold shut; the page is 2,700 px instead of 6,500. New: a bank
+on the role itself (what product engineer means, the move into it, the public half that
+Lennart and Michael both raised, the first post, the first month, their values), built on
+the job post and ZenML's own pages, every link checked; eight design questions and five on
+product work at Kitaru, folding in the mind map from the ZenML sessions (the four design
+steps, final state over path, pass^k, leases and process trees, the isolation ladder,
+durable execution against replay, fakes against record-replay, traces as a tree); deeper
+answers on side effects, SQLite and providers; and mock 1's answers on scoring and misses.
+No change to the plan or to `CHARTER.md`.

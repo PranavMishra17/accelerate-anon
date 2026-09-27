@@ -156,10 +156,12 @@
         ],
         "approach": [
           "When told 'be concrete', give one worked example with the check named: which rows the assertion reads, what it expects.",
-          "Then show you know the metric's blind spot and what sits next to it."
+          "Then show you know the metric's blind spot and what sits next to it.",
+          "Structure behind it: requirements, what is frozen, how it runs, how it is scored. Outcome and final state come before trajectory."
         ],
         "say": [
           "Deterministic assertions against the snapshot decide it. For 'make a todo list from this email', the snapshot knows which email is the right one and what its action items are, so the run passes if the agent read that email and the created tasks match those items.",
+          "More generally, pass or fail is the final state against a goal state, not the path: two runs can take different routes to the same right result, and both pass. The path is scored separately.",
           "Tool calls per completed task is only computed over runs that pass those assertions, so an agent that wraps up early on an empty result doesn't get a better number, it gets a failed run. We moved 2.5 to 2.2 on that metric for the same outcomes.",
           "On its own it would reward guessing over clarifying, which is why it sits next to a count of false completion claims."
         ],
@@ -226,7 +228,8 @@
         ],
         "approach": [
           "Separate the two judges in your first sentence.",
-          "Then one mechanism that detects judge drift without new labels: re-judge frozen outputs."
+          "Then one mechanism that detects judge drift without new labels: re-judge frozen outputs.",
+          "Add pass^k when they push on noise: for a gating case, report whether it passes every time in k runs, not once."
         ],
         "say": [
           "There are two judges, and they're in different states. The scanner's judge, which decides whether a production flag is a real bug, is calibrated: weekly against fresh human labels, about three in four agreement.",
@@ -261,7 +264,8 @@
         "approach": [
           "Say the reframe first: a miss is information, the agent's behaviour changed. That buys you ten seconds and shows judgement.",
           "Then build up in order of cost: the miss experience (diff and accept), then policy by effect (reads, writes), then the world model for the few sessions that fork.",
-          "If you blank, say 'let me start with what the user sees' and describe the screen."
+          "If you blank, say 'let me start with what the user sees' and describe the screen.",
+          "Say what you would not rebuild: the runner, the sandbox and the replay layer work. Your value is the layer above: production traces into cases, stateful environments, outcome and policy scoring."
         ],
         "say": [
           "First, a miss is information: it means the agent's behaviour changed, which is what they were measuring. So the goal isn't to avoid misses, it's to stop a miss from killing the run and make it cheap to resolve.",

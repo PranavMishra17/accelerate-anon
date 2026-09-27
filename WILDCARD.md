@@ -23,7 +23,13 @@ things:
    in the words to say it, timed spoken drills, a technical question bank, figures,
    questions to ask, traps, and every session readable in place. Add a `LOOPS` entry in
    `index.html` so the wildcard page shows it as a card. Optional `OWN` in the module adds
-   a tab for your own system set against theirs.
+   a tab for your own system set against theirs. The Prep tab is a hub: `SHOW_UP` (how to
+   present yourself), then each bank (`SCRIPTS`, then each `QA` group in `QA_ORDER`) as one
+   row that opens in the one-screen panel, then drills, questions to ask, traps and
+   `SOURCES` folded shut. A question can carry `short` (its label in the list), `land` (the
+   one point), `notes` (the nuance) and `figs`; the answer shows on the dark sheet. Every
+   loop gets a non-technical bank about the role itself, researched from the job post and
+   the company's own pages, with every link checked.
 3. **Mocks**, run in the Claude Code chat by `interviews/MOCKS.md`: named interviewers from
    the loop with distinct roles, the whole loop covered (story, why this move, the work,
    their product, questions), no reference to rounds you were not in. Each mock is saved

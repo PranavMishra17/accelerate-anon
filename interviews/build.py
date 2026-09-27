@@ -109,10 +109,17 @@ def build(module_name):
                                        capture_output=True, text=True, encoding="utf-8", check=True).stdout)
         for p in own["parts"]:
             p["learn"] = {"figs": p.get("figs", []), "sdLinks": sd[p["id"]]}
-    # Every Prep question gets an anchor, so a mock exchange can point at its revision.
+    order = getattr(m, "QA_ORDER", None)
+    if order:
+        m.QA.sort(key=lambda g: order.index(g["group"]) if g["group"] in order else len(order))
+    # Every Prep question gets an anchor, so a mock exchange can point at its revision, and
+    # figures written on the question itself join whatever QA_EXTRA gave it.
     for g in getattr(m, "QA", []):
         for it in g["items"]:
             it["id"] = "q-" + re.sub(r"[^a-z0-9]+", "-", it["q"].lower()).strip("-")[:60]
+            if it.get("figs"):
+                ln = it.setdefault("learn", {"figs": [], "read": [], "sdLinks": []})
+                ln["figs"] = ln.get("figs", []) + [f for f in it["figs"] if f not in ln.get("figs", [])]
     mocks_path = os.path.join(HERE, module_name + ".mocks.json")
     mocks = json.load(io.open(mocks_path, encoding="utf-8")) if os.path.exists(mocks_path) else []
     for mk in mocks:
@@ -133,6 +140,9 @@ def build(module_name):
         "planKicker": L.get("plan_kicker", ""), "mechTitle": L.get("mech_title", ""),
         "designLink": L.get("design_link"), "extra": L.get("extra", ""),
         "emphasis": getattr(m, "EMPHASIS", []), "own": own,
+        # Prep hub: how to show up, a line under each bank, and the links it rests on.
+        "showUp": getattr(m, "SHOW_UP", []), "prepLead": getattr(m, "PREP_LEAD", ""), "storyBlurb": getattr(m, "STORY_BLURB", ""),
+        "sources": getattr(m, "SOURCES", []),
     }
     tpl = io.open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
