@@ -117,7 +117,7 @@ Practice:
   - Guide: [Technique: Least privilege and sandboxing](SYSTEM%20DESIGN.html#/patterns/agent-safety/least-privilege). What Kitaru deliberately does not do: your agent runs with your process's rights.
 - [ ] One recursive table, and the objects around it  _(15m)_
   - Read: [Postgres docs: WITH RECURSIVE, for a tree in one table](https://www.postgresql.org/docs/current/queries-with.html)  (15m)
-  - Read: DDIA, 2e: Data models and query languages, the part on trees and graphs  (12m)
+  - Read: DDIA, 2e: ch. 3 Data Models and Query Languages → Graph-Like Data Models (property graphs, Cypher, graph queries in SQL)  (12m)
 - [ ] Tool policy and on_miss, exactly  _(15m)_
   - Read: [Kitaru docs: replay and overrides, the tool policies](https://docs.zenml.io/kitaru/guides/replay-and-overrides)  (4m)
   - Guide: [Technique: Tool effect classes](SYSTEM%20DESIGN.html#/patterns/agent-safety/effect-classes). Tool policies are a replay-time version of sorting tools by what they do to the world.
@@ -170,10 +170,10 @@ Practice:
   - [ ] Say Kitaru's key and Stripe's key side by side, out loud  _(3m)_
     Done when: session, step and argument-hash versus a client-supplied UUID — both compared to a stored result on repeat
 - [ ] **Idempotence in stream processing**  (9m)
-  Exactly-once processing is really at-least-once delivery plus idempotent effects. DDIA's section on idempotence in chapter 11 is the canonical explanation.
-  - DDIA 2e - index: idempotence. The stream-processing chapter
+  Exactly-once processing is really at-least-once delivery plus idempotent effects. DDIA 2e explains it in chapter 12, Stream Processing, under Fault Tolerance → Idempotence.
+  - DDIA 2e, ch. 12 Stream Processing → Processing Streams → Fault Tolerance → Idempotence
   - [ ] Read the section  _(5m)_
-    DDIA 2e - index: idempotence; exactly-once semantics. The stream-processing chapter's fault-tolerance section, the idempotence subsection
+    DDIA 2e, ch. 12 Stream Processing → Processing Streams → Fault Tolerance → Idempotence (read Microbatching and Checkpointing and Atomic Commit Revisited just before it); then ch. 13 A Philosophy of Streaming Systems → Aiming for Correctness → The End-to-End Argument for Databases (Exactly-once execution of an operation, Duplicate suppression)
   - [ ] Write one sentence connecting it to your bench  _(4m)_
     Done when: one written sentence: exactly-once evaluation is at-least-once replay plus idempotent tool responses
 - [ ] **Durable execution: event history and replay**  (11m)
@@ -308,8 +308,8 @@ Practice:
 - [ ] A side-effecting call fails halfway  _(15m)_
   - Read: [Stripe: designing APIs with idempotency](https://stripe.com/blog/idempotency)  (6m)
   - Read: [Brandur Leach: Stripe-like idempotency keys in Postgres](https://brandur.org/idempotency-keys)  (22m)
-  - Read: DDIA, 2e: The trouble with distributed systems, timeouts and unknown outcomes  (18m)
-  - Read: DDIA, 2e: Stream processing, exactly-once and idempotence  (15m)
+  - Read: DDIA, 2e: ch. 9 The Trouble with Distributed Systems → Unreliable Networks → Timeouts and Unbounded Delays  (18m)
+  - Read: DDIA, 2e: ch. 12 Stream Processing → Processing Streams → Fault Tolerance → Idempotence; then ch. 13 → Aiming for Correctness → The End-to-End Argument for Databases  (15m)
   - Guide: [Technique: Idempotency keys](SYSTEM%20DESIGN.html#/patterns/multi-step/idempotency). Where the key lives decides whether a retry is safe.
   - Guide: [Technique: Transactional outbox](SYSTEM%20DESIGN.html#/patterns/multi-step/outbox). Write the intent before the call, the ledger's shape.
   - Guide: [Technique: Idempotent tools and unknown results](SYSTEM%20DESIGN.html#/patterns/agent-durability/unknown-results). The send succeeded but the response timed out.
@@ -317,7 +317,7 @@ Practice:
   - Read: [Postgres docs: the locking clause, FOR UPDATE SKIP LOCKED](https://www.postgresql.org/docs/current/sql-select.html)  (9m)
   - Read: [Crunchy Data: a queue in plain Postgres with SKIP LOCKED](https://www.crunchydata.com/blog/message-queuing-using-native-postgresql)  (10m)
   - Read: [Postgres docs: LISTEN, triggering on the event](https://www.postgresql.org/docs/current/sql-listen.html)  (2m)
-  - Read: DDIA, 2e: Transactions, locks and isolation  (25m)
+  - Read: DDIA, 2e: ch. 8 Transactions → Weak Isolation Levels (Read Committed, Snapshot Isolation, Preventing Lost Updates, Write Skew and Phantoms), then Serializability  (25m)
   - Guide: [Technique: Queue claiming with SKIP LOCKED](SYSTEM%20DESIGN.html#/patterns/contention/claim-skip-locked). The idiom to name when they ask how the queue is claimed.
   - Guide: [Technique: Polling and long polling](SYSTEM%20DESIGN.html#/patterns/real-time/polling). Why a cron drain's worst case is its interval, and what triggering on the event buys.
   - Guide: [Technique: Retries with backoff and a dead-letter queue](SYSTEM%20DESIGN.html#/patterns/long-running/retries-dlq). The backstop you keep after moving to events.

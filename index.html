@@ -737,7 +737,7 @@
           intro: "The instinct on the eval-harness question was right; what was missing was the vocabulary to carry it. Backpressure is a large part of the answer to that question, and this session is where the vocabulary comes from.",
           diagrams: ["queue"],
           steps: [
-            { t: "Read DDIA chapter 1, and sit properly on the percentiles section",
+            { t: "Read DDIA 2e chapter 2, and sit properly on the percentiles section",
               close: [
                 { k: "blank", q: "The mean is dominated by the bulk of ___ requests, which is why it hides the tail.", a: "fast" },
                 { k: "word", q: "Which percentile is the number that 99 percent of requests beat?", a: "p99" },
@@ -749,10 +749,10 @@
               ],
               d: "It is short. The argument that the mean hides everything and p99 is where users live is the most quotable thing in the book, and you will use it in interviews within the month.",
               m: 25,
-              where: "DDIA 2e - index: percentiles; response time; tail latency amplification. Sections 'Describing Performance', 'Latency and Response Time', 'Average, Median, and Percentiles'. Not in 2e chapter 1, which is Trade-Offs in Data Systems Architecture; the nonfunctional-requirements chapter carries it",
+              where: "DDIA 2e, ch. 2 Defining Nonfunctional Requirements → Describing Performance → Latency and Response Time, then Average, Median, and Percentiles, then Use of Response Time Metrics. Chapter 2, not chapter 1: in the 2nd edition chapter 1 is Trade-Offs in Data Systems Architecture",
               out: "p50, p95 and p99 defined in your own words, and one sentence on why an average hides the tail",
               skip: "The rest of chapter 1. Reliability and maintainability are not what this week is about.",
-              links: [ddia("look up percentiles")],
+              links: [ddia("ch. 2 Defining Nonfunctional Requirements → Describing Performance")],
               ans: [
                 "p50 (the median): half of all requests finish faster than this",
                 "p95 and p99: the latency that 95 or 99 percent of requests beat — where the slow tail lives",
@@ -1007,7 +1007,7 @@
           intro: "The honest answer to make it a hundred million usually begins with stop doing it on one machine. That part is obvious. What you split on, and what goes wrong when the split is uneven, is not.",
           diagrams: ["skew", "tail"],
           steps: [
-            { t: "Read DDIA chapter 6 in full",
+            { t: "Read DDIA 2e chapter 7, Sharding, in full",
               close: [
                 { k: "word", q: "What is the name for the partitioning scheme where a hash of the key picks the partition?", a: "Hash partitioning" },
                 { k: "blank", q: "___ partitioning keeps a contiguous range of keys on one partition, which keeps range queries efficient but concentrates load if access is skewed.", a: "Key-range" },
@@ -1019,9 +1019,9 @@
               ],
               d: "Partitioning, partition keys, rebalancing and request routing. The chapter that pays for itself.",
               m: 45,
-              where: "DDIA 2e chapter 7, 'Sharding' (confirmed) - index: sharding; partitioning; hot spots; skewed workload; rebalancing. Read the key-value sharding sections, then skewed workloads and relieving hot spots, then request routing. Secondary Indexes, Rebalancing Partitions, Request Routing",
+              where: "DDIA 2e, ch. 7 Sharding → Sharding of Key-Value Data (Sharding by Key Range, Sharding by Hash of Key, Consistent Hashing, then Skewed Workloads and Relieving Hot Spots), then Request Routing, then Sharding and Secondary Indexes. This was chapter 6, Partitioning, in the 1st edition",
               out: "key-range versus hash partitioning distinguished in your own words, plus what a rebalancing strategy must avoid",
-              links: [ddia("chapter 7, Sharding")],
+              links: [ddia("ch. 7 Sharding → Sharding of Key-Value Data → Skewed Workloads and Relieving Hot Spots")],
               ans: [
                 "Key-range partitioning: each partition owns a contiguous range of keys, which keeps range queries efficient but concentrates load if access is skewed toward one range",
                 "Hash partitioning: a hash of the key picks the partition, which spreads load evenly but destroys the ability to do efficient range scans",
@@ -1057,7 +1057,7 @@
               ],
               d: "The second diagram is the whole argument. It is also one of the most useful things you can say out loud in a systems interview, because it shows you think about systems rather than components.",
               m: 20,
-              where: "DDIA 2e - index: tail latency amplification; percentiles. The fan-out discussion inside the response-time sections, plus the tail diagram above",
+              where: "DDIA 2e, ch. 2 Defining Nonfunctional Requirements → Describing Performance → Use of Response Time Metrics, the tail latency amplification part, plus the tail diagram above",
               out: "the 63 percent number reproduced from 0.99 to the power 100, and one sentence on why a component's p99 becomes the system's typical case",
               links: [L.latency],
               ans: "If a request fans out to 100 shards and waits for all of them, the request is fast only when every one of the 100 shards is fast. Each shard is slow one percent of the time, so each is fast with probability 0.99, and the chance all 100 are independently fast is 0.99 to the power 100. Using natural logs, the natural log of 0.99 is about minus 0.01, multiplied by 100 gives about minus 1.005, and e to the power minus 1.005 is about 0.366 — so there is roughly a 37 percent chance every shard is fast, and about 63 percent of requests hit at least one slow shard and are themselves slow. A component's one-percent-slow tail becomes the system's typical case, because fan-out multiplies the chance of hitting that tail by the number of things being fanned out to." },
@@ -1291,7 +1291,7 @@
           intro: "The back-of-envelope estimate is asked constantly and is mostly a willingness to do arithmetic out loud. This session is practice at doing it out loud.",
           diagrams: ["storage"],
           steps: [
-            { t: "Read the first half of DDIA chapter 3",
+            { t: "Read the first half of DDIA 2e chapter 4, Storage and Retrieval",
               sd: [{ v: "overview", a: "pattern-scaling-writes", why: "Write-optimised storage: where LSM-trees show up as an interview technique." }, { v: "overview", a: "pattern-search", why: "Inverted indexes and full-text search, the other structures that chapter covers." }],
               close: [
                 { k: "figure", q: "In the storage figure, which structure is drawn updating a page directly in place: the LSM-tree or the B-tree?", a: "The B-tree. The LSM-tree appends to an in-memory memtable and flushes to sorted files merged later, rather than updating a page in place." },
@@ -1306,10 +1306,10 @@
               ],
               d: "LSM-trees against B-trees, at the level of why writes are cheap in one and reads in the other. Not the implementation.",
               m: 40,
-              where: "DDIA 2e - index: LSM-tree; B-tree; hash index; log-structured storage. The storage-and-retrieval chapter, from hash indexes through the B-tree and LSM-tree comparison, plus the short other-indexing sectructures after it",
+              where: "DDIA 2e, ch. 4 Storage and Retrieval → Storage and Indexing for OLTP → Log-Structured Storage (hash indexes, SSTables, LSM-trees, Bloom filters), then B-Trees, then Comparing B-Trees and LSM-Trees. Skim the other index structures after it",
               out: "your own sentence on why writes are cheap in an LSM-tree and reads can span layers, and the reverse for a B-tree",
               skip: "From 'Transaction Processing or Analytics?' onward — column-oriented storage and OLAP schemas are a different session",
-              links: [ddia("look up LSM-tree and B-tree")],
+              links: [ddia("ch. 4 Storage and Retrieval → Storage and Indexing for OLTP → Comparing B-Trees and LSM-Trees")],
               ans: [
                 "A basic hash index keeps an in-memory map from key to byte offset in an append-only log — fast point lookups, but it must fit in memory and cannot do range queries",
                 "An LSM-tree makes writes cheap because they are sequential appends to an in-memory structure, flushed to sorted files and merged later by background compaction",
@@ -1600,7 +1600,7 @@
           intro: "A one-in-a-million failure happens a hundred times a day at this scale. Partial failure stops being an edge case and becomes the normal operating condition.",
           diagrams: ["retry"],
           steps: [
-            { t: "Read DDIA chapter 8, then skim chapter 11's delivery guarantees",
+            { t: "Read DDIA 2e chapter 9, then skim chapter 12's fault tolerance and idempotence",
               sd: [{ v: "overview", a: "pattern-reliability", why: "Replication, timeouts, circuit breakers and bulkheads: the chapter as a toolkit." }],
               close: [
                 { k: "pick", q: "A node comes back from a long pause still believing it holds a lock it actually lost. What stops its stale write from corrupting data?",
@@ -1615,11 +1615,11 @@
               ],
               d: "Unreliable networks, unreliable clocks, and why partial failure is the defining problem of distributed systems.",
               m: 50,
-              where: "DDIA 2e chapter 9, 'The Trouble with Distributed Systems' (confirmed), in full - index: partial failure; unreliable networks; unreliable clocks; fencing token. Then, for idempotence, index: idempotence; exactly-once. 'Fault Tolerance' section under Processing Streams, skimmed",
+              where: "DDIA 2e, ch. 9 The Trouble with Distributed Systems, in full: Faults and Partial Failures, Unreliable Networks (Timeouts and Unbounded Delays), Unreliable Clocks, Knowledge, Truth, and Lies (fencing tokens). Then skim ch. 12 Stream Processing → Processing Streams → Fault Tolerance → Idempotence (read Microbatching and Checkpointing and Atomic Commit Revisited just before it); then ch. 13 A Philosophy of Streaming Systems → Aiming for Correctness → The End-to-End Argument for Databases (Exactly-once execution of an operation, Duplicate suppression)",
               out: "one sentence each on what makes networks, clocks and 'truth' unreliable in a distributed system",
               skip: "In chapter 11: Transmitting Event Streams, Databases and Streams, and the rest of Processing Streams — only Fault Tolerance is this session's target",
-              nlm: "Does the timeout-versus-failure distinction in chapter 8 depend on the network protocol, or does it hold for any unreliable network? Does 'Fault Tolerance' in chapter 11 assume idempotent processing, or does it also cover the non-idempotent case?",
-              links: [ddia("chapter 9, plus idempotence")],
+              nlm: "Does the timeout-versus-failure distinction in chapter 8 depend on the network protocol, or does it hold for any unreliable network? Does 'Fault Tolerance' in chapter 12 assume idempotent processing, or does it also cover the non-idempotent case?",
+              links: [ddia("ch. 9 The Trouble with Distributed Systems; ch. 12 Stream Processing → Fault Tolerance → Idempotence")],
               ans: [
                 "Networks are unreliable: packets can be delayed, dropped, reordered or duplicated, and a timeout cannot tell a slow response from a lost one",
                 "Clocks are unreliable: they drift and can jump during resynchronisation, so wall-clock timestamps cannot be trusted to order events across machines",
@@ -1905,7 +1905,7 @@
             d: "Control definition, then a test plan with the attributes to check, then the population pulled by a query, then a sample, then evidence retrieved for each sampled item, then attribute testing, then citation verification, then exceptions, then a drafted conclusion, then the reviewer queue. Only attribute testing and the drafted narrative are the model. Everything that decides a fact is code. Say that split out loud; it is the whole design in one sentence." },
           { t: "Design sample selection as seeded code",
             d: "Random sampling with a stored seed, or judgmental sampling where a human records the reason. The seed, the population query and its row count all go into the workpaper, so anyone can rerun the selection and get the same items. Sample size comes from the firm's methodology table, not from a prompt. The general argument underneath is that a deterministic, side-effect-free step can simply be re-run, which is why it belongs in code and not in a model call.",
-            links: [bk("DDIA 2e - index: MapReduce; fault tolerance. The batch-processing chapter")] },
+            links: [bk("DDIA 2e, ch. 11 Batch Processing → the MapReduce and dataflow-engine sections, and how they tolerate faults by rerunning a failed task")] },
           { t: "Design citation as constrained selection, not generation",
             sd: [{ v: "overview", a: "pattern-grounding", why: "Citations, structured output and refusal: the pattern this design is one instance of." }],
             d: "Evidence is chunked with its coordinates: document, page, bounding box, character span. The model sees chunks labelled E1 to En and must cite handles. It never writes a document name or page number. Code resolves each handle to coordinates and renders the red box. Then a verifier checks that the cited span actually contains the extracted value, by exact match for amounts, dates and IDs, and fails closed if it does not. That is the same structure as the opaque handles in your memory system, and you should say so." },
@@ -1917,7 +1917,7 @@
           { t: "Design the reviewer loop and the audit log",
             sd: [{ v: "overview", a: "pattern-agent-safety", why: "Human in the loop and least privilege, for a system whose output someone signs." }, { v: "overview", a: "pattern-consistency", why: "Event sourcing: the audit log as the source of truth and the workpaper as a view of it." }],
             d: "Every model call is logged with the handles it saw, its output, model version and prompt version. Every reviewer decision is logged too, including overrides. Overrides are the most valuable data the company has: they are labelled examples of exactly where the system is wrong, and they feed evaluation directly. The systems name for this is event sourcing: an append-only log of immutable facts, with the workpaper as a derived view that can be rebuilt from it. Say that sentence and the audit log stops sounding like logging.",
-            links: [bk("DDIA 2e - index: event sourcing; immutability. The stream-processing chapter")] },
+            links: [bk("DDIA 2e, ch. 12 Stream Processing → Databases and Streams → Change Data Capture, Event Sourcing, then State, Streams, and Immutability")] },
           { t: "Answer the evaluation question before it is asked",
             sd: [{ v: "overview", a: "pattern-grounding", why: "Eval gates and shadow runs: how a quality bar is enforced on every change." }],
             d: "Build a gold set from past signed workpapers. Track attribute-level agreement with reviewers, not just end verdicts. Citation precision is fully deterministic — does the cited span contain the value — so it can gate releases. Watch the insufficient rate: rising means evidence retrieval got worse, falling suddenly may mean the model started guessing. Replay the gold set on every model or prompt change, which is your eval harness." },
@@ -1950,7 +1950,7 @@
           intro: "Caching is the last systems topic, and then the whole milestone gets spoken aloud in one five-minute answer.",
           diagrams: ["cache"],
           steps: [
-            { t: "Read DDIA chapter 5 on replication, lightly",
+            { t: "Read DDIA 2e chapter 6, Replication, lightly",
               sd: [{ v: "overview", a: "pattern-consistency", why: "Read-your-writes and quorums, the replication ideas that come up in interviews." }],
               close: [
                 { k: "word", q: "What is the delay between a write landing on the leader and that write becoming visible on a follower called?", a: "Replication lag" },
@@ -1963,10 +1963,10 @@
               ],
               d: "For staleness, replication lag and read-your-writes. Those three ideas are most of what a cache costs you.",
               m: 30,
-              where: "DDIA 2e - index: replication lag; read-your-writes consistency; eventual consistency. The problems-with-replication-lag sections, read-your-writes in particular",
+              where: "DDIA 2e, ch. 6 Replication → Problems with Replication Lag → Reading Your Own Writes in particular, then Monotonic Reads and Consistent Prefix Reads",
               out: "one sentence: what a client can see immediately after its own write, and why that is a staleness problem before it is ever a caching problem",
               skip: "Leader election, multi-leader conflict resolution and leaderless replication — this pass only needs the staleness argument, not the rest of the chapter",
-              links: [ddia("look up replication lag")],
+              links: [ddia("ch. 6 Replication → Problems with Replication Lag → Reading Your Own Writes")],
               ans: [
                 "Replication lag is the delay between a write landing on the leader and that write becoming visible on a follower",
                 "Read-your-writes consistency guarantees a user immediately sees their own write, even when reads are served from a lagging replica",
@@ -3236,7 +3236,7 @@
         res: [R.latency],
         do: [
           { a: "Read the percentiles pages, then say which constraint you are dismissing and why", m: 5,
-            where: "DDIA 2e - index: percentiles; response time. Sections 'Describing Performance' through 'Use of Response Time Metrics'. It is not in 2e chapter 1; look it up in the index rather than by chapter number",
+            where: "DDIA 2e, ch. 2 Defining Nonfunctional Requirements → Describing Performance → from Latency and Response Time through Use of Response Time Metrics. Chapter 2, not chapter 1",
             out: "one sentence: this is a batch pipeline, so p99 response time is not the constraint, throughput per engagement and cost per page are",
             skip: "the rest of chapter 1. Reliability and maintainability are not being asked about here.",
             ans: "This is a batch ingestion pipeline, not a live request path, so p99 response time is the wrong thing to optimise for. Throughput per engagement and cost per page are the real constraints, because nobody is waiting on a single response the way a live user would be." },
@@ -3787,10 +3787,10 @@
           { k: "word", q: "What per-tenant resource should never be shared, alongside storage and index?", a: "Encryption keys (and cache)." }
         ],
         say: "Silo — separate storage and index per tenant — against pool with row-level isolation. Per-tenant encryption keys. No shared cache. Your Postgres row-level-security story from alfred_ is real evidence here.",
-        res: [bk("DDIA 2e chapter 7, Sharding")],
+        res: [bk("DDIA 2e, ch. 7 Sharding → Sharding of Key-Value Data")],
         do: [
           { a: "Read 'Partitioning by Hash of Key'", m: 5,
-            where: "DDIA 2e chapter 7, 'Sharding' (confirmed) - index: hash partitioning; consistent hashing. The sharding-by-hash section, a few pages",
+            where: "DDIA 2e, ch. 7 Sharding → Sharding of Key-Value Data → Sharding by Hash of Key, then Consistent Hashing. A few pages",
             skip: "'Partitioning by Key Range', earlier in the same chapter — hashing is the relevant scheme for a tenant key",
             ans: [
               "Hashing the partitioning key spreads data evenly across shards, avoiding the hot spots a naive key-range scheme produces on sequential keys",
@@ -4302,7 +4302,7 @@
         sd: [{ v: "overview", a: "pattern-consistency", why: "Exactly-once as a consistency technique, next to change data capture." }],
         close: [
           { k: "blank", q: "Exactly-once processing is really at-least-once ___ plus idempotent effects.", a: "delivery" },
-          { k: "word", q: "Per the notes, which DDIA chapter is the canonical explanation of idempotence?", a: "Chapter 11." },
+          { k: "word", q: "Where in DDIA 2e is idempotence explained, and where is it taken end to end?", a: "Chapter 12, Stream Processing, under Fault Tolerance, the Idempotence subsection; chapter 13, Aiming for Correctness, takes it end to end with request ids and duplicate suppression." },
           { k: "short", q: "One sentence connecting this to your own bench.",
             a: "Exactly-once evaluation in the bench is really at-least-once replay plus idempotent tool responses — retries can repeat, but every write lands in the same fake world and produces the same stored effect each time." },
           { k: "pick", q: "Your replay mechanism can call a tool twice for the same step because of a retry. What actually makes the overall result exactly-once?",
@@ -4311,11 +4311,11 @@
           { k: "why", q: "Why is exactly-once delivery on its own treated as unachievable, with idempotent effects doing the real work instead?",
             a: "Because a message can always be duplicated or lost undetectably over an unreliable network, so systems instead guarantee at-least-once delivery and make the effect of processing idempotent, so a duplicate causes no harm." }
         ],
-        say: "Exactly-once processing is really at-least-once delivery plus idempotent effects. DDIA's section on idempotence in chapter 11 is the canonical explanation.",
-        res: [bk("DDIA 2e - index: idempotence. The stream-processing chapter")],
+        say: "Exactly-once processing is really at-least-once delivery plus idempotent effects. DDIA 2e explains it in chapter 12, Stream Processing, under Fault Tolerance → Idempotence.",
+        res: [bk("DDIA 2e, ch. 12 Stream Processing → Processing Streams → Fault Tolerance → Idempotence")],
         do: [
           { a: "Read the section", m: 5,
-            where: "DDIA 2e - index: idempotence; exactly-once semantics. The stream-processing chapter's fault-tolerance section, the idempotence subsection" },
+            where: "DDIA 2e, ch. 12 Stream Processing → Processing Streams → Fault Tolerance → Idempotence (read Microbatching and Checkpointing and Atomic Commit Revisited just before it); then ch. 13 A Philosophy of Streaming Systems → Aiming for Correctness → The End-to-End Argument for Databases (Exactly-once execution of an operation, Duplicate suppression)" },
           { a: "Write one sentence connecting it to your bench", m: 4,
             out: "one written sentence: exactly-once evaluation is at-least-once replay plus idempotent tool responses",
             ans: "Exactly-once evaluation in my bench is really at-least-once replay plus idempotent tool responses. The delivery can retry or repeat; what makes the result exactly-once is that every write lands in the same fake world and produces the same stored effect each time." }

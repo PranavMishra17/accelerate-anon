@@ -75,7 +75,13 @@ The long form, for the material itself, is `PROTOCOL.md`, section **How you stud
   `https://aiengineeringfromscratch.com/lesson?path=phases%2F<phase>%2F<lesson>`. Verify
   the path is listed in the site's `data.js` (or with
   `gh api repos/rohitg00/ai-engineering-from-scratch/contents/phases/<phase>`). DDIA is
-  cited as "DDIA, 2e: <topic>", never with 1st-edition chapter numbers. Link guide
+  cited as "DDIA, 2e: ch. N Title → Section → Subsection", never "look it up in the index"
+  (he could not find things that way) and never 1st-edition numbers. 2e has 14 chapters:
+  1 Trade-Offs, 2 Nonfunctional Requirements, 3 Data Models, 4 Storage and Retrieval,
+  5 Encoding, 6 Replication, 7 Sharding, 8 Transactions, 9 Trouble with Distributed Systems,
+  10 Consistency and Consensus, 11 Batch, 12 Stream Processing, 13 A Philosophy of
+  Streaming Systems, 14 Doing the Right Thing (numbers checked against Kleppmann's
+  `ept/ddia2-references`). No page numbers until he supplies them from his copy. Link guide
   techniques at `SYSTEM%20DESIGN.html#/patterns/<pattern>/<technique>`.
 - **Quizzes**: open questions only, one at a time in a pop-up, at most eight. No blanks, no
   one-word answers.

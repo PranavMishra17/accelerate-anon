@@ -318,3 +318,13 @@ Asked for by Pranav: the GitHub folder view is hard to read and navigate. All 11
 links (57 distinct lessons) in the reading, the figure notes and the study list now point
 at the lesson's page on aiengineeringfromscratch.com. Every path was checked against the
 site's own catalog, and three were opened. No change to the plan or to `CHARTER.md`.
+
+**2026-09-26 — Every DDIA reference names the chapter, section and subsection.**
+Asked for by Pranav, who could not find the idempotence reading in his copy. References
+said "look it up in the index", and five step titles still carried 1st-edition chapter
+numbers (chapter 6 for sharding, chapter 11 for idempotence). All 36 now read "DDIA 2e,
+ch. N Title → Section → Subsection" in the tracker, the reading, `MILESTONE-1.md` and
+`STUDY-LIST.md`. Chapter numbers are checked against Kleppmann's own 2e references
+repository; section names against a chapter-by-chapter 2e reading. Page numbers are left
+out: no source reachable here gives them for the 2nd edition. No change to the plan or to
+`CHARTER.md`.
