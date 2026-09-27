@@ -379,3 +379,12 @@ Asked for by Pranav: pure white was hard on the eyes, and the dark sheet ran to 
 panel's edge like a box with a stretched header. The panel and its list are now a warm
 off-white, and the dark sheet is a rounded card set inside the panel with even margins.
 No change to the plan or to `CHARTER.md`.
+
+**2026-09-27 — Questions to ask, as three Cs.**
+Asked for by Pranav. The flat list of eight questions is now three kinds, built from
+interview advice with every link checked: clarifying, asked during the interview and tied
+to the decision each changes (six, including 'who is the user of this screen', the
+question the mock's design gap needed); contributing, at the end, about their problems
+and what success looks like (six); and collaborating, how the team decides, reviews and
+ships (five). Each kind has when, why and how; each question has who to ask, how to loop
+it in, and what it shows. No change to the plan or to `CHARTER.md`.

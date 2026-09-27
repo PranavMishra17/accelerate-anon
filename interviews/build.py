@@ -134,7 +134,7 @@ def build(module_name):
         "who": L["who"], "format": L["format"], "bar": L["bar"],
         "sessions": [{k: s.get(k) for k in ("id", "name", "blurb", "intro", "len", "day", "steps", "study", "quiz", "hasTrackerQuiz", "figs")}
                      for s in sessions],
-        "scripts": getattr(m, "SCRIPTS", []), "drills": getattr(m, "DRILLS", []), "qa": getattr(m, "QA", []), "ask": getattr(m, "ASK", []), "traps": getattr(m, "TRAPS", []),
+        "scripts": getattr(m, "SCRIPTS", []), "drills": getattr(m, "DRILLS", []), "qa": getattr(m, "QA", []), "ask": getattr(m, "ASK", []), "ask3": getattr(m, "ASK_3C", []), "traps": getattr(m, "TRAPS", []),
         "tables": getattr(m, "KITARU_TABLES", []), "admire": getattr(m, "ADMIRE", ""), "kitaruLead": getattr(m, "KITARU_LEAD", ""),
         "figures": L.get("figures", []), "mockHow": getattr(m, "MOCK_HOW", ""), "mocks": mocks[-2:],
         "planKicker": L.get("plan_kicker", ""), "mechTitle": L.get("mech_title", ""),

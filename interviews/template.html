@@ -186,6 +186,16 @@ details.fold .ft { font-weight: 700; font-size: 19px; }
 details.fold .fs { font-size: 15px; color: var(--muted); }
 details.fold > summary:hover .ft { color: var(--accent); }
 .fold-body { padding: 0 4px 26px; }
+.c3 { margin: 6px 0 34px; }
+.c3-t { font-size: 20px; margin: 18px 0 4px; }
+.c3-w { display: block; font-size: 15px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+.c3-why { font-size: 16.5px; color: var(--soft); margin: 8px 0 10px; }
+.c3-how { font-size: 15.5px; margin-bottom: 14px; }
+.c3-q { padding: 14px 0 14px 16px; border-left: 2px solid var(--rule); margin: 0 0 12px; }
+.c3-q .to { display: block; font-size: 13.5px; font-weight: 700; color: var(--muted); letter-spacing: .02em; }
+.c3-q .q { display: block; font-weight: 700; font-size: 17.5px; line-height: 1.45; margin: 2px 0 6px; }
+.c3-q .lp, .c3-q .wy { display: block; font-size: 15.5px; color: var(--soft); line-height: 1.5; }
+.c3-q .lp b, .c3-q .wy b { color: var(--ink); }
 .showup li b { color: var(--ink); }
 .banks { border-top: 1px solid var(--rule); margin-top: 6px; }
 .bank { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 18px; width: 100%; text-align: left; background: none; border: 0;
@@ -479,7 +489,7 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
   /* ---------------------------------------------------------------- tabs */
   var TABS = [
     { id: "overview", label: "Overview", show: function () { return true; } },
-    { id: "prep", label: "Prep", show: function () { return LOOP.scripts.length || LOOP.drills.length || LOOP.qa.length || LOOP.ask.length; } },
+    { id: "prep", label: "Prep", show: function () { return LOOP.scripts.length || LOOP.drills.length || LOOP.qa.length || LOOP.ask.length || (LOOP.ask3 || []).length; } },
     { id: "design", label: "Design", show: function () { return LOOP.tables.length || LOOP.figures.length; } },
     { id: "own", label: (LOOP.own && LOOP.own.tab) || "Yours", show: function () { return !!LOOP.own; } },
     { id: "sessions", label: "Sessions", show: function () { return LOOP.sessions.length; } },
@@ -628,7 +638,28 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
       return body;
     }
     if (LOOP.drills.length) { drills(fold("practise", "Practise aloud", LOOP.drills.length + " timed questions, out loud")); }
-    if (LOOP.ask.length) {
+    var three = LOOP.ask3 || [];
+    if (three.length) {
+      /* Questions you ask, as three Cs: when, why and how for each kind, then each question
+         with who to ask, how to loop it in, and what it shows. */
+      var n3 = three.reduce(function (n, k) { return n + k.items.length; }, 0);
+      var a3 = fold("ask", "Questions to ask: clarify, contribute, collaborate", n3 + " questions, in three kinds");
+      three.forEach(function (k) {
+        var sec = el("div", "c3"); sec.id = "ask-" + k.id;
+        sec.appendChild(el("h3", "c3-t", esc(k.title) + '<span class="c3-w">' + inl(k.when) + "</span>"));
+        sec.appendChild(el("p", "c3-why", inl(k.why)));
+        var how = el("ul", "mk-list c3-how");
+        k.how.forEach(function (t) { how.appendChild(el("li", "", inl(t))); });
+        sec.appendChild(how);
+        k.items.forEach(function (x) {
+          sec.appendChild(el("div", "c3-q",
+            '<span class="to">' + esc(x.to) + '</span><span class="q">' + inl(x.q) + "</span>" +
+            '<span class="lp"><b>Loop it in.</b> ' + inl(x.loop) + "</span>" +
+            '<span class="wy"><b>What it shows.</b> ' + inl(x.why) + "</span>"));
+        });
+        a3.appendChild(sec);
+      });
+    } else if (LOOP.ask.length) {
       var a = fold("ask", "Questions to ask", LOOP.ask.length + " questions, one at a time, then wait");
       LOOP.ask.forEach(function (x) { a.appendChild(el("div", "ask", '<span class="to">' + esc(x.to) + "</span><span>" + inl(x.q) + "</span>")); });
     }
