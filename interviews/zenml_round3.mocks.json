@@ -204,7 +204,7 @@
           "completeness"
         ],
         "ref": "#say-refunds",
-        "prep": "Four action items, the agent creates three",
+        "prep": "What makes a run count as done",
         "land": "Enumerable means asserted: three of four fails, and the refunds bug is why."
       },
       {
@@ -239,7 +239,7 @@
         "figs": [
           "passk"
         ],
-        "prep": "How do you know the judge is still right",
+        "prep": "How do you decide what becomes an eval case",
         "land": "Two judges: the scanner's is calibrated, the completeness one is not yet. Re-judge frozen outputs to catch drift."
       },
       {

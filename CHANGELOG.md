@@ -397,3 +397,18 @@ next. Each theme lists what they may probe, gives one answer, and adds lines to 
 when they push. Theme 1 is Pranav's text verbatim; the others follow its voice and use
 only facts already in the prep. The panel shows probes on the light side and the swap-in
 lines on the dark sheet under the answer. No change to the plan or to `CHARTER.md`.
+
+**2026-09-27 — Prep reordered and merged; the story in Pranav's own words.**
+Asked for by Pranav, with four answers in his own words. The story bank is now ten items
+in one shape (the question, what they may probe, one answer, lines to swap in): his career,
+why this role and ZenML, why leave alfred_, and his days at alfred_ (all four verbatim),
+why he left WheelPrice and what he did there (written in his voice from his WheelPrice
+notes), the bench in two minutes, what he found reading Kitaru's source (he did not run
+it, and the earlier claim that he imported traces into it is removed), the comparison and
+the close. The banks now run: story, the role, product engineering on Kitaru, tools and
+the landscape (grounded in what he has built with: TypeScript and Deno, FastAPI and
+Pydantic, a Postgres queue, his own agent loop, model choice and cost), his work at depth
+(merged into stories he can remember in parts), designing replay and evals, a new bank on
+Kitaru's own details to drop in unasked, and backend depth. Similar questions were merged
+before new ones were added: 73 questions became 53. No change to the plan or to
+`CHARTER.md`.

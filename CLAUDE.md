@@ -84,6 +84,12 @@ The long form, for the material itself, is `PROTOCOL.md`, section **How you stud
   Streaming Systems, 14 Doing the Right Thing (numbers checked against Kleppmann's
   `ept/ddia2-references`). No page numbers until he supplies them from his copy. Link guide
   techniques at `SYSTEM%20DESIGN.html#/patterns/<pattern>/<technique>`.
+- **His own answers are verbatim.** When he supplies an answer in his words, it goes in
+  exactly as written (mark it `# verbatim`); no polishing unless something is factually
+  wrong, and then ask. New answers are written in his voice ("I think", "pretty much", a
+  real alfred_ example, a plain closing line), using only facts from his prep, the master
+  reference and `job_search/profile/`. Interview answers follow one shape: the question,
+  what they may probe, one answer, and lines to swap in.
 - **Quizzes**: open questions only, one at a time in a pop-up, at most eight. No blanks, no
   one-word answers.
 - **Words**: plain sentence case, short sentences, no emojis, no marketing words, no

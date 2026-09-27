@@ -116,7 +116,7 @@ def build(module_name):
     # figures written on the question itself join whatever QA_EXTRA gave it.
     for g in getattr(m, "QA", []):
         for it in g["items"]:
-            it["id"] = "q-" + re.sub(r"[^a-z0-9]+", "-", it["q"].lower()).strip("-")[:60]
+            it["id"] = it.get("id") or "q-" + re.sub(r"[^a-z0-9]+", "-", it["q"].lower()).strip("-")[:60]
             if it.get("figs"):
                 ln = it.setdefault("learn", {"figs": [], "read": [], "sdLinks": []})
                 ln["figs"] = ln.get("figs", []) + [f for f in it["figs"] if f not in ln.get("figs", [])]

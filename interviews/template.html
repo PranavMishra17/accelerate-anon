@@ -563,7 +563,8 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
     var banks = [];
     if (LOOP.scripts.length) {
       banks.push({ id: "say", title: "Your story, in the words to say it", blurb: LOOP.storyBlurb || "", items: LOOP.scripts.map(function (x) {
-        return { id: "say-" + x.id, q: x.title, short: x.title, tests: x.when, a: x.say, land: x.land, never: x.never, notes: x.notes,
+        return { id: "say-" + x.id, q: x.title, short: x.short || x.title, tests: x.when, a: x.say, land: x.land, never: x.never, notes: x.notes,
+          probes: x.probes, swaps: x.swaps,
           meta: x.length ? x.length.charAt(0).toUpperCase() + x.length.slice(1) + "." : "",
           drill: LOOP.drills.some(function (d) { return d.id === x.id; }) ? x.id : null };
       }) });
