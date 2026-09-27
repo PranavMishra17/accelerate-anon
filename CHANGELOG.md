@@ -412,3 +412,17 @@ Pydantic, a Postgres queue, his own agent loop, model choice and cost), his work
 Kitaru's own details to drop in unasked, and backend depth. Similar questions were merged
 before new ones were added, so the count held at 57 while the overlaps went. No change to the plan or to
 `CHARTER.md`.
+
+**2026-09-27 — Two big design questions, each with its own board.**
+Asked for by Pranav, at the end of Backend depth. First: your eval harness, why it has
+this shape, what you would keep and change if you rebuilt it, what breaks at ten and a
+hundred times in the order it breaks (authoring first, then drift, redaction, one runner,
+repeat cost, multi-turn), how you would scale it (an immutable base world with a
+copy-on-write fork per run, automated world building from the scanner, a leased queue that
+runs only affected cases) and how you would productionize it for other teams. Second: if
+Kitaru moved toward your design, with stateful worlds, fakes and multi-turn runs: the
+requirements, new entities, infrastructure changes (a resolver chain in the adapter,
+a world store, fakes in the SDK, the turn loop in the worker), trade-offs, four deep dives
+and what to build first. Both draw on the replay-design and multi-turn sessions, the
+teardown's scaling section and the mind map; each is a numbered board on the light side
+and a five-beat story on the dark sheet. No change to the plan or to `CHARTER.md`.

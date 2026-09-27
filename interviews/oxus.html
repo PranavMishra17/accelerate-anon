@@ -260,6 +260,8 @@ dialog.convo::backdrop { background: rgba(10, 10, 14, 0.62); }
 .cv-col .lab { font-size: 13px; font-weight: 700; color: var(--muted); margin: 18px 0 6px; }
 .cv-col .mk-list { font-size: 15.5px; line-height: 1.55; }
 .cv-said .ex-said { font-size: 15.5px; }
+.cv-part { font-size: 16px; margin: 26px 0 6px; padding-top: 14px; border-top: 1px solid var(--rule); color: var(--ink); }
+.cv-part-lead { font-size: 15px; color: var(--soft); margin: 0 0 6px; }
 
 /* what to say: a dark sheet in a typewriter face, the one place on the screen that is dark */
 .cv-say { background: var(--sheet); color: var(--sheet-ink); scrollbar-color: var(--sheet-rule) transparent; border-radius: 10px; margin-top: 16px; padding: 22px 28px 32px;
@@ -1140,6 +1142,12 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
         pane.appendChild(head);
         var c = panelCols(pane, "Understand it", "What to say");
         panelSection(c.left, "What they may probe", panelList(x.probes));
+        /* A big design question carries its own board: titled sections, read in order. */
+        (x.parts || []).forEach(function (p) {
+          c.left.appendChild(el("h4", "cv-part", inl(p.title)));
+          if (p.lead) { c.left.appendChild(el("p", "cv-part-lead", inl(p.lead))); }
+          panelList(p.items).forEach(function (u) { c.left.appendChild(u); });
+        });
         panelSection(c.left, "The nuance", panelList(x.notes));
         panelSection(c.left, "Avoid", panelList(x.never, "mk-bad"));
         learn(c.left, x.learn || {});

@@ -27,7 +27,10 @@ things:
    present yourself), then each bank (`SCRIPTS`, then each `QA` group in `QA_ORDER`) as one
    row that opens in the one-screen panel, then drills, questions to ask, traps and
    `SOURCES` folded shut. A question can carry `short` (its label in the list), `land` (the
-   one point), `notes` (the nuance) and `figs`; the answer shows on the dark sheet.
+   one point), `notes` (the nuance), `figs`, `probes` (what they may ask next) and `swaps`
+   (lines to swap in); the answer shows on the dark sheet. A big design question also
+   carries `parts`: titled sections (why, what I'd change, what breaks, how to scale, how
+   to productionize, trade-offs, deep dives) drawn as a board on the light side.
    Questions you ask are `ASK_3C`: clarifying (during the interview, each tied to the
    decision it changes), contributing (at the end, about their problems and what success
    looks like) and collaborating (how the team decides, reviews and ships), each with when,
