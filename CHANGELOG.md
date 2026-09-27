@@ -322,7 +322,7 @@ site's own catalog, and three were opened. No change to the plan or to `CHARTER.
 **2026-09-26 — Every DDIA reference names the chapter, section and subsection.**
 Asked for by Pranav, who could not find the idempotence reading in his copy. References
 said "look it up in the index", and five step titles still carried 1st-edition chapter
-numbers (chapter 6 for sharding, chapter 11 for idempotence). All 36 now read "DDIA 2e,
+numbers (chapter 6 for sharding, chapter 11 for idempotence). All 50 passages now read "DDIA 2e,
 ch. N Title → Section → Subsection" in the tracker, the reading, `MILESTONE-1.md` and
 `STUDY-LIST.md`. Chapter numbers are checked against Kleppmann's own 2e references
 repository; section names against a chapter-by-chapter 2e reading. Page numbers are left
