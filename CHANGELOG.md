@@ -350,3 +350,10 @@ verdicts, and for the one picked, what was asked and how it landed on top, what 
 the answer, how to approach it, the figure) on the right, each scrolling on its own.
 Arrows move between turns; Escape closes. The mock page keeps the read and a one-line list
 of turns. No change to the plan or to `CHARTER.md`.
+
+**2026-09-27 — The mock conversation reads light, with the answer on a dark typewriter sheet.**
+Asked for by Pranav. The panel is always light whatever the page's theme, the header is a
+small strip (who, the question, the verdict, what they were testing), and the turn list
+fits all ten turns. What to say is the one dark area: the point to land, then the answer
+in a typewriter face with the key phrases in amber. No change to the plan or to
+`CHARTER.md`.
