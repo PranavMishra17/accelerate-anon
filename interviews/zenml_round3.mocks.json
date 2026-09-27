@@ -1,8 +1,193 @@
 [
   {
-    "title": "Mock 1: Hamza and Alex, 26 minutes",
-    "when": "Sunday 27 September 2026, 10:12 to 10:38",
-    "critique": "What landed\n- The bench from the ground up: one snapshot per task, users merged in with duplicate entities renamed (the three Michaels), the harness flag swapping only the provider call, the snapshot reset between runs.\n- Honesty about the judge: 'no calibration yet, it is my gut' was the right answer.\n- Two metrics in the end: completion (behind calls per task) and completeness against ground truth you hold.\n\nWhat to fix, in order of cost\n1. The design question collapsed. When lost, go to the smallest concrete thing: what the user sees, what they click, what changes next time. The answer was prepared (missFlow).\n2. The empty result is the harness inventing a fact: the same provenance gap you criticise in Kitaru. Name it before they do.\n3. Metrics took three turns to become concrete. Lead with the two numbers and one worked example.\n4. The intro ran about three minutes. Use the 40-second script: what you own, one number, then the bench.\n5. Your question to them was generic. Use a prepared one: is replay the wedge, or the product?\n\nBest version of the weakest answer (a better prompt misses every recording)\n\"I'd make the miss productive. Show the recorded call next to what the new agent sent, old query and new side by side. If they are equivalent, one click accepts it and writes a static alias, so the next replay hits. Deterministic, auditable, no threshold, and every accepted pair is labelled data for automatic matching later.\nThen split by effect. A read that misses can fall through to the customer's own environment, marked live on the node. A write that misses fails closed on a fork, never passthrough; at alfred_ every write declares itself as a write.\nThe limit: this fixes rephrasing, not a different path. For those few sessions, promote the trace into a small queryable world, which is what my bench does. The common case stays free.\"\n\nOn the empty result: \"That's a gap. An empty result tells the agent something false. I mark those runs, but I should score them as harness-caused and keep them out of the metric, or return an explicit 'not in snapshot' so the agent cannot mistake it for the truth.\"",
-    "transcript": "Hamza: Tell us what you're working on at alfred_, and what part you own.\nPranav: Founding engineer; making the agent reliable in production: eval infrastructure, memory architecture, orchestration. Working memory: one data model for work items that every source reconciles into. Then the eval bench: a production scanner with cheap rules and a calibrated judge flags failing turns; similar tasks across users are collected, their tool calls unioned and their fetched data put into one SQLite snapshot per task, with entities deduplicated; the real agent runs with a harness flag that swaps provider calls for the snapshot; the snapshot resets between runs.\n\nAlex: If the agent calls a tool not in the snapshot, what does pass through mean? Does it hit Gmail? How would you know?\nPranav: It never leaves the machine. The agent gets an empty result back; the call is marked so the snapshot can be enriched.\n\nAlex/Hamza: An empty result is a plausible answer. The agent concludes there are no meeting notes. How does scoring tell a bad call from a good call on a lie the harness told?\nPranav: With rich enough aggregation it rarely happens; the north star is turns or tool calls per completed task; out-of-union calls are flagged.\n\nHamza: An agent that stops early on the empty set looks more efficient. What makes a run count as done, concretely?\nPranav: Completion is the task done; failed runs are a separate class.\n\nAlex: Four action items, the agent makes three. Pass or fail, and what decides?\nPranav: Pass on completion. Ground truth per instance is known, so completeness is a second, orthogonal score; judged now with Claude Code rather than an LLM judge.\n\nAlex: How do you know the judge didn't move when the pass rate moves?\nPranav: No calibration yet; the harness is local and judged on my gut. Ground truth stays fixed; the bench reruns on tool, agent or subtask changes, and the reconciler appends new production cases.\n\nHamza: A customer imports Langfuse traces, improves the prompt, the CRM query changes, half the cohort misses and dies. What do we build?\nPranav: A read-tool policy that executes against the user's environment; simulated users; not sure.\nAlex: Tomorrow morning the customer sees half the runs died. What should that screen show?\nPranav: The recorded call against what the agent did; then last-turn replay, stateful world, simulated user; not sure.\nHamza: They say the two searches are the same. What button, and what changes for the next replay?\nPranav: Not sure; a bit lost.\n\nHamza: Questions for us?\nPranav: What do you need from a product engineer specifically?"
+    "id": "m1",
+    "title": "Mock 1: Hamza and Alex",
+    "when": "Sunday 27 September 2026, 10:12 to 10:38, 26 minutes",
+    "read": [
+      "The bench came across as real work: one snapshot per task, users merged into it with duplicate people renamed, the harness flag that swaps only the provider call. Alex said he wanted to think about it more, which is the reaction you want.",
+      "It went wrong in two places. When they pushed on the empty result, you defended it instead of naming it as a gap, and that is the same provenance problem you plan to criticise in Kitaru. Then the design question on misses collapsed, although the answer is already on your Prep tab. Both are fixable by tomorrow: say the limit first, and when lost, go to what the user sees and clicks."
+    ],
+    "landed": [
+      "How the bench works, from the ground up, with a concrete example task.",
+      "Honesty about the completeness judge: no calibration yet.",
+      "Two numbers in the end: completion and completeness against ground truth you hold."
+    ],
+    "fix": [
+      {"t": "When you are lost on a design question, go to the smallest concrete thing: what the user sees, what they click, what changes next time.", "ref": "x7"},
+      {"t": "Name the limit before they do. An empty result is the harness inventing a fact.", "ref": "x3"},
+      {"t": "Lead with the numbers and one worked example; it took three turns to get concrete on the metric.", "ref": "x4"},
+      {"t": "Keep the two judges apart: the scanner's judge is calibrated, the completeness judge is not.", "ref": "x6"},
+      {"t": "Intro in 45 seconds: what you own, one number, the bench headline.", "ref": "x1"}
+    ],
+    "exchanges": [
+      {
+        "id": "x1", "label": "What you own", "who": "Hamza",
+        "q": "Tell us what you're working on right now at alfred_, and what part of it you actually own.",
+        "tests": "Is the ownership real, and can you say it in under a minute?",
+        "said": ["Founding engineer; making the agent reliable in production through eval infrastructure, memory and orchestration. 5,000-plus subscribers. A long account of working memory: one data model for work items that email, Slack and meeting notes reconcile into. Then the whole bench: scanner, calibrated judge, similar tasks across users, one SQLite snapshot per task, the harness flag."],
+        "verdict": "partly", "why": "The content was right and specific, but it ran over three minutes with filler, and the bench detail arrived before they asked for it.",
+        "good": ["Concrete ownership: eval, memory, orchestration.", "A real number: 5,000-plus subscribers.", "Working memory explained through your own project, a good hook for later."],
+        "bad": ["Over three minutes; the first answer sets the pace for ninety.", "Filler: 'so to say', 'essentially', 'in a lot of degree'.", "You spent the bench story on the opener, so later answers repeated it."],
+        "approach": ["Three sentences: what alfred_ is with one number, what you own, the one piece most relevant to them. Then stop and let them choose where to go.", "Offer the depth as a choice: 'I can go into the eval bench or the memory work, whichever is more useful.'"],
+        "say": [
+          "I'm a founding engineer at alfred_, an AI executive assistant over email, calendar and work apps, with 5,000-plus active users. I own making the agent reliable in production: the eval infrastructure, the memory architecture, and the orchestration underneath.",
+          "Right now it's working memory: one model for every open work item, which email, Slack and meeting notes all reconcile into, so the agent can answer 'what's open today' from one place.",
+          "The part closest to Kitaru is the eval bench I built: real production failures replayed against new agent versions, with tools answered from a snapshot of the user's world. Happy to go into either."
+        ],
+        "ref": "#say-intro"
+      },
+      {
+        "id": "x2", "label": "What pass through means", "who": "Alex",
+        "q": "You said that if the agent calls a tool that isn't in the snapshot, you send an error or a pass through. What does pass through mean in your harness? Does that call hit Gmail for real, and how would you know afterwards?",
+        "tests": "Provenance. Can a reader of your results tell recorded from live, or invented?",
+        "said": ["It never leaves the machine. The agent gets an empty result back, with an indication that it's the wrong tool; those calls are marked so the snapshot can be enriched."],
+        "verdict": "partly", "why": "'Never leaves the machine' is the right first sentence. The empty result is the problem, and you described it as a feature.",
+        "good": ["Clear that nothing reaches a live provider.", "You mark out-of-snapshot calls, which is the start of provenance."],
+        "bad": ["Earlier you said 'error or pass through', here 'empty result with an indication', later 'no error, just null'. Three versions of one behaviour.", "An empty result is a plausible answer, so the agent can act on it as a fact."],
+        "approach": ["Answer the literal question first: no, it cannot reach Gmail, because the harness flag routes every provider call to the snapshot.", "Then volunteer the limit in the same breath: 'what the agent gets back is the weak spot.' Interviewers push hardest on what you defend and ease off what you name."],
+        "say": [
+          "It never leaves the machine. With the harness flag on, every provider call goes to the snapshot, so there is no path to Gmail at all.",
+          "What the agent gets back is the weak spot, honestly. Today a call outside the snapshot returns an empty result, and every such call is logged against the run. An empty result is a plausible answer, though. The agent can read it as 'there are no meeting notes', which is the harness telling it something false.",
+          "What I'd do instead: return an explicit 'not in this snapshot' error the agent can't mistake for data, and treat any run that hit one as harness-limited, not as a pass or a fail."
+        ],
+        "figs": ["harnessSeam"]
+      },
+      {
+        "id": "x3", "label": "The empty result is a lie", "who": "Hamza",
+        "q": "In production there probably were notes, so the harness taught the agent something false and it acted reasonably on it. How does your scoring tell 'the agent made a bad call' from 'the agent made a good call on a lie the harness told it'?",
+        "tests": "Do you own your harness's failure modes, or defend them?",
+        "said": ["Out-of-snapshot calls are marked. With rich enough aggregation it rarely happens; I haven't seen it. The north star is tool calls per completed task, and irrelevant calls add latency."],
+        "verdict": "missed", "why": "You answered a different question (how often), then moved to the metric. 'I haven't seen it' reads as 'I never looked', which is the opposite of the signal you want.",
+        "good": ["You do mark the calls, which is the raw material for a real answer."],
+        "bad": ["'I have not seen it': rare is not the same as measured.", "Went sideways to the north-star metric instead of down into the scoring.", "Missed the chance to connect it to Kitaru's provenance gap, the critique you plan to make."],
+        "approach": ["Agree with the premise out loud: 'you're right, those two runs look identical in the output.'", "Then the mechanism: mark the node, keep marked runs out of the headline number, and look at them separately.", "Close by tying it to their world: it's the same problem as a passthrough node without a mocked mark. That turns a weakness into your strongest critique."],
+        "say": [
+          "You're right, in the output those two runs look identical, and today my metric can't tell them apart on its own.",
+          "What I have is the mark: every call outside the snapshot is logged against the run. The fix I'd make is to use it in scoring. A run that touched an out-of-snapshot call is harness-limited, so it's excluded from the headline number and goes to a separate list, and that list is the backlog for enriching the snapshot.",
+          "It's the same problem as a passthrough node in Kitaru that carries no mocked mark: a reader can't tell a recorded answer from an invented or live one. In both systems every answer should carry how it was served."
+        ],
+        "figs": ["kitaruPolicy"],
+        "prep": "A tool the snapshot doesn't cover"
+      },
+      {
+        "id": "x4", "label": "What counts as done", "who": "Hamza",
+        "q": "An agent that gets your empty set and wraps up confidently has used fewer calls, so on your metric it looks more efficient. Who decides 'completed'? An assertion against the snapshot, a judge, something else? Be concrete.",
+        "tests": "Is your headline metric gameable, and do you know how?",
+        "said": ["Completion means the task was done: the email found and the todo list created. Failed runs are a separate class that is tracked."],
+        "verdict": "partly", "why": "True but generic. He asked for the mechanism and got the definition, so it took another question to reach the real answer.",
+        "good": ["Failed runs are counted separately, not averaged in."],
+        "bad": ["No mechanism: who or what decides 'done'.", "Did not say that calls per task is only computed over runs that pass, the one fact that answers his worry."],
+        "approach": ["When told 'be concrete', give one worked example with the check named: which rows the assertion reads, what it expects.", "Then show you know the metric's blind spot and what sits next to it."],
+        "say": [
+          "Deterministic assertions against the snapshot decide it. For 'make a todo list from this email', the snapshot knows which email is the right one and what its action items are, so the run passes if the agent read that email and the created tasks match those items.",
+          "Tool calls per completed task is only computed over runs that pass those assertions, so an agent that wraps up early on an empty result doesn't get a better number, it gets a failed run. We moved 2.5 to 2.2 on that metric for the same outcomes.",
+          "On its own it would reward guessing over clarifying, which is why it sits next to a count of false completion claims."
+        ],
+        "figs": ["completeness"],
+        "prep": "What makes a run count as done"
+      },
+      {
+        "id": "x5", "label": "Four items, three created", "who": "Alex",
+        "q": "The email has four action items. The agent creates a todo list with three. Pass or fail, and what piece of code or which model makes that call?",
+        "tests": "Completeness, and whether you have the refunds lesson ready.",
+        "said": ["A pass for the completion metric. Ground truth per instance is known, so completeness is a second, orthogonal score, and three of four is measured there. Judging has moved to Claude Code."],
+        "verdict": "partly", "why": "The two-score design is right. But 'pass' for a todo list missing an item is the refunds bug you already fixed, and you didn't use that story.",
+        "good": ["Ground truth held per instance: the strongest part of your design.", "Separating completion from completeness."],
+        "bad": ["Called it a pass; for an enumerable answer, a missing item should fail the assertion.", "Didn't reach for the refunds story, which is exactly this case with a real outcome.", "Said the judge is Claude Code without saying which parts are assertions and which are judged."],
+        "approach": ["Decide first: enumerable or not. Four action items is a set you can count, so it is an assertion, not a judgement.", "Then the story that proves you learned it the hard way: the ledger that left out two refunds."],
+        "say": [
+          "It fails, and code decides it, not a model. Action items are enumerable: the snapshot knows there are four, so the case asserts that all four appear. Three of four is a fail on that assertion, and a 0.75 on the completeness score we track across the bench.",
+          "We learned that the hard way. A ledger request produced a clean, well-formed ledger that left out two refunds, and every surface check passed. After that, anything enumerable from the fixture is asserted against it.",
+          "A model only judges what can't be counted, like whether a meeting brief is useful, and those cases stay out of automated gating."
+        ],
+        "figs": ["completeness"],
+        "ref": "#say-refunds",
+        "prep": "Four action items, the agent creates three"
+      },
+      {
+        "id": "x6", "label": "Did the judge move?", "who": "Alex",
+        "q": "Claude Code judging on Tuesday and Claude Code judging on Friday won't always agree. How do you know the judge didn't move when your pass rate moves?",
+        "tests": "Is the judge measured, or trusted?",
+        "said": ["No calibration yet for the completeness judge; the harness is local and it's my gut. Ground truth stays fixed. The bench reruns on tool, agent or subtask changes, and the reconciler appends new production cases."],
+        "verdict": "partly", "why": "The honesty landed. But in your intro you said the judge was calibrated, so without naming two judges it sounded like a contradiction.",
+        "good": ["'No calibration yet, it's my gut' is exactly the kind of limit they respect.", "Ground truth fixed across runs."],
+        "bad": ["Two judges, one word: the scanner's judge is calibrated, the completeness judge is not. Say which.", "No concrete way to detect drift, and there is a cheap one."],
+        "approach": ["Separate the two judges in your first sentence.", "Then one mechanism that detects judge drift without new labels: re-judge frozen outputs."],
+        "say": [
+          "There are two judges, and they're in different states. The scanner's judge, which decides whether a production flag is a real bug, is calibrated: weekly against fresh human labels, about three in four agreement.",
+          "The completeness judge on the bench isn't calibrated yet. Where the answer is enumerable I've replaced it with assertions, so it only judges what can't be counted.",
+          "To tell judge drift from agent change I'd keep a frozen set of past outputs and re-judge it whenever the judge's model or prompt changes. The outputs didn't change, so if the verdicts moved, the judge moved. And the judge's model and prompt are pinned per bench run."
+        ],
+        "figs": ["passk"],
+        "prep": "How do you know the judge is still right"
+      },
+      {
+        "id": "x7", "label": "A better prompt misses everything", "who": "Hamza",
+        "q": "A customer imports a few hundred Langfuse traces, improves the system prompt, and the agent now searches the CRM with a cleaner query. Every search misses the recording; with on_miss set to fail, half the cohort dies. 'Your tool punishes me for improving my agent.' What do we build?",
+        "tests": "Product judgement on their central problem. They argue about this internally.",
+        "said": ["A fake or mock world, maybe a simulated user, but I'd rather not go into that. A read-tool policy that executes against the user's environment if they provide one. Not exactly sure."],
+        "verdict": "gap", "why": "You jumped to the biggest idea, simulation, and backed away from it. The answer was on your Prep tab.",
+        "good": ["Splitting reads from writes is the right instinct; it just came out as an afterthought."],
+        "bad": ["Started with the hardest option and then declined to discuss it.", "No order: what first, what next, what last.", "'Not exactly sure' before trying the smallest version."],
+        "approach": ["Say the reframe first: a miss is information, the agent's behaviour changed. That buys you ten seconds and shows judgement.", "Then build up in order of cost: the miss experience (diff and accept), then policy by effect (reads, writes), then the world model for the few sessions that fork.", "If you blank, say 'let me start with what the user sees' and describe the screen."],
+        "say": [
+          "First, a miss is information: it means the agent's behaviour changed, which is what they were measuring. So the goal isn't to avoid misses, it's to stop a miss from killing the run and make it cheap to resolve.",
+          "The first thing I'd build is the miss experience. Show the recorded call next to what the new agent sent. If they're equivalent, one action accepts it and writes a static alias, so the next replay hits. It's deterministic and auditable, and every accepted pair is labelled data for matching later.",
+          "Second, policy by effect. A read that misses can fall through to the customer's own environment, marked live on the node. A write that misses fails closed on a fork, never passthrough.",
+          "And the honest limit: that fixes rephrasing, not an agent that takes a different path. For those few sessions, promote the trace into a small queryable world, which is what my bench does. The common case stays free."
+        ],
+        "figs": ["missFlow", "kitaruKey"],
+        "ref": "#say-miss",
+        "prep": "A better prompt misses every recording"
+      },
+      {
+        "id": "x8", "label": "What the screen shows", "who": "Alex",
+        "q": "Forget the perfect system. Tomorrow morning the customer sees half the runs died. What should that screen show them, so the miss is useful instead of a red X?",
+        "tests": "Can you think like the user, concretely?",
+        "said": ["The recorded call against what the agent did. Then last-turn replay, a stateful world across turns, a simulated user. Not really sure."],
+        "verdict": "gap", "why": "Your first sentence was the answer. Then you recited the multi-turn options, which were answering a different question.",
+        "good": ["'The recorded call against what the agent did' is exactly right."],
+        "bad": ["Kept talking after the right answer, into material from another question.", "Nothing about what the user can do on that screen."],
+        "approach": ["When your first sentence is right, stop and build on it: what is on the screen, what can they do there.", "Think of one row per miss, grouped, because a few hundred red rows is not usable."],
+        "say": [
+          "The misses grouped by tool, with a count, so they see '140 misses on search_crm' rather than 140 red rows.",
+          "Open one and it's a diff: the recorded arguments next to what the new agent sent, the recorded result under it, and where in the session it happened.",
+          "And on that row, the actions: accept as equivalent, which maps the new arguments to the recorded result; run this one call live, marked as live; or leave it failed. Accept applies to the whole group, so one decision clears the 140."
+        ],
+        "figs": ["missFlow"]
+      },
+      {
+        "id": "x9", "label": "Which button", "who": "Hamza",
+        "q": "The customer looks at the diff and says 'yes, those are the same search, just phrased better.' What button do they press, and what does it change for the next replay?",
+        "tests": "Can you land a design all the way down to data?",
+        "said": ["It would play out, but I'm not really sure and a bit lost."],
+        "verdict": "gap", "why": "This is the static alias, the last step of your own miss script.",
+        "good": [],
+        "bad": ["No attempt at the mechanism. Even a rough one ('we remember the mapping') beats 'I'm lost'."],
+        "approach": ["Name the button, then the data it writes, then what the next replay does with it. Three sentences.", "If you blank, buy time honestly: 'give me a second', then start from 'the next replay needs to hit, so something has to map the new call to the old result.'"],
+        "say": [
+          "'Accept as equivalent.' It writes a static alias for that tool: these new arguments map to that recorded call's result, scoped to this cohort.",
+          "On the next replay the lookup checks the alias before it misses, so those calls hit, and the node is stamped 'served by alias' so nobody mistakes it for an exact match.",
+          "And every accepted pair is a labelled example of 'different arguments, same meaning', which is what you'd need to train or tune fuzzy matching later, and test it in shadow first."
+        ],
+        "figs": ["missFlow"],
+        "prep": "The customer says the two searches are the same"
+      },
+      {
+        "id": "x10", "label": "Your questions for them", "who": "Hamza",
+        "q": "Before we let you go, what questions do you have for us?",
+        "tests": "Curiosity, and whether you've thought about their business.",
+        "said": ["I'd love to understand the product more, and what you need from a product engineer specifically."],
+        "verdict": "partly", "why": "A fine question, but generic. You have eight prepared ones that show you've read the product.",
+        "good": ["Asking about the role itself is reasonable."],
+        "bad": ["It could be asked of any company.", "Only one question. Ask one, listen, then one more."],
+        "approach": ["Lead with the one that shows you read the source, then one about the role.", "One at a time, then wait."],
+        "say": [
+          "Where do you see Kitaru sitting against observability tools long term: is replay the wedge, or the product?",
+          "And for the role: what would you want someone in this seat to have shipped by the end of the first month?"
+        ],
+        "ref": "#ask"
+      }
+    ]
   }
 ]

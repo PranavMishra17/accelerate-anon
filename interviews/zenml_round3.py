@@ -131,9 +131,25 @@ QA = [
                "On generative paths you can't, so known-flaky cases, about ten percent, run three times and report a pass rate. A case that flips between versions without a code change is quarantined and looked at. One lucky run never counts as a pass.",
                "If they push on tool calls per task: on its own it rewards an agent that guesses instead of clarifying, which is why it sits next to counts of false completion claims. A version that got decisive and wrong would win on one and lose on the other."],
          "land": "Remove it on dangerous paths; measure around it elsewhere."},
-        {"q": "How do you know the judge is still right?", "tests": "Is the judge's value measured?",
-         "a": ["Weekly reconciliation against fresh human labels on a sample, which is where the roughly three-in-four agreement comes from. When agreement drops it's usually because a feature changed what correct means, and the rubric gets updated."],
-         "land": "The judge is calibrated, not trusted."},
+        {"q": "A tool the snapshot doesn't cover: what does the agent get back?", "tests": "Provenance: can a reader tell recorded from invented? (Mock 1 gap.)",
+         "a": ["It never leaves the machine: with the harness flag on, every provider call goes to the snapshot, so there is no path to a live system.",
+               "What the agent gets back is the weak spot. Today it's an empty result, and the call is logged against the run. But an empty result is a plausible answer: the agent can read it as 'there are no meeting notes', which is the harness telling it something false.",
+               "So I'd return an explicit 'not in this snapshot' error the agent can't mistake for data, and treat any run that hit one as harness-limited: out of the headline number, onto a list that becomes the backlog for enriching the snapshot. It's the same problem as a Kitaru passthrough node with no mocked mark."],
+         "land": "Name it as a gap before they do; every answer should carry how it was served."},
+        {"q": "What makes a run count as done?", "tests": "Is the headline metric gameable? (Mock 1: took three turns to get concrete.)",
+         "a": ["Deterministic assertions against the snapshot. For 'make a todo list from this email', the snapshot knows the right email and its action items, so the run passes if the agent read that email and the tasks match those items.",
+               "Tool calls per completed task is computed only over runs that pass, so an agent that wraps up early on an empty result doesn't look efficient, it fails. We moved 2.5 to 2.2 on that for the same outcomes.",
+               "On its own the metric would reward guessing over clarifying, so it sits next to a count of false completion claims."],
+         "land": "Name the check, give one worked example, then the metric's blind spot."},
+        {"q": "Four action items, the agent creates three: pass or fail?", "tests": "Completeness, and the refunds lesson. (Mock 1: answered 'pass'.)",
+         "a": ["It fails, and code decides, not a model. Action items are enumerable: the snapshot knows there are four, so the case asserts all four appear. Three of four fails that assertion and scores 0.75 on the completeness number we track across the bench.",
+               "We learned it on the ledger that left out two refunds while every surface check passed. A model only judges what can't be counted, like whether a brief is useful, and those cases stay out of automated gating."],
+         "land": "Enumerable means asserted, never judged."},
+        {"q": "How do you know the judge is still right?", "tests": "Is the judge's value measured? Name which judge.",
+         "a": ["There are two judges, in different states. The scanner's judge, which decides whether a production flag is a real bug, is calibrated weekly against fresh human labels on a sample: about three in four agreement. When agreement drops it's usually because a feature changed what correct means, and the rubric gets updated.",
+               "The completeness judge on the bench isn't calibrated yet; where the answer is enumerable I replaced it with assertions, so it only judges what can't be counted.",
+               "To tell judge drift from agent change: keep a frozen set of past outputs and re-judge it when the judge's model or prompt changes. The outputs didn't move, so if the verdicts did, the judge moved. And the judge's model and prompt are pinned per run."],
+         "land": "Two judges: one calibrated, one honestly not. Re-judge frozen outputs to catch drift."},
         {"q": "How do you decide what becomes an eval case?", "tests": "The heart of the role.",
          "a": ["The first filter is the whole game, because everything downstream is conditioned on it. Early on a signal flagged abandoned conversations, the agent said something and the user never replied, and a large share were one-way notifications where no reply was ever expected. Another class, 'agent did nothing', was just wrong: the agent had acted, we weren't joining against the tool-execution record.",
                "Both got fixed by grounding the signal in execution truth rather than tuning a threshold."],
@@ -201,6 +217,17 @@ QA = [
         {"q": "If you ran Kitaru for a quarter, what would you ship first?", "tests": "Product judgement with dependencies.",
          "a": ["Provenance on every node first: small, and everything else depends on a reader trusting where a result came from. Then productive misses: the recorded-versus-attempted diff and one command to accept a variant. Then multi-turn with a calibrated simulator. The order follows dependency: trust, then the cheap feature, then the hardest open problem."],
          "land": "Trust first."},
+        {"q": "A better prompt misses every recording. What do we build?", "tests": "Their central problem, as product judgement. (Mock 1 gap.)",
+         "a": ["First, a miss is information: the agent's behaviour changed, which is what they were measuring. The goal isn't to avoid misses, it's to stop one from killing the run and make it cheap to resolve.",
+               "First build: the miss experience. Misses grouped by tool with a count; open one and it's the recorded call next to what the new agent sent. If they're equivalent, one action accepts it as a static alias and the next replay hits. Deterministic, auditable, and every accepted pair is labelled data for matching later.",
+               "Second: policy by effect. A read that misses can fall through to the customer's environment, marked live on the node. A write that misses fails closed on a fork, never passthrough.",
+               "The limit: that fixes rephrasing, not a different path. For those few sessions, promote the trace into a small queryable world, which is what my bench does. The common case stays free."],
+         "land": "Reframe, then build up in order of cost. If you blank, start with what the user sees."},
+        {"q": "The customer says the two searches are the same. What button, and what changes next replay?", "tests": "Can you land a design down to data? (Mock 1 gap.)",
+         "a": ["'Accept as equivalent.' It writes a static alias for that tool: these new arguments map to that recorded call's result, scoped to the cohort, and it applies to the whole group of identical misses.",
+               "Next replay the lookup checks aliases before it misses, so those calls hit, and the node is stamped 'served by alias', so nobody mistakes it for an exact match.",
+               "Every accepted pair is a labelled example of 'different arguments, same meaning': the data you'd need to tune fuzzy matching later, shipped in shadow first."],
+         "land": "Button, then the data it writes, then what the next replay does with it."},
     ]},
 ]
 
@@ -282,10 +309,10 @@ DRILLS = [
     {"id": "close", "prompt": "Close the interview.", "target": "20 seconds", "seconds": 20, "ref": "#say-close"},
 ]
 
-MOCK_HOW = ("Full mocks run in the Claude Code chat, not here. Say **'run the ZenML mock, 15 minutes'**. "
-            "The interviewer opens with a first question and adapts from your answers like a person would, "
-            "with opinions and follow-ups, and never summarises your answer back to you. Critique comes only after the "
-            "time is up. The latest two mocks, with their critique, are kept below.")
+MOCK_HOW = ("Full mocks run in the Claude Code chat. Say **'run the ZenML mock, 25 minutes'**. "
+            "Hamza leads on your story, why this move and judgement; Alex goes down on mechanism and what the user sees. "
+            "Each mock below starts with the read, then the conversation one exchange at a time: open one for what worked, "
+            "what did not, how to approach it, and the answer to give. Every gap also sits on the Prep tab.")
 
 KITARU_LEAD = ("Kitaru spawns your agent as an ordinary subprocess in your own environment, and an in-process adapter "
                "intercepts the agent framework's tool-execution hook, answering each tool call by a SHA-256 lookup "
@@ -417,7 +444,22 @@ QA_EXTRA = {
         "figs": ["passk"],
         "read": ["https://arxiv.org/abs/2406.12045"],
         "sd": [{"p": "agent-safety", "t": "policy-gate", "why": "Why the gating decision is scored, not sampled."}]},
+    "A tool the snapshot doesn't cover": {
+        "figs": ["harnessSeam", "kitaruPolicy"],
+        "sd": [{"v": "kitaru", "a": "deepdives", "why": "Provenance: no silent live calls."}]},
+    "What makes a run count as done": {
+        "figs": ["completeness"],
+        "sd": [{"p": "grounding", "t": "eval-gate", "why": "What a gate asserts before it passes."}]},
+    "Four action items, the agent creates three": {
+        "figs": ["completeness"]},
+    "A better prompt misses every recording": {
+        "figs": ["missFlow", "kitaruKey", "zenEffects"],
+        "sd": [{"v": "kitaru", "a": "deepdives", "why": "Divergence: the better the change, the worse the replay."}]},
+    "The customer says the two searches are the same": {
+        "figs": ["missFlow"],
+        "sd": [{"v": "kitaru", "a": "deepdives", "why": "The productive miss, as a design option."}]},
     "How do you know the judge is still right": {
+        "figs": ["passk"],
         "read": ["https://eugeneyan.com/writing/llm-evaluators/"],
         "sd": [{"p": "grounding", "t": "shadow-online", "why": "The signals the judge sits on, and why they drift."}]},
     "How do you decide what becomes an eval case": {

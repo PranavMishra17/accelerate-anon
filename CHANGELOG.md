@@ -328,3 +328,16 @@ ch. N Title → Section → Subsection" in the tracker, the reading, `MILESTONE-
 repository; section names against a chapter-by-chapter 2e reading. Page numbers are left
 out: no source reachable here gives them for the 2nd edition. No change to the plan or to
 `CHARTER.md`.
+
+**2026-09-27 — The Mocks tab rebuilt; mock 1 judged exchange by exchange.**
+Asked for by Pranav after the first ZenML mock: the critique was one block of text and
+could not be read or revised from. The tab now opens with the read (how it went, a tally
+of verdicts, what landed, what to fix first) and then the conversation as a read-along:
+each exchange shows who asked, what you said and a verdict, and opens to what worked,
+what did not, how to approach it, its figure, and the answer to give behind a toggle.
+All four gaps and the missed answer have full answers, and six Prep questions were added
+or corrected (the empty result, what counts as done, four items and three created, the
+two judges, the miss that punishes improvement, the accept button); each exchange links
+to its Prep question. `MOCKS.md` now gives Hamza and Alex distinct roles and lays out a
+full-loop mock, including why this move and why leaving. No change to the plan or to
+`CHARTER.md`.

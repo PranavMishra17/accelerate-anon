@@ -146,9 +146,37 @@ textarea:focus { outline: none; border-color: var(--muted); }
 .hint { font-size: 14px; color: var(--muted); margin-top: 4px; }
 .attempts .at { padding: 8px 0 8px 14px; border-left: 2px solid var(--rule); margin: 10px 0; white-space: pre-wrap; font-size: 16px; color: var(--soft); }
 .attempts .at small { display: block; color: var(--muted); font-size: 13.5px; }
-.mock { padding: 18px 0; border-top: 1px solid var(--rule); }
-.mock pre { white-space: pre-wrap; font: inherit; font-size: 16px; margin: 8px 0 0; }
 .when { color: var(--muted); font-size: 16px; }
+
+/* mocks: the read, then the conversation. Colour means one of two things here: who is
+   speaking (a rule beside the question), and the verdict (a small dot). */
+:root { --hamza: #9A5B13; --alex: #2F6DB5; --v-landed: var(--ok); --v-partly: #B7791F; --v-missed: #C23B22; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --hamza: #E0A55C; --alex: #7AB2FF; --v-partly: #E3B25C; --v-missed: #F07A63; } }
+:root[data-theme="dark"] { --hamza: #E0A55C; --alex: #7AB2FF; --v-partly: #E3B25C; --v-missed: #F07A63; }
+.vd { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; background: var(--muted); }
+.vd-landed { background: var(--v-landed); } .vd-partly { background: var(--v-partly); }
+.vd-missed, .vd-gap { background: var(--v-missed); } .vd-gap { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--v-missed); }
+.sep { display: inline-block; width: 1px; height: 14px; background: var(--rule); margin: 0 14px; vertical-align: -2px; }
+.mk-tally { font-size: 16px; color: var(--soft); margin: 4px 0 22px; }
+.mk-read { font-size: 18.5px; color: var(--ink); }
+.mk-h { font-size: 15px; font-weight: 700; color: var(--muted); margin: 26px 0 8px; }
+.mk-list { margin: 0; padding-left: 22px; font-size: 17px; line-height: 1.6; }
+.mk-list li { margin: 0 0 8px; padding-left: 4px; }
+.mk-list a { font-size: 15px; margin-left: 6px; white-space: nowrap; }
+.mk-good li::marker { color: var(--v-landed); } .mk-bad li::marker { color: var(--v-missed); }
+details.ex > summary { padding: 22px 34px 20px 0; }
+.ex-q { display: block; border-left: 3px solid var(--rule); padding: 1px 0 1px 16px; font-size: 18.5px; font-weight: 700; line-height: 1.5; color: var(--ink); }
+.ex-q.spk-hamza { border-left-color: var(--hamza); } .ex-q.spk-alex { border-left-color: var(--alex); }
+.ex-who { display: block; font-size: 13.5px; letter-spacing: .03em; font-weight: 700; margin-bottom: 3px; color: var(--muted); }
+.spk-hamza .ex-who { color: var(--hamza); } .spk-alex .ex-who { color: var(--alex); }
+details.ex > summary:hover .ex-q { color: var(--accent); }
+.ex-v { display: block; margin: 10px 0 0 19px; font-size: 15.5px; color: var(--soft); line-height: 1.5; }
+.ex-body { padding-left: 19px; }
+.ex-said { margin: 0 0 6px; padding-left: 14px; border-left: 2px solid var(--rule); color: var(--soft); font-size: 16.5px; }
+.ex-tests { margin: 16px 0 0; font-size: 16px; color: var(--soft); }
+.ex-tests b { color: var(--ink); }
+.ex-links { margin: 18px 0 0; font-size: 15px; }
+@media (max-width: 700px) { .ex-body { padding-left: 0; } .ex-v { margin-left: 0; } }
 
 /* design */
 figure { margin: 26px 0 34px; padding: 18px; background: #FFFFFF; color: #15141A; border-radius: 8px; overflow-x: auto; }
@@ -501,7 +529,7 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
         if (q.land) { qb.appendChild(el("p", "point", "<b>The point.</b> " + inl(q.land))); }
         learn(qb, q.learn || {});
         qb.appendChild(sayToggle("What you would say", transcript(q.a, "You", "")));
-        var c = item(null, q.q, q.tests ? "They are testing: " + inl(q.tests.charAt(0).toLowerCase() + q.tests.slice(1)) : "", qb);
+        var c = item(q.id || null, q.q, q.tests ? "They are testing: " + inl(q.tests.charAt(0).toLowerCase() + q.tests.slice(1)) : "", qb);
         s.appendChild(c);
         items.push({ node: c, text: (q.q + " " + q.a.join(" ")).toLowerCase() });
       });
@@ -718,25 +746,81 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
   }
 
   /* ---------------------------------------------------------------- mocks */
+  /* A mock reads in two parts: the read (how it went, what landed, what to fix first),
+     then the conversation, one exchange at a time. Each exchange shows who asked what and
+     what you said, with a verdict; it opens to why, how to approach it, and the answer to
+     say, behind the same toggle the Prep tab uses. */
+  var VERDICT = { landed: "Landed", partly: "Partly", missed: "Missed", gap: "Gap: you did not have an answer" };
   function tabMocks(host) {
     var s = heading(host, "mock", "Run in chat", "Mock interviews");
     s.appendChild(el("p", "lead", inl(LOOP.mockHow)));
     if (!LOOP.mocks.length) {
-      s.appendChild(el("div", "mock", "<b>None yet.</b> After a mock in chat, its transcript and critique are added here. Only the latest two are kept."));
+      s.appendChild(el("p", "when", "None yet. After a mock in chat, its read and its exchanges appear here. The latest two are kept."));
     }
-    LOOP.mocks.slice(-2).reverse().forEach(function (m) {
-      var c = el("div", "mock");
-      c.appendChild(el("h3", "", esc(m.title)));
-      c.appendChild(el("p", "when", esc(m.when)));
-      c.appendChild(el("pre", "", esc(m.critique)));
-      if (m.transcript) {
-        var det = el("details");
-        det.appendChild(el("summary", "", "Transcript"));
-        det.appendChild(el("pre", "", esc(m.transcript)));
-        c.appendChild(det);
-      }
-      s.appendChild(c);
-    });
+    LOOP.mocks.slice(-2).reverse().forEach(function (m, mi) { drawMock(host, m, mi); });
+  }
+  function drawMock(host, m, mi) {
+    var pre = m.id || "m" + mi;
+    var s = heading(host, pre, m.when, m.title);
+    var ex = m.exchanges || [];
+    if (!ex.length && m.critique) { s.appendChild(el("p", "", inl(m.critique))); return; }
+    var tally = {};
+    ex.forEach(function (x) { tally[x.verdict] = (tally[x.verdict] || 0) + 1; });
+    s.appendChild(el("p", "mk-tally", ["landed", "partly", "missed", "gap"].filter(function (k) { return tally[k]; })
+      .map(function (k) { return '<span class="vd vd-' + k + '"></span>' + tally[k] + " " + (k === "gap" ? "gaps" : k); }).join('<span class="sep"></span>') +
+      '<span class="sep"></span>' + ex.length + " exchanges"));
+    (m.read || []).forEach(function (p) { s.appendChild(el("p", "mk-read", inl(p))); });
+    if (m.landed && m.landed.length) {
+      s.appendChild(el("h3", "mk-h", "What landed"));
+      var ul = el("ul", "mk-list");
+      m.landed.forEach(function (t) { ul.appendChild(el("li", "", inl(t))); });
+      s.appendChild(ul);
+    }
+    if (m.fix && m.fix.length) {
+      s.appendChild(el("h3", "mk-h", "Fix these first"));
+      var ol = el("ol", "mk-list mk-fix");
+      m.fix.forEach(function (f) {
+        ol.appendChild(el("li", "", inl(f.t) + (f.ref ? ' <a href="' + link("mocks", pre + "-" + f.ref) + '">See the exchange</a>' : "")));
+      });
+      s.appendChild(ol);
+    }
+    var c = heading(host, pre + "-talk", "Read along, one exchange at a time", "The conversation");
+    bulk(c);
+    ex.forEach(function (x, i) { c.appendChild(exchange(pre, x, i)); });
+  }
+  function exchange(pre, x, i) {
+    var box = el("details", "item ex"); box.id = pre + "-" + x.id;
+    var who = (x.who || "").toLowerCase();
+    var sm = el("summary");
+    sm.innerHTML = '<span class="ex-q spk-' + esc(who) + '"><span class="ex-who">' + esc(x.who) + '</span>' + inl(x.q) + "</span>" +
+      '<span class="ex-v"><span class="vd vd-' + esc(x.verdict) + '"></span>' + esc(VERDICT[x.verdict] || x.verdict) + ". " + inl(x.why || "") + "</span>";
+    box.appendChild(sm);
+    nav.push([box.id, (i + 1) + ". " + (x.label || x.q), true]);
+    var b = el("div", "sbody ex-body");
+    b.appendChild(el("div", "lab", "What you said"));
+    (x.said || []).forEach(function (p) { b.appendChild(el("p", "ex-said", inl(p))); });
+    if (x.tests) { b.appendChild(el("p", "ex-tests", "<b>What they were testing.</b> " + inl(x.tests))); }
+    function list(label, items, cls) {
+      if (!items || !items.length) { return; }
+      b.appendChild(el("div", "lab", label));
+      var ul = el("ul", "mk-list " + cls);
+      items.forEach(function (t) { ul.appendChild(el("li", "", inl(t))); });
+      b.appendChild(ul);
+    }
+    list("What worked", x.good, "mk-good");
+    list("What did not", x.bad, "mk-bad");
+    list("How to approach it", x.approach, "");
+    (x.figs || []).forEach(function (k) { var f = figNode(k, 0); if (f) { b.appendChild(f); } });
+    if (x.say && x.say.length) {
+      var t = sayToggle("The answer to give", transcript(x.say, "You", ""));
+      b.appendChild(t);
+    }
+    var links = [];
+    if (x.prepId) { links.push('<a href="' + link("prep", x.prepId) + '">Revise it on the Prep tab</a>'); }
+    if (x.ref) { links.push('<a href="' + prepRef(x.ref) + '">The prepared script</a>'); }
+    if (links.length) { b.appendChild(el("p", "ex-links", links.join('<span class="sep"></span>'))); }
+    box.appendChild(b);
+    return box;
   }
 
   /* ---------------------------------------------------------------- quiz, one question at a time */

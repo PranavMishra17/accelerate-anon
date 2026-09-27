@@ -8,7 +8,9 @@ OWN: your own system, walked part by part, set against theirs. Sessions still
 held in the tracker are read from index.html (SESSION_IDS), and each session's
 quiz is built from its own questions: open questions with a model answer only,
 no blanks and no one-word answers, at most eight. Past mocks live in
-<module>.mocks.json, the latest two shown.
+<module>.mocks.json, the latest two shown: each is a read (verdict, what landed,
+what to fix) and its exchanges, every one with what was asked, what was said, a
+verdict, how to approach it and the answer to say (see MOCKS.md for the shape).
 """
 import html, importlib, io, json, os, re, subprocess, sys
 
@@ -107,8 +109,19 @@ def build(module_name):
                                        capture_output=True, text=True, encoding="utf-8", check=True).stdout)
         for p in own["parts"]:
             p["learn"] = {"figs": p.get("figs", []), "sdLinks": sd[p["id"]]}
+    # Every Prep question gets an anchor, so a mock exchange can point at its revision.
+    for g in getattr(m, "QA", []):
+        for it in g["items"]:
+            it["id"] = "q-" + re.sub(r"[^a-z0-9]+", "-", it["q"].lower()).strip("-")[:60]
     mocks_path = os.path.join(HERE, module_name + ".mocks.json")
     mocks = json.load(io.open(mocks_path, encoding="utf-8")) if os.path.exists(mocks_path) else []
+    for mk in mocks:
+        for ex in mk.get("exchanges", []):
+            if ex.get("prep"):
+                hit = [it for g in m.QA for it in g["items"] if it["q"].startswith(ex["prep"])]
+                if not hit:
+                    sys.exit("mock %s exchange %s: no Prep question starts with %r" % (mk.get("id"), ex["id"], ex["prep"]))
+                ex["prepId"] = hit[0]["id"]
     data = {
         "id": L["id"], "title": L["title"], "subtitle": L["subtitle"], "when": L["when"], "when_iso": L["when_iso"],
         "who": L["who"], "format": L["format"], "bar": L["bar"],
