@@ -410,5 +410,5 @@ the landscape (grounded in what he has built with: TypeScript and Deno, FastAPI 
 Pydantic, a Postgres queue, his own agent loop, model choice and cost), his work at depth
 (merged into stories he can remember in parts), designing replay and evals, a new bank on
 Kitaru's own details to drop in unasked, and backend depth. Similar questions were merged
-before new ones were added: 73 questions became 53. No change to the plan or to
+before new ones were added, so the count held at 57 while the overlaps went. No change to the plan or to
 `CHARTER.md`.
