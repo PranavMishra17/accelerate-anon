@@ -22,8 +22,16 @@ things:
    <module>` from a content module (`interviews/<module>.py`): the brief, what to say
    in the words to say it, timed spoken drills, a technical question bank, figures,
    questions to ask, traps, and every session readable in place. Add a `LOOPS` entry in
-   `index.html` so the wildcard page shows it as a card. Full mocks run in the Claude
-   Code chat, by `interviews/MOCKS.md`.
+   `index.html` so the wildcard page shows it as a card. Optional `OWN` in the module adds
+   a tab for your own system set against theirs.
+3. **Mocks**, run in the Claude Code chat by `interviews/MOCKS.md`: named interviewers from
+   the loop with distinct roles, the whole loop covered (story, why this move, the work,
+   their product, questions), no reference to rounds you were not in. Each mock is saved
+   to `interviews/<module>.mocks.json` and shows on the page's Mocks tab as a read (how it
+   went, what landed, what to fix first) and a one-screen conversation: the turns on the
+   left, and for each, the question and verdict, what you said, and what to say on a dark
+   sheet. Every gap gets a full answer and a Prep question. The template draws all of this
+   for any loop; a new loop only writes content.
 
 Sessions **append**. Existing wildcard sessions are not cleared when new ones arrive.
 When a loop is over, its unfinished sessions are marked `parked: true`: still counted,

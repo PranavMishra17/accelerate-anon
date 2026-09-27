@@ -146,8 +146,10 @@ drill deck and the three open questions on the home page each morning.
 
 **An interview gets its own page and a real mock.** The loop's page holds what to know
 and how to say it. The mock is a person with opinions who follows the thread and never
-recaps you back to yourself; the critique comes after, with the best version of the
-weakest answer.
+recaps you back to yourself; the critique comes after, turn by turn: what landed, what
+did not, how to approach it, and the answer to give, with a full answer for every "I'm
+not sure". It is read in one screen, not scrolled: the turns on one side, the answer on
+the other.
 
 **Small rewards, never debt.** Closing a session launches the craft; closing a week binds
 it into the book, lights its constellation and unlocks a livery. None of it adds work.

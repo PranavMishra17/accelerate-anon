@@ -124,7 +124,7 @@ copy are four separate stores. Export from the Data page and commit the file int
 | `IMPROVEMENTS.md` | Tracker improvements built, reversed, and deliberately not done. |
 | `CHANGELOG.md` | Append only. Every re-plan and deviation, with its reason. |
 | `diagnostics/` | The baseline quiz the plan was calibrated from, and its result. Gate results go here too. |
-| `interviews/MOCKS.md` | How mock interviews run in the Claude Code chat. |
+| `interviews/MOCKS.md` | How mock interviews run in the Claude Code chat, the interviewers' roles, and how a mock is saved: a read and a one-screen conversation with the answer to give for every turn. |
 | `figures/REVIEW.md` | Open review points for the next pass over the figures. |
 
 ## Generated pages
