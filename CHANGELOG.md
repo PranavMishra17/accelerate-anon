@@ -388,3 +388,12 @@ question the mock's design gap needed); contributing, at the end, about their pr
 and what success looks like (six); and collaborating, how the team decides, reviews and
 ships (five). Each kind has when, why and how; each question has who to ask, how to loop
 it in, and what it shows. No change to the plan or to `CHARTER.md`.
+
+**2026-09-27 — The role bank as six themes, in Pranav's voice.**
+Asked for by Pranav, with his own answer to the first theme. The eleven separate role
+questions are merged into six themes: why product engineering and why Kitaru, the public
+half, Kitaru explained, how you'd work here, working with people, and why leave and where
+next. Each theme lists what they may probe, gives one answer, and adds lines to swap in
+when they push. Theme 1 is Pranav's text verbatim; the others follow its voice and use
+only facts already in the prep. The panel shows probes on the light side and the swap-in
+lines on the dark sheet under the answer. No change to the plan or to `CHARTER.md`.
