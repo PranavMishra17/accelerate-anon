@@ -341,3 +341,12 @@ two judges, the miss that punishes improvement, the accept button); each exchang
 to its Prep question. `MOCKS.md` now gives Hamza and Alex distinct roles and lays out a
 full-loop mock, including why this move and why leaving. No change to the plan or to
 `CHARTER.md`.
+
+**2026-09-27 — A mock's conversation opens in one screen.**
+Asked for by Pranav: reading turn by turn down the page meant scrolling per turn. The
+conversation now opens as a full-screen panel: the ten turns on the left with their
+verdicts, and for the one picked, what was asked and how it landed on top, what you said
+(in short, what worked, what did not) on the left, and what to say (the one point to land,
+the answer, how to approach it, the figure) on the right, each scrolling on its own.
+Arrows move between turns; Escape closes. The mock page keeps the read and a one-line list
+of turns. No change to the plan or to `CHARTER.md`.

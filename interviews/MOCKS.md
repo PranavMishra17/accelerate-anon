@@ -62,7 +62,10 @@ side's product: never a hint, always the words to say.
 ## Keeping them
 
 Each mock goes into `interviews/<module>.mocks.json`, and the page is rebuilt with
-`python interviews/build.py <module>`. The page shows the latest two. The shape:
+`python interviews/build.py <module>`. The page shows the latest two: the read, then a
+list of turns that opens the conversation in one screen (turns on the left; for the chosen
+turn, the question and verdict on top, what was said on the left, what to say on the
+right; arrows move, Escape closes). The shape:
 
 ```
 { id, title, when,
@@ -72,6 +75,7 @@ Each mock goes into `interviews/<module>.mocks.json`, and the page is rebuilt wi
   exchanges: [{ id, label, who, q, tests,    who asked what, and what they were testing
                 said: [trimmed answer],
                 verdict: landed | partly | missed | gap, why,
+                land: "the one point to get across",
                 good: [...], bad: [...], approach: [...],
                 say: [the answer to give],   shut behind a toggle
                 figs: [figure keys], ref: "#say-<script>",

@@ -311,8 +311,8 @@ DRILLS = [
 
 MOCK_HOW = ("Full mocks run in the Claude Code chat. Say **'run the ZenML mock, 25 minutes'**. "
             "Hamza leads on your story, why this move and judgement; Alex goes down on mechanism and what the user sees. "
-            "Each mock below starts with the read, then the conversation one exchange at a time: open one for what worked, "
-            "what did not, how to approach it, and the answer to give. Every gap also sits on the Prep tab.")
+            "Each mock below starts with the read. Open the conversation to see every turn in one screen: the turns on the left, "
+            "and for the one you pick, what they asked and how it landed, what you said, and what to say. Every gap also sits on the Prep tab.")
 
 KITARU_LEAD = ("Kitaru spawns your agent as an ordinary subprocess in your own environment, and an in-process adapter "
                "intercepts the agent framework's tool-execution hook, answering each tool call by a SHA-256 lookup "

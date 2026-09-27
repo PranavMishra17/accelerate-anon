@@ -164,19 +164,63 @@ textarea:focus { outline: none; border-color: var(--muted); }
 .mk-list li { margin: 0 0 8px; padding-left: 4px; }
 .mk-list a { font-size: 15px; margin-left: 6px; white-space: nowrap; }
 .mk-good li::marker { color: var(--v-landed); } .mk-bad li::marker { color: var(--v-missed); }
-details.ex > summary { padding: 22px 34px 20px 0; }
-.ex-q { display: block; border-left: 3px solid var(--rule); padding: 1px 0 1px 16px; font-size: 18.5px; font-weight: 700; line-height: 1.5; color: var(--ink); }
+.ex-q { display: block; border-left: 3px solid var(--rule); padding: 1px 0 1px 16px; font-size: 19px; font-weight: 700; line-height: 1.5; color: var(--ink); }
 .ex-q.spk-hamza { border-left-color: var(--hamza); } .ex-q.spk-alex { border-left-color: var(--alex); }
 .ex-who { display: block; font-size: 13.5px; letter-spacing: .03em; font-weight: 700; margin-bottom: 3px; color: var(--muted); }
-.spk-hamza .ex-who { color: var(--hamza); } .spk-alex .ex-who { color: var(--alex); }
-details.ex > summary:hover .ex-q { color: var(--accent); }
-.ex-v { display: block; margin: 10px 0 0 19px; font-size: 15.5px; color: var(--soft); line-height: 1.5; }
-.ex-body { padding-left: 19px; }
-.ex-said { margin: 0 0 6px; padding-left: 14px; border-left: 2px solid var(--rule); color: var(--soft); font-size: 16.5px; }
-.ex-tests { margin: 16px 0 0; font-size: 16px; color: var(--soft); }
-.ex-tests b { color: var(--ink); }
-.ex-links { margin: 18px 0 0; font-size: 15px; }
-@media (max-width: 700px) { .ex-body { padding-left: 0; } .ex-v { margin-left: 0; } }
+.spk-hamza .ex-who, .tw.spk-hamza { color: var(--hamza); } .spk-alex .ex-who, .tw.spk-alex { color: var(--alex); }
+.ex-said { margin: 0 0 8px; padding-left: 14px; border-left: 2px solid var(--rule); color: var(--soft); font-size: 16.5px; }
+.ex-links { margin: 20px 0 0; font-size: 15px; }
+.linkish { background: none; border: 0; padding: 0; color: var(--accent); font-size: 15px; white-space: nowrap; }
+.linkish:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* the turn list: one row per turn, on the page and in the conversation's rail */
+.turns { list-style: none; margin: 18px 0 0; padding: 0; border-top: 1px solid var(--rule); }
+.turn { display: grid; grid-template-columns: 26px 16px minmax(0, 1fr) auto; align-items: baseline; gap: 6px; width: 100%; text-align: left;
+  background: none; border: 0; border-bottom: 1px solid var(--rule); padding: 11px 6px; color: var(--ink); font-size: 16.5px; line-height: 1.4; }
+.turn:hover .tl { color: var(--accent); }
+.turn .n { color: var(--muted); font-size: 14.5px; font-variant-numeric: tabular-nums; }
+.turn .tw { font-size: 13.5px; font-weight: 700; }
+
+/* the conversation: one screen, turns on the left, the chosen turn on the right */
+dialog.convo { width: min(1320px, 96vw); height: min(900px, 92vh); max-width: none; max-height: none; border: 0; border-radius: 10px; padding: 0;
+  background: var(--bg); color: var(--ink); box-shadow: 0 24px 60px rgba(0,0,0,.35); overflow: hidden; }
+dialog.convo::backdrop { background: rgba(10, 10, 14, 0.6); }
+.cv { display: grid; grid-template-columns: 270px minmax(0, 1fr); height: 100%; }
+.cv-rail { border-right: 1px solid var(--rule); overflow-y: auto; padding: 18px 12px 18px 16px; display: flex; flex-direction: column; }
+.cv-title { padding: 0 6px 14px; border-bottom: 1px solid var(--rule); font-size: 15px; line-height: 1.4; }
+.cv-title span { display: block; color: var(--muted); font-size: 13.5px; margin-top: 3px; }
+.cv-rail .turn { border-radius: 6px; border-bottom: 0; margin-top: 2px; font-size: 15.5px; padding: 9px 8px; }
+.cv-rail .turn.on { background: var(--tint); }
+.cv-rail .turn.on .tl { font-weight: 700; }
+.cv-keys { margin-top: auto; padding: 14px 6px 0; font-size: 13.5px; color: var(--muted); }
+.cv-pane { display: flex; flex-direction: column; min-height: 0; }
+.cv-head { padding: 22px 110px 16px 28px; border-bottom: 1px solid var(--rule); flex: none; }
+.cv-verdict { margin: 12px 0 0 19px; font-size: 16px; color: var(--soft); line-height: 1.5; }
+.cv-verdict b { color: var(--ink); }
+.cv-tests { margin: 4px 0 0 19px; font-size: 15px; color: var(--muted); }
+.cv-tests b { color: var(--soft); font-weight: 700; }
+.cv-cols { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); flex: 1; min-height: 0; }
+.cv-col { overflow-y: auto; padding: 20px 28px 32px; }
+.cv-said { border-right: 1px solid var(--rule); }
+.cv-h { font-size: 15px; font-weight: 700; color: var(--muted); margin: 0 0 12px; }
+.cv-col .lab { font-size: 14px; font-weight: 700; color: var(--muted); margin: 20px 0 8px; }
+.cv-col .mk-list { font-size: 16px; }
+.cv-land { font-size: 17.5px; margin: 0 0 14px; padding: 12px 14px; background: var(--tint); border-radius: 6px; }
+.cv-say .transcript { font-size: 17.5px; padding: 18px 22px; margin: 0; }
+.cv-col figure { padding: 12px; margin: 18px 0 0; }
+.cv-col figure svg { min-width: 0; }
+.cv-close { position: absolute; top: 16px; right: 18px; z-index: 2; background: transparent; border: 1px solid var(--rule); color: var(--soft);
+  border-radius: 6px; padding: 5px 12px; font-size: 14.5px; }
+.cv-close:hover { color: var(--ink); border-color: var(--ink); }
+@media (max-width: 860px) {
+  dialog.convo { width: 100vw; height: 100vh; border-radius: 0; }
+  .cv { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .cv-rail { max-height: 30vh; border-right: 0; border-bottom: 1px solid var(--rule); }
+  .cv-cols { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
+  .cv-col { overflow: visible; }
+  .cv-said { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .cv-head { padding-right: 90px; }
+}
 
 /* design */
 figure { margin: 26px 0 34px; padding: 18px; background: #FFFFFF; color: #15141A; border-radius: 8px; overflow-x: auto; }
@@ -274,6 +318,7 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
   <main id="main"></main>
 </div>
 <dialog id="quiz" aria-label="Quiz"></dialog>
+<dialog id="convo" class="convo" aria-label="Mock conversation"></dialog>
 <script src="../figures/icons.js"></script>
 <script src="../figures/figures.js"></script>
 <script src="../figures/notes.js"></script>
@@ -780,47 +825,112 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
       s.appendChild(el("h3", "mk-h", "Fix these first"));
       var ol = el("ol", "mk-list mk-fix");
       m.fix.forEach(function (f) {
-        ol.appendChild(el("li", "", inl(f.t) + (f.ref ? ' <a href="' + link("mocks", pre + "-" + f.ref) + '">See the exchange</a>' : "")));
+        var li = el("li", "", inl(f.t) + " ");
+        var at = ex.findIndex(function (x) { return x.id === f.ref; });
+        if (at >= 0) { li.appendChild(openLink("See turn " + (at + 1), m, at)); }
+        ol.appendChild(li);
       });
       s.appendChild(ol);
     }
-    var c = heading(host, pre + "-talk", "Read along, one exchange at a time", "The conversation");
-    bulk(c);
-    ex.forEach(function (x, i) { c.appendChild(exchange(pre, x, i)); });
+    /* The turns, one line each; the conversation itself opens in one screen. */
+    var c = heading(host, pre + "-talk", "Every turn, in one screen", "The conversation");
+    var go = el("button", "btn primary", "Open the conversation");
+    go.addEventListener("click", function () { openConvo(m, 0); });
+    c.appendChild(el("div", "acts")).appendChild(go);
+    var list = el("ol", "turns");
+    ex.forEach(function (x, i) {
+      var li = el("li");
+      var b = el("button", "turn");
+      b.innerHTML = '<span class="n">' + (i + 1) + '</span><span class="vd vd-' + esc(x.verdict) + '"></span><span class="tl">' + esc(x.label || x.q) +
+        '</span><span class="tw spk-' + esc((x.who || "").toLowerCase()) + '">' + esc(x.who) + "</span>";
+      b.addEventListener("click", function () { openConvo(m, i); });
+      li.appendChild(b); list.appendChild(li);
+    });
+    c.appendChild(list);
   }
-  function exchange(pre, x, i) {
-    var box = el("details", "item ex"); box.id = pre + "-" + x.id;
-    var who = (x.who || "").toLowerCase();
-    var sm = el("summary");
-    sm.innerHTML = '<span class="ex-q spk-' + esc(who) + '"><span class="ex-who">' + esc(x.who) + '</span>' + inl(x.q) + "</span>" +
-      '<span class="ex-v"><span class="vd vd-' + esc(x.verdict) + '"></span>' + esc(VERDICT[x.verdict] || x.verdict) + ". " + inl(x.why || "") + "</span>";
-    box.appendChild(sm);
-    nav.push([box.id, (i + 1) + ". " + (x.label || x.q), true]);
-    var b = el("div", "sbody ex-body");
-    b.appendChild(el("div", "lab", "What you said"));
-    (x.said || []).forEach(function (p) { b.appendChild(el("p", "ex-said", inl(p))); });
-    if (x.tests) { b.appendChild(el("p", "ex-tests", "<b>What they were testing.</b> " + inl(x.tests))); }
-    function list(label, items, cls) {
-      if (!items || !items.length) { return; }
-      b.appendChild(el("div", "lab", label));
-      var ul = el("ul", "mk-list " + cls);
-      items.forEach(function (t) { ul.appendChild(el("li", "", inl(t))); });
-      b.appendChild(ul);
+  function openLink(text, m, i) {
+    var a = el("button", "linkish", esc(text));
+    a.addEventListener("click", function () { openConvo(m, i); });
+    return a;
+  }
+
+  /* One screen: the turns on the left, the chosen turn on the right. The turn's header is
+     what they asked and how it landed; under it, what you said on the left and what to say
+     on the right, each column scrolling on its own. Up and down arrows move; Escape closes. */
+  var convo = document.getElementById("convo");
+  function openConvo(m, start) {
+    var ex = m.exchanges, cur = start || 0;
+    convo.innerHTML = "";
+    var shell = el("div", "cv");
+    var rail = el("nav", "cv-rail");
+    rail.appendChild(el("div", "cv-title", "<b>" + esc(m.title) + "</b><span>" + esc(m.when) + "</span>"));
+    var items = ex.map(function (x, i) {
+      var b = el("button", "turn");
+      b.innerHTML = '<span class="n">' + (i + 1) + '</span><span class="vd vd-' + esc(x.verdict) + '"></span><span class="tl">' + esc(x.label || x.q) +
+        '</span><span class="tw spk-' + esc((x.who || "").toLowerCase()) + '">' + esc(x.who) + "</span>";
+      b.addEventListener("click", function () { show(i); });
+      rail.appendChild(b);
+      return b;
+    });
+    rail.appendChild(el("div", "cv-keys", "Up and down arrows move. Escape closes."));
+    var pane = el("section", "cv-pane");
+    var close = el("button", "cv-close", "Close");
+    close.setAttribute("aria-label", "Close the conversation");
+    close.addEventListener("click", function () { convo.close(); });
+    shell.appendChild(rail); shell.appendChild(pane);
+    convo.appendChild(close); convo.appendChild(shell);
+
+    function section(host, label, nodes) {
+      if (!nodes.length) { return; }
+      host.appendChild(el("div", "lab", label));
+      nodes.forEach(function (n) { host.appendChild(n); });
     }
-    list("What worked", x.good, "mk-good");
-    list("What did not", x.bad, "mk-bad");
-    list("How to approach it", x.approach, "");
-    (x.figs || []).forEach(function (k) { var f = figNode(k, 0); if (f) { b.appendChild(f); } });
-    if (x.say && x.say.length) {
-      var t = sayToggle("The answer to give", transcript(x.say, "You", ""));
-      b.appendChild(t);
+    function ul(items, cls) {
+      var u = el("ul", "mk-list " + (cls || ""));
+      (items || []).forEach(function (t) { u.appendChild(el("li", "", inl(t))); });
+      return (items && items.length) ? [u] : [];
     }
-    var links = [];
-    if (x.prepId) { links.push('<a href="' + link("prep", x.prepId) + '">Revise it on the Prep tab</a>'); }
-    if (x.ref) { links.push('<a href="' + prepRef(x.ref) + '">The prepared script</a>'); }
-    if (links.length) { b.appendChild(el("p", "ex-links", links.join('<span class="sep"></span>'))); }
-    box.appendChild(b);
-    return box;
+    function show(i) {
+      cur = i;
+      var x = ex[i], who = (x.who || "").toLowerCase();
+      items.forEach(function (b, j) { b.classList.toggle("on", j === i); if (j === i) { b.setAttribute("aria-current", "true"); } else { b.removeAttribute("aria-current"); } });
+      items[i].scrollIntoView({ block: "nearest" });
+      pane.innerHTML = "";
+      var head = el("header", "cv-head");
+      head.appendChild(el("div", "ex-q spk-" + who, '<span class="ex-who">Turn ' + (i + 1) + " of " + ex.length + ", " + esc(x.who) + "</span>" + inl(x.q)));
+      head.appendChild(el("p", "cv-verdict", '<span class="vd vd-' + esc(x.verdict) + '"></span><b>' + esc(VERDICT[x.verdict] || x.verdict) + ".</b> " + inl(x.why || "")));
+      if (x.tests) { head.appendChild(el("p", "cv-tests", "<b>They were testing:</b> " + inl(x.tests))); }
+      pane.appendChild(head);
+      var cols = el("div", "cv-cols");
+      var said = el("div", "cv-col cv-said");
+      said.appendChild(el("h3", "cv-h", "What you said"));
+      section(said, "In short", (x.said || []).map(function (p) { return el("p", "ex-said", inl(p)); }));
+      section(said, "What worked", ul(x.good, "mk-good"));
+      section(said, "What did not", ul(x.bad, "mk-bad"));
+      var say = el("div", "cv-col cv-say");
+      say.appendChild(el("h3", "cv-h", "What to say"));
+      if (x.land) { say.appendChild(el("p", "cv-land", "<b>Land on this.</b> " + inl(x.land))); }
+      if (x.say && x.say.length) { say.appendChild(transcript(x.say, "You", "")); }
+      section(say, "How to approach it", ul(x.approach));
+      (x.figs || []).forEach(function (k) { var f = figNode(k, 0); if (f) { say.appendChild(f); } });
+      var links = [];
+      if (x.prepId) { links.push('<a href="' + link("prep", x.prepId) + '">Revise it on the Prep tab</a>'); }
+      if (x.ref) { links.push('<a href="' + prepRef(x.ref) + '">The prepared script</a>'); }
+      if (links.length) { say.appendChild(el("p", "ex-links", links.join('<span class="sep"></span>'))); }
+      cols.appendChild(said); cols.appendChild(say);
+      pane.appendChild(cols);
+      said.scrollTop = 0; say.scrollTop = 0;
+    }
+    convo.onkeydown = function (e) {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        var n = cur + (e.key === "ArrowDown" ? 1 : -1);
+        if (n >= 0 && n < ex.length) { show(n); items[n].focus(); }
+      }
+    };
+    show(cur);
+    try { convo.showModal(); } catch (err) { convo.setAttribute("open", ""); }
+    items[cur].focus();
   }
 
   /* ---------------------------------------------------------------- quiz, one question at a time */
@@ -925,6 +1035,7 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
   var shown = null;
   function route() {
     var r = parse();
+    if (convo.open) { convo.close(); }
     try {
       main.innerHTML = ""; nav = [];
       if (r.tab === "overview") { tabOverview(main); }
