@@ -60,14 +60,14 @@ ol.how { padding-left: 22px; } ol.how li { margin: 0 0 8px; }
 .hidden { display: none; }
 /* The one-screen cheat sheet: cream in every mode, six columns, sized to a landscape screen */
 .cheat { position: fixed; inset: 0; z-index: 50; background: #FBF8F1; color: #1D1B17; display: flex; flex-direction: column;
-  font: var(--cs-f) / 1.38 var(--body); --cs-f: clamp(10.5px, min(0.62vw, 1.15vh), 15px); }
+  font: var(--cs-f) / 1.3 var(--body); --cs-f: clamp(10.5px, min(0.62vw, 1.15vh), 15px); }
 .cheat[hidden] { display: none; }
 .cs-top { display: flex; gap: 14px; align-items: baseline; padding: 8px 16px; border-bottom: 1px solid #E7E0D2; font-size: 1.05em; }
 .cs-top span { color: #736D62; }
 .cs-top .grow { flex: 1; }
 .cs-top button { font: inherit; font-size: .95em; padding: 3px 12px; border: 1px solid #E3DACA; border-radius: 6px; background: #F4EEE2; color: #1D1B17; cursor: pointer; }
-.cs-grid { flex: 1; min-height: 0; padding: 10px 14px 12px; column-count: 6; column-gap: 10px; column-fill: balance; overflow: auto; }
-.cs-card { break-inside: avoid; border: 1px solid #E7E0D2; border-radius: 8px; padding: 7px 10px 6px; margin: 0 0 10px; background: #FFFDF8; }
+.cs-grid { flex: 1; min-height: 0; padding: 10px 14px 12px; column-count: 6; column-gap: 10px; column-fill: auto; overflow: auto; }
+.cs-card { break-inside: avoid; border: 1px solid #E7E0D2; border-radius: 8px; padding: 6px 9px 5px; margin: 0 0 8px; background: #FFFDF8; }
 .cs-card h3 { margin: 0 0 3px; font-size: 1.12em; }
 .cs-card h3 a { color: #0A5BD3; }
 .cs-card p { margin: 0 0 3px; }
@@ -76,7 +76,7 @@ ol.how { padding-left: 22px; } ol.how li { margin: 0 0 8px; }
 .cs-click { cursor: pointer; }
 .cs-click:hover, .cs-click:focus { border-color: #C9BFA9; outline: none; box-shadow: 0 1px 0 #E3DACA; }
 .cs-card .cs-ex { margin: 0 0 3px; font-size: .95em; }
-.cs-card pre { margin: 4px 0; padding: 5px 8px; font-size: .9em; line-height: 1.4; border-radius: 6px; white-space: pre-wrap; overflow: visible; }
+.cs-card pre { margin: 3px 0; padding: 4px 7px; font-size: .9em; line-height: 1.3; border-radius: 6px; white-space: pre-wrap; overflow: visible; }
 .top .cheat-btn { font-weight: 700; }
 @media (max-width: 900px) { .cs-grid { column-count: 1; } .cs-top span:not(.grow) { display: none; } }
 @media print { body > :not(.cheat) { display: none; } .cheat { position: static; } }
@@ -185,7 +185,7 @@ details.var > summary .pl { font-style: italic; }
   </main>
 </div>
 <div id="cheat" class="cheat" role="dialog" aria-label="Coding cheat sheet" hidden>
-  <div class="cs-top"><b>Coding cheat sheet</b><span>Click a card for worked examples and variations. F for full screen, Esc to close.</span><span class="grow"></span><button type="button" id="cs-full">Full screen</button><button type="button" id="cs-close">Close</button></div>
+  <div class="cs-top"><b>Coding cheat sheet</b><span>Patterns, then algorithms. Click a card for worked examples and variations. F for full screen, Esc to close.</span><span class="grow"></span><button type="button" id="cs-full">Full screen</button><button type="button" id="cs-close">Close</button></div>
   <div class="cs-grid" id="cs-grid"></div>
 </div>
 <div id="pop" class="pop" hidden><div class="pop-in" role="dialog" aria-modal="true" aria-label="Pattern, side by side"><div class="pop-l" id="pop-l"></div><div class="pop-r" id="pop-r"></div><button type="button" class="pop-x" id="pop-x">Close</button></div></div>
@@ -354,7 +354,7 @@ details.var > summary .pl { font-style: italic; }
     { id: "dp", title: "Dynamic programming", group: "Techniques",
       ex: {"i": "coins = [1, 2, 5], amount = 11", "o": "3", "w": "5 + 5 + 1"},
       sheet: {"spot": "Count ways, min or max cost, can you; choices overlap.", "move": "State in words, recurrence, base, order.", "code": "dp = [0] + [inf] * amt\nfor x in range(1, amt + 1):\n    for c in coins:\n        if c <= x:\n            dp[x] = min(dp[x], dp[x - c] + 1)", "notes": ["Start top-down with @cache, then a table.", "Two strings: dp[i][j]. Only the last row needed: O(n) space.", "Know: climb, rob, coin change, LIS, LCS, knapsack."]},
-      vars: [{"n": "Longest increasing subsequence", "ex": {"i": "[10, 9, 2, 5, 3, 7, 101, 18]", "o": "4", "w": "2, 3, 7, 18"}, "t": "Keep the smallest tail for each length; bisect places each number. O(n log n).", "code": "from bisect import bisect_left\n\ndef lis(nums):\n    tails = []                           # tails[i]: smallest end of a run of length i + 1\n    for x in nums:\n        i = bisect_left(tails, x)\n        if i == len(tails):\n            tails.append(x)\n        else:\n            tails[i] = x\n    return len(tails)"}, {"n": "Unique paths in a grid", "ex": {"i": "3 rows, 7 columns", "o": "28", "w": "moves right or down only"}, "t": "Each cell is paths from above plus paths from the left; one row is enough.", "code": "def unique_paths(m, n):\n    row = [1] * n\n    for _ in range(1, m):\n        for j in range(1, n):\n            row[j] += row[j - 1]         # above (old row[j]) + left\n    return row[-1]"}, {"n": "Word break", "ex": {"i": "\"leetcode\", [\"leet\", \"code\"]", "o": "True", "w": "\"leet\" + \"code\""}, "t": "ok[i] means s[:i] can be split; try every last word.", "code": "def word_break(s, words):\n    words = set(words)\n    ok = [True] + [False] * len(s)\n    for i in range(1, len(s) + 1):\n        ok[i] = any(ok[j] and s[j:i] in words for j in range(i))\n    return ok[-1]"}, {"n": "0/1 knapsack", "ex": {"i": "weights [1, 3, 4], values [15, 20, 30], capacity 4", "o": "35", "w": "items 1 and 3"}, "t": "Loop capacity downward so each item is used at most once.", "code": "def knapsack(wts, vals, cap):\n    dp = [0] * (cap + 1)\n    for w, v in zip(wts, vals):\n        for c in range(cap, w - 1, -1):  # downward: this item once\n            dp[c] = max(dp[c], dp[c - w] + v)\n    return dp[cap]"}],
+      vars: [{"n": "Maximum subarray (Kadane's)", "ex": {"i": "[-2, 1, -3, 4, -1, 2, 1, -5, 4]", "o": "6", "w": "[4, -1, 2, 1]"}, "t": "The state is the best sum ending here: extend the run or restart at x. O(n), O(1).", "code": "def max_subarray(nums):\n    best = cur = nums[0]\n    for x in nums[1:]:\n        cur = max(x, cur + x)     # extend the run, or restart at x\n        best = max(best, cur)\n    return best"}, {"n": "Longest increasing subsequence", "ex": {"i": "[10, 9, 2, 5, 3, 7, 101, 18]", "o": "4", "w": "2, 3, 7, 18"}, "t": "Keep the smallest tail for each length; bisect places each number. O(n log n).", "code": "from bisect import bisect_left\n\ndef lis(nums):\n    tails = []                           # tails[i]: smallest end of a run of length i + 1\n    for x in nums:\n        i = bisect_left(tails, x)\n        if i == len(tails):\n            tails.append(x)\n        else:\n            tails[i] = x\n    return len(tails)"}, {"n": "Unique paths in a grid", "ex": {"i": "3 rows, 7 columns", "o": "28", "w": "moves right or down only"}, "t": "Each cell is paths from above plus paths from the left; one row is enough.", "code": "def unique_paths(m, n):\n    row = [1] * n\n    for _ in range(1, m):\n        for j in range(1, n):\n            row[j] += row[j - 1]         # above (old row[j]) + left\n    return row[-1]"}, {"n": "Word break", "ex": {"i": "\"leetcode\", [\"leet\", \"code\"]", "o": "True", "w": "\"leet\" + \"code\""}, "t": "ok[i] means s[:i] can be split; try every last word.", "code": "def word_break(s, words):\n    words = set(words)\n    ok = [True] + [False] * len(s)\n    for i in range(1, len(s) + 1):\n        ok[i] = any(ok[j] and s[j:i] in words for j in range(i))\n    return ok[-1]"}, {"n": "0/1 knapsack", "ex": {"i": "weights [1, 3, 4], values [15, 20, 30], capacity 4", "o": "35", "w": "items 1 and 3"}, "t": "Loop capacity downward so each item is used at most once.", "code": "def knapsack(wts, vals, cap):\n    dp = [0] * (cap + 1)\n    for w, v in zip(wts, vals):\n        for c in range(cap, w - 1, -1):  # downward: this item once\n            dp[c] = max(dp[c], dp[c - w] + v)\n    return dp[cap]"}],
       spot: "Count the ways, min or max cost, choices that overlap. <b>Signal:</b> 'how many ways', 'minimum cost', and a brute force that repeats work.",
       cx: "States times transitions; memoisation turns exponential into polynomial.",
       tpl: "from functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef best(i):\n    if i >= n:\n        return 0\n    return max(take(i) + best(i + 2), best(i + 1))",
@@ -421,8 +421,11 @@ details.var > summary .pl { font-style: italic; }
     { id: "techniques", title: "Techniques", blurb: "Dynamic programming, backtracking, and the small utilities AI rounds ask for." }
   ];
   var EXTRA = {"say": {"title": "Say it out loud", "notes": ["<b>1</b> Restate it; ask size, empty, duplicates, negatives.", "<b>2</b> Brute force and its cost, first.", "<b>3</b> Name the pattern and the target cost.", "<b>4</b> Code while talking; clear names.", "<b>5</b> Trace one example, then empty, one, all-same.", "<b>6</b> Time and space; one improvement."]}, "input": {"title": "The input tells you the target", "notes": ["n &le; 20: 2<sup>n</sup>, backtracking &middot; n &le; 500: n<sup>3</sup> &middot; n &le; 5,000: n<sup>2</sup>", "n &le; 10<sup>6</sup>: n log n or n &middot; huge: log n or math", "<b>Sorted</b> &rarr; binary search, two pointers", "<b>Contiguous</b> &rarr; window; with negatives &rarr; prefix sums", "<b>Top k</b> &rarr; heap &middot; <b>fewest steps</b> &rarr; BFS", "<b>Count ways / min cost</b> &rarr; DP &middot; <b>every combination</b> &rarr; backtracking"]}, "tools": {"title": "Python you reach for", "code": "Counter(a).most_common(k)\ndefaultdict(list); deque().popleft()\nheapq.heappush / heappop / nlargest\nbisect_left(a, x)\nsorted(a, key=lambda p: (p[1], -p[0]))\n@functools.cache\nitertools.combinations / accumulate", "notes": ["float('inf'); divmod(a, b); ''.join(parts)."]}, "edge": {"title": "Edge cases to say", "notes": ["Empty input; one element; all the same.", "Negatives and zero; duplicates.", "Already sorted, or reversed.", "Off by one: r - l + 1, lo &le; hi.", "Deep recursion past 1,000: go iterative.", "Strings: case, spaces, unicode."]}, "traps": {"title": "Python traps", "notes": ["[[0] * m] * n shares rows: use a comprehension.", "def f(x=[]) shares the list across calls.", "list.pop(0) is O(n): use deque.", "s += c in a loop is O(n<sup>2</sup>): use join.", "-7 // 2 is -4: floor division.", "Don't mutate a list while looping over it."]}};
-  var ORDER = ["say", "input", "hashing", "prefix", "pointers", "window", "stack", "binary", "linked", "trees", "graphs", "order",
-    "heap", "intervals", "dp", "backtrack", "tools", "edge", "traps", "ai"];
+  var ALGO = {"bfs": {"title": "BFS", "pop": "graphs", "at": 0, "ex": {"i": "edges 1-2, 1-3, 3-4, from 1", "o": "{1: 0, 2: 1, 3: 1, 4: 2}", "w": ""}, "spot": "Fewest steps; level by level; unweighted.", "code": "q, dist = deque([s]), {s: 0}\nwhile q:\n    u = q.popleft()\n    for v in g[u]:\n        if v not in dist:\n            dist[v] = dist[u] + 1\n            q.append(v)", "notes": ["Mark when you push, not when you pop.", "Many sources: start the queue with all of them.", "O(V + E)."]}, "dfs": {"title": "DFS", "pop": "graphs", "at": 1, "ex": {"i": "edges 1-2, 3-4; count pieces", "o": "2", "w": ""}, "spot": "Explore everything; components, paths, cycles.", "code": "def dfs(u):\n    seen.add(u)\n    for v in g[u]:\n        if v not in seen:\n            dfs(v)", "notes": ["Iterative: a stack instead of the call stack.", "Directed cycle: meeting a node still on the path.", "Past 1,000 deep: go iterative. O(V + E)."]}, "topo": {"title": "Topological sort", "pop": "order", "at": 1, "ex": {"i": "0 -> 1, 0 -> 2, 1 -> 3, 2 -> 3", "o": "[0, 1, 2, 3]", "w": ""}, "spot": "Prerequisites; build order; can all finish.", "code": "q = deque(u for u in range(n) if indeg[u] == 0)\norder = []\nwhile q:\n    u = q.popleft()\n    order.append(u)\n    for v in g[u]:\n        indeg[v] -= 1\n        if indeg[v] == 0:\n            q.append(v)", "notes": ["len(order) &lt; n means a cycle.", "DFS version: post-order, reversed. O(V + E)."]}, "dijkstra": {"title": "Dijkstra", "pop": "order", "at": 2, "ex": {"i": "a-b 1, b-c 2, a-c 4, from a", "o": "c = 3", "w": ""}, "spot": "Cheapest path; non-negative weights.", "code": "dist, h = {s: 0}, [(0, s)]\nwhile h:\n    d, u = heapq.heappop(h)\n    if d > dist[u]: continue   # stale\n    for v, w in g[u]:\n        if d + w < dist.get(v, inf):\n            dist[v] = d + w\n            heapq.heappush(h, (d + w, v))", "notes": ["Negative weights: Bellman-Ford, n - 1 rounds.", "At most k stops: Bellman-Ford, k + 1 rounds.", "O(E log V)."]}, "uf": {"title": "Union-find", "pop": "order", "at": 0, "ex": {"i": "union(0, 1), union(1, 2); find(0) == find(2)", "o": "True", "w": ""}, "spot": "Are these connected; merge groups; redundant edge.", "code": "def find(x):\n    while parent[x] != x:\n        parent[x] = parent[parent[x]]\n        x = parent[x]\n    return x\n\ndef union(a, b):\n    ra, rb = find(a), find(b)\n    if ra == rb: return False   # a cycle\n    parent[ra] = rb\n    return True", "notes": ["parent = list(range(n)) to start.", "Components = n minus successful unions.", "Nearly O(1) per call."]}, "kadane": {"title": "Kadane's: max subarray", "pop": "dp", "at": 5, "ex": {"i": "[-2, 1, -3, 4, -1, 2, 1, -5, 4]", "o": "6", "w": "[4, -1, 2, 1]"}, "spot": "Best contiguous sum.", "code": "best = cur = a[0]\nfor x in a[1:]:\n    cur = max(x, cur + x)   # extend, or restart at x\n    best = max(best, cur)", "notes": ["Max product: track the min too; a negative flips them.", "Circular: total minus the min subarray. O(n), O(1)."]}, "sorting": {"title": "Sorting and selection", "pop": "heap", "at": 1, "ex": {"i": "[3, 2, 1, 5, 6, 4], kth largest, k = 2", "o": "5", "w": ""}, "spot": "Sort to expose order; select without a full sort.", "code": "def merge_sort(a):\n    if len(a) <= 1: return a\n    m = len(a) // 2\n    l, r = merge_sort(a[:m]), merge_sort(a[m:])\n    out, i, j = [], 0, 0\n    while i < len(l) and j < len(r):\n        if l[i] <= r[j]: out.append(l[i]); i += 1\n        else: out.append(r[j]); j += 1\n    return out + l[i:] + r[j:]", "notes": ["sorted() is Timsort: stable, O(n log n).", "Kth: quickselect, O(n) average; or a heap of k.", "Small values: counting sort, O(n + k)."]}};
+  Object.keys(ALGO).forEach(function (k) { EXTRA[k] = ALGO[k]; });
+  // Patterns, then the algorithms (graph pattern cards are covered by BFS to union-find), then tools.
+  var ORDER = ["hashing", "prefix", "pointers", "window", "stack", "binary", "linked", "trees", "heap", "intervals",
+    "bfs", "dfs", "topo", "dijkstra", "uf", "dp", "kadane", "backtrack", "sorting", "ai", "tools", "edge", "traps"];
   var byId = {};
   P.forEach(function (p) { byId[p.id] = p; });
   function groupOf(p) { return p.group.toLowerCase(); }
@@ -497,14 +500,15 @@ details.var > summary .pl { font-style: italic; }
 
   // The cheat sheet: one screen of cards drawn from the same data. Opened by #cheat; F for full screen, Esc to close.
   function cardHtml(key) {
-    var p = byId[key], c = p ? p.sheet : EXTRA[key];
-    var h = p ? '<div class="cs-card cs-click" data-pop="' + key + '" tabindex="0" role="button">' : '<div class="cs-card">';
+    var p = byId[key], c = p ? p.sheet : EXTRA[key], target = p ? key : c.pop, ex = p ? p.ex : c.ex;
+    var h = target ? '<div class="cs-card cs-click" data-pop="' + target + '" data-at="' + (c.at || 0) + '" tabindex="0" role="button">' : '<div class="cs-card">';
     h += "<h3>" + esc(p ? p.title : c.title) + "</h3>";
-    if (p) { h += '<p class="cs-ex">' + exLine(p.ex, true) + "</p>"; }
+    if (ex) { h += '<p class="cs-ex">' + exLine(ex, true) + "</p>"; }
     if (c.spot) { h += "<p><b>Spot:</b> " + c.spot + "</p>"; }
     if (c.move) { h += "<p><b>Move:</b> " + c.move + "</p>"; }
     if (c.code) { h += "<pre>" + hl(c.code) + "</pre>"; }
-    if (c.notes) { h += "<ul>" + c.notes.map(li).join("") + "</ul>"; }
+    // A clickable card keeps its sharpest nuance; the rest are in its popup.
+    if (c.notes) { h += "<ul>" + (target ? c.notes.slice(0, 1) : c.notes).map(li).join("") + "</ul>"; }
     return h + "</div>";
   }
   document.getElementById("cs-grid").innerHTML = ORDER.map(cardHtml).join("");
@@ -512,7 +516,28 @@ details.var > summary .pl { font-style: italic; }
   function syncCheat() {
     cheat.hidden = location.hash !== "#cheat";
     syncScroll();
+    fitSheet();
   }
+  // Screens and display scaling differ: shrink the text until every card fits on one screen.
+  var grid = document.getElementById("cs-grid");
+  function fitSheet() {
+    if (cheat.hidden) { return; }
+    cheat.style.fontSize = "";
+    grid.style.columnCount = "";
+    var f = parseFloat(getComputedStyle(cheat).fontSize), cols = [6, 7, 8];
+    function fits() { return grid.scrollWidth <= grid.clientWidth + 1; }
+    // The largest font that fits in six, seven or eight columns.
+    for (; f >= 8.5; f -= 0.25) {
+      cheat.style.fontSize = f + "px";
+      for (var i = 0; i < cols.length; i++) {
+        grid.style.columnCount = cols[i];
+        if (fits()) { return; }
+      }
+    }
+  }
+  var fitTimer = null;
+  window.addEventListener("resize", function () { clearTimeout(fitTimer); fitTimer = setTimeout(fitSheet, 120); });
+  try { document.fonts.ready.then(fitSheet); } catch (e) { /* no font loading API */ }
   function closeCheat() {
     closePop();
     try { if (document.fullscreenElement) { document.exitFullscreen(); } } catch (e) { /* not supported */ }
@@ -530,7 +555,7 @@ details.var > summary .pl { font-style: italic; }
   // Side by side: nuances and the list of problems on the left, the chosen one's code on the right.
   var pop = document.getElementById("pop"), popL = document.getElementById("pop-l"), popR = document.getElementById("pop-r"), items = [], at = 0;
   function syncScroll() { document.body.style.overflow = cheat.hidden && pop.hidden ? "" : "hidden"; }
-  function openPop(key) {
+  function openPop(key, start) {
     var p = byId[key];
     items = [{ kind: "The template", n: p.title, ex: p.ex, t: p.sheet.move ? "<b>The move.</b> " + p.sheet.move : p.sheet.spot, th: true, code: p.tpl, c: p.cx }]
       .concat(p.probs.map(function (q) { return { kind: "Classic problem", n: q.n, ex: q.ex, t: q.task + " Hint: " + q.hint, code: q.sol, c: q.c }; }))
@@ -547,8 +572,8 @@ details.var > summary .pl { font-style: italic; }
       '<p class="pl-foot">Up and down arrows move; Esc closes. <a href="#' + p.id + '">Open on the page</a></p>';
     pop.hidden = false;
     syncScroll();
-    pick(0);
     popL.scrollTop = 0;
+    pick(start || 0);
   }
   function pick(i) {
     at = Math.max(0, Math.min(items.length - 1, i));
@@ -573,7 +598,7 @@ details.var > summary .pl { font-style: italic; }
   document.getElementById("pop-x").addEventListener("click", closePop);
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-pop]");
-    if (t && !t.closest("#pop")) { e.preventDefault(); openPop(t.getAttribute("data-pop")); }
+    if (t && !t.closest("#pop")) { e.preventDefault(); openPop(t.getAttribute("data-pop"), +(t.getAttribute("data-at") || 0)); }
   });
   document.addEventListener("keydown", function (e) {
     if (!pop.hidden) {
@@ -585,7 +610,7 @@ details.var > summary .pl { font-style: italic; }
     if (cheat.hidden || e.target.tagName === "INPUT") { return; }
     if (e.key === "Escape" && !document.fullscreenElement) { closeCheat(); }
     else if (e.key === "f" || e.key === "F") { fullCheat(); }
-    else if (e.key === "Enter" && e.target.getAttribute && e.target.getAttribute("data-pop")) { openPop(e.target.getAttribute("data-pop")); }
+    else if (e.key === "Enter" && e.target.getAttribute && e.target.getAttribute("data-pop")) { openPop(e.target.getAttribute("data-pop"), +(e.target.getAttribute("data-at") || 0)); }
   });
 
   // Routes: #cheat, #<tab>, #<pattern> (opens it in its tab), #how and #bigo.

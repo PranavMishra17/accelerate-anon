@@ -529,3 +529,14 @@ across every tab. The cheat sheet is drawn from the same data, six columns with 
 example on each card, still one 1920x1080 screen; clicking a card, or 'See it side by
 side' on the page, opens a landscape popup with the nuances and the list of problems on
 the left and the chosen one's code on the right. No change to the plan or to `CHARTER.md`.
+
+**2026-09-28 — Cheat sheet: the algorithms, and a fit to any screen.**
+The sheet had patterns but not the algorithms themselves. It now has cards for BFS, DFS,
+topological sort, Dijkstra, union-find, Kadane's and sorting and selection, each with a
+tested snippet; each opens its popup at the matching problem (Kadane's is a new DP
+variation). 'Say it out loud' and 'The input tells you the target' left the sheet (both
+stay on the Start tab), and the two graph pattern cards gave way to the algorithm cards
+that cover them. At 125% display scaling the screen was smaller than the sheet was built
+for, so it spilled sideways: it now fills columns top to bottom and picks the largest
+text that fits in six to eight columns, and each clickable card keeps its sharpest
+nuance, with the rest in its popup. No change to the plan or to `CHARTER.md`.
