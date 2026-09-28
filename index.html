@@ -2245,7 +2245,8 @@
         intro: "You know alfred_ from the inside, slice by slice. An interviewer wants it from the outside: where a message enters, where the agent runs, where state lives, what runs in the background. Every step here is a drawing or a spoken answer, done cold, on paper, before you open the answer. Checked against the code on origin/main, 28 September 2026. Repeat until each takes under five minutes.",
         steps: [
           { t: "Draw where everything runs", m: 10,
-            sd: [{ v: "alfred", a: "hld", why: "The deployment map and the full high-level design." }],
+            sd: [{ v: "alfred", why: "Start here, at the top of the design: where it runs, one SMS, memory, with both figures." },
+                 { v: "alfred", a: "hld", why: "The full high-level design." }],
             d: "Cold, on paper, three rows. Top: every way a request comes in. Middle: where compute runs. Bottom: where state, queues and schedules live, and the outside services. Then say, in one sentence, where the agent runs. The trap from the call: Postgres is where state lives, not where the agent runs.",
             ans: [
               "Requests come in four ways: SMS through a Linq webhook; the web app, Next.js on Vercel; Claude over MCP, through alfred-web's /api/mcp on Vercel; and phone calls through LiveKit.",

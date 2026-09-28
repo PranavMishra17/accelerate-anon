@@ -2884,6 +2884,29 @@ GUIDE.examples.push({
   tabLabel: "alfred_ (real system)",
   title: "alfred_",
   kind: "A shipped email and calendar agent, read from its own code",
+  start: {
+    title: "Start here: the three answers",
+    blocks: [
+      { type: "list", title: "Where does the agent run?", items: [
+        "In a Deno edge function on Supabase: `conv-v6-turn` for SMS, `conv-v6-web` for the web app.",
+        "Long-running work (documents, routines, the phone agent, EmailEngine for IMAP) runs in containers on Railway.",
+        "State lives in one Postgres, with pgmq for queues and pg_cron for schedules. Postgres is where state lives, never where the agent runs."
+      ]},
+      { type: "fig", key: "alfredDeploy" },
+      { type: "list", title: "One SMS, end to end", ordered: true, items: [
+        "Linq webhook → `conv-v6-ingress`: checks the signature, dedupes, stores the message, inserts a job row, returns fast.",
+        "The job worker claims the job (`SKIP LOCKED`) and hands it to `conv-v6-turn`.",
+        "The turn runs: lease, trace, context, prompt, then the LangGraph agent, up to 12 steps.",
+        "Every tool call goes through the wrapper stack, then guards check the reply before it is sent back through Linq."
+      ]},
+      { type: "list", title: "Memory across conversations: three kinds, each reaching the turn a different way", items: [
+        "**The conversation.** The last 30 messages, trimmed to 6,000 tokens, go in as the transcript, plus a rolling summary and related past chats.",
+        "**Facts** sit in the cached per-user block.",
+        "**Working memory** is fetched on demand through a lookup tool."
+      ]},
+      { type: "fig", key: "alfredMemory" }
+    ]
+  },
   prompt: "Design alfred_. It watches a user's inboxes and calendars, acts on mail without being asked (archive, label, draft, notify), and answers the user over SMS, web chat, and an MCP connector with tools over email, calendar, tasks, and memory.",
   lens: [
     "This is the email agent example as it actually shipped: one Postgres, about 370 Deno edge functions, about 250 cron registrations, a few long-running containers on Railway, and one tool package that every surface imports. The interesting design is what sits around the model, not the model.",
@@ -2949,8 +2972,7 @@ GUIDE.examples.push({
           { term: "The conversation", desc: "The last 30 messages, trimmed to 6,000 tokens, as the transcript; a rolling summary every 8 messages and the three most related past chats in the per-turn block." },
           { term: "Facts", desc: "`v6_user_facts`: written by the agent's remember and update tools and by an extraction job every 12 messages; up to 40 in the cached per-user block; the user can correct them." },
           { term: "Working memory", desc: "`working_memory_items`: one row per loop (owed reply, awaited reply, obligation), built by scheduled reconcilers in code; fetched on demand by `working_memory_lookup`, not placed in every prompt." }
-        ]},
-        { type: "fig", key: "alfredMemory" }
+        ]}
       ],
       reasoning: [
         "Call out PendingAction as the contended entity now. Two consumers (executor and drafter) and one reverser all move its status.",
@@ -3115,8 +3137,7 @@ ToolDef {
 
     hld: {
       board: [
-        { type: "note", text: "Draw it cold first: the drill 'alfred_ from the outside' is the first session in your tracker's wildcard. Where everything runs, checked against the code on 28 September 2026:" },
-        { type: "fig", key: "alfredDeploy" },
+        { type: "note", text: "Draw it cold first: the drill 'alfred_ from the outside' is the first session in your tracker's wildcard. Where everything runs is at the top of this design, checked against the code on 28 September 2026." },
         { type: "diagram", title: "alfred_ high-level design", nodes: [
           { id: "sms", label: "SMS user", sub: "Linq number", col: 0, row: 0, tone: "human" },
           { id: "web", label: "Web + mobile", sub: "Next.js, Flutter", col: 0, row: 1, tone: "human" },
@@ -5034,6 +5055,9 @@ function renderDesignPage(example) {
         h("h2", null, example.title),
         h("blockquote", { class: "prompt" }, h("strong", null, LABELS.interviewer), inline(example.prompt))),
       lens.length ? h("aside", { class: "lens" }, h("h3", null, LABELS.lens), h("ul", null, lens.map((item) => h("li", null, inline(item))))) : null),
+    example.start ? h("div", { class: "board start-board" },
+      h("h4", { class: "board-title" }, example.start.title),
+      ensureArray(example.start.blocks, `${example.id} start`).map((block) => renderBlock(block, `${example.id}/start`))) : null,
     h("div", { class: "steps" },
       GUIDE.framework.map((step) => safeRun(`render step ${example.id}/${step.id}`, () => renderStep(example, step), () => errorPanel(LABELS.blockFailed))),
       hasUsage ? safeRun(`render pattern usage ${example.id}`, () => renderPatternUsage(example), () => errorPanel(LABELS.blockFailed)) : null,

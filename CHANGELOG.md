@@ -494,3 +494,11 @@ in-page Python highlighter (keywords, strings, comments, numbers, function names
 builtins); the harder solutions carry short comments on the line that holds the trick
 (prefix counts, monotonic stack, stale heap entries, DP state, backtracking undo). All 34
 solutions still pass their tests. No change to the plan or to `CHARTER.md`.
+
+**2026-09-28 — alfred_: the three answers at the very top.**
+The guide's alfred_ design opens with a 'Start here' board before step 1: where the agent
+runs, one SMS end to end, and the three kinds of memory, with the deployment and memory
+figures beside them (moved up from the high-level design and the entities step, so each
+appears once). The tracker's draw-it-cold drill links there first. The ZenML page is not
+where this will be looked for again, so it lives in the guide. No change to the plan or to
+`CHARTER.md`.
