@@ -516,3 +516,16 @@ the target cost, every pattern with its signal, move, core code and nuance, Pyth
 edge cases, Python traps, AI-flavoured coding), opened from the top bar or
 `CODING.html#cheat`, which the tracker's Reference links. No change to the plan or to
 `CHARTER.md`.
+
+**2026-09-28 — CODING.html: examples everywhere, variations, tabs, a side-by-side view.**
+You asked for small examples so the code says what it solves, variations of each classic
+problem, and a better structure as the page grew. Every pattern and every problem now
+carries a worked example (input, output, one line on why). Each pattern gains three or
+four variations, 51 in all: the same idea asked differently, each with its example, what
+changes, and code tested against cases. Graphs split into BFS and DFS, and order and
+weights (topological sort, Dijkstra, union-find), making fifteen patterns. The page is
+now tabs (Start, Core, Structures, Techniques), each pattern a folded section, search
+across every tab. The cheat sheet is drawn from the same data, six columns with an
+example on each card, still one 1920x1080 screen; clicking a card, or 'See it side by
+side' on the page, opens a landscape popup with the nuances and the list of problems on
+the left and the chosen one's code on the right. No change to the plan or to `CHARTER.md`.
