@@ -276,6 +276,7 @@ dialog.convo::backdrop { background: rgba(10, 10, 14, 0.62); }
 .cv-say .transcript .who { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--sheet-muted); margin-bottom: 10px; }
 .cv-say .transcript .beat { margin: 0 0 18px; }
 .cv-say .transcript strong { color: var(--sheet-mark); font-weight: 400; }
+.cv-say code, .cv-say .transcript code { background: #2E2B26; color: #F6D8A0; padding: 1px 6px; border-radius: 4px; font-size: .95em; }
 .cv-say .transcript .line + .line { padding-left: 1.2em; }
 .cv-say .ex-links a { color: #9CC6FF; }
 .swap { margin: 0 0 16px; padding-left: 16px; border-left: 2px solid var(--sheet-rule); }
@@ -680,7 +681,8 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
       var so = fold("sources", "What this rests on", LOOP.sources.length + " checked links: the job post, their values, the launch");
       var ul = el("ul", "reading");
       LOOP.sources.forEach(function (x) {
-        ul.appendChild(el("li", "", '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + inl(x.label) + "</a>" + (x.why ? '<span class="why">' + inl(x.why) + "</span>" : "")));
+        var lab = x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + inl(x.label) + "</a>" : inl(x.label);
+        ul.appendChild(el("li", "", lab + (x.why ? '<span class="why">' + inl(x.why) + "</span>" : "")));
       });
       so.appendChild(ul);
     }

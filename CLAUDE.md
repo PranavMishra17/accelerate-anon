@@ -108,6 +108,8 @@ The long form, for the material itself, is `PROTOCOL.md`, section **How you stud
   different progress stores. Test on `localhost:8000`.
 - Heredocs mangle `\n` and regex escapes in Python and JS; write scripts with `Write`.
 - Lift-off and other effects must not fire on load (`booted` guard in `markSession`).
+- Loop pages load `figures/*` with a `?v=<content hash>` that `build.py` stamps, so a changed
+  figure is never stale. Rebuild the loop page after any figure change.
 - The desktop pr-attribution hook may reject a commit trailer; commit without it if so.
 
 ## Wings of work ahead

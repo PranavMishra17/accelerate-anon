@@ -426,3 +426,20 @@ a world store, fakes in the SDK, the turn loop in the worker), trade-offs, four 
 and what to build first. Both draw on the replay-design and multi-turn sessions, the
 teardown's scaling section and the mind map; each is a numbered board on the light side
 and a five-beat story on the dark sheet. No change to the plan or to `CHARTER.md`.
+
+**2026-09-27 — The current job post folded in; two stories in Pranav's words; a Python bank.**
+Asked for by Pranav, with the newer job post and two stories of his own. The newer post
+puts building in public on X and GitHub at the centre, a different hat each week, customer
+demos, and four success points at six months, and describes Kitaru as turning agent
+traces into reliable evals. The role bank now answers the X question honestly (he reads it
+more than he posts there, with a plan for week one) and gains five themes: the week's
+hat, a live customer demo, six months, keeping up with the field and who the users are,
+and open source. His two bench stories go in verbatim: how the harness replaces
+third-party APIs with SQLite (with a board on the contract, the data model, one read, one
+write, determinism and what it leaves out) and whether the harness supports multi-turn
+(with a board on the options, the goal-oriented simulator and calibration). Two new
+figures draw the provider interface with its two implementations, and a small relational
+model of the user's world. A new Python bank covers decorators, asyncio, Pydantic,
+Protocols, context managers, packaging, pytest, SQLAlchemy and an honest comparison with
+his TypeScript. Loop pages now load shared figure files with a content hash, so a changed
+figure is never served stale. No change to the plan or to `CHARTER.md`.

@@ -1668,5 +1668,70 @@ var FIGURES = (function () {
     }
   };
 
+  /* ---- the alfred_ bench's provider seam and the world it answers from (2026-09-27) ---- */
+
+  DIA.benchAdapter = {
+    title: "The swap: one provider interface, two implementations",
+    cap: "<b>I don't emulate every provider. I emulate the contract the agent actually depends on.</b> The agent and the tool code are production code in every run. They call a provider interface, like GmailAdapter.search() or CalendarAdapter.createEvent(). In production that interface calls Gmail, Google Calendar, Outlook or Asana; with the harness flag on, the same interface is backed by an implementation that reads and writes the case's SQLite snapshot. The agent never knows which one it is talking to.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "agent", x: 0, y: 16, w: 150, h: 48, label: "alfred_ agent", sub: "the real loop", tone: "sys", icon: "bot" });
+      b += S.box({ id: "tools", x: 180, y: 16, w: 190, h: 48, label: "Tool code", sub: "ranking, filtering: real", tone: "sys", icon: "code" });
+      b += S.box({ id: "iface", x: 400, y: 10, w: 236, h: 60, label: "Provider interface", sub: "search, send, createEvent", tone: "math", icon: "layers" });
+      b += S.arrow(152, 40, 178, 40, {});
+      b += S.arrow(372, 40, 398, 40, {});
+      b += S.box({ id: "flag", x: 0, y: 128, w: 200, h: 48, label: "Harness flag", sub: "picks the implementation", tone: "req", icon: "filter" });
+      b += S.arrow(202, 140, 438, 72, { dash: true });
+      b += S.box({ id: "prod", x: 240, y: 128, w: 190, h: 48, label: "Production adapters", sub: "Gmail, GCal, Outlook, Asana", tone: "flat" });
+      b += S.box({ id: "harness", x: 450, y: 128, w: 186, h: 48, label: "Harness adapters", sub: "same interface, SQLite", tone: "math" });
+      b += S.arrow(470, 72, 360, 126, {});
+      b += S.arrow(575, 72, 560, 126, {});
+      b += S.box({ id: "live", x: 240, y: 232, w: 190, h: 48, label: "Live providers", sub: "never reached in a run", tone: "alaap", icon: "cloud" });
+      b += S.box({ id: "snapshot", x: 450, y: 232, w: 186, h: 48, label: "SQLite snapshot", sub: "one per task, reset per case", tone: "math", icon: "database" });
+      b += S.arrow(335, 178, 335, 230, { dash: true });
+      b += S.arrow(545, 178, 545, 230, {});
+      b += S.text(553, 208, "reads and writes", "d-t-s");
+      b += S.text(0, 222, "gmail.search()  -> query threads, messages", "d-t-s");
+      b += S.text(0, 240, "gmail.send()  -> insert a message", "d-t-s");
+      b += S.text(0, 258, "calendar.create()  -> insert an event", "d-t-s");
+      b += S.text(0, 276, "asana.createTask()  -> insert a task", "d-t-s");
+      return S.frame(640, 292, b);
+    }
+  };
+
+  DIA.benchSchema = {
+    title: "A small relational model of the user's world",
+    cap: "<b>Model the subset of the provider's domain the evals need, not the provider's database.</b> People are one table, so the same person can appear as a sender, a recipient and an attendee, and three people called Michael stay three rows. Threads hold messages; participants and attendees are join tables; tasks point back at the message they came from. Two harness tables sit beside the world: the case's metadata (its world version and a pinned 'now') and a log of every call with how it was served. A model like this is what the harness adapters read and write.",
+    svg: function () {
+      var b = "";
+      function tbl(id, x, y, title, cols, tone) {
+        var w = 192, h = 26 + cols.length * 15 + 6, s = "";
+        s += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="4" class="d-fill-' + tone + ' d-str-' + tone + '" stroke-width="1.25"/>';
+        s += S.text(x + 10, y + 17, title, "d-t-b");
+        s += '<path d="M' + x + ',' + (y + 24) + ' L' + (x + w) + ',' + (y + 24) + '" class="d-str-' + tone + '" stroke-width="1"/>';
+        cols.forEach(function (c, i) { s += S.text(x + 10, y + 39 + i * 15, c, "d-t-s"); });
+        b += S.node(id, s);
+        return { x: x, y: y, w: w, h: h };
+      }
+      tbl("contacts", 0, 0, "contacts", ["id, name, email, org", "three Michaels = three rows"], "sys");
+      tbl("threads", 222, 0, "threads", ["id, subject", "labels, last_message_at"], "sys");
+      tbl("events", 444, 0, "events", ["id, title, start, end", "organizer_id, location"], "sys");
+      tbl("participants", 0, 100, "participants", ["message_id, contact_id", "role: from, to, cc"], "flat");
+      tbl("messages", 222, 100, "messages", ["id, thread_id, sent_at", "snippet, body, is_read", "attachments (name, type)"], "sys");
+      tbl("attendees", 444, 100, "attendees", ["event_id, contact_id", "response: yes, no, maybe"], "flat");
+      tbl("case_meta", 0, 214, "case_meta  (harness)", ["case_id, world_version", "pinned_now, user_id"], "req");
+      tbl("tasks", 222, 214, "tasks", ["id, title, due, status", "source_message_id"], "sys");
+      tbl("call_log", 444, 214, "call_log  (harness)", ["turn, tool, args_hash", "served_by"], "req");
+      b += S.arrow(194, 132, 220, 132, { id: "participants>messages" });
+      b += S.arrow(98, 98, 98, 64, { id: "participants>contacts" });
+      b += S.arrow(320, 98, 320, 64, { id: "messages>threads" });
+      b += S.arrow(320, 212, 320, 179, { id: "tasks>messages" });
+      b += S.arrow(542, 98, 542, 64, { id: "attendees>events" });
+      b += S.text(0, 300, "search -> threads, messages  ·  send -> messages, participants", "d-t-s");
+      b += S.text(0, 318, "createEvent -> events, attendees  ·  createTask -> tasks", "d-t-s");
+      return S.frame(640, 330, b);
+    }
+  };
+
   return { S: S, DIA: DIA, slug: slug };
 })();
