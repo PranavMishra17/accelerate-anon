@@ -484,3 +484,13 @@ classic problems; every solution, and every code block on the Mphasis page, was 
 test cases. The tracker links both: the Mphasis card in the wildcard, and 'Algorithms and
 coding' under Reference. `interviews/build.py` accepts a loop with no tracker sessions. No
 change to the plan or to `CHARTER.md`.
+
+**2026-09-28 — Ask first, always; code on cream.**
+`CLAUDE.md` now says it outright: clarifying questions come before anything sizeable or
+ambiguous (new pages, rewrites, design changes, anything with two readings), in the same
+numbered, lettered, recommended-default format; clear small fixes go ahead. On
+`CODING.html`, code sits on cream in light and dark mode alike and is coloured by a small
+in-page Python highlighter (keywords, strings, comments, numbers, function names,
+builtins); the harder solutions carry short comments on the line that holds the trick
+(prefix counts, monotonic stack, stale heap entries, DP state, backtracking undo). All 34
+solutions still pass their tests. No change to the plan or to `CHARTER.md`.
