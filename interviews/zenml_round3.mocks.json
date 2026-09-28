@@ -373,5 +373,364 @@
         "land": "One question that shows you read the product, then one about the role. One at a time."
       }
     ]
+  },
+  {
+    "id": "m2",
+    "title": "Mock 2: Hamza and Alex, the full loop",
+    "when": "Monday 28 September 2026, 08:05 to 08:33, 28 minutes",
+    "read": [
+      "Better than mock 1 where it was about you and your system: the story had the right arc, and the SQLite swap came across cleanly enough that Alex said he liked it. Scoping 'Kitaru with a world' to one class of task was a good design instinct.",
+      "Weaker exactly where this seat is different. The current post is built around building in public, and when Hamza asked for your first post you gave a strategy, then 'I don't know', but never a post. The other habit: twice you answered the neighbouring question instead of the one asked. Both are fixable: have one concrete post ready, and when unsure, say so and reason."
+    ],
+    "landed": [
+      "The swap: adapters behind the same interface, a canonical model per domain, tool code real.",
+      "Kitaru toward your design: scope to one class first, build the world from traces, recorded answers for reads, writes into the world.",
+      "Honesty about X: you read it, you don't post; LinkedIn and YouTube; never professionally.",
+      "The refunds story, told naturally."
+    ],
+    "fix": [
+      {
+        "t": "Have one concrete post ready: the first line and what's on screen. For this seat it's the most important gap.",
+        "ref": "x4"
+      },
+      {
+        "t": "Answer the exact question. If you haven't hit it, say so and reason it out.",
+        "ref": "x10"
+      },
+      {
+        "t": "Drop 'specialisation'. Say 'depth in AI infrastructure, breadth in the work'.",
+        "ref": "x2"
+      },
+      {
+        "t": "Don't credit your ideas to their product; say 'one thing I'd add is...'.",
+        "ref": "x8"
+      },
+      {
+        "t": "Headline, then stop. Most answers ran two to three minutes with filler.",
+        "ref": "x1"
+      }
+    ],
+    "exchanges": [
+      {
+        "id": "x1",
+        "label": "Your story",
+        "who": "Hamza",
+        "q": "I've seen the CV, but tell me the story in your own words. How did you get from where you started to what you're doing at alfred_?",
+        "tests": "Growing ownership, told in about ninety seconds, landing on why this role.",
+        "said": [
+          "UIC research with the healthcare side and the hospital network; WheelPrice as an AI engineer in a two-engineer team with non-technical founders; across the stack, shipping to customers for the first time; alfred_ as founding LLM engineer for deeper AI systems work; eval harness, failure detection, working memory, talking to customers; the common thread; wanting a larger engineering surface with vertical ownership."
+        ],
+        "verdict": "partly",
+        "why": "The arc was right and close to your script, but it ran long with filler, and working memory came out as 'a cracker for every work obligation'.",
+        "good": [
+          "The UIC to WheelPrice to alfred_ arc, with ownership growing each time.",
+          "'You have to figure out what's broken, decide what to build, and own it through production.'"
+        ],
+        "bad": [
+          "About two minutes; the filler ('so to say', 'let us say') dilutes the strong lines.",
+          "The last lines drifted ('a larger engineering surface') instead of landing on this role."
+        ],
+        "approach": [
+          "Say your own script: its last line lands on 'the engineer who needs better tooling'. Then stop."
+        ],
+        "land": "Research, then shipping products, then the infrastructure that tells you whether they work.",
+        "say": [
+          "I started out in computer science research at UIC, on applied ML and LLM systems in healthcare, which gave me a strong base in actually building and evaluating these systems.",
+          "Then WheelPrice: two engineers, founders from the business side, so I worked across the stack and shipped things customers used every day.",
+          "Then alfred_, as founding LLM engineer on an AI assistant with 5,000-plus users. My work there is reliability and evaluation: the eval harness, production failure detection, working memory.",
+          "The thread is building AI systems where nobody hands you a defined problem. And I've spent a lot of time as the engineer who needed better tooling for exactly that, which is why Kitaru is a natural next step."
+        ],
+        "ref": "#say-intro"
+      },
+      {
+        "id": "x2",
+        "label": "Why already talking to us",
+        "who": "Hamza",
+        "q": "You joined alfred_ this year, as a founding engineer, on a product you clearly care about. Why are you already talking to us?",
+        "tests": "A pull, not a push, and no red flags.",
+        "said": [
+          "Not urgently leaving; learned a lot; the work is internal to one product. Comparing my harness taught me how it would break at scale and how hard it would be to hand to another company with a similar data model. So I want to work on infrastructure and developer experience, explore selectively, and get specialisation."
+        ],
+        "verdict": "partly",
+        "why": "The 'built for one product, I can see where it doesn't generalise' point was your most convincing line. Ending on 'specialisation' contradicted the role.",
+        "good": [
+          "The harness insight: built for one product, you can see where it wouldn't generalise.",
+          "Calm, not defensive."
+        ],
+        "bad": [
+          "'Specialisation': the post says this seat is not for specialists.",
+          "'Ship it to our competitors' sounded odd; say 'another team'."
+        ],
+        "approach": [
+          "Use your own answer: 'less get away from alfred_, more a direction I want to go deeper into'. Then one line on depth versus breadth."
+        ],
+        "land": "Less 'get away from alfred_', more 'a direction I want to go deeper into'.",
+        "say": [
+          "There's nothing wrong at alfred_; I still enjoy the work. But it's internal to one product, and comparing my harness with Kitaru showed me exactly where it wouldn't generalise to another team.",
+          "What I want is to build that infrastructure as the product, for other engineers. Depth in AI infrastructure, and breadth in the work: shipping, talking to users, and showing what we built."
+        ],
+        "ref": "#say-leave"
+      },
+      {
+        "id": "x3",
+        "label": "The public half, honestly",
+        "who": "Hamza",
+        "q": "Some weeks shipping, some weeks writing the thread or recording the demo, some weeks on a call with a team whose agent is on fire. How do you feel about that half, and what have you done in public so far?",
+        "tests": "Will you build in public, and are you honest about where you are?",
+        "said": [
+          "First re-explained specialisation for a while. Then: enthusiastic about public work, active on personal projects; on X as a reader, not a poster; work on LinkedIn; a YouTube channel with demos; never done it professionally, and would love to."
+        ],
+        "verdict": "partly",
+        "why": "The honesty landed. The first minute went on re-defending 'specialisation' instead of answering, and there was no plan for X.",
+        "good": [
+          "'I read X, I don't post there': Hamza preferred that to a follower count.",
+          "LinkedIn, YouTube demos, never professionally: all true and clear."
+        ],
+        "bad": [
+          "A minute of re-explaining before answering.",
+          "No week-one plan for X, which is what turns the gap into a strength."
+        ],
+        "approach": [
+          "Answer first: 'I enjoy it, I read X daily, I post on LinkedIn and YouTube.' Then the gap, then the plan."
+        ],
+        "land": "For an open-source developer tool, talking about what you shipped is part of shipping it.",
+        "say": [
+          "Honestly, I enjoy it. I read X every day, it's where the agent builders are, but I post on LinkedIn and on my YouTube channel, where I put demos of what I build.",
+          "What I haven't done is post on X, or do it professionally for a company. So from week one: a thread for every meaningful release, a short demo on real traces, and real replies where people are stuck on evals."
+        ],
+        "prep": "The public half"
+      },
+      {
+        "id": "x4",
+        "label": "The first post, strategy",
+        "who": "Hamza",
+        "q": "Say you start on Monday. By Friday you've played with Kitaru. What's the first thing you'd post, and why would an agent builder stop scrolling for it?",
+        "tests": "Taste for builders: a concrete, useful post.",
+        "said": [
+          "I'd find a use case that was helpful to me and related to my previous work, where Kitaru makes it more efficient, and get to the common point within the first minute."
+        ],
+        "verdict": "missed",
+        "why": "A strategy, not a post. For this seat, this is the answer they most want to hear concretely.",
+        "good": [
+          "The instinct to start from something real that you felt."
+        ],
+        "bad": [
+          "No first line, no demo, no reason to stop scrolling."
+        ],
+        "approach": [
+          "Answer with the artefact: the first sentence, what's on screen, how long, and why it's useful. Then the reason."
+        ],
+        "land": "A sixty-second before and after on real sessions: the fix, the regression, and why.",
+        "say": [
+          "The first line would be: 'Your agent passed the demo. Here's what happened when I replayed fifty of its real sessions against the new prompt.'",
+          "On screen, a sixty-second recording: a small agent of mine, import its traces, pick the cohort that's failing, mock the tools, change one line of the prompt, replay, and the diff: three sessions fixed, one got worse, and why. Repo linked.",
+          "It stops the scroll because everyone building agents has shipped a prompt change that looked fine and broke something, and this shows the before and after on real sessions in a minute."
+        ],
+        "prep": "The public half"
+      },
+      {
+        "id": "x5",
+        "label": "The first post, pushed",
+        "who": "Hamza",
+        "q": "That's the strategy, not the post. Give me the actual thing: the first sentence, and what's in the video or screenshot.",
+        "tests": "Can you get concrete under pressure?",
+        "said": [
+          "I don't know. Maybe something on multi-turn evals: tau-bench scores the end state; figure out how to plug Kitaru into that, since it's more of a replay system today."
+        ],
+        "verdict": "partly",
+        "why": "'I don't know' first, then a genuinely good seed (tau-bench, end state) that never became a post.",
+        "good": [
+          "Tau-bench and end-state scoring is a strong, credible topic, and it led Alex into the technical half."
+        ],
+        "bad": [
+          "Opening with 'I don't know' when asked twice.",
+          "Still no first line or visual."
+        ],
+        "approach": [
+          "If the first idea was weak, give the second as a post: a first line, a picture, a takeaway."
+        ],
+        "land": "Score the end state, not the transcript.",
+        "say": [
+          "Second post, then: 'Stop reading agent transcripts. Score the end state.' A screenshot of two runs that took different paths to the same right database state; one passes on transcript matching, both pass on the end state.",
+          "Then how to do that with your own traces: capture the world before, run the agent, diff the world after against a goal. That's what tau-bench gets right, and it's where replay and a small world model meet."
+        ]
+      },
+      {
+        "id": "x6",
+        "label": "What answers a search call",
+        "who": "Alex",
+        "q": "When your agent calls something like 'search my email' during an eval run, what actually happens? Where does that call go, and what answers it?",
+        "tests": "Intercept depth.",
+        "said": [
+          "Each task class has its own SQLite file aggregated from many production instances. In harness mode the agent and tools run as in production; at the third-party API call, an adapter maps it to the SQLite instance. Canonical data models per domain (email, notes, tasks), and each provider merges into them."
+        ],
+        "verdict": "landed",
+        "why": "Clear, concrete and correct. Alex said he liked it.",
+        "good": [
+          "Tool code real, only the provider call swapped.",
+          "Canonical model per domain, providers merged into it."
+        ],
+        "bad": [
+          "Could have been half as long with the same content."
+        ],
+        "approach": [
+          "Lead with the one line: 'An adapter at the provider boundary; in the harness it reads and writes a SQLite world instead of Gmail.'"
+        ],
+        "land": "I don't emulate every provider. I emulate the contract the agent actually depends on.",
+        "say": [
+          "The agent and the tool code run exactly as in production. The tool calls a provider interface; in production that's Gmail, in the harness the same interface is backed by an adapter that reads and writes the case's SQLite world.",
+          "The world is a canonical model per domain, email, calendar, tasks, notes, so Gmail, Outlook and IMAP all merge into one shape. I don't emulate every provider; I emulate the contract the agent depends on."
+        ],
+        "figs": [
+          "benchAdapter",
+          "benchSchema"
+        ],
+        "prep": "How do you actually replace third-party APIs with SQLite"
+      },
+      {
+        "id": "x7",
+        "label": "Gmail's query syntax",
+        "who": "Alex",
+        "q": "Gmail search isn't just a keyword. How far did you go in emulating that query language, and what happened when the agent used syntax you hadn't implemented?",
+        "tests": "The edge of the fake.",
+        "said": [
+          "Every query becomes a SQL query over the canonical model; providers have adapters with their differences. The agent calls tools with parameters, not raw queries, so it's easier: there's no third-party call in harness mode."
+        ],
+        "verdict": "partly",
+        "why": "The key point landed (the model sends structured parameters, not raw syntax), but the unimplemented-syntax half was never answered.",
+        "good": [
+          "Structured parameters, not raw Gmail syntax: a genuinely good boundary."
+        ],
+        "bad": [
+          "The second half of the question went unanswered."
+        ],
+        "approach": [
+          "Answer both halves: how far you went, and what happens at the edge."
+        ],
+        "land": "The model sends structured parameters, so the fake only has to support the parameters the tool exposes.",
+        "say": [
+          "We didn't emulate Gmail's query language. The model never writes raw syntax; it calls our search tool with structured parameters, sender, dates, labels, and the tool builds the query. So the SQLite adapter only has to support those parameters.",
+          "At the edge, anything the adapter doesn't support should fail loudly, never be ignored. That's the rule I'd hold it to."
+        ]
+      },
+      {
+        "id": "x8",
+        "label": "A parameter the fake doesn't know",
+        "who": "Alex",
+        "q": "Someone adds a has_attachment filter; production supports it, nobody updates the SQLite adapter. What does the SQLite side do with a parameter it doesn't understand?",
+        "tests": "Do fake and real stay in sync, and does drift fail loudly?",
+        "said": [
+          "The harness runs when tool parameters change; attachments live in the canonical model with type and the first 500 characters; an unseen parameter would be flagged and the case fails. Then: your on_miss lets reads pass through, which is the right way."
+        ],
+        "verdict": "partly",
+        "why": "The right direction, but the mechanism was unclear, and you credited your own read/write idea to their on_miss, which doesn't split by reads and writes.",
+        "good": [
+          "Running the bench when tool parameters change.",
+          "Attachments in the model with their type and a snippet."
+        ],
+        "bad": [
+          "No mechanism for how the drift is caught.",
+          "Misstated their on_miss: passthrough applies to any tool."
+        ],
+        "approach": [
+          "Name the mechanism: a shared interface and a parity test. Offer the read/write split as your idea."
+        ],
+        "land": "Unknown parameters fail loudly, and a parity test keeps the fake in step with production.",
+        "say": [
+          "It should refuse, not ignore. The SQLite adapter and the production adapter implement the same interface, so an unknown parameter raises 'not supported in this snapshot', and the case is marked harness-limited rather than passing.",
+          "And to catch it before a run: a parity test that sends the same parameters to both adapters against recorded production responses, so adding has_attachment to production without the fake fails in CI.",
+          "One thing I'd add to Kitaru is the same split: let reads fall through on a miss, and fail writes closed."
+        ],
+        "figs": [
+          "benchAdapter"
+        ]
+      },
+      {
+        "id": "x9",
+        "label": "Kitaru toward your design",
+        "who": "Alex",
+        "q": "If Kitaru went in your direction, a session gets something like your SQLite world behind it, what would you build? Where does the world come from when all we have is an imported trace?",
+        "tests": "Designing an evolution of their system.",
+        "said": [
+          "Keep replay. Find cases replay can't test faithfully, like long-running tasks. Pick one subclass, email first; retroactively build its world from the traces' tool calls and results; reads fall back to the recording; writes land in the world instance. Specify which agent class needs this first."
+        ],
+        "verdict": "landed",
+        "why": "Scoped, incremental and grounded in your own experience.",
+        "good": [
+          "Keep replay as the default.",
+          "One class first, email.",
+          "Reads from the recording, writes into the world."
+        ],
+        "bad": [
+          "Missing: entity reconciliation across sessions, provenance on world-answered calls, and 'only for sessions someone forks'."
+        ],
+        "approach": [
+          "Add the three missing pieces in one sentence at the end."
+        ],
+        "land": "Import stays free; promote only forked sessions into worlds, one class at a time.",
+        "say": [
+          "I'd keep replay as the default and only promote a session into a world when someone forks it and it starts missing. Start with one class, email.",
+          "Build the world from that session and others with the same intent: union their tool calls and results, reconcile the people and threads, and mark anything synthetic. Reads fall back to the recording, writes land in the world, and every answer is stamped with where it came from."
+        ],
+        "prep": "If Kitaru moved toward your design"
+      },
+      {
+        "id": "x10",
+        "label": "Is the world telling the truth?",
+        "who": "Alex",
+        "q": "Once the world answers a query the recording never saw, how do you know the answer is right? The agent behaves well, the case passes, and the world was just wrong. How would you catch that?",
+        "tests": "Keeping a fake honest.",
+        "said": [
+          "Talked about the north-star metric, turns per task completion, then completeness: the ledger missing refunds, gold truth per task, and quality as an open problem."
+        ],
+        "verdict": "missed",
+        "why": "A good story, but about whether the agent's output was complete, not whether the world was right. Alex pointed out the gap.",
+        "good": [
+          "The refunds story and completeness are real and well told."
+        ],
+        "bad": [
+          "Answered a neighbouring question.",
+          "Ground truth built from the same world can't catch a wrong world."
+        ],
+        "approach": [
+          "Restate the question in one line first: 'So, is the fake itself wrong?' That keeps you on it."
+        ],
+        "land": "Calibrate every fake against its own recording before you trust it.",
+        "say": [
+          "You check the fake against reality before you trust it. Take the calls the recording did capture, replay them through the world, and compare: if the world's answer differs from what the real tool returned, the world isn't trusted for that tool.",
+          "Then every answer the world gives, rather than the recording, is stamped as world-answered, so a reviewer can see which parts of a pass rest on the fake. And for read-only tools, you can spot-check a sample live.",
+          "It's the same idea as calibrating a judge: never trust a stand-in you haven't measured against the real thing."
+        ],
+        "prep": "If Kitaru moved toward your design"
+      },
+      {
+        "id": "x11",
+        "label": "Your question for them",
+        "who": "Hamza",
+        "q": "We're coming up on time. What questions do you have for us?",
+        "tests": "Curiosity about their product and users.",
+        "said": [
+          "What surprised you about the product with early users?"
+        ],
+        "verdict": "partly",
+        "why": "A decent question that got a good answer, but only one, and generic. Your prepared contributing questions would have gone further.",
+        "good": [
+          "Asked about users, and got a real answer (cohort replay over debugging; mapping traces is where people stick)."
+        ],
+        "bad": [
+          "One generic question.",
+          "No follow-up on their answer, which handed you two openings."
+        ],
+        "approach": [
+          "Ask one prepared question, then follow up on their answer with one line."
+        ],
+        "land": "One question that shows you read the product, then a follow-up on what they said.",
+        "say": [
+          "What would you want someone in this seat to have shipped by the end of the first month?",
+          "And a follow-up on your answer: you said the mapping from a trace to Kitaru's model is where people get stuck. Is that the importers, or the concepts?"
+        ],
+        "ref": "#ask"
+      }
+    ]
   }
 ]
