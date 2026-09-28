@@ -2218,6 +2218,8 @@
      The wildcard page lists them; a loop's sessions are the wildcard sessions whose
      forWhat starts with the loop's forWhat. */
   var LOOPS = [
+    { id: "mphasis", name: "Mphasis, technical", when: "Mon 28 Sep, today", forWhat: "Mphasis",
+      file: "interviews/mphasis.html", note: "Agentic skills and AI fundamentals, a short coding exercise. Algorithms: CODING.html." },
     { id: "zenml-r3", name: "ZenML round 3", when: "Mon 28 Sep, 9 AM Eastern", forWhat: "ZenML round 3",
       file: "interviews/zenml-round3.html", note: "Ninety minutes, technical, with Hamza and Alex." },
     { id: "oxus", name: "Oxus, technical", when: "23 Sep", forWhat: "Oxus",
@@ -2234,7 +2236,7 @@
 
   var WILDCARD = {
     title: "Wildcard",
-    note: "ZenML round 3: Mon 28 Sep, 9 AM Eastern, ninety minutes of in-depth technical questions with Hamza and Alex. Oxus happened on 23 Sep; its design sessions moved into weeks 2 to 4 and the rest are parked.",
+    note: "Mphasis, technical: Mon 28 Sep, agentic skills and AI fundamentals, with a short coding exercise; its page is interviews/mphasis.html and algorithms are on CODING.html. ZenML round 3: Mon 28 Sep, 9 AM Eastern, ninety minutes of in-depth technical questions with Hamza and Alex. Oxus happened on 23 Sep; its design sessions moved into weeks 2 to 4 and the rest are parked.",
     sessions: [
       {
         id: "wc18", track: "Interview", forWhat: "Every interview: your own system", len: "1h 15m", est: 75,
@@ -5848,15 +5850,15 @@
     /* everything that is not a session, grouped by what it is for */
     [["Practise", [["requeue", "Requeue"], ["written", "Written work"], ["search", "Search"]]],
      ["Look ahead", [["book", "The book"], ["sky", "The sky"], ["map", "The work ahead"], ["ahead", "What comes after"]]],
-     ["Reference", [["resources", "Resources"], ["sd", "System design guide"], ["al", "Alaap and TrenTorch plan"]]],
+     ["Reference", [["resources", "Resources"], ["sd", "System design guide"], ["code", "Algorithms and coding"], ["al", "Alaap and TrenTorch plan"]]],
      ["Rules and data", [["charter", "Charter"], ["protocol", "Protocol"], ["data", "Data and export"]]]
     ].forEach(function (grp) {
       var foot = el("div", "foot");
       foot.appendChild(el("div", "fh", grp[0]));
       grp[1].forEach(function (t) {
-        if (t[0] === "sd" || t[0] === "al") {
+        if (t[0] === "sd" || t[0] === "al" || t[0] === "code") {
           var sdLink = document.createElement("a");
-          sdLink.href = t[0] === "sd" ? SD.file : AL.file;
+          sdLink.href = t[0] === "sd" ? SD.file : t[0] === "code" ? "CODING.html" : AL.file;
           sdLink.target = "_blank";
           sdLink.rel = "noopener";
           sdLink.className = "sdnav";

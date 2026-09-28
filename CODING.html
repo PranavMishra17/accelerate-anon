@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Algorithms and coding</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="icon" type="image/svg+xml" href="brand/system-design.svg">
+<style>
+/* One calm column: patterns on the left, a pattern's signals, template and problems on the right.
+   Solutions stay shut until you have tried. */
+:root { --bg: #FBF8F1; --ink: #1D1B17; --soft: #45413A; --muted: #736D62; --rule: #E7E0D2; --tint: #F2ECE0;
+  --accent: #0A5BD3; --code-bg: #1C1B19; --code-ink: #EEE9DE; --mark: #F2C66D;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif; --mono: "JetBrains Mono", Consolas, monospace; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1C1B22; --ink: #EDEDF2; --soft: #C9C8D3; --muted: #9C9BA8; --rule: #33323C; --tint: #25242D; --accent: #7AB2FF; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.65 var(--body); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.top { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--rule); }
+.top-in { max-width: 1180px; margin: 0 auto; padding: 12px 24px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.top b { font-size: 17px; }
+.top .grow { flex: 1; }
+.top input { font: inherit; font-size: 15px; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 6px; background: transparent; color: var(--ink); min-width: 240px; }
+.shell { max-width: 1180px; margin: 0 auto; padding: 0 24px 120px; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 48px; }
+nav.side { position: sticky; top: 64px; align-self: start; padding-top: 28px; font-size: 15px; max-height: calc(100vh - 70px); overflow-y: auto; }
+nav.side a { display: block; padding: 4px 0; color: var(--muted); }
+nav.side a:hover, nav.side a.on { color: var(--ink); }
+nav.side .h { font-size: 12.5px; font-weight: 700; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin: 16px 0 4px; }
+main { min-width: 0; max-width: 780px; padding-top: 28px; }
+h1 { font-size: 32px; margin: 0 0 6px; }
+.lead { color: var(--soft); font-size: 18px; margin: 0 0 28px; }
+section.pat { padding: 26px 0 30px; border-top: 1px solid var(--rule); }
+section.pat h2 { font-size: 24px; margin: 0 0 4px; }
+.spot { color: var(--soft); margin: 6px 0 12px; }
+.spot b { color: var(--ink); }
+.cx { font-size: 14.5px; color: var(--muted); margin: 0 0 10px; }
+pre { margin: 10px 0 14px; padding: 14px 16px; background: var(--code-bg); color: var(--code-ink); border-radius: 8px; overflow-x: auto;
+  font: 13.5px/1.65 var(--mono); }
+code { font-family: var(--mono); font-size: .9em; background: var(--tint); padding: 1px 5px; border-radius: 4px; }
+pre code { background: none; padding: 0; font-size: inherit; }
+details.prob { border: 1px solid var(--rule); border-radius: 8px; margin: 10px 0; background: var(--bg); }
+details.prob > summary { list-style: none; cursor: pointer; padding: 12px 16px; display: flex; gap: 10px; align-items: baseline; }
+details.prob > summary::-webkit-details-marker { display: none; }
+details.prob > summary .pn { font-weight: 700; }
+details.prob > summary .pl { color: var(--muted); font-size: 14px; margin-left: auto; white-space: nowrap; }
+details.prob[open] > summary { border-bottom: 1px solid var(--rule); }
+.pb { padding: 12px 16px 6px; }
+.pb .task { margin: 0 0 8px; }
+.pb .hint { color: var(--soft); font-size: 15.5px; }
+details.sol { margin: 8px 0 10px; }
+details.sol > summary { cursor: pointer; font-weight: 700; font-size: 14.5px; color: var(--soft); display: inline-block; padding: 5px 12px; border: 1px solid var(--rule); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; margin: 8px 0 16px; }
+th, td { text-align: left; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { color: var(--muted); font-weight: 400; }
+ol.how { padding-left: 22px; } ol.how li { margin: 0 0 8px; }
+.hidden { display: none; }
+@media (max-width: 820px) { .shell { grid-template-columns: minmax(0, 1fr); } nav.side { position: static; max-height: none; } }
+</style>
+</head>
+<body>
+<div class="top"><div class="top-in">
+  <b>Algorithms and coding</b>
+  <a href="index.html">Tracker</a>
+  <a href="SYSTEM%20DESIGN.html">System design guide</a>
+  <span class="grow"></span>
+  <input id="q" type="search" placeholder="Search patterns and problems, e.g. window, heap, BFS">
+</div></div>
+<div class="shell">
+  <nav class="side" id="side"></nav>
+  <main id="main">
+    <h1>Algorithms and coding</h1>
+    <p class="lead">Thirteen patterns cover most interview problems. For each: how to spot it, a template in Python, and classic problems with the solution shut until you have tried. Start with how to code out loud.</p>
+    <section class="pat" id="how">
+      <h2>How to code in an interview</h2>
+      <ol class="how">
+        <li><b>Restate the problem</b> in one sentence, and ask about input size, empty input, duplicates and negative numbers.</li>
+        <li><b>Say the brute force</b> and its cost before anything clever. It's a correct answer you can improve.</li>
+        <li><b>Name the pattern</b> ("this is a sliding window") and the better complexity.</li>
+        <li><b>Write it while talking.</b> Clear names over short ones. Syntax matters less than structure.</li>
+        <li><b>Run one small example by hand</b>, then the edge cases: empty, one element, all the same.</li>
+        <li><b>State time and space</b> at the end, and one way you'd improve it if they asked.</li>
+      </ol>
+    </section>
+    <section class="pat" id="bigo">
+      <h2>Complexity cheat sheet</h2>
+      <table>
+        <tr><th>Operation</th><th>Cost</th></tr>
+        <tr><td>dict / set lookup, insert</td><td>O(1) on average</td></tr>
+        <tr><td>list append, pop from the end</td><td>O(1)</td></tr>
+        <tr><td>list insert or pop at the front</td><td>O(n): use collections.deque for O(1)</td></tr>
+        <tr><td>sort</td><td>O(n log n)</td></tr>
+        <tr><td>heapq push / pop</td><td>O(log n); heapify O(n)</td></tr>
+        <tr><td>binary search</td><td>O(log n) on sorted data</td></tr>
+        <tr><td>BFS / DFS on a graph</td><td>O(V + E)</td></tr>
+        <tr><td>n up to 10^5 or 10^6</td><td>aim for O(n) or O(n log n)</td></tr>
+        <tr><td>n up to about 20</td><td>O(2^n) backtracking is fine</td></tr>
+      </table>
+    </section>
+    <div id="patterns"></div>
+  </main>
+</div>
+<script>
+(function () {
+  "use strict";
+  var P = [
+    { id: "hashing", title: "Arrays and hashing", group: "Core",
+      spot: "You need to find pairs, duplicates or groups, or count things. <b>Signal:</b> 'have I seen this before?'",
+      cx: "Usually O(n) time, O(n) space.",
+      tpl: "seen = {}\nfor i, x in enumerate(nums):\n    if target - x in seen:\n        return [seen[target - x], i]\n    seen[x] = i",
+      probs: [
+        { n: "Two Sum", l: "easy", task: "Return indices of two numbers that add up to target.", hint: "Store each number's index; look up target minus the current number.",
+          sol: "def two_sum(nums, target):\n    seen = {}\n    for i, x in enumerate(nums):\n        if target - x in seen:\n            return [seen[target - x], i]\n        seen[x] = i\n    return []", c: "O(n) time, O(n) space." },
+        { n: "Group anagrams", l: "medium", task: "Group words that are anagrams of each other.", hint: "Anagrams share the same sorted letters: use that as the key.",
+          sol: "from collections import defaultdict\n\ndef group_anagrams(words):\n    groups = defaultdict(list)\n    for w in words:\n        groups[\"\".join(sorted(w))].append(w)\n    return list(groups.values())", c: "O(n k log k) for n words of length k." },
+        { n: "Longest consecutive sequence", l: "medium", task: "Length of the longest run of consecutive integers, in O(n).", hint: "Put everything in a set; only start counting from numbers with no left neighbour.",
+          sol: "def longest_consecutive(nums):\n    s, best = set(nums), 0\n    for x in s:\n        if x - 1 not in s:            # x starts a run\n            y = x\n            while y + 1 in s:\n                y += 1\n            best = max(best, y - x + 1)\n    return best", c: "O(n): each number is visited in at most one run." }
+      ] },
+    { id: "prefix", title: "Prefix sums", group: "Core",
+      spot: "Sums over subarrays, many range queries. <b>Signal:</b> 'sum of a subarray equals k'.",
+      cx: "O(n) to build; O(1) per range sum.",
+      tpl: "prefix = [0]\nfor x in nums:\n    prefix.append(prefix[-1] + x)\n# sum of nums[i:j] == prefix[j] - prefix[i]",
+      probs: [
+        { n: "Subarray sum equals k", l: "medium", task: "Count contiguous subarrays summing to k (numbers can be negative).", hint: "A running sum; count how often running - k has been seen.",
+          sol: "from collections import Counter\n\ndef subarray_sum(nums, k):\n    seen, run, count = Counter({0: 1}), 0, 0\n    for x in nums:\n        run += x\n        count += seen[run - k]\n        seen[run] += 1\n    return count", c: "O(n) time and space." }
+      ] },
+    { id: "pointers", title: "Two pointers", group: "Core",
+      spot: "Sorted arrays, pairs, palindromes, in-place changes. <b>Signal:</b> the input is sorted, or you compare both ends.",
+      cx: "O(n) time, O(1) space.",
+      tpl: "left, right = 0, len(a) - 1\nwhile left < right:\n    if condition(a[left], a[right]):\n        left += 1\n    else:\n        right -= 1",
+      probs: [
+        { n: "Valid palindrome", l: "easy", task: "Is a string a palindrome, ignoring case and non-alphanumerics?", hint: "Pointers from both ends, skipping non-alphanumerics.",
+          sol: "def is_palindrome(s):\n    l, r = 0, len(s) - 1\n    while l < r:\n        if not s[l].isalnum():\n            l += 1\n        elif not s[r].isalnum():\n            r -= 1\n        elif s[l].lower() != s[r].lower():\n            return False\n        else:\n            l, r = l + 1, r - 1\n    return True", c: "O(n) time, O(1) space." },
+        { n: "Container with most water", l: "medium", task: "Max area between two lines.", hint: "Start wide; always move the shorter line inward.",
+          sol: "def max_area(h):\n    l, r, best = 0, len(h) - 1, 0\n    while l < r:\n        best = max(best, (r - l) * min(h[l], h[r]))\n        if h[l] < h[r]:\n            l += 1\n        else:\n            r -= 1\n    return best", c: "O(n)." },
+        { n: "3Sum", l: "medium", task: "All unique triplets summing to zero.", hint: "Sort; fix one number; two pointers on the rest; skip duplicates.",
+          sol: "def three_sum(nums):\n    nums.sort()\n    out = []\n    for i in range(len(nums) - 2):\n        if i and nums[i] == nums[i - 1]:\n            continue\n        l, r = i + 1, len(nums) - 1\n        while l < r:\n            s = nums[i] + nums[l] + nums[r]\n            if s < 0:\n                l += 1\n            elif s > 0:\n                r -= 1\n            else:\n                out.append([nums[i], nums[l], nums[r]])\n                l += 1\n                while l < r and nums[l] == nums[l - 1]:\n                    l += 1\n    return out", c: "O(n^2) time." }
+      ] },
+    { id: "window", title: "Sliding window", group: "Core",
+      spot: "Contiguous subarrays or substrings with a condition. <b>Signal:</b> 'longest' or 'shortest' substring or subarray such that...",
+      cx: "O(n): each element enters and leaves the window once.",
+      tpl: "left = 0\nfor right, x in enumerate(s):\n    add(x)\n    while window_is_invalid():\n        remove(s[left])\n        left += 1\n    best = max(best, right - left + 1)",
+      probs: [
+        { n: "Longest substring without repeating characters", l: "medium", task: "Length of the longest substring with all distinct characters.", hint: "Remember each character's last index; jump the left edge past a repeat.",
+          sol: "def length_of_longest_substring(s):\n    last, left, best = {}, 0, 0\n    for right, ch in enumerate(s):\n        if ch in last and last[ch] >= left:\n            left = last[ch] + 1\n        last[ch] = right\n        best = max(best, right - left + 1)\n    return best", c: "O(n) time, O(alphabet) space." },
+        { n: "Maximum sum of a window of size k", l: "easy", task: "Largest sum of any k consecutive numbers.", hint: "Add the new element, subtract the one leaving.",
+          sol: "def max_window_sum(nums, k):\n    cur = best = sum(nums[:k])\n    for i in range(k, len(nums)):\n        cur += nums[i] - nums[i - k]\n        best = max(best, cur)\n    return best", c: "O(n)." }
+      ] },
+    { id: "stack", title: "Stack", group: "Core",
+      spot: "Matching pairs, 'next greater element', undoing. <b>Signal:</b> brackets, or 'for each item, the next item that is larger'.",
+      cx: "O(n): each item is pushed and popped once.",
+      tpl: "stack = []\nfor i, x in enumerate(nums):\n    while stack and nums[stack[-1]] < x:\n        j = stack.pop()      # x is the next greater for j\n    stack.append(i)",
+      probs: [
+        { n: "Valid parentheses", l: "easy", task: "Are the brackets balanced and correctly nested?", hint: "Push openers; on a closer, the top must be its match.",
+          sol: "def is_valid(s):\n    pairs, stack = {')': '(', ']': '[', '}': '{'}, []\n    for ch in s:\n        if ch in pairs:\n            if not stack or stack.pop() != pairs[ch]:\n                return False\n        else:\n            stack.append(ch)\n    return not stack", c: "O(n)." },
+        { n: "Daily temperatures", l: "medium", task: "For each day, how many days until a warmer one?", hint: "A monotonic stack of indices waiting for a warmer day.",
+          sol: "def daily_temperatures(t):\n    out, stack = [0] * len(t), []\n    for i, x in enumerate(t):\n        while stack and t[stack[-1]] < x:\n            j = stack.pop()\n            out[j] = i - j\n        stack.append(i)\n    return out", c: "O(n)." }
+      ] },
+    { id: "binary", title: "Binary search", group: "Core",
+      spot: "Sorted data, or a yes/no condition that flips once. <b>Signal:</b> 'find the first' or 'minimum x such that...'.",
+      cx: "O(log n).",
+      tpl: "lo, hi = 0, len(a)            # search in [lo, hi)\nwhile lo < hi:\n    mid = (lo + hi) // 2\n    if condition(a[mid]):      # True from some point on\n        hi = mid\n    else:\n        lo = mid + 1\nreturn lo                      # first index where condition holds",
+      probs: [
+        { n: "Search in a sorted array", l: "easy", task: "Index of target, or -1.", hint: "Classic halving.",
+          sol: "def search(nums, target):\n    lo, hi = 0, len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1", c: "O(log n)." },
+        { n: "Search in a rotated sorted array", l: "medium", task: "Find target in a sorted array that was rotated.", hint: "One half is always sorted; check whether the target is in it.",
+          sol: "def search_rotated(nums, target):\n    lo, hi = 0, len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[lo] <= nums[mid]:                  # left half sorted\n            if nums[lo] <= target < nums[mid]:\n                hi = mid - 1\n            else:\n                lo = mid + 1\n        else:                                      # right half sorted\n            if nums[mid] < target <= nums[hi]:\n                lo = mid + 1\n            else:\n                hi = mid - 1\n    return -1", c: "O(log n)." }
+      ] },
+    { id: "linked", title: "Linked lists", group: "Structures",
+      spot: "Reversal, cycles, merging. <b>Signal:</b> a ListNode class, 'in place'.",
+      cx: "O(n) time, O(1) space with pointers.",
+      tpl: "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val, self.next = val, next\n\nslow = fast = head\nwhile fast and fast.next:\n    slow, fast = slow.next, fast.next.next",
+      probs: [
+        { n: "Reverse a linked list", l: "easy", task: "Reverse it in place.", hint: "Three pointers: prev, current, next.",
+          sol: "def reverse(head):\n    prev = None\n    while head:\n        head.next, prev, head = prev, head, head.next\n    return prev", c: "O(n), O(1) space." },
+        { n: "Detect a cycle", l: "easy", task: "Does the list loop?", hint: "Fast and slow pointers meet if there's a cycle.",
+          sol: "def has_cycle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow, fast = slow.next, fast.next.next\n        if slow is fast:\n            return True\n    return False", c: "O(n), O(1)." },
+        { n: "Merge two sorted lists", l: "easy", task: "Merge into one sorted list.", hint: "A dummy head; attach the smaller node each time.",
+          sol: "def merge_two(a, b):\n    dummy = tail = ListNode()\n    while a and b:\n        if a.val <= b.val:\n            tail.next, a = a, a.next\n        else:\n            tail.next, b = b, b.next\n        tail = tail.next\n    tail.next = a or b\n    return dummy.next", c: "O(n + m)." }
+      ] },
+    { id: "trees", title: "Trees", group: "Structures",
+      spot: "Hierarchies, BSTs, depth, paths. <b>Signal:</b> a TreeNode class.",
+      cx: "O(n) to visit every node; recursion depth O(h).",
+      tpl: "def dfs(node):\n    if not node:\n        return base_value\n    left, right = dfs(node.left), dfs(node.right)\n    return combine(node, left, right)\n\nfrom collections import deque\nq = deque([root])\nwhile q:\n    for _ in range(len(q)):        # one level at a time\n        node = q.popleft()\n        q.extend(c for c in (node.left, node.right) if c)",
+      probs: [
+        { n: "Maximum depth", l: "easy", task: "Depth of a binary tree.", hint: "1 plus the deeper child.",
+          sol: "def max_depth(node):\n    if not node:\n        return 0\n    return 1 + max(max_depth(node.left), max_depth(node.right))", c: "O(n)." },
+        { n: "Level order traversal", l: "medium", task: "Values level by level.", hint: "BFS with a queue, one level per loop.",
+          sol: "from collections import deque\n\ndef level_order(root):\n    if not root:\n        return []\n    out, q = [], deque([root])\n    while q:\n        level = []\n        for _ in range(len(q)):\n            n = q.popleft()\n            level.append(n.val)\n            q.extend(c for c in (n.left, n.right) if c)\n        out.append(level)\n    return out", c: "O(n)." },
+        { n: "Validate a BST", l: "medium", task: "Is it a valid binary search tree?", hint: "Pass the allowed range down, not just parent comparisons.",
+          sol: "def is_bst(node, lo=float('-inf'), hi=float('inf')):\n    if not node:\n        return True\n    if not (lo < node.val < hi):\n        return False\n    return is_bst(node.left, lo, node.val) and is_bst(node.right, node.val, hi)", c: "O(n)." }
+      ] },
+    { id: "graphs", title: "Graphs", group: "Structures",
+      spot: "Connections, grids, dependencies, shortest paths. <b>Signal:</b> islands, prerequisites, 'minimum steps'.",
+      cx: "BFS and DFS O(V + E); Dijkstra O(E log V).",
+      tpl: "from collections import deque\n\ndef bfs(start, neighbours):\n    seen, q, dist = {start}, deque([start]), {start: 0}\n    while q:\n        u = q.popleft()\n        for v in neighbours(u):\n            if v not in seen:\n                seen.add(v)\n                dist[v] = dist[u] + 1\n                q.append(v)\n    return dist",
+      probs: [
+        { n: "Number of islands", l: "medium", task: "Count groups of connected '1's in a grid.", hint: "For each unvisited land cell, flood-fill it and count one.",
+          sol: "def num_islands(grid):\n    rows, cols, count = len(grid), len(grid[0]), 0\n    def sink(r, c):\n        if 0 <= r < rows and 0 <= c < cols and grid[r][c] == '1':\n            grid[r][c] = '0'\n            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n                sink(r + dr, c + dc)\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == '1':\n                count += 1\n                sink(r, c)\n    return count", c: "O(rows x cols)." },
+        { n: "Course schedule (topological sort)", l: "medium", task: "Can all courses be finished given prerequisite pairs?", hint: "Kahn's algorithm: repeatedly take courses with no remaining prerequisites.",
+          sol: "from collections import deque, defaultdict\n\ndef can_finish(n, prereqs):\n    graph, indeg = defaultdict(list), [0] * n\n    for course, pre in prereqs:\n        graph[pre].append(course)\n        indeg[course] += 1\n    q = deque(i for i in range(n) if indeg[i] == 0)\n    done = 0\n    while q:\n        u = q.popleft()\n        done += 1\n        for v in graph[u]:\n            indeg[v] -= 1\n            if indeg[v] == 0:\n                q.append(v)\n    return done == n", c: "O(V + E)." },
+        { n: "Shortest path with weights (Dijkstra)", l: "medium", task: "Cheapest cost from a source to every node, non-negative weights.", hint: "A min-heap of (cost, node); skip stale entries.",
+          sol: "import heapq\n\ndef dijkstra(graph, src):          # graph: {u: [(v, w), ...]}\n    dist = {src: 0}\n    heap = [(0, src)]\n    while heap:\n        d, u = heapq.heappop(heap)\n        if d > dist.get(u, float('inf')):\n            continue\n        for v, w in graph.get(u, []):\n            nd = d + w\n            if nd < dist.get(v, float('inf')):\n                dist[v] = nd\n                heapq.heappush(heap, (nd, v))\n    return dist", c: "O(E log V)." }
+      ] },
+    { id: "heap", title: "Heaps and top k", group: "Structures",
+      spot: "The k largest or smallest, streaming medians, merging sorted lists. <b>Signal:</b> 'top k', 'kth largest'.",
+      cx: "O(n log k) for top k.",
+      tpl: "import heapq\nheap = []\nfor x in nums:\n    heapq.heappush(heap, x)\n    if len(heap) > k:\n        heapq.heappop(heap)     # keep the k largest\n# heap[0] is the kth largest",
+      probs: [
+        { n: "Kth largest element", l: "medium", task: "The kth largest in an unsorted array.", hint: "A min-heap of size k.",
+          sol: "import heapq\n\ndef kth_largest(nums, k):\n    heap = nums[:k]\n    heapq.heapify(heap)\n    for x in nums[k:]:\n        if x > heap[0]:\n            heapq.heapreplace(heap, x)\n    return heap[0]", c: "O(n log k)." },
+        { n: "Merge k sorted lists", l: "hard", task: "Merge k sorted Python lists into one.", hint: "A heap of (value, list index, position).",
+          sol: "import heapq\n\ndef merge_k(lists):\n    heap = [(lst[0], i, 0) for i, lst in enumerate(lists) if lst]\n    heapq.heapify(heap)\n    out = []\n    while heap:\n        val, i, j = heapq.heappop(heap)\n        out.append(val)\n        if j + 1 < len(lists[i]):\n            heapq.heappush(heap, (lists[i][j + 1], i, j + 1))\n    return out", c: "O(N log k) for N total items." }
+      ] },
+    { id: "intervals", title: "Intervals", group: "Structures",
+      spot: "Meetings, ranges, bookings. <b>Signal:</b> pairs of [start, end].",
+      cx: "O(n log n) for the sort.",
+      tpl: "for start, end in sorted(intervals):\n    if out and start <= out[-1][1]:\n        out[-1][1] = max(out[-1][1], end)\n    else:\n        out.append([start, end])",
+      probs: [
+        { n: "Meeting rooms needed", l: "medium", task: "Minimum number of rooms for all meetings.", hint: "Sort by start; a min-heap of end times; reuse a room when the earliest ends first.",
+          sol: "import heapq\n\ndef min_rooms(meetings):\n    ends = []\n    for start, end in sorted(meetings):\n        if ends and ends[0] <= start:\n            heapq.heapreplace(ends, end)   # reuse the room that frees first\n        else:\n            heapq.heappush(ends, end)\n    return len(ends)", c: "O(n log n)." }
+      ] },
+    { id: "dp", title: "Dynamic programming", group: "Techniques",
+      spot: "Count the ways, min or max cost, choices that overlap. <b>Signal:</b> 'how many ways', 'minimum cost', and a brute force that repeats work.",
+      cx: "States times transitions; memoisation turns exponential into polynomial.",
+      tpl: "from functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef best(i):\n    if i >= n:\n        return 0\n    return max(take(i) + best(i + 2), best(i + 1))",
+      probs: [
+        { n: "Climbing stairs", l: "easy", task: "Ways to climb n steps taking 1 or 2 at a time.", hint: "ways(n) = ways(n-1) + ways(n-2).",
+          sol: "def climb(n):\n    a, b = 1, 1\n    for _ in range(n):\n        a, b = b, a + b\n    return a", c: "O(n), O(1) space." },
+        { n: "House robber", l: "medium", task: "Max sum without taking two adjacent houses.", hint: "At each house: rob it plus best two back, or skip it.",
+          sol: "def rob(nums):\n    take, skip = 0, 0\n    for x in nums:\n        take, skip = skip + x, max(take, skip)\n    return max(take, skip)", c: "O(n)." },
+        { n: "Coin change", l: "medium", task: "Fewest coins to make an amount, or -1.", hint: "dp[a] = 1 + min over coins of dp[a - coin].",
+          sol: "def coin_change(coins, amount):\n    INF = amount + 1\n    dp = [0] + [INF] * amount\n    for a in range(1, amount + 1):\n        for c in coins:\n            if c <= a:\n                dp[a] = min(dp[a], dp[a - c] + 1)\n    return dp[amount] if dp[amount] != INF else -1", c: "O(amount x coins)." },
+        { n: "Longest common subsequence", l: "medium", task: "Length of the longest subsequence common to two strings.", hint: "A 2D table: match extends the diagonal, else take the best neighbour.",
+          sol: "def lcs(a, b):\n    dp = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]\n    for i in range(1, len(a) + 1):\n        for j in range(1, len(b) + 1):\n            if a[i - 1] == b[j - 1]:\n                dp[i][j] = dp[i - 1][j - 1] + 1\n            else:\n                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])\n    return dp[-1][-1]", c: "O(n m)." }
+      ] },
+    { id: "backtrack", title: "Backtracking", group: "Techniques",
+      spot: "Generate all combinations, subsets or permutations. <b>Signal:</b> 'all possible', small n.",
+      cx: "Exponential, O(2^n) or O(n!); fine for n up to about 20.",
+      tpl: "def backtrack(path, choices):\n    if done(path):\n        out.append(path[:])\n        return\n    for c in choices:\n        path.append(c)\n        backtrack(path, next_choices(c))\n        path.pop()              # undo",
+      probs: [
+        { n: "Subsets", l: "medium", task: "All subsets of distinct numbers.", hint: "At each index, include it or not.",
+          sol: "def subsets(nums):\n    out = []\n    def go(i, path):\n        if i == len(nums):\n            out.append(path[:])\n            return\n        go(i + 1, path)\n        path.append(nums[i])\n        go(i + 1, path)\n        path.pop()\n    go(0, [])\n    return out", c: "O(n 2^n)." },
+        { n: "Permutations", l: "medium", task: "All orderings of distinct numbers.", hint: "Choose an unused number, recurse, undo.",
+          sol: "def permutations(nums):\n    out, used = [], [False] * len(nums)\n    def go(path):\n        if len(path) == len(nums):\n            out.append(path[:])\n            return\n        for i, x in enumerate(nums):\n            if not used[i]:\n                used[i] = True\n                path.append(x)\n                go(path)\n                path.pop()\n                used[i] = False\n    go([])\n    return out", c: "O(n n!)." }
+      ] },
+    { id: "ai", title: "AI-flavoured coding", group: "Techniques",
+      spot: "Small utilities that come up in AI engineering rounds.",
+      cx: "Mostly O(n).",
+      tpl: "# chunk text with overlap\ndef chunk(text, size=800, overlap=100):\n    step = size - overlap\n    return [text[i:i + size] for i in range(0, len(text), step)]",
+      probs: [
+        { n: "Token-bucket rate limiter", l: "medium", task: "Allow at most rate requests per second with bursts up to capacity.", hint: "Refill tokens by elapsed time; spend one per request.",
+          sol: "import time\n\nclass TokenBucket:\n    def __init__(self, rate, capacity):\n        self.rate, self.capacity = rate, capacity\n        self.tokens, self.last = capacity, time.monotonic()\n\n    def allow(self):\n        now = time.monotonic()\n        self.tokens = min(self.capacity, self.tokens + (now - self.last) * self.rate)\n        self.last = now\n        if self.tokens >= 1:\n            self.tokens -= 1\n            return True\n        return False", c: "O(1) per call." },
+        { n: "Cosine top-k retrieval", l: "easy", task: "Given a query vector and document vectors, return the k most similar.", hint: "Normalise, dot product, argsort.",
+          sol: "import numpy as np\n\ndef top_k(query, docs, k=5):\n    q = query / np.linalg.norm(query)\n    d = docs / np.linalg.norm(docs, axis=1, keepdims=True)\n    scores = d @ q\n    idx = np.argsort(-scores)[:k]\n    return list(zip(idx.tolist(), scores[idx].tolist()))", c: "O(n d) for n docs of dimension d." },
+        { n: "Simple word tokenizer and vocabulary", l: "easy", task: "Turn texts into lists of integer ids with a vocabulary.", hint: "Lowercase, split on non-letters, assign ids in order, reserve 0 for unknown.",
+          sol: "import re\n\ndef build_vocab(texts):\n    vocab = {\"<unk>\": 0}\n    for t in texts:\n        for w in re.findall(r\"[a-z']+\", t.lower()):\n            vocab.setdefault(w, len(vocab))\n    return vocab\n\ndef encode(text, vocab):\n    return [vocab.get(w, 0) for w in re.findall(r\"[a-z']+\", text.lower())]", c: "O(total characters)." }
+      ] }
+  ];
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  var side = document.getElementById("side"), host = document.getElementById("patterns");
+  var nav = '<div class="h">Start</div><a href="#how">How to code in an interview</a><a href="#bigo">Complexity cheat sheet</a>';
+  var lastGroup = "";
+  P.forEach(function (p) {
+    if (p.group !== lastGroup) { nav += '<div class="h">' + esc(p.group) + "</div>"; lastGroup = p.group; }
+    nav += '<a href="#' + p.id + '">' + esc(p.title) + "</a>";
+    var html = '<section class="pat" id="' + p.id + '"><h2>' + esc(p.title) + "</h2>" +
+      '<p class="spot">' + p.spot + '</p><p class="cx">' + esc(p.cx) + "</p>" +
+      "<pre><code>" + esc(p.tpl) + "</code></pre>";
+    p.probs.forEach(function (q) {
+      html += '<details class="prob" data-text="' + esc((p.title + " " + q.n + " " + q.task).toLowerCase()) + '"><summary><span class="pn">' + esc(q.n) +
+        '</span><span class="pl">' + esc(q.l) + '</span></summary><div class="pb"><p class="task">' + esc(q.task) + '</p><p class="hint"><b>Hint.</b> ' + esc(q.hint) +
+        '</p><details class="sol"><summary>Show the solution</summary><pre><code>' + esc(q.sol) + '</code></pre><p class="cx">' + esc(q.c) + "</p></details></div></details>";
+    });
+    host.insertAdjacentHTML("beforeend", html + "</section>");
+  });
+  side.innerHTML = nav;
+
+  document.getElementById("q").addEventListener("input", function (e) {
+    var v = e.target.value.trim().toLowerCase();
+    document.querySelectorAll("section.pat").forEach(function (sec) {
+      if (sec.id === "how" || sec.id === "bigo") { sec.classList.toggle("hidden", !!v); return; }
+      var any = false;
+      sec.querySelectorAll("details.prob").forEach(function (d) {
+        var hit = !v || d.dataset.text.indexOf(v) >= 0 || sec.querySelector("h2").textContent.toLowerCase().indexOf(v) >= 0;
+        d.classList.toggle("hidden", !hit);
+        if (hit) { any = true; }
+      });
+      sec.classList.toggle("hidden", !any);
+    });
+  });
+}());
+</script>
+</body>
+</html>

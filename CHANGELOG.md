@@ -472,3 +472,15 @@ chat-turn figure and the guide's stale 'runAgent, max 12 steps' and 'one Supabas
 are corrected. The home page no longer fails on a wildcard session without a date, and
 `figures/stamp.py` stamps content hashes on the tracker's and guide's figure links so a new
 figure is never served stale. No change to the plan or to `CHARTER.md`.
+
+**2026-09-28 — Mphasis loop page, and an algorithms page.**
+An Mphasis technical round came in with two hours' notice: agentic skills, AI
+fundamentals, a possible short coding exercise. A new loop page, `interviews/mphasis.html`,
+holds a two-hour plan and how to show up on a recorded video call, Mphasis's generative AI
+work (NeoZeta's relearning of legacy code into a knowledge graph, checked on their site),
+AI fundamentals, agentic AI tied to alfred_, RAG and GraphRAG with runnable code, and quick
+Python. A new page, `CODING.html`, covers thirteen algorithm patterns with templates and 34
+classic problems; every solution, and every code block on the Mphasis page, was run against
+test cases. The tracker links both: the Mphasis card in the wildcard, and 'Algorithms and
+coding' under Reference. `interviews/build.py` accepts a loop with no tracker sessions. No
+change to the plan or to `CHARTER.md`.

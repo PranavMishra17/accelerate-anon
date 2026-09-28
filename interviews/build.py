@@ -19,6 +19,8 @@ sys.path.insert(0, HERE)
 
 
 def sessions_from_tracker(ids):
+    if not ids:
+        return []   # a loop can be prep-only, with no tracker sessions
     out = subprocess.run(["node", os.path.join(HERE, "extract.js"), ",".join(i for i, _ in ids)],
                          capture_output=True, text=True, encoding="utf-8", check=True).stdout
     data = json.loads(out)
