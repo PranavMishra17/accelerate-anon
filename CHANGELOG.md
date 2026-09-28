@@ -559,3 +559,10 @@ side as two, with the popup full screen (a Notes and Code switch upright, side b
 its side). `python coding/test_data.py` runs all 210 code blocks and re-checks the
 examples. The tracker's Reference links the standalone sheet. No change to the plan or to
 `CHARTER.md`.
+
+**2026-09-28 — The cheat sheet is one file you can send.**
+`CHEATSHEET.html` is now built by `coding/build_sheet.py` with everything inlined: the
+data, the sheet code and styles, the figures and the fonts. It makes no network requests,
+works offline on a desktop and on a phone, and its 'Full page' and 'Open on the page'
+links go to the published site. Run the build after any change in `coding/` or `figures/`.
+No change to the plan or to `CHARTER.md`.

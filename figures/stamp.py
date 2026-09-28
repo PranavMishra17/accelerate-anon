@@ -11,7 +11,7 @@ import hashlib, io, os, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-PAGES = ["index.html", "SYSTEM DESIGN.html", "CODING.html", "CHEATSHEET.html"]
+PAGES = ["index.html", "SYSTEM DESIGN.html", "CODING.html"]   # CHEATSHEET.html is built by coding/build_sheet.py
 
 for page in PAGES:
     path = os.path.join(ROOT, page)

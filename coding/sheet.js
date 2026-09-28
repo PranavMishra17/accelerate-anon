@@ -157,7 +157,7 @@
         "<h4>Classic problems</h4>" + p.probs.map(function (q, i) { return btn(1 + i); }).join("") +
         "<h4>Variations</h4>" + p.vars.map(function (v, i) { return btn(1 + p.probs.length + i); }).join("");
     }
-    h += '<p class="pl-foot">Up and down arrows move; Esc closes. <a href="' + CS.pageBase + "#" + p.id + '">Open on the page</a></p>';
+    h += '<p class="pl-foot">Up and down arrows move; Esc closes. <a href="' + CS.pageBase + "#" + p.id + '"' + (/^https?:/.test(CS.pageBase) ? ' target="_blank" rel="noopener"' : "") + ">Open on the page</a></p>";
     popL.innerHTML = h;
     pop.hidden = false;
     document.body.style.overflow = "hidden";
