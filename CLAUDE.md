@@ -64,8 +64,11 @@ Check behaviour in the built-in browser pane at `localhost:8000`, asserting on s
 The long form, for the material itself, is `PROTOCOL.md`, section **How you study best**
 (read it before designing any new page, session or figure). The working rules:
 
-- **Ask first on anything sizeable.** Use `ask-questions-if-underspecified`: numbered
-  questions, lettered options, a recommended default; he answers like `1b 2a 3a`. For
+- **Ask first on anything sizeable or ambiguous; always.** New pages, content rewrites,
+  design changes, anything with more than one reasonable reading: use
+  `ask-questions-if-underspecified` before building. Numbered questions, lettered options,
+  a recommended default in bold, and a `defaults` fast path; he answers like `1b 2a 3a`.
+  Clear, small fixes (a typo, "make the header smaller") go ahead without questions. For
   "surprise me" asks, offer a list of options and build only the ones he picks.
 - **Teach, don't script.** Every step should open to what it is, the figure that draws it,
   what to read with minutes, and where it sits in the guide, with the spoken answer shut
