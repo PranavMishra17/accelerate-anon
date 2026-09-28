@@ -1795,5 +1795,349 @@ var FIGURES = (function () {
     }
   };
 
+  /* ---- AI engineering fundamentals, 13 figures added 2026-09-28 ---- */
+
+  DIA.numpyShapes = {
+    title: "Shapes must line up at the axis being combined; a size-1 axis stretches to fit instead.",
+    cap: "<b>Three shape rules used constantly: matmul, broadcasting, and reduction.</b> A matmul needs the left operand's last axis to match the right operand's first axis — D here — and that shared axis disappears from the result, so (B, T, D) @ (D, H) gives (B, T, H). Broadcasting stretches a size-1 axis to match its partner without copying data, so (3, 1) plus (1, 4) becomes (3, 4). A reduction removes exactly the axis it runs over: summing (B, T, H) over axis=-1 drops H, leaving (B, T).",
+    svg: function () {
+      var b = "";
+      b += S.tag(0, 8, "matmul");
+      b += S.box({ id: "mm-x", x: 0, y: 18, w: 110, h: 44, label: "x", sub: "(B, T, D)", tone: "req" });
+      b += S.box({ id: "mm-w", x: 0, y: 82, w: 110, h: 44, label: "W", sub: "(D, H)", tone: "math" });
+      b += S.box({ id: "mm-out", x: 200, y: 50, w: 150, h: 44, label: "out", sub: "(B, T, H)", tone: "now" });
+      b += S.arrow(110, 40, 196, 62, {});
+      b += S.arrow(110, 104, 196, 82, {});
+      b += S.tag(0, 150, "broadcast");
+      b += S.box({ id: "bc-a", x: 0, y: 160, w: 100, h: 44, label: "a", sub: "(3, 1)", tone: "req" });
+      b += S.box({ id: "bc-b", x: 0, y: 224, w: 100, h: 44, label: "b", sub: "(1, 4)", tone: "req" });
+      b += S.box({ id: "bc-sum", x: 200, y: 192, w: 130, h: 44, label: "a + b", sub: "(3, 4)", tone: "now" });
+      b += S.arrow(100, 182, 196, 204, {});
+      b += S.arrow(100, 246, 196, 224, {});
+      b += S.tag(0, 298, "reduction");
+      b += S.box({ id: "red-in", x: 0, y: 308, w: 140, h: 44, label: "x", sub: "(B, T, H)", tone: "req" });
+      b += S.box({ id: "red-out", x: 260, y: 308, w: 150, h: 44, label: "x.sum(-1)", sub: "(B, T)", tone: "now" });
+      b += S.arrow(140, 330, 256, 330, { label: "sum(axis=-1)" });
+      return S.frame(430, 372, b);
+    }
+  };
+
+  DIA.trainLoop = {
+    title: "One PyTorch training step is six calls, in a fixed order, repeated.",
+    cap: "<b>Every step follows the same cycle, then loops.</b> A batch comes from the DataLoader, the model runs it forward, the criterion turns predictions into a loss, .backward() walks the autograd graph to compute gradients, the optimizer applies its update rule, and zero_grad() clears gradients before the next batch — skip that call and gradients silently accumulate across steps. Evaluation runs the same forward pass inside torch.no_grad(), which skips building the autograd graph since no backward pass will follow.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "batch", x: 0, y: 20, w: 110, h: 44, label: "batch", sub: "DataLoader", tone: "req", icon: "layers" });
+      b += S.box({ id: "forward", x: 150, y: 20, w: 120, h: 44, label: "forward", sub: "model(x)", tone: "sys", icon: "bot" });
+      b += S.box({ id: "loss", x: 310, y: 20, w: 100, h: 44, label: "loss", sub: "criterion", tone: "math" });
+      b += S.box({ id: "backward", x: 310, y: 110, w: 120, h: 44, label: ".backward()", sub: "grads", tone: "math" });
+      b += S.box({ id: "optimizer", x: 150, y: 110, w: 130, h: 44, label: "optimizer.step()", tone: "sys" });
+      b += S.box({ id: "zerograd", x: 0, y: 110, w: 130, h: 44, label: "zero_grad()", tone: "flat" });
+      b += S.box({ id: "eval", x: 480, y: 65, w: 140, h: 60, label: "eval", sub: "torch.no_grad()", tone: "alaap", icon: "eye" });
+      b += S.arrow(110, 42, 146, 42, {});
+      b += S.arrow(270, 42, 306, 42, {});
+      b += S.arrow(360, 64, 370, 108, {});
+      b += S.arrow(306, 132, 284, 132, {});
+      b += S.arrow(146, 132, 134, 132, {});
+      b += S.arrow(65, 110, 55, 64, { label: "next batch" });
+      b += S.arrow(270, 42, 480, 95, { dash: true, curve: -40, label: "at eval time" });
+      return S.frame(650, 190, b);
+    }
+  };
+
+  DIA.ragPipeline = {
+    title: "Indexing runs once; retrieval runs on every query, against the index indexing built.",
+    cap: "<b>Two pipelines share one index.</b> At index time, the parser's output — blocks tagged with page and section — is chunked while keeping that structural metadata, then embedded into a vector index. At query time, the query is embedded, top-k chunks are retrieved from the same index, a rerank stage reorders them, and a prompt lists them as numbered sources so the LLM's answer can cite by number; a citation check confirms every cited number actually appears in the prompt.",
+    svg: function () {
+      var b = "";
+      b += S.tag(0, 8, "index time");
+      b += S.box({ id: "parser", x: 0, y: 20, w: 110, h: 44, label: "parser", sub: "page, section", tone: "req", icon: "file-scan" });
+      b += S.box({ id: "chunk", x: 150, y: 20, w: 140, h: 44, label: "chunk", sub: "keeps metadata", tone: "sys", icon: "split" });
+      b += S.box({ id: "embed", x: 330, y: 20, w: 110, h: 44, label: "embed", tone: "math" });
+      b += S.box({ id: "index", x: 480, y: 20, w: 120, h: 44, label: "index", tone: "now", icon: "database" });
+      b += S.arrow(110, 42, 146, 42, {});
+      b += S.arrow(290, 42, 326, 42, {});
+      b += S.arrow(440, 42, 476, 42, {});
+      b += S.tag(0, 110, "query time");
+      b += S.box({ id: "query", x: 0, y: 122, w: 100, h: 44, label: "query", tone: "req", icon: "search" });
+      b += S.box({ id: "embedq", x: 140, y: 122, w: 140, h: 44, label: "embed query", tone: "math" });
+      b += S.box({ id: "retrieve", x: 320, y: 122, w: 140, h: 44, label: "retrieve top k", tone: "sys" });
+      b += S.box({ id: "rerank", x: 500, y: 122, w: 110, h: 44, label: "rerank", tone: "sys", icon: "trending-up" });
+      b += S.arrow(100, 144, 136, 144, {});
+      b += S.arrow(280, 144, 316, 144, {});
+      b += S.arrow(460, 144, 496, 144, {});
+      b += S.arrow(540, 64, 390, 120, { dash: true, label: "top k" });
+      b += S.box({ id: "prompt", x: 500, y: 224, w: 170, h: 50, label: "prompt", sub: "numbered sources", tone: "flat" });
+      b += S.arrow(555, 166, 585, 222, {});
+      b += S.box({ id: "llm", x: 0, y: 326, w: 100, h: 50, label: "LLM", tone: "sys", icon: "bot" });
+      b += S.box({ id: "answer", x: 150, y: 326, w: 170, h: 50, label: "answer", sub: "with citations", tone: "now" });
+      b += S.box({ id: "check", x: 370, y: 326, w: 140, h: 50, label: "citation check", tone: "alaap" });
+      b += S.arrow(585, 274, 50, 324, {});
+      b += S.arrow(100, 351, 146, 351, {});
+      b += S.arrow(320, 351, 366, 351, {});
+      return S.frame(690, 400, b);
+    }
+  };
+
+  DIA.graphRag = {
+    title: "Retrieval walks a graph instead of ranking chunks; every fact still points back to its source chunk.",
+    cap: "<b>Building the graph and querying it are two separate passes over the same structure.</b> An LLM reads chunks and extracts subject-relation-object triples, which become nodes and edges, each edge recording the chunk it came from. A query finds the entities it names, expands outward a fixed number of hops to gather nearby facts, pulls each fact's source chunk back in for grounding, and only then goes to the LLM for an answer.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "chunks", x: 0, y: 20, w: 100, h: 44, label: "chunks", tone: "req", icon: "file-text" });
+      b += S.box({ id: "extract", x: 150, y: 20, w: 160, h: 44, label: "extract triples", sub: "LLM", tone: "sys", icon: "bot" });
+      b += S.box({ id: "graph", x: 360, y: 20, w: 150, h: 50, label: "graph", sub: "nodes, edges, source", tone: "now", icon: "network" });
+      b += S.arrow(100, 42, 146, 42, {});
+      b += S.arrow(310, 42, 356, 42, {});
+      b += S.box({ id: "query", x: 0, y: 130, w: 100, h: 44, label: "query", tone: "req", icon: "search" });
+      b += S.box({ id: "findEntities", x: 150, y: 130, w: 160, h: 44, label: "find entities", tone: "sys" });
+      b += S.box({ id: "expand", x: 360, y: 130, w: 150, h: 44, label: "expand k hops", tone: "sys" });
+      b += S.arrow(100, 152, 146, 152, {});
+      b += S.arrow(310, 152, 356, 152, {});
+      b += S.arrow(435, 70, 435, 128, { dash: true, label: "reads graph" });
+      b += S.box({ id: "facts", x: 150, y: 230, w: 200, h: 50, label: "facts + chunks", tone: "flat" });
+      b += S.box({ id: "llmAnswer", x: 400, y: 230, w: 160, h: 50, label: "LLM answer", tone: "now", icon: "bot" });
+      b += S.arrow(435, 174, 280, 228, {});
+      b += S.arrow(350, 255, 396, 255, {});
+      return S.frame(580, 300, b);
+    }
+  };
+
+  DIA.agentLoop = {
+    title: "The agent loop is one cycle: build context, call the model, maybe call a tool, repeat.",
+    cap: "<b>Every turn re-enters the same loop.</b> A user message triggers context building from the system prompt, history and memory; the model either calls a tool or answers directly. A tool call is validated against its schema, run behind a guard, and its observation is appended back into context before the model runs again — the same loop, one step further. A step limit stops runaway loops even if the model never emits a final answer.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "user", x: 0, y: 20, w: 110, h: 44, label: "user message", tone: "req", icon: "user" });
+      b += S.box({ id: "context", x: 150, y: 20, w: 170, h: 44, label: "build context", sub: "system, history, memory", tone: "sys" });
+      b += S.box({ id: "model", x: 360, y: 20, w: 110, h: 44, label: "model", tone: "sys", icon: "bot" });
+      b += S.box({ id: "branch", x: 360, y: 110, w: 130, h: 50, label: "tool call?", tone: "alaap" });
+      b += S.box({ id: "validate", x: 530, y: 90, w: 140, h: 44, label: "validate args", tone: "math" });
+      b += S.box({ id: "runTool", x: 530, y: 160, w: 140, h: 44, label: "run tool", sub: "behind a guard", tone: "sys", icon: "shield" });
+      b += S.box({ id: "observation", x: 340, y: 230, w: 170, h: 44, label: "observation", sub: "appended", tone: "flat" });
+      b += S.box({ id: "reply", x: 150, y: 230, w: 170, h: 44, label: "reply", sub: "and write memory", tone: "now" });
+      b += S.box({ id: "stepLimit", x: 0, y: 110, w: 130, h: 50, label: "step limit", sub: "stops the loop", tone: "alaap" });
+      b += S.arrow(110, 42, 146, 42, {});
+      b += S.arrow(320, 42, 356, 42, {});
+      b += S.arrow(415, 64, 425, 108, {});
+      b += S.arrow(490, 120, 526, 112, {});
+      b += S.arrow(600, 134, 600, 158, {});
+      b += S.arrow(530, 204, 425, 228, {});
+      b += S.arrow(425, 228, 415, 66, { curve: 60, label: "next turn" });
+      b += S.arrow(400, 158, 235, 228, { label: "final answer" });
+      b += S.arrow(360, 120, 130, 120, { dash: true, label: "n steps" });
+      return S.frame(690, 300, b);
+    }
+  };
+
+  DIA.webResearch = {
+    title: "Research is plan, search, synthesise, then check coverage — and loop back to plan if something is missing.",
+    cap: "<b>The loop that turns one question into a sourced answer.</b> A question is broken into sub-queries, each searched and fetched, and passages are extracted from the pages. Duplicate passages are collapsed and ranked before synthesis writes an answer with citations. A coverage check compares the answer against the question's sub-parts; anything still missing sends the loop back to planning for another round.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "question", x: 0, y: 20, w: 110, h: 44, label: "question", tone: "req" });
+      b += S.box({ id: "plan", x: 150, y: 20, w: 150, h: 44, label: "plan sub-queries", tone: "sys" });
+      b += S.box({ id: "search", x: 340, y: 20, w: 100, h: 44, label: "search", tone: "sys", icon: "search" });
+      b += S.box({ id: "fetch", x: 480, y: 20, w: 100, h: 44, label: "fetch", tone: "sys", icon: "globe" });
+      b += S.arrow(110, 42, 146, 42, {});
+      b += S.arrow(300, 42, 336, 42, {});
+      b += S.arrow(440, 42, 476, 42, {});
+      b += S.box({ id: "extract", x: 0, y: 122, w: 170, h: 44, label: "extract passages", tone: "math" });
+      b += S.box({ id: "dedupe", x: 210, y: 122, w: 170, h: 44, label: "dedupe and rank", tone: "math" });
+      b += S.box({ id: "synth", x: 420, y: 122, w: 200, h: 44, label: "synthesise", sub: "with citations", tone: "now" });
+      b += S.arrow(530, 64, 85, 120, {});
+      b += S.arrow(170, 144, 206, 144, {});
+      b += S.arrow(380, 144, 416, 144, {});
+      b += S.box({ id: "coverage", x: 420, y: 224, w: 200, h: 44, label: "coverage check", tone: "alaap" });
+      b += S.arrow(520, 166, 520, 222, {});
+      b += S.arrow(420, 246, 180, 64, { dash: true, curve: 55, label: "gap found" });
+      return S.frame(650, 290, b);
+    }
+  };
+
+  DIA.voicePipeline = {
+    title: "Voice is a pipeline of streaming stages, and the user talking again can interrupt any of them.",
+    cap: "<b>Every stage streams into the next before the previous one finishes.</b> Microphone frames go through voice-activity detection and endpointing (~150 ms) to decide when the user stopped talking, then streaming speech-to-text (~300 ms), the LLM streaming tokens back, a sentence chunker that hands complete sentences to streaming text-to-speech (~200 ms) for playback. Barge-in: VAD detecting new speech cancels TTS mid-sentence, so the agent stops talking the moment the user interrupts.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "mic", x: 0, y: 20, w: 90, h: 44, label: "mic", sub: "frames", tone: "req", icon: "mic" });
+      b += S.box({ id: "vad", x: 120, y: 20, w: 140, h: 44, label: "VAD", sub: "endpointing, ~150ms", tone: "sys" });
+      b += S.box({ id: "stt", x: 290, y: 20, w: 150, h: 44, label: "streaming STT", sub: "~300ms", tone: "sys" });
+      b += S.box({ id: "llm", x: 470, y: 20, w: 120, h: 44, label: "LLM", sub: "streaming tokens", tone: "sys", icon: "bot" });
+      b += S.box({ id: "chunker", x: 290, y: 122, w: 150, h: 44, label: "sentence chunker", tone: "math" });
+      b += S.box({ id: "tts", x: 470, y: 122, w: 120, h: 44, label: "streaming TTS", sub: "~200ms", tone: "sys", icon: "speaker" });
+      b += S.box({ id: "playback", x: 620, y: 122, w: 100, h: 44, label: "playback", tone: "now", icon: "volume-2" });
+      b += S.arrow(90, 42, 116, 42, {});
+      b += S.arrow(260, 42, 286, 42, {});
+      b += S.arrow(440, 42, 466, 42, {});
+      b += S.arrow(500, 64, 365, 120, {});
+      b += S.arrow(440, 144, 466, 144, {});
+      b += S.arrow(590, 144, 616, 144, {});
+      b += S.arrow(190, 66, 530, 120, { dash: true, label: "barge-in: cancel" });
+      return S.frame(720, 190, b);
+    }
+  };
+
+  DIA.transformerBlock = {
+    title: "The same block repeats N times: normalise, attend causally, add back, normalise, transform, add back.",
+    cap: "<b>One block, stacked N times, turns embeddings into next-token logits.</b> Tokens are embedded and combined with position information, then pass through N identical blocks: layer norm, causal multi-head attention (each position only attends to itself and earlier positions), a residual add, another layer norm, an MLP, and a second residual add. After the last block, a final norm and a linear projection produce logits over the vocabulary, and softmax turns them into the next-token distribution.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "tokens", x: 0, y: 20, w: 90, h: 44, label: "tokens", tone: "req" });
+      b += S.box({ id: "embed", x: 130, y: 20, w: 140, h: 44, label: "embed + pos", tone: "math" });
+      b += S.arrow(90, 42, 126, 42, {});
+      b += S.arrow(200, 64, 70, 110, {});
+      b += '<rect x="0" y="100" width="390" height="140" rx="6" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 4" opacity="0.5"/>';
+      b += S.text(355, 114, "x N", "d-t-x");
+      b += S.box({ id: "ln1", x: 20, y: 112, w: 100, h: 40, label: "LN", tone: "flat" });
+      b += S.box({ id: "mha", x: 140, y: 112, w: 150, h: 40, label: "MHA", sub: "causal mask", tone: "sys" });
+      b += S.box({ id: "add1", x: 310, y: 112, w: 80, h: 40, label: "add", sub: "+ input", tone: "flat" });
+      b += S.box({ id: "ln2", x: 20, y: 180, w: 100, h: 40, label: "LN", tone: "flat" });
+      b += S.box({ id: "mlp", x: 140, y: 180, w: 150, h: 40, label: "MLP", tone: "sys" });
+      b += S.box({ id: "add2", x: 310, y: 180, w: 80, h: 40, label: "add", sub: "+ add1", tone: "flat" });
+      b += S.arrow(120, 132, 136, 132, {});
+      b += S.arrow(290, 132, 306, 132, {});
+      b += S.arrow(350, 152, 70, 178, {});
+      b += S.arrow(120, 200, 136, 200, {});
+      b += S.arrow(290, 200, 306, 200, {});
+      b += S.box({ id: "finalNorm", x: 430, y: 150, w: 120, h: 44, label: "final norm", tone: "flat" });
+      b += S.box({ id: "logits", x: 430, y: 210, w: 110, h: 44, label: "logits", tone: "math" });
+      b += S.box({ id: "softmax", x: 430, y: 270, w: 110, h: 44, label: "softmax", tone: "math" });
+      b += S.box({ id: "nextToken", x: 430, y: 330, w: 140, h: 44, label: "next token", tone: "now" });
+      b += S.arrow(390, 200, 426, 172, {});
+      b += S.arrow(490, 194, 485, 208, {});
+      b += S.arrow(485, 254, 485, 268, {});
+      b += S.arrow(485, 314, 485, 328, {});
+      return S.frame(600, 400, b);
+    }
+  };
+
+  DIA.bpeMerge = {
+    title: "BPE learns merges by frequency; encoding replays those same merges in the order they were learned.",
+    cap: "<b>Training and encoding are the same operation, run in opposite directions.</b> Training starts from raw bytes or characters, counts every adjacent pair, and merges the single most frequent pair into a new symbol — for example \"l\" and \"o\" merging into \"lo\" — growing the vocabulary by one entry per merge, repeated thousands of times. Encoding new text applies those learned merges in the exact order they were learned, turning characters into the final token ids.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "text", x: 0, y: 20, w: 90, h: 44, label: "text", tone: "req" });
+      b += S.box({ id: "chars", x: 130, y: 20, w: 140, h: 44, label: "characters", sub: "or bytes", tone: "flat" });
+      b += S.box({ id: "countPairs", x: 310, y: 20, w: 170, h: 44, label: "count adjacent pairs", tone: "math" });
+      b += S.box({ id: "mergePair", x: 520, y: 20, w: 180, h: 50, label: "merge top pair", sub: "\"l\"+\"o\" -> \"lo\"", tone: "now", icon: "merge" });
+      b += S.arrow(90, 42, 126, 42, {});
+      b += S.arrow(270, 42, 306, 42, {});
+      b += S.arrow(480, 42, 516, 45, {});
+      b += S.arrow(610, 70, 395, 64, { curve: -50, label: "repeat" });
+      b += S.box({ id: "vocab", x: 520, y: 122, w: 180, h: 44, label: "vocabulary grows", tone: "flat" });
+      b += S.arrow(610, 70, 610, 120, {});
+      b += S.box({ id: "encodeText", x: 0, y: 224, w: 110, h: 44, label: "text", tone: "req" });
+      b += S.box({ id: "applyMerges", x: 160, y: 224, w: 210, h: 44, label: "apply merges", sub: "learned order", tone: "sys" });
+      b += S.box({ id: "ids", x: 420, y: 224, w: 100, h: 44, label: "ids", tone: "now" });
+      b += S.arrow(610, 166, 370, 222, { dash: true, label: "learned merges" });
+      b += S.arrow(110, 246, 156, 246, {});
+      b += S.arrow(370, 246, 416, 246, {});
+      return S.frame(720, 310, b);
+    }
+  };
+
+  DIA.evalHarness = {
+    title: "An eval harness is a release gate: score against a baseline, and block the ship on a regression.",
+    cap: "<b>The same golden set runs through both the candidate and the baseline before either ships.</b> The system under test runs the golden set, and each output is scored by several scorers — exact match, an LLM judge against a rubric, a citation check — then aggregated into a pass rate and pass^k for flaky cases. That aggregate is compared against the baseline's own scores, and a regression gate decides ship or block from the comparison, not from the candidate's score alone.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "goldenSet", x: 0, y: 20, w: 130, h: 44, label: "golden set", tone: "req", icon: "list-checks" });
+      b += S.box({ id: "runSystem", x: 160, y: 20, w: 140, h: 44, label: "run system", tone: "sys" });
+      b += S.box({ id: "scorers", x: 330, y: 20, w: 200, h: 50, label: "scorers", sub: "exact match, judge, citation", tone: "math" });
+      b += S.box({ id: "aggregate", x: 560, y: 20, w: 130, h: 50, label: "aggregate", sub: "pass rate, pass^k", tone: "now" });
+      b += S.arrow(130, 42, 156, 42, {});
+      b += S.arrow(300, 42, 326, 42, {});
+      b += S.arrow(530, 45, 556, 45, {});
+      b += S.box({ id: "baseline", x: 160, y: 130, w: 140, h: 44, label: "baseline", tone: "flat" });
+      b += S.box({ id: "compare", x: 560, y: 130, w: 130, h: 44, label: "compare", sub: "vs baseline", tone: "sys" });
+      b += S.arrow(625, 70, 625, 128, {});
+      b += S.arrow(300, 152, 556, 150, {});
+      b += S.box({ id: "gate", x: 560, y: 224, w: 130, h: 50, label: "regression gate", sub: "ship or block", tone: "now" });
+      b += S.arrow(625, 174, 625, 222, {});
+      return S.frame(700, 290, b);
+    }
+  };
+
+  DIA.schemaRepair = {
+    title: "A model's output is untrusted until it parses and validates; a validation error becomes the next prompt.",
+    cap: "<b>Structured output is enforced by a retry loop, not by asking nicely.</b> The schema or tool definition is put in the prompt, the model produces output, and that output is parsed as JSON, then validated against the schema. A pass returns a typed object; a failure — bad JSON or a schema violation — feeds the error message back into the next prompt and retries, up to n times, after which the caller gets a clean failure instead of a silent bad object.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "schema", x: 0, y: 20, w: 110, h: 44, label: "schema", sub: "or tool def", tone: "req" });
+      b += S.box({ id: "prompt", x: 150, y: 20, w: 150, h: 44, label: "prompt", tone: "sys" });
+      b += S.box({ id: "modelOut", x: 340, y: 20, w: 140, h: 44, label: "model output", tone: "sys", icon: "bot" });
+      b += S.box({ id: "parse", x: 520, y: 20, w: 110, h: 44, label: "parse JSON", tone: "math" });
+      b += S.arrow(110, 42, 146, 42, {});
+      b += S.arrow(300, 42, 336, 42, {});
+      b += S.arrow(480, 42, 516, 42, {});
+      b += S.box({ id: "validate", x: 520, y: 122, w: 110, h: 44, label: "validate", tone: "math" });
+      b += S.arrow(575, 64, 575, 120, {});
+      b += S.box({ id: "ok", x: 380, y: 224, w: 140, h: 44, label: "typed object", tone: "now" });
+      b += S.box({ id: "errBox", x: 570, y: 224, w: 140, h: 44, label: "feed error back", tone: "alaap" });
+      b += S.arrow(560, 166, 450, 222, { label: "pass" });
+      b += S.arrow(600, 166, 630, 222, { label: "error" });
+      b += S.box({ id: "retry", x: 380, y: 326, w: 150, h: 44, label: "retry", sub: "at most n", tone: "alaap" });
+      b += S.arrow(620, 268, 480, 324, {});
+      b += S.arrow(455, 326, 225, 64, { curve: 90, label: "retry" });
+      b += S.box({ id: "cleanFail", x: 570, y: 326, w: 150, h: 44, label: "clean failure", sub: "after n", tone: "alaap" });
+      b += S.arrow(530, 348, 566, 348, { dash: true, label: "n exceeded" });
+      return S.frame(720, 390, b);
+    }
+  };
+
+  DIA.servingPath = {
+    title: "A request is cached, queued and batched before it reaches the model — and every stage reports to metrics.",
+    cap: "<b>The path a single request takes through a serving stack.</b> The client's request hits an API endpoint, passes auth and rate limiting, and checks a cache — a hit returns immediately, skipping everything downstream. A miss joins a queue where a micro-batcher groups requests before they reach the model, which streams tokens back to the client over SSE. A side channel tracks metrics and timeouts at every stage, not just at the end.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "client", x: 0, y: 20, w: 100, h: 44, label: "client", tone: "req", icon: "user" });
+      b += S.box({ id: "endpoint", x: 140, y: 20, w: 140, h: 44, label: "API endpoint", tone: "sys" });
+      b += S.box({ id: "auth", x: 320, y: 20, w: 160, h: 44, label: "auth, rate limit", tone: "sys", icon: "lock" });
+      b += S.box({ id: "cache", x: 520, y: 20, w: 140, h: 44, label: "cache check", tone: "math" });
+      b += S.arrow(100, 42, 136, 42, {});
+      b += S.arrow(280, 42, 316, 42, {});
+      b += S.arrow(480, 42, 516, 42, {});
+      b += S.box({ id: "queue", x: 320, y: 122, w: 170, h: 44, label: "queue + batch", sub: "micro-batcher", tone: "sys" });
+      b += S.box({ id: "model", x: 520, y: 122, w: 140, h: 44, label: "model", tone: "sys", icon: "bot" });
+      b += S.box({ id: "stream", x: 520, y: 224, w: 170, h: 44, label: "stream tokens", sub: "SSE", tone: "now" });
+      b += S.box({ id: "metrics", x: 0, y: 122, w: 170, h: 60, label: "metrics, timeouts", sub: "every stage", tone: "flat" });
+      b += S.arrow(560, 64, 400, 120, { label: "miss" });
+      b += S.arrow(520, 42, 100, 42, { curve: -60, label: "hit" });
+      b += S.arrow(490, 144, 516, 144, {});
+      b += S.arrow(590, 166, 605, 222, {});
+      b += S.arrow(520, 246, 50, 64, { curve: -100, label: "SSE" });
+      b += S.arrow(320, 144, 170, 150, { dash: true });
+      return S.frame(710, 300, b);
+    }
+  };
+
+  DIA.lora = {
+    title: "LoRA trains two small matrices instead of one big one; at inference they merge back into it for free.",
+    cap: "<b>Only A and B train — W stays frozen the entire time.</b> Input x goes through the frozen weight W (d x k) and, in parallel, through A (r x k) then B (d x r), scaled by alpha/r, before the two paths sum into the output. r is small, often 8, which is the entire point: training d x k parameters costs d*k, training r*(d+k) costs far less once d and k are in the thousands. At inference, W' = W + (alpha/r) x B x A merges the adapter into one matrix, so serving pays no extra latency over the base model.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "x", x: 0, y: 100, w: 70, h: 44, label: "x", tone: "req" });
+      b += S.box({ id: "W", x: 130, y: 20, w: 110, h: 44, label: "W", sub: "frozen, d x k", tone: "math" });
+      b += S.box({ id: "A", x: 130, y: 100, w: 80, h: 44, label: "A", sub: "r x k", tone: "math" });
+      b += S.box({ id: "B", x: 250, y: 100, w: 80, h: 44, label: "B", sub: "d x r", tone: "math" });
+      b += S.box({ id: "scale", x: 360, y: 100, w: 110, h: 44, label: "x alpha/r", tone: "math" });
+      b += S.box({ id: "sum", x: 510, y: 60, w: 90, h: 44, label: "sum", tone: "sys" });
+      b += S.box({ id: "output", x: 630, y: 60, w: 90, h: 44, label: "output", tone: "now" });
+      b += S.arrow(70, 110, 126, 55, {});
+      b += S.arrow(70, 122, 126, 122, {});
+      b += S.arrow(210, 122, 246, 122, {});
+      b += S.arrow(330, 122, 356, 122, {});
+      b += S.arrow(240, 55, 506, 75, {});
+      b += S.arrow(470, 122, 506, 95, {});
+      b += S.arrow(600, 82, 626, 82, {});
+      b += S.box({ id: "merge", x: 250, y: 200, w: 280, h: 50, label: "merge for inference", sub: "W' = W + (alpha/r) B A", tone: "now" });
+      b += S.arrow(185, 64, 390, 198, { dash: true, curve: -100, label: "fuse for serving" });
+      b += S.arrow(290, 144, 290, 198, { dash: true });
+      b += S.text(0, 280, "params to train: W is d*k; A + B is r*(d+k) — far smaller once r stays small, e.g. r=8.", "d-t-s");
+      return S.frame(720, 300, b);
+    }
+  };
+
   return { S: S, DIA: DIA, slug: slug };
 })();

@@ -715,7 +715,7 @@ window.CODING = {
        {
         "i": "target = 7, nums = [2, 3, 1, 2, 4, 3]",
         "o": "2",
-        "why": "[4, 3] sums to 7 in just two elements, shorter than any other qualifying run"
+        "why": "[4, 3] sums to 7 in two elements, shorter than any other qualifying run"
        },
        {
         "i": "target = 100, nums = [1, 2, 3]",
@@ -1694,7 +1694,7 @@ window.CODING = {
      "sol": "def is_bst(node, lo=float('-inf'), hi=float('inf')):\n    if not node:\n        return True\n    if not (lo < node.val < hi):  # every ancestor bounds it, not only the parent\n        return False\n    return is_bst(node.left, lo, node.val) and is_bst(node.right, node.val, hi)",
      "c": "O(n).",
      "st": {
-      "p": "`is_bst` receives the `root` of a binary tree and returns `True` if it is a valid binary search tree, `False` otherwise. A node is valid only if its value falls strictly between the lower and upper bounds inherited from every ancestor, not just its direct parent. An empty tree is valid.",
+      "p": "`is_bst` receives the `root` of a binary tree and returns `True` if it is a valid binary search tree, `False` otherwise. A node is valid only if its value falls strictly between the lower and upper bounds inherited from every ancestor, not its direct parent. An empty tree is valid.",
       "ex": [
        {
         "i": "root = [2, 1, 3]",
@@ -2874,6 +2874,1614 @@ window.CODING = {
    "g": "techniques"
   },
   {
+   "id": "numpy",
+   "title": "NumPy and matrix basics",
+   "group": "AI systems",
+   "spot": "Any interview that asks you to score, rank or batch vectors by hand instead of calling a library. <b>Signal:</b> \"implement cosine similarity\", \"no sklearn\", \"do this with matrices\".",
+   "cx": "Matmul is the dominant cost; broadcasting avoids materializing copies, but a shape mismatch broadcasts silently to a wrong-looking result instead of erroring.",
+   "ex": {
+    "i": "one query vector against 3 document vectors",
+    "o": "softmax weights peaking on the identical document (index 0)",
+    "w": "shows normalize, cosine similarity, mask, and softmax as one scoring pipeline"
+   },
+   "hld": [
+    "Arrays and dtypes: build typed arrays; dtype controls memory and precision.",
+    "Shape, reshape and transpose: reshape must preserve element count; transpose is a view.",
+    "Broadcasting: shapes align from the trailing dimension outward.",
+    "Matmul and einsum: @ contracts the shared axis; einsum names which axes contract.",
+    "Reductions along an axis: sum or mean over one axis, keepdims to stay broadcastable.",
+    "Stable softmax: subtract the row max before exp to avoid overflow to inf or nan.",
+    "Cosine similarity matrix: normalize both sides, then one matmul.",
+    "Masking with where: replace entries that fail a condition, elementwise."
+   ],
+   "parts": [
+    {
+     "n": "Arrays and dtypes",
+     "t": "Typed arrays control memory and precision; float32 halves memory versus float64, which matters once you're indexing millions of vectors.",
+     "code": "\nimport numpy as np\n\ndef make_array(values, dtype=np.float32):\n    return np.array(values, dtype=dtype)\n"
+    },
+    {
+     "n": "Shape, reshape and transpose",
+     "t": "Reshape must preserve the total element count; -1 lets numpy infer one dimension. Transpose is a view, not a copy, so mutating it mutates the original.",
+     "code": "\ndef reshape_and_transpose(a):\n    flat = a.reshape(-1)\n    grid = flat.reshape(2, -1)\n    return grid, grid.T\n"
+    },
+    {
+     "n": "Broadcasting",
+     "t": "Shapes align from the trailing dimension. (n, d) + (d,) broadcasts the vector across every row; (n, d) + (n,) usually does NOT do what people expect and either errors or broadcasts on the wrong axis.",
+     "code": "\ndef broadcast_add(matrix, vector):\n    return matrix + vector\n"
+    },
+    {
+     "n": "Matmul and einsum",
+     "t": "@ contracts the shared axis; einsum spells out which axes contract, which is easier to audit in batched code even when it isn't faster.",
+     "code": "\ndef scores_matmul(queries, docs):\n    return queries @ docs.T\n\ndef scores_einsum(queries, docs):\n    return np.einsum(\"qd,nd->qn\", queries, docs)\n"
+    },
+    {
+     "n": "Reductions along an axis",
+     "t": "axis=1 reduces across columns, one value per row; keepdims keeps the result broadcastable back against the original array without a manual reshape.",
+     "code": "\ndef row_normalize(matrix):\n    norms = np.linalg.norm(matrix, axis=1, keepdims=True)\n    return matrix / np.clip(norms, 1e-8, None)\n"
+    },
+    {
+     "n": "Stable softmax",
+     "t": "Subtracting the row max before exp is invariant to the softmax result but keeps exp() away from overflow; skip it and a large logit in float32 turns into inf, then inf/inf is nan.",
+     "code": "\ndef softmax(x, axis=-1):\n    shifted = x - np.max(x, axis=axis, keepdims=True)\n    exp = np.exp(shifted)\n    return exp / np.sum(exp, axis=axis, keepdims=True)\n"
+    },
+    {
+     "n": "Cosine similarity matrix and masking",
+     "t": "Normalize both sides so the matmul IS cosine similarity, then use np.where to drop scores under a threshold to -inf so a later softmax sends them to ~0 instead of deleting the row.",
+     "code": "\ndef cosine_similarity_matrix(a, b):\n    a_n = row_normalize(a)\n    b_n = row_normalize(b)\n    return a_n @ b_n.T\n\ndef mask_self(sim_matrix, threshold=0.0):\n    return np.where(sim_matrix >= threshold, sim_matrix, -np.inf)\n"
+    }
+   ],
+   "tpl": "\nquery = make_array([[1.0, 0.0, 1.0, 0.0]])\ndocs = make_array([[1.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 1.0], [1.0, 1.0, 0.0, 0.0]])\nsims = cosine_similarity_matrix(query, docs)\nmasked = mask_self(sims, threshold=0.1)\nweights = softmax(masked, axis=-1)\nbest_doc_index = int(np.argmax(weights[0]))\n",
+   "remember": [
+    "Subtract the row max before exp; skipping it is how a fine-looking softmax turns into nan in production on a big logit.",
+    "A dot product is cosine similarity only once both sides are unit-normalized; forgetting one side silently returns something else.",
+    "Broadcasting failures are usually silent, not an error: (n, d) + (n,) can broadcast on the wrong axis instead of raising.",
+    "axis=0 reduces down a column (across rows), axis=1 reduces across a row (across columns); keepdims=True is what keeps the result broadcastable afterward.",
+    "einsum is not automatically faster than @; use it when naming the contracted axes prevents a bug, not by default."
+   ],
+   "asks": [
+    {
+     "q": "Why subtract the max before exponentiating in softmax?",
+     "a": "exp() of a large logit overflows float32 to inf, and inf divided by inf is nan. Subtracting the row's max shifts every value to at most 0 before exponentiating, which leaves the softmax result mathematically unchanged but keeps every intermediate value finite."
+    },
+    {
+     "q": "What's the practical difference between axis=0 and axis=1 in a reduction?",
+     "a": "For a 2D array shaped (rows, cols), axis=0 collapses the rows and returns one value per column; axis=1 collapses the columns and returns one value per row. Getting this backwards is a common bug when normalizing a batch of vectors stored as rows."
+    },
+    {
+     "q": "When would you reach for einsum instead of @ or a loop?",
+     "a": "When the contraction involves more than two plain 2D matrices, or when a batch dimension makes @ ambiguous, naming the axes explicitly in einsum makes the intended contraction unambiguous and easy to review, even though for a simple 2D matmul it usually isn't faster than @."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now batch multiple queries at once",
+     "ex": {
+      "i": "2 queries against the same 3 docs",
+      "o": "a (2, 3) weight matrix, each row summing to 1",
+      "w": "the same pipeline batched with one einsum call instead of a python loop"
+     },
+     "t": "einsum handles the extra batch dimension in a single call; looping over queries in python would give the same numbers far slower.",
+     "code": "\nqueries_batch = make_array([[1.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 1.0]])\nbatch_sims = np.einsum(\"qd,nd->qn\", queries_batch, docs)\nbatch_weights = softmax(batch_sims, axis=-1)\nbatch_shape = batch_weights.shape\n"
+    },
+    {
+     "n": "Now scale by temperature before softmax",
+     "ex": {
+      "i": "the same similarity row at temperature 0.1 vs 5.0",
+      "o": "a near one-hot distribution vs a near-uniform one",
+      "w": "temperature controls how peaked the softmax output is"
+     },
+     "t": "Dividing the logits by temperature before softmax controls confidence: temperature below 1 sharpens the distribution, above 1 flattens it.",
+     "code": "\ndef softmax_with_temperature(x, temperature=1.0, axis=-1):\n    return softmax(x / temperature, axis=axis)\n\nsharp_weights = softmax_with_temperature(sims, temperature=0.1)\nflat_weights = softmax_with_temperature(sims, temperature=5.0)\nsharp_max = float(np.max(sharp_weights))\nflat_max = float(np.max(flat_weights))\n"
+    },
+    {
+     "n": "Now do the whole thing with einsum, no @",
+     "ex": {
+      "i": "the same query and docs",
+      "o": "identical similarity matrix computed via einsum",
+      "w": "shows @ and einsum computing the same contraction"
+     },
+     "t": "einsum and @ compute the same contraction here; einsum spells out which axes are being summed over.",
+     "code": "\ndef cosine_similarity_matrix_einsum(a, b):\n    a_n = row_normalize(a)\n    b_n = row_normalize(b)\n    return np.einsum(\"id,jd->ij\", a_n, b_n)\n\nsims_einsum = cosine_similarity_matrix_einsum(query, docs)\neinsum_matches_matmul = bool(np.allclose(sims_einsum, sims))\n"
+    }
+   ],
+   "sheet": {
+    "spot": "Score or rank vectors by hand, no library helper allowed.",
+    "move": "normalize rows, one matmul for cosine, subtract max before exp.",
+    "code": "from numpy.linalg import norm as nrm\nqn = q / nrm(q)\ndn = d / nrm(d, axis=1, keepdims=True)\nsim = qn @ dn.T\nsim -= sim.max(axis=-1, keepdims=True)\nex = np.exp(sim)\nw = ex / ex.sum(axis=-1, keepdims=True)",
+    "notes": [
+     "dot product = cosine only if both sides are unit-normalized first.",
+     "subtract the max before exp, every time, or risk inf/nan on real logits.",
+     "a broadcasting shape mismatch is usually silent, not an error."
+    ]
+   },
+   "figs": [
+    "numpyShapes",
+    "vectors"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
+   "id": "torch",
+   "title": "PyTorch basics",
+   "group": "AI systems",
+   "spot": "Interviewer hands you a small dataset and asks for a training loop from scratch, or asks you to explain what a line in an existing loop does. <b>Signal:</b> \"write the training loop\", \"what does zero_grad do\", \"no Trainer class\".",
+   "cx": "The Python loop over batches is not the bottleneck; the forward/backward pass on the model is. Keep the loop itself simple and correct rather than clever.",
+   "ex": {
+    "i": "32 synthetic examples, a 3-feature linear target",
+    "o": "training loss that drops over 5 epochs, then a reloaded checkpoint matching the trained weights",
+    "w": "exercises the full tensor -> model -> loop -> checkpoint path"
+   },
+   "hld": [
+    "Tensors and devices: typed tensors, placed on cpu or gpu.",
+    "Autograd: requires_grad records ops; backward() computes gradients by walking the graph.",
+    "nn.Module: a model is parameters plus a forward() that uses them.",
+    "Dataset and DataLoader: __getitem__ defines one example; DataLoader batches and shuffles.",
+    "The training step: forward, loss, backward, step, zero_grad, in that order.",
+    "Evaluation with no_grad: eval() changes layer behavior, no_grad() skips the autograd graph.",
+    "Save and load a state_dict: weights keyed by name; architecture must match on load."
+   ],
+   "parts": [
+    {
+     "n": "Tensors and devices",
+     "t": "Device placement decides where the tensor's memory and ops live; moving a tensor mid-graph breaks autograd, so pick the device once, up front.",
+     "code": "\nimport torch\nimport torch.nn as nn\n\nDEVICE = torch.device(\"cpu\")\n\ndef make_tensor(values):\n    return torch.tensor(values, dtype=torch.float32, device=DEVICE)\n"
+    },
+    {
+     "n": "Autograd",
+     "t": "requires_grad=True tells torch to record every operation on that tensor; backward() walks the recorded graph in reverse to compute gradients into .grad.",
+     "code": "\ndef autograd_demo():\n    x = torch.tensor([2.0, 3.0], requires_grad=True)\n    y = (x ** 2).sum()\n    y.backward()\n    return x.grad\n"
+    },
+    {
+     "n": "nn.Module",
+     "t": "A model is parameters plus a forward() that combines them; nn.Linear owns a weight and bias tensor and registers them for the optimizer automatically.",
+     "code": "\nclass TinyRegressor(nn.Module):\n    def __init__(self, in_features: int):\n        super().__init__()\n        self.linear = nn.Linear(in_features, 1)\n\n    def forward(self, x):\n        return self.linear(x).squeeze(-1)\n"
+    },
+    {
+     "n": "Dataset and DataLoader",
+     "t": "__getitem__ defines what one example looks like; DataLoader handles batching and shuffling on top of that, so the training loop never indexes the raw data itself.",
+     "code": "\nfrom torch.utils.data import Dataset, DataLoader\n\nclass TinyDataset(Dataset):\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n\n    def __len__(self):\n        return len(self.x)\n\n    def __getitem__(self, idx):\n        return self.x[idx], self.y[idx]\n\ndef make_loader(x, y, batch_size=4):\n    return DataLoader(TinyDataset(x, y), batch_size=batch_size, shuffle=True)\n"
+    },
+    {
+     "n": "The training step",
+     "t": "zero_grad must run before backward on every batch, or gradients from the previous batch accumulate into the new ones; forward, loss, backward, step is the fixed order after that.",
+     "code": "\ndef train_one_epoch(model, loader, optimizer, loss_fn):\n    model.train()\n    total_loss = 0.0\n    for xb, yb in loader:\n        optimizer.zero_grad()\n        pred = model(xb)\n        loss = loss_fn(pred, yb)\n        loss.backward()\n        optimizer.step()\n        total_loss += loss.item()\n    return total_loss / len(loader)\n"
+    },
+    {
+     "n": "Evaluation, save and load",
+     "t": "model.eval() changes layer behavior (dropout, batchnorm); no_grad() separately skips building the autograd graph to save memory and time. A checkpoint is tensors keyed by name, so the architecture must match on load.",
+     "code": "\ndef evaluate(model, x, y, loss_fn):\n    model.eval()\n    with torch.no_grad():\n        pred = model(x)\n        return loss_fn(pred, y).item()\n\ndef save_checkpoint(model, path):\n    torch.save(model.state_dict(), path)\n\ndef load_checkpoint(model, path):\n    model.load_state_dict(torch.load(path, weights_only=True))\n    return model\n"
+    }
+   ],
+   "tpl": "\ntorch.manual_seed(0)\nx = torch.randn(32, 3)\ntrue_w = torch.tensor([1.5, -2.0, 0.5])\ny = x @ true_w + 0.1 * torch.randn(32)\n\nmodel = TinyRegressor(in_features=3)\noptimizer = torch.optim.SGD(model.parameters(), lr=0.1)\nloss_fn = nn.MSELoss()\nloader = make_loader(x, y, batch_size=8)\n\nlosses = [train_one_epoch(model, loader, optimizer, loss_fn) for _ in range(5)]\nfinal_eval_loss = evaluate(model, x, y, loss_fn)\n\nimport tempfile, os\nckpt_path = os.path.join(tempfile.gettempdir(), \"tiny_regressor_ai_topics_a.pt\")\nsave_checkpoint(model, ckpt_path)\nreloaded = TinyRegressor(in_features=3)\nload_checkpoint(reloaded, ckpt_path)\nos.remove(ckpt_path)\n",
+   "remember": [
+    "zero_grad before backward, every batch; backward() accumulates into .grad by default, it does not overwrite.",
+    "eval() and no_grad() solve different problems and are usually used together: eval() changes layer behavior, no_grad() skips graph bookkeeping.",
+    "Freezing a layer means both param.requires_grad = False AND leaving it out of the optimizer's parameter list; requires_grad alone doesn't stop the optimizer from touching a frozen tensor if it's still handed to it.",
+    "A state_dict is tensors by name; loading into a different architecture fails or, worse under strict=False, silently loads nothing.",
+    "Batch size and shuffling change training dynamics, not speed; a shrinking loss curve that looks stalled is sometimes a batching artifact, not a broken model."
+   ],
+   "asks": [
+    {
+     "q": "Why call optimizer.zero_grad() before backward() instead of after?",
+     "a": "backward() accumulates gradients into .grad with += rather than overwriting them, so without a zero_grad() call at the start of each batch, gradients from the previous step get added on top of the new ones and corrupt the update."
+    },
+    {
+     "q": "What's the difference between model.eval() and torch.no_grad()?",
+     "a": "eval() switches modules like dropout and batchnorm to their inference behavior; no_grad() disables autograd's graph-building to save memory and time. They solve different problems, which is why evaluation code almost always uses both together rather than either alone."
+    },
+    {
+     "q": "How would you fine-tune only part of a pretrained model?",
+     "a": "Set requires_grad=False on the parameters you want frozen, and only pass the remaining trainable parameters into the optimizer. The frozen layers still run during forward(), they receive no gradient and get no update from optimizer.step()."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now add a validation split and early stopping",
+     "ex": {
+      "i": "a held-out 16-example split",
+      "o": "training stops once validation loss stops improving for 2 epochs",
+      "w": "shows a loop that watches a held-out metric instead of running a fixed epoch count"
+     },
+     "t": "Track the best validation loss seen so far; stop once it fails to improve for `patience` epochs in a row instead of training a fixed number of epochs.",
+     "code": "\ndef train_with_early_stopping(model, loader, val_x, val_y, optimizer, loss_fn, patience=2, max_epochs=10):\n    best_val = float(\"inf\")\n    bad_epochs = 0\n    for epoch in range(max_epochs):\n        train_one_epoch(model, loader, optimizer, loss_fn)\n        val_loss = evaluate(model, val_x, val_y, loss_fn)\n        if val_loss < best_val:\n            best_val, bad_epochs = val_loss, 0\n        else:\n            bad_epochs += 1\n            if bad_epochs >= patience:\n                break\n    return best_val\n\nval_x = torch.randn(16, 3)\nval_y = val_x @ true_w + 0.1 * torch.randn(16)\nearly_stop_val_loss = train_with_early_stopping(model, loader, val_x, val_y, optimizer, loss_fn)\n"
+    },
+    {
+     "n": "Now freeze the body and fine-tune only the head",
+     "ex": {
+      "i": "a 2-layer net with a frozen body",
+      "o": "only the head's parameters have nonzero gradients",
+      "w": "shows freezing a layer AND excluding it from the optimizer"
+     },
+     "t": "Freezing requires two things: requires_grad = False on the frozen parameters, and building the optimizer from only the remaining trainable parameters.",
+     "code": "\nclass TwoLayerRegressor(nn.Module):\n    def __init__(self, in_features):\n        super().__init__()\n        self.body = nn.Linear(in_features, 8)\n        self.head = nn.Linear(8, 1)\n\n    def forward(self, x):\n        return self.head(torch.relu(self.body(x))).squeeze(-1)\n\nfinetune_model = TwoLayerRegressor(in_features=3)\nfor param in finetune_model.body.parameters():\n    param.requires_grad = False\nfinetune_optimizer = torch.optim.SGD(\n    [p for p in finetune_model.parameters() if p.requires_grad], lr=0.1\n)\nfinetune_loader = make_loader(x, y, batch_size=8)\nfinetune_loss = train_one_epoch(finetune_model, finetune_loader, finetune_optimizer, loss_fn)\nfrozen_param_count = sum(p.numel() for p in finetune_model.body.parameters())\ntrainable_param_count = sum(p.numel() for p in finetune_model.head.parameters())\n"
+    },
+    {
+     "n": "Now clip gradients before the optimizer step",
+     "ex": {
+      "i": "one batch's gradients",
+      "o": "a gradient norm capped at 1.0 before the step is applied",
+      "w": "shows where clipping sits relative to backward and step"
+     },
+     "t": "Clipping happens after backward() has populated .grad but before optimizer.step() consumes it; it caps the gradient norm so one bad batch can't blow up the weights.",
+     "code": "\nclip_model = TinyRegressor(in_features=3)\nclip_optimizer = torch.optim.SGD(clip_model.parameters(), lr=0.1)\nclip_optimizer.zero_grad()\npred = clip_model(x)\nloss = loss_fn(pred, y)\nloss.backward()\ntorch.nn.utils.clip_grad_norm_(clip_model.parameters(), max_norm=1.0)\ngrad_norm_after_clip = torch.sqrt(sum((p.grad ** 2).sum() for p in clip_model.parameters()))\nclip_optimizer.step()\n"
+    }
+   ],
+   "sheet": {
+    "spot": "Write a training loop from scratch, no Trainer class.",
+    "move": "forward, loss, backward, step, zero_grad - every batch.",
+    "code": "for xb, yb in loader:\n    opt.zero_grad()\n    pred = model(xb)\n    loss = loss_fn(pred, yb)\n    loss.backward()\n    opt.step()",
+    "notes": [
+     "zero_grad before backward, not after - grads accumulate by default.",
+     "eval() changes layer behavior; no_grad() skips the graph. Use both.",
+     "freezing needs requires_grad=False AND excluding it from the optimizer."
+    ]
+   },
+   "figs": [
+    "trainLoop",
+    "descent",
+    "chain"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
+   "id": "embed",
+   "title": "Embeddings and vector search",
+   "group": "AI systems",
+   "spot": "Building retrieval over a document set without a vector database. <b>Signal:</b> \"build search over these docs\", \"no pinecone/faiss\", \"combine keyword and semantic search\".",
+   "cx": "Embedding is the slow, batchable step, done once per chunk; retrieval at query time is one matmul against the index, cheap even at hundreds of thousands of vectors.",
+   "ex": {
+    "i": "\"how many days do I have to return something\" over a chunked policy document",
+    "o": "the refund-window chunk ranked first by both dense and hybrid search",
+    "w": "shows chunk, embed, index, and retrieve as one flow with a keyword fallback"
+   },
+   "hld": [
+    "Chunk: split text into overlapping pieces sized for the embedding model.",
+    "Embed and normalise: turn text into a unit vector so dot product equals cosine similarity.",
+    "Index as a matrix: stack chunk vectors into one array for a single matmul at query time.",
+    "Embed the query: same embedding function, same normalisation, as the chunks.",
+    "Top k by dot product: index @ query, then argsort for the highest scores.",
+    "Hybrid with keyword scores: blend a BM25-style score with the dense score.",
+    "Metadata filters: restrict the candidate set before scoring, not after."
+   ],
+   "parts": [
+    {
+     "n": "Chunk text",
+     "t": "Split on a word count with overlap so a sentence that straddles a chunk boundary is still readable in at least one chunk.",
+     "code": "\nimport hashlib\nimport re\nfrom collections import Counter\nimport numpy as np\n\ndef chunk_text(text: str, max_words: int = 15, overlap: int = 4) -> list[str]:\n    words = text.split()\n    chunks = []\n    start = 0\n    while start < len(words):\n        end = start + max_words\n        chunks.append(\" \".join(words[start:end]))\n        if end >= len(words):\n            break\n        start = end - overlap\n    return chunks\n"
+    },
+    {
+     "n": "Fake embed and normalise",
+     "t": "A deterministic hashed bag-of-words stands in for a real embedding call: every token hashes into a fixed dimension, giving a reproducible vector without a real model. Normalising means the later dot product equals cosine similarity.",
+     "code": "\nEMBED_DIM = 64\n\ndef _hash_bucket(token: str, dim: int) -> int:\n    # md5 instead of the builtin hash(): builtin hash() is randomized per process for\n    # strings, which would make retrieval ranking non-reproducible between runs\n    return int(hashlib.md5(token.encode()).hexdigest(), 16) % dim\n\ndef fake_embed(text: str) -> np.ndarray:\n    # real: client.embeddings.create(model=..., input=text)\n    vec = np.zeros(EMBED_DIM, dtype=np.float32)\n    for token in re.findall(r\"[a-z0-9]+\", text.lower()):\n        vec[_hash_bucket(token, EMBED_DIM)] += 1.0\n    norm = np.linalg.norm(vec)\n    return vec / norm if norm > 0 else vec\n"
+    },
+    {
+     "n": "Build the index matrix",
+     "t": "Stacking every chunk vector into one array turns retrieval into a single matmul instead of a per-chunk python loop.",
+     "code": "\ndef build_index(chunks: list[str]) -> np.ndarray:\n    return np.stack([fake_embed(c) for c in chunks])\n"
+    },
+    {
+     "n": "Top k by dot product",
+     "t": "Both sides are unit vectors, so the dot product already is cosine similarity; no extra division needed at query time.",
+     "code": "\ndef top_k(query: str, chunks: list[str], index: np.ndarray, k: int = 3) -> list[tuple[str, float]]:\n    q = fake_embed(query)\n    scores = index @ q\n    order = np.argsort(-scores)[:k]\n    return [(chunks[i], float(scores[i])) for i in order]\n"
+    },
+    {
+     "n": "Hybrid with keyword scores",
+     "t": "A simplified BM25-style term-frequency score catches exact-word matches that a hashed embedding can dilute; blending needs both scores rescaled onto a comparable range first.",
+     "code": "\ndef bm25_like_score(query: str, chunk: str) -> float:\n    q_terms = re.findall(r\"[a-z0-9]+\", query.lower())\n    c_terms = re.findall(r\"[a-z0-9]+\", chunk.lower())\n    counts = Counter(c_terms)\n    return sum(counts[t] for t in q_terms) / (len(c_terms) + 1)\n\ndef hybrid_top_k(query, chunks, index, k=3, alpha=0.5):\n    dense = index @ fake_embed(query)\n    sparse = np.array([bm25_like_score(query, c) for c in chunks])\n    sparse = sparse / (sparse.max() + 1e-8)\n    combined = alpha * dense + (1 - alpha) * sparse\n    order = np.argsort(-combined)[:k]\n    return [(chunks[i], float(combined[i])) for i in order]\n"
+    },
+    {
+     "n": "Metadata filters",
+     "t": "Filter the candidate set before scoring, not after; scoring everything and filtering afterward can return fewer than k results or let an excluded match crowd out one that should have been kept.",
+     "code": "\ndef filtered_top_k(query, records, index, k=3, where=None):\n    allowed = [i for i, r in enumerate(records) if where is None or where(r[\"meta\"])]\n    if not allowed:\n        return []\n    sub_index = index[allowed]\n    q = fake_embed(query)\n    scores = sub_index @ q\n    order = np.argsort(-scores)[:k]\n    return [(records[allowed[i]][\"text\"], float(scores[i])) for i in order]\n"
+    }
+   ],
+   "tpl": "\ndocument = (\n    \"The refund policy allows returns within 30 days of purchase with a receipt. \"\n    \"Shipping typically takes 3 to 5 business days within the continental US. \"\n    \"International orders may be subject to customs fees set by the destination country.\"\n)\nchunks = chunk_text(document, max_words=15, overlap=4)\nrecords = [{\"text\": c, \"meta\": {\"source\": f\"chunk{i}\"}} for i, c in enumerate(chunks)]\nindex = build_index(chunks)\n\nquery = \"how many days do I have to return something\"\ndense_hits = top_k(query, chunks, index, k=2)\nhybrid_hits = hybrid_top_k(query, chunks, index, k=2, alpha=0.6)\nfiltered_hits = filtered_top_k(query, records, index, k=2, where=lambda m: m[\"source\"] != records[0][\"meta\"][\"source\"])\n",
+   "remember": [
+    "Normalise embeddings once at index time and once for the query; skip it and the dot product stops being cosine similarity.",
+    "Embedding is batchable and cacheable; only re-embed chunks that changed, not the whole corpus on every run.",
+    "Apply metadata filters before ranking, not after, or a good match gets crowded out by an excluded one that should never have been scored.",
+    "Hybrid search needs both scores rescaled onto a comparable range before blending; raw BM25-style counts and cosine similarity live in different numeric ranges.",
+    "A fixed top-k returns garbage when nothing in the corpus is relevant; a score threshold or a reranker catches what a fixed k can't."
+   ],
+   "asks": [
+    {
+     "q": "Why normalise the embeddings before taking a dot product?",
+     "a": "Normalising makes every vector unit length, so the dot product reduces to exactly cosine similarity. Without it, the score is inflated by vector magnitude, and a longer or more repetitive chunk would win purely on length rather than relevance."
+    },
+    {
+     "q": "How do you combine keyword and semantic search without one dominating?",
+     "a": "Rescale each score onto a comparable range, such as dividing by its own max, then blend with a tunable weight. Without rescaling, whichever score happens to have the larger raw numbers dominates the ranking regardless of actual relevance."
+    },
+    {
+     "q": "Your index has a metadata field like source or date. How do you restrict retrieval to a subset?",
+     "a": "Filter the candidate set before scoring, not after. Scoring everything and filtering afterward can return fewer than k results, or let an excluded document's high score crowd out an included document that ranked lower but should have been kept."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now add an embedding cache so re-indexing skips unchanged chunks",
+     "ex": {
+      "i": "indexing the same chunks twice",
+      "o": "the second pass makes zero new embedding calls",
+      "w": "shows why embedding is the step worth caching"
+     },
+     "t": "Key the cache on the chunk text (a content hash in a real system); the second build reuses cached vectors instead of recomputing them.",
+     "code": "\nembed_cache: dict[str, np.ndarray] = {}\n\ndef cached_embed(text: str) -> np.ndarray:\n    if text not in embed_cache:\n        embed_cache[text] = fake_embed(text)\n    return embed_cache[text]\n\ndef build_index_cached(chunks):\n    return np.stack([cached_embed(c) for c in chunks])\n\nindex_first_pass = build_index_cached(chunks)\ncache_size_after_first_pass = len(embed_cache)\nindex_second_pass = build_index_cached(chunks)\ncache_size_after_second_pass = len(embed_cache)\n"
+    },
+    {
+     "n": "Now use a score threshold instead of a fixed k",
+     "ex": {
+      "i": "the same query",
+      "o": "a variable-length result: everything over the bar, possibly zero or all of them",
+      "w": "shows a fixed k returning noise when relevance actually falls off a cliff"
+     },
+     "t": "A threshold returns however many chunks clear the bar, which can be zero (nothing relevant) or the whole corpus, unlike a fixed k that always returns exactly k results regardless of quality.",
+     "code": "\ndef top_by_threshold(query, chunks, index, min_score=0.15):\n    q = fake_embed(query)\n    scores = index @ q\n    order = np.argsort(-scores)\n    return [(chunks[i], float(scores[i])) for i in order if scores[i] >= min_score]\n\nthreshold_hits = top_by_threshold(query, chunks, index, min_score=0.05)\nno_match_hits = top_by_threshold(\"completely unrelated topic about volcanoes\", chunks, index, min_score=0.9)\n"
+    },
+    {
+     "n": "Now rerank the dense top-k with the keyword score instead of blending upfront",
+     "ex": {
+      "i": "the same query",
+      "o": "the dense candidate set reordered by exact term overlap",
+      "w": "shows a cheap two-stage retrieve-then-rerank instead of blending scores in one pass"
+     },
+     "t": "Stage one is a cheap dense search over the whole index to get a small candidate set; stage two reranks only that small set with the keyword score, which is cheap precisely because it never touches the full corpus.",
+     "code": "\ndef retrieve_then_rerank(query, chunks, index, first_k=3, final_k=2):\n    dense_candidates = top_k(query, chunks, index, k=first_k)\n    reranked = sorted(\n        dense_candidates,\n        key=lambda pair: bm25_like_score(query, pair[0]),\n        reverse=True,\n    )\n    return reranked[:final_k]\n\nreranked_hits = retrieve_then_rerank(query, chunks, index)\n"
+    }
+   ],
+   "sheet": {
+    "spot": "Given a parser's output, retrieve the top matches for a query.",
+    "move": "normalize embeddings, one matmul against the index, argsort.",
+    "code": "idx = np.stack([embed(c) for c in chunks])\nq = embed(query)\nscores = idx @ q\ntop = np.argsort(-scores)[:k]\nhits = [chunks[i] for i in top]",
+    "notes": [
+     "dot product = cosine only if both sides are unit-normalized.",
+     "filter by metadata before scoring, never after.",
+     "cache embeddings; re-embedding unchanged chunks wastes the slow step."
+    ]
+   },
+   "figs": [
+    "vectors",
+    "embed",
+    "hybridRetrieval"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
+   "id": "rag",
+   "title": "RAG over a parser's output",
+   "group": "AI systems",
+   "spot": "Given a document parser's structured output, build retrieval-augmented answers with citations. <b>Signal:</b> \"here is our parser, build RAG over it\", \"answers must cite the source\".",
+   "cx": "Retrieval and rerank are cheap, a matmul and a small sort; the LLM call is the slow, expensive step, so keep the reranked set small before it ever reaches the prompt.",
+   "ex": {
+    "i": "\"how much PTO do I accrue per month\" over 4 parsed policy blocks",
+    "o": "an answer citing [1], resolving to the PTO chunk with its page and section",
+    "w": "shows structure-aware chunking carrying metadata through to a checkable citation"
+   },
+   "hld": [
+    "Parser output: blocks of text, each carrying its page and section.",
+    "Chunk by structure with overlap, keeping metadata: split on structure, not a blind window.",
+    "Embed and index: vectorize each chunk, stack into a matrix.",
+    "Retrieve top k: one matmul against the index, argsort.",
+    "Rerank: score the small candidate set more precisely, e.g. by term overlap.",
+    "Prompt with numbered sources: number every retrieved chunk so a citation can point to one.",
+    "LLM answer with citations: the model answers and cites sources by number.",
+    "Check the citations: every cited number must resolve to a retrieved source."
+   ],
+   "parts": [
+    {
+     "n": "Parser output blocks",
+     "t": "What a document parser hands you: text already split into blocks, each carrying the page and section it came from. That's the metadata a citation depends on later.",
+     "code": "\nfrom dataclasses import dataclass\nimport hashlib\nimport re\nimport numpy as np\n\n@dataclass\nclass Block:\n    text: str\n    page: int\n    section: str\n\ndef fake_parser_output() -> list[Block]:\n    return [\n        Block(\"Employees accrue 1.5 days of PTO per month worked, capped at 20 days per year.\", 1, \"Time Off\"),\n        Block(\"Unused PTO does not roll over into the next calendar year.\", 1, \"Time Off\"),\n        Block(\"Remote employees must be available during core hours, 10am to 3pm local time.\", 2, \"Remote Work\"),\n        Block(\"Expense reports over $500 require manager approval before reimbursement.\", 3, \"Expenses\"),\n    ]\n"
+    },
+    {
+     "n": "Chunk by structure with overlap, keeping metadata",
+     "t": "Chunking walks each block, not the whole document blindly, so a chunk never crosses a section boundary; metadata rides along with every chunk or a citation later has nothing to point back to.",
+     "code": "\n@dataclass\nclass Chunk:\n    text: str\n    page: int\n    section: str\n    chunk_id: int\n\ndef chunk_blocks(blocks: list[Block], max_chars: int = 160, overlap_chars: int = 30) -> list[Chunk]:\n    chunks = []\n    cid = 0\n    for block in blocks:\n        text = block.text\n        start = 0\n        while start < len(text):\n            end = start + max_chars\n            piece = text[start:end]\n            chunks.append(Chunk(piece, block.page, block.section, cid))\n            cid += 1\n            if end >= len(text):\n                break\n            start = end - overlap_chars\n    return chunks\n"
+    },
+    {
+     "n": "Embed and index",
+     "t": "Same hashed bag-of-words trick as plain embedding search; stacked once into a matrix for a single matmul at query time.",
+     "code": "\nEMBED_DIM = 64\n\ndef _hash_bucket(token: str, dim: int) -> int:\n    return int(hashlib.md5(token.encode()).hexdigest(), 16) % dim\n\ndef fake_embed(text: str) -> np.ndarray:\n    # real: client.embeddings.create(model=..., input=text)\n    vec = np.zeros(EMBED_DIM, dtype=np.float32)\n    for token in re.findall(r\"[a-z0-9]+\", text.lower()):\n        vec[_hash_bucket(token, EMBED_DIM)] += 1.0\n    norm = np.linalg.norm(vec)\n    return vec / norm if norm > 0 else vec\n\ndef build_index(chunks: list[Chunk]) -> np.ndarray:\n    return np.stack([fake_embed(c.text) for c in chunks])\n"
+    },
+    {
+     "n": "Retrieve top k",
+     "t": "One matmul against the whole index, then argsort; the cheap approximate pass that narrows a large corpus down to a small candidate set.",
+     "code": "\ndef retrieve(query: str, chunks: list[Chunk], index: np.ndarray, k: int = 3) -> list[Chunk]:\n    q = fake_embed(query)\n    scores = index @ q\n    order = np.argsort(-scores)[:k]\n    return [chunks[i] for i in order]\n"
+    },
+    {
+     "n": "Rerank",
+     "t": "A real reranker is a cross-encoder scoring (query, chunk) pairs jointly, far more accurate but too slow to run over a whole index; it only runs on the small candidate set retrieval already narrowed down.",
+     "code": "\ndef rerank(query: str, candidates: list[Chunk]) -> list[Chunk]:\n    def overlap_score(chunk: Chunk) -> int:\n        q_terms = set(re.findall(r\"[a-z0-9]+\", query.lower()))\n        c_terms = set(re.findall(r\"[a-z0-9]+\", chunk.text.lower()))\n        return len(q_terms & c_terms)\n    return sorted(candidates, key=overlap_score, reverse=True)\n"
+    },
+    {
+     "n": "Prompt with numbered sources and LLM answer with citations",
+     "t": "Numbering every retrieved chunk in the prompt gives the model something concrete to cite by number, instead of a free-text reference that's hard to verify.",
+     "code": "\ndef build_prompt(query: str, sources: list[Chunk]) -> str:\n    numbered = \"\\n\".join(f\"[{i+1}] (p.{s.page}, {s.section}) {s.text}\" for i, s in enumerate(sources))\n    return (\n        f\"Answer the question using only the numbered sources. Cite each claim as [n].\\n\\n\"\n        f\"Sources:\\n{numbered}\\n\\nQuestion: {query}\"\n    )\n\ndef fake_llm_answer(prompt: str, sources: list[Chunk]) -> str:\n    # real: client.messages.create(model=..., messages=[{\"role\": \"user\", \"content\": prompt}])\n    query_line = prompt.rsplit(\"Question: \", 1)[-1]\n    q_terms = set(re.findall(r\"[a-z0-9]+\", query_line.lower()))\n    best_i, best_overlap = 0, -1\n    for i, s in enumerate(sources):\n        overlap = len(q_terms & set(re.findall(r\"[a-z0-9]+\", s.text.lower())))\n        if overlap > best_overlap:\n            best_i, best_overlap = i, overlap\n    return f\"{sources[best_i].text} [{best_i + 1}]\"\n"
+    },
+    {
+     "n": "Check the citations",
+     "t": "Every citation number in the answer must resolve to one of the sources actually retrieved; an uncited claim or an out-of-range citation number is treated as a failure, not waved through.",
+     "code": "\nCITATION_RE = re.compile(r\"\\[(\\d+)\\]\")\n\ndef check_citations(answer: str, sources: list[Chunk]) -> bool:\n    cited = [int(n) for n in CITATION_RE.findall(answer)]\n    if not cited:\n        return False\n    return all(1 <= n <= len(sources) for n in cited)\n"
+    }
+   ],
+   "tpl": "\nblocks = fake_parser_output()\nchunks = chunk_blocks(blocks)\nindex = build_index(chunks)\n\nquery = \"how much PTO do I accrue per month\"\ncandidates = retrieve(query, chunks, index, k=3)\nranked = rerank(query, candidates)\nprompt = build_prompt(query, ranked)\nanswer = fake_llm_answer(prompt, ranked)\ncitations_ok = check_citations(answer, ranked)\n",
+   "remember": [
+    "Chunk on structural boundaries (blocks, sections, pages), not a fixed character count blind to sentence or table edges; carry page/section metadata on every chunk or citations have nothing to point to.",
+    "Overlap between chunks trades a bit of duplicate content for not losing a sentence that straddles a cut.",
+    "Rerank only the top-k candidates, never the full index; the point of retrieval is to shrink the set the expensive step has to look at.",
+    "Number the sources in the prompt and require citation by number; free-text citations are much harder to verify against the actual retrieved chunks.",
+    "Checking citations means the numbers resolve to real sources, not that the answer is factually correct; it catches fabricated references, not factual errors."
+   ],
+   "asks": [
+    {
+     "q": "Why chunk by structure instead of a fixed token window?",
+     "a": "A fixed window cuts mid-sentence or mid-table with no regard for meaning. Structural chunking, using the parser's own block or section boundaries, keeps each chunk coherent, and carrying that block's page and section metadata through the chunk is what makes a later citation checkable."
+    },
+    {
+     "q": "What does reranking add that retrieval alone doesn't?",
+     "a": "Initial retrieval, a bi-encoder dot product, is fast but approximate because the query and document are embedded independently. A reranker looks at the query and each candidate together, which is more accurate but too slow to run over a whole index, so it only reorders the small top-k set retrieval already narrowed down."
+    },
+    {
+     "q": "How do you keep a RAG system from making up citations?",
+     "a": "Require numbered sources in the prompt and instruct the model to cite by number, then programmatically check that every citation number in the answer resolves to one of the sources actually retrieved. An answer with no citations, or a citation number outside the source list, gets rejected or flagged rather than trusted."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now refuse instead of answering when nothing is relevant",
+     "ex": {
+      "i": "a question with no matching policy section",
+      "o": "a refusal instead of a fabricated answer",
+      "w": "shows a relevance bar on the reranked set, not just top-k regardless of quality"
+     },
+     "t": "Add a minimum overlap bar to the reranked candidates; if nothing clears it, the corpus doesn't actually answer the question, so refuse rather than forcing an answer out of a weak match.",
+     "code": "\ndef rerank_with_bar(query, candidates, min_overlap=1):\n    scored = []\n    for c in candidates:\n        q_terms = set(re.findall(r\"[a-z0-9]+\", query.lower()))\n        c_terms = set(re.findall(r\"[a-z0-9]+\", c.text.lower()))\n        scored.append((len(q_terms & c_terms), c))\n    scored.sort(key=lambda pair: pair[0], reverse=True)\n    return [c for score, c in scored if score >= min_overlap]\n\noff_topic_query = \"what is the parking validation policy\"\noff_topic_candidates = retrieve(off_topic_query, chunks, index, k=3)\nrelevant = rerank_with_bar(off_topic_query, off_topic_candidates, min_overlap=2)\nrefusal_answer = (\n    \"I don't have enough information in the provided sources to answer that.\"\n    if not relevant else fake_llm_answer(build_prompt(off_topic_query, relevant), relevant)\n)\n"
+    },
+    {
+     "n": "Now cite multiple sources for one merged claim",
+     "ex": {
+      "i": "a claim spanning two chunks",
+      "o": "an answer citing both, e.g. \"...[1][2]\"",
+      "w": "shows the citation checker validating more than one number per answer"
+     },
+     "t": "A claim that draws on two sources cites both by number; the citation checker doesn't care how many numbers appear, only that each one resolves.",
+     "code": "\ndef fake_llm_answer_multi(prompt: str, sources: list[Chunk]) -> str:\n    query_line = prompt.rsplit(\"Question: \", 1)[-1]\n    q_terms = set(re.findall(r\"[a-z0-9]+\", query_line.lower()))\n    scored = sorted(\n        range(len(sources)),\n        key=lambda i: len(q_terms & set(re.findall(r\"[a-z0-9]+\", sources[i].text.lower()))),\n        reverse=True,\n    )\n    top_two = scored[:2] if len(scored) >= 2 else scored\n    merged_text = \" and \".join(sources[i].text for i in top_two)\n    citation = \"\".join(f\"[{i + 1}]\" for i in sorted(top_two))\n    return f\"{merged_text} {citation}\"\n\nmulti_answer = fake_llm_answer_multi(prompt, ranked)\nmulti_citations_ok = check_citations(multi_answer, ranked)\n"
+    },
+    {
+     "n": "Now restrict retrieval to one section the user picked",
+     "ex": {
+      "i": "the same PTO question, scoped to the \"Time Off\" section only",
+      "o": "candidates drawn only from Time Off chunks",
+      "w": "shows filtering the index before scoring, not after"
+     },
+     "t": "Filter the chunk list to the chosen section before building the sub-index to score against; scoring the whole index and filtering afterward risks returning fewer than k results.",
+     "code": "\ndef retrieve_in_section(query, chunks, index, section, k=3):\n    allowed = [i for i, c in enumerate(chunks) if c.section == section]\n    if not allowed:\n        return []\n    sub_index = index[allowed]\n    q = fake_embed(query)\n    scores = sub_index @ q\n    order = np.argsort(-scores)[:k]\n    return [chunks[allowed[i]] for i in order]\n\nsection_scoped_hits = retrieve_in_section(query, chunks, index, section=\"Time Off\", k=2)\n"
+    }
+   ],
+   "sheet": {
+    "spot": "Retrieve from a parser's blocks and answer with a citation.",
+    "move": "chunk with metadata, retrieve, rerank, cite by number, verify.",
+    "code": "chunks = chunk_blocks(blocks)\nidx = build_index(chunks)\ncands = retrieve(query, chunks, idx, k=5)\nranked = rerank(query, cands)[:3]\nans = llm(prompt(query, ranked))\nok = check_citations(ans, ranked)",
+    "notes": [
+     "metadata (page, section) must ride the chunk from parse to citation.",
+     "rerank only the retrieved top-k, never the whole index.",
+     "a citation check verifies the number resolves, not that it's true."
+    ]
+   },
+   "figs": [
+    "ragPipeline",
+    "hybridRetrieval"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
+   "id": "graphrag",
+   "title": "GraphRAG",
+   "group": "AI systems",
+   "spot": "The answer requires connecting facts that live in different chunks, not something a single retrieved passage states directly. <b>Signal:</b> \"multi-hop question\", \"who is ultimately responsible for\", \"build a knowledge graph from these docs\".",
+   "cx": "Extraction is the expensive step, one LLM call per chunk, done once and cacheable; graph traversal at query time is pointer-following over an adjacency list, effectively free next to the LLM calls on either end.",
+   "ex": {
+    "i": "a document about a team and its dependency chain, question about who is ultimately responsible",
+    "o": "the chain traced 3 hops to the maintaining team, with a citation",
+    "w": "shows GraphRAG answering a question no single chunk states directly, by walking relations"
+   },
+   "hld": [
+    "Chunks: split the document into pieces small enough to extract facts from.",
+    "Extract triples with an LLM: pull (subject, relation, object) facts from each chunk.",
+    "Build the graph: nodes and edges, each edge tagged with its source chunk.",
+    "Find the query's entities: match named entities in the query against graph nodes.",
+    "Expand the neighbourhood (k hops): walk outward from the seed entities.",
+    "Gather facts and their chunks: collect the edges touched, deduped, with citations.",
+    "Answer with an LLM: synthesize the gathered facts into a cited answer."
+   ],
+   "parts": [
+    {
+     "n": "Chunks",
+     "t": "Split on sentence boundaries so each fact extracted later stays inside one chunk instead of straddling two.",
+     "code": "\ndef make_chunks(text: str) -> list[str]:\n    return [s.strip() for s in text.split(\". \") if s.strip()]\n"
+    },
+    {
+     "n": "Extract triples with an LLM",
+     "t": "A deterministic lookup stands in for the extraction call: a real one would ask an LLM to pull (subject, relation, object) triples out of the chunk text.",
+     "code": "\nfrom dataclasses import dataclass\n\n@dataclass\nclass Triple:\n    subject: str\n    relation: str\n    obj: str\n    source_chunk: int\n\ndef fake_llm_extract_triples(chunk: str, chunk_id: int) -> list[Triple]:\n    # real: client.messages.create(..., prompt asking for (subject, relation, object) triples)\n    known = {\n        \"Ava leads the Platform team\": Triple(\"Ava\", \"leads\", \"Platform team\", chunk_id),\n        \"Platform team owns the deploy pipeline\": Triple(\"Platform team\", \"owns\", \"deploy pipeline\", chunk_id),\n        \"deploy pipeline depends on the artifact registry\": Triple(\"deploy pipeline\", \"depends_on\", \"artifact registry\", chunk_id),\n        \"artifact registry is maintained by the Infra team\": Triple(\"artifact registry\", \"maintained_by\", \"Infra team\", chunk_id),\n    }\n    return [triple for phrase, triple in known.items() if phrase in chunk]\n"
+    },
+    {
+     "n": "Build the graph",
+     "t": "An adjacency list keyed by node name; each edge is added in both directions so the later neighborhood expansion can walk outward from either endpoint, and every edge keeps the chunk id it came from.",
+     "code": "\ndef build_graph(triples: list[Triple]) -> dict[str, list[tuple[str, str, int]]]:\n    graph: dict[str, list[tuple[str, str, int]]] = {}\n    for t in triples:\n        graph.setdefault(t.subject, []).append((t.relation, t.obj, t.source_chunk))\n        graph.setdefault(t.obj, []).append((t.relation, t.subject, t.source_chunk))\n    return graph\n"
+    },
+    {
+     "n": "Find the query's entities and expand the neighbourhood",
+     "t": "Naive substring matching finds which graph nodes the query mentions; expansion then does a bounded breadth-first walk outward, stopping early if a hop adds nothing new.",
+     "code": "\ndef find_query_entities(query: str, graph: dict) -> list[str]:\n    return [node for node in graph if node.lower() in query.lower()]\n\ndef expand_neighborhood(seed_entities: list[str], graph: dict, hops: int = 2) -> set[str]:\n    frontier = set(seed_entities)\n    visited = set(seed_entities)\n    for _ in range(hops):\n        next_frontier = set()\n        for node in frontier:\n            for relation, neighbor, source_chunk in graph.get(node, []):\n                if neighbor not in visited:\n                    next_frontier.add(neighbor)\n        visited |= next_frontier\n        frontier = next_frontier\n        if not frontier:\n            break\n    return visited\n"
+    },
+    {
+     "n": "Gather facts and their chunks",
+     "t": "Collect every edge touching the visited neighborhood, deduped since each edge was stored on both endpoints; iterate nodes in a fixed order so the gathered fact list is reproducible.",
+     "code": "\ndef gather_facts(entities: set[str], graph: dict) -> list[Triple]:\n    facts = []\n    seen = set()\n    for node in sorted(entities):\n        for relation, neighbor, source_chunk in graph.get(node, []):\n            key = tuple(sorted([node, neighbor])) + (relation,)\n            if key not in seen:\n                seen.add(key)\n                facts.append(Triple(node, relation, neighbor, source_chunk))\n    return facts\n"
+    },
+    {
+     "n": "Answer with an LLM",
+     "t": "The gathered facts, each still tagged with its source chunk, become numbered evidence for a final answer that cites by number, the same discipline as plain RAG.",
+     "code": "\ndef build_graph_prompt(query: str, facts: list[Triple]) -> str:\n    lines = \"\\n\".join(f\"[{i+1}] {f.subject} {f.relation} {f.obj} (chunk {f.source_chunk})\" for i, f in enumerate(facts))\n    return f\"Answer using only these facts, cite by number.\\n\\nFacts:\\n{lines}\\n\\nQuestion: {query}\"\n\ndef fake_llm_graph_answer(prompt: str, facts: list[Triple]) -> str:\n    # real: client.messages.create(...)\n    if not facts:\n        return \"Not enough connected facts to answer.\"\n    best = facts[-1]\n    return f\"{best.subject} {best.relation} {best.obj}. [{len(facts)}]\"\n"
+    }
+   ],
+   "tpl": "\ndocument = (\n    \"Ava leads the Platform team. The Platform team owns the deploy pipeline. \"\n    \"The deploy pipeline depends on the artifact registry. \"\n    \"The artifact registry is maintained by the Infra team.\"\n)\nchunks = make_chunks(document)\nall_triples = [t for i, c in enumerate(chunks) for t in fake_llm_extract_triples(c, i)]\ngraph = build_graph(all_triples)\n\nquery = \"Who is ultimately responsible for what Ava's team depends on\"\nseeds = find_query_entities(\"Ava\", graph)\nneighborhood = expand_neighborhood(seeds, graph, hops=3)\nfacts = gather_facts(neighborhood, graph)\nprompt = build_graph_prompt(query, facts)\nanswer = fake_llm_graph_answer(prompt, facts)\n",
+   "remember": [
+    "Graph edges carry their source chunk id so a fact traced through the graph can still be cited back to text, the same discipline as chunk metadata in plain RAG.",
+    "Extraction quality caps everything downstream; a missed or malformed triple is a broken edge the traversal can never repair.",
+    "k hops is a real knob: too few misses the answer if it isn't directly in one chunk, too many pulls in unrelated facts and floods the prompt. Expand until the frontier stops growing or the hop limit, whichever comes first.",
+    "Dedupe facts gathered from a neighborhood; the same edge is reachable from both of its endpoints since traversal is undirected.",
+    "GraphRAG earns its cost over plain RAG specifically for multi-hop questions where the answer requires connecting facts across chunks; for a fact stated directly in one place, plain retrieval is simpler and cheaper."
+   ],
+   "asks": [
+    {
+     "q": "When does GraphRAG beat plain vector RAG?",
+     "a": "When the answer requires connecting facts that live in separate chunks, a multi-hop question like who is ultimately responsible for X, where no single chunk states the answer directly but a chain of relations does. For a fact stated in one place, plain retrieval is simpler and cheaper."
+    },
+    {
+     "q": "How do you decide how many hops to expand?",
+     "a": "Treat it as a tunable stopping condition: expand until the frontier of newly reached nodes stops growing, or a fixed hop limit, whichever comes first. Too few hops misses multi-hop answers; too many pulls in unrelated facts that dilute the prompt."
+    },
+    {
+     "q": "How do you keep triple extraction from silently corrupting the graph?",
+     "a": "Validate extracted triples against an allowed schema of relation types before inserting them, and keep the source chunk id on every triple so a suspicious edge can be traced back and checked against the text it supposedly came from."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now find the shortest path, not just the last fact reached",
+     "ex": {
+      "i": "\"Ava\" to \"Infra team\"",
+      "o": "the 4-hop chain through Platform team, deploy pipeline, artifact registry",
+      "w": "shows the chain length itself is answerable, not just endpoint membership"
+     },
+     "t": "A breadth-first search finds the shortest path by construction: the first time the target is dequeued, that path used the fewest hops.",
+     "code": "\ndef shortest_path(start: str, end: str, graph: dict) -> list[str] | None:\n    from collections import deque\n    queue = deque([[start]])\n    visited = {start}\n    while queue:\n        path = queue.popleft()\n        node = path[-1]\n        if node == end:\n            return path\n        for relation, neighbor, source_chunk in graph.get(node, []):\n            if neighbor not in visited:\n                visited.add(neighbor)\n                queue.append(path + [neighbor])\n    return None\n\npath_to_infra = shortest_path(\"Ava\", \"Infra team\", graph)\npath_length = len(path_to_infra) - 1 if path_to_infra else None\n"
+    },
+    {
+     "n": "Now two chunks disagree; keep both edges with a confidence field",
+     "ex": {
+      "i": "two conflicting depends_on triples for the same subject",
+      "o": "both edges survive, each tagged with its own confidence",
+      "w": "shows the graph not silently overwriting a conflicting fact"
+     },
+     "t": "Instead of one triple overwriting another for the same subject, both survive as separate edges, each carrying a confidence score a downstream consumer can use to prefer one over the other.",
+     "code": "\n@dataclass\nclass ScoredTriple:\n    subject: str\n    relation: str\n    obj: str\n    source_chunk: int\n    confidence: float\n\ndef build_graph_with_confidence(triples_with_conf: list[tuple[Triple, float]]) -> dict:\n    graph_c: dict[str, list] = {}\n    for t, conf in triples_with_conf:\n        graph_c.setdefault(t.subject, []).append((t.relation, t.obj, t.source_chunk, conf))\n    return graph_c\n\nconflicting = [\n    (Triple(\"deploy pipeline\", \"depends_on\", \"artifact registry\", 2), 0.9),\n    (Triple(\"deploy pipeline\", \"depends_on\", \"config service\", 3), 0.4),\n]\ngraph_with_conf = build_graph_with_confidence(conflicting)\nedges_for_pipeline = graph_with_conf[\"deploy pipeline\"]\n"
+    },
+    {
+     "n": "Now expand only along specific relation types",
+     "ex": {
+      "i": "expand from Ava following only leads/owns edges",
+      "o": "the walk stops before crossing a depends_on edge",
+      "w": "shows filtering the walk by relation type, not just by hop count"
+     },
+     "t": "Filtering which relation types the walk is allowed to cross keeps an ownership query from wandering into unrelated dependency edges, even within the hop budget.",
+     "code": "\ndef expand_by_relation(seed_entities, graph, allowed_relations, hops=2):\n    frontier = set(seed_entities)\n    visited = set(seed_entities)\n    for _ in range(hops):\n        next_frontier = set()\n        for node in frontier:\n            for relation, neighbor, source_chunk in graph.get(node, []):\n                if relation in allowed_relations and neighbor not in visited:\n                    next_frontier.add(neighbor)\n        visited |= next_frontier\n        frontier = next_frontier\n        if not frontier:\n            break\n    return visited\n\nownership_only = expand_by_relation([\"Ava\"], graph, allowed_relations={\"leads\", \"owns\"}, hops=3)\n"
+    }
+   ],
+   "sheet": {
+    "spot": "Answer needs facts connected across chunks, not in one place.",
+    "move": "extract triples, build adjacency, expand k hops, cite chunks.",
+    "code": "trip = [extract(c, i) for i, c in enum(chunks)]\ngraph = build_graph(flatten(trip))\nseeds = find_entities(query, graph)\nnbhd = expand(seeds, graph, hops=2)\nfacts = gather_facts(nbhd, graph)\nans = llm(prompt(query, facts))",
+    "notes": [
+     "extraction quality caps everything downstream - a bad triple breaks an edge.",
+     "hop count trades recall for prompt noise; stop when the frontier stalls.",
+     "keep the source chunk id on every edge so a fact traces back to text."
+    ]
+   },
+   "figs": [
+    "graphRag"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
+   "id": "agent",
+   "title": "An agent loop",
+   "group": "AI systems",
+   "spot": "Build a tool-using agent from scratch: model call, tool execution, and a loop, with no framework. <b>Signal:</b> \"implement the agent loop\", \"no LangChain\", \"what stops it from looping forever\".",
+   "cx": "The model call is the slow, billed step; validating arguments and running a guarded tool is comparatively free, so validate before spending a tool call, or a retry round-trip, on bad input.",
+   "ex": {
+    "i": "\"What's the weather like right now?\"",
+    "o": "a final answer citing the tool's observation, after exactly one tool call",
+    "w": "shows the loop taking one tool step then stopping at a final answer, not the step limit"
+   },
+   "hld": [
+    "User message: the new turn that starts this loop iteration.",
+    "Build context: system prompt, conversation history, and durable memory, combined.",
+    "Model call: the model reads context and returns either a tool call or a final answer.",
+    "Tool call decision: the model's response says whether it wants to act or answer.",
+    "Validate arguments and run the tool behind a guard: check the schema, then call it with a budget.",
+    "Append the observation: the tool's result goes back into context for the next model call.",
+    "Loop until a final answer or the step limit: keep calling the model until it's done or capped.",
+    "Reply and write memory: return the final answer, save any durable fact worth keeping."
+   ],
+   "parts": [
+    {
+     "n": "User message and context",
+     "t": "Memory is a small set of durable facts that survive across sessions; history is the raw transcript of this session. Both fold into context, but they aren't the same thing.",
+     "code": "\nfrom dataclasses import dataclass\n\n@dataclass\nclass Message:\n    role: str  # \"system\" | \"user\" | \"assistant\" | \"tool\"\n    content: str\n\ndef build_context(system_prompt: str, history: list[Message], memory: dict, user_message: str) -> list[Message]:\n    memory_note = \"; \".join(f\"{k}: {v}\" for k, v in memory.items())\n    system = f\"{system_prompt}\\nKnown facts: {memory_note}\" if memory_note else system_prompt\n    return [Message(\"system\", system), *history, Message(\"user\", user_message)]\n"
+    },
+    {
+     "n": "Model call decides tool or final answer",
+     "t": "The model reads the whole context and decides, each turn, whether it needs a tool or can answer directly; the fake below inspects the last user turn and whether a tool observation is already present.",
+     "code": "\nTOOLS = {\n    \"get_weather\": lambda args: f\"{args.get('city', 'unknown')}: 72F and sunny\",\n    \"search_docs\": lambda args: f\"found 2 matches for '{args.get('query', '')}'\",\n}\n\ndef fake_llm_step(context: list[Message]) -> dict:\n    # real: client.messages.create(model=..., messages=[...], tools=[...])\n    last_user = next((m.content for m in reversed(context) if m.role == \"user\"), \"\")\n    if \"weather\" in last_user.lower() and not any(m.role == \"tool\" for m in context):\n        return {\"type\": \"tool_call\", \"tool\": \"get_weather\", \"arguments\": {\"city\": \"Chicago\"}}\n    if any(m.role == \"tool\" for m in context):\n        observation = next(m.content for m in reversed(context) if m.role == \"tool\")\n        return {\"type\": \"final_answer\", \"content\": f\"Here's what I found: {observation}\"}\n    return {\"type\": \"final_answer\", \"content\": \"I don't have a tool for that.\"}\n"
+    },
+    {
+     "n": "Validate the arguments",
+     "t": "Every proposed tool call is checked against a schema before it reaches real code; a missing field or an unknown tool name (a hallucinated tool) fails here instead of inside the tool.",
+     "code": "\nTOOL_SCHEMAS = {\n    \"get_weather\": {\"city\": str},\n    \"search_docs\": {\"query\": str},\n}\n\ndef validate_arguments(tool_name: str, arguments: dict) -> bool:\n    schema = TOOL_SCHEMAS.get(tool_name)\n    if schema is None:\n        return False\n    return all(name in arguments and isinstance(arguments[name], typ) for name, typ in schema.items())\n"
+    },
+    {
+     "n": "Run the tool behind a guard",
+     "t": "A per-turn call budget caps a runaway loop, and any exception a tool raises is caught and turned into an observation instead of crashing the whole agent turn.",
+     "code": "\nMAX_TOOL_CALLS_PER_TURN = 3\n\ndef run_tool(tool_name: str, arguments: dict, calls_so_far: int) -> str:\n    if calls_so_far >= MAX_TOOL_CALLS_PER_TURN:\n        return \"error: tool call budget exceeded for this turn\"\n    if tool_name not in TOOLS:\n        return f\"error: unknown tool '{tool_name}'\"\n    try:\n        return TOOLS[tool_name](arguments)\n    except Exception as exc:\n        return f\"error: tool raised {exc}\"\n"
+    },
+    {
+     "n": "Append the observation",
+     "t": "The tool's result becomes part of the context for the next model call, the same as any other message; the model 'sees' a tool result by re-reading the transcript, not through a side channel.",
+     "code": "\ndef append_observation(context: list[Message], observation: str) -> list[Message]:\n    return [*context, Message(\"tool\", observation)]\n"
+    },
+    {
+     "n": "The loop until a final answer or the step limit",
+     "t": "The step limit, checked every iteration independent of what the model says, is what turns a bug like a repeating tool call into a bounded failure instead of an infinite loop.",
+     "code": "\nMAX_STEPS = 5\n\ndef run_agent(system_prompt: str, history: list[Message], memory: dict, user_message: str) -> tuple[str, list[Message]]:\n    context = build_context(system_prompt, history, memory, user_message)\n    tool_calls = 0\n    for step in range(MAX_STEPS):\n        decision = fake_llm_step(context)\n        if decision[\"type\"] == \"final_answer\":\n            return decision[\"content\"], context\n        tool_name, arguments = decision[\"tool\"], decision[\"arguments\"]\n        if not validate_arguments(tool_name, arguments):\n            context = append_observation(context, f\"error: invalid arguments for {tool_name}\")\n            continue\n        observation = run_tool(tool_name, arguments, tool_calls)\n        tool_calls += 1\n        context = append_observation(context, observation)\n    return \"I couldn't complete this within the step limit.\", context\n"
+    },
+    {
+     "n": "Reply and write memory",
+     "t": "Memory stays small and durable: a fact worth remembering next turn, not a copy of the transcript.",
+     "code": "\ndef write_memory(memory: dict, user_message: str, final_answer: str) -> dict:\n    updated = dict(memory)\n    if \"weather\" in user_message.lower():\n        updated[\"last_topic\"] = \"weather\"\n    return updated\n"
+    }
+   ],
+   "tpl": "\nmemory = {}\nhistory: list[Message] = []\nuser_message = \"What's the weather like right now?\"\n\nfinal_answer, final_context = run_agent(\"You are a helpful assistant with tools.\", history, memory, user_message)\nmemory = write_memory(memory, user_message, final_answer)\nsteps_taken = sum(1 for m in final_context if m.role == \"tool\")\n",
+   "remember": [
+    "The step limit is what turns a bug, the model looping on the same tool call, into a bounded failure instead of an infinite loop; always cap it and fail loudly when hit, never silently.",
+    "Validate tool arguments against a schema before running the tool; a hallucinated argument or missing field should never reach real code, a real API call, a shell command, a database write.",
+    "A tool must never raise past the loop; catch its exception and turn it into an observation the model can react to, or one bad tool call kills the whole turn.",
+    "Memory is small and durable, facts worth keeping next turn; history is the raw transcript. Conflating them makes context grow unbounded and buries the facts that matter.",
+    "The guard on tool execution, budget, allow-list, timeout, belongs next to the tool call itself, not scattered across every place a tool might get invoked."
+   ],
+   "asks": [
+    {
+     "q": "What stops an agent loop from running forever?",
+     "a": "A hard step limit checked every iteration of the loop, independent of what the model says. When it's hit, the loop returns a clear failure instead of a guessed answer, so the caller can see the turn didn't complete rather than silently getting something wrong."
+    },
+    {
+     "q": "Where do you validate a tool call's arguments, and why there?",
+     "a": "Right after the model proposes the call and before it reaches the tool's real implementation, that's the one place every tool call passes through, so a schema check there, types, required fields, an allow-list of tool names, blocks a hallucinated or malformed call before it can touch a real API, a shell command, or a database."
+    },
+    {
+     "q": "How is memory different from the conversation history you pass to the model?",
+     "a": "History is the raw transcript of this session's turns; memory is a small set of durable facts meant to persist across sessions, a preference, a decision already made. Passing all of history back every turn as memory makes context grow unbounded and buries the handful of facts that actually need to survive."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now two tools can run per step, not just one",
+     "ex": {
+      "i": "a request needing weather and a doc search",
+      "o": "both tool calls validated and run independently in the same step",
+      "w": "shows each proposed call still going through the same guard, just more than one at a time"
+     },
+     "t": "The model can propose several tool calls in one step; each one still goes through the same validate-then-guard path independently, so one bad call among several doesn't block the rest.",
+     "code": "\ndef fake_llm_parallel_step(context: list[Message]) -> dict:\n    last_user = next((m.content for m in reversed(context) if m.role == \"user\"), \"\")\n    if \"weather\" in last_user.lower() and \"docs\" in last_user.lower() and not any(m.role == \"tool\" for m in context):\n        return {\"type\": \"tool_calls\", \"calls\": [\n            {\"tool\": \"get_weather\", \"arguments\": {\"city\": \"Chicago\"}},\n            {\"tool\": \"search_docs\", \"arguments\": {\"query\": \"weather policy\"}},\n        ]}\n    return {\"type\": \"final_answer\", \"content\": \"combined result\"}\n\nparallel_decision = fake_llm_parallel_step(build_context(\"sys\", [], {}, \"weather and docs please\"))\nparallel_observations = []\nfor call_index, call in enumerate(parallel_decision[\"calls\"]):\n    if validate_arguments(call[\"tool\"], call[\"arguments\"]):\n        parallel_observations.append(run_tool(call[\"tool\"], call[\"arguments\"], call_index))\nparallel_tool_count = len(parallel_observations)\n"
+    },
+    {
+     "n": "Now a sensitive tool needs approval before it runs",
+     "ex": {
+      "i": "a search_docs call marked sensitive, denied by the approval callback",
+      "o": "an error observation instead of the tool result",
+      "w": "shows the guard denying execution outright rather than running and asking forgiveness"
+     },
+     "t": "A sensitive tool checks an approval callback before running at all; a denial returns an error observation the model can react to, the tool body never executes.",
+     "code": "\nSENSITIVE_TOOLS = {\"search_docs\"}\n\ndef run_tool_with_approval(tool_name, arguments, calls_so_far, approve_fn):\n    if tool_name in SENSITIVE_TOOLS and not approve_fn(tool_name, arguments):\n        return \"error: user did not approve this tool call\"\n    return run_tool(tool_name, arguments, calls_so_far)\n\napprovals_seen = []\ndef auto_deny(tool_name, arguments):\n    approvals_seen.append((tool_name, arguments))\n    return False\n\ndenied_result = run_tool_with_approval(\"search_docs\", {\"query\": \"salary bands\"}, 0, auto_deny)\n"
+    },
+    {
+     "n": "Now retry a failed tool call once with the error fed back",
+     "ex": {
+      "i": "a call to a nonexistent tool",
+      "o": "one retry, then the error is returned rather than retried forever",
+      "w": "shows a bounded retry instead of either giving up immediately or looping unbounded"
+     },
+     "t": "A bounded retry gives a transient failure one more chance, but the retry count is capped the same way the step limit caps the outer loop; it does not retry forever.",
+     "code": "\ndef run_tool_with_retry(tool_name, arguments, calls_so_far, max_retries=1):\n    attempt = 0\n    last_error = None\n    while attempt <= max_retries:\n        result = run_tool(tool_name, arguments, calls_so_far + attempt)\n        if not result.startswith(\"error:\"):\n            return result\n        last_error = result\n        attempt += 1\n    return last_error\n\nretry_result = run_tool_with_retry(\"unknown_tool\", {}, 0, max_retries=1)\n"
+    }
+   ],
+   "sheet": {
+    "spot": "Build a tool-using agent loop from scratch.",
+    "move": "model call, validate args, guarded tool run, append, cap steps.",
+    "code": "for step in range(MAX_STEPS):\n    d = llm(ctx)\n    if d[\"type\"] == \"final_answer\":\n        break\n    if not valid(d[\"tool\"], d[\"args\"]):\n        continue\n    obs = run_tool(d[\"tool\"], d[\"args\"])\n    ctx.append(obs)",
+    "notes": [
+     "step limit is the difference between a bug and an infinite loop.",
+     "validate arguments before the tool runs, not after it errors.",
+     "memory is durable facts, not the whole transcript - keep it small."
+    ]
+   },
+   "figs": [
+    "agentLoop"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
+   "id": "research",
+   "title": "A web research agent",
+   "group": "AI systems",
+   "spot": "Answer a question by searching, reading multiple pages, and synthesizing with citations, looping only on what's still missing. <b>Signal:</b> \"build a research agent\", \"cite your sources\", \"decide when you have enough\".",
+   "cx": "Search and fetch are the slow, external steps, network calls; extraction and ranking are local string work, so batch or cache the network calls and keep the local passes cheap.",
+   "ex": {
+    "i": "\"What is the population of Iceland and what is its capital?\"",
+    "o": "an answer citing both facts with two source urls, resolved in one round",
+    "w": "shows sub-query planning finding two independent facts a single search would likely miss"
+   },
+   "hld": [
+    "Question: the thing to answer.",
+    "Plan sub-queries: break a compound question into separately searchable pieces.",
+    "Search: run each sub-query against a search index.",
+    "Fetch pages: retrieve the full text behind each search result.",
+    "Extract relevant passages: keep the sentences that actually address the question.",
+    "Dedupe and rank: drop repeated facts, order what's left by relevance.",
+    "Synthesise with citations: write the answer, citing which source each claim came from.",
+    "Check coverage and loop if something is missing: search again only for what's still unresolved."
+   ],
+   "parts": [
+    {
+     "n": "Plan sub-queries",
+     "t": "A compound question is split into separately searchable pieces; a real planner would use an LLM call, the fake below splits on a known conjunction so the shape, one question becomes several searches, is testable.",
+     "code": "\ndef plan_sub_queries(question: str) -> list[str]:\n    # real: an LLM call asked to decompose the question into independent sub-questions\n    if \" and \" in question.lower():\n        parts = [p.strip() for p in question.split(\" and \")]\n        return [p if p.endswith(\"?\") else p + \"?\" for p in parts]\n    return [question]\n"
+    },
+    {
+     "n": "Search",
+     "t": "A tiny fake index stands in for a real search API; overlap between the query's words and each indexed key decides which snippets come back.",
+     "code": "\nFAKE_WEB_INDEX = {\n    \"population of iceland\": [(\"iceland-stats.example\", \"Iceland's population was about 380,000 in 2023.\")],\n    \"capital of iceland\": [(\"iceland-gov.example\", \"Reykjavik is the capital and largest city of Iceland.\")],\n    \"iceland renewable energy\": [(\"iceland-energy.example\", \"Iceland generates nearly 100% of its electricity from renewable geothermal and hydro power.\")],\n}\n\ndef fake_search(query: str, k: int = 2) -> list[tuple[str, str]]:\n    # real: search_client.search(query, num_results=k)\n    query_terms = set(query.lower().replace(\"?\", \"\").split())\n    scored = []\n    for key, results in FAKE_WEB_INDEX.items():\n        overlap = len(query_terms & set(key.split()))\n        if overlap:\n            scored.extend(results)\n    return scored[:k]\n"
+    },
+    {
+     "n": "Fetch pages",
+     "t": "The search snippet stands in for a fetched, cleaned page body; a real fetch would hit the url and strip boilerplate down to article text.",
+     "code": "\ndef fake_fetch(url: str, snippet: str) -> str:\n    # real: http_client.get(url).text, then strip boilerplate/nav down to article text\n    return snippet\n"
+    },
+    {
+     "n": "Extract relevant passages",
+     "t": "A keyword-overlap check on each sentence stands in for an LLM relevance judgment; every kept passage carries the url it came from.",
+     "code": "\ndef extract_passages(question: str, page_text: str, url: str) -> list[dict]:\n    q_terms = set(question.lower().replace(\"?\", \"\").split())\n    passages = []\n    for sentence in page_text.split(\". \"):\n        s_terms = set(sentence.lower().split())\n        if q_terms & s_terms:\n            passages.append({\"text\": sentence.strip(), \"url\": url})\n    return passages\n"
+    },
+    {
+     "n": "Dedupe and rank",
+     "t": "Dedupe on normalized text, not the source url, since the same fact often shows up on more than one page; rank what's left by term overlap with the question.",
+     "code": "\ndef dedupe_and_rank(question: str, passages: list[dict]) -> list[dict]:\n    q_terms = set(question.lower().replace(\"?\", \"\").split())\n    seen_text = set()\n    unique = []\n    for p in passages:\n        key = p[\"text\"].lower()\n        if key not in seen_text:\n            seen_text.add(key)\n            unique.append(p)\n    return sorted(unique, key=lambda p: len(q_terms & set(p[\"text\"].lower().split())), reverse=True)\n"
+    },
+    {
+     "n": "Synthesise with citations",
+     "t": "The final answer cites each claim by the number of the passage it came from; the source list is kept separately for anyone who wants to verify further.",
+     "code": "\ndef synthesize(question: str, ranked_passages: list[dict]) -> str:\n    # real: client.messages.create(...) with the passages as numbered sources\n    if not ranked_passages:\n        return \"No sources found.\"\n    return \"; \".join(f\"{p['text']} [{i + 1}]\" for i, p in enumerate(ranked_passages))\n\ndef source_list(ranked_passages: list[dict]) -> list[str]:\n    return [p[\"url\"] for p in ranked_passages]\n"
+    },
+    {
+     "n": "Check coverage and loop if something is missing",
+     "t": "A sub-query counts as covered once a gathered passage shares a term with it; the loop only re-searches what's still missing, and a round cap keeps an unanswerable sub-query from looping forever.",
+     "code": "\nMAX_RESEARCH_ROUNDS = 3\n\ndef check_coverage(sub_queries: list[str], all_passages: list[dict]) -> list[str]:\n    covered_terms = set()\n    for p in all_passages:\n        covered_terms |= set(p[\"text\"].lower().split())\n    missing = []\n    for sq in sub_queries:\n        sq_terms = set(sq.lower().replace(\"?\", \"\").split())\n        if not (sq_terms & covered_terms):\n            missing.append(sq)\n    return missing\n\ndef research(question: str) -> dict:\n    sub_queries = plan_sub_queries(question)\n    all_passages: list[dict] = []\n    rounds = 0\n    remaining = list(sub_queries)\n    while remaining and rounds < MAX_RESEARCH_ROUNDS:\n        for sq in list(remaining):\n            for url, snippet in fake_search(sq):\n                page = fake_fetch(url, snippet)\n                all_passages.extend(extract_passages(sq, page, url))\n        rounds += 1\n        remaining = check_coverage(remaining, all_passages)\n    ranked = dedupe_and_rank(question, all_passages)\n    answer = synthesize(question, ranked)\n    return {\"answer\": answer, \"sources\": source_list(ranked), \"rounds\": rounds, \"unresolved\": remaining}\n"
+    }
+   ],
+   "tpl": "\nresult = research(\"What is the population of Iceland and what is its capital?\")\nanswer = result[\"answer\"]\nsources = result[\"sources\"]\nrounds_taken = result[\"rounds\"]\nunresolved = result[\"unresolved\"]\n",
+   "remember": [
+    "Dedupe on normalized text, not the source url; the same fact often shows up on multiple pages, and citing it twice pads the answer without adding information.",
+    "Track the source per passage from the moment it's extracted; synthesis can only cite what was captured with its origin attached, not reconstruct it after the fact.",
+    "Coverage checking exists so the loop is driven by what's actually missing, not by re-running the whole plan; re-searching a sub-query that's already answered wastes a network round-trip for nothing new.",
+    "Cap the number of research rounds the same way an agent caps tool steps; an unanswerable sub-query would otherwise loop until the plan itself is the bug.",
+    "A sub-query decomposition is a bet, not a guarantee: verify each piece got covered rather than assuming more searches automatically means more coverage."
+   ],
+   "asks": [
+    {
+     "q": "Why break one question into sub-queries before searching?",
+     "a": "A compound or multi-part question often needs facts from different pages that a single search is unlikely to surface together. Decomposing into sub-queries lets each one search independently, and synthesis reassembles the results into one answer instead of hoping a single search result covers everything."
+    },
+    {
+     "q": "How do you decide when the research agent has done enough and should stop?",
+     "a": "Check coverage: after each round, see which sub-queries still have no passage addressing them, and only search again for those. Stop when nothing is left uncovered or a round limit is hit, and report what's still unresolved rather than guessing at an answer."
+    },
+    {
+     "q": "Two different sites report the same fact; how does that affect the final answer?",
+     "a": "Dedupe on the normalized passage text before ranking and synthesis, so the same fact from two sources counts once toward relevance instead of appearing twice in the answer. The source list can still keep both urls for corroboration, but the cited claim itself shouldn't repeat."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now weight a source by domain trust",
+     "ex": {
+      "i": "the same passages, ranked with a per-domain trust multiplier",
+      "o": "a government source outranking a lower-trust one at similar relevance",
+      "w": "shows ranking on more than raw term overlap"
+     },
+     "t": "An unknown domain defaults to a low but nonzero trust score rather than zero, so an unfamiliar source can still surface, ranked below a known-trustworthy one at similar relevance.",
+     "code": "\nTRUSTED_DOMAINS = {\"iceland-gov.example\": 1.0, \"iceland-stats.example\": 0.8, \"iceland-energy.example\": 0.6}\n\ndef dedupe_and_rank_trusted(question, passages):\n    q_terms = set(question.lower().replace(\"?\", \"\").split())\n    seen_text = set()\n    unique = []\n    for p in passages:\n        key = p[\"text\"].lower()\n        if key not in seen_text:\n            seen_text.add(key)\n            unique.append(p)\n    def score(p):\n        relevance = len(q_terms & set(p[\"text\"].lower().split()))\n        trust = TRUSTED_DOMAINS.get(p[\"url\"], 0.3)\n        return relevance * trust\n    return sorted(unique, key=score, reverse=True)\n\ncapital_passages = extract_passages(\"capital of iceland\", \"Reykjavik is the capital and largest city of Iceland.\", \"iceland-gov.example\")\ntrusted_ranked = dedupe_and_rank_trusted(\"capital of iceland\", capital_passages)\n"
+    },
+    {
+     "n": "Now flag disagreeing sources instead of picking one",
+     "ex": {
+      "i": "two passages with different population figures",
+      "o": "a flagged-conflict answer instead of a single confident number",
+      "w": "shows a crude conflict signal instead of silently trusting the top-ranked passage"
+     },
+     "t": "Two top-ranked passages about the same thing but citing different numbers is a conflict signal a relevance score alone won't catch; surface both instead of silently picking the higher-ranked one.",
+     "code": "\nimport re\n\ndef synthesize_with_conflict_check(question, ranked_passages):\n    if len(ranked_passages) < 2:\n        return synthesize(question, ranked_passages)\n    nums_a = set(re.findall(r\"\\d[\\d,]*\", ranked_passages[0][\"text\"]))\n    nums_b = set(re.findall(r\"\\d[\\d,]*\", ranked_passages[1][\"text\"]))\n    if nums_a and nums_b and nums_a != nums_b:\n        return f\"Sources disagree: [1] {ranked_passages[0]['text']}  vs  [2] {ranked_passages[1]['text']}\"\n    return synthesize(question, ranked_passages)\n\nconflict_passages = (\n    extract_passages(\"population of iceland\", \"Iceland's population was about 380,000 in 2023.\", \"a.example\")\n    + extract_passages(\"population of iceland\", \"Iceland's population was about 400,000 in 2024.\", \"b.example\")\n)\nconflict_answer = synthesize_with_conflict_check(\"population of iceland\", conflict_passages)\n"
+    },
+    {
+     "n": "Now cap total fetches across the whole call, not per round",
+     "ex": {
+      "i": "the same compound question, fetch budget of 1",
+      "o": "only one page ever fetched, the rest of the plan left unresolved",
+      "w": "shows a global budget instead of one that resets every round"
+     },
+     "t": "The fetch counter is shared across the whole research call, not reset per sub-query or per round, so a tight budget actually bounds total network calls rather than bounding them per round.",
+     "code": "\ndef research_with_fetch_cap(question, max_fetches=2):\n    sub_queries = plan_sub_queries(question)\n    all_passages: list[dict] = []\n    fetch_count = 0\n    for sq in sub_queries:\n        for url, snippet in fake_search(sq):\n            if fetch_count >= max_fetches:\n                break\n            page = fake_fetch(url, snippet)\n            all_passages.extend(extract_passages(sq, page, url))\n            fetch_count += 1\n    return {\"passages\": all_passages, \"fetch_count\": fetch_count}\n\ncapped = research_with_fetch_cap(\"What is the population of Iceland and what is its capital?\", max_fetches=1)\n"
+    }
+   ],
+   "sheet": {
+    "spot": "Answer a question by searching, reading, and citing sources.",
+    "move": "plan sub-queries, search+fetch, extract, dedupe, cite, check.",
+    "code": "subq = plan(question)\nhits = [search(q) for q in subq]\npages = [fetch(u) for u in hits]\npas = [extract(q, p) for p in pages]\nranked = dedupe_rank(pas)\nans = synth(ranked)\nmissing = coverage(subq, pas)",
+    "notes": [
+     "dedupe on normalized text, not url - the same fact repeats across sites.",
+     "loop only on sub-queries coverage says are missing, not the whole plan.",
+     "cap rounds and fetches; a bounded failure beats an infinite crawl."
+    ]
+   },
+   "figs": [
+    "webResearch"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
+   "id": "voice",
+   "title": "Audio to audio: a voice pipeline",
+   "group": "AI systems",
+   "spot": "Comes up as 'build a voice agent' or 'why does our assistant feel slow'. <b>Signal:</b> words like <code>barge-in</code>, <code>endpointing</code>, <code>time to first audio</code>.",
+   "cx": "Time to first audio is the metric that matters, not total latency: start TTS on the first sentence while the LLM is still generating the rest.",
+   "ex": {
+    "i": "user says \"what's the weather in Boston\" then goes quiet",
+    "o": "system starts speaking the first sentence of the answer while it is still generating the rest, then stops mid-word the instant the user says \"wait\"",
+    "w": "shows streaming end to end plus barge-in cutting it off"
+   },
+   "hld": [
+    "Microphone: capture raw audio frames.",
+    "Voice activity detection and endpointing: decide when the user has stopped talking.",
+    "Streaming speech-to-text: transcribe as audio arrives, not after it ends.",
+    "LLM streaming tokens: generate the reply token by token.",
+    "Sentence chunker: group tokens into sentences so TTS can start before the reply is finished.",
+    "Streaming text-to-speech and playback: speak each sentence as soon as it is ready.",
+    "Barge-in: cancel TTS the instant the user starts talking again.",
+    "Latency budget: track time-to-first-audio per stage, not the total."
+   ],
+   "parts": [
+    {
+     "n": "Microphone frames",
+     "t": "The mic yields fixed-size audio frames continuously; everything downstream is a generator pulling from this stream.",
+     "code": "import numpy as np\n\ndef mic_frames(utterance: str, frame_ms: int = 20, sample_rate: int = 16000):\n    # real: sounddevice.InputStream callback pushing frames into a queue\n    samples_per_frame = int(sample_rate * frame_ms / 1000)\n    # simulate: each non-space character \"speaks\" one frame of louder audio, then trailing silence\n    for ch in utterance:\n        level = 0.01 if ch == \" \" else 0.5\n        frame = np.random.randn(samples_per_frame).astype(np.float32) * 0.05 + level\n        yield frame\n    for _ in range(15):  # silence long enough for the endpointer to fire\n        yield np.random.randn(samples_per_frame).astype(np.float32) * 0.01"
+    },
+    {
+     "n": "Voice activity detection and endpointing",
+     "t": "VAD flags each frame as speech or silence; endpointing decides the turn is over after enough consecutive silent frames. Short window = low latency but risks cutting off a speaker who pauses mid-thought; long window = safer but adds that much wait on every turn.",
+     "code": "def vad_is_speech(frame: np.ndarray, energy_threshold: float = 0.15) -> bool:\n    # real: webrtcvad.Vad().is_speech(frame_bytes, sample_rate)\n    return float(np.abs(frame).mean()) > energy_threshold\n\ndef endpointer(frames, silence_frames_to_end: int = 10):\n    silence_run = 0\n    for frame in frames:\n        speaking = vad_is_speech(frame)\n        yield frame, speaking\n        silence_run = 0 if speaking else silence_run + 1\n        if silence_run >= silence_frames_to_end:\n            return"
+    },
+    {
+     "n": "Streaming speech-to-text",
+     "t": "A real streaming recognizer emits growing partial transcripts and a final one; here the fake counts spoken frames to reveal one more word at a time.",
+     "code": "def fake_stt(frames_with_vad, utterance_text: str):\n    # real: a streaming recognizer (e.g. a Whisper/Deepgram-style websocket) emitting\n    # partial hypotheses as audio arrives, then a final transcript at endpointing\n    spoken_frame_count = sum(1 for _, speaking in frames_with_vad if speaking)\n    words = utterance_text.split()\n    reveal_every = max(1, spoken_frame_count // max(1, len(words)))\n    for i, word in enumerate(words):\n        yield {\"text\": \" \".join(words[: i + 1]), \"final\": i == len(words) - 1}"
+    },
+    {
+     "n": "LLM streaming tokens and sentence chunker",
+     "t": "The LLM streams tokens; the chunker buffers until a sentence boundary so TTS can start on sentence one without waiting for the whole reply.",
+     "code": "def fake_llm_stream(prompt: str):\n    # real: client.messages.create(..., stream=True)\n    question = prompt.split(\":\")[-1].strip()\n    canned = f\"Sure, here is the answer to {question}. It has two parts. That is everything.\"\n    for word in canned.split(\" \"):\n        yield word + \" \"\n\ndef sentence_chunker(token_stream):\n    # this boundary is what shortens time-to-first-audio: TTS gets sentence one\n    # while the LLM is still generating sentence two\n    buf = \"\"\n    for tok in token_stream:\n        buf += tok\n        if buf.strip().endswith((\".\", \"!\", \"?\")):\n            yield buf.strip()\n            buf = \"\"\n    if buf.strip():\n        yield buf.strip()"
+    },
+    {
+     "n": "Streaming TTS, playback and barge-in",
+     "t": "TTS speaks sentence by sentence; while playing, every audio chunk is interleaved with a check of the mic, and speech there cancels the TTS generator mid-utterance.",
+     "code": "def fake_tts(sentence: str, sample_rate: int = 16000):\n    # real: a streaming TTS engine yielding audio chunks per sentence, not per whole reply\n    n_frames = max(1, len(sentence) // 5)\n    for _ in range(n_frames):\n        yield np.zeros(int(sample_rate * 0.02), dtype=np.float32)\n\ndef speak_with_barge_in(sentences, user_frames):\n    # cancelling here is the whole point of barge-in: a bare-metal player would also\n    # stop the speaker hardware the moment this fires\n    played = []\n    user_frames = iter(user_frames)\n    for sentence in sentences:\n        tts_gen = fake_tts(sentence)\n        for chunk in tts_gen:\n            user_frame = next(user_frames, None)\n            if user_frame is not None and vad_is_speech(user_frame):\n                tts_gen.close()\n                return played, True\n            played.append(chunk)\n    return played, False"
+    },
+    {
+     "n": "Latency budget per stage",
+     "t": "A rough per-stage budget, labelled as targets not measurements, for reasoning about where time-to-first-audio actually goes.",
+     "code": "LATENCY_BUDGET_MS = {\n    # rough targets, not measurements - actual numbers depend on model, network, hardware\n    \"endpointing_silence_wait\": (150, 400),\n    \"stt_partial_to_final\": (100, 300),\n    \"llm_time_to_first_token\": (200, 600),\n    \"sentence_chunk_to_tts_start\": (50, 150),\n    \"tts_time_to_first_audio\": (150, 400),\n    \"total_time_to_first_audio_response\": (600, 1500),\n}"
+    }
+   ],
+   "tpl": "utterance = \"what is the capital of France\"\nframes = list(endpointer(mic_frames(utterance)))\ntranscript = None\nfor partial in fake_stt(frames, utterance):\n    transcript = partial[\"text\"]\n\nllm_prompt = f\"user said: {transcript}\"\nsentences = list(sentence_chunker(fake_llm_stream(llm_prompt)))\n\nsilent_user_frames = [np.zeros(320, dtype=np.float32) for _ in range(1000)]\naudio_out, was_interrupted = speak_with_barge_in(sentences, silent_user_frames)",
+   "remember": [
+    "Endpointing is a latency-vs-cutoff trade-off: shorter silence windows respond faster but clip speakers who pause mid-thought.",
+    "Optimize time to first audio, not total response time - start TTS on sentence one while the LLM is still generating.",
+    "Barge-in means cancelling the TTS generator (and stopping playback) the instant VAD detects the user speaking, not waiting for the sentence to finish.",
+    "Streaming STT gives partial transcripts you can act on early, but only the final one after endpointing is safe to hand to the LLM.",
+    "A latency budget is per stage, not one number - it tells you which stage to optimize first."
+   ],
+   "asks": [
+    {
+     "q": "Why not wait for a long silence to be sure the user is done?",
+     "a": "Because every millisecond of that wait is added latency on every single turn. The trade-off is tuned per product: voice UIs for quick commands use a short window, ones expecting pauses (dictation, thinking out loud) use a longer one, sometimes with a max-wait override."
+    },
+    {
+     "q": "What actually determines time to first audio?",
+     "a": "The sum of endpointing wait, STT finalization, LLM time-to-first-token, sentence chunking, and TTS time-to-first-audio. Streaming at every stage and starting TTS per sentence instead of per full reply is what keeps this sum small."
+    },
+    {
+     "q": "How do you implement barge-in correctly?",
+     "a": "Keep listening to the mic while TTS is playing, and the moment VAD fires, cancel the TTS generator and stop playback immediately - don't wait for the current sentence to finish, or the interruption feels broken."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now the user actually interrupts mid-reply",
+     "ex": {
+      "i": "user starts talking again right as TTS begins speaking",
+      "o": "playback stops immediately, only a few audio chunks were produced",
+      "w": "shows barge-in actually cancelling, not just being wired up"
+     },
+     "t": "Feed loud frames (VAD-positive) into the user-frame stream instead of silence.",
+     "code": "loud_user_frames = [np.ones(320, dtype=np.float32) * 0.5] + [\n    np.zeros(320, dtype=np.float32) for _ in range(999)\n]\naudio_out_interrupted, was_interrupted_now = speak_with_barge_in(sentences, loud_user_frames)"
+    },
+    {
+     "n": "Now compare a short vs long endpointing window",
+     "ex": {
+      "i": "silence_frames_to_end of 5 vs 20, at 20ms frames",
+      "o": "100ms of added wait vs 400ms of added wait before the turn is seen as done",
+      "w": "makes the endpointing trade-off a concrete number"
+     },
+     "t": "Convert the silence-frame count directly to milliseconds of added latency.",
+     "code": "def endpoint_latency_ms(silence_frames_to_end: int, frame_ms: int = 20) -> int:\n    # short window: less latency, more risk of cutting off a mid-thought pause\n    # long window: safer endpointing, but this many extra ms before the turn is \"done\"\n    return silence_frames_to_end * frame_ms\n\nfast_endpoint_ms = endpoint_latency_ms(5)\nsafe_endpoint_ms = endpoint_latency_ms(20)"
+    }
+   ],
+   "sheet": {
+    "spot": "Building or debugging latency in a voice agent.",
+    "move": "Stream every stage; start TTS per sentence; cancel on VAD.",
+    "code": "frames = mic_frames(text)\nspeaking = vad_is_speech(frame)\nframes = endpointer(frames, silence_n)\ntext = fake_stt(frames)\ntokens = fake_llm_stream(prompt)\nsents = sentence_chunker(tokens)\naudio = speak_with_barge_in(sents, mic)\n# barge-in: tts_gen.close() on VAD hit",
+    "notes": [
+     "Endpointing window is a direct latency-vs-cutoff dial, not a fixed constant.",
+     "Time to first audio beats total latency as the metric users actually feel.",
+     "Barge-in must cancel mid-sentence, not wait for the current sentence to end."
+    ]
+   },
+   "figs": [
+    "voicePipeline",
+    "spectrogramReading"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
+   "id": "transformer",
+   "title": "Attention and a transformer block",
+   "group": "AI systems",
+   "spot": "Comes up as 'implement attention' or 'why is there a causal mask'. <b>Signal:</b> <code>Q, K, V</code>, <code>causal mask</code>, <code>sqrt(d_k)</code>.",
+   "cx": "Attention cost is roughly O(t^2 * d) in sequence length; KV caching during generation avoids recomputing it over the whole prefix at every new token.",
+   "ex": {
+    "i": "token sequence for \"the cat sat\"",
+    "o": "logits over the vocabulary for the token after \"sat\", softmax picks one next token",
+    "w": "shows the causal forward pass producing one next-token prediction"
+   },
+   "hld": [
+    "Tokens: integer ids for each input position.",
+    "Embedding plus positions: token id and position each get a learned vector, summed.",
+    "Pre-norm: layer norm applied before each sublayer, not after.",
+    "Multi-head causal attention: split into heads, score Q against K scaled by sqrt(d_head), mask future tokens, weight V.",
+    "Residual add around the attention sublayer.",
+    "MLP (two linear layers with a nonlinearity), its own pre-norm and residual.",
+    "Stack N of these blocks.",
+    "Final norm, a linear head to logits, softmax, pick the next token."
+   ],
+   "parts": [
+    {
+     "n": "Tokens and embeddings",
+     "t": "Token ids look up a learned vector; a separate position embedding (added, not concatenated) is what tells the model where in the sequence each token sits.",
+     "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass TokenEmbedding(nn.Module):\n    def __init__(self, vocab_size: int, d_model: int, max_len: int = 64):\n        super().__init__()\n        self.tok_emb = nn.Embedding(vocab_size, d_model)\n        self.pos_emb = nn.Embedding(max_len, d_model)\n\n    def forward(self, ids: torch.Tensor) -> torch.Tensor:\n        positions = torch.arange(ids.shape[1], device=ids.device)\n        return self.tok_emb(ids) + self.pos_emb(positions)"
+    },
+    {
+     "n": "Multi-head causal self-attention",
+     "t": "Q, K, V are linear projections split across heads. Scores are scaled by sqrt(d_head) so the softmax does not saturate as the head dimension grows; the causal mask blocks each position from attending to anything after it.",
+     "code": "class CausalSelfAttention(nn.Module):\n    def __init__(self, d_model: int, n_heads: int):\n        super().__init__()\n        assert d_model % n_heads == 0\n        self.n_heads = n_heads\n        self.d_head = d_model // n_heads\n        self.qkv = nn.Linear(d_model, 3 * d_model)\n        self.out = nn.Linear(d_model, d_model)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        b, t, d = x.shape\n        q, k, v = self.qkv(x).chunk(3, dim=-1)\n        q = q.view(b, t, self.n_heads, self.d_head).transpose(1, 2)\n        k = k.view(b, t, self.n_heads, self.d_head).transpose(1, 2)\n        v = v.view(b, t, self.n_heads, self.d_head).transpose(1, 2)\n        # scaling by sqrt(d_head) keeps dot-product variance ~1 so softmax doesn't saturate\n        scores = (q @ k.transpose(-2, -1)) / (self.d_head ** 0.5)\n        causal_mask = torch.triu(torch.ones(t, t, dtype=torch.bool), diagonal=1)\n        scores = scores.masked_fill(causal_mask, float(\"-inf\"))  # token t can't see t+1..\n        weights = F.softmax(scores, dim=-1)\n        attended = (weights @ v).transpose(1, 2).reshape(b, t, d)\n        return self.out(attended)"
+    },
+    {
+     "n": "Transformer block: pre-norm, residual, MLP",
+     "t": "Pre-norm normalizes before the sublayer and adds the residual after; this keeps gradients well scaled through many stacked blocks (post-norm, which normalizes after the residual add, is harder to train stably at depth).",
+     "code": "class TransformerBlock(nn.Module):\n    def __init__(self, d_model: int, n_heads: int, d_ff: int):\n        super().__init__()\n        self.ln1 = nn.LayerNorm(d_model)\n        self.attn = CausalSelfAttention(d_model, n_heads)\n        self.ln2 = nn.LayerNorm(d_model)\n        self.mlp = nn.Sequential(nn.Linear(d_model, d_ff), nn.GELU(), nn.Linear(d_ff, d_model))\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        x = x + self.attn(self.ln1(x))  # pre-norm + residual\n        x = x + self.mlp(self.ln2(x))\n        return x"
+    },
+    {
+     "n": "Stack blocks and produce logits",
+     "t": "N blocks stacked, a final norm, then a linear head projects to vocabulary-sized logits for the next token.",
+     "code": "class TinyTransformer(nn.Module):\n    def __init__(self, vocab_size: int, d_model: int = 16, n_heads: int = 2, d_ff: int = 32,\n                 n_blocks: int = 2, max_len: int = 64):\n        super().__init__()\n        self.embed = TokenEmbedding(vocab_size, d_model, max_len)\n        self.blocks = nn.ModuleList([TransformerBlock(d_model, n_heads, d_ff) for _ in range(n_blocks)])\n        self.final_norm = nn.LayerNorm(d_model)\n        self.head = nn.Linear(d_model, vocab_size)\n\n    def forward(self, ids: torch.Tensor) -> torch.Tensor:\n        x = self.embed(ids)\n        for block in self.blocks:\n            x = block(x)\n        x = self.final_norm(x)\n        return self.head(x)  # logits, one vector per position"
+    }
+   ],
+   "tpl": "torch.manual_seed(0)\nvocab_size = 12\nmodel = TinyTransformer(vocab_size, d_model=16, n_heads=2, d_ff=32, n_blocks=2)\nids = torch.randint(0, vocab_size, (1, 6))\nlogits = model(ids)\nnext_token_probs = F.softmax(logits[0, -1], dim=-1)\nnext_token = int(torch.argmax(next_token_probs))",
+   "remember": [
+    "Scale attention scores by sqrt(d_head) - unscaled dot products grow with dimension and push softmax into a near-one-hot, low-gradient regime.",
+    "The causal mask is what makes this autoregressive: position t only ever attends to <= t.",
+    "Pre-norm (norm then sublayer then residual) trains more stably at depth than post-norm.",
+    "Multi-head splits d_model across heads, it does not repeat full-width attention per head.",
+    "Generation cost is dominated by attention over a growing sequence; KV caching avoids recomputing K and V for tokens already processed."
+   ],
+   "asks": [
+    {
+     "q": "Why scale by sqrt(d_k)?",
+     "a": "Dot products of random vectors grow with their dimension, so raw scores get large as d_head grows. Large scores push softmax toward one-hot outputs with near-zero gradient almost everywhere else, which stalls learning. Dividing by sqrt(d_head) keeps the score variance roughly constant regardless of dimension."
+    },
+    {
+     "q": "Why the causal mask?",
+     "a": "Training and inference are both autoregressive: the model predicts each token from only the tokens before it. Without the mask, position t could attend to t+1 and beyond during training, which is seeing the answer, and the model would never learn to generate."
+    },
+    {
+     "q": "Pre-norm vs post-norm?",
+     "a": "Pre-norm normalizes the input to a sublayer before applying it, then adds the residual on top of the un-normalized stream, which keeps gradient magnitudes stable through many stacked blocks. Post-norm normalizes after the residual add and can diverge at depth without careful warmup, which is why most modern stacks default to pre-norm."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now decode token by token, growing the sequence",
+     "ex": {
+      "i": "a 6-token prompt",
+      "o": "3 more tokens appended one at a time",
+      "w": "shows the autoregressive decode loop; a real server would cache K/V here instead of recomputing attention over the whole growing prefix each step"
+     },
+     "t": "Each step reruns the forward pass and appends the argmax token; comment marks where a real implementation would reuse cached K/V instead of recomputing them.",
+     "code": "def decode_step(model: TinyTransformer, ids: torch.Tensor) -> torch.Tensor:\n    # real serving loop: cache each block's K/V so step t only computes attention for the\n    # new token, not the whole prefix again - this is what makes decoding cheap per step\n    with torch.no_grad():\n        logits = model(ids)\n    next_id = torch.argmax(logits[0, -1]).view(1, 1)\n    return torch.cat([ids, next_id], dim=1)\n\ngenerated = ids\nfor _ in range(3):\n    generated = decode_step(model, generated)"
+    },
+    {
+     "n": "Now make it multi-query attention",
+     "ex": {
+      "i": "the same 6-token input",
+      "o": "a smaller K/V projection shared across all heads",
+      "w": "cuts the memory a KV cache needs during serving, at some quality cost"
+     },
+     "t": "All query heads share one K/V head instead of each head having its own; fewer parameters and a much smaller KV cache to carry during generation.",
+     "code": "class MultiQueryAttention(nn.Module):\n    def __init__(self, d_model: int, n_heads: int):\n        super().__init__()\n        self.n_heads = n_heads\n        self.d_head = d_model // n_heads\n        self.q_proj = nn.Linear(d_model, d_model)\n        self.kv_proj = nn.Linear(d_model, 2 * self.d_head)  # one shared K/V head, not one per head\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        b, t, d = x.shape\n        q = self.q_proj(x).view(b, t, self.n_heads, self.d_head).transpose(1, 2)\n        k, v = self.kv_proj(x).chunk(2, dim=-1)\n        k = k.unsqueeze(1)  # broadcast the single K/V head across all query heads\n        v = v.unsqueeze(1)\n        scores = (q @ k.transpose(-2, -1)) / (self.d_head ** 0.5)\n        causal_mask = torch.triu(torch.ones(t, t, dtype=torch.bool), diagonal=1)\n        scores = scores.masked_fill(causal_mask, float(\"-inf\"))\n        weights = F.softmax(scores, dim=-1)\n        return (weights @ v).transpose(1, 2).reshape(b, t, d)\n\nmqa = MultiQueryAttention(d_model=16, n_heads=2)\nmqa_out = mqa(torch.randn(1, 6, 16))\nmqa_param_count = sum(p.numel() for p in mqa.parameters())\nmha_param_count = sum(p.numel() for p in CausalSelfAttention(16, 2).parameters())"
+    }
+   ],
+   "sheet": {
+    "spot": "Asked to implement or explain attention from scratch.",
+    "move": "Scale by sqrt(d_head), mask future, pre-norm + residual.",
+    "code": "x = embed(ids) + pos\nq,k,v = proj(x).split()\ns = q@k.T / sqrt(d_head)\ns = s.masked_fill(causal, -inf)\nw = softmax(s); out = w@v\nx = x + attn(ln(x))\nx = x + mlp(ln(x))\nlogits = head(ln_f(x))",
+    "notes": [
+     "sqrt(d_head) scaling stops softmax saturating as head dim grows.",
+     "Causal mask is the only thing making this autoregressive.",
+     "Pre-norm trains more stably deep; post-norm needs careful warmup."
+    ]
+   },
+   "figs": [
+    "transformerBlock",
+    "qkvAttention",
+    "attention"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
+   "id": "bpe",
+   "title": "A tokenizer: byte-pair encoding",
+   "group": "AI systems",
+   "spot": "Comes up as 'implement a tokenizer' or 'why did this input get split like that'. <b>Signal:</b> <code>merges</code>, <code>vocab size</code>, <code>byte fallback</code>.",
+   "cx": "Training is the slow, one-time cost (recounting pairs every merge); encoding is fast, replaying a fixed list of merges in order.",
+   "ex": {
+    "i": "corpus of common English words trained for 10 merges, then encode \"the fox jumps\"",
+    "o": "a short id sequence that decodes back to the exact input text",
+    "w": "shows merges compressing common substrings losslessly"
+   },
+   "hld": [
+    "Text to bytes: start from raw UTF-8 bytes, the byte-fallback alphabet.",
+    "Count adjacent pairs across the corpus.",
+    "Merge the most frequent pair into one symbol.",
+    "Repeat: the vocabulary grows by one symbol per merge, recorded in order.",
+    "Encode: replay the learned merges, in order, on new text.",
+    "Map symbols to ids via the vocabulary.",
+    "Decode: look up ids, concatenate bytes, decode as UTF-8."
+   ],
+   "parts": [
+    {
+     "n": "Text to bytes, with byte fallback",
+     "t": "Starting from raw UTF-8 bytes rather than characters means every possible input, including unseen unicode, always has a representation: worst case it falls back to individual bytes, never an unknown token.",
+     "code": "from collections import Counter\n\ndef text_to_symbols(text: str) -> list:\n    # byte fallback: start from raw utf-8 bytes, not characters - any input, including\n    # unseen unicode or emoji, can always fall back to single bytes, never \"unknown\"\n    return [bytes([b]) for b in text.encode(\"utf-8\")]"
+    },
+    {
+     "n": "Count pairs and merge the most frequent",
+     "t": "One training step: count every adjacent symbol pair, merge the single most frequent one into a new symbol. This greedy choice, repeated, is what BPE training is.",
+     "code": "def count_pairs(symbols: list) -> Counter:\n    pairs = Counter()\n    for a, b in zip(symbols, symbols[1:]):\n        pairs[(a, b)] += 1\n    return pairs\n\ndef merge_pair(symbols: list, pair: tuple) -> list:\n    merged = pair[0] + pair[1]\n    out = []\n    i = 0\n    while i < len(symbols):\n        if i < len(symbols) - 1 and (symbols[i], symbols[i + 1]) == pair:\n            out.append(merged)\n            i += 2\n        else:\n            out.append(symbols[i])\n            i += 1\n    return out"
+    },
+    {
+     "n": "Train: repeat merges, build the vocab",
+     "t": "Merges are recorded in the order they were learned - that order is part of the trained tokenizer and must be replayed exactly at encode time.",
+     "code": "def train_bpe(corpus: str, num_merges: int):\n    symbols = text_to_symbols(corpus)\n    merges = []  # order matters: encode must replay merges in this exact order\n    for _ in range(num_merges):\n        pairs = count_pairs(symbols)\n        if not pairs:\n            break\n        best = max(pairs, key=pairs.get)  # most frequent pair wins this round\n        symbols = merge_pair(symbols, best)\n        merges.append(best)\n    return merges\n\ndef build_vocab(merges: list) -> list:\n    base = [bytes([i]) for i in range(256)]  # every raw byte is always in vocab: the fallback\n    return base + [a + b for a, b in merges]"
+    },
+    {
+     "n": "Encode and decode",
+     "t": "Encoding replays the learned merges in order on new text, then maps symbols to ids. Decoding reverses the id lookup and concatenates bytes.",
+     "code": "def encode(text: str, merges: list) -> list:\n    symbols = text_to_symbols(text)\n    for pair in merges:  # must apply in the order they were learned\n        symbols = merge_pair(symbols, pair)\n    return symbols\n\ndef symbols_to_ids(symbols: list, vocab: list) -> list:\n    index = {sym: i for i, sym in enumerate(vocab)}\n    return [index[s] for s in symbols]\n\ndef decode(ids: list, vocab: list) -> str:\n    return b\"\".join(vocab[i] for i in ids).decode(\"utf-8\")"
+    }
+   ],
+   "tpl": "corpus = \"the quick brown fox jumps over the lazy dog the fox runs the fox jumps again\"\nmerges = train_bpe(corpus, num_merges=10)\nvocab = build_vocab(merges)\n\ntext = \"the fox jumps\"\nsymbols = encode(text, merges)\nids = symbols_to_ids(symbols, vocab)\ndecoded = decode(ids, vocab)",
+   "remember": [
+    "Byte fallback guarantees no out-of-vocabulary input, ever, at the cost of a 256-symbol base alphabet before any merges.",
+    "Merge order must be replayed exactly at encode time - it is part of the trained tokenizer, not re-derived by recounting frequencies on new text.",
+    "Each training step is a greedy choice (the single most frequent pair), not a globally optimal compression.",
+    "Vocab size is roughly 256 plus the number of merges - that number is a tuning knob.",
+    "More merges means shorter token sequences for text similar to the training corpus, with diminishing returns."
+   ],
+   "asks": [
+    {
+     "q": "Why start from bytes instead of characters?",
+     "a": "It guarantees full coverage of any input, including unicode the tokenizer never saw during training, emoji, or malformed text, without ever needing an unknown-token symbol. The cost is a larger base alphabet (256 byte values) before any merges are learned."
+    },
+    {
+     "q": "Does merge order matter when encoding new text?",
+     "a": "Yes, it must be replayed exactly in the order it was learned. Re-deriving merges by recounting pair frequencies on the new text would produce a different, inconsistent tokenization than what the model was trained on."
+    },
+    {
+     "q": "How do you control vocabulary size?",
+     "a": "By the number of merges: vocab size is about 256 plus that count. More merges compress text into fewer tokens (cheaper context, faster generation) but grow the embedding table and the softmax output layer, so it is a trade-off, not a free win."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now encode text the tokenizer never trained on",
+     "ex": {
+      "i": "\"the fox 🦊 jumps\", an emoji absent from training",
+      "o": "encodes and decodes back losslessly via single-byte fallback symbols",
+      "w": "proves byte fallback covers unseen input"
+     },
+     "t": "Run encode/decode on text containing a character with zero training-set frequency.",
+     "code": "unseen_text = \"the fox \\U0001F98A jumps\"  # emoji never appeared in the training corpus\nunseen_symbols = encode(unseen_text, merges)\nunseen_ids = symbols_to_ids(unseen_symbols, vocab)\nunseen_decoded = decode(unseen_ids, vocab)"
+    },
+    {
+     "n": "Now measure the compression BPE buys",
+     "ex": {
+      "i": "the training corpus, with vs without merges applied",
+      "o": "tokens-per-character ratio drops once merges are learned",
+      "w": "makes the cost line concrete: fewer tokens per unit of text"
+     },
+     "t": "Compare tokens-per-character with zero merges against the trained tokenizer.",
+     "code": "def compression_ratio(text: str, merges: list) -> float:\n    # lower ratio = fewer tokens spent per character, which is what merges are buying you\n    return len(encode(text, merges)) / len(text)\n\nratio_trained = compression_ratio(corpus, merges)\nratio_untrained = compression_ratio(corpus, [])"
+    }
+   ],
+   "sheet": {
+    "spot": "Asked to implement a tokenizer or explain merge behavior.",
+    "move": "Bytes in, greedy-merge most frequent pair, replay in order.",
+    "code": "syms = bytes_of(text)  # byte fallback\npairs = count_adjacent(syms)\nbest = argmax(pairs)\nsyms = merge(syms, best)  # repeat\nmerges.append(best)  # order matters!\nencode: replay merges in order\nids = vocab_index(syms)\ndecode: join bytes, utf-8 decode",
+    "notes": [
+     "Byte fallback means there is never an unknown-token failure.",
+     "Encode must replay learned merges in order, not recompute frequencies.",
+     "Vocab size = 256 + merge count; that count trades sequence length for table size."
+    ]
+   },
+   "figs": [
+    "bpeMerge"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
+   "id": "evals",
+   "title": "Evaluating LLM output",
+   "group": "AI systems",
+   "spot": "Comes up as 'how do you know your agent didn't regress' or 'design an eval harness'. <b>Signal:</b> <code>golden set</code>, <code>LLM judge</code>, <code>regression gate</code>.",
+   "cx": "An LLM-judge call per example is the slow, costly scorer; exact-match and citation checks are nearly free, so run those first and save judge calls for what they can't catch.",
+   "ex": {
+    "i": "a golden set of 3 QA pairs, run against one regressed candidate system",
+    "o": "pass_rate drops on the regressed system and the regression gate fails the build",
+    "w": "shows exact match catching a real regression before deploy"
+   },
+   "hld": [
+    "Golden set: held-out (input, expected) pairs.",
+    "Run the system under test on each input.",
+    "Scorers: exact match, an LLM-judge rubric, and a citation check.",
+    "Aggregate: pass rate, and pass^k across repeated samples.",
+    "Compare against the baseline's scores.",
+    "Regression gate: fail only on a real drop past tolerance."
+   ],
+   "parts": [
+    {
+     "n": "Golden set and the system under test",
+     "t": "A small held-out set of (input, expected) pairs, kept separate from anything used to tune prompts, plus the fake system being evaluated.",
+     "code": "GOLDEN_SET = [\n    {\"id\": \"g1\", \"input\": \"capital of France\", \"expected\": \"Paris\"},\n    {\"id\": \"g2\", \"input\": \"2 + 2\", \"expected\": \"4\"},\n    {\"id\": \"g3\", \"input\": \"author of Hamlet\", \"expected\": \"Shakespeare\"},\n]\n\ndef fake_system(prompt: str) -> str:\n    # real: call the agent/model under test\n    canned = {\"capital of France\": \"Paris\", \"2 + 2\": \"4\", \"author of Hamlet\": \"Shakespeare\"}\n    return canned.get(prompt, \"I don't know\")"
+    },
+    {
+     "n": "Scorers: exact match, LLM judge, citation check",
+     "t": "Exact match is cheap and strict but brittle to paraphrasing. An LLM judge is more flexible but biased toward longer, more confident-sounding, self-similar phrasing - calibrate it against a small human-labelled sample before trusting it. A citation check catches a different failure: fabricated sources.",
+     "code": "def exact_match(output: str, expected: str) -> bool:\n    return output.strip().lower() == expected.strip().lower()\n\ndef fake_llm_judge(output: str, expected: str) -> float:\n    # real: ask a strong model to score against a written rubric.\n    # judges are biased toward longer, more confident, self-similar answers - calibrate\n    # against a small human-labelled sample before trusting the score\n    return 1.0 if expected.lower() in output.lower() else 0.0\n\ndef citation_check(output: str, sources: list) -> bool:\n    # did the output cite one of the retrieved sources, not a hallucinated one\n    return any(src in output for src in sources)"
+    },
+    {
+     "n": "Aggregate: pass rate and pass^k",
+     "t": "Pass rate is the mean of a binary scorer over the set. pass^k is stricter than the usual pass@k: it asks whether ALL of k independent samples pass, a measure of consistency, not whether the model can get it right once.",
+     "code": "def run_eval(golden_set, system_fn) -> dict:\n    results = [exact_match(system_fn(item[\"input\"]), item[\"expected\"]) for item in golden_set]\n    return {\"pass_rate\": sum(results) / len(results), \"results\": results}\n\ndef pass_at_k(sample_results: list, k: int) -> float:\n    # pass^k: probability ALL of k samples pass - stricter and more consistency-sensitive\n    # than pass@k (at least one of k passes), and drops fast as k grows on a flaky item\n    if not sample_results:\n        return 0.0\n    window = sample_results[:k]\n    return 1.0 if all(window) else 0.0"
+    },
+    {
+     "n": "Compare against baseline and gate",
+     "t": "The gate fails a build only on a drop past a tolerance band, so one flaky example does not block a deploy, but a real regression does.",
+     "code": "def regression_gate(current: dict, baseline: dict, tolerance: float = 0.02) -> bool:\n    return current[\"pass_rate\"] >= baseline[\"pass_rate\"] - tolerance"
+    }
+   ],
+   "tpl": "baseline_scores = run_eval(GOLDEN_SET, fake_system)\n\ndef regressed_system(prompt: str) -> str:\n    if prompt == \"author of Hamlet\":\n        return \"I don't know\"  # simulate a real regression on one item\n    return fake_system(prompt)\n\ncurrent_scores = run_eval(GOLDEN_SET, regressed_system)\ngate_passed = regression_gate(current_scores, baseline_scores)\n\nsamples = [exact_match(fake_system(GOLDEN_SET[0][\"input\"]), GOLDEN_SET[0][\"expected\"]) for _ in range(4)]\np_at_4 = pass_at_k(samples, 4)",
+   "remember": [
+    "An LLM judge is biased toward longer, more confident, self-similar phrasing - calibrate it against a small human-labelled sample before trusting its scores.",
+    "pass^k (all k samples pass) is much stricter than the usual pass@k (any of k samples pass), and measures consistency, not capability.",
+    "Exact match alone is brittle to paraphrasing; combine scorers rather than relying on one.",
+    "A regression gate needs a tolerance band - gating on any drop at all reacts to noise.",
+    "The golden set must stay held out from prompt tuning, or the eval stops measuring anything real."
+   ],
+   "asks": [
+    {
+     "q": "Why is an LLM judge risky as your only scorer?",
+     "a": "It is biased toward longer, more confident-sounding answers and toward phrasing similar to its own style, and it can be gamed by output that sounds right without being right. You calibrate it by scoring a small human-labelled sample first and checking agreement before trusting it on the rest."
+    },
+    {
+     "q": "What is the difference between pass@k and pass^k?",
+     "a": "pass@k asks whether at least one of k sampled generations is correct - useful when you can pick the best of several tries. pass^k asks whether all k are correct, a much stricter bar that measures consistency, and it drops quickly as k grows if the system is flaky on an item."
+    },
+    {
+     "q": "How do you gate a deploy on eval results without blocking on noise?",
+     "a": "Compare the current run's pass rate to a stored baseline with a tolerance band, and fail the gate only on a drop past that tolerance. You also keep the golden set held out from prompt tuning, so the eval doesn't reward overfitting to it."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now blend exact match with the LLM judge",
+     "ex": {
+      "i": "the golden set scored by both scorers",
+      "o": "one composite score per item",
+      "w": "shows combining a strict and a soft scorer instead of picking just one"
+     },
+     "t": "A composite score catches more real regressions than either scorer alone: exact match is brittle, the judge is gameable.",
+     "code": "def composite_score(output: str, expected: str) -> float:\n    return 0.5 * float(exact_match(output, expected)) + 0.5 * fake_llm_judge(output, expected)\n\ncomposite_scores = [composite_score(fake_system(g[\"input\"]), g[\"expected\"]) for g in GOLDEN_SET]"
+    },
+    {
+     "n": "Now watch pass^k drop as k grows on a flaky item",
+     "ex": {
+      "i": "3 samples on one golden item, one of them sampled wrong",
+      "o": "pass^1 is 1.0 but pass^3 is 0.0",
+      "w": "makes the pass^k trade-off concrete: consistency, not just capability"
+     },
+     "t": "Simulate k independent generations on the same item, one of which is wrong.",
+     "code": "def sample_candidates(prompt: str, expected: str, n: int, flaky_index) -> list:\n    return [\n        exact_match(fake_system(prompt), expected) if i != flaky_index else False\n        for i in range(n)\n    ]\n\nflaky_samples = sample_candidates(GOLDEN_SET[0][\"input\"], GOLDEN_SET[0][\"expected\"], n=3, flaky_index=1)\np_at_1 = pass_at_k(flaky_samples, 1)\np_at_3 = pass_at_k(flaky_samples, 3)"
+    }
+   ],
+   "sheet": {
+    "spot": "Asked to design or debug an eval harness / regression gate.",
+    "move": "Score cheap-to-costly, aggregate, gate on drop past tolerance.",
+    "code": "gold = [{input, expected}, ...]\nout = system(input)\nok = exact_match(out, expected)\njudge = llm_judge(out, expected)  # bias\nrate = mean(ok for g in gold)\npassk = all(ok for k samples)\ngate: rate >= baseline - tol",
+    "notes": [
+     "LLM judges are biased toward long, confident, self-similar answers.",
+     "pass^k (all k) is stricter than pass@k (any of k) and drops fast.",
+     "Gate on a tolerance band, not any drop, or noise blocks every deploy."
+    ]
+   },
+   "figs": [
+    "evalHarness",
+    "passk"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
+   "id": "structured",
+   "title": "Structured output and function calling",
+   "group": "AI systems",
+   "spot": "Comes up as 'get reliable JSON out of the model' or 'wire up a tool call'. <b>Signal:</b> <code>schema</code>, <code>validate</code>, <code>retry</code>.",
+   "cx": "Each repair round is a full extra model call; capping retries bounds cost as much as it bounds latency.",
+   "ex": {
+    "i": "\"Extract the person's contact info\", model returns age as a string on attempt one",
+    "o": "a typed object with age as an int, after one repair round",
+    "w": "shows the validate-then-repair loop converging instead of crashing or guessing"
+   },
+   "hld": [
+    "Schema: fields and types the output must satisfy.",
+    "Prompt (or tool definition) carrying that schema to the model.",
+    "Model output: raw text, hopefully JSON.",
+    "Parse JSON.",
+    "Validate against the schema.",
+    "On error, feed the exact error back and retry, capped at n attempts.",
+    "Return a typed object, or a clean failure - never a silent bad guess."
+   ],
+   "parts": [
+    {
+     "n": "Schema and prompt",
+     "t": "The schema names required fields and their types; passing it as a proper tool/function definition is enforced closer to generation and is more reliable than only describing it in prose.",
+     "code": "import json\n\nSCHEMA = {\n    \"type\": \"object\",\n    \"properties\": {\n        \"name\": {\"type\": \"string\"},\n        \"age\": {\"type\": \"integer\"},\n        \"email\": {\"type\": \"string\"},\n    },\n    \"required\": [\"name\", \"age\", \"email\"],\n}\n\ndef build_prompt(instruction: str, schema: dict) -> str:\n    # real: pass schema as a tool/function definition or a json_schema response format,\n    # not just prose - models follow a typed schema far more reliably than a described one\n    return f\"{instruction}\\nRespond with JSON matching this schema:\\n{json.dumps(schema)}\""
+    },
+    {
+     "n": "Model output and JSON parsing",
+     "t": "The fake model simulates a common real failure: a numeric field returned as a string on the first attempt, fixed on the second.",
+     "code": "def fake_llm_structured(prompt: str, attempt: int) -> str:\n    # real: client.messages.create(..., tools=[...]) or a json_schema response format\n    if attempt == 0:\n        return '{\"name\": \"Ada Lovelace\", \"age\": \"36\", \"email\": \"ada@example.com\"}'  # age is a string\n    return '{\"name\": \"Ada Lovelace\", \"age\": 36, \"email\": \"ada@example.com\"}'\n\ndef parse_json(text: str):\n    try:\n        return json.loads(text), None\n    except json.JSONDecodeError as e:\n        return None, f\"invalid JSON: {e}\""
+    },
+    {
+     "n": "Validate against the schema",
+     "t": "Check required fields are present and every present field has the right type; return None for valid, or a specific message pointing at what broke.",
+     "code": "_TYPE_MAP = {\"string\": str, \"integer\": int}\n\ndef validate(obj, schema: dict):\n    if obj is None:\n        return \"no object to validate\"\n    for field in schema[\"required\"]:\n        if field not in obj:\n            return f\"missing required field: {field}\"\n    for field, spec in schema[\"properties\"].items():\n        if field in obj and not isinstance(obj[field], _TYPE_MAP[spec[\"type\"]]):\n            return f\"field {field} should be {spec['type']}, got {type(obj[field]).__name__}\"\n    return None  # None means valid"
+    },
+    {
+     "n": "Validate then repair, capped retries",
+     "t": "On failure, the exact validation error is fed back into the next prompt - this specific feedback is what makes the loop converge instead of repeating the same mistake. Past the retry cap it returns a clean failure, never a silently wrong guess.",
+     "code": "def get_structured_output(prompt: str, schema: dict, max_retries: int = 3):\n    error = None\n    for attempt in range(max_retries):\n        raw = fake_llm_structured(prompt, attempt)\n        obj, parse_error = parse_json(raw)\n        error = parse_error or validate(obj, schema)\n        if error is None:\n            return obj, None  # typed object, success\n        # feed the exact error back, not a generic \"try again\" - this is what converges\n        prompt = f\"{prompt}\\nYour last output was invalid: {error}. Try again.\"\n    return None, f\"failed after {max_retries} attempts: {error}\"  # clean failure, not a crash"
+    }
+   ],
+   "tpl": "prompt = build_prompt(\"Extract the person's contact info.\", SCHEMA)\nresult, error = get_structured_output(prompt, SCHEMA, max_retries=3)",
+   "remember": [
+    "Validate then repair beats regex-patching JSON: point at the exact field that broke, not a vague retry.",
+    "Feed the specific validation error back into the next prompt - a generic 'try again' converges far less reliably.",
+    "Cap retries and fail clean (None + reason) rather than looping forever or returning garbage.",
+    "A tool/function-calling schema is enforced closer to generation and is more reliable than a schema only described in prose.",
+    "Stringified numbers and missing required fields are the most common real-world validation failures."
+   ],
+   "asks": [
+    {
+     "q": "Why validate then repair instead of re-prompting harder?",
+     "a": "Because you can name the exact field and rule that broke ('age should be integer, got str') and hand that back verbatim, which converges in one or two retries. A vaguer nudge like 'please fix your JSON' gives the model far less to correct."
+    },
+    {
+     "q": "What happens after max_retries is hit?",
+     "a": "Return a clean typed failure, None plus a reason, rather than raising or silently returning a best-effort guess. The caller can then fall back to a default, ask a human, or surface the error, instead of shipping a plausible-looking wrong object."
+    },
+    {
+     "q": "Prose schema vs a tool/function-calling schema, does it matter?",
+     "a": "Yes - a schema passed as a proper tool definition is enforced closer to how the model actually generates output, and is far more reliable than one only described in the prompt text, which the model can drift away from."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now the model keeps failing past the retry cap",
+     "ex": {
+      "i": "a model that never fixes the type error",
+      "o": "None plus a clean failure reason",
+      "w": "shows the cap actually bounding cost and returning cleanly, not looping forever"
+     },
+     "t": "Swap in a model stub that always returns the same invalid field; confirm the loop stops at max_retries with a clean failure, not an exception.",
+     "code": "def always_wrong_llm(prompt: str, attempt: int) -> str:\n    return '{\"name\": \"Ada Lovelace\", \"age\": \"not a number\", \"email\": \"ada@example.com\"}'\n\ndef get_structured_output_stubborn(prompt, schema, max_retries=2):\n    error = None\n    for attempt in range(max_retries):\n        raw = always_wrong_llm(prompt, attempt)\n        obj, parse_error = parse_json(raw)\n        error = parse_error or validate(obj, schema)\n        if error is None:\n            return obj, None\n    return None, f\"failed after {max_retries} attempts: {error}\"\n\nstubborn_result, stubborn_error = get_structured_output_stubborn(prompt, SCHEMA, max_retries=2)"
+    },
+    {
+     "n": "Now add an enum-constrained field",
+     "ex": {
+      "i": "a status field limited to active/inactive, given \"pending\"",
+      "o": "validation fails naming the allowed values",
+      "w": "shows validation growing beyond just type checks"
+     },
+     "t": "Extend validation with a constraint the plain type map cannot express: membership in a fixed set of allowed values.",
+     "code": "SCHEMA_WITH_ENUM = dict(SCHEMA, properties=dict(\n    SCHEMA[\"properties\"], status={\"type\": \"string\", \"enum\": [\"active\", \"inactive\"]},\n))\nSCHEMA_WITH_ENUM[\"required\"] = SCHEMA[\"required\"] + [\"status\"]\n\ndef validate_with_enum(obj, schema: dict):\n    plain_props = {k: v for k, v in schema[\"properties\"].items() if \"enum\" not in v}\n    base_error = validate(obj, {**schema, \"properties\": plain_props})\n    if base_error:\n        return base_error\n    for field, spec in schema[\"properties\"].items():\n        if \"enum\" in spec and obj.get(field) not in spec[\"enum\"]:\n            return f\"field {field} must be one of {spec['enum']}\"\n    return None\n\nbad_status_obj = {\"name\": \"Ada\", \"age\": 36, \"email\": \"a@b.com\", \"status\": \"pending\"}\nenum_error = validate_with_enum(bad_status_obj, SCHEMA_WITH_ENUM)"
+    }
+   ],
+   "sheet": {
+    "spot": "Wiring up JSON output or a tool call that must be reliable.",
+    "move": "Validate, feed the exact error back, retry with a cap.",
+    "code": "schema = {required, properties}\nprompt = with_schema(instruction, schema)\nraw = model(prompt)\nobj, err = parse_json(raw)\nerr = err or validate(obj, schema)\nif err and tries < n: retry with err\nif err: return None, err  # clean fail\nreturn obj  # typed",
+    "notes": [
+     "Feed the specific validation error back, not a generic retry prompt.",
+     "Cap retries; past the cap return a clean failure, never a silent guess.",
+     "A tool-call schema is enforced more reliably than one only in prose."
+    ]
+   },
+   "figs": [
+    "schemaRepair"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
+   "id": "serving",
+   "title": "Serving a model: streaming, batching, limits",
+   "group": "AI systems",
+   "spot": "Comes up as 'design the inference API' or 'why is p95 latency bad under load'. <b>Signal:</b> <code>batching</code>, <code>rate limit</code>, <code>SSE</code>.",
+   "cx": "Batching raises throughput per GPU-second but adds queueing latency to every request in the batch - the knob to tune against your SLA is max_wait, not max_batch_size.",
+   "ex": {
+    "i": "two concurrent requests for different prompts, micro-batch size 2",
+    "o": "one batched model call serving both, each streamed back as SSE token events",
+    "w": "shows the batcher coalescing concurrent requests into a single forward pass"
+   },
+   "hld": [
+    "Client sends a request to the API endpoint.",
+    "Auth and a token-bucket rate limit gate the request.",
+    "Cache check: skip the model entirely on a hit.",
+    "Queue and micro-batch concurrent requests together.",
+    "Model runs the batch in one forward pass.",
+    "Stream tokens back over server-sent events as they are generated.",
+    "Metrics and timeouts: track p95 latency, bound worst-case wait."
+   ],
+   "parts": [
+    {
+     "n": "Auth and a token-bucket rate limiter",
+     "t": "The bucket refills continuously based on elapsed time rather than resetting on a fixed window, which avoids a burst of requests all landing right at a window boundary.",
+     "code": "import time\nimport asyncio\nfrom collections import OrderedDict\n\nclass TokenBucket:\n    def __init__(self, rate_per_sec: float, capacity: int):\n        self.rate = rate_per_sec\n        self.capacity = capacity\n        self.tokens = capacity\n        self.last_check = time.monotonic()\n\n    def allow(self) -> bool:\n        # continuous refill, not a fixed window - avoids a burst right at a window edge\n        now = time.monotonic()\n        self.tokens = min(self.capacity, self.tokens + (now - self.last_check) * self.rate)\n        self.last_check = now\n        if self.tokens >= 1:\n            self.tokens -= 1\n            return True\n        return False\n\ndef check_auth(api_key: str, valid_keys: set) -> bool:\n    # real: look up a hashed key in a datastore, not a set literal\n    return api_key in valid_keys"
+    },
+    {
+     "n": "LRU cache check",
+     "t": "A cache hit skips the model entirely. The key must cover everything that affects the output (prompt, params, prompt-version) or two different requests can collide.",
+     "code": "class LRUCache:\n    def __init__(self, capacity: int = 128):\n        self.capacity = capacity\n        self.store = OrderedDict()\n\n    def get(self, key):\n        if key not in self.store:\n            return None\n        self.store.move_to_end(key)  # mark as recently used\n        return self.store[key]\n\n    def put(self, key, value):\n        self.store[key] = value\n        self.store.move_to_end(key)\n        if len(self.store) > self.capacity:\n            self.store.popitem(last=False)  # evict least recently used"
+    },
+    {
+     "n": "Micro-batcher",
+     "t": "Coalesces concurrent requests into one model call. Bigger batches (or a longer wait) raise GPU utilization and throughput but add queueing latency to every request in the batch - tune this to the latency SLA, not to maximize GPU usage.",
+     "code": "class MicroBatcher:\n    def __init__(self, batch_fn, max_batch_size: int = 4):\n        # trade-off: bigger batches raise throughput per GPU-second but add queueing\n        # latency to every request in the batch - tune to the SLA, not the GPU\n        self.batch_fn = batch_fn\n        self.max_batch_size = max_batch_size\n        self.pending = []\n\n    async def submit(self, item):\n        fut = asyncio.get_event_loop().create_future()\n        self.pending.append((item, fut))\n        if len(self.pending) >= self.max_batch_size:\n            await self._flush()\n        return await fut\n\n    async def _flush(self):\n        batch, futs = [i for i, _ in self.pending], [f for _, f in self.pending]\n        self.pending = []\n        for fut, result in zip(futs, self.batch_fn(batch)):\n            if not fut.done():\n                fut.set_result(result)"
+    },
+    {
+     "n": "Model call, SSE streaming, metrics and timeouts",
+     "t": "The model runs the batch in one forward pass; results stream back as server-sent events so the client renders tokens as they arrive. Timeouts bound worst-case wait; p95 (not average) is what a user-facing SLA should track.",
+     "code": "def fake_model(prompts: list) -> list:\n    # real: one batched forward pass on GPU\n    return [f\"answer to: {p}\" for p in prompts]\n\ndef sse_format(event: str, data: str) -> str:\n    # real: yielded from a StreamingResponse in a framework like this (not installed here):\n    # \"from fastapi import FastAPI\" ... return StreamingResponse(gen(), media_type=\"text/event-stream\")\n    return f\"event: {event}\\ndata: {data}\\n\\n\"\n\ndef stream_tokens(text: str):\n    for word in text.split(\" \"):\n        yield sse_format(\"token\", word)\n    yield sse_format(\"done\", \"\")\n\nclass Metrics:\n    def __init__(self):\n        self.latencies_ms = []\n        self.timeouts = 0\n\n    def record(self, start: float):\n        self.latencies_ms.append((time.monotonic() - start) * 1000)\n\n    def p95_ms(self) -> float:\n        if not self.latencies_ms:\n            return 0.0\n        ordered = sorted(self.latencies_ms)\n        return ordered[min(int(len(ordered) * 0.95), len(ordered) - 1)]\n\nasync def call_with_timeout(coro, timeout_s: float, metrics: \"Metrics\"):\n    start = time.monotonic()\n    try:\n        result = await asyncio.wait_for(coro, timeout=timeout_s)\n        metrics.record(start)\n        return result\n    except asyncio.TimeoutError:\n        metrics.timeouts += 1\n        return None"
+    }
+   ],
+   "tpl": "async def handle_request(api_key, prompt, bucket, cache, batcher, valid_keys, metrics):\n    if not check_auth(api_key, valid_keys):\n        return None, \"unauthorized\"\n    if not bucket.allow():\n        return None, \"rate limited\"\n    cached = cache.get(prompt)\n    if cached is not None:\n        return cached, \"cache hit\"\n    result = await call_with_timeout(batcher.submit(prompt), timeout_s=1.0, metrics=metrics)\n    cache.put(prompt, result)\n    return result, \"served\"\n\nasync def main():\n    bucket = TokenBucket(rate_per_sec=100, capacity=10)\n    cache = LRUCache(capacity=16)\n    batcher = MicroBatcher(fake_model, max_batch_size=2)\n    valid_keys = {\"key-abc\"}\n    metrics = Metrics()\n    results = await asyncio.gather(\n        handle_request(\"key-abc\", \"hello\", bucket, cache, batcher, valid_keys, metrics),\n        handle_request(\"key-abc\", \"world\", bucket, cache, batcher, valid_keys, metrics),\n    )\n    return results, list(stream_tokens(\"hello world\")), metrics\n\nserving_results, sse_events, serving_metrics = asyncio.run(main())",
+   "remember": [
+    "Batching trades latency for throughput - the knob to tune is max_wait against your SLA, not max_batch_size against the GPU.",
+    "A token bucket refills continuously, so it avoids the burst-at-boundary problem a fixed-window limiter has.",
+    "The cache key must cover everything that affects the output, or you serve a stale or wrong answer for a request that looks identical but isn't.",
+    "SSE lets the client render tokens as they're generated instead of waiting for the full response.",
+    "Track p95 (or p99) latency and timeout counts, not the average - that's what a user-facing SLA actually feels."
+   ],
+   "asks": [
+    {
+     "q": "How do you pick a micro-batch size?",
+     "a": "Bigger batches (or waiting longer to fill one) raise GPU utilization and throughput, but every request in the batch waits for it to fill or flush, so it adds latency. Size and max-wait are chosen against your p95 latency SLA, not to maximize GPU usage."
+    },
+    {
+     "q": "Why a token bucket instead of a fixed-window rate limiter?",
+     "a": "A fixed window resets all at once, so a burst of requests can land right at the boundary and double the effective rate for a moment. A token bucket refills continuously based on elapsed time, which smooths that out."
+    },
+    {
+     "q": "What goes wrong if the cache key is the prompt text?",
+     "a": "If the response also depends on things like sampling temperature, a system prompt version, or per-user context, two genuinely different requests can collide on the same key and one gets served the other's cached, wrong answer. The key has to cover everything that affects the output."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now show a cache hit skipping the batcher entirely",
+     "ex": {
+      "i": "a prompt already in the cache",
+      "o": "returned immediately, status 'cache hit'",
+      "w": "shows the cache short-circuiting before batching or the model are touched"
+     },
+     "t": "Pre-populate the cache and confirm the request never reaches the batcher.",
+     "code": "async def main_cache_hit():\n    bucket = TokenBucket(rate_per_sec=100, capacity=10)\n    cache = LRUCache(capacity=16)\n    cache.put(\"hello\", \"cached answer\")\n    batcher = MicroBatcher(fake_model, max_batch_size=2)\n    metrics = Metrics()\n    return await handle_request(\"key-abc\", \"hello\", bucket, cache, batcher, {\"key-abc\"}, metrics)\n\ncache_hit_result, cache_hit_status = asyncio.run(main_cache_hit())"
+    },
+    {
+     "n": "Now show the rate limiter rejecting a burst",
+     "ex": {
+      "i": "5 requests fired back to back against a bucket of capacity 1",
+      "o": "the first is allowed, the rest are throttled",
+      "w": "makes the token-bucket throttling behavior concrete"
+     },
+     "t": "A tiny bucket makes the throttling visible after one request.",
+     "code": "burst_bucket = TokenBucket(rate_per_sec=1, capacity=1)\nburst_allowed = [burst_bucket.allow() for _ in range(5)]  # only the first should succeed"
+    }
+   ],
+   "sheet": {
+    "spot": "Designing or debugging an inference API under load.",
+    "move": "Auth, rate limit, cache, batch, stream, measure p95.",
+    "code": "if not auth(key): reject\nif not bucket.allow(): 429\nif cache.get(key): return cached\nawait batcher.submit(req)  # coalesce\nmodel(batch)  # one fwd pass\nstream: sse \"data: tok\\n\\n\"\nmetrics.p95(); timeout via wait_for",
+    "notes": [
+     "Batch size/wait trades throughput for latency - tune to the SLA.",
+     "Token bucket avoids the fixed-window burst-at-boundary problem.",
+     "Cache key must cover everything that affects the output."
+    ]
+   },
+   "figs": [
+    "servingPath"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
+   "id": "lora",
+   "title": "Fine-tuning with LoRA",
+   "group": "AI systems",
+   "spot": "Comes up as 'how would you fine-tune this cheaply' or 'explain LoRA'. <b>Signal:</b> <code>rank</code>, <code>alpha</code>, <code>merge weights</code>.",
+   "cx": "Trainable parameters (and optimizer state) shrink by orders of magnitude versus full fine-tuning; the forward pass cost barely changes.",
+   "ex": {
+    "i": "a frozen 8x8 layer with a rank-2 adapter, trained 20 steps against a random target",
+    "o": "training loss drops, and the merged weight reproduces the adapted layer exactly",
+    "w": "shows only a small fraction of parameters training while W stays untouched"
+   },
+   "hld": [
+    "Frozen base weight W (d by k) - never updated.",
+    "Low-rank adapters: A (r by k) down-projects, B (d by r) up-projects, r small.",
+    "Scale the adapter by alpha/r so its magnitude stays stable as r changes.",
+    "Forward pass: Wx plus the scaled adapter path, B(Ax).",
+    "Only A and B train; W stays frozen the whole time.",
+    "Merge A and B into W after training for zero-overhead inference.",
+    "Parameter count: a small fraction of full fine-tuning's trainable parameters."
+   ],
+   "parts": [
+    {
+     "n": "Frozen base weight and low-rank adapters",
+     "t": "W is a normal linear weight but frozen. A and B are the low-rank pair: A projects down to rank r, B projects back up. B starts at zero so the adapter is a no-op until training moves it, preserving the frozen model's original behavior at init.",
+     "code": "import torch\nimport torch.nn as nn\n\nclass LoRALinear(nn.Module):\n    def __init__(self, d_in: int, d_out: int, r: int = 4, alpha: int = 8):\n        super().__init__()\n        self.weight = nn.Parameter(torch.randn(d_out, d_in) * 0.02, requires_grad=False)  # frozen\n        self.lora_A = nn.Parameter(torch.randn(r, d_in) * 0.02)  # (r, k) down-projects to rank r\n        self.lora_B = nn.Parameter(torch.zeros(d_out, r))         # (d, r) starts at 0: no-op at init\n        self.scale = alpha / r  # keeps the adapter's effective magnitude stable as r changes\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        base = x @ self.weight.T\n        adapter = x @ self.lora_A.T @ self.lora_B.T\n        return base + self.scale * adapter\n\n    def merged_weight(self) -> torch.Tensor:\n        # fold the adapter into W for inference - same shape as the original layer,\n        # zero added latency and no separate adapter module to carry at serve time\n        return self.weight + self.scale * (self.lora_B @ self.lora_A)"
+    },
+    {
+     "n": "Train only A and B",
+     "t": "W's requires_grad is already False from construction, so the optimizer only ever sees A and B - this is what makes LoRA cheap in optimizer memory, not in parameter count (Adam keeps two extra moment tensors per trainable parameter).",
+     "code": "def trainable_params(model: nn.Module) -> list:\n    return [p for p in model.parameters() if p.requires_grad]\n\ndef train_step(model: \"LoRALinear\", x: torch.Tensor, y: torch.Tensor, optimizer) -> float:\n    optimizer.zero_grad()\n    pred = model(x)\n    loss = ((pred - y) ** 2).mean()\n    loss.backward()\n    optimizer.step()\n    return float(loss)"
+    },
+    {
+     "n": "Parameter count vs full fine-tuning",
+     "t": "Compares what LoRA actually trains against what full fine-tuning would have to train, the frozen weight included.",
+     "code": "def param_counts(model: \"LoRALinear\") -> dict:\n    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)\n    frozen = sum(p.numel() for p in model.parameters() if not p.requires_grad)\n    return {\n        \"trainable\": trainable,\n        \"frozen\": frozen,\n        \"full_finetune_equivalent\": frozen + trainable,  # what unfreezing everything would train\n    }"
+    }
+   ],
+   "tpl": "torch.manual_seed(0)\nd_in, d_out, r = 8, 8, 2\nmodel = LoRALinear(d_in, d_out, r=r, alpha=8)\noptimizer = torch.optim.SGD(trainable_params(model), lr=0.1)\n\nx = torch.randn(4, d_in)\ntarget = x @ (torch.randn(d_in, d_out) * 0.1)\n\nlosses = [train_step(model, x, target, optimizer) for _ in range(20)]\nmerged = model.merged_weight()\ncounts = param_counts(model)",
+   "remember": [
+    "Only A and B train, W stays frozen - this is what makes LoRA cheap in optimizer memory, not in raw parameter count.",
+    "B starts at zero so the adapter contributes nothing at initialization; training is what moves it away from the frozen model's original behavior.",
+    "alpha/r scales the adapter's contribution so changing rank r doesn't force you to re-tune the learning rate as much.",
+    "Merging folds the adapter into W for inference - same shape as the original layer, zero added latency, no separate module to serve.",
+    "Pick r by task complexity, not by reflex - too small underfits, too large erodes the compute/memory savings that are the whole point."
+   ],
+   "asks": [
+    {
+     "q": "Why does B start at zero?",
+     "a": "So the adapter path contributes exactly nothing at initialization - the frozen model's original behavior is preserved until training actually begins moving A and B away from their start."
+    },
+    {
+     "q": "What is alpha/r actually doing?",
+     "a": "It scales the adapter's output so that as you change the rank r, the effective magnitude of the update stays roughly comparable. Without it, changing r would also change how strongly the adapter perturbs the frozen weight, forcing you to re-tune the learning rate every time."
+    },
+    {
+     "q": "Why merge the weights before serving?",
+     "a": "Merging folds the frozen weight and the adapter into a single matrix of the original shape, so inference has no added latency and there's no extra module to load - versus keeping them separate, which only pays off if you need to swap adapters at runtime."
+    }
+   ],
+   "vars": [
+    {
+     "n": "Now swap in a different task's adapter on the same frozen base",
+     "ex": {
+      "i": "a second LoRA adapter trained on the same W",
+      "o": "a distinct A/B pair, W identical to the first adapter's",
+      "w": "shows the point of adapters: one frozen base, many cheap task-specific adapters"
+     },
+     "t": "Reuse the same frozen weight tensor and attach a fresh A/B pair for a second task.",
+     "code": "task_b_model = LoRALinear(d_in, d_out, r=r, alpha=8)\ntask_b_model.weight = model.weight  # same frozen base, swapped adapter - the point of LoRA\ntask_b_optimizer = torch.optim.SGD(trainable_params(task_b_model), lr=0.1)\ntask_b_losses = [train_step(task_b_model, x, target, task_b_optimizer) for _ in range(10)]\nsame_base = torch.equal(model.weight, task_b_model.weight)"
+    },
+    {
+     "n": "Now compare trainable fraction as rank grows",
+     "ex": {
+      "i": "rank 1, 4, and 16 adapters on the same 8x8 layer",
+      "o": "trainable-parameter fraction rises with rank, still far below full fine-tuning",
+      "w": "makes the rank-vs-savings trade-off concrete"
+     },
+     "t": "Sweep rank and compute the trainable fraction of the full-fine-tune-equivalent count for each.",
+     "code": "param_ratios = {}\nfor rank in (1, 4, 16):\n    m = LoRALinear(d_in, d_out, r=rank, alpha=8)\n    c = param_counts(m)\n    param_ratios[rank] = c[\"trainable\"] / c[\"full_finetune_equivalent\"]"
+    }
+   ],
+   "sheet": {
+    "spot": "Asked how to fine-tune cheaply, or to explain LoRA.",
+    "move": "Freeze W, train a low-rank A/B pair, merge for serving.",
+    "code": "W frozen (d,k); A (r,k); B (d,r)\ny = x@W.T + (a/r)*(x@A.T@B.T)\nB init 0 -> adapter starts no-op\ntrain only A,B; W.requires_grad=False\nmerged = W + (a/r)*(B@A)\nserve: merged, no extra latency",
+    "notes": [
+     "B initialized to zero keeps the adapter a no-op until trained.",
+     "alpha/r decouples effective update size from the choice of rank.",
+     "Merging removes all inference-time overhead versus keeping them apart."
+    ]
+   },
+   "figs": [
+    "lora"
+   ],
+   "probs": [],
+   "g": "ai-systems"
+  },
+  {
    "id": "ai",
    "title": "AI-flavoured coding",
    "group": "AI systems",
@@ -3040,7 +4648,7 @@ window.CODING = {
        {
         "i": "top_k([1, 0], [[1, 0]], 5)",
         "o": "[(0, 1.0)]",
-        "why": "edge case: k larger than the number of documents just returns all of them"
+        "why": "edge case: k larger than the number of documents returns all of them"
        }
       ],
       "k": [
@@ -3268,6 +4876,20 @@ window.CODING = {
    "id": "ai",
    "title": "AI systems",
    "order": [
+    "numpy",
+    "torch",
+    "embed",
+    "rag",
+    "graphrag",
+    "agent",
+    "research",
+    "voice",
+    "transformer",
+    "bpe",
+    "evals",
+    "structured",
+    "serving",
+    "lora",
     "ai"
    ]
   }

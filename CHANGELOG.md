@@ -540,3 +540,22 @@ that cover them. At 125% display scaling the screen was smaller than the sheet w
 for, so it spilled sideways: it now fills columns top to bottom and picks the largest
 text that fits in six to eight columns, and each clickable card keeps its sharpest
 nuance, with the rest in its popup. No change to the plan or to `CHARTER.md`.
+
+**2026-09-28 — CODING.html: full statements, an AI systems tab, and a cheat sheet of its own.**
+You asked for longer questions, coding beyond LeetCode, and a cheat sheet that works on a
+phone. Every classic problem and variation (86) now reads as a full interview question in
+our own words: the problem, two worked examples with why, and constraints, each example
+checked by running the solution. A new AI systems tab holds fourteen topics: NumPy, PyTorch,
+embeddings and vector search, RAG over a parser's output, GraphRAG, an agent loop, a web
+research agent, a voice pipeline, a transformer block, BPE, evals, structured output,
+serving, and LoRA. Each is its design in components, a figure, a skeleton per component,
+the whole thing end to end, what to remember, what they ask, and two or three variations;
+all the code runs offline with small fakes and is tested. Thirteen new shared figures draw
+them (`numpyShapes` to `lora`). The page's data moved to `coding/data.js`, with the sheet
+and popup in `coding/sheet.js`, so `CHEATSHEET.html`, the sheet as its own page, shares
+everything with `CODING.html`. The sheet has an Algorithms and an AI systems tab; on a
+wide screen it fits one screen, and on a phone it scrolls, upright as one column and on its
+side as two, with the popup full screen (a Notes and Code switch upright, side by side on
+its side). `python coding/test_data.py` runs all 210 code blocks and re-checks the
+examples. The tracker's Reference links the standalone sheet. No change to the plan or to
+`CHARTER.md`.

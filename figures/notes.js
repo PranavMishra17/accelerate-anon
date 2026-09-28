@@ -64,5 +64,313 @@ window.FIG_NOTES = Object.assign(window.FIG_NOTES || {}, {
   "benchAdapter": {"nodes": {"agent": {"d": "The real alfred_ agent loop, unchanged: the same prompts, model calls and decisions it makes in production."}, "tools": {"d": "The tool code, also unchanged: ranking, filtering and shaping results are production code in every run.\n\nThat's the point of the design: most bugs lived in the seam between what a tool returned and how the model read it, so that seam stays real."}, "iface": {"d": "The provider interface: GmailAdapter.search(), GmailAdapter.send(), CalendarAdapter.createEvent(), a tasks createTask().\n\nThe tool code depends only on this contract, not on Gmail itself. That's what makes the swap possible."}, "flag": {"d": "The harness flag decides which implementation sits behind the interface for this run. The agent can't tell, and doesn't need to."}, "prod": {"d": "The production implementations: each one calls the real provider API, Gmail, Google Calendar, Outlook or Asana, and maps the response into the interface's shape."}, "harness": {"d": "The harness implementations: the same methods, backed by the case's SQLite snapshot.\n\n'I don't emulate every provider. I emulate the contract the agent actually depends on.'"}, "live": {"d": "The live providers. With the harness flag on, no call reaches them: there is no path out of the machine."}, "snapshot": {"d": "The case's SQLite snapshot: a small relational model of the user's world, copied fresh for each case so writes never leak between runs."}}, "edges": {"agent>tools": {"d": "The agent decides to call a tool; the tool's real code runs."}, "tools>iface": {"d": "The tool calls the provider interface, never Gmail directly."}, "flag>iface": {"d": "The flag picks which implementation answers the interface in this run."}, "iface>prod": {"d": "In production, the interface is backed by the real provider adapters."}, "iface>harness": {"d": "In the harness, the same interface is backed by SQLite adapters."}, "prod>live": {"d": "Production adapters call the real APIs; in a harness run this path is never taken."}, "harness>snapshot": {"d": "Harness adapters query and mutate the snapshot: search reads threads and messages, send inserts a message, createEvent inserts an event."}}, "walk": ["agent", "agent>tools", "tools", "tools>iface", "iface", "flag", "flag>iface", "iface>prod", "prod", "prod>live", "live", "iface>harness", "harness", "harness>snapshot", "snapshot"]},
   "benchSchema": {"nodes": {"contacts": {"d": "People, once: id, name, email, organisation. The same person can be a sender, a recipient and an attendee.\n\nDeliberate ambiguity lives here: three people called Michael are three rows, so the agent has to disambiguate."}, "threads": {"d": "Conversations: id, subject, labels, last message time. search() usually returns threads, then reads their messages."}, "events": {"d": "Calendar events: id, title, start, end, organiser, location. createEvent() inserts here; updateEvent() mutates the row."}, "participants": {"d": "Who was on each message and how: from, to, cc. A join table between messages and contacts, so 'emails from Priya' is a query, not a string match."}, "messages": {"d": "Individual emails: thread, time, snippet, body, read state, attachments by name and type. send() inserts a message and its participants."}, "attendees": {"d": "Who is invited to each event and their response. A join table between events and contacts."}, "case_meta": {"d": "Harness metadata for the case: its id, the world version it was built against, the user, and a pinned 'now', so anything reasoning about 'today' matches the snapshot."}, "tasks": {"d": "Tasks the agent creates: title, due date, status, and the message they came from, so an assertion can check 'every action item became a task'."}, "call_log": {"d": "Every tool call in the run: turn, tool, a hash of its arguments, and how it was served: from the snapshot, or not in the snapshot.\n\nThis is the provenance record: it keeps harness-limited runs out of the headline number."}}, "edges": {"participants>messages": {"d": "Each participant row belongs to one message."}, "participants>contacts": {"d": "Each participant row points at one person."}, "messages>threads": {"d": "Every message belongs to a thread."}, "tasks>messages": {"d": "A task remembers the email it came from, which is what completeness assertions check."}, "attendees>events": {"d": "Each attendee row belongs to one event. (It also points at a contact, not drawn.)"}}, "walk": ["contacts", "threads", "messages", "messages>threads", "participants", "participants>messages", "participants>contacts", "events", "attendees", "attendees>events", "tasks", "tasks>messages", "case_meta", "call_log"]},
   "alfredDeploy": {"nodes": {"sms": {"d": "Users text alfred_; the SMS provider, Linq, posts a signed webhook for every inbound message."}, "web": {"d": "The web and mobile app, a Next.js app on Vercel, streams each turn from an edge function over server-sent events."}, "mcp": {"d": "Claude, through the MCP connector: alfred-web's /api/mcp route on Vercel checks the token and forwards each tool call to an edge function."}, "phone": {"d": "Live phone calls: a LiveKit voice worker that runs as a long-lived container, with a Cloudflare worker in front of the call."}, "edge": {"d": "Supabase edge functions, Deno: where the agent runs. conv-v6 ingress, job worker and turn for SMS; conv-v6-web for the web app; mcp-exec for MCP; the email pipeline (ingress, triage, worker, executor, notify).\n\nAbout 380 function directories in the repo. Each invocation is short-lived, which is why long work goes elsewhere."}, "railway": {"d": "Railway containers for work that outlives a request: a document writer, a routines worker, the LiveKit phone agent, and EmailEngine, the IMAP bridge.\n\nThey claim their work from the same Postgres job rows the edge functions use."}, "ext": {"d": "The models (Anthropic for the agent, Gemini for email triage) and the providers the tools read and write: Google and Microsoft mail and calendars."}, "pg": {"d": "One Supabase Postgres: jobs, traces and product data; pgmq queues for the event bus; pg_cron for the schedules (a job-worker drain every minute, triage and worker drainers, the email poller); and storage buckets for files.\n\nThe answer to 'where is state?', never the answer to 'where does the agent run?'."}}, "edges": {"sms>edge": {"d": "The webhook lands on conv-v6-ingress."}, "web>edge": {"d": "The web app streams from conv-v6-web."}, "mcp>edge": {"d": "Tool calls from Claude run in mcp-exec, as the user, through the same wrappers."}, "phone>railway": {"d": "Calls are handled by the phone agent container."}, "edge>ext": {"d": "Edge functions call the models and the mail and calendar APIs."}, "edge>pg": {"d": "Edge functions read and write jobs, traces and product data, and are woken by pg_cron and pgmq."}, "railway>pg": {"d": "Containers claim their jobs from Postgres rows, the same way the job worker does."}}, "walk": ["sms", "web", "mcp", "phone", "sms>edge", "web>edge", "mcp>edge", "edge", "phone>railway", "railway", "edge>pg", "railway>pg", "pg", "edge>ext", "ext"]},
-  "alfredMemory": {"nodes": {"conv": {"d": "The current conversation: the messages of this SMS chat or web conversation."}, "jobs": {"d": "Background jobs the turn enqueues: a rolling summary every 8 new messages, and fact extraction every 12."}, "mail": {"d": "Scheduled reconcilers over email and calendar: triage writes per-email facts, a reconciler folds them into loops about every 15 minutes, sent mail opens awaited replies."}, "recent": {"d": "The last 30 messages, trimmed to a 6,000-token budget. Stored per surface: SMS and web transcripts stay separate."}, "summary": {"d": "A rolling summary of this conversation, refreshed every 8 messages, plus the three most related past conversations from other chats."}, "facts": {"d": "Free-form facts about the user, written by the agent's remember and update tools and by the extraction job (marked inferred). The user can read and edit them on the memory page."}, "wm": {"d": "Working memory: one row per loop, an owed reply, an awaited reply, an obligation, with whose move it is and whether it's open. Built by code, not by a model, from the reconcilers' output."}, "msgs": {"d": "The recent messages go in as the turn's message list, not in a system block."}, "b3": {"d": "The per-turn, uncached block: now, entities, pending confirmations, recent actions, the conversation summary, related past conversations, and people you mentioned."}, "b2": {"d": "The per-user block, cached: about the user, preferences, connected accounts, email rules, and up to 40 facts (above 40, the newest 8 plus vector recall)."}, "tool": {"d": "working_memory_lookup: the agent fetches loops on demand, first a compact view per topic, then a topic's threads. Kept out of every prompt for cost and cache reasons."}}, "edges": {"conv>recent": {"d": "Each message is stored as it arrives."}, "jobs>summary": {"d": "Every 8 messages, the summary is rewritten."}, "jobs>facts": {"d": "Every 12 messages, new facts are extracted and applied."}, "mail>wm": {"d": "Reconcilers open, update and close loops."}, "recent>msgs": {"d": "Recent messages become the turn's transcript."}, "summary>b3": {"d": "The summary and related chats render in the per-turn block."}, "facts>b2": {"d": "Facts render in the cached per-user block."}, "wm>tool": {"d": "Loops are fetched through the lookup tool when the agent needs them."}, "wm>b3": {"d": "For people named in the message, their open loops can appear in the per-turn block; a rollout dial controls it."}}, "walk": ["conv", "conv>recent", "recent", "recent>msgs", "msgs", "jobs", "jobs>summary", "summary", "summary>b3", "b3", "jobs>facts", "facts", "facts>b2", "b2", "mail", "mail>wm", "wm", "wm>tool", "tool", "wm>b3"]}
+  "alfredMemory": {"nodes": {"conv": {"d": "The current conversation: the messages of this SMS chat or web conversation."}, "jobs": {"d": "Background jobs the turn enqueues: a rolling summary every 8 new messages, and fact extraction every 12."}, "mail": {"d": "Scheduled reconcilers over email and calendar: triage writes per-email facts, a reconciler folds them into loops about every 15 minutes, sent mail opens awaited replies."}, "recent": {"d": "The last 30 messages, trimmed to a 6,000-token budget. Stored per surface: SMS and web transcripts stay separate."}, "summary": {"d": "A rolling summary of this conversation, refreshed every 8 messages, plus the three most related past conversations from other chats."}, "facts": {"d": "Free-form facts about the user, written by the agent's remember and update tools and by the extraction job (marked inferred). The user can read and edit them on the memory page."}, "wm": {"d": "Working memory: one row per loop, an owed reply, an awaited reply, an obligation, with whose move it is and whether it's open. Built by code, not by a model, from the reconcilers' output."}, "msgs": {"d": "The recent messages go in as the turn's message list, not in a system block."}, "b3": {"d": "The per-turn, uncached block: now, entities, pending confirmations, recent actions, the conversation summary, related past conversations, and people you mentioned."}, "b2": {"d": "The per-user block, cached: about the user, preferences, connected accounts, email rules, and up to 40 facts (above 40, the newest 8 plus vector recall)."}, "tool": {"d": "working_memory_lookup: the agent fetches loops on demand, first a compact view per topic, then a topic's threads. Kept out of every prompt for cost and cache reasons."}}, "edges": {"conv>recent": {"d": "Each message is stored as it arrives."}, "jobs>summary": {"d": "Every 8 messages, the summary is rewritten."}, "jobs>facts": {"d": "Every 12 messages, new facts are extracted and applied."}, "mail>wm": {"d": "Reconcilers open, update and close loops."}, "recent>msgs": {"d": "Recent messages become the turn's transcript."}, "summary>b3": {"d": "The summary and related chats render in the per-turn block."}, "facts>b2": {"d": "Facts render in the cached per-user block."}, "wm>tool": {"d": "Loops are fetched through the lookup tool when the agent needs them."}, "wm>b3": {"d": "For people named in the message, their open loops can appear in the per-turn block; a rollout dial controls it."}}, "walk": ["conv", "conv>recent", "recent", "recent>msgs", "msgs", "jobs", "jobs>summary", "summary", "summary>b3", "b3", "jobs>facts", "facts", "facts>b2", "b2", "mail", "mail>wm", "wm", "wm>tool", "tool", "wm>b3"]},
+  "numpyShapes": {
+    "nodes": {
+      "mm-x": { "d": "The left operand of the matmul: a batch of sequences, shape (B, T, D) — batch, sequence length, hidden dimension.\n\nIts last axis, D, is the one that has to match the other operand's first axis for the matmul to be valid; every other axis just carries through to the output." },
+      "mm-w": { "d": "The right operand: a weight matrix, shape (D, H).\n\nD matches x's last axis exactly, and H — the output feature size — becomes the new last axis of the result, the shape a linear layer's weight always has." },
+      "mm-out": { "d": "The matmul's result, shape (B, T, H).\n\nEvery axis except the ones combined disappears from view — D vanishes, replaced by H, while B and T pass through unchanged." },
+      "bc-a": { "d": "An array of shape (3, 1): 3 rows, 1 column.\n\nIts size-1 column is the axis broadcasting stretches to match the other operand's 4 columns." },
+      "bc-b": { "d": "An array of shape (1, 4): 1 row, 4 columns.\n\nIts size-1 row is stretched the other way, to 3, so the two operands end up matching on both axes before adding." },
+      "bc-sum": { "d": "The broadcast result, shape (3, 4).\n\nnumpy repeats each size-1 axis virtually — 3 copies of the row, 4 copies of the column — without allocating the repeated data, then adds elementwise; no loop, no explicit tiling." },
+      "red-in": { "d": "A tensor of shape (B, T, H), the same shape the matmul above produces." },
+      "red-out": { "d": "The same tensor after summing over its last axis, shape (B, T).\n\nA reduction always removes exactly the axis it runs over; axis=-1 means the last one regardless of how many axes the tensor has." }
+    },
+    "edges": {
+      "mm-x>mm-out": { "d": "x feeds the matmul; only its last axis, D, participates in the combination, and the rest of its shape survives into the output untouched." },
+      "mm-w>mm-out": { "d": "W is the other input; its first axis, D, is matched against x's last axis and disappears, leaving H as the new trailing dimension." },
+      "bc-a>bc-sum": { "d": "a's single column is broadcast to width 4 to match b before the elementwise add — a virtual repeat, not a copy." },
+      "bc-b>bc-sum": { "d": "b's single row is broadcast to height 3 to match a, the same virtual-repeat rule applied on the other axis." },
+      "red-in>red-out": { "d": "Summed over axis=-1: every (batch, position) pair's H values collapse into one number, so H disappears from the shape entirely." }
+    },
+    "walk": ["mm-x", "mm-w", "mm-x>mm-out", "mm-w>mm-out", "mm-out", "bc-a", "bc-b", "bc-a>bc-sum", "bc-b>bc-sum", "bc-sum", "red-in", "red-in>red-out", "red-out"]
+  },
+  "trainLoop": {
+    "nodes": {
+      "batch": { "d": "A batch of examples pulled from the DataLoader.\n\nIt is the only new input each step — everything else in the loop is computed from it." },
+      "forward": { "d": "The forward pass: model(x) turns the batch into predictions, building the autograd graph as it goes so gradients can be computed later." },
+      "loss": { "d": "The criterion compares predictions against targets and reduces them to one scalar — the number backward() differentiates." },
+      "backward": { "d": ".backward() walks the autograd graph built during the forward pass and accumulates a gradient into every parameter's .grad, using the chain rule." },
+      "optimizer": { "d": "optimizer.step() applies the update rule — SGD, Adam, whichever was configured — reading each parameter's accumulated .grad to move it." },
+      "zerograd": { "d": "zero_grad() clears every parameter's .grad back to zero.\n\nSkipping this call is a classic bug: gradients accumulate silently across steps instead of resetting, quietly corrupting training." },
+      "eval": { "d": "Evaluation runs the identical forward pass, but inside torch.no_grad(), which skips building the autograd graph entirely since no backward() call will follow — faster and lighter, not just a formality." }
+    },
+    "edges": {
+      "batch>forward": { "d": "The batch is the forward pass's input." },
+      "forward>loss": { "d": "Predictions and targets are reduced to the scalar the rest of the step differentiates." },
+      "loss>backward": { "d": "backward() is called on the scalar loss to start backpropagation." },
+      "backward>optimizer": { "d": "Gradients computed by backward() are what optimizer.step() reads to update parameters." },
+      "optimizer>zerograd": { "d": "Once the update is applied, the accumulated gradients are no longer needed and must be cleared before the next batch." },
+      "zerograd>batch": { "d": "The loop repeats: the next batch starts the same six calls over again." },
+      "forward>eval": { "d": "The same forward computation, called instead inside torch.no_grad() when evaluating rather than training." }
+    },
+    "walk": ["batch", "batch>forward", "forward", "forward>loss", "loss", "loss>backward", "backward", "backward>optimizer", "optimizer", "optimizer>zerograd", "zerograd", "zerograd>batch", "forward>eval", "eval"]
+  },
+  "ragPipeline": {
+    "nodes": {
+      "parser": { "d": "The document parser's output: blocks of text, each tagged with the page and section it came from.\n\nEverything downstream — chunking, citation — depends on this metadata surviving." },
+      "chunk": { "d": "Chunking splits the parsed blocks into retrieval-sized pieces while keeping their page and section metadata attached, rather than reducing them to plain text." },
+      "embed": { "d": "An embedding model turns each chunk's text into a vector for nearest-neighbour search, indexed the same way the query will be at retrieval time." },
+      "index": { "d": "The vector index holding every chunk's embedding plus its metadata, built once at index time and reused by every query." },
+      "query": { "d": "The user's or agent's question, the input to the query-time half of the pipeline." },
+      "embedq": { "d": "The query is embedded into the same vector space the index was built in — using the same embedding model, or retrieval silently degrades." },
+      "retrieve": { "d": "Nearest-neighbour search against the index returns the top-k chunks by embedding similarity, before any reranking." },
+      "rerank": { "d": "A rerank model reorders the retrieved candidates using a richer signal than embedding distance alone, since retrieval's job is recall and rerank's job is precision." },
+      "prompt": { "d": "The reranked chunks are assembled into a prompt as numbered sources, so the model can cite \"source 3\" instead of quoting text verbatim." },
+      "llm": { "d": "The LLM reads the prompt's numbered sources and generates an answer, expected to cite by number rather than assert unsourced facts." },
+      "answer": { "d": "The generated answer, carrying inline citations back to the numbered sources in the prompt." },
+      "check": { "d": "The citation check verifies every number the answer cites actually exists among the prompt's sources — catching a hallucinated citation before it reaches the user." }
+    },
+    "edges": {
+      "parser>chunk": { "d": "Parsed blocks, with page and section attached, are the input chunking splits." },
+      "chunk>embed": { "d": "Each chunk's text is what gets embedded; its metadata rides along unembedded." },
+      "embed>index": { "d": "Embeddings are written into the vector index, once, at index time." },
+      "query>embedq": { "d": "The raw query text is embedded before it can be compared against the index." },
+      "embedq>retrieve": { "d": "The embedded query is the search key nearest-neighbour retrieval uses." },
+      "retrieve>rerank": { "d": "The top-k candidates from retrieval are what rerank reorders — rerank never sees the full index, only this shortlist." },
+      "index>retrieve": { "d": "Retrieval searches this index, built once and reused by every query." },
+      "rerank>prompt": { "d": "The reranked, now well-ordered chunks are assembled into the prompt as numbered sources." },
+      "prompt>llm": { "d": "The assembled prompt, sources numbered, is what the LLM actually reads." },
+      "llm>answer": { "d": "The LLM's generated text, with citations, is the answer." },
+      "answer>check": { "d": "The finished answer is checked before it ships, not after." }
+    },
+    "walk": ["parser", "parser>chunk", "chunk", "chunk>embed", "embed", "embed>index", "index", "query", "query>embedq", "embedq", "embedq>retrieve", "retrieve", "index>retrieve", "retrieve>rerank", "rerank", "rerank>prompt", "prompt", "prompt>llm", "llm", "llm>answer", "answer", "answer>check", "check"]
+  },
+  "graphRag": {
+    "nodes": {
+      "chunks": { "d": "The source chunks, the same kind of text a plain RAG pipeline would embed directly — here they feed extraction instead." },
+      "extract": { "d": "An LLM reads each chunk and extracts subject-relation-object triples, the graph's raw material." },
+      "graph": { "d": "The knowledge graph: triples become nodes and edges, and every edge keeps a pointer back to the chunk it was extracted from — the fact that grounds it." },
+      "query": { "d": "The user's or agent's question, the input to the query-time half of the pipeline." },
+      "findEntities": { "d": "The named entities in the query are matched against nodes already in the graph, the starting points for the walk that follows." },
+      "expand": { "d": "From those starting entities, the walk expands outward a fixed number of hops, gathering nearby facts rather than searching the whole graph." },
+      "facts": { "d": "The facts gathered by expansion, each still paired with the source chunk its edge pointed to — grounding carried through from extraction to answer." },
+      "llmAnswer": { "d": "The LLM answers using only the gathered facts and their source chunks, not the whole graph or the whole corpus." }
+    },
+    "edges": {
+      "chunks>extract": { "d": "Chunks are what the extraction LLM reads to produce triples." },
+      "extract>graph": { "d": "Extracted triples become the graph's nodes and edges, each edge keeping its source chunk." },
+      "query>findEntities": { "d": "The query's own text is where entity matching starts." },
+      "findEntities>expand": { "d": "Matched entities are the seed nodes the k-hop expansion walks outward from." },
+      "graph>expand": { "d": "Expansion walks the graph built earlier — a query never triggers new extraction, only traversal of what already exists." },
+      "expand>facts": { "d": "Everything the k-hop walk touches becomes the candidate fact set, each with its source chunk still attached." },
+      "facts>llmAnswer": { "d": "The gathered facts, not the raw graph, are what the LLM reads to answer." }
+    },
+    "walk": ["chunks", "chunks>extract", "extract", "extract>graph", "graph", "query", "query>findEntities", "findEntities", "findEntities>expand", "graph>expand", "expand", "expand>facts", "facts", "facts>llmAnswer", "llmAnswer"]
+  },
+  "agentLoop": {
+    "nodes": {
+      "user": { "d": "The user's message, the event that starts a turn of the loop." },
+      "context": { "d": "Context assembly: the system prompt, conversation history and any retrieved memory are combined into what the model actually sees this turn." },
+      "model": { "d": "The model call. It either emits a tool call or a final answer — the loop's one real branch point." },
+      "branch": { "d": "The decision point: did the model ask for a tool, or answer directly?\n\nEverything downstream of this box depends on which." },
+      "validate": { "d": "A requested tool call's arguments are checked against its schema before anything runs — malformed arguments are rejected here, not inside the tool." },
+      "runTool": { "d": "The tool actually executes, behind a guard that can deny or rate-limit the call rather than trusting the model's request outright." },
+      "observation": { "d": "The tool's result is appended to the context as an observation, so the next model call sees what just happened." },
+      "reply": { "d": "The model's final answer: sent to the user, and written to memory so future turns can reference it." },
+      "stepLimit": { "d": "A hard cap on how many times the loop can go around.\n\nWithout it, a model stuck calling tools in a cycle never stops on its own." }
+    },
+    "edges": {
+      "user>context": { "d": "The user's message is folded into context assembly alongside history and memory." },
+      "context>model": { "d": "Assembled context is the input the model actually reasons over." },
+      "model>branch": { "d": "The model's output determines which branch the loop takes next." },
+      "branch>validate": { "d": "A tool call moves to argument validation before anything executes." },
+      "validate>runTool": { "d": "Only validated arguments reach the tool's real implementation." },
+      "runTool>observation": { "d": "The tool's return value becomes the observation appended to context." },
+      "observation>model": { "d": "The loop closes: updated context, including the new observation, goes back into the next model call." },
+      "branch>reply": { "d": "A direct answer skips tool execution entirely and goes straight to the user." },
+      "branch>stepLimit": { "d": "Every trip through the branch counts against the step limit, whichever way it goes." }
+    },
+    "walk": ["user", "user>context", "context", "context>model", "model", "model>branch", "branch", "branch>validate", "validate", "validate>runTool", "runTool", "runTool>observation", "observation", "observation>model", "branch>reply", "reply", "branch>stepLimit", "stepLimit"]
+  },
+  "webResearch": {
+    "nodes": {
+      "question": { "d": "The research question, broken down before any searching starts." },
+      "plan": { "d": "The question is decomposed into sub-queries — smaller, more searchable pieces than the original question." },
+      "search": { "d": "Each sub-query is run through a search engine, independently." },
+      "fetch": { "d": "The pages search returned are fetched in full, since a snippet alone rarely has enough to extract a real passage from." },
+      "extract": { "d": "Relevant passages are pulled out of each fetched page, discarding boilerplate and irrelevant sections." },
+      "dedupe": { "d": "Passages that say the same thing, often from different pages, are collapsed, and the survivors are ranked by relevance." },
+      "synth": { "d": "Synthesis writes the answer from the ranked passages, with citations back to where each claim came from." },
+      "coverage": { "d": "The coverage check compares the synthesised answer against the question's sub-parts, looking specifically for what never got covered." }
+    },
+    "edges": {
+      "question>plan": { "d": "The original question is what gets decomposed into sub-queries." },
+      "plan>search": { "d": "Each sub-query, not the original question, is what actually gets searched." },
+      "search>fetch": { "d": "Search results are URLs; fetch is what turns them into page content." },
+      "fetch>extract": { "d": "Fetched pages are the source extraction pulls passages from." },
+      "extract>dedupe": { "d": "Extracted passages, still possibly redundant across pages, go into dedupe and rank." },
+      "dedupe>synth": { "d": "The deduped, ranked passages are what synthesis actually writes from." },
+      "synth>coverage": { "d": "The finished answer is checked before it's treated as final." },
+      "coverage>plan": { "d": "A gap sends the loop back to planning — new sub-queries targeting specifically what's missing, not a restart from scratch." }
+    },
+    "walk": ["question", "question>plan", "plan", "plan>search", "search", "search>fetch", "fetch", "fetch>extract", "extract", "extract>dedupe", "dedupe", "dedupe>synth", "synth", "synth>coverage", "coverage", "coverage>plan"]
+  },
+  "voicePipeline": {
+    "nodes": {
+      "mic": { "d": "Raw microphone audio, arriving as a stream of frames rather than one complete recording." },
+      "vad": { "d": "Voice-activity detection and endpointing decide when the user started and stopped talking, at roughly 150 ms of added latency.\n\nToo slow here and the agent talks over the user; too fast and it cuts them off." },
+      "stt": { "d": "Streaming speech-to-text transcribes audio as it arrives rather than waiting for the full utterance, at roughly 300 ms." },
+      "llm": { "d": "The LLM streams response tokens back as they're generated, rather than waiting for the full reply before sending anything." },
+      "chunker": { "d": "The sentence chunker waits for a complete sentence — not just any token boundary — before handing text to speech synthesis, so TTS never has to guess how a sentence ends." },
+      "tts": { "d": "Streaming text-to-speech synthesises audio for each completed sentence, at roughly 200 ms, rather than the whole reply at once." },
+      "playback": { "d": "Synthesised audio plays back to the user, the pipeline's final output." }
+    },
+    "edges": {
+      "mic>vad": { "d": "Raw frames are what VAD analyses to find speech boundaries." },
+      "vad>stt": { "d": "Once VAD marks speech, that audio segment is what streaming STT transcribes." },
+      "stt>llm": { "d": "Transcribed text is the LLM's input for generating a response." },
+      "llm>chunker": { "d": "Streamed tokens accumulate until the chunker recognises a complete sentence." },
+      "chunker>tts": { "d": "Complete sentences, not raw tokens, are what TTS synthesises — synthesising mid-sentence would mispronounce words it hasn't seen yet." },
+      "tts>playback": { "d": "Synthesised audio is sent straight to playback as it's produced." },
+      "vad>tts": { "d": "Barge-in: new speech detected by VAD cancels TTS mid-sentence, so the agent stops talking the instant the user interrupts, rather than finishing its sentence first." }
+    },
+    "walk": ["mic", "mic>vad", "vad", "vad>stt", "stt", "stt>llm", "llm", "llm>chunker", "chunker", "chunker>tts", "tts", "tts>playback", "playback", "vad>tts"]
+  },
+  "transformerBlock": {
+    "nodes": {
+      "tokens": { "d": "The input sequence as token ids, before any learned representation is attached." },
+      "embed": { "d": "Token embeddings combined with position information, since attention itself has no notion of order — position has to be added explicitly." },
+      "ln1": { "d": "Layer norm applied before attention (pre-norm), stabilising the scale of activations entering MHA." },
+      "mha": { "d": "Causal multi-head attention: each position attends only to itself and earlier positions, never to the future — the constraint that makes autoregressive generation well-defined." },
+      "add1": { "d": "The residual add: MHA's output is added back to the block's original input, not used to replace it, which is what lets gradients flow through many stacked blocks." },
+      "ln2": { "d": "A second layer norm, before the MLP, exactly mirroring ln1's role for the attention sublayer." },
+      "mlp": { "d": "The MLP (typically two linear layers with a nonlinearity between) is where most of a block's parameters live, applied identically to every position." },
+      "add2": { "d": "The second residual add: the MLP's output is added back to add1's output, the same skip-connection pattern as add1." },
+      "finalNorm": { "d": "One final layer norm after the last block, before the output projection." },
+      "logits": { "d": "A linear projection from the model's hidden dimension to vocabulary size — one score per possible next token." },
+      "softmax": { "d": "Softmax turns raw logits into a probability distribution over the vocabulary that sums to 1." },
+      "nextToken": { "d": "The sampled or argmax next token, generated one at a time and fed back in for the next step." }
+    },
+    "edges": {
+      "tokens>embed": { "d": "Token ids are looked up in the embedding table and combined with positional information." },
+      "embed>ln1": { "d": "The embedded, position-aware input is what the first block's layer norm normalises." },
+      "ln1>mha": { "d": "Normalised activations are what attention actually operates on, not the raw residual stream." },
+      "mha>add1": { "d": "Attention's output is added back to the block's input, the residual connection around the attention sublayer." },
+      "add1>ln2": { "d": "The sum becomes the input to the second layer norm, ahead of the MLP." },
+      "ln2>mlp": { "d": "Normalised activations again, this time feeding the MLP sublayer." },
+      "mlp>add2": { "d": "The MLP's output is added back to add1's output, the residual connection around the MLP sublayer." },
+      "add2>finalNorm": { "d": "After N repeats of this block, the final residual stream is normalised once more." },
+      "finalNorm>logits": { "d": "The normalised final representation is projected to vocabulary-sized logits." },
+      "logits>softmax": { "d": "Raw logits are turned into a proper probability distribution." },
+      "softmax>nextToken": { "d": "The next token is drawn from this distribution, by sampling or by taking the argmax." }
+    },
+    "walk": ["tokens", "tokens>embed", "embed", "embed>ln1", "ln1", "ln1>mha", "mha", "mha>add1", "add1", "add1>ln2", "ln2", "ln2>mlp", "mlp", "mlp>add2", "add2", "add2>finalNorm", "finalNorm", "finalNorm>logits", "logits", "logits>softmax", "softmax", "softmax>nextToken", "nextToken"]
+  },
+  "bpeMerge": {
+    "nodes": {
+      "text": { "d": "The raw training corpus, or a new piece of text at encode time — the same starting point either way." },
+      "chars": { "d": "The text broken into its smallest units: individual characters, or raw bytes for a byte-level tokenizer." },
+      "countPairs": { "d": "Every adjacent pair of symbols in the corpus is counted, the frequency table the next merge is chosen from." },
+      "mergePair": { "d": "The single most frequent pair is merged into one new symbol — for example \"l\" and \"o\" becoming \"lo\" — added to the vocabulary as one new entry." },
+      "vocab": { "d": "The vocabulary after this merge, one symbol larger than before.\n\nRepeated thousands of times, this is the entire training loop." },
+      "encodeText": { "d": "New text to be tokenized, after training has already produced a fixed set of merges." },
+      "applyMerges": { "d": "Encoding applies every learned merge in the exact order it was learned — not by re-deriving frequencies, since order alone fully determines the result." },
+      "ids": { "d": "The final sequence of token ids, ready to feed into a model." }
+    },
+    "edges": {
+      "text>chars": { "d": "Training starts by splitting the corpus into its smallest units." },
+      "chars>countPairs": { "d": "Adjacent character (or byte) pairs are what get counted." },
+      "countPairs>mergePair": { "d": "The pair with the highest count is the one that gets merged this round." },
+      "mergePair>countPairs": { "d": "After a merge, pair counts are recomputed over the now-slightly-different corpus, and the cycle repeats — this loop runs thousands of times to reach a useful vocabulary size." },
+      "mergePair>vocab": { "d": "Each merge adds exactly one new entry to the vocabulary." },
+      "vocab>applyMerges": { "d": "The full ordered list of learned merges is what encoding replays." },
+      "encodeText>applyMerges": { "d": "New text is what the learned merges get applied to." },
+      "applyMerges>ids": { "d": "After every applicable merge has been applied in order, what remains are the final token ids." }
+    },
+    "walk": ["text", "text>chars", "chars", "chars>countPairs", "countPairs", "countPairs>mergePair", "mergePair", "mergePair>countPairs", "mergePair>vocab", "vocab", "vocab>applyMerges", "encodeText", "encodeText>applyMerges", "applyMerges", "applyMerges>ids", "ids"]
+  },
+  "evalHarness": {
+    "nodes": {
+      "goldenSet": { "d": "A fixed set of test cases with known-correct answers — a little over a hundred cases is typical, enough to be stable without being expensive to run." },
+      "runSystem": { "d": "The system under test runs the golden set exactly as it would run in production, not a simplified stand-in." },
+      "scorers": { "d": "Several scorers grade each output: exact match where an answer is enumerable, an LLM judge against a written rubric where it isn't, and a citation check for anything that claims a source." },
+      "aggregate": { "d": "Individual scores roll up into a pass rate, and pass^k for cases flaky enough to need repeated runs before trusting the result." },
+      "baseline": { "d": "The same golden set's scores from the last shipped version, kept around specifically so the candidate has something to be compared against." },
+      "compare": { "d": "The candidate's aggregate score is compared against the baseline's, case by case, not just as two overall numbers." },
+      "gate": { "d": "The regression gate turns the comparison into a decision: ship if nothing regressed past a threshold, block if it did." }
+    },
+    "edges": {
+      "goldenSet>runSystem": { "d": "The golden set's cases are exactly what the candidate system runs." },
+      "runSystem>scorers": { "d": "Every output the system under test produces is what the scorers grade." },
+      "scorers>aggregate": { "d": "Individual scorer results are rolled up into pass rate and pass^k." },
+      "aggregate>compare": { "d": "The candidate's aggregate score is one side of the comparison." },
+      "baseline>compare": { "d": "The baseline's own aggregate score, from the same golden set, is the other side." },
+      "compare>gate": { "d": "The comparison's result — better, worse, or no meaningful difference — is what the gate decides ship or block from." }
+    },
+    "walk": ["goldenSet", "goldenSet>runSystem", "runSystem", "runSystem>scorers", "scorers", "scorers>aggregate", "aggregate", "baseline", "baseline>compare", "aggregate>compare", "compare", "compare>gate", "gate"]
+  },
+  "schemaRepair": {
+    "nodes": {
+      "schema": { "d": "The schema or tool definition the model's output is expected to conform to, put directly in the prompt." },
+      "prompt": { "d": "The prompt sent to the model, schema included, asking for output that will need to parse and validate." },
+      "modelOut": { "d": "The model's raw output — text that is hoped to be valid JSON matching the schema, but is not yet trusted to be." },
+      "parse": { "d": "The output is parsed as JSON.\n\nThis can fail on its own, before validation even runs, if the model produced malformed text." },
+      "validate": { "d": "Parsed JSON is checked against the schema: field types, required fields, whatever the schema demands." },
+      "ok": { "d": "A validated, typed object — the only thing the caller is actually allowed to use downstream." },
+      "errBox": { "d": "On failure, the specific error — malformed JSON or a named schema violation — is captured to feed back to the model, not just a generic \"try again\"." },
+      "retry": { "d": "The captured error is fed into a new prompt and the model tries again, up to a fixed retry limit, commonly n=3." },
+      "cleanFail": { "d": "After n retries with no valid output, the caller gets an explicit failure — never a best-guess object that merely looks like it matched the schema." }
+    },
+    "edges": {
+      "schema>prompt": { "d": "The schema is embedded directly in the prompt the model receives." },
+      "prompt>modelOut": { "d": "The prompt is what the model responds to." },
+      "modelOut>parse": { "d": "The model's raw text is what parsing attempts to turn into JSON." },
+      "parse>validate": { "d": "Successfully parsed JSON moves on to schema validation; malformed JSON never reaches this step cleanly." },
+      "validate>ok": { "d": "A pass returns a typed object with no further checks needed." },
+      "validate>errBox": { "d": "A failure — from parsing or from validation — is captured as a specific error message." },
+      "errBox>retry": { "d": "The captured error becomes part of the next prompt, not just a bare retry." },
+      "retry>prompt": { "d": "The retry loop re-enters at the prompt step, this time with the error included as extra context." },
+      "retry>cleanFail": { "d": "Once the retry count exceeds n, the loop stops and reports a clean failure instead of retrying forever." }
+    },
+    "walk": ["schema", "schema>prompt", "prompt", "prompt>modelOut", "modelOut", "modelOut>parse", "parse", "parse>validate", "validate", "validate>ok", "ok", "validate>errBox", "errBox", "errBox>retry", "retry", "retry>prompt", "retry>cleanFail", "cleanFail"]
+  },
+  "servingPath": {
+    "nodes": {
+      "client": { "d": "The client issuing a single request — the unit of work this whole figure traces." },
+      "endpoint": { "d": "The API endpoint that receives the request, the first stop before anything else runs." },
+      "auth": { "d": "Authentication and rate limiting run before any real work: an unauthenticated or over-quota request is rejected here, cheaply." },
+      "cache": { "d": "A cache check keyed on the request.\n\nA hit returns immediately, skipping the queue, the batcher and the model entirely." },
+      "queue": { "d": "A queue holding requests that missed the cache, drained by a micro-batcher that groups several requests into one model call rather than running them one at a time." },
+      "model": { "d": "The model processes a batch of requests together, which is why the queue and batcher exist — batching is what makes serving efficient." },
+      "stream": { "d": "The model's output streams back to the client over server-sent events, token by token, rather than waiting for the full response." },
+      "metrics": { "d": "A side channel records latency and timeout data at every stage shown here, not only at the end — so a slow auth check is visible separately from a slow model call." }
+    },
+    "edges": {
+      "client>endpoint": { "d": "The request's first hop, from client to endpoint." },
+      "endpoint>auth": { "d": "Every request passes through auth and rate limiting before anything else." },
+      "auth>cache": { "d": "An authenticated, within-quota request is checked against the cache next." },
+      "cache>queue": { "d": "A cache miss is what actually reaches the queue — a hit never gets this far." },
+      "cache>client": { "d": "A cache hit returns straight to the client, skipping the queue, batcher and model entirely — the whole point of caching." },
+      "queue>model": { "d": "The micro-batcher pulls queued requests and hands a batch to the model." },
+      "model>stream": { "d": "The model's output is streamed back rather than returned all at once." },
+      "stream>client": { "d": "Streamed tokens reach the client over SSE as they're produced." },
+      "queue>metrics": { "d": "Every stage in this path — not drawn as separate arrows, to keep the figure readable — reports its own latency and timeout data to this same metrics channel." }
+    },
+    "walk": ["client", "client>endpoint", "endpoint", "endpoint>auth", "auth", "auth>cache", "cache", "cache>client", "cache>queue", "queue", "queue>model", "model", "model>stream", "stream", "stream>client", "queue>metrics", "metrics"]
+  },
+  "lora": {
+    "nodes": {
+      "x": { "d": "The layer's input activation, the same x that would go into the frozen weight alone in an unmodified model." },
+      "W": { "d": "The original pretrained weight matrix, shape d x k, frozen for the entire fine-tune — not one of its values changes." },
+      "A": { "d": "The first of the two trained matrices, shape r x k, initialised randomly." },
+      "B": { "d": "The second trained matrix, shape d x r, initialised to zero so the adapter starts as a true no-op — B*A is zero until training moves it." },
+      "scale": { "d": "The low-rank path's output is scaled by alpha/r before being added, a fixed hyperparameter ratio that controls how strongly the adapter can shift the frozen output." },
+      "sum": { "d": "The frozen path's output and the scaled low-rank path's output are added together — this sum is the layer's actual output during training." },
+      "output": { "d": "The layer's final output, identical in shape to what the unmodified frozen model would have produced." },
+      "merge": { "d": "At inference, W' = W + (alpha/r) x B x A folds the adapter into a single matrix the same shape as W, so serving pays no extra latency or extra matrix multiply over the base model." }
+    },
+    "edges": {
+      "x>W": { "d": "The input reaches the frozen weight exactly as it would with no adapter at all." },
+      "x>A": { "d": "The same input, in parallel, also enters the low-rank path through A." },
+      "A>B": { "d": "A's output, dimension r, is what B projects back up to dimension d." },
+      "B>scale": { "d": "B's output is scaled by alpha/r before it's allowed to affect the final sum." },
+      "W>sum": { "d": "The frozen path's contribution to the output." },
+      "scale>sum": { "d": "The scaled low-rank path's contribution, added to the frozen path's." },
+      "sum>output": { "d": "The combined result is the layer's actual output." },
+      "W>merge": { "d": "At inference, the frozen weight is one of the two things folded into a single merged matrix." },
+      "B>merge": { "d": "B (combined with A and the alpha/r scale) is the other component folded into the merge — after merging, A and B no longer need to exist as separate matrices at serving time." }
+    },
+    "walk": ["x", "x>W", "W", "x>A", "A", "A>B", "B", "B>scale", "scale", "W>sum", "scale>sum", "sum", "sum>output", "output", "W>merge", "B>merge", "merge"]
+  }
 });
