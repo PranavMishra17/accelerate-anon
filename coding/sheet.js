@@ -52,7 +52,7 @@
   function cardHtml(key) {
     var p = byId[key], c = p ? p.sheet : (D.algo[key] || D.extra[key]);
     if (!c) { return ""; }
-    var target = p ? key : c.pop, ex = p ? p.ex : c.ex;
+    var target = p ? key : c.pop || "x:" + key, ex = p ? p.ex : c.ex;
     var h = target ? '<div class="cs-card cs-click" data-pop="' + target + '" data-at="' + (c.at || 0) + '" tabindex="0" role="button">' : '<div class="cs-card">';
     h += "<h3>" + esc(p ? p.title : c.title) + "</h3>";
     if (ex) { h += '<p class="cs-ex">' + exLine(ex, true) + "</p>"; }
@@ -71,9 +71,18 @@
     function fit() {
       root.style.fontSize = "";
       grid.style.columnCount = "";
-      // A phone, upright or on its side: cards at a readable size, in as many columns as fit, and scroll.
-      root.classList.toggle("scroll", window.innerWidth <= 760 || window.innerHeight <= 560);
-      if (root.hidden || root.classList.contains("scroll")) { return; }
+      // A phone upright scrolls one readable column; on its side the cards become tiles on one screen.
+      var w = window.innerWidth, h = window.innerHeight, upright = w <= 760 && h > w, sideways = h <= 560 && w > h;
+      root.classList.toggle("scroll", upright);
+      root.classList.toggle("compact", sideways);
+      grid.style.gridTemplateColumns = "";
+      if (root.hidden || upright) { return; }
+      if (sideways) {
+        // A phone on its side: every card a tile, all on one screen with no scrolling; a tap opens notes and code.
+        var n = grid.children.length, rows = Math.max(1, Math.floor((grid.clientHeight - 8) / 56));
+        grid.style.gridTemplateColumns = "repeat(" + Math.ceil(n / Math.min(rows, n)) + ", minmax(0, 1fr))";
+        return;
+      }
       var f = parseFloat(getComputedStyle(root).fontSize), cols = [6, 7, 8];
       function fits() { return grid.scrollWidth <= grid.clientWidth + 1; }
       // The largest font that fits in six, seven or eight columns.
@@ -130,6 +139,7 @@
     pop.querySelector(".pop-x").addEventListener("click", closePop);
   }
   function openPop(key, start) {
+    if (key.indexOf("x:") === 0) { openRef(D.extra[key.slice(2)]); return; }
     var p = byId[key];
     if (!p) { return; }
     ensurePop();
@@ -166,6 +176,19 @@
     pane(start ? "r" : "l");
     pop.querySelector(".pop-x").focus();
   }
+  // A reference card (Python tools, edge cases, traps): its notes on the left, its code, if any, on the right.
+  function openRef(c) {
+    if (!c) { return; }
+    ensurePop();
+    lastFocus = document.activeElement;
+    items = [{ kind: "Reference", n: c.title, t: "", code: c.code || "" }];
+    popL.innerHTML = "<h2>" + esc(c.title) + '</h2><ul class="nu">' + (c.notes || []).map(li).join("") + "</ul>";
+    pop.hidden = false;
+    document.body.style.overflow = "hidden";
+    pick(0);
+    pane("l");
+    pop.querySelector(".pop-x").focus();
+  }
   function pick(i) {
     at = Math.max(0, Math.min(items.length - 1, i));
     var it = items[at];
@@ -173,7 +196,7 @@
       : '<p class="pr-t">' + (it.th ? it.t : md(it.t || "")) + "</p>";
     popR.innerHTML = '<div class="pr-kind">' + it.kind + "</div><h3>" + esc(it.n) + "</h3>" + (it.ex && !it.st ? '<div class="ex">' + exLine(it.ex) + "</div>" : "") + body +
       (it.hld ? '<ol class="nu">' + it.hld.map(function (x) { return li(md(x)); }).join("") + "</ol>" : "") +
-      (it.fig ? figHtml(it.fig) : "") + "<pre><code>" + hl(it.code) + "</code></pre>" + (it.c ? '<p class="cx">' + esc(it.c) + "</p>" : "");
+      (it.fig ? figHtml(it.fig) : "") + (it.code ? "<pre><code>" + hl(it.code) + "</code></pre>" : "") + (it.c ? '<p class="cx">' + esc(it.c) + "</p>" : "");
     popL.querySelectorAll(".pi").forEach(function (b) { b.classList.toggle("on", +b.getAttribute("data-i") === at); });
     var on = popL.querySelector(".pi.on");
     if (on && on.scrollIntoView) { on.scrollIntoView({ block: "nearest" }); }

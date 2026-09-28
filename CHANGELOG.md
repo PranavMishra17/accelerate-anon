@@ -566,3 +566,11 @@ data, the sheet code and styles, the figures and the fonts. It makes no network 
 works offline on a desktop and on a phone, and its 'Full page' and 'Open on the page'
 links go to the published site. Run the build after any change in `coding/` or `figures/`.
 No change to the plan or to `CHARTER.md`.
+
+**2026-09-28 — Cheat sheet on a phone on its side: one screen, tiles, notes and code together.**
+Scrolling the sheet sideways on a phone was worse than the one-screen sheet. On a phone on
+its side every card is now a tile (its title and example), all on one screen with no
+scrolling; a tap opens the popup with the notes on the left and the code on the right,
+code first and in smaller type, with no Notes / Code switch. The reference cards (Python
+tools, edge cases, traps) open too. Upright is unchanged. No change to the plan or to
+`CHARTER.md`.
