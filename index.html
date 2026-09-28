@@ -5851,15 +5851,15 @@
     /* everything that is not a session, grouped by what it is for */
     [["Practise", [["requeue", "Requeue"], ["written", "Written work"], ["search", "Search"]]],
      ["Look ahead", [["book", "The book"], ["sky", "The sky"], ["map", "The work ahead"], ["ahead", "What comes after"]]],
-     ["Reference", [["resources", "Resources"], ["sd", "System design guide"], ["code", "Algorithms and coding"], ["al", "Alaap and TrenTorch plan"]]],
+     ["Reference", [["resources", "Resources"], ["sd", "System design guide"], ["code", "Algorithms and coding"], ["cheat", "Coding cheat sheet"], ["al", "Alaap and TrenTorch plan"]]],
      ["Rules and data", [["charter", "Charter"], ["protocol", "Protocol"], ["data", "Data and export"]]]
     ].forEach(function (grp) {
       var foot = el("div", "foot");
       foot.appendChild(el("div", "fh", grp[0]));
       grp[1].forEach(function (t) {
-        if (t[0] === "sd" || t[0] === "al" || t[0] === "code") {
+        if (t[0] === "sd" || t[0] === "al" || t[0] === "code" || t[0] === "cheat") {
           var sdLink = document.createElement("a");
-          sdLink.href = t[0] === "sd" ? SD.file : t[0] === "code" ? "CODING.html" : AL.file;
+          sdLink.href = t[0] === "sd" ? SD.file : t[0] === "code" ? "CODING.html" : t[0] === "cheat" ? "CODING.html#cheat" : AL.file;
           sdLink.target = "_blank";
           sdLink.rel = "noopener";
           sdLink.className = "sdnav";

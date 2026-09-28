@@ -502,3 +502,17 @@ figures beside them (moved up from the high-level design and the entities step, 
 appears once). The tracker's draw-it-cold drill links there first. The ZenML page is not
 where this will be looked for again, so it lives in the guide. No change to the plan or to
 `CHARTER.md`.
+
+**2026-09-28 — Mphasis answers written for Mphasis; a one-screen coding cheat sheet.**
+The Mphasis story bank was your ZenML intro with one new line. It now has six answers,
+each written for this round: the intro (your words, plus MetaRAG's production
+code-translation use case, the closest thing you have to Mphasis's work), why Mphasis
+(NeoZeta parses before the model; the same order alfred_ uses), why this role (what's
+enough, evaluated and auditable; classic ML as a swap line), why leave alfred_ (your
+words, with range across clients in place of Kitaru), why now, and your day at alfred_
+unchanged. Each note says what changed from your version. `CODING.html` gains a cheat
+sheet, one landscape screen of twenty cards (how to code out loud, the input size and
+the target cost, every pattern with its signal, move, core code and nuance, Python tools,
+edge cases, Python traps, AI-flavoured coding), opened from the top bar or
+`CODING.html#cheat`, which the tracker's Reference links. No change to the plan or to
+`CHARTER.md`.

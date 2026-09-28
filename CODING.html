@@ -58,6 +58,25 @@ th, td { text-align: left; padding: 7px 10px 7px 0; border-bottom: 1px solid var
 th { color: var(--muted); font-weight: 400; }
 ol.how { padding-left: 22px; } ol.how li { margin: 0 0 8px; }
 .hidden { display: none; }
+/* The one-screen cheat sheet: cream in every mode, five columns, sized to a landscape screen */
+.cheat { position: fixed; inset: 0; z-index: 50; background: #FBF8F1; color: #1D1B17; display: flex; flex-direction: column;
+  font: var(--cs-f) / 1.38 var(--body); --cs-f: clamp(11px, min(0.66vw, 1.2vh), 15px); }
+.cheat[hidden] { display: none; }
+.cs-top { display: flex; gap: 14px; align-items: baseline; padding: 8px 16px; border-bottom: 1px solid #E7E0D2; font-size: 1.05em; }
+.cs-top span { color: #736D62; }
+.cs-top .grow { flex: 1; }
+.cs-top button { font: inherit; font-size: .95em; padding: 3px 12px; border: 1px solid #E3DACA; border-radius: 6px; background: #F4EEE2; color: #1D1B17; cursor: pointer; }
+.cs-grid { flex: 1; min-height: 0; padding: 10px 14px 12px; column-count: 5; column-gap: 12px; column-fill: balance; overflow: auto; }
+.cs-card { break-inside: avoid; border: 1px solid #E7E0D2; border-radius: 8px; padding: 7px 10px 6px; margin: 0 0 10px; background: #FFFDF8; }
+.cs-card h3 { margin: 0 0 3px; font-size: 1.12em; }
+.cs-card h3 a { color: #0A5BD3; }
+.cs-card p { margin: 0 0 3px; }
+.cs-card ul { margin: 3px 0 0; padding-left: 16px; }
+.cs-card li { margin: 1px 0; }
+.cs-card pre { margin: 4px 0; padding: 5px 8px; font-size: .9em; line-height: 1.4; border-radius: 6px; white-space: pre-wrap; overflow: visible; }
+.top .cheat-btn { font-weight: 700; }
+@media (max-width: 900px) { .cs-grid { column-count: 1; } .cs-top span:not(.grow) { display: none; } }
+@media print { body > :not(.cheat) { display: none; } .cheat { position: static; } }
 @media (max-width: 820px) { .shell { grid-template-columns: minmax(0, 1fr); } nav.side { position: static; max-height: none; } }
 </style>
 </head>
@@ -66,6 +85,7 @@ ol.how { padding-left: 22px; } ol.how li { margin: 0 0 8px; }
   <b>Algorithms and coding</b>
   <a href="index.html">Tracker</a>
   <a href="SYSTEM%20DESIGN.html">System design guide</a>
+  <a href="#cheat" class="cheat-btn">Cheat sheet</a>
   <span class="grow"></span>
   <input id="q" type="search" placeholder="Search patterns and problems, e.g. window, heap, BFS">
 </div></div>
@@ -102,6 +122,100 @@ ol.how { padding-left: 22px; } ol.how li { margin: 0 0 8px; }
     </section>
     <div id="patterns"></div>
   </main>
+</div>
+<div id="cheat" class="cheat" role="dialog" aria-label="Coding cheat sheet" hidden>
+  <div class="cs-top"><b>Coding cheat sheet</b><span>Thirteen patterns cover most of what gets asked. F for full screen, Esc to close.</span><span class="grow"></span><button type="button" id="cs-full">Full screen</button><button type="button" id="cs-close">Close</button></div>
+  <div class="cs-grid">
+    <div class="cs-card"><h3><a href="#how">Say it out loud</a></h3><ul><li><b>1</b> Restate it; ask size, empty, duplicates, negatives.</li><li><b>2</b> Brute force and its cost, first.</li><li><b>3</b> Name the pattern and the target cost.</li><li><b>4</b> Code while talking; clear names.</li><li><b>5</b> Trace one example, then empty, one, all-same.</li><li><b>6</b> Time and space; one improvement.</li></ul></div>
+    <div class="cs-card"><h3><a href="#bigo">The input tells you the target</a></h3><ul><li>n &le; 20: 2<sup>n</sup>, backtracking &middot; n &le; 500: n<sup>3</sup> &middot; n &le; 5,000: n<sup>2</sup></li><li>n &le; 10<sup>6</sup>: n log n or n &middot; huge: log n or math</li><li><b>Sorted</b> &rarr; binary search, two pointers</li><li><b>Contiguous</b> &rarr; window; with negatives &rarr; prefix sums</li><li><b>Top k</b> &rarr; heap &middot; <b>fewest steps</b> &rarr; BFS</li><li><b>Count ways / min cost</b> &rarr; DP &middot; <b>every combination</b> &rarr; backtracking</li></ul></div>
+    <div class="cs-card"><h3><a href="#hashing">Arrays and hashing</a></h3><p><b>Spot:</b> Seen it before? Pairs, duplicates, groups, counts.</p><p><b>Move:</b> dict value &rarr; index, Counter, set.</p><pre>seen = {}
+for i, x in enumerate(a):
+    if t - x in seen: return [seen[t - x], i]
+    seen[x] = i</pre><ul><li>Group anagrams: key = tuple(sorted(w)).</li><li>Longest run: start only where x - 1 not in set.</li><li>O(n) time, O(n) space.</li></ul></div>
+    <div class="cs-card"><h3><a href="#prefix">Prefix sums</a></h3><p><b>Spot:</b> Subarray sum equals k; range sums; negatives allowed.</p><p><b>Move:</b> Count earlier prefixes equal to run - k.</p><pre>seen, run, ans = Counter({0: 1}), 0, 0
+for x in a:
+    run += x
+    ans += seen[run - k]
+    seen[run] += 1</pre><ul><li>Seed {0: 1}: a run from index 0.</li><li>Range sum = pre[r + 1] - pre[l].</li><li>O(n).</li></ul></div>
+    <div class="cs-card"><h3><a href="#pointers">Two pointers</a></h3><p><b>Spot:</b> Sorted array; pair or triplet sums; palindromes; in place.</p><p><b>Move:</b> Ends inward; move the side that fixes it.</p><pre>l, r = 0, len(a) - 1
+while l &lt; r:
+    s = a[l] + a[r]
+    if s == t: return l, r
+    if s &lt; t: l += 1
+    else: r -= 1</pre><ul><li>3sum: sort, fix i, two pointers; skip duplicates.</li><li>O(n) after an O(n log n) sort.</li></ul></div>
+    <div class="cs-card"><h3><a href="#window">Sliding window</a></h3><p><b>Spot:</b> Longest or shortest contiguous run with a rule.</p><p><b>Move:</b> Grow right; shrink left while invalid.</p><pre>l = best = 0
+for r, c in enumerate(s):
+    cnt[c] += 1
+    while bad(cnt):
+        cnt[s[l]] -= 1; l += 1
+    best = max(best, r - l + 1)</pre><ul><li>Works only if shrinking restores validity.</li><li>Length is r - l + 1. O(n).</li></ul></div>
+    <div class="cs-card"><h3><a href="#stack">Stack</a></h3><p><b>Spot:</b> Brackets; next greater or warmer; undo; expressions.</p><p><b>Move:</b> Pop while the top is answered by the current item.</p><pre>st = []
+for i, x in enumerate(a):
+    while st and a[st[-1]] &lt; x:
+        j = st.pop(); ans[j] = i - j
+    st.append(i)</pre><ul><li>Store indices, not values.</li><li>Each item pushed and popped once: O(n).</li></ul></div>
+    <div class="cs-card"><h3><a href="#binary">Binary search</a></h3><p><b>Spot:</b> Sorted; rotated; smallest k such that a check passes.</p><p><b>Move:</b> Halve the range; keep one invariant.</p><pre>lo, hi = 0, len(a) - 1
+while lo &lt;= hi:
+    mid = (lo + hi) // 2
+    if a[mid] == t: return mid
+    if a[mid] &lt; t: lo = mid + 1
+    else: hi = mid - 1</pre><ul><li>On the answer: lo, hi = min, max; test check(mid).</li><li>bisect_left(a, x): first index with a[i] &ge; x.</li><li>Rotated: one half is always sorted. O(log n).</li></ul></div>
+    <div class="cs-card"><h3><a href="#linked">Linked lists</a></h3><p><b>Spot:</b> Reverse, cycle, middle, merge, kth from the end.</p><p><b>Move:</b> Dummy head; prev and cur; slow and fast.</p><pre>prev, cur = None, head
+while cur:
+    nxt = cur.next
+    cur.next = prev
+    prev, cur = cur, nxt
+return prev</pre><ul><li>Cycle: fast two steps, slow one; they meet.</li><li>Kth from end: fast starts k ahead. O(n), O(1).</li></ul></div>
+    <div class="cs-card"><h3><a href="#trees">Trees</a></h3><p><b>Spot:</b> Depth, paths, validate a BST, LCA, level order.</p><p><b>Move:</b> Recurse and return info up; BFS for levels.</p><pre>def depth(n):
+    if not n: return 0
+    return 1 + max(depth(n.left), depth(n.right))</pre><ul><li>BST: pass (lo, hi) bounds down; in-order is sorted.</li><li>Levels: for _ in range(len(q)).</li><li>O(n) time, O(h) stack.</li></ul></div>
+    <div class="cs-card"><h3><a href="#graphs">Graphs: BFS and DFS</a></h3><p><b>Spot:</b> Grids, islands, components, fewest steps.</p><p><b>Move:</b> BFS for fewest steps; mark seen when you push.</p><pre>q, seen = deque([s]), {s}
+while q:
+    u = q.popleft()
+    for v in g[u]:
+        if v not in seen:
+            seen.add(v); q.append(v)</pre><ul><li>Grid: four directions and a bounds check.</li><li>Build g with defaultdict(list). O(V + E).</li></ul></div>
+    <div class="cs-card"><h3><a href="#graphs">Graphs: order and weights</a></h3><p><b>Spot:</b> Prerequisites; weighted shortest path; merging groups.</p><pre>parent = list(range(n))
+def find(x):
+    while parent[x] != x:
+        parent[x] = parent[parent[x]]
+        x = parent[x]
+    return x</pre><ul><li><b>Topological (Kahn):</b> queue indegree 0; done &lt; n means a cycle.</li><li><b>Dijkstra:</b> heap of (dist, node); skip stale; no negative weights. O(E log V).</li><li><b>Union-find:</b> components, redundant edge; union = parent[find(a)] = find(b).</li></ul></div>
+    <div class="cs-card"><h3><a href="#heap">Heaps and top k</a></h3><p><b>Spot:</b> Top k, kth largest, merge k sorted, scheduling.</p><p><b>Move:</b> Min-heap of size k keeps the k largest.</p><pre>h = []
+for x in a:
+    heapq.heappush(h, x)
+    if len(h) &gt; k: heapq.heappop(h)
+return h[0]  # kth largest</pre><ul><li>heapq is min only: push -x for a max-heap.</li><li>Ties: push (key, i, item). O(n log k).</li></ul></div>
+    <div class="cs-card"><h3><a href="#intervals">Intervals</a></h3><p><b>Spot:</b> Overlap, merge, insert, meeting rooms.</p><p><b>Move:</b> Sort by start; compare with the last end.</p><pre>out = []
+for s, e in sorted(iv):
+    if out and s &lt;= out[-1][1]:
+        out[-1][1] = max(out[-1][1], e)
+    else: out.append([s, e])</pre><ul><li>Rooms needed: a heap of end times.</li><li>O(n log n) for the sort.</li></ul></div>
+    <div class="cs-card"><h3><a href="#dp">Dynamic programming</a></h3><p><b>Spot:</b> Count ways, min or max cost, can you; choices overlap.</p><p><b>Move:</b> State in words, recurrence, base, order.</p><pre>dp = [0] + [inf] * amt
+for x in range(1, amt + 1):
+    for c in coins:
+        if c &lt;= x:
+            dp[x] = min(dp[x], dp[x - c] + 1)</pre><ul><li>Start top-down with @cache, then a table.</li><li>Two strings: dp[i][j]. Only the last row needed: O(n) space.</li><li>Know: climb, rob, coin change, LIS, LCS, knapsack.</li></ul></div>
+    <div class="cs-card"><h3><a href="#backtrack">Backtracking</a></h3><p><b>Spot:</b> Every subset, permutation or combination; n small.</p><p><b>Move:</b> Choose, recurse, undo.</p><pre>def go(i, path):
+    if i == len(a):
+        out.append(path[:]); return
+    go(i + 1, path)            # skip
+    path.append(a[i])          # take
+    go(i + 1, path)
+    path.pop()                 # undo</pre><ul><li>Copy the path when you save it.</li><li>Sort and skip duplicates; prune early.</li><li>O(2<sup>n</sup>) subsets, O(n!) permutations.</li></ul></div>
+    <div class="cs-card"><h3>Python you reach for</h3><pre>Counter(a).most_common(k)
+defaultdict(list); deque().popleft()
+heapq.heappush / heappop / nlargest
+bisect_left(a, x)
+sorted(a, key=lambda p: (p[1], -p[0]))
+@functools.cache
+itertools.combinations / accumulate</pre><ul><li>float('inf'); divmod(a, b); ''.join(parts).</li></ul></div>
+    <div class="cs-card"><h3>Edge cases to say</h3><ul><li>Empty input; one element; all the same.</li><li>Negatives and zero; duplicates.</li><li>Already sorted, or reversed.</li><li>Off by one: r - l + 1, lo &le; hi.</li><li>Deep recursion past 1,000: go iterative.</li><li>Strings: case, spaces, unicode.</li></ul></div>
+    <div class="cs-card"><h3>Python traps</h3><ul><li>[[0] * m] * n shares rows: use a comprehension.</li><li>def f(x=[]) shares the list across calls.</li><li>list.pop(0) is O(n): use deque.</li><li>s += c in a loop is O(n<sup>2</sup>): use join.</li><li>-7 // 2 is -4: floor division.</li><li>Don't mutate a list while looping over it.</li></ul></div>
+    <div class="cs-card"><h3><a href="#ai">AI-flavoured coding</a></h3><p><b>Spot:</b> Top k by cosine, retries, parsing model output, rate limits.</p><pre>q = q / np.linalg.norm(q)
+M = M / np.linalg.norm(M, axis=1, keepdims=True)
+top = np.argsort(-(M @ q))[:k]</pre><ul><li><b>Retry:</b> sleep base &times; 2<sup>i</sup> plus jitter; cap; retry only retryable errors.</li><li><b>Model JSON:</b> strip fences, json.loads in try, validate, None on failure.</li><li><b>Token bucket:</b> refill elapsed &times; rate, capped. <b>LRU:</b> OrderedDict, move_to_end.</li></ul></div>
+  </div>
 </div>
 <script>
 (function () {
@@ -294,6 +408,33 @@ ol.how { padding-left: 22px; } ol.how li { margin: 0 0 8px; }
     host.insertAdjacentHTML("beforeend", html + "</section>");
   });
   side.innerHTML = nav;
+
+  // The cheat sheet: opened by #cheat (the tracker links it), F for full screen, Esc to close.
+  var cheat = document.getElementById("cheat");
+  cheat.querySelectorAll("pre").forEach(function (p) { p.innerHTML = hl(p.textContent); });
+  function syncCheat() {
+    var open = location.hash === "#cheat";
+    cheat.hidden = !open;
+    document.body.style.overflow = open ? "hidden" : "";
+  }
+  function closeCheat() {
+    try { if (document.fullscreenElement) { document.exitFullscreen(); } } catch (e) { /* not supported */ }
+    try { history.pushState(null, "", location.pathname + location.search); } catch (e) { location.hash = ""; }
+    syncCheat();
+  }
+  function fullCheat() {
+    try { if (!document.fullscreenElement) { cheat.requestFullscreen(); } else { document.exitFullscreen(); } } catch (e) { /* not supported */ }
+  }
+  document.getElementById("cs-close").addEventListener("click", closeCheat);
+  document.getElementById("cs-full").addEventListener("click", fullCheat);
+  cheat.addEventListener("click", function (e) { if (e.target.closest(".cs-card h3 a")) { cheat.hidden = true; document.body.style.overflow = ""; } });
+  document.addEventListener("keydown", function (e) {
+    if (cheat.hidden || e.target.tagName === "INPUT") { return; }
+    if (e.key === "Escape" && !document.fullscreenElement) { closeCheat(); }
+    if (e.key === "f" || e.key === "F") { fullCheat(); }
+  });
+  window.addEventListener("hashchange", syncCheat);
+  syncCheat();
 
   document.getElementById("q").addEventListener("input", function (e) {
     var v = e.target.value.trim().toLowerCase();
