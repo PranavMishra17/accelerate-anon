@@ -40,7 +40,7 @@ SHOW_UP = [
     ("Don't bluff.", "'I haven't used that, here's how I'd reason about it' is a strong answer in a recorded round."),
 ]
 
-STORY_BLURB = "Your career in ninety seconds, and why this conversation."
+STORY_BLURB = "Your career in ninety seconds, then why Mphasis, why this role, why leave alfred_ and why now, each written for Mphasis."
 
 SOURCES = [
     {"label": "Mphasis NeoZeta: generative AI for legacy modernization", "url": "https://www.mphasis.ai/home/neozeta-generative-ai-enterprise-modernization-platform.html",
@@ -52,16 +52,89 @@ SOURCES = [
 
 SCRIPTS = [
     {"id": "intro", "title": "Tell me about yourself", "length": "about 90 seconds",
-     "when": "The opener.",
-     "probes": ["What do you do day to day?", "What's your strongest AI work?", "Why this role?"],
-     "say": [  # verbatim, from Pranav's own intro, first four paragraphs
+     "when": "The opener. In an L1 AI/ML round it sets which of your projects they dig into, so put MetaRAG and alfred_ in it on purpose.",
+     "probes": ["Tell me more about MetaRAG.", "What do you do day to day at alfred_?", "What's your strongest AI/ML work?", "Why Mphasis?"],
+     "say": [
          "Sure. I started out in computer science research at UIC, where I worked on applied ML and LLM systems. That gave me a pretty strong foundation in actually building and evaluating these systems, rather than just using the models.",
+         "One of those was MetaRAG, a retrieval framework for enterprise knowledge. It ended up running in a production code-translation use case, about ten thousand queries a day, and the paper got accepted at IEEE CAI.",
          "From there I joined WheelPrice, which was a much more startup-oriented environment. I was working across the stack and got a lot more exposure to shipping things that were actually being used by customers. It was a small engineering team, so I had to be pretty broad \u2014 backend, AI, infrastructure, and product work all kind of blended together.",
          "After that I joined alfred_, where I've been working as a founding LLM engineer. It's an AI assistant, and my work has become much more focused on reliability and evaluation \u2014 things like building the eval harness, production failure detection, working memory, and making sure agent changes actually improve the product rather than just looking better on a benchmark.",
          "The common thread through all of that has really been building AI systems in environments where you don't have a perfectly defined problem in front of you. You have to figure out what's broken, decide what to build, and then own it through production.",
-         "What interests me here is doing that at enterprise scale: agents that have to be reliable and auditable on systems that matter, like the legacy platforms your clients run."],
-     "land": "Research, then shipping products, then making agents reliable in production.",
-     "notes": ["The first four paragraphs are your own words; the last line is for Mphasis.", "About ninety seconds, then stop."]},
+         "And that's pretty much why Mphasis is interesting to me. Your clients run systems where a wrong answer is expensive, and making AI reliable and checkable on those systems is the work I've been doing, just with bigger stakes."],
+     "swaps": [{"when": "If they cut you short: the one-line arc", "line": "Research on retrieval and multi-agent reasoning, then shipping products at a startup, and now making an agent reliable in production for five thousand users."},
+               {"when": "If they ask for the numbers on MetaRAG", "line": "82.5% precision against a 73.3% content-only baseline, 0.925 hit rate at ten, and about 25% fewer hallucinations, measured with an automated evaluation framework."}],
+     "land": "Research, then shipping products, then making agents reliable in production; Mphasis is the same problem with bigger stakes.",
+     "notes": ["Changed from your ZenML intro: paragraphs 1, 3, 4 and 5 are your words, unchanged. Paragraph 2 (MetaRAG) is new, because a production code-translation use case is the closest thing you have to Mphasis's core work. The last line now points at Mphasis instead of Kitaru.",
+               "About ninety seconds. Stop after the last line and let them pick where to go; MetaRAG and alfred_ are both baits you are ready for.",
+               "Numbers if they dig: MetaRAG 82.5% precision, 0.925 Hit@10, 25% hallucination reduction, p99 under 300 ms, 10K queries a day, on SageMaker with MLflow. alfred_: 5,000+ active users."],
+     "never": ["Don't say you worked on COBOL or legacy modernization. You worked on code translation retrieval; say exactly that.",
+               "Never mention alfred_'s funding or a crunch."]},
+
+    {"id": "why-mphasis", "title": "Why Mphasis?", "length": "about 60 seconds",
+     "when": "Straight after the intro, or at the end. They want to hear you know what they do and why it fits you, not a compliment.",
+     "probes": ["What do you know about us?", "Why a services company and not a product company?", "Have you worked with legacy systems?", "What would you want to work on here?"],
+     "say": [
+         "Honestly, two things. The first is the problems. Your clients are banks, insurers, airlines, with decades of systems underneath. That's where generative AI is hardest to get right, and I think also where it's most useful, because a lot of those systems aren't fully understood by anyone anymore.",
+         "The second is how you're approaching it. What I read about NeoZeta is that it doesn't point an LLM at COBOL and hope. It parses the code deterministically first, builds a knowledge graph of what the system does, and uses the model on top of that. I think that's the right order.",
+         "It's pretty much the lesson I learned at alfred_: let code decide what code can decide, and use the model for the language part. And it's close to my own research, since MetaRAG was retrieval over enterprise knowledge in a code-translation setting.",
+         "So it's a problem I've already touched, in the place where getting it right matters most."],
+     "swaps": [{"when": "If they ask: have you worked with legacy systems?", "line": "Not COBOL, no, and I'd rather be straight about that. What I have done is the pattern around it: retrieval for code translation with MetaRAG, and at alfred_, an agent that has to act on systems it doesn't own, where every action gets checked against what actually happened. COBOL itself I'd learn on the job."},
+               {"when": "If they ask: why services and not a product company?", "line": "At a startup you go deep on one product. In services you see twenty problems, each with different data and different constraints. I've had the depth; now I want the range, and I want to learn how large clients actually adopt this, the security reviews, the data rules, getting people to trust it."}],
+     "land": "The hardest place to make generative AI reliable, and you're approaching it in the right order: parse first, model second.",
+     "notes": ["New for Mphasis, in your voice. NeoZeta facts are from their own page (in Sources): deterministic parsers plus generative AI relearn legacy code into explainable knowledge. Say 'what I read', not 'I know'.",
+               "The alfred_ line maps to a real design choice: email rules are a deterministic matcher that fires before the model sees the mail, and the executor has no send path."]},
+
+    {"id": "why-role", "title": "Why this role? Why AI/ML engineering?", "length": "about 60 seconds",
+     "when": "Why an AI/ML engineer role, and what you would bring to it on day one.",
+     "probes": ["How strong are you on classic ML, not only LLMs?", "What would you do in your first month?", "Have you trained models or only used APIs?"],
+     "say": [
+         "Because it's the work I like most: taking a model and making it do a real job, reliably. At alfred_ that's meant evals, guardrails, memory and cost. In research it was retrieval and multi-agent reasoning, including getting four-billion-parameter models to work as a team at about three times the speed of frontier models.",
+         "In a role like this, I think the value usually isn't picking the fanciest model. It's knowing when RAG is enough, when a small model is enough, how you evaluate it before you trust it, and how you make it auditable for a client. That's where I've spent most of my time.",
+         "And I like the variety. Different clients, different data, different constraints. I think that makes you a better engineer than going deeper into one product."],
+     "swaps": [{"when": "If they ask about classic ML, not only LLMs", "line": "I'm comfortable there too. My master's coursework was advanced ML, NLP and computer vision, and I've trained and deployed models myself, for example an audio inference API I quantized to INT8 and served at 150 milliseconds p95."},
+               {"when": "If they ask what you'd do in the first month", "line": "Learn one client's system end to end before touching it, find where AI output is being trusted without a check, and put an evaluation set around it. Every later change gets measured against that."}],
+     "land": "The value isn't the fanciest model; it's knowing what's enough, evaluating it, and making it auditable.",
+     "notes": ["New for Mphasis, in your voice. Facts: SLM-TeamMedAgents, 4B small models, 77.63% accuracy across 8 benchmarks, 3.1x inference speedup against frontier LLMs; audio API at 150 ms p95 via INT8.",
+               "'L1' is the first technical round, so expect this to lead into fundamentals. The AI fundamentals bank is the follow-on."]},
+
+    {"id": "leave", "title": "Why are you looking to leave alfred_?", "length": "about 45 seconds",
+     "when": "You are exploring while employed. Make that clear without sounding defensive.",
+     "probes": ["Is something wrong at alfred_?", "You've only been there since April. Why move so soon?", "Will you leave us quickly too?", "Is this about compensation or visa?"],
+     "say": [
+         "There's nothing particularly wrong with alfred_. I've actually learned a lot there and I still enjoy the work.",
+         "I'm mostly looking at what I want the next few years of my career to look like. At alfred_, I've had a lot of ownership because it's a small team, and that's been great. But the work is ultimately internal to one product.",
+         "What I'm increasingly interested in is range: taking what I've learned about making agents reliable and applying it across many problems and many clients, on systems that matter. That's the part a company like Mphasis gives me that one product can't.",
+         "So it's less \u201cI need to get away from alfred_\u201d and more \u201cI've found a direction I want to go deeper into.\u201d"],
+     "swaps": [{"when": "If they ask bluntly: why not just stay?", "line": "I could. And that's why I'm being selective about what I talk to. I'm not looking to leave just to change companies. It has to give me a meaningfully different scope, and going from one product to many clients' systems does."},
+               {"when": "If they ask: only since April, why so soon?", "line": "Fair question. It's been a very dense six months, and the reliability pieces I built there are running. I'm not in a rush; this is one of very few conversations I'm having, because the scope is genuinely different."}],
+     "land": "Less \u201cget away from alfred_\u201d, more \u201ca direction I want to go deeper into\u201d.",
+     "notes": ["Changed from your ZenML version: paragraphs 1, 2 and 4 are your words, unchanged. Paragraph 3 was about building developer infrastructure for Kitaru; it is now range across clients, which is what services offers.",
+               "Pay, visa and start date are prepared in chat, not on this public page. If asked here, say you're happy to go through it with the recruiter."]},
+
+    {"id": "why-now", "title": "Why now?", "length": "about 30 seconds",
+     "when": "Often tacked onto why leave, or asked as 'what changed?'. Short.",
+     "probes": ["What changed recently?", "Are you interviewing elsewhere?"],
+     "say": [
+         "Two reasons. The things I built at alfred_, the eval harness, the failure scanner, working memory, are running in production, so it's a natural point to take what I learned somewhere bigger.",
+         "And I think enterprise AI is at the point where it's moving from pilots to production. The hard part now is exactly what I've been working on: making it reliable, measurable and safe. I'd like to be doing that where it's hardest, which is on the systems your clients run."],
+     "swaps": [{"when": "If they ask whether you're interviewing elsewhere", "line": "A few conversations, yes, and I'm being selective. This one stands out because it's the most direct fit between what I've done and what you're building."}],
+     "land": "My pieces are running; enterprise AI is moving from pilots to production, which is the part I know.",
+     "notes": ["New, in your voice. Keep it under thirty seconds; the leave answer carries the weight."]},
+
+    {"id": "alfred-day", "title": "What does your day-to-day look like at alfred_?", "length": "about 60 seconds",
+     "when": "How much you code, what 'founding LLM engineer' means, what you personally own.",
+     "probes": ["How much do you actually code?", "What does \u201cfounding LLM engineer\u201d mean?", "What did you personally own?"],
+     "say": [  # verbatim
+         "It's pretty varied, which is one of the things I like about the role.",
+         "A typical piece of work might start with a production failure. I'll look at the conversation and the tool trace, figure out whether it's a model problem, a tool problem, or something in our orchestration or memory layer.",
+         "If it's something we need to reproduce, I'll add it to the eval harness. The harness takes a snapshot of the relevant user environment \u2014 email, calendar, whatever the task needs \u2014 and lets the actual agent code run against that state. So we're testing the same tool paths we use in production rather than mocking the whole agent.",
+         "Then I'll usually build the fix, run the regression set, and look at whether we've actually improved the behavior without breaking something else.",
+         "I've also worked on the production failure scanner, working memory, reliability infrastructure, and some of the cost and orchestration pieces.",
+         "So it's a mix of debugging production behavior, building infrastructure, writing product code, and figuring out what we should build next."],
+     "swaps": [{"when": "If they ask \u201chow much coding?\u201d", "line": "A lot. I'm usually in the codebase every day. The difference is that because we're a small team, the coding is usually preceded by figuring out what the right thing to build is."}],
+     "land": "The coding is usually preceded by figuring out what the right thing to build is.",
+     "notes": ["Your own words, unchanged from ZenML. It works for any company.",
+               "For Mphasis, the regression-set sentence is the one to lean on: clients want proof a change didn't break anything."]},
 ]
 
 QA = [
@@ -256,6 +329,9 @@ TRAPS = [
 
 DRILLS = [
     {"id": "intro", "prompt": "Tell me about yourself.", "target": "90 seconds", "seconds": 90, "ref": "#say-intro"},
+    {"id": "why-mphasis", "prompt": "Why Mphasis?", "target": "60 seconds", "seconds": 60, "ref": "#say-why-mphasis"},
+    {"id": "why-role", "prompt": "Why this role, and how strong are you on classic ML?", "target": "60 seconds", "seconds": 60, "ref": "#say-why-role"},
+    {"id": "leave", "prompt": "Why leave alfred_ after six months?", "target": "45 seconds", "seconds": 45, "ref": "#say-leave"},
     {"id": "llm", "prompt": "How does a large language model work?", "target": "60 seconds", "seconds": 60, "ref": "#/prep/q-how-does-a-large-language-model-work"},
     {"id": "agent", "prompt": "What is an AI agent? Walk me through one you built.", "target": "90 seconds", "seconds": 90, "ref": "#/prep/q-what-is-an-ai-agent-and-how-is-it-different-from-a-chatbot"},
     {"id": "rag", "prompt": "Design a RAG system out loud, then code the query path.", "target": "3 minutes", "seconds": 180, "ref": "#/prep/q-build-a-basic-rag-pipeline"},
