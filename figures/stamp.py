@@ -1,5 +1,6 @@
-"""Stamp the figure files that the tracker and the system design guide load with a hash of
-their contents, so a changed figure is never served from a stale browser cache.
+"""Stamp the figure files (and the coding page's coding/ files) that the tracker, the system design
+guide, CODING.html and CHEATSHEET.html load with a hash of their contents, so a changed file is
+never served from a stale browser cache.
 
     python figures/stamp.py
 
@@ -10,21 +11,21 @@ import hashlib, io, os, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-PAGES = ["index.html", "SYSTEM DESIGN.html"]
+PAGES = ["index.html", "SYSTEM DESIGN.html", "CODING.html", "CHEATSHEET.html"]
 
 for page in PAGES:
     path = os.path.join(ROOT, page)
     s = io.open(path, encoding="utf-8", newline="").read()
 
     def stamp(m):
-        f = m.group(1)
-        p = os.path.join(HERE, f)
+        d, f = m.group(1), m.group(2)
+        p = os.path.join(ROOT, d, f)
         if not os.path.exists(p):
             return m.group(0)
         v = hashlib.sha1(io.open(p, "rb").read()).hexdigest()[:8]
-        return '"figures/%s?v=%s"' % (f, v)
+        return '"%s/%s?v=%s"' % (d, f, v)
 
-    out, n = re.subn(r'"figures/([a-z-]+\.(?:js|css))(?:\?v=[0-9a-f]+)?"', stamp, s)
+    out, n = re.subn(r'"(figures|coding)/([a-z-]+\.(?:js|css))(?:\?v=[0-9a-f]+)?"', stamp, s)
     if out != s:
         io.open(path, "w", encoding="utf-8", newline="\n").write(out)
     print("%s: %d links" % (page, n))

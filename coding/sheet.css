@@ -1,0 +1,140 @@
+/* The coding cheat sheet and the side-by-side popup, shared by CODING.html and CHEATSHEET.html.
+   Cream in every colour scheme. On a phone the sheet is one scrolling column and the popup is
+   full screen with a Notes / Code switch. */
+:root { --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif; --mono: "JetBrains Mono", Consolas, monospace;
+  --code-bg: #F4EEE2; --code-ink: #2B2722; --code-rule: #E3DACA; --mark: #F2C66D; }
+.cheat, .pop { --ink: #1D1B17; --soft: #45413A; --muted: #736D62; --rule: #E7E0D2; --tint: #F2ECE0; --accent: #0A5BD3; color-scheme: light; }
+
+/* Code: Python colours on cream */
+pre { margin: 10px 0 14px; padding: 14px 16px; background: var(--code-bg); color: var(--code-ink); border: 1px solid var(--code-rule); border-radius: 8px; overflow-x: auto;
+  font: 13.5px/1.65 var(--mono); }
+.tk { color: #A626A4; } .ts { color: #3F8F3E; } .tc { color: #8B8475; font-style: italic; } .tn { color: #B0620A; } .tf { color: #2F65D8; } .tb { color: #0E7C93; }
+code { font-family: var(--mono); font-size: .9em; background: var(--tint); padding: 1px 5px; border-radius: 4px; }
+pre code { background: none; padding: 0; font-size: inherit; }
+
+/* A worked example on one line: input -> output, why */
+.ex { margin: 8px 0 10px; padding: 8px 12px; background: var(--tint); border-left: 3px solid var(--mark); border-radius: 6px; font-size: 15px; }
+.ex-in, .ex-out { font-family: var(--mono); font-size: .88em; }
+.ex-out { font-weight: 700; }
+.ex-arrow { color: var(--muted); margin: 0 6px; }
+.ex-w { color: var(--muted); }
+.ex-w::before { content: "\00B7"; margin: 0 8px; }
+
+/* A full problem statement: paragraphs, two examples, constraints */
+.st p { margin: 0 0 8px; }
+.st-ex { margin: 8px 0; padding: 8px 12px; border: 1px solid var(--rule); border-radius: 8px; font-size: .94em; }
+.st-ex > b { display: block; margin-bottom: 2px; }
+.st-ex div { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: 8px; margin: 2px 0; }
+.st-ex .k { color: var(--muted); }
+.st-ex code { background: none; padding: 0; overflow-wrap: anywhere; }
+.st-k { margin: 8px 0 4px; font-size: .94em; }
+.st-k ul { margin: 2px 0 0; padding-left: 18px; }
+
+/* A shared figure, always on white */
+.cfig { margin: 12px 0 14px; }
+.cfig .fig-svg { background: #fff; border: 1px solid var(--rule); border-radius: 8px; padding: 12px; overflow-x: auto;
+  --faint: #a2a09a; --dim: #6b6a65; --line: #c3c0b7; --ink: #1a1a19; --live: #fffdf5; }
+.cfig svg { display: block; min-width: 520px; max-width: 100%; height: auto; margin: 0 auto; }
+.cfig figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+/* The sheet: one screen of cards. fitSheet() picks the font and the column count. */
+.cheat { position: fixed; inset: 0; z-index: 50; background: #FBF8F1; color: #1D1B17; display: flex; flex-direction: column;
+  font: var(--cs-f) / 1.3 var(--body); --cs-f: clamp(10.5px, min(0.62vw, 1.15vh), 15px); }
+.cheat[hidden] { display: none; }
+.cs-top { display: flex; gap: 10px 14px; align-items: center; padding: 6px 14px; border-bottom: 1px solid #E7E0D2; font-size: 14px; flex-wrap: wrap; }
+.cs-top b { font-size: 15px; }
+.cs-top .hint { color: #736D62; font-size: 13.5px; }
+.cs-top .grow { flex: 1; }
+.cs-top a { color: #0A5BD3; text-decoration: none; }
+.cs-top button, .cs-tabs button { font: inherit; font-size: 14px; padding: 3px 12px; border: 1px solid #E3DACA; border-radius: 6px; background: #F4EEE2; color: #1D1B17; cursor: pointer; }
+.cs-tabs { display: flex; gap: 4px; }
+.cs-tabs button { background: none; border-color: transparent; color: #736D62; }
+.cs-tabs button.on { background: #FFFDF8; border-color: #C9BFA9; color: #1D1B17; font-weight: 700; }
+.cs-grid { flex: 1; min-height: 0; padding: 10px 14px 12px; column-count: 6; column-gap: 10px; column-fill: auto; overflow: auto; }
+.cs-card { break-inside: avoid; border: 1px solid #E7E0D2; border-radius: 8px; padding: 6px 9px 5px; margin: 0 0 8px; background: #FFFDF8; }
+.cs-card h3 { margin: 0 0 3px; font-size: 1.12em; }
+.cs-card p { margin: 0 0 3px; }
+.cs-card ul { margin: 3px 0 0; padding-left: 16px; }
+.cs-card li { margin: 1px 0; }
+.cs-card li.more { display: none; }
+.cs-click { cursor: pointer; }
+.cs-click:hover, .cs-click:focus { border-color: #C9BFA9; outline: none; box-shadow: 0 1px 0 #E3DACA; }
+.cs-card .cs-ex { margin: 0 0 3px; font-size: .95em; }
+.cs-card pre { margin: 3px 0; padding: 4px 7px; font-size: .9em; line-height: 1.3; border-radius: 6px; white-space: pre-wrap; overflow: visible; }
+
+/* Side by side: notes and the list on the left, the chosen item on the right */
+.pop { position: fixed; inset: 0; z-index: 60; background: rgba(29, 27, 23, .4); display: flex; align-items: center; justify-content: center; padding: 3vh 2vw; }
+.pop[hidden] { display: none; }
+.pop-in { position: relative; width: min(1560px, 96vw); height: min(920px, 92vh); background: #FBF8F1; color: #1D1B17; border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .3); display: grid; grid-template-columns: minmax(320px, .85fr) minmax(0, 1.3fr); overflow: hidden; font: 15px/1.5 var(--body); }
+.pop-bar { display: none; }
+.pop-l { overflow: auto; padding: 22px 22px 24px; background: #F5F0E6; border-right: 1px solid #E7E0D2; }
+.pop-r { overflow: auto; padding: 22px 28px 24px; }
+.pop-x { position: absolute; top: 12px; right: 14px; font: inherit; font-size: 14px; padding: 3px 12px; border: 1px solid #E3DACA; border-radius: 6px; background: #F4EEE2; color: #1D1B17; cursor: pointer; z-index: 2; }
+.pop h2 { margin: 0 0 4px; font-size: 24px; padding-right: 70px; }
+.pop .spot { color: #45413A; margin: 4px 0 10px; }
+.pop .spot b { color: #1D1B17; }
+.pop .ex { background: #EFE8DA; }
+.pop h4 { margin: 18px 0 6px; font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: #736D62; }
+.pop ul.nu { margin: 0; padding-left: 18px; }
+.pop ul.nu li { margin: 3px 0; }
+.pop a { color: #0A5BD3; }
+.pop details.ask { margin: 4px 0; }
+.pop details.ask summary { cursor: pointer; }
+.pop details.ask p { margin: 4px 0 8px 16px; color: #45413A; }
+.pi { display: block; width: 100%; text-align: left; font: inherit; background: none; border: 1px solid transparent; border-radius: 8px; padding: 6px 10px; margin: 2px 0; cursor: pointer; color: inherit; }
+.pi:hover { background: #FFFDF8; border-color: #E7E0D2; }
+.pi.on { background: #FFFDF8; border-color: #C9BFA9; }
+.pi b { display: block; font-size: 15px; }
+.pi span { display: block; font-size: 12.5px; color: #736D62; font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-foot { margin: 18px 0 0; font-size: 13.5px; color: #736D62; }
+.pr-kind { font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: #736D62; }
+.pop-r h3 { margin: 2px 90px 8px 0; font-size: 22px; }
+.pop-r .pr-t { margin: 6px 0 10px; }
+.pop-r pre { font-size: 14px; }
+.pop .cx { color: #736D62; font-size: 14px; }
+
+@media print { body > :not(.cheat) { display: none; } .cheat { position: static; } }
+
+/* Scroll mode (sheet.js sets .scroll on a phone, upright or on its side): readable cards in a grid of 300px
+   columns, read row by row, every note shown, the whole sheet scrolls */
+.cheat.scroll { overflow-y: auto; font-size: 15px; -webkit-overflow-scrolling: touch; }
+.cheat.scroll .cs-top { position: sticky; top: 0; z-index: 2; background: #FBF8F1; }
+.cheat.scroll .cs-top .hint, .cheat.scroll .cs-top .wide { display: none; }
+.cheat.scroll .cs-grid { flex: none; overflow: visible; columns: auto !important; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0 12px; align-items: start; padding: 10px 12px 48px; }
+.cheat.scroll .cs-card { padding: 10px 12px 8px; margin-bottom: 10px; }
+.cheat.scroll .cs-card li.more { display: list-item; }
+.cheat.scroll .cs-card pre { font-size: 12.5px; line-height: 1.45; }
+
+/* A short screen (a phone on its side): the popup fills it, side by side, each half scrolls */
+@media (max-height: 560px) {
+  .pop { padding: 0; }
+  .pop-in { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; grid-template-columns: minmax(260px, .8fr) minmax(0, 1.4fr); }
+  .pop-l, .pop-r { padding: 12px 14px 28px; }
+  .pop h2 { font-size: 19px; }
+  .pop-r h3 { font-size: 18px; }
+  .pop-r pre { font-size: 12.5px; white-space: pre-wrap; }
+  .pop-x { top: 8px; right: 10px; }
+}
+
+/* Phone: the sheet scrolls as one column with every note; the popup fills the screen */
+@media (max-width: 760px) {
+  .cheat { font-size: 15px; }
+  .cs-top { padding: 8px 12px; }
+  .cs-top .hint, .cs-top .wide { display: none; }
+  .cs-tabs { order: 5; width: 100%; }
+  .cs-tabs button { flex: 1; padding: 6px 8px; }
+  .pop { padding: 0; }
+  .pop-in { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .pop-bar { display: flex; gap: 6px; padding: 10px 92px 10px 12px; border-bottom: 1px solid #E7E0D2; background: #F5F0E6; }
+  .pop-bar button { flex: 1; font: inherit; font-size: 15px; padding: 6px 10px; border: 1px solid #E3DACA; border-radius: 6px; background: none; color: #736D62; }
+  .pop-bar button.on { background: #FFFDF8; border-color: #C9BFA9; color: #1D1B17; font-weight: 700; }
+  .pop-l, .pop-r { padding: 14px 14px 32px; border-right: 0; }
+  .pop-in .pop-r { display: none; }
+  .pop-in.show-r .pop-r { display: block; }
+  .pop-in.show-r .pop-l { display: none; }
+  .pop-x { top: 10px; right: 12px; padding: 6px 12px; }
+  .pop h2 { font-size: 21px; padding-right: 0; }
+  .pop-r h3 { margin-right: 0; font-size: 19px; }
+  .pop-r pre { font-size: 12.5px; white-space: pre-wrap; }
+}

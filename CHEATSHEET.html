@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coding cheat sheet</title>
+<meta name="theme-color" content="#FBF8F1">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="icon" type="image/svg+xml" href="brand/system-design.svg">
+<link rel="stylesheet" href="coding/sheet.css?v=f6b7b77b">
+<style>
+body { margin: 0; background: #FBF8F1; }
+</style>
+</head>
+<body>
+<div class="cheat" role="main" aria-label="Coding cheat sheet">
+  <div class="cs-top"><b>Coding cheat sheet</b><div class="cs-tabs"></div><span class="hint">Tap or click a card for examples and variations. F for full screen.</span><span class="grow"></span><a href="CODING.html">Full page</a><a href="index.html" class="wide">Tracker</a><button type="button" class="wide" id="cs-full">Full screen</button></div>
+  <div class="cs-grid"></div>
+</div>
+<script src="coding/data.js?v=f3211aec"></script>
+<script src="coding/sheet.js?v=458358ec"></script>
+<script>
+(function () {
+  "use strict";
+  // The same sheet as CODING.html#cheat, as its own page; "Open on the page" links go to CODING.html.
+  window.CS.pageBase = "CODING.html";
+  window.CS.mountSheet(document.querySelector(".cheat"));
+  document.getElementById("cs-full").addEventListener("click", window.CS.fullScreen);
+  document.addEventListener("keydown", function (e) {
+    if (!window.CS.popOpen() && (e.key === "f" || e.key === "F")) { window.CS.fullScreen(); }
+  });
+}());
+</script>
+</body>
+</html>
