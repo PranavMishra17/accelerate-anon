@@ -456,3 +456,19 @@ Alaap's two engines behind one Protocol, a context manager for a 6 GB GPU, invar
 and SQLAlchemy over Kitaru-style sessions. Five questions that showed an empty
 'Understand it' column now have probes, notes and figures, and the board widens when it
 holds code. No change to the plan or to `CHARTER.md`.
+
+**2026-09-28 — alfred_ from the outside: a draw-it-cold drill, checked against the code.**
+After the ZenML call, where Pranav couldn't draw alfred_ top-down or say cleanly where the
+agent runs. Two readers checked the architecture against the alfred_ code on origin/main:
+the agent turn runs in Supabase edge functions in Deno (conv-v6 ingress, job worker, turn;
+conv-v6-web; mcp-exec), long work in Railway containers (documents, routines, the phone
+agent, EmailEngine), state in one Postgres with pgmq and pg_cron; the agent loop is a
+LangGraph graph of 12 steps on SMS and 50 on web; memory is three kinds (the conversation,
+facts in the cached per-user block, working memory fetched by a lookup tool). A new
+wildcard session, first in the list and for every interview, drills it as six exercises,
+each drawn cold with the answer hidden. Two new figures (where everything runs; memory
+across conversations) sit in the guide's alfred_ design and on the ZenML alfred_ tab; the
+chat-turn figure and the guide's stale 'runAgent, max 12 steps' and 'one Supabase project'
+are corrected. The home page no longer fails on a wildcard session without a date, and
+`figures/stamp.py` stamps content hashes on the tracker's and guide's figure links so a new
+figure is never served stale. No change to the plan or to `CHARTER.md`.

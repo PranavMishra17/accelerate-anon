@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>System design delivery, worked end to end</title>
 <link rel="stylesheet" href="fonts/fonts.css">
-<link rel="stylesheet" href="figures/viewer.css">
-<link rel="stylesheet" href="figures/figures.css">
-<script src="figures/icons.js"></script>
-<script src="figures/figures.js"></script>
-<script src="figures/notes.js" defer></script>
-<script src="figures/notes-sd.js" defer></script>
-<script src="figures/viewer.js" defer></script>
+<link rel="stylesheet" href="figures/viewer.css?v=7a5bfc4f">
+<link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
+<script src="figures/icons.js?v=129ef92b"></script>
+<script src="figures/figures.js?v=2bf7bd54"></script>
+<script src="figures/notes.js?v=85c9ff0a" defer></script>
+<script src="figures/notes-sd.js?v=d4c6a625" defer></script>
+<script src="figures/viewer.js?v=ecb99aae" defer></script>
 <link rel="icon" type="image/svg+xml" href="brand/system-design.svg">
 <style>
 :root {
@@ -2886,7 +2886,7 @@ GUIDE.examples.push({
   kind: "A shipped email and calendar agent, read from its own code",
   prompt: "Design alfred_. It watches a user's inboxes and calendars, acts on mail without being asked (archive, label, draft, notify), and answers the user over SMS, web chat, and an MCP connector with tools over email, calendar, tasks, and memory.",
   lens: [
-    "This is the email agent example as it actually shipped: one Postgres, about 370 Deno edge functions, about 250 cron registrations, and one tool package that every surface imports. The interesting design is what sits around the model, not the model.",
+    "This is the email agent example as it actually shipped: one Postgres, about 370 Deno edge functions, about 250 cron registrations, a few long-running containers on Railway, and one tool package that every surface imports. The interesting design is what sits around the model, not the model.",
     "Two loops share one tool layer. A conversational agent the user talks to, and a background pipeline that watches the mailbox and acts alone. The pipeline never sends mail; only a user-approved path does.",
     "Every claim below is grounded in a file path. Where the design cut a corner, the corner is named, because the corners are where the interviewer's follow-ups live."
   ],
@@ -2944,7 +2944,13 @@ GUIDE.examples.push({
           { term: "TurnTrace, ToolExecution", desc: "`v6_turn_traces` and `v6_tool_executions`: one row per turn and per tool call, with latency stamps, cache hits, and preview status. The eval scanner reads these." },
           { term: "Effect", desc: "`turn_effects` and `side_effects`: the ledger of what actually changed in the world. The ground truth for any behavioural assertion; the assistant's text is not." },
           { term: "AttentionItem, WorkingMemoryBrief", desc: "Open loops and the brief built from them. Knowledge entities for the briefing surfaces." }
-        ]}
+        ]},
+        { type: "defs", title: "Memory across conversations: three kinds", items: [
+          { term: "The conversation", desc: "The last 30 messages, trimmed to 6,000 tokens, as the transcript; a rolling summary every 8 messages and the three most related past chats in the per-turn block." },
+          { term: "Facts", desc: "`v6_user_facts`: written by the agent's remember and update tools and by an extraction job every 12 messages; up to 40 in the cached per-user block; the user can correct them." },
+          { term: "Working memory", desc: "`working_memory_items`: one row per loop (owed reply, awaited reply, obligation), built by scheduled reconcilers in code; fetched on demand by `working_memory_lookup`, not placed in every prompt." }
+        ]},
+        { type: "fig", key: "alfredMemory" }
       ],
       reasoning: [
         "Call out PendingAction as the contended entity now. Two consumers (executor and drafter) and one reverser all move its status.",
@@ -3062,7 +3068,7 @@ ToolDef {
           { id: "jobs", label: "v6_agent_jobs", sub: "claim via SKIP LOCKED", col: 2, row: 1, tone: "queue" },
           { id: "turn", label: "conv-v6 turn", sub: "lease, trace, context", col: 3, row: 1, tone: "orchestrator" },
           { id: "prompt", label: "Prompt builder", sub: "4 blocks, 3 cache breaks", col: 3, row: 0, tone: "service" },
-          { id: "loop", label: "runAgent loop", sub: "max 12 steps", col: 4, row: 1, tone: "orchestrator" },
+          { id: "loop", label: "Agent graph", sub: "LangGraph, 12 on SMS", col: 4, row: 1, tone: "orchestrator" },
           { id: "model", label: "Model stack", sub: "sonnet, opus, haiku", col: 4, row: 0, tone: "model" },
           { id: "wrap", label: "compose() wrappers", sub: "gate, preview, replay", col: 5, row: 1, tone: "guard" },
           { id: "tools", label: "packages/tools", sub: "ToolDef registry", col: 6, row: 1, tone: "service" },
@@ -3109,6 +3115,8 @@ ToolDef {
 
     hld: {
       board: [
+        { type: "note", text: "Draw it cold first: the drill 'alfred_ from the outside' is the first session in your tracker's wildcard. Where everything runs, checked against the code on 28 September 2026:" },
+        { type: "fig", key: "alfredDeploy" },
         { type: "diagram", title: "alfred_ high-level design", nodes: [
           { id: "sms", label: "SMS user", sub: "Linq number", col: 0, row: 0, tone: "human" },
           { id: "web", label: "Web + mobile", sub: "Next.js, Flutter", col: 0, row: 1, tone: "human" },
@@ -3188,7 +3196,7 @@ ToolDef {
       script: [
         "Three doors, one brain, one tool package. SMS goes through a webhook and a job queue because the reply can take longer than a webhook should. Web streams directly. MCP runs single tools as the user, behind an allowlist.",
         "The background pipeline is a separate row: ingestion stages mail, triage decides, the executor and the worker act, notify tells the user, and a reconciler checks the provider afterwards.",
-        "Everything is one Supabase project: Postgres with row-level security, pg_cron for schedules, pgmq for the event bus, and Deno edge functions for compute. That is a deliberate choice for a small team; the trade-off is that one database carries every workload, which I will come back to.",
+        "Compute is Deno edge functions on Supabase, with a few long-running containers on Railway for documents, routines and phone calls; state is one Postgres with row-level security, pg_cron for schedules and pgmq for the event bus. That is a deliberate choice for a small team; the trade-off is that one database carries every workload, which I will come back to.",
         "Two boxes people leave off: the control plane, which is a config table with percentage dials, and the eval scanner, which turns real failing turns into regression cases."
       ],
       contrast: "The whiteboard email-agent design has an orchestrator, a gateway, a tool executor, a gate, and a trace store. Here the same boxes exist with names, and two extra rows appear: the delivery surfaces (notify, send, briefs) and the operations layer (monitors, spend, control plane), because a shipped agent spends most of its code there."
@@ -3787,7 +3795,7 @@ GUIDE.patternUsage = {
         { id: "hitl-undo", how: "Writes return `requires_confirmation` first; only `donna-send-approved-draft` sends, after approval; the reverser undoes silent actions the user rejects." },
         { id: "injection", how: "Email bodies are tagged as untrusted, echoed tool markup is stripped, and silent actions are limited to archive, label, and move." },
         { id: "least-privilege", how: "MCP runs one allowlisted tool as the token's user; the web route holds no service key." },
-        { id: "budgets", how: "The `runAgent` loop is capped at 12 steps." }
+        { id: "budgets", how: "The agent graph (`runAgentGraph`, on LangGraph) is capped at 12 steps on SMS and 50 on web." }
       ]},
       { group: "contention", why: "Webhook retries, MCP retries, overlapping crons, and two isolates can all hit the same conversation.", techniques: [
         { id: "single-writer", how: "`v6_try_acquire_lease` gives one turn per conversation; the lease is a column with an expiry, because the work spans several provider calls." },

@@ -15,6 +15,7 @@ Read `README.md` for what each page does and the order of `index.html`'s script.
 python -m http.server 8000 --bind 127.0.0.1   # or study.cmd; always http://localhost:8000
 node figures/check.js                         # every shared figure renders; ids vs notes; figures/check.html gallery
 node figures/check.js cand.js                 # same, for candidate DIA entries applied on top
+python figures/stamp.py                       # after any figures/ change: cache-busting hashes in index.html and the guide
 python interviews/build.py zenml_round3       # interviews/zenml-round3.html from its content module
 python alaap/build.py                         # ALAAP.html + the AL:BEGIN..AL:END block in index.html
 ```
@@ -108,8 +109,11 @@ The long form, for the material itself, is `PROTOCOL.md`, section **How you stud
   different progress stores. Test on `localhost:8000`.
 - Heredocs mangle `\n` and regex escapes in Python and JS; write scripts with `Write`.
 - Lift-off and other effects must not fire on load (`booted` guard in `markSession`).
-- Loop pages load `figures/*` with a `?v=<content hash>` that `build.py` stamps, so a changed
-  figure is never stale. Rebuild the loop page after any figure change.
+- Every page loads `figures/*` with a `?v=<content hash>`: loop pages get it from `build.py`,
+  the tracker and the guide from `python figures/stamp.py`. After any figure change, run both,
+  or the browser serves the old figure and the guide reports 'No shared figure'.
+- A wildcard session with no date in `forWhat` (like `wc18`, for every interview) is valid;
+  `loopDate` returns null for it and the home page shows it without a date.
 - The desktop pr-attribution hook may reject a commit trailer; commit without it if so.
 
 ## Wings of work ahead

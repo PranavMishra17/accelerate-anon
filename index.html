@@ -6,8 +6,8 @@
 <title>Accelerate</title>
 <link rel="icon" type="image/svg+xml" href="brand/accelerate.svg">
 <link rel="stylesheet" href="fonts/fonts.css">
-<link rel="stylesheet" href="figures/figures.css">
-<link rel="stylesheet" href="figures/viewer.css">
+<link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
+<link rel="stylesheet" href="figures/viewer.css?v=7a5bfc4f">
 <link rel="alternate icon" type="image/png" href="brand/accelerate-32.png">
 <style>
   :root {
@@ -677,10 +677,10 @@
     </main>
   </div>
 </div>
-<script src="figures/icons.js"></script>
-<script src="figures/figures.js"></script>
-<script src="figures/notes.js"></script>
-<script src="figures/viewer.js"></script>
+<script src="figures/icons.js?v=129ef92b"></script>
+<script src="figures/figures.js?v=2bf7bd54"></script>
+<script src="figures/notes.js?v=85c9ff0a"></script>
+<script src="figures/viewer.js?v=ecb99aae"></script>
 <script src="data/reading.js"></script>
 <script>
 (function () {
@@ -2236,6 +2236,83 @@
     title: "Wildcard",
     note: "ZenML round 3: Mon 28 Sep, 9 AM Eastern, ninety minutes of in-depth technical questions with Hamza and Alex. Oxus happened on 23 Sep; its design sessions moved into weeks 2 to 4 and the rest are parked.",
     sessions: [
+      {
+        id: "wc18", track: "Interview", forWhat: "Every interview: your own system", len: "1h 15m", est: 75,
+        name: "alfred_ from the outside: draw it cold",
+        blurb: "Before any round. In the ZenML call you couldn't draw alfred_ top-down or say where the agent runs. Draw it on paper first, then open the answer.",
+        intro: "You know alfred_ from the inside, slice by slice. An interviewer wants it from the outside: where a message enters, where the agent runs, where state lives, what runs in the background. Every step here is a drawing or a spoken answer, done cold, on paper, before you open the answer. Checked against the code on origin/main, 28 September 2026. Repeat until each takes under five minutes.",
+        steps: [
+          { t: "Draw where everything runs", m: 10,
+            sd: [{ v: "alfred", a: "hld", why: "The deployment map and the full high-level design." }],
+            d: "Cold, on paper, three rows. Top: every way a request comes in. Middle: where compute runs. Bottom: where state, queues and schedules live, and the outside services. Then say, in one sentence, where the agent runs. The trap from the call: Postgres is where state lives, not where the agent runs.",
+            ans: [
+              "Requests come in four ways: SMS through a Linq webhook; the web app, Next.js on Vercel; Claude over MCP, through alfred-web's /api/mcp on Vercel; and phone calls through LiveKit.",
+              "Compute is Supabase edge functions in Deno: conv-v6 ingress, job worker and turn for SMS, conv-v6-web for the web app, mcp-exec for MCP, and the email pipeline. Work that outlives a request runs in Railway containers: the document writer, the routines worker, the LiveKit phone agent, and EmailEngine for IMAP.",
+              "State is one Supabase Postgres: jobs, traces and product data, pgmq queues for the event bus, pg_cron for schedules, storage buckets for files. Outside: Anthropic for the agent, Gemini for email triage, and Google and Microsoft mail and calendars.",
+              "In one sentence: the agent runs in a Deno edge function on Supabase, long work runs on Railway, and state lives in Postgres."
+            ],
+            close: [
+              { k: "short", q: "Where does alfred_'s agent turn actually run?", a: "In a Deno edge function on Supabase, conv-v6-turn for SMS and conv-v6-web for the web app. Long-running work runs in containers on Railway; state is in Postgres." },
+              { k: "why", q: "Why do documents, routines and phone calls run on Railway instead of in edge functions?", a: "Edge function invocations are short-lived. Work that outlives a request needs a long-running process, so those containers claim jobs from the same Postgres rows and run as long as they need." }
+            ] },
+          { t: "Draw one SMS, end to end", m: 15,
+            sd: [{ v: "alfred", a: "dataflow", why: "The chat turn and the background pipeline, step by step." }],
+            d: "The user texts 'move my 3pm to tomorrow'. Draw every hop from their phone to the reply, and name the function or table at each hop. Then say why there's a job row in the middle instead of doing the work in the webhook.",
+            ans: [
+              "Linq posts a signed webhook to conv-v6-ingress. It checks the signature, dedupes on the event id in v6_webhook_events, resolves the phone number to a user, stores the inbound message in linq_messages, and inserts a process_turn row into v6_agent_jobs. Then it returns fast and pokes the job worker.",
+              "conv-v6-job-worker, woken by that poke or by the one-minute cron, claims the job with FOR UPDATE SKIP LOCKED and hands it to conv-v6-turn. (For a small cohort, a cheaper v7 first pass tries first and hands back to v6 when it can't answer.)",
+              "conv-v6-turn takes a lease on the conversation (90 seconds, renewed every 30), opens a trace, loads context, builds the prompt, and runs the agent graph, LangGraph, up to 12 steps. Every tool call goes through the compose() wrapper stack: validation, capability gate, preview and confirmation, idempotency, logging, timeout. Guards check for fabricated claims before the reply goes out.",
+              "The reply is stored in linq_messages and sent back through Linq; a failed chunk is retried by an outbound-retry function.",
+              "Why the job row: Linq retries a webhook that doesn't answer fast, and a turn can take many seconds. So the webhook acknowledges at once, the work is a row that exactly one worker claims, and the lease stops two turns answering the same conversation."
+            ],
+            close: [
+              { k: "short", q: "What stops two texts sent a second apart from producing two overlapping replies?", a: "Dedupe on the event id stops a retried webhook; the conversation lease lets only one turn run per chat, so the second job is requeued until the first finishes." },
+              { k: "why", q: "Why acknowledge the webhook before doing any work?", a: "The provider retries anything slow, and the turn can take seconds. Acknowledging fast and moving the work to a claimed job row avoids duplicate turns and timeouts." }
+            ] },
+          { t: "Say the turn's layer order in thirty seconds", m: 5,
+            d: "Out loud, no notes: the order of what happens inside one turn, from lease to reply. Then name the three retry layers.",
+            ans: [
+              "Lease, trace, context, prompt, agent graph, tool wrappers, guards, reply, close the trace.",
+              "Retry layers: dedupe the webhook event, lease the conversation, and an idempotency key on every write tool."
+            ],
+            close: [
+              { k: "short", q: "Name the three retry layers in a chat turn.", a: "Webhook dedupe on the event id, a lease per conversation, and idempotency keys on write tools." }
+            ] },
+          { t: "Draw the context a turn sees", m: 10,
+            sd: [{ v: "alfred", a: "deepdives", why: "The cost dive: the prompt as a cache layout." }],
+            d: "Draw the prompt as stacked blocks, say what's in each and which are cached, then where the conversation history goes. Say why the layout is a cost decision.",
+            ans: [
+              "Block 1: the shared instructions, the tool catalog and the skill index, plus a small overlay per surface (SMS or web). Byte-identical across users, cached for an hour.",
+              "Block 2, per user: about the user, preferences, connected accounts, email rules, and up to 40 facts. Cached with the five-minute default.",
+              "Block 3, per turn, uncached: now, the entities you can refer to, pending confirmations, recent actions, the conversation summary, related past conversations, people you mentioned.",
+              "The history isn't in a block: the last 30 messages, trimmed to 6,000 tokens, go in as the message list.",
+              "Why it's a cost decision: the shared prefix is large, and another user's turn warms it for everyone if it's byte-identical, so it's laid out to maximise cache hits."
+            ],
+            close: [
+              { k: "short", q: "Which parts of the prompt are cached, and for how long?", a: "The shared instructions and tool catalog for an hour; the per-user block with the five-minute default; the per-turn block isn't cached." }
+            ] },
+          { t: "Draw memory across conversations", m: 15,
+            sd: [{ v: "alfred", a: "entities", why: "The entities, including the working-memory and fact stores." }],
+            d: "Three columns: what writes memory, how it's stored, how it reaches a turn. Cover the conversation itself, facts, and working memory. Then say why working memory is a tool rather than part of every prompt.",
+            ans: [
+              "The conversation: messages are stored per surface. A rolling summary is rewritten every 8 messages, and the three most related past conversations are recalled. The summary and related chats appear in the per-turn block; recent messages are the transcript.",
+              "Facts: written by the agent's remember and update tools and by a background extraction every 12 messages, marked as inferred. Up to 40 appear in the cached per-user block. The user can read and correct them on the memory page.",
+              "Working memory: one row per loop, an owed reply, an awaited reply, an obligation, with whose move it is and whether it's open. Scheduled reconcilers build it from email and calendar, using code rather than a model to decide open or closed. The agent fetches it on demand with a lookup tool, first a compact view per topic, then a topic's threads.",
+              "Why a tool: loops change constantly and there can be many, so putting them in every prompt would cost tokens and break the cache. Fetching on demand keeps the prompt stable and only pays when a question needs them. For people named in a message, their open loops can appear directly, behind a rollout dial.",
+              "The brief is separate: every twenty minutes or so a working-memory brief is composed, and there the model only picks from real candidates behind opaque handles while code re-attaches ids and ownership, so it can't invent a thread."
+            ],
+            close: [
+              { k: "short", q: "What are the three kinds of memory a turn can use, and how does each reach it?", a: "The conversation (recent messages as the transcript, summary and related chats in the per-turn block), facts (in the cached per-user block), and working memory (fetched on demand through a lookup tool)." },
+              { k: "why", q: "Why is working memory fetched by a tool instead of placed in the prompt?", a: "It changes constantly and can be large; on-demand fetching keeps the prompt cache stable and only costs tokens when a question needs it." }
+            ] },
+          { t: "The whole system in three minutes, drawing as you talk", m: 15,
+            d: "Blank page, timer on. Draw the deployment map, then walk one SMS through it, then say where memory comes in. Stop at three minutes. Then answer out loud: 'what's the first thing that breaks at ten times the users?'",
+            ans: [
+              "Order: the four doors, then compute (edge functions and Railway), then Postgres; one SMS from webhook to reply; then the prompt blocks and the three memories.",
+              "What breaks first at ten times: one Postgres carrying every workload, chat, ingestion, triage, briefs and crons. Isolation is in the schema today (partial indexes, SKIP LOCKED consumers, tuned vacuum); the signal to split is chat latency moving with triage batch size."
+            ] }
+        ]
+      },
       {
         id: "wc7", track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h", est: 60,
         name: "Round three is a different room",
@@ -6013,9 +6090,10 @@
       var why = nx.s.blurb || "";
       if (nx.wild) {
         var when = loopDate(nx.s), diff = when ? Math.round((when - today) / 864e5) : null;
-        var whenTxt = diff === 0 ? "today" : diff === 1 ? "tomorrow" :
-          (diff !== null && diff < 7 ? "on " + DAYNAME[when.getDay()] : "on " + when.getDate() + " " + MONTHNAME[when.getMonth()]);
-        why = "For " + String(nx.s.forWhat).split(",")[0] + ", " + whenTxt + ". " + why;
+        /* A session for every interview has no date in its forWhat. */
+        var whenTxt = !when ? "" : diff === 0 ? "today" : diff === 1 ? "tomorrow" :
+          (diff < 7 ? "on " + DAYNAME[when.getDay()] : "on " + when.getDate() + " " + MONTHNAME[when.getMonth()]);
+        why = "For " + String(nx.s.forWhat).split(",")[0] + (whenTxt ? ", " + whenTxt : "") + ". " + why;
       } else {
         why = "Week " + (nx.wi + 1) + ", " + nx.s.track.toLowerCase() + ". " + why;
       }

@@ -1557,7 +1557,7 @@ var FIGURES = (function () {
 
   DIA.alfredTurn = {
     title: "alfred_: one chat turn, in layer order",
-    cap: "<b>Acknowledge fast, then lease, trace, prompt, loop, guard, reply.</b> The SMS webhook gets a 200 at once and becomes a job row; the turn takes a lease on the conversation so two isolates cannot both answer, builds a four-block cached prompt, and runs a loop of at most 12 steps. Every tool call goes through the compose() wrappers and writes the effects ledger. The web surface skips ingress and jobs; MCP skips the loop.",
+    cap: "<b>Acknowledge fast, then lease, trace, prompt, loop, guard, reply.</b> The SMS webhook gets a 200 at once and becomes a job row; the turn takes a lease on the conversation so two isolates cannot both answer, builds a four-block cached prompt, and runs a LangGraph agent graph of at most 12 steps on SMS (50 on web). Every tool call goes through the compose() wrappers and writes the effects ledger. A cheaper v7 first pass, still in rollout, hands the job to this turn when it can't answer. The web surface skips ingress and jobs; MCP skips the graph.",
     svg: function () {
       var b = "";
       b += S.box({ id: "linq", x: 0, y: 20, w: 110, h: 44, label: "Linq SMS", sub: "signed webhook", tone: "iv" });
@@ -1565,7 +1565,7 @@ var FIGURES = (function () {
       b += S.box({ id: "job", x: 270, y: 20, w: 120, h: 44, label: "Job row", sub: "SKIP LOCKED", tone: "sys", icon: "list" });
       b += S.box({ id: "turn", x: 410, y: 20, w: 120, h: 44, label: "Turn", sub: "lease, trace", tone: "sys", icon: "lock" });
       b += S.box({ id: "prompt", x: 550, y: 20, w: 90, h: 44, label: "Prompt", sub: "4 blocks", tone: "flat" });
-      b += S.box({ id: "loop", x: 520, y: 120, w: 120, h: 44, label: "runAgent loop", sub: "max 12 steps", tone: "sys" });
+      b += S.box({ id: "loop", x: 520, y: 120, w: 120, h: 44, label: "Agent graph", sub: "LangGraph, 12 steps", tone: "sys" });
       b += S.box({ id: "wrappers", x: 350, y: 120, w: 150, h: 44, label: "compose()", sub: "gate, preview, replay", tone: "math" });
       b += S.box({ id: "tools", x: 180, y: 120, w: 150, h: 44, label: "packages/tools", sub: "ToolDef registry", tone: "flat" });
       b += S.box({ id: "effects", x: 0, y: 120, w: 160, h: 44, label: "Effects ledger", sub: "turn_effects", tone: "math", icon: "database" });
@@ -1730,6 +1730,68 @@ var FIGURES = (function () {
       b += S.text(0, 300, "search -> threads, messages  ·  send -> messages, participants", "d-t-s");
       b += S.text(0, 318, "createEvent -> events, attendees  ·  createTask -> tasks", "d-t-s");
       return S.frame(640, 330, b);
+    }
+  };
+
+  DIA.alfredDeploy = {
+    title: "alfred_: where everything runs",
+    cap: "<b>Compute is Deno edge functions on Supabase plus a few long-running containers on Railway; state is one Postgres.</b> Every request surface lands on an edge function: SMS on conv-v6 (ingress, job worker, turn), the web app on conv-v6-web, Claude over MCP on mcp-exec. Work that outlives a request, like writing documents, scheduled routines and live phone calls, runs in Railway containers that claim jobs from the same Postgres. Postgres holds the jobs, traces and product data, runs the queues (pgmq and job rows) and the schedules (pg_cron).",
+    svg: function () {
+      var b = "";
+      b += S.tag(0, 12, "Where requests come in");
+      b += S.box({ id: "sms", x: 0, y: 20, w: 150, h: 46, label: "SMS", sub: "Linq webhook", tone: "iv", icon: "message-square" });
+      b += S.box({ id: "web", x: 163, y: 20, w: 150, h: 46, label: "Web app", sub: "Next.js on Vercel", tone: "iv", icon: "layout-grid" });
+      b += S.box({ id: "mcp", x: 326, y: 20, w: 150, h: 46, label: "Claude via MCP", sub: "/api/mcp on Vercel", tone: "iv", icon: "bot" });
+      b += S.box({ id: "phone", x: 489, y: 20, w: 147, h: 46, label: "Phone calls", sub: "LiveKit, Cloudflare", tone: "iv", icon: "mic" });
+      b += S.tag(0, 110, "Compute");
+      b += S.box({ id: "edge", x: 0, y: 118, w: 400, h: 64, label: "Supabase edge functions (Deno)", sub: "conv-v6 ingress, job worker, turn; conv-v6-web; mcp-exec; email pipeline", tone: "sys", icon: "zap" });
+      b += S.box({ id: "railway", x: 420, y: 118, w: 216, h: 64, label: "Railway containers", sub: "doc, routines, phone; EmailEngine", tone: "sys", icon: "server" });
+      b += S.box({ id: "ext", x: 0, y: 234, w: 190, h: 64, label: "Models, providers", sub: "Anthropic, Gemini; Google", tone: "flat", icon: "cloud" });
+      b += S.box({ id: "pg", x: 210, y: 234, w: 426, h: 64, label: "Supabase Postgres", sub: "jobs, traces, product data; pgmq queues; pg_cron; storage", tone: "math", icon: "database" });
+      b += S.arrow(75, 68, 75, 116, {});
+      b += S.arrow(238, 68, 238, 116, {});
+      b += S.arrow(401, 68, 330, 116, {});
+      b += S.arrow(562, 68, 562, 116, {});
+      b += S.arrow(95, 184, 95, 232, {});
+      b += S.text(103, 204, "model calls", "d-t-s");
+      b += S.arrow(300, 184, 300, 232, {});
+      b += S.text(308, 204, "read, write", "d-t-s");
+      b += S.arrow(528, 184, 528, 232, {});
+      b += S.text(536, 204, "claim jobs", "d-t-s");
+      b += S.text(0, 322, "Where does the agent run? In a Deno edge function on Supabase. Long work: Railway. State: Postgres.", "d-t-s");
+      return S.frame(640, 332, b);
+    }
+  };
+  DIA.alfredMemory = {
+    title: "alfred_: memory across conversations",
+    cap: "<b>Three memories, three ways into a turn.</b> The conversation: the last 30 messages trimmed to 6,000 tokens go in as messages, and a rolling summary refreshed every 8 messages plus the three most related past chats go in the per-turn block. Facts: written by the agent's own tools and by a background job every 12 messages, up to 40 of them in the cached per-user block, and editable by the user. Working memory: loops (owed replies, awaited replies, obligations) built by scheduled reconcilers from email and calendar, fetched on demand by a lookup tool rather than put in every prompt.",
+    svg: function () {
+      var b = "";
+      b += S.tag(0, 10, "Written by");
+      b += S.tag(225, 10, "Stored as");
+      b += S.tag(455, 10, "Reaches the turn as");
+      b += S.box({ id: "conv", x: 0, y: 20, w: 190, h: 48, label: "This conversation", sub: "SMS or web messages", tone: "iv", icon: "message-square" });
+      b += S.box({ id: "jobs", x: 0, y: 118, w: 190, h: 48, label: "Background jobs", sub: "every 8 and 12 messages", tone: "sys", icon: "repeat" });
+      b += S.box({ id: "mail", x: 0, y: 240, w: 190, h: 48, label: "Email and calendar", sub: "cron reconcilers", tone: "sys", icon: "mail" });
+      b += S.box({ id: "recent", x: 225, y: 20, w: 195, h: 48, label: "Recent messages", sub: "30, trimmed to 6k tokens", tone: "math" });
+      b += S.box({ id: "summary", x: 225, y: 85, w: 195, h: 48, label: "Rolling summary", sub: "plus 3 related past chats", tone: "math" });
+      b += S.box({ id: "facts", x: 225, y: 150, w: 195, h: 48, label: "Facts", sub: "user can read and edit", tone: "math", icon: "notebook-pen" });
+      b += S.box({ id: "wm", x: 225, y: 240, w: 195, h: 48, label: "Working memory", sub: "owed, awaited, obligations", tone: "math", icon: "list-checks" });
+      b += S.box({ id: "msgs", x: 455, y: 20, w: 185, h: 48, label: "Messages", sub: "the turn's transcript", tone: "flat" });
+      b += S.box({ id: "b3", x: 455, y: 85, w: 185, h: 48, label: "Block 3, per turn", sub: "uncached", tone: "flat" });
+      b += S.box({ id: "b2", x: 455, y: 150, w: 185, h: 48, label: "Block 2, per user", sub: "cached, up to 40 facts", tone: "flat" });
+      b += S.box({ id: "tool", x: 455, y: 240, w: 185, h: 48, label: "Lookup tool", sub: "on demand, not in prompt", tone: "flat", icon: "search" });
+      b += S.arrow(192, 44, 223, 44, {});
+      b += S.arrow(192, 132, 223, 112, {});
+      b += S.arrow(192, 152, 223, 170, {});
+      b += S.arrow(192, 264, 223, 264, {});
+      b += S.arrow(422, 44, 453, 44, {});
+      b += S.arrow(422, 109, 453, 109, {});
+      b += S.arrow(422, 174, 453, 174, {});
+      b += S.arrow(422, 264, 453, 264, {});
+      b += S.arrow(422, 252, 470, 135, { id: "wm>b3", dash: true });
+      b += S.text(0, 312, "Dashed: open loops for people named in the message, dialled by a rollout setting.", "d-t-s");
+      return S.frame(640, 322, b);
     }
   };
 

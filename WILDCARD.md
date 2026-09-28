@@ -92,6 +92,12 @@ done properly later if the interview prep turned out to be shallower than it fel
 
 ## Currently in the slot
 
+- **Every interview: your own system.** `wc18`, 'alfred_ from the outside: draw it cold', sits
+  first in the wildcard. Six drawing and speaking drills (where everything runs, one SMS end to
+  end, the turn's layer order, the context a turn sees, memory across conversations, the whole
+  system in three minutes), each answer hidden until tried, checked against the alfred_ code on
+  28 September 2026. Added after the ZenML call, where the top-down picture didn't land.
+
 Opened 22 September 2026 for two loops.
 
 - **Oxus, technical, 23 September.** Happened. Its three design sessions (evidence
