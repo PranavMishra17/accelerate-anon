@@ -443,3 +443,16 @@ model of the user's world. A new Python bank covers decorators, asyncio, Pydanti
 Protocols, context managers, packaging, pytest, SQLAlchemy and an honest comparison with
 his TypeScript. Loop pages now load shared figure files with a content hash, so a changed
 figure is never served stale. No change to the plan or to `CHARTER.md`.
+
+**2026-09-27 — The Python bank with worked examples from his own projects; no empty columns.**
+Asked for by Pranav. The Python bank now opens with three questions answered at the depth
+of years of work: his experience (UIC services, WheelPrice's FastAPI backend, MockFlow-AI's
+real-time voice workers, SnakeAI's Python-to-C++ bridge, and Alaap as the example of how he
+writes Python now), why he likes Python and where he wouldn't use it, and how he would
+build his eval harness in Python and what would change. Every technical question now has a
+worked example in code: checkpointing Alaap's renders, MockFlow-AI's fallback timer and a
+concurrent cohort replay, Kitaru's policies and Alaap's direction as Pydantic models,
+Alaap's two engines behind one Protocol, a context manager for a 6 GB GPU, invariant tests,
+and SQLAlchemy over Kitaru-style sessions. Five questions that showed an empty
+'Understand it' column now have probes, notes and figures, and the board widens when it
+holds code. No change to the plan or to `CHARTER.md`.

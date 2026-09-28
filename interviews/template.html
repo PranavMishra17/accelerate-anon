@@ -262,6 +262,10 @@ dialog.convo::backdrop { background: rgba(10, 10, 14, 0.62); }
 .cv-said .ex-said { font-size: 15.5px; }
 .cv-part { font-size: 16px; margin: 26px 0 6px; padding-top: 14px; border-top: 1px solid var(--rule); color: var(--ink); }
 .cv-part-lead { font-size: 15px; color: var(--soft); margin: 0 0 6px; }
+.cv-code { margin: 10px 0 12px; padding: 12px 14px; background: #EFE8DA; border: 1px solid var(--rule); border-radius: 6px; overflow-x: auto;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.6; color: #2A2620; white-space: pre; }
+.cv-cols.has-code { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.cv-code code { background: none; padding: 0; font-size: inherit; color: inherit; }
 
 /* what to say: a dark sheet in a typewriter face, the one place on the screen that is dark */
 .cv-say { background: var(--sheet); color: var(--sheet-ink); scrollbar-color: var(--sheet-rule) transparent; border-radius: 10px; margin-top: 16px; padding: 22px 28px 32px;
@@ -567,7 +571,7 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
     if (LOOP.scripts.length) {
       banks.push({ id: "say", title: "Your story, in the words to say it", blurb: LOOP.storyBlurb || "", items: LOOP.scripts.map(function (x) {
         return { id: "say-" + x.id, q: x.title, short: x.short || x.title, tests: x.when, a: x.say, land: x.land, never: x.never, notes: x.notes,
-          probes: x.probes, swaps: x.swaps,
+          probes: x.probes, swaps: x.swaps, learn: x.figs ? { figs: x.figs } : null,
           meta: x.length ? x.length.charAt(0).toUpperCase() + x.length.slice(1) + "." : "",
           drill: LOOP.drills.some(function (d) { return d.id === x.id; }) ? x.id : null };
       }) });
@@ -1081,7 +1085,7 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
     right.appendChild(el("h3", "cv-h", rightTitle));
     cols.appendChild(left); cols.appendChild(right);
     pane.appendChild(cols);
-    return { left: left, right: right };
+    return { left: left, right: right, cols: cols };
   }
 
   /* A mock: what they asked and how it landed; what you said; what to say. */
@@ -1149,6 +1153,9 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
           c.left.appendChild(el("h4", "cv-part", inl(p.title)));
           if (p.lead) { c.left.appendChild(el("p", "cv-part-lead", inl(p.lead))); }
           panelList(p.items).forEach(function (u) { c.left.appendChild(u); });
+          /* A worked example: code, shown as written. */
+          if (p.code) { var pre = el("pre", "cv-code"); pre.appendChild(el("code", "", esc(p.code))); c.left.appendChild(pre); }
+          if (p.after) { panelList(p.after).forEach(function (u) { c.left.appendChild(u); }); }
         });
         panelSection(c.left, "The nuance", panelList(x.notes));
         panelSection(c.left, "Avoid", panelList(x.never, "mk-bad"));
@@ -1164,6 +1171,7 @@ dialog::backdrop { background: rgba(10, 10, 14, 0.55); }
           });
         }
         if (x.meta) { c.right.appendChild(el("p", "cv-meta", esc(x.meta))); }
+        if (c.left.querySelector(".cv-code")) { c.cols.classList.add("has-code"); }
       }
     });
   }
