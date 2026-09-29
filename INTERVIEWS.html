@@ -158,14 +158,40 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
       : esc(n) + "None is scheduled. A new loop is a new <code>interviews/&lt;module&gt;.py</code>.";
   }
 
-  /* Size each wordmark so the name fills its card's width: measure it at 100px, scale, and
-     keep a pixel spare. Then give every wordmark in a grid row the tallest one's height, so
-     the names sit on one baseline and the rounds below them line up. */
+  /* Every wordmark is one height: the size at which "Mphasis" fills a card's width. Each name
+     then fills the width by its letter-spacing, wider for short names, tighter for long ones;
+     a very long name that would need more than -0.12em is set smaller instead. The trailing
+     space after the last letter is cancelled so the name ends at the card's edge. Then every
+     wordmark in a grid row gets the tallest one's height, so the rounds below line up. */
   function fit() {
     var marks = [].slice.call(document.querySelectorAll(".wm"));
-    marks.forEach(function (h) { h.style.minHeight = ""; h.firstChild.style.fontSize = "100px"; });
-    var sizes = marks.map(function (h) { return 100 * (h.clientWidth - 1) / h.firstChild.getBoundingClientRect().width; });
-    marks.forEach(function (h, i) { h.firstChild.style.fontSize = Math.max(17, Math.floor(sizes[i] * 10) / 10) + "px"; });
+    if (!marks.length) { return; }
+    marks.forEach(function (h) {
+      h.style.minHeight = "";
+      var s = h.firstChild.style;
+      s.fontSize = "100px"; s.letterSpacing = ""; s.marginRight = "";
+    });
+    var probe = marks[0].firstChild.cloneNode(false);
+    probe.textContent = "Mphasis";
+    probe.style.cssText = "position:absolute;visibility:hidden;font-size:100px";
+    marks[0].appendChild(probe);
+    var avail = marks[0].clientWidth - 1;
+    var size = Math.max(17, Math.floor(1000 * avail / probe.getBoundingClientRect().width) / 10);
+    probe.remove();
+    marks.forEach(function (h) {
+      var co = h.firstChild, n = co.textContent.length;
+      co.style.fontSize = size + "px";
+      co.style.letterSpacing = "0px";
+      var room = h.clientWidth - 1 - co.getBoundingClientRect().width;
+      var ls = n > 1 ? room / (n - 1) : 0;
+      if (ls < -0.12 * size) {   /* too long to tighten: smaller, at the base tracking */
+        co.style.letterSpacing = "";
+        co.style.fontSize = Math.max(17, Math.floor(1000 * (h.clientWidth - 1) / co.getBoundingClientRect().width * size / 100) / 10) + "px";
+        return;
+      }
+      co.style.letterSpacing = ls.toFixed(2) + "px";
+      co.style.marginRight = (-ls).toFixed(2) + "px";
+    });
     var rows = {};
     marks.forEach(function (h) { var t = h.parentNode.offsetTop; rows[t] = Math.max(rows[t] || 0, h.getBoundingClientRect().height); });
     marks.forEach(function (h) { h.style.minHeight = rows[h.parentNode.offsetTop] + "px"; });
