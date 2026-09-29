@@ -574,3 +574,12 @@ scrolling; a tap opens the popup with the notes on the left and the code on the 
 code first and in smaller type, with no Notes / Code switch. The reference cards (Python
 tools, edge cases, traps) open too. Upright is unchanged. No change to the plan or to
 `CHARTER.md`.
+
+**2026-09-29 — Revamp, phase 1: the launch bar and a lean home page.**
+Following `REVAMP.md`. The tracker's header gains a launch bar: one button per reference
+(system design guide, coding, cheat sheet, Alaap and TrenTorch, the current interview
+loop), each opening in a new tab. The flight plan chart is gone; the week's status stays
+as one line under the next session. The home page keeps the next session, this week, the
+open wildcard items and three for today. The five weeks, the figures, the craft, the day
+board and every session moved to Progress (`#/progress`); Explain a figure has its own
+route (`#/figure`). No change to the plan or to `CHARTER.md`.

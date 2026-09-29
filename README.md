@@ -103,8 +103,13 @@ copy are four separate stores. Export from the Data page and commit the file int
 - **Drill** (`#/drill/<scope>`) turns one card at a time: say it, turn it, rate it. The cards
   you couldn't answer come first next time. **Sheet** (`#/sheet/<scope>`) prints a
   session, a week or the wildcard as a dense page, and can copy itself as markdown.
-- **Every morning.** The home page shows three open questions from sessions you've
-  started, weighted towards what you missed, and one figure to explain aloud in a minute.
+- **The home page** keeps four things: the next session, this week's sessions, what is open
+  in the wildcard, and three open questions from sessions you've started, weighted towards
+  what you missed. The buttons at the top right open each reference in a new tab: the system
+  design guide, coding, the cheat sheet, Alaap and TrenTorch, and the current interview loop.
+- **Progress** (`#/progress`) holds the five weeks at a glance, the figures, the craft, the
+  day board and every session. **Explain a figure** (`#/figure`): one figure to explain
+  aloud in a minute.
 - **The book and the sky.** When a week closes, it binds into the book (`#/book`): one page
   per week, printable. The sky (`#/sky`) draws every session as a star, lit when it
   closes.
