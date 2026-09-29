@@ -214,7 +214,7 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
 .note { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s6); max-width: var(--measure); }
 
 /* The pages: a card each, as on the interviews hub. One neutral surface with the page's name in
-   its colour (--b, a categorical token); hover and focus fill the card with it. */
+   its colour (--b, a categorical token); hover and focus add a faint tint of it and a coloured border. */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--s4); margin: 0 0 var(--s3); padding: 0; list-style: none; }
 .card {
   --c-bg: var(--surface); --c-name: var(--b); --c-ink: var(--ink); --c-soft: var(--soft); --c-muted: var(--muted); --c-rule: var(--rule);
@@ -222,7 +222,7 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
   background: var(--c-bg); color: var(--c-ink); border: 1px solid var(--c-rule); border-radius: var(--radius);
 }
 .card:hover, .card:focus-within {
-  --c-bg: var(--b); --c-name: var(--surface); --c-ink: var(--surface); --c-soft: var(--surface); --c-muted: var(--surface); --c-rule: var(--b);
+  --c-bg: color-mix(in srgb, var(--b) 6%, var(--surface)); --c-rule: color-mix(in srgb, var(--b) 45%, var(--rule));
 }
 .card, .card * { transition: background-color 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out; }
 @media (prefers-reduced-motion: reduce) { .card, .card * { transition: none; } }
@@ -239,7 +239,6 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
 .hrs { font-size: var(--fs-xs); color: var(--c-muted); margin: 0; }
 .hrs b { color: var(--c-ink); }
 .bar { height: 2px; background: var(--c-rule); margin: var(--s2) 0 0; overflow: hidden; }
-.card:hover .bar, .card:focus-within .bar { background: color-mix(in srgb, var(--surface) 30%, transparent); }
 .bar i { display: block; height: 100%; background: var(--c-soft); }
 .go { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); font-size: var(--fs-sm); padding-top: var(--s3); }
 .go a { position: relative; z-index: 2; color: var(--c-soft); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
@@ -360,7 +359,7 @@ footer { border-top: var(--hair); padding: var(--s4) 0 var(--s6); font-size: var
       rd: "A framework, " + C.patterns + " patterns, " + C.designs.length + " designs",
       ctx: "Six steps for any design question, and every deep dive named.",
       links: [["Framework", "SYSTEM%20DESIGN.html#/framework"], ["Patterns", "SYSTEM%20DESIGN.html#/patterns"], ["Designs", "SYSTEM%20DESIGN.html#/designs"]] },
-    { key: "coding", name: "Coding", href: "CODING.html", cat: 2,
+    { key: "coding", name: "Coding primer", href: "CODING.html", cat: 2,
       rd: C.algo + " patterns, " + C.topics + " AI systems topics",
       ctx: "Problems written out in full, with tested solutions.",
       links: [["Start", "CODING.html#start"], ["AI systems", "CODING.html#ai-systems"]] },
@@ -409,6 +408,7 @@ footer { border-top: var(--hair); padding: var(--s4) 0 var(--s6); font-size: var
       co.style.fontSize = size + "px";
       co.style.letterSpacing = "0px";
       var ls = n > 1 ? (h.clientWidth - 1 - co.getBoundingClientRect().width) / (n - 1) : 0;
+      ls = Math.min(ls, 0.06 * size);   /* a short name is not stretched: it ends early instead */
       co.style.letterSpacing = ls.toFixed(2) + "px";
       co.style.marginRight = (-ls).toFixed(2) + "px";
     });
