@@ -122,7 +122,7 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .loop { --brand: var(--bd, var(--b, var(--ink))); } }
 :root[data-theme="dark"] .loop { --brand: var(--bd, var(--b, var(--ink))); }
 .loop:hover, .loop:focus-within {
-  --c-bg: color-mix(in srgb, var(--brand) 6%, var(--surface)); --c-rule: color-mix(in srgb, var(--brand) 45%, var(--rule));
+  --c-bg: var(--brand); --c-name: var(--surface); --c-ink: var(--surface); --c-soft: var(--surface); --c-muted: var(--surface); --c-rule: var(--brand);
 }
 /* Colour only, quick and ease-out; no movement. 150 ms is the ceiling in DESIGN.md rule 10. */
 .loop, .loop * { transition: background-color 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out; }
@@ -144,6 +144,7 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
 .hrs { font-size: var(--fs-xs); color: var(--c-muted); margin: 0; }
 .hrs b { color: var(--c-ink); font-weight: var(--w-strong); }
 .bar { height: 2px; background: var(--c-rule); margin: var(--s2) 0 0; overflow: hidden; }
+.loop:hover .bar, .loop:focus-within .bar { background: color-mix(in srgb, var(--surface) 30%, transparent); }
 .bar i { display: block; height: 100%; background: var(--c-soft); }
 .end { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s3); padding-top: var(--s3); }
 .go { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); font-size: var(--fs-sm); }
@@ -154,6 +155,7 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
 .tag { margin-left: auto; display: inline-flex; gap: var(--s2); align-items: center; font-size: var(--fs-xs); line-height: 1; color: var(--c-muted);
   border: 1px solid var(--c-rule); border-radius: var(--radius-sm); padding: var(--s1) var(--s2); white-space: nowrap; }
 .tag b { color: var(--c-ink); font-weight: var(--w-strong); }
+.loop:hover .tag, .loop:focus-within .tag { border-color: currentColor; }
 .empty { background: var(--sunken); border-radius: var(--radius-lg); padding: var(--s5); max-width: var(--measure); }
 .empty b { display: block; font-weight: var(--w-strong); }
 .empty p { color: var(--soft); margin: var(--s1) 0 0; }
