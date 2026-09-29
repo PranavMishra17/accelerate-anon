@@ -24,28 +24,29 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
 .lead { color: var(--soft); margin: var(--s4) 0 var(--s5); max-width: var(--measure); }
 .lead b { color: var(--ink); font-weight: var(--w-strong); }
 
-/* The loops: a grid of tiles, newest first. Each company keeps one colour, as a 3px top
-   rule and a dot. A tile uses three sizes: 12 meta, 13 context and links, 17 title. */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(272px, 1fr)); gap: var(--s4); margin: 0 0 var(--s7); padding: 0; list-style: none; }
-.loop { --c: var(--muted); display: flex; flex-direction: column; min-width: 0; background: var(--surface); border: var(--hair); border-top: 3px solid var(--c);
-  border-radius: var(--radius); padding: var(--s3) var(--s4) var(--s4); }
-.loop.c1 { --c: var(--cat-1); } .loop.c2 { --c: var(--cat-2); } .loop.c3 { --c: var(--cat-3); }
-.loop.c4 { --c: var(--cat-4); } .loop.c5 { --c: var(--cat-5); } .loop.c6 { --c: var(--cat-6); }
-.st { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-xs); color: var(--muted); }
-.st i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+/* The loops: a grid of cards, newest first, all one neutral surface. The only colour is the
+   company name, set in its brand colour like a wordmark (--b, and --bd on the dark surface,
+   given per card from the loop's module). A card uses three sizes: 12 meta, 13 context and
+   links, 17 the name. */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--s4); margin: 0 0 var(--s7); padding: 0; list-style: none; }
+.loop { display: flex; flex-direction: column; min-width: 0; background: var(--surface); border: var(--hair); border-radius: var(--radius); padding: var(--s4); }
+.st { font-size: var(--fs-xs); color: var(--muted); margin: 0; }
 .st b { color: var(--ink); font-weight: var(--w-strong); }
-.loop h2 { font-size: var(--fs-lg); font-weight: var(--w-strong); line-height: var(--lh-tight); margin: var(--s2) 0 var(--s1); }
-.loop h2 a { color: var(--ink); }
-.loop h2 a:hover { color: var(--accent); text-decoration: none; }
-.ctx { font-size: var(--fs-sm); color: var(--soft); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hrs { font-size: var(--fs-xs); color: var(--muted); margin: var(--s4) 0 0; }
+.loop h2 { font-size: var(--fs-lg); line-height: var(--lh-tight); margin: var(--s3) 0 var(--s1); }
+.loop h2 a { color: var(--soft); }
+.co { color: var(--b, var(--ink)); font-weight: var(--w-strong); margin-right: var(--s2); }
+.rd { font-weight: var(--w-regular); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .co { color: var(--bd, var(--b, var(--ink))); } }
+:root[data-theme="dark"] .co { color: var(--bd, var(--b, var(--ink))); }
+.ctx { font-size: var(--fs-sm); color: var(--soft); margin: 0; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.ft { margin-top: auto; padding-top: var(--s5); }   /* progress and links sit on one baseline across a row */
+.hrs { font-size: var(--fs-xs); color: var(--muted); margin: 0; }
 .hrs b { color: var(--ink); font-weight: var(--w-strong); }
-.hrs .ok { color: var(--ok); font-weight: var(--w-strong); }
-.bar { height: 3px; border-radius: 2px; background: var(--sunken); margin: var(--s2) 0 0; overflow: hidden; }
+.bar { height: 2px; background: var(--rule); margin: var(--s2) 0 0; overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--soft); }
-.loop.done .bar i { background: var(--ok); }
-.go { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); margin: auto 0 0; padding-top: var(--s4); font-size: var(--fs-sm); }
-.go a:first-child { font-weight: var(--w-strong); }
+.go { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); margin: 0; padding-top: var(--s3); font-size: var(--fs-sm); }
+.go a { color: var(--soft); }
+.go a:first-child { color: var(--ink); font-weight: var(--w-strong); }
 .empty { background: var(--sunken); border-radius: var(--radius-lg); padding: var(--s5); max-width: var(--measure); }
 .empty b { display: block; font-weight: var(--w-strong); }
 .empty p { color: var(--soft); margin: var(--s1) 0 0; }
@@ -66,7 +67,7 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
     <ul class="grid" id="loops"></ul>
   </main>
 </div>
-<script type="application/json" id="hub-data">[{"title": "Mphasis, technical", "subtitle": "Agentic AI, AI fundamentals, a short coding exercise", "when": "Today, Monday 28 September (time in the invite)", "when_iso": "2026-09-28T14:30:00-04:00", "date": "Mon 28 Sep 2026", "company": "Mphasis", "href": "interviews/mphasis.html", "sessions": [], "total": 0, "links": [{"label": "Company", "url": "https://www.mphasis.ai/home.html", "title": "Mphasis.ai"}], "cat": 3}, {"title": "ZenML round 3", "subtitle": "Kitaru, product engineer", "when": "Monday 28 September, 9 AM Eastern", "when_iso": "2026-09-28T09:00:00-04:00", "date": "Mon 28 Sep 2026", "company": "ZenML", "href": "interviews/zenml-round3.html", "sessions": [{"id": "wc7", "min": 60}, {"id": "wc13", "min": 90}, {"id": "wc14", "min": 60}, {"id": "wc15", "min": 120}, {"id": "wc16", "min": 90}, {"id": "wc8", "min": 120}, {"id": "wc9", "min": 120}, {"id": "wc17", "min": 90}, {"id": "wc10", "min": 75}, {"id": "wc11", "min": 45}, {"id": "wc12", "min": 90}], "total": 960, "links": [{"label": "Job post", "url": "https://careers.crane.vc/companies/zenml-2/jobs/74821580-product-engineer-zenml-kitaru-f-m-d-full-time", "title": "Product Engineer, ZenML/Kitaru: the job post (closed to applications)"}, {"label": "Company", "url": "https://www.zenml.io/company", "title": "ZenML: company and values"}], "cat": 2}, {"title": "Oxus, technical", "subtitle": "Audit automation, founding engineer", "when": "Wednesday 23 September, afternoon", "when_iso": "2026-09-23T14:00:00-04:00", "date": "Wed 23 Sep 2026", "company": "Oxus", "href": "interviews/oxus.html", "sessions": [{"id": "wc1", "min": 45}, {"id": "wc5", "min": 75}, {"id": "wc6", "min": 60}], "total": 180, "links": [], "cat": 1}]</script>
+<script type="application/json" id="hub-data">[{"title": "Vanguard, technical", "subtitle": "Details to be filled", "when": "Date to be set", "when_iso": "", "date": "", "company": "Vanguard", "round": "Technical", "brand": "#96151D", "brandDark": "#EA6971", "href": "interviews/vanguard.html", "sessions": [], "total": 0, "links": [{"label": "Company", "url": "https://corporate.vanguard.com/", "title": "Vanguard: company site"}]}, {"title": "Mphasis, technical", "subtitle": "Agentic AI, AI fundamentals, a short coding exercise", "when": "Today, Monday 28 September (time in the invite)", "when_iso": "2026-09-28T14:30:00-04:00", "date": "Mon 28 Sep 2026", "company": "Mphasis", "round": "Technical", "brand": "#C5197A", "brandDark": "#EE7ABB", "href": "interviews/mphasis.html", "sessions": [], "total": 0, "links": [{"label": "Company", "url": "https://www.mphasis.ai/home.html", "title": "Mphasis.ai"}]}, {"title": "ZenML round 3", "subtitle": "Kitaru, product engineer", "when": "Monday 28 September, 9 AM Eastern", "when_iso": "2026-09-28T09:00:00-04:00", "date": "Mon 28 Sep 2026", "company": "ZenML", "round": "Round 3", "brand": "#5D7545", "brandDark": "#8BA96D", "href": "interviews/zenml-round3.html", "sessions": [{"id": "wc7", "min": 60}, {"id": "wc13", "min": 90}, {"id": "wc14", "min": 60}, {"id": "wc15", "min": 120}, {"id": "wc16", "min": 90}, {"id": "wc8", "min": 120}, {"id": "wc9", "min": 120}, {"id": "wc17", "min": 90}, {"id": "wc10", "min": 75}, {"id": "wc11", "min": 45}, {"id": "wc12", "min": 90}], "total": 960, "links": [{"label": "Job post", "url": "https://careers.crane.vc/companies/zenml-2/jobs/74821580-product-engineer-zenml-kitaru-f-m-d-full-time", "title": "Product Engineer, ZenML/Kitaru: the job post (closed to applications)"}, {"label": "Company", "url": "https://www.zenml.io/company", "title": "ZenML: company and values"}]}, {"title": "Oxus, technical", "subtitle": "Audit automation, founding engineer", "when": "Wednesday 23 September, afternoon", "when_iso": "2026-09-23T14:00:00-04:00", "date": "Wed 23 Sep 2026", "company": "Oxus", "round": "Technical", "brand": "#0D1666", "brandDark": "#909AF1", "href": "interviews/oxus.html", "sessions": [{"id": "wc1", "min": 45}, {"id": "wc5", "min": 75}, {"id": "wc6", "min": 60}], "total": 180, "links": []}]</script>
 <script>
 "use strict";
 (function () {
@@ -86,11 +87,11 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
 
   function progress(L, d) {
     var n = L.sessions.length;
-    if (!n) { return '<p class="hrs">No tracker sessions. The prep is on the loop page.</p>'; }
+    if (!n) { return '<p class="hrs">No tracker sessions.</p>'; }
     var closed = L.sessions.filter(function (s) { return d[s.id]; });
     var banked = closed.reduce(function (a, s) { return a + s.min; }, 0);
     var line = closed.length === n
-      ? '<span class="ok">All ' + n + " sessions closed</span>, " + hm(banked)
+      ? "<b>All " + n + " sessions closed</b>, " + hm(banked)
       : "<b>" + closed.length + "</b> of " + n + " sessions, <b>" + hm(banked) + "</b> of " + hm(L.total);
     return '<p class="hrs">' + line + "</p>" +
       '<div class="bar" role="progressbar" aria-label="Hours banked" aria-valuemin="0" aria-valuemax="' + L.total + '" aria-valuenow="' + banked + '"><i style="width:' +
@@ -107,22 +108,24 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
       return;
     }
     grid.innerHTML = LOOPS.map(function (L) {
-      var past = new Date(L.when_iso).getTime() <= now;
+      var past = !!L.when_iso && new Date(L.when_iso).getTime() <= now;   /* no date yet: still to come */
       if (!past) { next = L; }
-      var all = L.sessions.length && L.sessions.every(function (s) { return d[s.id]; });
       var ctx = L.subtitle || L.company;
-      return '<li class="loop c' + L.cat + (all ? " done" : "") + '">' +
-        '<div class="st" title="' + esc(L.company + ". " + L.when) + '"><i></i>' + (past ? "Happened, " + esc(L.date) : "<b>Upcoming</b>, " + esc(L.date)) + "</div>" +
-        '<h2><a href="' + esc(L.href) + '">' + esc(L.title) + "</a></h2>" +
+      var brand = (L.brand ? "--b:" + L.brand + ";" : "") + (L.brandDark ? "--bd:" + L.brandDark + ";" : "");
+      return '<li class="loop"' + (brand ? ' style="' + esc(brand) + '"' : "") + ">" +
+        '<p class="st" title="' + esc(L.company + ". " + L.when) + '">' +
+        (past ? "Happened, " + esc(L.date) : "<b>Upcoming</b>, " + (L.date ? esc(L.date) : "date to be set")) + "</p>" +
+        '<h2><a href="' + esc(L.href) + '"><span class="co">' + esc(L.company) + "</span>" +
+        (L.round ? '<span class="rd">' + esc(L.round) + "</span>" : "") + "</a></h2>" +
         '<p class="ctx" title="' + esc(ctx) + '">' + esc(ctx) + "</p>" +
-        progress(L, d) +
+        '<div class="ft">' + progress(L, d) +
         '<div class="go"><a href="' + esc(L.href) + '">Loop page</a>' +
         L.links.map(function (k) { return '<a href="' + esc(k.url) + '" target="_blank" rel="noopener" title="' + esc(k.title) + '">' + esc(k.label) + "</a>"; }).join("") +
-        "</div></li>";
+        "</div></div></li>";
     }).join("");
     var n = LOOPS.length + (LOOPS.length === 1 ? " loop" : " loops") + ", newest first. ";
     lead.innerHTML = next
-      ? esc(n) + "Next: <b>" + esc(next.title) + "</b>, " + esc(next.when) + "."
+      ? esc(n) + "Next: <b>" + esc(next.title) + "</b>. " + esc(next.when.replace(/\.$/, "")) + "."
       : esc(n) + "None is scheduled. A new loop is a new <code>interviews/&lt;module&gt;.py</code>.";
   }
 

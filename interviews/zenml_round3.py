@@ -10,6 +10,10 @@ LOOP = {
     "id": "zenml-r3",
     "title": "ZenML round 3",
     "subtitle": "Kitaru, product engineer",
+    # Brand colour for the hub's wordmark. ZenML Labs' sage green: --primary: #5d7545 in the
+    # [data-app=labs] scope of zenml.io's /_astro/global.CyAR-CHc.css (the favicon is #1C1E1A on
+    # sage #DBE0C2). brand_dark: the same hue lightened to 6:1 on the dark surface.
+    "brand": "#5D7545", "brand_dark": "#8BA96D",
     "when_iso": "2026-09-28T09:00:00-04:00",
     "when": "Monday 28 September, 9 AM Eastern",
     "who": "Hamza Tahir, co-founder of ZenML, and Alex Strick van Linschoten, who ships the Claude Code skills behind Kitaru's guided tour.",

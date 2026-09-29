@@ -9,6 +9,10 @@ LOOP = {
     "id": "mphasis",
     "title": "Mphasis, technical",
     "subtitle": "Agentic AI, AI fundamentals, a short coding exercise",
+    # Brand colour for the hub's wordmark. The magenta of the logo's mark (mphasis.com,
+    # /content/dam/mphasis-com/global/logo/mphasis-logo.png, #C5197A; the site CSS uses #C81A78).
+    # brand_dark: the same hue lightened to 6:1 on the dark surface.
+    "brand": "#C5197A", "brand_dark": "#EE7ABB",
     "when_iso": "2026-09-28T14:30:00-04:00",
     "when": "Today, Monday 28 September (time in the invite)",
     "who": "A technical panel. The invite came from the RPO consultant, copying two others.",

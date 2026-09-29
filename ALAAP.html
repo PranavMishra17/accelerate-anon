@@ -153,6 +153,20 @@ svg{display:block;margin:0 auto;max-width:100%;height:auto}
 .pager a{text-decoration:none;max-width:48%}
 .pager a:hover{text-decoration:underline}
 .pager .next{margin-left:auto;text-align:right}
+/* progress, kept in this browser: a done control on each stage, a check in the index, one line on the overview */
+.markbox{display:inline-flex;align-items:baseline;gap:var(--s2);font-size:var(--fs-sm)}
+.sh .markbox{order:1;margin-left:auto}
+.markend{margin-top:var(--s5)}
+.mark{font:inherit;color:var(--accent);background:none;border:var(--hair);border-radius:var(--radius);padding:var(--s1) var(--s3);cursor:pointer}
+.mark:hover{border-color:var(--accent)}
+.mark.undo{border-color:transparent;padding:0;color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+.mark.undo:hover{color:var(--ink)}
+.okd{color:var(--ok);font-weight:var(--w-strong)}
+.side a.done .sn{color:var(--ok)}
+.track{margin:var(--s4) 0 0;padding:var(--s3) var(--s4);background:var(--sunken);border-radius:var(--radius-lg);display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2) var(--s4)}
+.track p{margin:0;font-size:var(--fs-sm);color:var(--soft);flex:1 1 280px}
+.track .go{display:inline-block;background:var(--accent);color:var(--surface);text-decoration:none;font-weight:var(--w-strong);padding:var(--s2) var(--s4);border-radius:var(--radius)}
+.track .go:hover{text-decoration:underline}
 
 /* architecture and the two documents: the contents stay beside the text */
 .arch,.doc{display:grid;grid-template-columns:260px minmax(0,1fr);column-gap:var(--s6);padding-bottom:var(--s7)}
@@ -3855,6 +3869,7 @@ papers named inline. Where a source could not be reached (VCTK's DataShare licen
       var name = ms.querySelector("h2").textContent.replace(" · ", ", ");
       var el = ms.nextElementSibling;
       while (el && el.classList.contains("stage")) {
+        msOf[el.id] = name;
         var pm = el.querySelector(".sh .pm");
         if (pm) { pm.textContent += " · " + name; }
         el = el.nextElementSibling;
@@ -3886,6 +3901,127 @@ papers named inline. Where a source could not be reached (VCTK's DataShare licen
         (next ? '<a class="next" href="' + next.getAttribute("href") + '">Next: ' + label(next) + "</a>" : "");
       st.appendChild(nav);
     });
+    setupProgress(lead);
+  }
+
+  /* Progress, kept in this browser only, under its own key:
+     {v: 1, done: {"<stage>": iso date}, last: {stage: n, at: iso date}}.
+     Storage can be missing or blocked; the page then works for the visit and says so. */
+  var KEY = "alaap.progress.v1";
+  var stored = true;
+  var prog = load();
+  var S = [];
+  var msOf = {};
+  var track = null;
+
+  function load() {
+    var raw = null, o = null;
+    try { raw = window.localStorage.getItem(KEY); } catch (err) { stored = false; }
+    try { o = JSON.parse(raw || "null"); } catch (err) { o = null; }
+    o = o && typeof o === "object" ? o : {};
+    return {
+      v: 1,
+      done: o.done && typeof o.done === "object" ? o.done : {},
+      last: o.last && typeof o.last.stage === "number" ? o.last : null
+    };
+  }
+
+  function save() {
+    try { window.localStorage.setItem(KEY, JSON.stringify(prog)); stored = true; } catch (err) { stored = false; }
+  }
+
+  function markbox(s, long) {
+    var b = document.createElement("span");
+    b.className = "markbox";
+    b.innerHTML = '<span class="okd" hidden></span><button type="button" class="mark"></button>';
+    b.lastChild.setAttribute("data-n", s.n);
+    if (long) { b.lastChild.setAttribute("data-long", "1"); }
+    s.boxes.push(b);
+    return b;
+  }
+
+  function setupProgress(lead) {
+    stages.forEach(function (st) {
+      var m = /^stage-(\d+)$/.exec(st.id);
+      if (!m) { return; }
+      var h = /([\d.]+) h/.exec((st.querySelector(".sh .pm") || {}).textContent || "");
+      var link = rail.querySelector('a[href="#/plan/' + st.id + '"]');
+      var s = { n: +m[1], el: st, title: st.querySelector(".sh h3").textContent, hours: h ? parseFloat(h[1]) : 0,
+                ms: msOf[st.id] || "", link: link, sn: link ? link.querySelector(".sn") : null,
+                label: link ? label(link) : "", boxes: [] };
+      st.querySelector(".sh").appendChild(markbox(s, false));
+      var end = document.createElement("div");
+      end.className = "markend";
+      end.appendChild(markbox(s, true));
+      st.insertBefore(end, st.querySelector(".pager"));
+      S.push(s);
+    });
+    track = document.createElement("div");
+    track.className = "track";
+    track.innerHTML = '<p></p><a class="go"></a>';
+    if (lead) { lead.insertBefore(track, title.nextSibling); }
+    plan.addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest("button.mark") : null;
+      if (!b) { return; }
+      var n = b.getAttribute("data-n");
+      if (prog.done[n]) { delete prog.done[n]; } else { prog.done[n] = new Date().toISOString(); }
+      save();
+      paint();
+    });
+  }
+
+  function hrs(h) { return Math.round(h * 10) / 10 + " h"; }
+
+  function day(iso) {
+    var d = new Date(iso);
+    return isNaN(d.getTime()) ? "" : ", " + d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  }
+
+  /* where to pick up: the stage last opened, unless it is done; then the first stage not done */
+  function nextStage() {
+    var last = prog.last ? S.filter(function (s) { return s.n === prog.last.stage; })[0] : null;
+    if (last && !prog.done[last.n]) { return last; }
+    return S.filter(function (s) { return !prog.done[s.n]; })[0] || null;
+  }
+
+  function paint() {
+    var n = 0, h = 0, total = 0;
+    S.forEach(function (s) {
+      var at = prog.done[s.n];
+      total += s.hours;
+      if (at) { n += 1; h += s.hours; }
+      s.boxes.forEach(function (b) {
+        var ok = b.firstChild, btn = b.lastChild;
+        ok.hidden = !at;
+        ok.textContent = at ? "✓ Done" + day(at) : "";
+        btn.textContent = at ? "Undo" : btn.getAttribute("data-long") ? "Mark stage " + s.n + " done" : "Mark done";
+        btn.className = at ? "mark undo" : "mark";
+      });
+      if (s.link) {
+        s.link.classList.toggle("done", !!at);
+        if (s.sn) { s.sn.textContent = at ? "✓" : String(s.n); }
+        s.link.setAttribute("aria-label", s.label + (at ? ", done" : ""));
+      }
+    });
+    if (!track) { return; }
+    var next = nextStage();
+    var line = n + " of " + S.length + " stages done · " + hrs(h) + " of " + hrs(total) + " · " +
+      (next ? next.ms : S.length ? S[S.length - 1].ms : "");
+    if (!stored) { line += ". Progress is not saved in this browser."; }
+    track.firstChild.textContent = line;
+    var go = track.lastChild;
+    go.hidden = !next;
+    if (next) {
+      go.href = "#/plan/stage-" + next.n;
+      go.textContent = (prog.last || n ? "Continue" : "Start") + ": stage " + next.n + ", " + next.title;
+    }
+  }
+
+  function visited(st) {
+    var s = S.filter(function (x) { return x.el === st; })[0];
+    if (!s) { return; }
+    prog.last = { stage: s.n, at: new Date().toISOString() };
+    save();
   }
 
   function label(a) {
@@ -3936,6 +4072,7 @@ papers named inline. Where a source could not be reached (VCTK's DataShare licen
       if (r.tab !== current) { show(r.tab); current = r.tab; }
       var st = r.tab === "plan" ? showPlan(r.anchor) : null;
       if (r.tab !== "plan") { markContents(r.tab, r.anchor); }
+      if (st) { visited(st); } else if (r.tab === "plan") { paint(); }
       var target = r.anchor ? document.getElementById(r.anchor) : null;
       if (target && target !== st) {
         var fold = target.closest ? target.closest("details") : null;
@@ -3951,6 +4088,7 @@ papers named inline. Where a source could not be reached (VCTK's DataShare licen
 
   if ("scrollRestoration" in window.history) { window.history.scrollRestoration = "manual"; }
   setup();
+  paint();
   window.addEventListener("hashchange", route);
   route();
 }());

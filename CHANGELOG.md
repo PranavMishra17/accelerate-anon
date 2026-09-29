@@ -635,3 +635,12 @@ per company), the loop pages, Alaap (a stage index with one stage at a time; the
 rewritten; quoted em dashes and hype lines cleaned at build time), alfred_ (a reader with tabs
 and one item at a time) and the shared badges and figure viewer. `CLAUDE.md` now requires
 `DESIGN.md`. No change to the plan or to `CHARTER.md`.
+
+**2026-09-29 — Alaap tracks itself; interview cards in brand colours; Vanguard.**
+The Alaap page keeps its own progress (`alaap.progress.v1`): mark a stage done, see stages and
+hours done, and continue from the last stage visited. The interview cards lost their coloured
+stripe and dot: every card is one plain surface and only the company name carries the
+company's colour, taken from its own logo or site (Mphasis magenta, ZenML green, Oxus navy,
+Vanguard red), with a lighter value for dark mode. A new loop, Vanguard, technical, has a
+skeleton page (`interviews/vanguard.py`) ready for its details and leads the tracker's loops.
+No change to the plan or to `CHARTER.md`.

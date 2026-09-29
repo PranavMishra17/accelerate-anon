@@ -1264,8 +1264,9 @@ details.item > .sbody { padding-left: 0; }
     document.getElementById("prog").textContent = LOOP.sessions.length ? n + " of " + LOOP.sessions.length + " sessions done" : "";
   }
   function countdown() {
-    var ms = new Date(LOOP.when_iso).getTime() - Date.now();
     var c = document.getElementById("count");
+    if (!LOOP.when_iso) { c.textContent = "Date to be set"; return; }
+    var ms = new Date(LOOP.when_iso).getTime() - Date.now();
     if (ms <= 0) { c.textContent = "The call has happened"; return; }
     var h = Math.floor(ms / 36e5), d = Math.floor(h / 24);
     c.textContent = (d ? d + "d " : "") + (h % 24) + "h to the call";

@@ -2,14 +2,16 @@
 
     python interviews/hub.py      -> INTERVIEWS.html at the repo root
 
-One tile per loop module (interviews/*.py with a LOOP dict), newest first, in a grid: the
-status and date, the title, one line of context, total hours from its tracker sessions with
-a progress bar, and links to the loop page and to the job post or company site in its
-SOURCES. Each company keeps one categorical colour (--cat-1 to --cat-6 in site/tokens.css),
-given in the order its first loop happened, so a second loop at the same company matches the
-first. Progress (sessions closed, hours banked) is read in the browser from the tracker's
-own store, selfstudy.m1.planner; the hub never writes to it. A new loop appears when its
-module is added and this is rerun.
+One card per loop module (interviews/*.py with a LOOP dict), newest first, in a grid: the
+status and date, the company as a wordmark with the round beside it, one line of context,
+total hours from its tracker sessions with a thin progress line, and links to the loop page
+and to the job post or company site in its SOURCES. Cards are one neutral surface; the only
+colour is the company name, in its brand colour: LOOP["brand"] (and LOOP["brand_dark"] when
+the brand colour does not read on the dark surface), one home, in the loop's module. A loop
+with an empty when_iso is upcoming with its date to be set, and sorts first. Progress
+(sessions closed, hours banked) is read in the browser from the tracker's own store,
+selfstudy.m1.planner; the hub never writes to it. A new loop appears when its module is
+added and this is rerun.
 """
 import datetime, hashlib, importlib, io, json, os, re, sys
 
@@ -31,6 +33,12 @@ def company(L):
     return L.get("company") or re.split(r"[\s,]+", L["title"].strip())[0]
 
 
+def round_of(title, co):
+    """The title without its company, capitalised: 'Mphasis, technical' -> 'Technical'."""
+    r = title.strip()[len(co):].lstrip(" ,") if title.strip().startswith(co) else title.strip()
+    return r[:1].upper() + r[1:]
+
+
 def links(sources):
     """The job post and the company site, only from URLs the module already has."""
     out = []
@@ -50,23 +58,22 @@ def loops():
         L = getattr(m, "LOOP", None)
         if not L:
             continue
-        d = datetime.datetime.fromisoformat(L["when_iso"])
+        d = datetime.datetime.fromisoformat(L["when_iso"]) if L["when_iso"] else None
+        for k in ("brand", "brand_dark"):
+            assert re.fullmatch(r"#[0-9A-Fa-f]{6}", L.get(k) or "#000000"), "%s: LOOP[%r] is not a #rrggbb colour" % (f, k)
         sessions = [{"id": s["id"], "min": minutes(s.get("len"))} for s in sessions_from_tracker(getattr(m, "SESSION_IDS", []))]
+        co = company(L)
         out.append({
             "title": L["title"], "subtitle": L.get("subtitle", ""), "when": L["when"], "when_iso": L["when_iso"],
-            "date": "%s %d %s %d" % (d.strftime("%a"), d.day, d.strftime("%b"), d.year),
-            "company": company(L),
+            "date": "%s %d %s %d" % (d.strftime("%a"), d.day, d.strftime("%b"), d.year) if d else "",
+            "company": co, "round": round_of(L["title"], co),
+            "brand": L.get("brand", ""), "brandDark": L.get("brand_dark", ""),
             "href": "interviews/" + f[:-3].replace("_", "-") + ".html",
             "sessions": sessions, "total": sum(s["min"] for s in sessions),
             "links": links(getattr(m, "SOURCES", [])),
         })
-    # One colour per company, in the order each company's first loop happened (six, then round again).
-    first = {}
-    for x in sorted(out, key=lambda x: datetime.datetime.fromisoformat(x["when_iso"])):
-        first.setdefault(x["company"], len(first) % 6 + 1)
-    for x in out:
-        x["cat"] = first[x["company"]]
-    out.sort(key=lambda x: datetime.datetime.fromisoformat(x["when_iso"]), reverse=True)
+    # Newest first; a loop with no date yet is still to come, so it goes on top.
+    out.sort(key=lambda x: datetime.datetime.fromisoformat(x["when_iso"]).timestamp() if x["when_iso"] else float("inf"), reverse=True)
     return out
 
 
@@ -96,28 +103,29 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
 .lead { color: var(--soft); margin: var(--s4) 0 var(--s5); max-width: var(--measure); }
 .lead b { color: var(--ink); font-weight: var(--w-strong); }
 
-/* The loops: a grid of tiles, newest first. Each company keeps one colour, as a 3px top
-   rule and a dot. A tile uses three sizes: 12 meta, 13 context and links, 17 title. */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(272px, 1fr)); gap: var(--s4); margin: 0 0 var(--s7); padding: 0; list-style: none; }
-.loop { --c: var(--muted); display: flex; flex-direction: column; min-width: 0; background: var(--surface); border: var(--hair); border-top: 3px solid var(--c);
-  border-radius: var(--radius); padding: var(--s3) var(--s4) var(--s4); }
-.loop.c1 { --c: var(--cat-1); } .loop.c2 { --c: var(--cat-2); } .loop.c3 { --c: var(--cat-3); }
-.loop.c4 { --c: var(--cat-4); } .loop.c5 { --c: var(--cat-5); } .loop.c6 { --c: var(--cat-6); }
-.st { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-xs); color: var(--muted); }
-.st i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+/* The loops: a grid of cards, newest first, all one neutral surface. The only colour is the
+   company name, set in its brand colour like a wordmark (--b, and --bd on the dark surface,
+   given per card from the loop's module). A card uses three sizes: 12 meta, 13 context and
+   links, 17 the name. */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--s4); margin: 0 0 var(--s7); padding: 0; list-style: none; }
+.loop { display: flex; flex-direction: column; min-width: 0; background: var(--surface); border: var(--hair); border-radius: var(--radius); padding: var(--s4); }
+.st { font-size: var(--fs-xs); color: var(--muted); margin: 0; }
 .st b { color: var(--ink); font-weight: var(--w-strong); }
-.loop h2 { font-size: var(--fs-lg); font-weight: var(--w-strong); line-height: var(--lh-tight); margin: var(--s2) 0 var(--s1); }
-.loop h2 a { color: var(--ink); }
-.loop h2 a:hover { color: var(--accent); text-decoration: none; }
-.ctx { font-size: var(--fs-sm); color: var(--soft); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hrs { font-size: var(--fs-xs); color: var(--muted); margin: var(--s4) 0 0; }
+.loop h2 { font-size: var(--fs-lg); line-height: var(--lh-tight); margin: var(--s3) 0 var(--s1); }
+.loop h2 a { color: var(--soft); }
+.co { color: var(--b, var(--ink)); font-weight: var(--w-strong); margin-right: var(--s2); }
+.rd { font-weight: var(--w-regular); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .co { color: var(--bd, var(--b, var(--ink))); } }
+:root[data-theme="dark"] .co { color: var(--bd, var(--b, var(--ink))); }
+.ctx { font-size: var(--fs-sm); color: var(--soft); margin: 0; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.ft { margin-top: auto; padding-top: var(--s5); }   /* progress and links sit on one baseline across a row */
+.hrs { font-size: var(--fs-xs); color: var(--muted); margin: 0; }
 .hrs b { color: var(--ink); font-weight: var(--w-strong); }
-.hrs .ok { color: var(--ok); font-weight: var(--w-strong); }
-.bar { height: 3px; border-radius: 2px; background: var(--sunken); margin: var(--s2) 0 0; overflow: hidden; }
+.bar { height: 2px; background: var(--rule); margin: var(--s2) 0 0; overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--soft); }
-.loop.done .bar i { background: var(--ok); }
-.go { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); margin: auto 0 0; padding-top: var(--s4); font-size: var(--fs-sm); }
-.go a:first-child { font-weight: var(--w-strong); }
+.go { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); margin: 0; padding-top: var(--s3); font-size: var(--fs-sm); }
+.go a { color: var(--soft); }
+.go a:first-child { color: var(--ink); font-weight: var(--w-strong); }
 .empty { background: var(--sunken); border-radius: var(--radius-lg); padding: var(--s5); max-width: var(--measure); }
 .empty b { display: block; font-weight: var(--w-strong); }
 .empty p { color: var(--soft); margin: var(--s1) 0 0; }
@@ -158,11 +166,11 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
 
   function progress(L, d) {
     var n = L.sessions.length;
-    if (!n) { return '<p class="hrs">No tracker sessions. The prep is on the loop page.</p>'; }
+    if (!n) { return '<p class="hrs">No tracker sessions.</p>'; }
     var closed = L.sessions.filter(function (s) { return d[s.id]; });
     var banked = closed.reduce(function (a, s) { return a + s.min; }, 0);
     var line = closed.length === n
-      ? '<span class="ok">All ' + n + " sessions closed</span>, " + hm(banked)
+      ? "<b>All " + n + " sessions closed</b>, " + hm(banked)
       : "<b>" + closed.length + "</b> of " + n + " sessions, <b>" + hm(banked) + "</b> of " + hm(L.total);
     return '<p class="hrs">' + line + "</p>" +
       '<div class="bar" role="progressbar" aria-label="Hours banked" aria-valuemin="0" aria-valuemax="' + L.total + '" aria-valuenow="' + banked + '"><i style="width:' +
@@ -179,22 +187,24 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
       return;
     }
     grid.innerHTML = LOOPS.map(function (L) {
-      var past = new Date(L.when_iso).getTime() <= now;
+      var past = !!L.when_iso && new Date(L.when_iso).getTime() <= now;   /* no date yet: still to come */
       if (!past) { next = L; }
-      var all = L.sessions.length && L.sessions.every(function (s) { return d[s.id]; });
       var ctx = L.subtitle || L.company;
-      return '<li class="loop c' + L.cat + (all ? " done" : "") + '">' +
-        '<div class="st" title="' + esc(L.company + ". " + L.when) + '"><i></i>' + (past ? "Happened, " + esc(L.date) : "<b>Upcoming</b>, " + esc(L.date)) + "</div>" +
-        '<h2><a href="' + esc(L.href) + '">' + esc(L.title) + "</a></h2>" +
+      var brand = (L.brand ? "--b:" + L.brand + ";" : "") + (L.brandDark ? "--bd:" + L.brandDark + ";" : "");
+      return '<li class="loop"' + (brand ? ' style="' + esc(brand) + '"' : "") + ">" +
+        '<p class="st" title="' + esc(L.company + ". " + L.when) + '">' +
+        (past ? "Happened, " + esc(L.date) : "<b>Upcoming</b>, " + (L.date ? esc(L.date) : "date to be set")) + "</p>" +
+        '<h2><a href="' + esc(L.href) + '"><span class="co">' + esc(L.company) + "</span>" +
+        (L.round ? '<span class="rd">' + esc(L.round) + "</span>" : "") + "</a></h2>" +
         '<p class="ctx" title="' + esc(ctx) + '">' + esc(ctx) + "</p>" +
-        progress(L, d) +
+        '<div class="ft">' + progress(L, d) +
         '<div class="go"><a href="' + esc(L.href) + '">Loop page</a>' +
         L.links.map(function (k) { return '<a href="' + esc(k.url) + '" target="_blank" rel="noopener" title="' + esc(k.title) + '">' + esc(k.label) + "</a>"; }).join("") +
-        "</div></li>";
+        "</div></div></li>";
     }).join("");
     var n = LOOPS.length + (LOOPS.length === 1 ? " loop" : " loops") + ", newest first. ";
     lead.innerHTML = next
-      ? esc(n) + "Next: <b>" + esc(next.title) + "</b>, " + esc(next.when) + "."
+      ? esc(n) + "Next: <b>" + esc(next.title) + "</b>. " + esc(next.when.replace(/\.$/, "")) + "."
       : esc(n) + "None is scheduled. A new loop is a new <code>interviews/&lt;module&gt;.py</code>.";
   }
 
@@ -222,4 +232,5 @@ def build():
 if __name__ == "__main__":
     assert minutes("1h 15m") == 75 and minutes("45m") == 45 and minutes("1h") == 60 and minutes(None) == 0
     assert company({"title": "ZenML round 3"}) == "ZenML" and company({"title": "Mphasis, technical"}) == "Mphasis"
+    assert round_of("Mphasis, technical", "Mphasis") == "Technical" and round_of("ZenML round 3", "ZenML") == "Round 3"
     build()
