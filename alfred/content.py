@@ -27,7 +27,7 @@ START = [
     {"title": "One SMS, end to end", "ordered": True, "items": [
         "Linq webhook to `conv-v6-ingress`: checks the signature, dedupes, stores the message, inserts a job row, returns fast.",
         "The job worker claims the job (`SKIP LOCKED`) and hands it to `conv-v6-turn`.",
-        "The turn runs: lease, trace, context, prompt, then the LangGraph agent, up to 12 steps.",
+        "The turn runs: lease, trace, context, prompt, then the LangGraph agent, up to 12 steps (50 on the web).",
         "Every tool call goes through the wrapper stack, then guards check the reply before it is sent back through Linq."]},
     {"title": "Memory across conversations: three kinds, each reaching the turn a different way", "items": [
         "**The conversation.** The last 30 messages, trimmed to 6,000 tokens, go in as the transcript, plus a rolling summary and related past chats.",
@@ -62,7 +62,7 @@ LAYERS = [
      "figs": ["alfredTurn"],
      "nuances": [
          "**Lease.** One turn per conversation: a lease of 90 seconds, renewed every 30. It is a column with an expiry, not a session lock, because the work spans several provider calls.",
-         "**Loop.** The agent graph is LangGraph, up to 12 steps on SMS, over a model stack of Sonnet, Opus and Haiku.",
+         "**Loop.** The agent graph is LangGraph (`runAgentGraph`), up to 12 steps on SMS and 50 on the web, over a model stack of Sonnet, Opus and Haiku. The graph is small (a model node, a conditional edge, a tools node) and the tools node is alfred_'s own: LangGraph's prebuilt one would bypass the wrapper stack.",
          "**Guards.** Before the reply goes out, guards check for fabricated claims; then a tone filter, and the reply is sent through Linq. A failed chunk is retried by an outbound-retry function.",
          "**Block 1**, fleet-shared: the instructions, the tool catalog and the skill index, plus a small overlay per surface. Byte-identical for every user, cached for an hour.",
          "**Block 2**, per user: about the user, preferences, connected accounts, email rules, and up to 40 facts. Cached with the five-minute default.",
@@ -74,7 +74,7 @@ LAYERS = [
                  ["Cache hit", "91.4% inside 5 minutes at $0.38 per Mtok; 62% outside it at $1.04"],
                  ["Shared warmth", "another user's turn inside 5 minutes: 70.8% cached against 57.8% alone, 27% cheaper per token"],
                  ["Cache write", "1.25x input; the 5-minute TTL expires between most users' turns"],
-                 ["Agent loop", "at most 12 steps a turn"]],
+                 ["Agent loop", "at most 12 steps a turn on SMS, 50 on the web"]],
      "say": ["For chat: acknowledge the webhook, enqueue a job, and let the turn function take a lease on the conversation, open a trace, build a cached prompt, run a bounded loop where every tool call goes through the wrapper stack, then filter tone and send.",
              "Cost is a cache layout problem. The shared prefix is about a hundred thousand tokens, so it has to be byte-identical across users and cached for an hour, with the per-user part in its own slot."],
      "guide": [["The data flow: the turn, step by step", GUIDE + "/dataflow"], ["The cost dive", GUIDE + "/deepdives"]]},

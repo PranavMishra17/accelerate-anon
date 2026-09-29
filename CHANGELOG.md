@@ -583,3 +583,25 @@ as one line under the next session. The home page keeps the next session, this w
 open wildcard items and three for today. The five weeks, the figures, the craft, the day
 board and every session moved to Progress (`#/progress`); Explain a figure has its own
 route (`#/figure`). No change to the plan or to `CHARTER.md`.
+
+**2026-09-29 — Revamp, phase 6: one home per thing, dead content out, docs current.**
+Following `REVAMP.md` and the phase 6 audit. Wildcard sessions now open by id
+(`#/w/wc8`, and `#/s/w2a` for planned ones) as well as by position, and every hand-written
+link uses the id: putting `wc18` first on 28 September had sent twelve links in the guide
+and the figure notes one session off. alfred_'s facts were checked against its code on
+`origin/main` and fixed everywhere they were told: the agent loop is a LangGraph graph with
+alfred_'s own tools node, 12 steps on SMS and 50 on the web; there is no risk score (a code
+floor confirms sends and irreversible deletes); the rules matcher cut cost about 30 percent,
+not 40; triage runs on Gemini 3.1 Flash Lite with a dial for an OpenAI cohort; EmailEngine
+runs on Railway. `ALFRED.html` is now the one home for your own system: the ZenML page's
+alfred_ tab keeps only the comparison with Kitaru, and the Mphasis page links to it. This
+supersedes the 28 September note that the alfred_ design "lives in the guide": the guide
+keeps the design walk and links across. The Mphasis page's copies of your intro and "why
+leave" are marked verbatim again, with "Alfred" restored. Kitaru's default tool policy is
+passthrough everywhere (wc8 said otherwise), and Kitaru is record-replay, not stubs. The
+Mphasis page's code that `CODING.html` already holds became links; GraphRAG's local and
+global search moved to `CODING.html`. A guide link said twice on a step now shows once.
+`brand/concepts/`, `variants/` and `icon.png` were removed (nothing used them; history
+keeps them); `handoffs/` moved to `archive/`. `CLAUDE.md` gains three rules: one home per
+thing, one screen in every orientation, and a pass ends with the live check. No change to
+the plan or to `CHARTER.md`.

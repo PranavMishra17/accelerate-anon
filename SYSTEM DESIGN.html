@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="figures/viewer.css?v=7a5bfc4f">
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
 <script src="figures/icons.js?v=129ef92b"></script>
-<script src="figures/figures.js?v=792b637a"></script>
-<script src="figures/notes.js?v=3ff06e0d" defer></script>
-<script src="figures/notes-sd.js?v=d4c6a625" defer></script>
+<script src="figures/figures.js?v=b8b66284"></script>
+<script src="figures/notes.js?v=074e5fe8" defer></script>
+<script src="figures/notes-sd.js?v=6831da86" defer></script>
 <script src="figures/viewer.js?v=ecb99aae" defer></script>
 <link rel="icon" type="image/svg+xml" href="brand/system-design.svg">
 <style>
@@ -3029,7 +3029,7 @@ GUIDE.examples.push({
   home: {
     text: "Where the agent runs, one SMS end to end, and memory across conversations now live on their own page.",
     label: "The three answers, the figures and the stories: alfred_ page",
-    href: "ALFRED.html"
+    href: "ALFRED.html#start"
   },
   prompt: "Design alfred_. It watches a user's inboxes and calendars, acts on mail without being asked (archive, label, draft, notify), and answers the user over SMS, web chat, and an MCP connector with tools over email, calendar, tasks, and memory.",
   lens: [
@@ -3200,7 +3200,7 @@ ToolDef {
         { type: "list", title: "Steps, tagged", ordered: true, items: [
           "**Ingest (code).** Push webhooks land on a pgmq queue; a consumer gates the user (entitlement, onboarding, deletion, two circuit breakers), applies skip filters (calendar invites, self-mail, older than 48h), fetches the body, and upserts into staging. A cron poller covers the accounts without push, using the same upsert.",
           "**Rule match (code).** `user_email_rules` runs deterministically inside triage before any model call. A rule fire is recorded on the pending action with `rule_id`.",
-          "**Triage (model).** Batched, one call per user batch, on `gpt-5.6-luna` today (was Gemini 2.5 Flash). Output per email: a category (archive, important, fyi, draft) and an autonomy level (`execute_silent`, `execute_inform`, `suggested`). A cheap-tier router sends obvious batches to a smaller model; a shadow path scores a candidate model on the same batch.",
+          "**Triage (model).** Batched, one call per user batch, on Gemini 3.1 Flash Lite by default (it was 2.5 Flash), with a live dial (`triage_model_rollout_pct`) that moves a per-user cohort to an OpenAI model. Output per email: a category (archive, important, fyi, draft) and an autonomy level (`execute_silent`, `execute_inform`, `suggested`). A cheap-tier router sends obvious batches to a smaller model; a shadow path scores a candidate model on the same batch.",
           "**Persist decision (code).** One `donna_pending_actions` row per email. Money extraction, security-email detection, and sender relationship run alongside as code with model fallbacks.",
           "**Execute silent (code).** The executor performs archive, mark read, label, move against the provider. It has no send path by construction.",
           "**Draft (model).** The worker writes a reply in the user's voice from exemplars; the user sees it as a pending draft in chat or the app.",
@@ -3341,7 +3341,7 @@ ToolDef {
       script: [
         "Three doors, one brain, one tool package. SMS goes through a webhook and a job queue because the reply can take longer than a webhook should. Web streams directly. MCP runs single tools as the user, behind an allowlist.",
         "The background pipeline is a separate row: ingestion stages mail, triage decides, the executor and the worker act, notify tells the user, and a reconciler checks the provider afterwards.",
-        "Compute is Deno edge functions on Supabase, with a few long-running containers on Railway for documents, routines and phone calls; state is one Postgres with row-level security, pg_cron for schedules and pgmq for the event bus. That is a deliberate choice for a small team; the trade-off is that one database carries every workload, which I will come back to.",
+        "Compute is Deno edge functions on Supabase, with a few long-running containers on Railway for documents, routines, phone calls and EmailEngine for IMAP; state is one Postgres with row-level security, pg_cron for schedules and pgmq for the event bus. That is a deliberate choice for a small team; the trade-off is that one database carries every workload, which I will come back to.",
         "Two boxes people leave off: the control plane, which is a config table with percentage dials, and the eval scanner, which turns real failing turns into regression cases."
       ],
       contrast: "The whiteboard email-agent design has an orchestrator, a gateway, a tool executor, a gate, and a trace store. Here the same boxes exist with names, and two extra rows appear: the delivery surfaces (notify, send, briefs) and the operations layer (monitors, spend, control plane), because a shipped agent spends most of its code there."
@@ -3430,6 +3430,11 @@ GUIDE.examples.push({
   tabLabel: "Kitaru (replay evals)",
   title: "Kitaru",
   kind: "Replay-based evals for agents, read from source",
+  home: {
+    text: "This page walks Kitaru as a design exercise. What you learned about Kitaru itself, its mechanisms as tables and the questions they asked, lives on the ZenML page.",
+    label: "Kitaru, as learned: the ZenML page",
+    href: "interviews/zenml-round3.html#/design/tables"
+  },
   prompt: "Design a replay-based evaluation product for AI agents. Teams import or record real agent sessions, change their agent, and replay those sessions against the change, with the outside world answered from the recording, so they can see what the change would have done before it ships.",
   lens: [
     "Built from the Kitaru source (zenml-io/kitaru), not the marketing pages. Where the design below says 'today', it describes the implementation; the deep dives are where you would take it.",
@@ -3633,7 +3638,7 @@ sha256(tool_name + "\\0" + json.dumps(args, sort_keys=True,
         ], pick: "Served-by on every node first, then effect classes for defaults. Small, and everything else depends on a reader trusting where an answer came from." },
         { type: "fig", key: "kitaruPolicy" },
         { type: "fig", key: "kitaruLive" },
-        { type: "dive", title: "Repeated calls, scope and concurrency", nfr: "Faithful under change", problem: "Under baseline scope the nth identical call returns the nth recorded node, ordered by started_at; under agent or cohort scope it is the latest completed node every time. The client reads its occurrence counter, awaits the lookup, then writes, so two concurrent identical calls could take the same ordinal.", options: [
+        { type: "dive", title: "Repeated calls, scope and concurrency", nfr: "Faithful under change", problem: "Under baseline scope the nth identical call returns the nth recorded node, ordered by started_at, then id; under agent or cohort scope it is the latest completed node every time. The client reads its occurrence counter, awaits the lookup, then writes, so two concurrent identical calls could take the same ordinal.", options: [
           { name: "Client-side counter (today)", take: "Simple; ambiguous for concurrent identical calls, a limitation the Claude SDK docs state openly." },
           { name: "Server-assigned occurrence", take: "The server claims the next ordinal atomically per replay and key, so concurrency cannot double-consume." },
           { name: "Unify the candidate sets", take: "The ordinal query sees completed and failed nodes, the latest query completed only; one rule avoids scope-dependent answers." }
@@ -4041,19 +4046,20 @@ GUIDE.patternUsage = {
 /* ------------------------------------------------------------------ */
 
 /* Links back into Accelerate, the study tracker this guide sits beside. For each
-   pattern, the sessions whose items point at it. Written from the same table as
-   the tracker's pointers into this file, so the two directions agree. */
+   pattern, the sessions whose items point at it. Kept by hand against the
+   tracker's pointers into this file. Wildcard sessions are linked by id
+   (#/w/wc8), never by position: positions shift when a session is added. */
 GUIDE.accelerate = {
   home: "index.html",
   patterns: {
     "agent-durability": [
       {
         "label": "ZenML: round three is a different room",
-        "href": "index.html#/w/1"
+        "href": "index.html#/w/wc7"
       },
       {
         "label": "ZenML: side effects inside replay",
-        "href": "index.html#/w/6"
+        "href": "index.html#/w/wc8"
       }
     ],
     "agent-safety": [
@@ -4067,7 +4073,7 @@ GUIDE.accelerate = {
       },
       {
         "label": "ZenML: side effects inside replay",
-        "href": "index.html#/w/6"
+        "href": "index.html#/w/wc8"
       }
     ],
     "consistency": [
@@ -4085,7 +4091,7 @@ GUIDE.accelerate = {
       },
       {
         "label": "ZenML: side effects inside replay",
-        "href": "index.html#/w/6"
+        "href": "index.html#/w/wc8"
       }
     ],
     "grounding": [
@@ -4095,7 +4101,7 @@ GUIDE.accelerate = {
       },
       {
         "label": "ZenML: round three is a different room",
-        "href": "index.html#/w/1"
+        "href": "index.html#/w/wc7"
       }
     ],
     "large-blobs": [
@@ -4121,7 +4127,7 @@ GUIDE.accelerate = {
       },
       {
         "label": "ZenML: side effects inside replay",
-        "href": "index.html#/w/6"
+        "href": "index.html#/w/wc8"
       }
     ],
     "reliability": [
@@ -4135,7 +4141,7 @@ GUIDE.accelerate = {
       },
       {
         "label": "ZenML: side effects inside replay",
-        "href": "index.html#/w/6"
+        "href": "index.html#/w/wc8"
       }
     ],
     "scaling-reads": [

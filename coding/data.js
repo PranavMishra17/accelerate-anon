@@ -3437,7 +3437,9 @@ window.CODING = {
     "Extraction quality caps everything downstream; a missed or malformed triple is a broken edge the traversal can never repair.",
     "k hops is a real knob: too few misses the answer if it isn't directly in one chunk, too many pulls in unrelated facts and floods the prompt. Expand until the frontier stops growing or the hop limit, whichever comes first.",
     "Dedupe facts gathered from a neighborhood; the same edge is reachable from both of its endpoints since traversal is undirected.",
-    "GraphRAG earns its cost over plain RAG specifically for multi-hop questions where the answer requires connecting facts across chunks; for a fact stated directly in one place, plain retrieval is simpler and cheaper."
+    "GraphRAG earns its cost over plain RAG specifically for multi-hop questions where the answer requires connecting facts across chunks; for a fact stated directly in one place, plain retrieval is simpler and cheaper.",
+    "Local search starts from the entities in the question and walks their neighbourhood, for a question like 'what reads EMP_TABLE?'. Global search clusters the graph into communities, summarises each, and answers from the summaries, for 'what does this system do?'.",
+    "Building the graph with an LLM is the expensive step. For code, a parser gives you the graph far more cheaply and reliably."
    ],
    "asks": [
     {

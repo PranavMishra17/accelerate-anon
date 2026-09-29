@@ -35,7 +35,6 @@ ul, ol { margin: 4px 0 12px; padding-left: 22px; } li { margin: 3px 0; }
 .top { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--rule); }
 .top-in { max-width: 1180px; margin: 0 auto; padding: 12px 24px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
 .top b { font-size: 17px; }
-.top .grow { flex: 1; }
 .shell { max-width: 1180px; margin: 0 auto; padding: 0 24px 120px; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 48px; }
 nav.side { position: sticky; top: 64px; align-self: start; padding-top: 28px; font-size: 15px; max-height: calc(100vh - 70px); overflow-y: auto; }
 nav.side a { display: block; padding: 4px 0; color: var(--muted); }
@@ -104,8 +103,6 @@ figure.fig figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; }
 <body>
 <div class="top"><div class="top-in">
   <b>alfred_</b>
-  <span class="grow"></span>
-  <nav data-site-nav data-here="alfred"></nav>
 </div></div>
 <div class="shell">
   <nav class="side" id="side" aria-label="Sections"></nav>
@@ -124,7 +121,8 @@ figure.fig figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; }
 
   var main = document.getElementById("main"), side = document.getElementById("side");
   main.appendChild(el("div", "kicker", esc(D.kicker)));
-  main.appendChild(el("h1", "", esc(D.title)));
+  var trow = main.appendChild(el("div", "sn-titlerow", "<h1>" + esc(D.title) + "</h1>")), snav = trow.appendChild(el("nav"));
+  snav.setAttribute("data-site-nav", ""); snav.setAttribute("data-here", "alfred");   /* the site badges, site/nav.js */
   main.appendChild(el("p", "lead", esc(D.lead)));
 
   /* A shared figure by key, drawn from figures.js inside [data-fig] so the viewer's notes work. */

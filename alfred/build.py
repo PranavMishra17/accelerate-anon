@@ -4,7 +4,7 @@
 
 Never edit ALFRED.html by hand: edit content.py (or the template) and rebuild.
 
-The shared figure files and the site bar (site/) are loaded with ?v=<hash of their contents>, so a changed figure is
+The shared figure files and the site badges (site/) are loaded with ?v=<hash of their contents>, so a changed figure is
 never served from a stale cache. Every figure key must exist in figures/figures.js, and
 Pranav's verbatim answers are checked word for word against interviews/zenml_round3.py
 while that module exists.
@@ -16,7 +16,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 FIG_FILES = ("icons.js", "figures.js", "notes.js", "viewer.js", "viewer.css", "figures.css")
 # Pages that may show a shared figure, for the "also in" line under each one.
-# The labels are the site bar's (site/nav.js).
+# The labels are the site badges' page names (site/nav.js).
 ELSEWHERE_PAGES = [("System design guide", "SYSTEM DESIGN.html", "SYSTEM%20DESIGN.html"), ("Accelerate tracker", "index.html", "index.html"),
                    ("Algorithms and coding", "CODING.html", "CODING.html"), ("Alaap and TrenTorch", "ALAAP.html", "ALAAP.html")]
 

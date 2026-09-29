@@ -93,8 +93,9 @@ logarithm practice set is fine. Paper, not a screen — the point is the hand.
 
 ### Session C — Alaap: Part 0, orientation
 
-Run the demo. **Listen to the output.** Read `architecture.html`, diagrams 1 to 5,
-and the executive verdict. This is two hours of the four Alaap gets all milestone.
+Run the demo. **Listen to the output.** Read `architecture.html` in the Alaap repo,
+diagrams 1 to 5 (the same diagrams are on `ALAAP.html`'s Architecture tab), and the
+executive verdict. This is two hours of the four Alaap gets all milestone.
 
 **Check.** Why is the TTS model never trained, and what breaks if it is?
 
@@ -327,6 +328,9 @@ instinct will be to drop everything, like September of last year with Amazon. Th
 is what the interruption protocol is for. Declare a Red week, sprint for the
 interview, come back on the ramp. The sprint is not a betrayal of the plan. Dropping
 the plan afterwards is.
+
+`CODING.html` exists as a reference, built for the Mphasis round on 28 September. It is
+not a track and does not start DSA early.
 
 **Alaap's Parts 3 through 6 are parked.** MDNs, the navigability papers, Vendi
 scores, per-dimension rescaling. All of it is readable once the mathematics is

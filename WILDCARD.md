@@ -22,8 +22,10 @@ things:
    <module>` from a content module (`interviews/<module>.py`): the brief, what to say
    in the words to say it, timed spoken drills, a technical question bank, figures,
    questions to ask, traps, and every session readable in place. Add a `LOOPS` entry in
-   `index.html` so the wildcard page shows it as a card. Optional `OWN` in the module adds
-   a tab for your own system set against theirs. The Prep tab is a hub: `SHOW_UP` (how to
+   `index.html` so the wildcard page shows it as a card. Optional `OWN` in the module sets
+   their system against yours; your own system's facts live in `alfred/content.py`
+   (`ALFRED.html`), and a loop page links there rather than copying them. Code that
+   `CODING.html` already holds is linked (`../CODING.html#<id>`), not pasted. The Prep tab is a hub: `SHOW_UP` (how to
    present yourself), then each bank (`SCRIPTS`, then each `QA` group in `QA_ORDER`) as one
    row that opens in the one-screen panel, then drills, questions to ask, traps and
    `SOURCES` folded shut. A question can carry `short` (its label in the list), `land` (the
@@ -47,10 +49,12 @@ things:
    for any loop; a new loop only writes content.
 
 Sessions **append**. Existing wildcard sessions are not cleared when new ones arrive.
-When a loop is over, its sessions are marked `parked: true`. Never delete or reorder a
-session: they are addressed by index (`#/w/<n>`) and by step keys (`wc3:s2`) in saved
-progress. Parked sessions still count toward credit (the fold rule counts every closed
-wildcard session, parked or not), stay openable at their `#/w/<n>` address, and leave
+When a loop is over, its sessions are marked `parked: true`. Never delete a session: saved
+progress keys its steps by id (`wc3:s2`). A session opens by id (`#/w/wc8`) or by position
+(`#/w/3`); every hand-written link uses the id, because positions shift when a session is
+inserted (putting `wc18` first on 28 September sent every `#/w/<n>` link one session off).
+Parked sessions still count toward credit (the fold rule counts every closed
+wildcard session, parked or not), stay openable at their `#/w/<id>` address, and leave
 every list: the home page, the rail, the wildcard page's open list, the sheet and the
 drill. They sit under **Past loops**, folded shut on the wildcard page, with each past
 loop's page linked.
@@ -72,7 +76,7 @@ loop's page linked.
 Session shape, for whoever is adding them:
 
     {
-      id: "wc18",                        // unique, wc-prefixed
+      id: "wc19",                        // unique, wc-prefixed
       track: "Systems",                  // Systems | Mathematics | Alaap | Interview | Requeue
       forWhat: "ZenML round 3, 28 Sep",  // which loop; LOOPS matches on its prefix
       len: "1h 30m", est: 90,
@@ -87,7 +91,7 @@ Session shape, for whoever is adding them:
     }
 
 Reading, figures and guide links per step can also live in `data/reading.js`, keyed
-`<session id>:<step>` (`wc18:0`) or `:s<n>` for a study item; the tracker and the loop
+`<session id>:<step>` (`wc13:0`) or `:s<n>` for a study item; the tracker and the loop
 page both read it. The end quiz is drawn from the steps' `close` questions, five to
 eight, open questions only. Also add a `SHORT` label, put the new loop first in `LOOPS`,
 and set `WILDCARD.note` to its name, one line.

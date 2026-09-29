@@ -39,9 +39,14 @@ function sdLabel(p) {
   if (p.v === "overview") { return p.a ? "The framework, " + (SD.anchors[p.a] || p.a) : "The six-step framework"; }
   return (SD.views[p.v] || p.v) + (p.a ? ", " + (SD.anchors[p.a] || p.a) : "");
 }
+/* One link per guide page: a step's own refs and data/reading.js can name the same one. */
+function links(refs) {
+  const seen = {};
+  return refs.map(p => ({ href: sdHref(p), label: sdLabel(p), why: p.why || "" })).filter(l => !seen[l.href] && (seen[l.href] = 1));
+}
 function withSd(key, x) {
   const r = RD.READING[key] || {};
-  x.sdLinks = [].concat(x.sd || [], r.sd || []).map(p => ({ href: sdHref(p), label: sdLabel(p), why: p.why || "" }));
+  x.sdLinks = links([].concat(x.sd || [], r.sd || []));
   x.read = [].concat(r.read || [], r.aieng || []);
   x.figs = r.figs || [];
   return x;
@@ -49,7 +54,7 @@ function withSd(key, x) {
 if (process.argv[2] === "--sd") {
   /* node extract.js --sd < {"key": [guide refs]}  ->  {"key": [{href, label, why}]} */
   const input = JSON.parse(fs.readFileSync(0, "utf8")), res = {};
-  for (const k in input) { res[k] = input[k].map(p => ({ href: sdHref(p), label: sdLabel(p), why: p.why || "" })); }
+  for (const k in input) { res[k] = links(input[k]); }
   process.stdout.write(JSON.stringify(res));
   process.exit(0);
 }

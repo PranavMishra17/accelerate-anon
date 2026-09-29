@@ -6,14 +6,17 @@
 
 <p align="center">
   A self-study system for an engineer who ships, built to survive interview sprints and busy weeks.<br>
-  Four static pages, no build step, no account. Progress stays in your browser.
+  Static pages, no build step for the tracker, no account. Progress stays in your browser.
 </p>
 
 <p align="center">
   <a href="https://pranavmishra17.github.io/self-study/">Tracker</a> ·
   <a href="https://pranavmishra17.github.io/self-study/SYSTEM%20DESIGN.html">System design guide</a> ·
-  <a href="https://pranavmishra17.github.io/self-study/ALAAP.html">ML and audio study plan</a> ·
-  <a href="https://pranavmishra17.github.io/self-study/interviews/zenml-round3.html">An interview loop page</a>
+  <a href="https://pranavmishra17.github.io/self-study/CODING.html">Algorithms and coding</a> ·
+  <a href="https://pranavmishra17.github.io/self-study/CHEATSHEET.html">Cheat sheet</a> ·
+  <a href="https://pranavmishra17.github.io/self-study/ALAAP.html">Alaap and TrenTorch</a> ·
+  <a href="https://pranavmishra17.github.io/self-study/ALFRED.html">alfred_</a> ·
+  <a href="https://pranavmishra17.github.io/self-study/interviews/zenml-round3.html">An interview loop</a>
 </p>
 
 ---
@@ -33,13 +36,18 @@ state, so they don't end the plan.
 
 ## The pages
 
+There is one plan, the tracker. The other pages are references beside it, used every week or
+so and never finished. Each thing lives on one page, and every other page links to it: a
+figure is drawn once and shown by key, a story or an answer has one home.
+
 | | Page | What you get |
 |:---:|---|---|
 | <img src="brand/accelerate.svg" width="40" alt=""> | **[Tracker](https://pranavmishra17.github.io/self-study/)**<br>`index.html` | Five weeks of sessions (systems, mathematics, audio ML), each a list of steps. A step opens to what the idea is, a figure you can take apart, what to read with minutes, the system design technique it uses, and the answer, hidden until you have tried. Open-question quizzes, a drill deck, printable sheets, a map of the year. |
-| <img src="brand/system-design.svg" width="40" alt=""> | **[System design guide](https://pranavmishra17.github.io/self-study/SYSTEM%20DESIGN.html)**<br>`SYSTEM DESIGN.html` | A six-step framework, fifteen deep-dive patterns with nearly a hundred techniques, each with its own mechanism diagram, and seven designs worked end to end (NotebookLM, prior authorisation, an email agent, a coding agent, Ticketmaster, alfred_, Kitaru). |
-| <img src="brand/system-design.svg" width="40" alt=""> | **[Algorithms and coding](https://pranavmishra17.github.io/self-study/CODING.html)**<br>`CODING.html` | Fifteen coding patterns in three tabs, every problem written out in full with two worked examples and constraints, and variations of each; plus an AI systems tab: fourteen topics beyond LeetCode (NumPy, PyTorch, RAG over a parser, GraphRAG, an agent loop, a research agent, a voice pipeline, a transformer block, BPE, evals, structured output, serving, LoRA), each as its design, a figure, a skeleton per component, what to remember and what they ask. All code runs offline and is tested. The **[cheat sheet](https://pranavmishra17.github.io/self-study/CHEATSHEET.html)** is the same material on one screen, and works on a phone. |
+| <img src="brand/system-design.svg" width="40" alt=""> | **[System design guide](https://pranavmishra17.github.io/self-study/SYSTEM%20DESIGN.html)**<br>`SYSTEM DESIGN.html` | A six-step framework, fifteen deep-dive patterns with nearly a hundred techniques, each with its own mechanism diagram, and seven designs worked end to end (NotebookLM, prior authorisation, an email agent, a coding agent, Ticketmaster, alfred_, Kitaru). A design reads one step at a time, in tabs with a sticky step bar; arrow keys and a swipe move between steps, and long boards open folded. |
+| <img src="brand/system-design.svg" width="40" alt=""> | **[Algorithms and coding](https://pranavmishra17.github.io/self-study/CODING.html)**<br>`CODING.html` | Fourteen coding patterns in three tabs, every problem written out in full with two worked examples and constraints, and variations of each; plus an AI systems tab: fourteen topics beyond LeetCode (NumPy, PyTorch, embeddings and vector search, RAG over a parser, GraphRAG, an agent loop, a research agent, a voice pipeline, a transformer block, BPE, evals, structured output, serving, LoRA), each as its design, a figure, a skeleton per component, what to remember and what they ask, and a card of AI-flavoured coding. All code runs offline and is tested. The **[cheat sheet](https://pranavmishra17.github.io/self-study/CHEATSHEET.html)** is the same material on one screen, and works on a phone. |
 | <img src="brand/alaap.svg" width="40" alt=""> | **[Alaap and TrenTorch](https://pranavmishra17.github.io/self-study/ALAAP.html)**<br>`ALAAP.html` | A linear plan of twenty-two stages from tensors and autograd to a speech model: for each stage, the goal, a diagram, the module to build, and an exit check with its answer. Generated. |
-| <img src="brand/accelerate.svg" width="40" alt=""> | **[Interview loops](https://pranavmishra17.github.io/self-study/interviews/zenml-round3.html)**<br>`interviews/` | One page per interview loop: the brief, what to say and how to say it, timed spoken drills, a technical question bank with figures and reading, questions to ask, traps, their system drawn from source, and your own system walked part by part and set against theirs. |
+| <img src="brand/accelerate.svg" width="40" alt=""> | **[alfred_](https://pranavmishra17.github.io/self-study/ALFRED.html)**<br>`ALFRED.html` | Your own system, for a refresh before any interview: where it runs, one SMS end to end and memory in three kinds; the system layer by layer, each with its figure, the nuances and the numbers; the stories in your own words; and the questions they keep asking. Facts are checked against the alfred_ code. Generated from `alfred/content.py`. |
+| <img src="brand/accelerate.svg" width="40" alt=""> | **[Interview loops](https://pranavmishra17.github.io/self-study/interviews/zenml-round3.html)**<br>`interviews/` | One page per interview loop: the brief, what to say and how to say it, timed spoken drills, a technical question bank with figures and reading, questions to ask, traps, their system drawn from source and set against yours, and mocks. Your own system lives on the alfred_ page; the ZenML page is also the home for what you learned about Kitaru. |
 
 **Every diagram can be explored.** Click one and it opens full screen. Hover a box or an
 arrow for a one-line note; click it for a plain explanation in the context of that figure,
@@ -96,7 +104,9 @@ copy are four separate stores. Export from the Data page and commit the file int
 
 - **Moving around.** The rail on the left lists the weeks and the wildcard. Arrow keys move
   between sessions, and Escape goes up a level. Every view has its own address
-  (`#/s/2/1`, `#/w/3`, `#/book`), so back and refresh keep your place.
+  (`#/s/2/1`, `#/w/wc8`, `#/book`), so back and refresh keep your place. A session also
+  opens by its id (`#/s/w2a`, `#/w/wc8`); links written by hand use the id, because a
+  session's position can change.
 - **A session.** Steps start shut, so the session reads as its outline. The tick box marks a
   step done without opening it. At the end, a quiz of five to eight open questions, one at a
   time.
@@ -106,7 +116,11 @@ copy are four separate stores. Export from the Data page and commit the file int
 - **The home page** keeps four things: the next session, this week's sessions, what is open
   in the wildcard, and three open questions from sessions you've started, weighted towards
   what you missed. The buttons at the top right open each reference in a new tab: the system
-  design guide, coding, the cheat sheet, Alaap and TrenTorch, and the current interview loop.
+  design guide, coding, the cheat sheet, Alaap and TrenTorch, alfred_, and the interview
+  loops. Every page carries the same bar, so each can reach the others.
+- **The wildcard** (`#/wild`) is one list of open sessions, with done ones hidden behind a
+  "Show done" toggle. Its note is one line, the loop in play. Loops that have happened are
+  parked under Past loops, folded: their sessions still count, out of sight.
 - **Progress** (`#/progress`) holds the five weeks at a glance, the figures, the craft, the
   day board and every session. **Explain a figure** (`#/figure`): one figure to explain
   aloud in a minute.
@@ -125,6 +139,7 @@ copy are four separate stores. Export from the Data page and commit the file int
 | `ROADMAP-AHEAD.md` | Milestone 2 planned, milestone 3 sketched, the rest parked. |
 | `PROTOCOL.md` | Week states, the re-entry ramp, the working rules, the re-plan ritual, and how you study best. |
 | `WILDCARD.md` | The interview slot: how sessions and loop pages are added, the fold rule, what is in it now. |
+| `REVAMP.md` | The revamp plan of 29 September, phase by phase, and what is left. |
 | `STUDY-LIST.md` | The current wildcard sessions as a flat checklist with reading, generated from the tracker's sheet. |
 | `REQUEUE.md` | Things set aside. Answered, never deleted. |
 | `IMPROVEMENTS.md` | Tracker improvements built, reversed, and deliberately not done. |
@@ -132,12 +147,18 @@ copy are four separate stores. Export from the Data page and commit the file int
 | `diagnostics/` | The baseline quiz the plan was calibrated from, and its result. Gate results go here too. |
 | `interviews/MOCKS.md` | How mock interviews run in the Claude Code chat, the interviewers' roles, and how a mock is saved: a read and a one-screen conversation with the answer to give for every turn. |
 | `figures/REVIEW.md` | Open review points for the next pass over the figures. |
+| `archive/` | Finished work kept for reference, each item named in `archive/README.md`. |
 
 ## Generated pages
 
 | Command | What it rebuilds |
 |---|---|
-| `python interviews/build.py <module>` | One loop's page, `interviews/<loop>.html`, from `interviews/<module>.py`. |
+| `python tools/rebuild.py` | Everything below in the right order, then every check; stops at the first failure. `--alaap` adds the Alaap build. |
+| `python interviews/build.py <module>` | One loop's page, `interviews/<loop>.html`, from `interviews/<module>.py` (`zenml_round3`, `mphasis`, `oxus`). |
+| `python alfred/build.py` | `ALFRED.html` from `alfred/content.py`. Never edit the page by hand. |
+| `python figures/stamp.py` | The cache-busting hashes on the figure and site files, in the tracker, the guide and `CODING.html`. |
+| `python coding/build_sheet.py` | `CHEATSHEET.html`, one self-contained file (data, code, figures and fonts inlined) to send anyone. |
+| `python coding/test_data.py` | Runs every code block in `coding/data.js` and re-checks each statement's examples. |
 | `python alaap/build.py` | `ALAAP.html` from `alaap/plan.py`, the Alaap repo's `learning/` folder and a local TrenTorch checkout. Never edit the page by hand. |
 | `node figures/check.js` | Checks every figure renders and every part has a note. Writes `figures/check.html`, a gallery. |
 | `python fonts/fetch.py` | The typefaces in `fonts/`, so the pages look the same offline. |
@@ -151,11 +172,11 @@ of data lives, the figure contract, conventions and gotchas.
 `index.html` is one file on purpose, and its script runs in this order:
 
 1. **Config**: the start date, the storage key, tracks and their colours.
-2. **Resources**: `L` for the planned weeks and `R` for wildcard study lists. Each link is
-   added once and referenced by key.
+2. **Resources**: `L`, the links for the planned weeks. Each link is added once and
+   referenced by key.
 3. **Plan**: `PLAN`, five weeks of three sessions plus optional practice.
-4. **Wildcard**: `WILDCARD.sessions` and `LOOPS`, one card per interview loop. Study lists
-   are in `STUDY`, keyed by session id.
+4. **Wildcard**: `LOOPS`, one card per interview loop, then `WILDCARD.sessions`, then `R`
+   and `STUDY`, the links and study lists for its sessions, keyed by session id.
 5. **Pointers**: `SD` into the system design guide and `AL` into the Alaap plan (`AL` is
    generated between `AL:BEGIN` and `AL:END`).
 6. **State, routing and views.** These rarely need touching when content changes.
@@ -174,7 +195,7 @@ To check the file still parses, extract its script and run `node --check`.
 
 | | |
 |---|---|
-| **Now** | ZenML round 3, Monday 28 September 2026: eleven wildcard sessions and the loop page. |
+| **Now** | Milestone 1, week 2. ZenML round 3 (28 September) is done and parked; the Mphasis page is the loop in play. |
 | **Milestone 1** | 21 September to 25 October: systems primitives and the mathematics TrenTorch needs. |
 | **Next** | Milestone 2: TrenTorch as the spine, sequenced in the Alaap plan, stages 3 to 15. |
 

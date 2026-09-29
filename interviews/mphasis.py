@@ -20,7 +20,9 @@ LOOP = {
     "plan_kicker": "The next two hours",
     "extra": ("Algorithms and coding patterns are on their own page: "
               "<a href=\"../CODING.html\" target=\"_blank\" rel=\"noopener\">Algorithms and coding</a>. "
-              "Agent design at depth is in your "
+              "Your own system is on the "
+              "<a href=\"../ALFRED.html\" target=\"_blank\" rel=\"noopener\">alfred_ page</a>, "
+              "and agent design at depth in your "
               "<a href=\"../SYSTEM%20DESIGN.html#/designs/alfred\" target=\"_blank\" rel=\"noopener\">system design guide, alfred_</a>."),
 }
 
@@ -55,11 +57,11 @@ SCRIPTS = [
      "when": "The opener. In an L1 AI/ML round it sets which of your projects they dig into, so put MetaRAG and alfred_ in it on purpose.",
      "probes": ["Tell me more about MetaRAG.", "What do you do day to day at alfred_?", "What's your strongest AI/ML work?", "Why Mphasis?"],
      "say": [
-         "Sure. I started out in computer science research at UIC, where I worked on applied ML and LLM systems. That gave me a pretty strong foundation in actually building and evaluating these systems, rather than just using the models.",
+         "Sure. I started out in computer science research at UIC, where I worked on applied ML and LLM systems. That gave me a pretty strong foundation in actually building and evaluating these systems, rather than just using the models.",  # verbatim
          "One of those was MetaRAG, a retrieval framework for enterprise knowledge. It ended up running in a production code-translation use case, about ten thousand queries a day, and the paper got accepted at IEEE CAI.",
-         "From there I joined WheelPrice, which was a much more startup-oriented environment. I was working across the stack and got a lot more exposure to shipping things that were actually being used by customers. It was a small engineering team, so I had to be pretty broad \u2014 backend, AI, infrastructure, and product work all kind of blended together.",
-         "After that I joined alfred_, where I've been working as a founding LLM engineer. It's an AI assistant, and my work has become much more focused on reliability and evaluation \u2014 things like building the eval harness, production failure detection, working memory, and making sure agent changes actually improve the product rather than just looking better on a benchmark.",
-         "The common thread through all of that has really been building AI systems in environments where you don't have a perfectly defined problem in front of you. You have to figure out what's broken, decide what to build, and then own it through production.",
+         "From there I joined WheelPrice, which was a much more startup-oriented environment. I was working across the stack and got a lot more exposure to shipping things that were actually being used by customers. It was a small engineering team, so I had to be pretty broad \u2014 backend, AI, infrastructure, and product work all kind of blended together.",  # verbatim
+         "After that I joined alfred_, where I've been working as a founding LLM engineer. It's an AI assistant, and my work has become much more focused on reliability and evaluation \u2014 things like building the eval harness, production failure detection, working memory, and making sure agent changes actually improve the product rather than just looking better on a benchmark.",  # verbatim
+         "The common thread through all of that has really been building AI systems in environments where you don't have a perfectly defined problem in front of you. You have to figure out what's broken, decide what to build, and then own it through production.",  # verbatim
          "And that's pretty much why Mphasis is interesting to me. Your clients run systems where a wrong answer is expensive, and making AI reliable and checkable on those systems is the work I've been doing, just with bigger stakes."],
      "swaps": [{"when": "If they cut you short: the one-line arc", "line": "Research on retrieval and multi-agent reasoning, then shipping products at a startup, and now making an agent reliable in production for five thousand users."},
                {"when": "If they ask for the numbers on MetaRAG", "line": "82.5% precision against a 73.3% content-only baseline, 0.925 hit rate at ten, and about 25% fewer hallucinations, measured with an automated evaluation framework."}],
@@ -101,10 +103,10 @@ SCRIPTS = [
      "when": "You are exploring while employed. Make that clear without sounding defensive.",
      "probes": ["Is something wrong at alfred_?", "You've only been there since April. Why move so soon?", "Will you leave us quickly too?", "Is this about compensation or visa?"],
      "say": [
-         "There's nothing particularly wrong with alfred_. I've actually learned a lot there and I still enjoy the work.",
-         "I'm mostly looking at what I want the next few years of my career to look like. At alfred_, I've had a lot of ownership because it's a small team, and that's been great. But the work is ultimately internal to one product.",
+         "There's nothing particularly wrong with alfred_. I've actually learned a lot there and I still enjoy the work.",  # verbatim
+         "I'm mostly looking at what I want the next few years of my career to look like. At alfred_, I've had a lot of ownership because it's a small team, and that's been great. But the work is ultimately internal to one product.",  # verbatim
          "What I'm increasingly interested in is range: taking what I've learned about making agents reliable and applying it across many problems and many clients, on systems that matter. That's the part a company like Mphasis gives me that one product can't.",
-         "So it's less \u201cI need to get away from alfred_\u201d and more \u201cI've found a direction I want to go deeper into.\u201d"],
+         "So it's less \u201cI need to get away from Alfred\u201d and more \u201cI've found a direction I want to go deeper into.\u201d"],  # verbatim
      "swaps": [{"when": "If they ask bluntly: why not just stay?", "line": "I could. And that's why I'm being selective about what I talk to. I'm not looking to leave just to change companies. It has to give me a meaningfully different scope, and going from one product to many clients' systems does."},
                {"when": "If they ask: only since April, why so soon?", "line": "Fair question. It's been a very dense six months, and the reliability pieces I built there are running. I'm not in a rush; this is one of very few conversations I'm having, because the scope is genuinely different."}],
      "land": "Less \u201cget away from alfred_\u201d, more \u201ca direction I want to go deeper into\u201d.",
@@ -194,10 +196,7 @@ QA = [
          "a": ["An embedding model turns text into a vector, so that similar meanings end up close together. To search, you embed the query and find the stored vectors closest to it, usually by cosine similarity.",
                "At scale you don't compare against everything: a vector index like HNSW finds approximate nearest neighbours fast. And you often combine it with keyword search, because embeddings can miss exact terms like an error code or a product name."],
          "land": "Embed, compare by cosine similarity, index with approximate nearest neighbours, and mix in keyword search.",
-         "parts": [
-             {"title": "Cosine similarity in NumPy",
-              "code": "import numpy as np\n\ndef cosine_top_k(query_vec, doc_vecs, k=5):\n    q = query_vec / np.linalg.norm(query_vec)\n    d = doc_vecs / np.linalg.norm(doc_vecs, axis=1, keepdims=True)\n    scores = d @ q                    # one dot product per document\n    top = np.argsort(-scores)[:k]     # highest first\n    return top, scores[top]"},
-         ]},
+         "learn": {"read": [{"url": "../CODING.html#embed", "label": "Embeddings and vector search, with the code", "why": "Cosine top-k in NumPy, tested."}]}},
         {"q": "How do you reduce hallucination?", "short": "Reducing hallucination", "tests": "Practical reliability.",
          "a": ["Ground the model: give it the facts through retrieval or tools and tell it to answer only from them, with citations. Constrain the output: structured formats, and let the model select from real options rather than invent identifiers.",
                "Then check: verify claims against a source of truth after generation. At alfred_ the strongest fix was structural: in working memory the model only picks from real candidates behind opaque handles, and code attaches the ids, so it can't invent a thread. And at WheelPrice, the fitment assistant could only answer through four tools against verified data."],
@@ -215,31 +214,36 @@ QA = [
          "parts": [
              {"title": "An agent loop, in plain Python",
               "code": "def run_agent(goal, tools, llm, max_steps=12):\n    messages = [{\"role\": \"user\", \"content\": goal}]\n    for _ in range(max_steps):\n        reply = llm(messages, tools=[t.schema for t in tools.values()])\n        messages.append(reply)\n        if not reply.tool_calls:              # the model answered: done\n            return reply.content\n        for call in reply.tool_calls:         # the model asked for tools\n            result = tools[call.name].run(**call.arguments)\n            messages.append({\"role\": \"tool\", \"id\": call.id, \"content\": result})\n    return \"Stopped: step budget reached\"",
-              "after": ["The step budget matters: alfred_'s agent stops at 12 steps on SMS."]},
-         ]},
+              "after": ["The step budget matters: alfred_'s agent stops at 12 steps on SMS and 50 on the web."]},
+         ],
+         "learn": {"read": [{"url": "../ALFRED.html#l-turn", "label": "alfred_: the turn, and the agent graph"}, {"url": "../CODING.html#agent", "label": "The agent loop, coded and tested"}]}},
         {"q": "How does tool calling actually work?", "short": "Tool calling", "tests": "Mechanics, not magic.",
          "a": ["You describe each tool to the model with a name, a description and a JSON schema for its arguments. The model doesn't run anything: it returns a structured request, 'call this tool with these arguments'.",
                "Your code validates the arguments, runs the tool, and sends the result back as a message, and the model continues. At alfred_ every tool call goes through a wrapper stack before it runs: schema validation, a capability gate, a preview and confirmation for writes, an idempotency key, logging and a timeout."],
          "land": "The model asks, your code validates and runs, the result goes back into the conversation.",
-         "figs": ["alfredWrap"]},
+         "figs": ["alfredWrap"],
+         "learn": {"read": [{"url": "../ALFRED.html#l-wrap", "label": "alfred_: the tool wrapper stack"}]}},
         {"q": "How do you give an agent memory?", "short": "Agent memory", "tests": "Short-term and long-term memory.",
          "a": ["Short-term is the conversation itself, trimmed to fit the context window, often with a rolling summary. Long-term is stored outside the model and brought back when needed: facts about the user, past conversations by similarity, and structured state.",
                "At alfred_ there are three: the recent messages and a summary, facts in the per-user part of the prompt, and working memory, open loops like owed replies, which the agent fetches with a tool instead of carrying in every prompt."],
          "land": "Short-term in the context, long-term in stores, brought back by retrieval or tools.",
-         "figs": ["alfredMemory"]},
+         "figs": ["alfredMemory"],
+         "learn": {"read": [{"url": "../ALFRED.html#l-memory", "label": "alfred_: memory, the three kinds"}]}},
         {"q": "What is ReAct, and what are the common agent patterns?", "short": "ReAct and patterns", "tests": "Vocabulary.",
          "a": ["ReAct is reasoning and acting interleaved: the model thinks about what to do, takes an action, observes the result, and repeats. Most tool-using agents are a version of it.",
                "Other patterns: plan and execute, where a plan is made first and steps are run; routing to a specialist; and multi-agent setups where agents with different roles work together. My TeamMedAgents research was a multi-agent setup for medical reasoning, and MockFlow-AI uses a state machine the model moves through by calling a tool, so it can't drift between stages."],
          "land": "Think, act, observe, repeat; plus planning, routing and multiple agents."},
         {"q": "How do you keep an agent safe?", "short": "Agent guardrails", "tests": "Safety on real actions.",
-         "a": ["Decide by what an action does, not by how confident the model sounds. At alfred_ every candidate action goes to one of five verdicts: act silently, notify, confirm first, clarify, or refuse, decided by deterministic risk scoring, not by another model.",
-               "Irreversible actions like sending mail always need a confirmation. There's an undo window for reversible ones. Emails are treated as untrusted input because of prompt injection. And a guard checks the agent's claims against what actually ran."],
-         "land": "Gate by what the action does, confirm irreversible ones, treat input as untrusted, verify claims."},
+         "a": ["Decide by what an action does, not by how confident the model sounds. At alfred_ every tool declares its side effect, read, write or bulk, and one wrapper stack around every call decides whether it previews, confirms or replays. That is decided in code, not by another model.",
+               "Irreversible actions like sending mail or deleting always need a confirmation, whatever the user prefers. There's an undo window for reversible ones. Emails are treated as untrusted input because of prompt injection. And a guard checks the agent's claims against what actually ran."],
+         "land": "Gate by what the action does, confirm irreversible ones, treat input as untrusted, verify claims.",
+         "learn": {"read": [{"url": "../ALFRED.html#l-wrap", "label": "alfred_: the wrapper stack, and why there is no risk score"}]}},
         {"q": "How do you evaluate an agent?", "short": "Evaluating agents", "tests": "Your strongest topic.",
          "a": ["Outcome first: did it reach the right end state? Then how: the right tools, no unsafe actions, how many steps. Then reliability: does it succeed every time over several runs, not just once.",
                "At alfred_ I built a bench from real production failures: a scanner flags failing conversations, a judge checks them, and real ones become cases. Each case runs the real agent against a snapshot of the user's world, with only the provider calls swapped, scored on tool calls per completed task and on assertions against the snapshot."],
          "land": "End state, then path, then repeatability; built from real failures.",
-         "figs": ["benchLoop", "benchAdapter"]},
+         "figs": ["benchLoop", "benchAdapter"],
+         "learn": {"read": [{"url": "../ALFRED.html#s-bench", "label": "alfred_: the eval bench, the full story"}]}},
         {"q": "What is MCP?", "short": "MCP", "tests": "Current tooling.",
          "a": ["The Model Context Protocol is an open standard for connecting models to tools and data. A server exposes tools and resources; a client, like Claude, discovers and calls them in a standard way, so you don't write a custom integration per model.",
                "At alfred_ we ship an MCP connector: Claude can call alfred_'s tools as the user, through the same safety wrappers our own agent uses, with writes previewed and confirmed."],
@@ -251,49 +255,42 @@ QA = [
                "Then evaluate both halves separately: did retrieval find the right chunks, and did the answer stay faithful to them? That split is what my MetaRAG work was about."],
          "land": "Chunk, embed, store; embed the question, retrieve, prompt with sources, generate; evaluate retrieval and answer separately.",
          "parts": [
-             {"title": "The code (any embedding model and LLM)",
-              "code": "import numpy as np\n\ndef chunk(text, size=800, overlap=100):\n    step = size - overlap\n    return [text[i:i + size] for i in range(0, len(text), step)]\n\nclass VectorStore:\n    def __init__(self):\n        self.vecs, self.items = [], []\n    def add(self, vec, text, source):\n        self.vecs.append(vec / np.linalg.norm(vec))\n        self.items.append({\"text\": text, \"source\": source})\n    def search(self, qvec, k=4):\n        q = qvec / np.linalg.norm(qvec)\n        scores = np.array(self.vecs) @ q\n        return [self.items[i] for i in np.argsort(-scores)[:k]]\n\ndef index(docs, embed, store):\n    for doc in docs:\n        for piece in chunk(doc[\"text\"]):\n            store.add(embed(piece), piece, doc[\"source\"])\n\ndef answer(question, embed, store, llm):\n    hits = store.search(embed(question))\n    context = \"\\n\\n\".join(f\"[{i}] ({h['source']}) {h['text']}\" for i, h in enumerate(hits))\n    prompt = (\"Answer only from the sources below and cite them like [0]. \"\n              \"If they don't contain the answer, say so.\\n\\n\"\n              f\"{context}\\n\\nQuestion: {question}\")\n    return llm(prompt)"},
              {"title": "What they'll probe",
               "items": ["**Chunk size:** too small loses context, too large dilutes relevance; overlap stops a sentence being cut in half.",
                         "**Hybrid search:** add keyword search (BM25) and merge the results, for exact terms.",
                         "**Reranking:** retrieve 20, rerank with a cross-encoder, keep the best 4.",
                         "**Evaluation:** retrieval recall at k; answer faithfulness to the sources; answer relevance."]},
-         ]},
+         ],
+         "figs": ["ragPipeline"],
+         "learn": {"read": [{"url": "../CODING.html#rag", "label": "RAG, end to end, with the code", "why": "Chunk, embed, retrieve, prompt, cite; tested."}, {"url": "../CODING.html#ai", "label": "AI-flavoured coding: chunk() and friends"}]}},
         {"q": "What is GraphRAG, and when does it beat plain RAG?", "short": "GraphRAG", "tests": "Beyond basic retrieval, and Mphasis's world.",
          "a": ["Plain RAG finds chunks that look like the question. It struggles with questions that need connections across many documents, like 'which systems depend on this table?' or 'what are the main themes across all of this?'.",
                "GraphRAG first extracts entities and relationships into a graph. For a specific question it retrieves an entity's neighbourhood, following the edges; for a broad question it uses summaries of clusters of the graph. For legacy code this is natural: programs, data and calls already form a graph, which is what NeoZeta's knowledge graph is about."],
          "land": "Retrieve by relationships, not just similarity: neighbourhoods for specific questions, cluster summaries for broad ones.",
-         "parts": [
-             {"title": "The code: build a graph, answer from a neighbourhood",
-              "code": "from collections import defaultdict\n\ndef build_graph(chunks, extract):\n    # extract(text) -> [(\"PAYROLL\", \"reads\", \"EMP_TABLE\"), ...], an LLM or a parser\n    graph = defaultdict(list)\n    for c in chunks:\n        for head, rel, tail in extract(c[\"text\"]):\n            graph[head].append((rel, tail, c[\"source\"]))\n            graph[tail].append((f\"inverse {rel}\", head, c[\"source\"]))\n    return graph\n\ndef neighbourhood(graph, start, hops=2):\n    seen, frontier, facts = {start}, [start], []\n    for _ in range(hops):\n        nxt = []\n        for node in frontier:\n            for rel, other, src in graph[node]:\n                facts.append(f\"{node} {rel} {other} ({src})\")\n                if other not in seen:\n                    seen.add(other)\n                    nxt.append(other)\n        frontier = nxt\n    return facts\n\ndef graph_answer(question, entity, graph, llm):\n    facts = \"\\n\".join(neighbourhood(graph, entity))\n    return llm(f\"Using only these facts:\\n{facts}\\n\\nAnswer: {question}\")",
-              "after": ["Finding the starting entity: match names in the question against graph nodes, or use vector search over node descriptions."]},
-             {"title": "Local versus global",
-              "items": ["**Local search:** start from the entities in the question and walk their neighbourhood. For 'what reads EMP_TABLE?'.",
-                        "**Global search:** cluster the graph into communities, summarise each, and answer from the summaries. For 'what does this system do?'.",
-                        "**Cost:** building the graph with an LLM is expensive; for code, a parser gives you the graph far more cheaply and reliably."]},
-         ]},
+         "figs": ["graphRag"],
+         "learn": {"read": [{"url": "../CODING.html#graphrag", "label": "GraphRAG, with the code", "why": "Triples, a graph, k hops, cited facts; local against global search."}]}},
     ]},
-    {"group": "Quick Python", "blurb": "Short exercises that show up on shared screens. Algorithms are on the CODING page.", "items": [
+    {"group": "Quick Python", "blurb": "Short exercises that show up on shared screens. The code for each is on the CODING page.", "items": [
         {"q": "Top k most frequent words in a text.", "short": "Top k frequent", "tests": "Collections and complexity.",
          "a": ["Count with a Counter, then take the k largest. Counter.most_common(k) does it; with a heap it's O(n log k)."],
          "land": "Counter plus a heap: O(n log k).",
-         "parts": [{"title": "Code", "code": "import heapq, re\nfrom collections import Counter\n\ndef top_k_words(text, k):\n    words = re.findall(r\"[a-z']+\", text.lower())\n    counts = Counter(words)\n    return heapq.nlargest(k, counts.items(), key=lambda kv: kv[1])"}]},
+         "learn": {"read": [{"url": "../CODING.html#heap", "label": "Heap: top k, with the code"}]}},
         {"q": "Implement an LRU cache.", "short": "LRU cache", "tests": "Data structures.",
          "a": ["An ordered dict: on get, move the key to the end; on put, insert at the end and, if over capacity, pop the first. Both are O(1). The interview version without OrderedDict is a hash map plus a doubly linked list."],
          "land": "OrderedDict, move_to_end on use, pop the oldest when full.",
-         "parts": [{"title": "Code", "code": "from collections import OrderedDict\n\nclass LRUCache:\n    def __init__(self, capacity):\n        self.cap = capacity\n        self.data = OrderedDict()\n\n    def get(self, key):\n        if key not in self.data:\n            return -1\n        self.data.move_to_end(key)          # most recently used\n        return self.data[key]\n\n    def put(self, key, value):\n        self.data[key] = value\n        self.data.move_to_end(key)\n        if len(self.data) > self.cap:\n            self.data.popitem(last=False)   # evict the least recently used"}]},
+         "learn": {"read": [{"url": "../CODING.html#ai", "label": "LRU cache, with the code"}]}},
         {"q": "Write a retry decorator with exponential backoff for an LLM call.", "short": "Retry with backoff", "tests": "Practical Python for AI systems.",
          "a": ["A decorator that catches the retryable error, waits base times two to the attempt, plus a little random jitter so many clients don't retry together, and gives up after a few attempts."],
          "land": "Catch, wait with exponential backoff and jitter, give up after n.",
-         "parts": [{"title": "Code", "code": "import functools, random, time\n\ndef retry(times=4, base=0.5, retry_on=(TimeoutError, ConnectionError)):\n    def deco(fn):\n        @functools.wraps(fn)\n        def wrapper(*args, **kwargs):\n            for attempt in range(times):\n                try:\n                    return fn(*args, **kwargs)\n                except retry_on:\n                    if attempt == times - 1:\n                        raise\n                    time.sleep(base * 2 ** attempt + random.uniform(0, base))\n        return wrapper\n    return deco\n\n@retry()\ndef call_llm(prompt):\n    ...  # your client call here"}]},
+         "learn": {"read": [{"url": "../CODING.html#ai", "label": "Retry with backoff, with the code"}]}},
         {"q": "Parse a model's JSON output safely.", "short": "Parsing model JSON", "tests": "Robustness.",
          "a": ["Strip code fences, try json.loads, and validate the shape with Pydantic. If it fails, retry once with the error message in the prompt. Better still, use the provider's structured output or tool calling so the model has to return the schema."],
          "land": "Strip, parse, validate with Pydantic, retry once with the error.",
-         "parts": [{"title": "Code", "code": "import json\nfrom pydantic import BaseModel, ValidationError\n\nclass Ticket(BaseModel):\n    category: str\n    priority: int\n\ndef parse_ticket(raw: str) -> Ticket | None:\n    text = raw.strip().removeprefix(\"```json\").removesuffix(\"```\").strip()\n    try:\n        return Ticket.model_validate(json.loads(text))\n    except (json.JSONDecodeError, ValidationError):\n        return None   # caller retries with the error in the prompt"}]},
+         "learn": {"read": [{"url": "../CODING.html#structured", "label": "Structured output and parsing, with the code"}]}},
         {"q": "Merge overlapping intervals.", "short": "Merge intervals", "tests": "A classic that shows up everywhere.",
          "a": ["Sort by start, then walk: if the next interval starts before the last one ends, extend the last; otherwise start a new one. O(n log n) for the sort."],
          "land": "Sort by start, extend or append.",
-         "parts": [{"title": "Code", "code": "def merge(intervals):\n    out = []\n    for start, end in sorted(intervals):\n        if out and start <= out[-1][1]:\n            out[-1][1] = max(out[-1][1], end)\n        else:\n            out.append([start, end])\n    return out"}]},
+         "learn": {"read": [{"url": "../CODING.html#intervals", "label": "Intervals, with the code"}]}},
     ]},
 ]
 

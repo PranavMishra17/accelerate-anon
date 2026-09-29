@@ -34,7 +34,9 @@ when squared error's does not.
 two pointers first, because the sorted-array question you missed is exactly that
 pattern; then hashing, binary search, recursion and trees — maximum depth of a binary
 tree came back blank and it is the gateway to every tree problem — then BFS and DFS,
-then a first look at dynamic programming. Requeued Q18 and Q20 clear here.
+then a first look at dynamic programming. Requeued Q18 and Q20 clear here. The material
+is `CODING.html`: Core, then Structures, then Techniques. Requeued Q17 to Q20 map to
+`#pointers`, `#hashing`, `#trees` and the Start tab's `#bigo`.
 
 **Systems drops to one drill a week** so it does not rot. One scaling question,
 answered out loud, fifteen minutes.

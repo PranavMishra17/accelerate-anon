@@ -92,7 +92,7 @@ no page lists them.
 **14. Dictation into the answer field.**
 Nearly every Check in the plan is literally "say it out loud". The browser's
 `SpeechRecognition` makes that real and leaves a transcript to set beside the model
-answer. Prior research is in `handoffs/dictation-and-shell.md`.
+answer. Prior research is in `archive/handoffs/dictation-and-shell.md`.
 
 **15. One free-recall question per quiz.**
 Multiple choice can be passed by elimination, which is a close cousin of knowing
@@ -121,7 +121,6 @@ enough to carry it.
 Named so they stop coming back as ideas.
 
 - Animated or steppable diagrams.
-- Dark mode.
 - Correlating the life strip against week states.
 - Merge-by-timestamp synchronisation between devices.
 - A bibliography page.
@@ -139,11 +138,15 @@ Not on this list because it predates it; recorded in `CHANGELOG.md`. It is the
 mechanism for "ticked but could not say it", which is the same shape of gap as
 Tier 1.
 
-**2026-09-22 — Items 1 to 21.** Built in parallel the same day; see `CHANGELOG.md`
-("Repo initialised. Twenty-one improvements").
+**2026-09-22 — Items 1 to 21, except 14.** Built in parallel the same day; see `CHANGELOG.md`
+("Repo initialised. Twenty-one improvements"). Dictation (14) became a Win+H hint; the
+research is in `archive/handoffs/`.
 
 **2026-09-26 — Superseded or reversed.** The ten-minute floor timer (item 5) and the
 per-session answer boxes went when sessions became collapsible step lists; each step now
 hides its answer until tried and takes a Had it / Partly / Missed it rating instead. The
 single spaced card (16) became three open questions a day. "Animated or steppable
 diagrams" left the not-doing list at Pranav's request: every figure now has a walk-through.
+
+**2026-09-28 — Reversed: dark mode.** It left the not-doing list: the guide, `CODING.html`,
+the loop pages and `ALAAP.html` have it, and revamp phase 5 checks it on every page.

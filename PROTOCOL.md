@@ -121,6 +121,12 @@ The words to say come last, shut until you have tried. Sessions that were blocks
 text to memorise, with about twenty-five recall questions each, were tried on 25
 September and thrown out the same day.
 
+**One home per thing.** The plan is the tracker; the guide, the coding page, Alaap and
+TrenTorch, alfred_ and each loop page are references beside it. A story, an answer, a piece
+of code or a figure lives in one of them; everywhere else links to it. Copies drift: by
+29 September alfred_'s agent loop, its cost cut and its safety gate were each told two
+different ways on different pages.
+
 **Diagrams you can take apart.** Each part of a figure explains itself on hover, in the
 context of that figure, with a link to where it is taught. A walk-through goes through
 the flow one part at a time. A figure is drawn once and reused everywhere it applies.
@@ -149,7 +155,12 @@ and how to say it. The mock is a person with opinions who follows the thread and
 recaps you back to yourself; the critique comes after, turn by turn: what landed, what
 did not, how to approach it, and the answer to give, with a full answer for every "I'm
 not sure". It is read in one screen, not scrolled: the turns on one side, the answer on
-the other.
+the other. How a loop page is built is in `WILDCARD.md`; how a mock runs, in
+`interviews/MOCKS.md`. Your own system is not re-told on a loop page: it links to
+`ALFRED.html`.
+
+**One screen, in every orientation.** Where a page promises one screen, it holds on a
+wide display, on a phone upright and on a phone on its side, unless said otherwise.
 
 **Small rewards, never debt.** Closing a session launches the craft; closing a week binds
 it into the book, lights its constellation and unlocks a livery. None of it adds work.

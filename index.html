@@ -556,9 +556,9 @@
     color: var(--mark); margin-bottom: 6px; }  .originwarn { border: 2px solid var(--mark); background: var(--live); padding: 12px 16px;
     margin: 0 0 18px; font-size: 13.5px; line-height: 1.5; color: var(--ink); }
   .originwarn b { color: var(--mark); }
-  /* -------- Accelerate: header lockup and the flight plan -------- */
+  /* -------- Accelerate: header lockup -------- */
   :root {
-    --flight: #2447E0; --flight-deep: #1733B8; --ghost: #8FA6F0; --burn: #F05A1A;
+    --flight: #2447E0; --flight-deep: #1733B8;
     --plan: #B3AFA4; --grid: #D8D4C9;
     --display: "Bahnschrift", "DIN Alternate", "DIN 2014", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
   }
@@ -665,8 +665,8 @@
   </div>
 </div>
 <script src="figures/icons.js?v=129ef92b"></script>
-<script src="figures/figures.js?v=792b637a"></script>
-<script src="figures/notes.js?v=3ff06e0d"></script>
+<script src="figures/figures.js?v=b8b66284"></script>
+<script src="figures/notes.js?v=074e5fe8"></script>
 <script src="figures/viewer.js?v=ecb99aae"></script>
 <script src="data/reading.js"></script>
 <script>
@@ -739,7 +739,6 @@
               where: "DDIA 2e, ch. 2 Defining Nonfunctional Requirements → Describing Performance → Latency and Response Time, then Average, Median, and Percentiles, then Use of Response Time Metrics. Chapter 2, not chapter 1: in the 2nd edition chapter 1 is Trade-Offs in Data Systems Architecture",
               out: "p50, p95 and p99 defined in your own words, and one sentence on why an average hides the tail",
               skip: "The rest of chapter 1. Reliability and maintainability are not what this week is about.",
-              links: [ddia("ch. 2 Defining Nonfunctional Requirements → Describing Performance")],
               ans: [
                 "p50 (the median): half of all requests finish faster than this",
                 "p95 and p99: the latency that 95 or 99 percent of requests beat — where the slow tail lives",
@@ -1296,7 +1295,6 @@
               where: "DDIA 2e, ch. 4 Storage and Retrieval → Storage and Indexing for OLTP → Log-Structured Storage (hash indexes, SSTables, LSM-trees, Bloom filters), then B-Trees, then Comparing B-Trees and LSM-Trees. Skim the other index structures after it",
               out: "your own sentence on why writes are cheap in an LSM-tree and reads can span layers, and the reverse for a B-tree",
               skip: "From 'Transaction Processing or Analytics?' onward — column-oriented storage and OLAP schemas are a different session",
-              links: [ddia("ch. 4 Storage and Retrieval → Storage and Indexing for OLTP → Comparing B-Trees and LSM-Trees")],
               ans: [
                 "A basic hash index keeps an in-memory map from key to byte offset in an append-only log — fast point lookups, but it must fit in memory and cannot do range queries",
                 "An LSM-tree makes writes cheap because they are sequential appends to an in-memory structure, flushed to sorted files and merged later by background compaction",
@@ -1953,7 +1951,6 @@
               where: "DDIA 2e, ch. 6 Replication → Problems with Replication Lag → Reading Your Own Writes in particular, then Monotonic Reads and Consistent Prefix Reads",
               out: "one sentence: what a client can see immediately after its own write, and why that is a staleness problem before it is ever a caching problem",
               skip: "Leader election, multi-leader conflict resolution and leaderless replication — this pass only needs the staleness argument, not the rest of the chapter",
-              links: [ddia("ch. 6 Replication → Problems with Replication Lag → Reading Your Own Writes")],
               ans: [
                 "Replication lag is the delay between a write landing on the leader and that write becoming visible on a follower",
                 "Read-your-writes consistency guarantees a user immediately sees their own write, even when reads are served from a lagging replica",
@@ -2265,7 +2262,7 @@
             ans: [
               "Linq posts a signed webhook to conv-v6-ingress. It checks the signature, dedupes on the event id in v6_webhook_events, resolves the phone number to a user, stores the inbound message in linq_messages, and inserts a process_turn row into v6_agent_jobs. Then it returns fast and pokes the job worker.",
               "conv-v6-job-worker, woken by that poke or by the one-minute cron, claims the job with FOR UPDATE SKIP LOCKED and hands it to conv-v6-turn. (For a small cohort, a cheaper v7 first pass tries first and hands back to v6 when it can't answer.)",
-              "conv-v6-turn takes a lease on the conversation (90 seconds, renewed every 30), opens a trace, loads context, builds the prompt, and runs the agent graph, LangGraph, up to 12 steps. Every tool call goes through the compose() wrapper stack: validation, capability gate, preview and confirmation, idempotency, logging, timeout. Guards check for fabricated claims before the reply goes out.",
+              "conv-v6-turn takes a lease on the conversation (90 seconds, renewed every 30), opens a trace, loads context, builds the prompt, and runs the agent graph, LangGraph, up to 12 steps on SMS (50 on the web). Every tool call goes through the compose() wrapper stack: validation, capability gate, preview and confirmation, idempotency, logging, timeout. Guards check for fabricated claims before the reply goes out.",
               "The reply is stored in linq_messages and sent back through Linq; a failed chunk is retried by an outbound-retry function.",
               "Why the job row: Linq retries a webhook that doesn't answer fast, and a turn can take many seconds. So the webhook acknowledges at once, the work is a row that exactly one worker claims, and the lease stops two turns answering the same conversation."
             ],
@@ -2351,7 +2348,7 @@
             sd: [{ v: "overview", a: "pattern-agent-durability", why: "Transcripts, checkpoints and unknown results: the ideas replay is built from." }],
             d: "The new Kitaru imports traces from Langfuse, LangSmith, Braintrust, Logfire and Arize Phoenix, replays with tool calls answered from the recording, and organises cases into immutable, versioned cohorts. The deterministic evaluators read stored session evidence only; they never run the agent or call a live tool.",
             ans: [
-              "Kitaru imports traces from Langfuse, LangSmith, Braintrust and Logfire, plus plain JSONL or anything OpenTelemetry-shaped",
+              "Kitaru imports traces from Langfuse, LangSmith, Braintrust, Logfire, Arize Phoenix and Mastra, plus plain JSONL; a custom importer covers anything else",
               "A replay answers tool calls from the recorded session instead of hitting the live tool",
               "Sessions sit in cohorts: pinned, versioned groups; cohort versions are immutable, so a result stays reproducible",
               "Deterministic evaluators never run the agent, call a model provider, or invoke a live tool — they only read stored session evidence"
@@ -2403,13 +2400,13 @@
               "About 10% flaky, run k = 3; about 25 production instances per query type; 6 or 7 tools seen against an ideal 2 or 3",
               "Authoring 3 to 4 hours early, 45 to 60 minutes once automated; first version 3 to 4 weeks; $15 to $25 a full run",
               "Headline metric: tool calls per completed task, for example 2.5 down to 2.2",
-              "Cautions: the 40% cost cut belongs to the rules engine, not the bench; say 'a rewrite of the multi-turn orchestration', never an internal version name, and name no colleague"
+              "Cautions: the 30% cost cut belongs to the rules engine, not the bench; say 'a rewrite of the multi-turn orchestration', never an internal version name, and name no colleague"
             ],
             close: [
               { k: "num", q: "Roughly how many cases are in the bench?", a: "A hundred-plus." },
               { k: "num", q: "About what share of judge flags turn out to be genuine bugs?", a: "About three in four." },
               { k: "blank", q: "The headline metric is tool calls per ___ task.", a: "completed" },
-              { k: "why", q: "Why must the 40% cost cut never be attached to the bench?", a: "It belongs to the rules-engine matcher; attaching it to eval work is a claim that does not survive one follow-up." }
+              { k: "why", q: "Why must the 30% cost cut never be attached to the bench?", a: "It belongs to the rules-engine matcher; attaching it to eval work is a claim that does not survive one follow-up." }
             ] },
           { t: "Deliver the two-minute version, three times, out loud", m: 20,
             d: "Four beats. The problem: no reliable way to say a new agent version was better. The funnel: a scanner with cheap deterministic signals over twelve classes, a judge trained on your labels, genuine bugs fixed and promoted into a hundred-plus cases. Replay: the harness flag, real tool code, only the provider call routed to SQLite, and a snapshot covering every path from about twenty-five real instances plus deliberate ambiguity, three people named Michael. The outcome: scored on tool calls per completed task and assertions against the snapshot, run nightly, and used to sign off the multi-turn orchestration rewrite.",
@@ -2787,11 +2784,11 @@
               "Each class wants a different replay policy"
             ] },
           { t: "State Kitaru's current answer precisely",
-            d: "By default a replay answers tool calls from the recording, which is how no card gets refunded twice. A call the recording never saw is handled by an explicit on_miss choice. A specific safe tool can be routed to pass through while everything else stays on history, and a tool can be pinned to a static result. Where it gets hard: a forked agent issues a new write the recording has no answer for.",
+            d: "By default a tool with no policy passes through: the real tool runs, live. History is set per tool: a tool on history is answered from the recording by its cache key, which is how no card gets refunded twice. A history lookup that misses goes to an explicit on_miss choice, and a tool can be pinned to a static result. Where it gets hard: a forked agent issues a new write the recording has no answer for.",
             ans: [
-              "Default: a replay answers a tool call from the recorded session",
-              "A miss is handled by on_miss, which takes exactly three values: fail (stop before touching a live tool), error_result (hand back a tool error and continue), or passthrough (execute the live tool)",
-              "Per-tool overrides are a separate knob: a tool can be pinned to a static result, or set to passthrough on its own, regardless of the global on_miss setting",
+              "Default: passthrough. A tool with no policy runs live; history, answering from the recorded session by cache key, is set per tool",
+              "A history miss is handled by on_miss, which takes exactly three values: fail (stop before touching a live tool), error_result (hand back a tool error and continue), or passthrough (execute the live tool)",
+              "Policies are found by exact tool name, then the default: passthrough, history, or static (a pinned result)",
               "The hard case: a forked agent issues a new write the recording never saw"
             ] },
           { t: "State your bench's answer, and its cost",
@@ -2844,7 +2841,7 @@
             why: "A stable key means a repeat of the same logical call maps to the same stored result, so retries and replays are harmless. A random UUID per attempt defeats the purpose." },
           { q: "Why does deterministic replay of a workflow require recording effects?",
             o: ["For logging only", "Re-executing effects would repeat them and change the world, so their results must come from history", "To save cost", "Because models are nondeterministic"], a: 1,
-            why: "That is the core of durable execution, and the reason Kitaru answers from the recording by default." }
+            why: "That is the core of durable execution, and the reason a write tool belongs on history in a replay: Kitaru's default, passthrough, would run it again." }
         ]
       },
 
@@ -4502,13 +4499,13 @@
           { k: "blank", q: "A ___ checks that it was called correctly; a stub just returns canned answers.", a: "mock" },
           { k: "short", q: "One sentence: why does a fake survive an agent going off-path where a stub does not?",
             a: "A fake lets a write actually land and a later read see it, while a stub only replays what was recorded for calls it anticipated, leaving nothing sensible for a call it did not foresee." },
-          { k: "pick", q: "An agent under test writes a new record, then reads it back later in the same run. Which test double supports that correctly — Kitaru's recorded stub, or Pranav's SQLite fake?",
-            o: ["Kitaru's recorded stub, since it has the original session's data", "Pranav's SQLite fake, since the write actually lands and a later read sees it", "Neither, this needs a live database"], a: 1,
-            why: "A stub replays canned answers; only a fake lets a genuinely new write be read back correctly." },
+          { k: "pick", q: "An agent under test writes a new record, then reads it back later in the same run. Which supports that correctly — Kitaru's record-replay, or Pranav's SQLite fake?",
+            o: ["Kitaru's record-replay, since it has the original session's data", "Pranav's SQLite fake, since the write actually lands and a later read sees it", "Neither, this needs a live database"], a: 1,
+            why: "Record-replay returns what was recorded, like a stub on a path it has not seen; only a fake lets a genuinely new write be read back correctly." },
           { k: "why", q: "Why does Fowler distinguish a fake from a stub, rather than treating them as the same idea?",
             a: "Because a stub only returns pre-canned answers for calls it expects, while a fake is a working implementation that behaves consistently on genuinely new interactions — the difference matters exactly when behaviour goes off the anticipated script." }
         ],
-        say: "A stub returns canned answers, a mock checks it was called correctly, a fake is a working lightweight implementation. Your SQLite snapshot is a fake; Kitaru's recorded results behave like stubs. That distinction explains why your bench survives going off-path.",
+        say: "A stub returns canned answers, a mock checks it was called correctly, a fake is a working lightweight implementation. Your SQLite snapshot is a fake; Kitaru is record-replay, real results reused for calls it has seen. That distinction explains why your bench survives going off-path.",
         res: [R.fowler],
         do: [
           { a: "Read the definitions and the mock-stub distinction", m: 5,
@@ -4516,8 +4513,8 @@
             url: "https://martinfowler.com/articles/mocksArentStubs.html",
             skip: "'Classical and Mockist Testing' and 'Choosing Between the Differences' — the testing-philosophy debate, not the definitions." },
           { a: "Say where your bench and Kitaru sit, out loud, in Fowler's terms", m: 3,
-            out: "your SQLite snapshot named as a fake, Kitaru's recorded results named as stubs",
-            ans: "In Fowler's terms, my SQLite snapshot is a fake — a working, lightweight implementation of the world the agent writes to. Kitaru's recorded tool results are closer to stubs, canned answers returned for a given call. The difference matters: my fake lets a write actually land and a later read see it, where a stub just replays what was recorded. That is why my bench survives the agent going off-path and pure stub replay does not." }
+            out: "your SQLite snapshot named as a fake, Kitaru named as record-replay",
+            ans: "In Fowler's terms, my SQLite snapshot is a fake — a working, lightweight implementation of the world the agent writes to. Kitaru is record-replay: real recorded results, reused for a call it has seen. The difference matters: my fake lets a write actually land and a later read see it, where record-replay can only return what was recorded. That is why my bench survives the agent going off-path and pure replay does not." }
         ] }
     ],
     wc9: [
@@ -5537,7 +5534,7 @@
   /* ------------------------------------------- your system design guide
 
      SYSTEM DESIGN.html sits beside this file: a six-step delivery framework,
-     fifteen deep-dive patterns, and six designs worked end to end. Items that
+     fifteen deep-dive patterns, and seven designs worked end to end. Items that
      the guide deepens carry an sd list of places in it, and every link opens
      in a new tab so the session you are in stays where it is. */
 
@@ -5711,9 +5708,15 @@
     if (page === "dia") { return "#/dia/" + week + "/" + (session + 1); }
     if (page === "sheet") { return "#/sheet/" + week; }
     if (page === "session") {
-      return week === "wc" ? "#/w/" + (session + 1) : "#/s/" + (week + 1) + "/" + (session + 1);
+      return week === "wc" ? "#/w/" + WILDCARD.sessions[session].id : "#/s/" + (week + 1) + "/" + (session + 1);
     }
     return "#/" + page;
+  }
+  // A session is addressed by position (#/w/3, #/s/2/4) or by id (#/w/wc8, #/s/w2a).
+  // Hand-written links use ids: positions shift when a session is inserted.
+  function byId(list, id) {
+    for (var i = 0; i < list.length; i++) { if (list[i].id === id) { return i; } }
+    return -1;
   }
   function parseHash() {
     var p = (window.location.hash || "#/").replace(/^#\/?/, "").split("/");
@@ -5721,6 +5724,12 @@
     try {
       if (!p[0]) { return { page: "home", week: currentWeek(), session: 0 }; }
       if (p[0] === "week" && PLAN[n(p[1])]) { return { page: "week", week: n(p[1]), session: 0 }; }
+      if (p[0] === "s" && p[1] && !p[2]) {
+        for (var wi = 0; wi < PLAN.length; wi++) {
+          var si = byId(PLAN[wi].sessions, p[1]);
+          if (si >= 0) { return { page: "session", week: wi, session: si }; }
+        }
+      }
       if (p[0] === "s" && PLAN[n(p[1])] && PLAN[n(p[1])].sessions[n(p[2])]) {
         return { page: "session", week: n(p[1]), session: n(p[2]) };
       }
@@ -5731,7 +5740,10 @@
       if (p[0] === "dia" && p[1]) {
         return { page: "dia", week: view.week, session: n(p[2]), scope: p[1] };
       }
-      if (p[0] === "w" && WILDCARD.sessions[n(p[1])]) { return { page: "session", week: "wc", session: n(p[1]) }; }
+      if (p[0] === "w" && p[1]) {
+        var wn = /^\d+$/.test(p[1]) ? n(p[1]) : byId(WILDCARD.sessions, p[1]);
+        if (WILDCARD.sessions[wn]) { return { page: "session", week: "wc", session: wn }; }
+      }
       if (["requeue", "protocol", "charter", "written", "ahead", "data", "resources", "search", "map", "book", "sky", "progress", "figure"].indexOf(p[0]) >= 0) {
         return { page: p[0], week: view.week, session: 0 };
       }
@@ -6843,10 +6855,13 @@
   }
   function guideList(s, list, hrefOf, labelOf, logAs) {
     if (!list || !list.length) { return null; }
-    var ul = el("ul", "rlist");
+    var ul = el("ul", "rlist"), seen = {};
     list.forEach(function (q) {
+      var href = hrefOf(q);
+      if (seen[href]) { return; }   // a step's own refs and data/reading.js can name the same page
+      seen[href] = 1;
       var li = document.createElement("li");
-      li.appendChild(linkTo(s, hrefOf(q), labelOf(q), logAs));
+      li.appendChild(linkTo(s, href, labelOf(q), logAs));
       if (q.why) { li.appendChild(el("div", "rwhy", q.why)); }
       ul.appendChild(li);
     });
@@ -7594,7 +7609,7 @@
     }
 
     v.appendChild(rubric("Where the rest lives"));
-    v.appendChild(el("p", "", "CHARTER.md is fixed. MILESTONE-1.md is the long form of these weeks. ROADMAP-AHEAD.md holds milestones 2 and 3. PROTOCOL.md, REQUEUE.md and CHANGELOG.md carry the rules, the open items and the history. The diagnostics folder holds every gate result."));
+    v.appendChild(el("p", "", "CHARTER.md is fixed. MILESTONE-1.md is the long form of these weeks. ROADMAP-AHEAD.md holds milestones 2 and 3. PROTOCOL.md, REQUEUE.md and CHANGELOG.md carry the rules, the open items and the history. The diagnostics folder holds the baseline, and will hold each gate result."));
     v.appendChild(el("p", "sm dim", "The folder is the memory, not the conversation. A re-plan months from now should need nothing but this."));
   }
 

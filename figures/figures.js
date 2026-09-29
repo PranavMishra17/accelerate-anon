@@ -1524,7 +1524,7 @@ var FIGURES = (function () {
 
   DIA.alfredHld = {
     title: "alfred_: three doors, one brain, one tool package",
-    cap: "<b>Two loops share one tool layer.</b> SMS, web and MCP converge on packages/tools; a background pipeline watches the mailbox, triages, and acts alone, but never sends. Everything lives in one Supabase project: Postgres with RLS, pg_cron and pgmq, and Deno edge functions. The eval scanner turns real failing turns into regression cases.",
+    cap: "<b>Two loops share one tool layer.</b> SMS, web and MCP converge on packages/tools; a background pipeline watches the mailbox, triages, and acts alone, but never sends. The agent and the pipeline run as Deno edge functions on Supabase, over one Postgres with RLS, pg_cron and pgmq; long work runs in containers on Railway. The eval scanner turns real failing turns into regression cases.",
     svg: function () {
       var b = "";
       b += S.box({ id: "sms", x: 0, y: 10, w: 200, h: 44, label: "SMS", sub: "conv-v6 ingress, jobs, turn", tone: "iv", icon: "message-square" });
@@ -1735,7 +1735,7 @@ var FIGURES = (function () {
 
   DIA.alfredDeploy = {
     title: "alfred_: where everything runs",
-    cap: "<b>Compute is Deno edge functions on Supabase plus a few long-running containers on Railway; state is one Postgres.</b> Every request surface lands on an edge function: SMS on conv-v6 (ingress, job worker, turn), the web app on conv-v6-web, Claude over MCP on mcp-exec. Work that outlives a request, like writing documents, scheduled routines and live phone calls, runs in Railway containers that claim jobs from the same Postgres. Postgres holds the jobs, traces and product data, runs the queues (pgmq and job rows) and the schedules (pg_cron).",
+    cap: "<b>Compute is Deno edge functions on Supabase plus a few long-running containers on Railway; state is one Postgres.</b> Every request surface lands on an edge function: SMS on conv-v6 (ingress, job worker, turn), the web app on conv-v6-web, Claude over MCP on mcp-exec. Work that outlives a request, like writing documents, scheduled routines, live phone calls and EmailEngine for IMAP, runs in Railway containers that claim jobs from the same Postgres. Postgres holds the jobs, traces and product data, runs the queues (pgmq and job rows) and the schedules (pg_cron).",
     svg: function () {
       var b = "";
       b += S.tag(0, 12, "Where requests come in");

@@ -2,8 +2,9 @@
 
 Raised by the reviewers who wrote the figure notes (2026-09-26), for the figure pass.
 Clear errors were fixed at the time: the Alaap autograd formulas (W.grad is x.T @ g),
-the async flag on the guide's idempotency diagram, and the collapsed ids in the chain-rule
-figure. What is left are mostly omissions: a failure path not drawn, a claim in the caption
+the async flag on the guide's idempotency diagram, the collapsed ids in the chain-rule
+figure, `attention` (V drawn and never used; a scale node and an output node added), `eigen`
+(each arrow drawn twice) and `overfit` (an invisible validation curve). What is left are mostly omissions: a failure path not drawn, a claim in the caption
 the drawing does not show. Keys: plain names are figures in figures.js, sd: the system design
 guide, al: the Alaap page.
 
@@ -27,9 +28,6 @@ guide, al: the Alaap page.
 - **al:arch-stages**: Track A (S0-S5) and track B (S6-S10) are drawn as two separate chains with no edge connecting them, but the figcaption states the identity-store schema is the contract between the tracks and that track B is 'supposed to start at S1', a real dependency the arrows don't show. The figcaption also flags a genuine naming collision: the numbered experiments/S6...S10 directories on disk are unrelated Indic experiments, not the same S6-S10 as this platform track; the diagram's own node ids (s6-inference-service, and so on) don't carry that warning, so matching ids to a file listing could easily conflate the two.
 - **zenmlStack**: The Stack node's only arrow reaches step: evaluate. The caption says the stack decides where the whole pipeline runs, but the drawing only shows it connected to the last step, which could read as the stack governing evaluation alone rather than every step.
 - **kitaruOrder**: The candidate-set footnotes under each column (completed AND failed vs. completed only) are themselves one of the two defects the source calls out by inspection, not just a note: the same cache key can resolve to a recorded failure under baseline scope and silently skip it under agent scope. That is inconsistency, not a documented design decision, and is worth stating as a bug rather than leaving as small print.
-- **attention**: The original figure drew Q, K and V as three boxes but only ever connected Q and K to a score and a softmax; V was drawn and never used, and the figure stopped at softmax without showing the output attention actually produces. Fixed by adding a scale node for the ÷√dₖ step and an output node that combines softmax's weights with V.
-- **eigen**: The original figure drew each vector's arrow twice — once as a plain path, once again via S.arrow — doubling the stroke for no visual reason. Cleaned up to a single arrow per vector in the redraw.
-- **overfit**: The original validation curve used tone "mark", which has no corresponding class in figures.css (only sys, math, alaap, req, iv, now, flat exist) — the curve had no stroke colour and rendered invisibly. Fixed by using tone "req" (dashed) so training and validation are visually distinct.
 - **sd:notebooklm:notebooklm-high-level-design**: No edge shows blob storage telling the notebook service that a presigned upload finished; nb>queue implies the notebook service already knows the source is ready, but nothing in the diagram signals when the raw upload actually completes.
 - **sd:prior-auth:prior-authorization-validator-high-level**: No edge connects docs (document processing) to evaluator; the workflow orchestrates both separately, so the diagram doesn't show how processed documents actually reach the criterion evaluator.
 - **sd:email-agent:email-and-calendar-agent-high-level-desi**: No edge shows what happens when the gate blocks an action outright rather than requiring confirmation or clarification; every outgoing edge from gate (notify, trace, outbox) is a path where the action proceeds in some form or is only logged.
@@ -120,3 +118,21 @@ guide, al: the Alaap page.
 - **sd:worker-leases**: Fencing matters most when the stale write arrives after the current one, which could otherwise silently overwrite newer state; the diagram doesn't show this ordering, which is the actual scenario the mechanism protects against.
 - **sd:unknown-results**: Reconciling requires the remote system to expose some way to check whether the action landed (a commit SHA, a message id, a charge id); the diagram assumes this is always possible, but many APIs don't expose an idempotency key or a lookup for an unacknowledged call, in which case this path isn't available.
 - **sd:resumable-events**: The diagram doesn't say how long events are retained before they age out; a viewer that reconnects after the retention window has passed has no valid 'last id' to resume from, and there's no fallback edge for that case, such as falling back to a fresh snapshot.
+
+## Text that may overlap: confirm by eye
+
+`node figures/check.js` warns when two labels' boxes overlap (29 September). Open each in
+`figures/check.html`; move a label or accept it.
+
+- **attention**: "saturated — one weight ≈ 1, gradient ≈ 0" against "spread out — still learning".
+- **arc**: "the gate" against the Alaap line under it.
+- **kitaruPlanes**: "sessions, session_nodes" against "tool lookup, node writes".
+- **kitaruFreeze**: "Recorded call log" against "hit: exact replay,".
+- **queueOverload**: "QUEUE LENGTH OVER TIME" against the axis label "queue length"; "E[N] = ρ / (1 − ρ)" against "E[N]".
+- **biasVarianceKnobs**: "VS. MODEL COMPLEXITY" against the axis label "error".
+- **gradientVector**: "θ (current point)" against "∇L: steepest ascent".
+
+## Not yet reviewed
+
+The figures added since 26 September have had no review pass: the thirteen AI systems
+figures on the coding page (`numpyShapes` to `lora`), `alfredDeploy` and `alfredMemory`.

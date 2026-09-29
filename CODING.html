@@ -9,10 +9,12 @@
 <link rel="stylesheet" href="figures/viewer.css?v=7a5bfc4f">
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
 <script src="figures/icons.js?v=129ef92b"></script>
-<script src="figures/figures.js?v=792b637a"></script>
-<script src="figures/notes.js?v=3ff06e0d" defer></script>
+<script src="figures/figures.js?v=b8b66284"></script>
+<script src="figures/notes.js?v=074e5fe8" defer></script>
 <script src="figures/viewer.js?v=ecb99aae" defer></script>
 <link rel="stylesheet" href="coding/sheet.css?v=d72dea74">
+<link rel="stylesheet" href="site/nav.css?v=555ea0f2">
+<script src="site/nav.js?v=fb3915ee" defer></script>
 <style>
 /* Tabs of folded sections: a pattern opens to an example, a template, problems and variations; an AI topic to its
    design, components, what to remember and what they will ask. Code, examples, the sheet and the popup: coding/sheet.css. */
@@ -99,8 +101,6 @@ details.sol > summary { cursor: pointer; font-weight: 700; font-size: 14.5px; co
 <body>
 <div class="top"><div class="top-in">
   <b>Algorithms and coding</b>
-  <a href="index.html">Tracker</a>
-  <a href="SYSTEM%20DESIGN.html">System design guide</a>
   <a href="#cheat" class="cheat-btn">Cheat sheet</a>
   <span class="grow"></span>
   <input id="q" type="search" placeholder="Search every tab, e.g. window, heap, RAG">
@@ -108,7 +108,7 @@ details.sol > summary { cursor: pointer; font-weight: 700; font-size: 14.5px; co
 <div class="shell">
   <nav class="side" id="side"></nav>
   <main id="main">
-    <h1 id="g-title">Algorithms and coding</h1>
+    <div class="sn-titlerow"><h1 id="g-title">Algorithms and coding</h1><nav data-site-nav data-here="coding"></nav></div>
     <p class="lead" id="g-blurb"></p>
     <div id="g-start">
     <section class="pat" id="how">
@@ -145,7 +145,7 @@ details.sol > summary { cursor: pointer; font-weight: 700; font-size: 14.5px; co
   <div class="cs-top"><b>Cheat sheet</b><div class="cs-tabs"></div><span class="hint">Click a card for examples and variations. F for full screen, Esc to close.</span><span class="grow"></span><a class="wide" href="CHEATSHEET.html">Its own page</a><button type="button" class="wide" id="cs-full">Full screen</button><button type="button" id="cs-close">Close</button></div>
   <div class="cs-grid"></div>
 </div>
-<script src="coding/data.js?v=8ba4d601"></script>
+<script src="coding/data.js?v=e3770f93"></script>
 <script src="coding/sheet.js?v=a375021c"></script>
 <script>
 (function () {

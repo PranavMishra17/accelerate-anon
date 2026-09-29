@@ -23,6 +23,8 @@ text appears on two pages, one of them becomes a link.
 
 ## Phase 1. The tracker's home page and the launch bar
 
+**Done, 29 Sep** (commit a137ca6): the launch bar, the flight plan gone, a lean home; Progress and Explain a figure on their own routes.
+
 - A launch bar at the top right of `index.html`: icon buttons with hover labels for System
   design, Coding, Cheat sheet, Alaap and TrenTorch, alfred_, and the current interview loop
   (the first entry in `LOOPS`). Each opens in a new tab.
@@ -35,6 +37,8 @@ text appears on two pages, one of them becomes a link.
 
 ## Phase 2. The wildcard
 
+**Done, 29 Sep** (acf1d2d): done sessions hidden behind a toggle, a one-line note, ZenML's sessions and `wc18` parked, past loops folded.
+
 - One list, as now, with done sessions hidden and a "show done" toggle.
 - The note shrinks to one line: the loop in play ("Mphasis, technical"). Loops that have
   happened are parked: their sessions stay counted, out of sight.
@@ -43,6 +47,8 @@ text appears on two pages, one of them becomes a link.
 - Update `WILDCARD.md` and `STUDY-LIST.md` to match.
 
 ## Phase 3. `ALFRED.html`, a living page for your own system
+
+**Done, 29 Sep** (acf1d2d): `ALFRED.html` built by `alfred/build.py` from `alfred/content.py`; its facts re-checked against the code in phase 6.
 
 Quick and short, for refreshing before any interview. Sections, each folded:
 
@@ -66,6 +72,8 @@ edited in one place.
 
 ## Phase 4. The system design guide: structure and movement
 
+**Done, 29 Sep** (acf1d2d): design steps as tabs with a sticky step bar, arrow keys and swipe, boards folded by `GUIDE.config.fold`; the alfred_ design links to `ALFRED.html`.
+
 - **Designs page**: each design becomes step tabs (Requirements, Entities, API, High-level
   design, Deep dives, and the rest), one step on screen at a time, with a sticky mini-map
   of the steps and a progress mark. Boards fold to their essentials; the spoken script and
@@ -80,6 +88,8 @@ edited in one place.
 
 ## Phase 5. Polish across the whole site
 
+**Built alongside phase 6, 29 Sep**: one site bar from `site/nav.js` on every page. Marked done once it is checked live.
+
 - One launch bar on every page (tracker, guide, coding, Alaap, loop pages, alfred_), from
   one shared file, so the pages feel like one site and each can reach the others.
 - One look: Atkinson Hyperlegible, three sizes, three greys, the same cream; dark mode
@@ -87,6 +97,8 @@ edited in one place.
 - Every page checked at 1536x787, 1920x1080, and a phone upright and on its side.
 
 ## Phase 6. Re-audit: duplicates become links, dead content goes
+
+**Done, 29 Sep.** Every candidate below was confirmed and acted on; the summary is in `CHANGELOG.md`.
 
 Candidates found so far, to confirm one by one:
 
@@ -106,7 +118,27 @@ Candidates found so far, to confirm one by one:
 
 ## Backlog: checks instead of rules
 
-- `tools/rebuild.py`: stamp, build the sheet, build the loop pages, `check.js`,
+- Done: `tools/rebuild.py`: stamp, build the sheet, build the loop pages, `check.js`,
   `test_data.py`, in one command, so no step is skipped.
-- A text-overlap check in `figures/check.js` (three figures passed with overlapping labels).
+- Done: a text-overlap check in `figures/check.js`. Its seven warnings are in
+  `figures/REVIEW.md` to confirm by eye.
 - A layout check that renders pages at the three sizes above and fails on overflow.
+- Generate `GUIDE.accelerate` (the guide's links back into the tracker) from the tracker's
+  `sd` refs in `tools/rebuild.py`, instead of keeping it by hand.
+
+## What is left for you
+
+1. **alfred_'s safety gate.** Your master reference and resume say the Execution Decision
+   Layer sorts each action into five verdicts by deterministic risk scoring. The alfred_
+   code on `origin/main` has no risk score: a code floor (sends and irreversible deletes
+   always confirm) plus the preferences you write in plain text, applied by the agent. The
+   pages now follow the code. Is the five-verdict layer an earlier version, the take-home,
+   or somewhere the code search missed?
+2. **Mphasis.** Did the round on 28 September happen? If so, park it (`LOOPS` and
+   `WILDCARD.md`) and the wildcard has no loop in play.
+3. **`progress/`.** Nothing was ever committed there, and the repo is public. Keep the
+   folder, or remove it and change the README line to "keep the export somewhere private"?
+4. **`STUDY-LIST.md`.** It is a generated copy of `#/sheet/wc` and reads "Nothing open".
+   Keep it, or remove it and use the sheet's copy-as-markdown when needed?
+5. **Six or twelve.** `MILESTONE-1.md` says six requeue items are what the milestone exists
+   to clear; `REQUEUE.md` has twelve. Which six, or all twelve? Due before 26 October.

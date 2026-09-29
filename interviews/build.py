@@ -150,11 +150,12 @@ def build(module_name):
     # Shared figure files carry a hash of their contents, so a changed figure is never
     # served from a stale browser cache.
     import hashlib
-    for f in ("icons.js", "figures.js", "notes.js", "viewer.js", "viewer.css", "figures.css"):
-        p = os.path.join(HERE, "..", "figures", f)
+    # The site badges (site/) are stamped the same way.
+    for f in [("figures", f) for f in ("icons.js", "figures.js", "notes.js", "viewer.js", "viewer.css", "figures.css")] + [("site", "nav.js"), ("site", "nav.css")]:
+        p = os.path.join(HERE, "..", *f)
         if os.path.exists(p):
             v = hashlib.sha1(io.open(p, "rb").read()).hexdigest()[:8]
-            tpl = tpl.replace('../figures/%s"' % f, '../figures/%s?v=%s"' % (f, v))
+            tpl = tpl.replace('../%s/%s"' % f, '../%s/%s?v=%s"' % (f + (v,)))
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     page = tpl.replace("{{DATA}}", blob).replace("{{TITLE}}", L["title"]).replace("{{MODULE}}", module_name)
     out = os.path.join(HERE, module_name.replace("_", "-") + ".html")
