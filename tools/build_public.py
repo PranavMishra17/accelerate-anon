@@ -386,13 +386,32 @@ footer { border-top: var(--hair); padding: var(--s4) 0 var(--s6); font-size: var
     fit();
   }
 
-  /* As on the hub: each name fills its card's width (up to 64px, one short word stays calm),
-     and a row's names share one baseline. */
+  /* As on the hub: every name is one height, and letter-spacing makes each fill its card's
+     width. The height is the largest (up to 64px) at which every name fits with its letters at
+     most 0.05em tighter than the base tracking; shorter names spread out. The trailing space
+     after the last letter is cancelled, and a row's names share one baseline. */
   function fit() {
     var marks = [].slice.call(document.querySelectorAll(".wm"));
-    marks.forEach(function (h) { h.style.minHeight = ""; h.firstChild.style.fontSize = "100px"; });
-    var sizes = marks.map(function (h) { return 100 * (h.clientWidth - 1) / h.firstChild.getBoundingClientRect().width; });
-    marks.forEach(function (h, i) { h.firstChild.style.fontSize = Math.min(64, Math.max(17, Math.floor(sizes[i] * 10) / 10)) + "px"; });
+    if (!marks.length) { return; }
+    marks.forEach(function (h) {
+      h.style.minHeight = "";
+      var s = h.firstChild.style;
+      s.fontSize = "100px"; s.letterSpacing = ""; s.marginRight = "";
+    });
+    var size = 64;
+    marks.forEach(function (h) {
+      var co = h.firstChild, gaps = Math.max(0, co.textContent.length - 1);
+      size = Math.min(size, 100 * (h.clientWidth - 1) / (co.getBoundingClientRect().width - 5 * gaps));
+    });
+    size = Math.max(17, Math.floor(size * 10) / 10);
+    marks.forEach(function (h) {
+      var co = h.firstChild, n = co.textContent.length;
+      co.style.fontSize = size + "px";
+      co.style.letterSpacing = "0px";
+      var ls = n > 1 ? (h.clientWidth - 1 - co.getBoundingClientRect().width) / (n - 1) : 0;
+      co.style.letterSpacing = ls.toFixed(2) + "px";
+      co.style.marginRight = (-ls).toFixed(2) + "px";
+    });
     var rows = {};
     marks.forEach(function (h) { var t = h.parentNode.offsetTop; rows[t] = Math.max(rows[t] || 0, h.getBoundingClientRect().height); });
     marks.forEach(function (h) { h.style.minHeight = rows[h.parentNode.offsetTop] + "px"; });
