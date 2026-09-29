@@ -23,6 +23,35 @@ const window = {};
 new Function("window", read("notes.js"))(window);
 const NOTES = window.FIG_NOTES || {};
 
+/* Text that may overlap: each <text> is boxed from its x, y, anchor and class (figures.css sizes,
+   about 0.56em a character) and every pair is compared. An estimate, so it warns and never fails;
+   confirm in a browser. Texts inside a transform are skipped, their coordinates are local. */
+const SIZE = { "d-t": 12, "d-t-b": 12, "d-t-s": 11, "d-t-x": 10.5 };
+function overlaps(svg) {
+  const boxes = [];
+  const flat = svg.replace(/<g[^>]*transform[^>]*>[\s\S]*?<\/g>/g, "");
+  for (const m of flat.matchAll(/<text([^>]*)>([^<]*)<\/text>/g)) {
+    const a = m[1], s = m[2].trim();
+    const num = k => { const r = a.match(new RegExp("\\b" + k + '="([-\\d.]+)"')); return r ? +r[1] : null; };
+    const x = num("x"), y = num("y"), cls = (a.match(/class="([^"]+)"/) || [])[1];
+    if (x === null || y === null || !s || !SIZE[cls]) { continue; }
+    const fs = SIZE[cls], w = s.length * fs * (cls === "d-t-b" ? 0.6 : 0.56);
+    const anchor = (a.match(/text-anchor="(\w+)"/) || [])[1];
+    const x0 = anchor === "middle" ? x - w / 2 : anchor === "end" ? x - w : x;
+    boxes.push({ s, x0, x1: x0 + w, y0: y - fs * 0.8, y1: y + fs * 0.2 });
+  }
+  const out = [];
+  for (let i = 0; i < boxes.length; i++) {
+    for (let j = i + 1; j < boxes.length; j++) {
+      const p = boxes[i], q = boxes[j];
+      if (Math.min(p.x1, q.x1) - Math.max(p.x0, q.x0) > 2 && Math.min(p.y1, q.y1) - Math.max(p.y0, q.y0) > 2) {
+        out.push('"' + p.s + '" / "' + q.s + '"');
+      }
+    }
+  }
+  return out;
+}
+
 let bad = 0;
 let html = '<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="figures.css">' +
   '<style>body{background:#e8e5dd;font-family:Arial;margin:20px}.f{background:#f4f2ec;padding:14px;margin:0 0 18px;max-width:820px}' +
@@ -44,6 +73,8 @@ for (const k of keys || Object.keys(F.DIA)) {
   if (free) { out.push("  unmatched arrows: " + free); }
   if (!NOTES[k]) { out.push("  no notes"); } else if (unnoted.length) { out.push("  no note: " + unnoted.join(" ")); }
   if (stale.length) { out.push("  notes for missing ids: " + stale.join(" ")); }
+  const clash = overlaps(svg);
+  if (clash.length) { out.push("  text may overlap: " + clash.join("; ")); }
   if (keys || out.length > 1) { console.log(out.join("\n")); }
   html += '<div class="f"><b>' + k + ": " + d.title + "</b>" + svg + '<div class="cap">' + d.cap + "</div></div>";
 }

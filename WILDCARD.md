@@ -47,8 +47,27 @@ things:
    for any loop; a new loop only writes content.
 
 Sessions **append**. Existing wildcard sessions are not cleared when new ones arrive.
-When a loop is over, its unfinished sessions are marked `parked: true`: still counted,
-still openable, no longer listed as work.
+When a loop is over, its sessions are marked `parked: true`. Never delete or reorder a
+session: they are addressed by index (`#/w/<n>`) and by step keys (`wc3:s2`) in saved
+progress. Parked sessions still count toward credit (the fold rule counts every closed
+wildcard session, parked or not), stay openable at their `#/w/<n>` address, and leave
+every list: the home page, the rail, the wildcard page's open list, the sheet and the
+drill. They sit under **Past loops**, folded shut on the wildcard page, with each past
+loop's page linked.
+
+## What each place shows
+
+- **Home**: open wildcard sessions only (not parked, not done). With none open it reads
+  "Nothing open." and links the loop in play, the first entry in `LOOPS`.
+- **Wildcard page** (`#/wild`): the loop in play on one line, then one list of open
+  sessions. Done sessions are hidden; a small "Show done (N)" toggle shows them struck
+  through. The toggle lives in memory only and is off on every load. Then the credit
+  line, Past loops (folded), and How it works (folded).
+- **Rail**: the wildcard's open count, a link to the loop in play, and its open sessions.
+- **The hero**: `nextSession()` never picks a parked or done wildcard session, nor one
+  whose loop date has passed.
+- **`WILDCARD.note`**: one line, the loop in play ("Mphasis, technical."). Everything
+  about past loops lives on their pages and under Past loops, not in the note.
 
 Session shape, for whoever is adding them:
 
@@ -70,8 +89,8 @@ Session shape, for whoever is adding them:
 Reading, figures and guide links per step can also live in `data/reading.js`, keyed
 `<session id>:<step>` (`wc18:0`) or `:s<n>` for a study item; the tracker and the loop
 page both read it. The end quiz is drawn from the steps' `close` questions, five to
-eight, open questions only. Also add a `SHORT` label and set `WILDCARD.note` to name the
-current loop.
+eight, open questions only. Also add a `SHORT` label, put the new loop first in `LOOPS`,
+and set `WILDCARD.note` to its name, one line.
 
 ## The fold rule
 
@@ -92,28 +111,21 @@ done properly later if the interview prep turned out to be shallower than it fel
 
 ## Currently in the slot
 
-- **Every interview: your own system.** `wc18`, 'alfred_ from the outside: draw it cold', sits
-  first in the wildcard. Six drawing and speaking drills (where everything runs, one SMS end to
-  end, the turn's layer order, the context a turn sees, memory across conversations, the whole
-  system in three minutes), each answer hidden until tried, checked against the alfred_ code on
-  28 September 2026. Added after the ZenML call, where the top-down picture didn't land.
+In play: **Mphasis, technical** (`interviews/mphasis.html`). It has no wildcard sessions;
+its page holds the prep, and algorithms are on `CODING.html`. Nothing is open.
 
-Opened 22 September 2026 for two loops.
+Parked, 29 September 2026:
 
-- **Oxus, technical, 23 September.** Happened. Its three design sessions (evidence
-  ingestion, walkthrough-to-flowchart and the year-over-year base, a control-testing
-  agent) moved into weeks 2, 3 and 4 as extra systems practice. The other three are
-  parked. Its page, `interviews/oxus.html`, is a minimal archive.
-- **ZenML round 3, Monday 28 September, 9 AM Eastern.** Eleven sessions: the shift from
-  round 2, the eval bench story and the critique fixed, side effects inside replay,
-  multi-turn replay, Kitaru internals, designing replay evals, backend depth, DevEx,
-  ZenML context for the CTO, and a full mock. Its page is `interviews/zenml-round3.html`;
-  the flat checklist is `STUDY-LIST.md`. The page's Design tab draws Kitaru from the
-  teardown in eleven figures; its alfred_ tab walks your own system part by part and sets
-  it against Kitaru, so both are fresh on the day.
+- **ZenML round 3, 28 September.** Happened. Eleven sessions parked. Its page,
+  `interviews/zenml-round3.html`, also holds everything learned about Kitaru.
+- **Oxus, technical, 23 September.** Happened. Its three design sessions moved into weeks
+  2, 3 and 4 as extra systems practice; the other three are parked. Its page,
+  `interviews/oxus.html`, is a minimal archive.
+- **`wc18`, 'alfred_ from the outside: draw it cold'.** Parked, not tied to one loop. Your
+  own system now has its own page, `ALFRED.html`, as study material rather than a drill.
 
-Fold candidate once the ZenML side-effects session closes: week 4's systems session
-on failure, retries and idempotency, which it covers in more depth.
+`STUDY-LIST.md` is regenerated from `#/sheet/wc` and so reads "Nothing open" until the
+next loop adds sessions.
 
 ## At the re-plan
 

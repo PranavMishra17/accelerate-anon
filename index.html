@@ -183,6 +183,10 @@
   table.t th.r, table.t td.r { text-align: right; }
   table.t td { padding: 11px 10px; border-bottom: 1px solid var(--hair); vertical-align: top; font-size: 14.5px; }
   table.t tr.clickable { cursor: pointer; }
+  table.t tr.shut td { color: var(--faint); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .inplay { font-size: 15px; margin: 4px 0 18px; }
+  .inplay a, .pastloop a { color: var(--ink); font-weight: 700; text-underline-offset: 2px; }
+  .pastloop { font-size: 14px; color: var(--mid); margin: 16px 0 0; }
   table.t tr.clickable:hover td { background: var(--sheet); }
   table.t td .sub { display: block; font-size: 12.5px; color: var(--dim); margin-top: 2px; }
   table.t td.r { font-size: 12.5px; color: var(--dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -2201,10 +2205,10 @@
      The wildcard page lists them; a loop's sessions are the wildcard sessions whose
      forWhat starts with the loop's forWhat. */
   var LOOPS = [
-    { id: "mphasis", name: "Mphasis, technical", when: "Mon 28 Sep, today", forWhat: "Mphasis",
+    { id: "mphasis", name: "Mphasis, technical", when: "Mon 28 Sep", forWhat: "Mphasis",
       file: "interviews/mphasis.html", note: "Agentic skills and AI fundamentals, a short coding exercise. Algorithms: CODING.html." },
     { id: "zenml-r3", name: "ZenML round 3", when: "Mon 28 Sep, 9 AM Eastern", forWhat: "ZenML round 3",
-      file: "interviews/zenml-round3.html", note: "Ninety minutes, technical, with Hamza and Alex." },
+      file: "interviews/zenml-round3.html", note: "Happened. Its page also holds everything learned about Kitaru." },
     { id: "oxus", name: "Oxus, technical", when: "23 Sep", forWhat: "Oxus",
       file: "interviews/oxus.html", note: "Happened. Its design sessions moved into weeks 2 to 4." }
   ];
@@ -2216,13 +2220,27 @@
     LOOPS.forEach(function (lp) { if (!hit && String(s.forWhat || "").indexOf(lp.forWhat) === 0) { hit = lp; } });
     return hit;
   }
+  /* What the wildcard still asks of you: not parked, not done. Every list shows only these. */
+  function wildOpen() {
+    var out = [];
+    WILDCARD.sessions.forEach(function (s, si) { if (!s.parked && !sessionDone(s)) { out.push({ s: s, i: si }); } });
+    return out;
+  }
+  function loopLink(lp) {
+    var a = document.createElement("a");
+    a.className = "sub looplink";
+    a.href = lp.file;
+    a.textContent = lp.name + ": open its page";
+    return a;
+  }
 
   var WILDCARD = {
     title: "Wildcard",
-    note: "Mphasis, technical: Mon 28 Sep, agentic skills and AI fundamentals, with a short coding exercise; its page is interviews/mphasis.html and algorithms are on CODING.html. ZenML round 3: Mon 28 Sep, 9 AM Eastern, ninety minutes of in-depth technical questions with Hamza and Alex. Oxus happened on 23 Sep; its design sessions moved into weeks 2 to 4 and the rest are parked.",
+    /* One line: the loop in play. Loops that have happened are parked, not described here. */
+    note: "Mphasis, technical.",
     sessions: [
       {
-        id: "wc18", track: "Interview", forWhat: "Every interview: your own system", len: "1h 15m", est: 75,
+        id: "wc18", parked: true, track: "Interview", forWhat: "Every interview: your own system", len: "1h 15m", est: 75,
         name: "alfred_ from the outside: draw it cold",
         blurb: "Before any round. In the ZenML call you couldn't draw alfred_ top-down or say where the agent runs. Draw it on paper first, then open the answer.",
         intro: "You know alfred_ from the inside, slice by slice. An interviewer wants it from the outside: where a message enters, where the agent runs, where state lives, what runs in the background. Every step here is a drawing or a spoken answer, done cold, on paper, before you open the answer. Checked against the code on origin/main, 28 September 2026. Repeat until each takes under five minutes.",
@@ -2300,7 +2318,7 @@
         ]
       },
       {
-        id: "wc7", track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h", est: 60,
+        id: "wc7", parked: true, track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h", est: 60,
         name: "Round three is a different room",
         blurb: "Friday, first. A ninety-minute technical round with Hamza and Alex, in depth.",
         intro: "Round two went well. Round three is ninety minutes of in-depth technical questions with Hamza, who co-founded ZenML and decides where Kitaru goes, and Alex, who ships the Claude Code skills behind Kitaru's guided tour. Expect them to go down, not sideways: mechanism, storage, failure, and whether your claims survive. Friday: this, your bench story, the critique fixes, Kitaru's internals. Saturday: design replay evals, side effects, multi-turn. Sunday: backend depth, then the mock. If time runs short, trim the DevEx and ZenML-context sessions, never the technical ones.",
@@ -2355,7 +2373,7 @@
       },
 
       {
-        id: "wc13", track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h 30m", est: 90,
+        id: "wc13", parked: true, track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h 30m", est: 90,
         name: "Your story: the alfred_ eval bench",
         blurb: "Friday. Round two graded the substance a B and the delivery a C. This is the delivery.",
         intro: "This is your story as you tell it, from the round-two critique. The numbers are yours to say as approximations: roughly, on the order of. Two rules carry the whole session: the headline comes first every time, and every architecture noun gets a number attached.",
@@ -2465,7 +2483,7 @@
       },
 
       {
-        id: "wc14", track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h", est: 60,
+        id: "wc14", parked: true, track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h", est: 60,
         name: "The round-two critique, fixed",
         blurb: "Friday. Seven graded blocks, each with its best version. Drill the D and C grades first.",
         intro: "The mock graded the Kitaru critique a D, your questions a D-plus, the false-signal story a C-minus. Those are the fastest points to win back. The running fixes: never mention alfred_'s funding, lead with the bench, attach a number to every noun, name artifacts instead of gesturing at them, drop filler openers, and say Lennart correctly.",
@@ -2547,7 +2565,7 @@
       },
 
       {
-        id: "wc15", track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "2h", est: 120,
+        id: "wc15", parked: true, track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "2h", est: 120,
         name: "Kitaru at mechanism depth",
         blurb: "Friday. The teardown, until you can say every mechanism without the page.",
         intro: "A technical round goes down, not sideways. This is Kitaru read from source: what executes where, what is stored, how a call is matched, and where the implementation and the pages disagree. Your teardown and KITARU.md are the references; the Kitaru design in your system design guide draws it. Ask about the gaps; never call them bugs.",
@@ -2670,7 +2688,7 @@
       },
 
       {
-        id: "wc16", track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "1h 30m", est: 90,
+        id: "wc16", parked: true, track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "1h 30m", est: 90,
         name: "Design: replay-based evals, from scratch, timed",
         blurb: "Saturday. The whole product as a thirty-five-minute design, with your bench as the other answer.",
         intro: "A technical round of ninety minutes is likely to include 'how would you build this'. Do not recite Kitaru back. Reason from first principles with the six steps, then use what you know about both designs in the deep dives. The worked version is the Kitaru design in your system design guide; try it cold first, then compare.",
@@ -2752,7 +2770,7 @@
       },
 
       {
-        id: "wc8", track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "2h", est: 120,
+        id: "wc8", parked: true, track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "2h", est: 120,
         name: "Side effects inside replay, in depth",
         blurb: "Saturday. Michael went here, which means round three goes further.",
         intro: "Michael dug into side effects and idempotency, so expect Hamza to push past where he stopped. This session also genuinely covers week four's material on retries and idempotency, so it is an honest fold candidate once closed.",
@@ -2831,7 +2849,7 @@
       },
 
       {
-        id: "wc9", track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "2h", est: 120,
+        id: "wc9", parked: true, track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "2h", est: 120,
         name: "Design: multi-turn replay when the conversation changes",
         blurb: "Saturday. The hardest open problem in replay evals, and a live one for them.",
         intro: "Conversational replay and adaptive multi-turn evaluation are on Kitaru's public roadmap right now. Your bench handles multi-turn because the world is stateful within a case. Turn that into a design you could defend to the people working on it. Ask about it as a genuine question; do not cite their issues or commits to them.",
@@ -2894,7 +2912,7 @@
       },
 
       {
-        id: "wc17", track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "1h 30m", est: 90,
+        id: "wc17", parked: true, track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "1h 30m", est: 90,
         name: "Backend depth: where a technical round goes down",
         blurb: "Sunday. Storage, failure and concurrency in your own systems, with a number each.",
         intro: "The bar from round two still holds: every claim survives one 'how exactly?' and one 'how big?'. When pushed, go down, not sideways; volunteer the limit before they find it; reach for a number unprompted. These are the questions most likely when they go down into your work.",
@@ -2979,7 +2997,7 @@
       },
 
       {
-        id: "wc10", track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h 15m", est: 75,
+        id: "wc10", parked: true, track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h 15m", est: 75,
         name: "DevEx: explaining Kitaru to a developer",
         blurb: "Sunday, if time allows. Alex's lane: onboarding, writing, and agent-driven tours.",
         intro: "Alex rebuilt ZenML's site with Claude Code, writes a great deal, came to engineering from a long research career, and ships the skills that let a coding agent drive Kitaru's tour. Expect questions about how you would explain something, what the first ten minutes should feel like, and what you would write.",
@@ -3029,7 +3047,7 @@
       },
 
       {
-        id: "wc11", track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "45m", est: 45,
+        id: "wc11", parked: true, track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "45m", est: 45,
         name: "ZenML context for the CTO",
         blurb: "Sunday, if time allows. Why a pipeline company built an agent eval product.",
         intro: "Hamza co-founded ZenML. Being able to explain why ZenML built Kitaru, and where you would take it, is the product-engineer half of this seat.",
@@ -3074,7 +3092,7 @@
       },
 
       {
-        id: "wc12", track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h 30m", est: 90,
+        id: "wc12", parked: true, track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h 30m", est: 90,
         name: "The full ninety-minute mock",
         blurb: "Sunday. Hamza and Alex in one sitting, then one retake of the weakest block.",
         intro: "Sunday afternoon, not Monday morning. It should feel slightly harder than the real thing: ninety minutes of technical depth.",
@@ -5800,27 +5818,22 @@
 
     var wg = el("div", "grp");
     var wOpen = view.page === "wild" || (view.page === "session" && view.week === "wc");
-    var wLive = WILDCARD.sessions.filter(function (s) { return !s.parked; });
-    var wClosed = wLive.filter(function (s) { return sessionDone(s); }).length;
     var wh = el("button", "gh" + (view.page === "wild" ? " on" : ""));
     wh.appendChild(el("span", "num", "W"));
     wh.appendChild(el("span", "nm", "Wildcard"));
-    wh.appendChild(el("span", "ct", wLive.length ? wClosed + "/" + wLive.length : "empty"));
+    wh.appendChild(el("span", "ct", wildOpen().length + " open"));
     wh.addEventListener("click", function () { go("wild"); closeRail(); });
     wg.appendChild(wh);
     if (wOpen) {
       var lastFor = null;
+      if (LOOPS[0]) { wg.appendChild(loopLink(LOOPS[0])); }
       WILDCARD.sessions.forEach(function (s, si) {
-        if (s.parked) { return; }
+        if (s.parked || sessionDone(s)) { return; }
         var f = s.forWhat || "";
         if (f !== lastFor) {
           var lp = loopOf(s);
           if (lp) {
-            var la = document.createElement("a");
-            la.className = "sub looplink";
-            la.href = lp.file;
-            la.textContent = lp.name + ": open its page";
-            wg.appendChild(la);
+            if (lp !== LOOPS[0]) { wg.appendChild(loopLink(lp)); }
           } else {
             wg.appendChild(el("div", "sub", f));
           }
@@ -5834,15 +5847,16 @@
     /* everything that is not a session, grouped by what it is for */
     [["Practise", [["requeue", "Requeue"], ["figure", "Explain a figure"], ["written", "Written work"], ["search", "Search"]]],
      ["Look ahead", [["progress", "Progress"], ["book", "The book"], ["sky", "The sky"], ["map", "The work ahead"], ["ahead", "What comes after"]]],
-     ["Reference", [["resources", "Resources"], ["sd", "System design guide"], ["code", "Algorithms and coding"], ["cheat", "Coding cheat sheet"], ["al", "Alaap and TrenTorch plan"]]],
+     ["Reference", [["resources", "Resources"], ["sd", "System design guide"], ["code", "Algorithms and coding"], ["cheat", "Coding cheat sheet"], ["al", "Alaap and TrenTorch plan"], ["alfred", "alfred_"]]],
      ["Rules and data", [["charter", "Charter"], ["protocol", "Protocol"], ["data", "Data and export"]]]
     ].forEach(function (grp) {
       var foot = el("div", "foot");
       foot.appendChild(el("div", "fh", grp[0]));
       grp[1].forEach(function (t) {
-        if (t[0] === "sd" || t[0] === "al" || t[0] === "code" || t[0] === "cheat") {
+        if (t[0] === "sd" || t[0] === "al" || t[0] === "code" || t[0] === "cheat" || t[0] === "alfred") {
           var sdLink = document.createElement("a");
-          sdLink.href = t[0] === "sd" ? SD.file : t[0] === "code" ? "CODING.html" : t[0] === "cheat" ? "CHEATSHEET.html" : AL.file;
+          sdLink.href = t[0] === "sd" ? SD.file : t[0] === "code" ? "CODING.html" : t[0] === "cheat" ? "CHEATSHEET.html" :
+            t[0] === "alfred" ? "ALFRED.html" : AL.file;
           sdLink.target = "_blank";
           sdLink.rel = "noopener";
           sdLink.className = "sdnav";
@@ -5900,7 +5914,8 @@
     if (!bar || bar.childNodes.length) { return; }
     var loop = LOOPS[0];
     [[SD.file, "System design guide", "network"], ["CODING.html", "Algorithms and coding", "code"],
-     ["CHEATSHEET.html", "Coding cheat sheet", "layout-grid"], [AL.file, "Alaap and TrenTorch", "audio-waveform"]]
+     ["CHEATSHEET.html", "Coding cheat sheet", "layout-grid"], [AL.file, "Alaap and TrenTorch", "audio-waveform"],
+     ["ALFRED.html", "alfred_", "bot"]]
       .concat(loop ? [[loop.file, loop.name, "message-square"]] : [])
       .forEach(function (x) {
         var a = document.createElement("a");
@@ -6331,6 +6346,18 @@
     m.addEventListener("click", function () { go("session", w, i); });
     return m;
   }
+  /* "Nothing open. Mphasis, technical" with the loop's page linked. */
+  function nothingOpen() {
+    var p = el("span", "mk", "Nothing open. ");
+    var lp = LOOPS[0];
+    if (lp) {
+      var a = document.createElement("a");
+      a.href = lp.file;
+      a.textContent = lp.name;
+      p.appendChild(a);
+    }
+    return p;
+  }
   function viewHome() {
     var v = document.getElementById("view");
     heroHome(v, nextSession());
@@ -6340,7 +6367,14 @@
     tw.appendChild(el("div", "wn", String(wk + 1)));
     tw.appendChild(el("div", "wd", "This week, " + range(wk)));
     tw.appendChild(el("div", "wt", PLAN[wk].title));
-    PLAN[wk].sessions.forEach(function (s, si) { tw.appendChild(homeItem(s, wk, si)); });
+    /* What is done does not show here; the week page and Progress still list it. */
+    var closedHere = 0;
+    PLAN[wk].sessions.forEach(function (s, si) {
+      if (sessionDone(s)) { closedHere += 1; return; }
+      tw.appendChild(homeItem(s, wk, si));
+    });
+    if (closedHere) { tw.appendChild(el("span", "mk", closedHere + " closed this week")); }
+    else if (!PLAN[wk].sessions.length) { tw.appendChild(el("span", "mk", "Nothing planned.")); }
     var allWeeks = el("button", "linkish more", "All five weeks");
     allWeeks.addEventListener("click", function () { go("progress"); });
     tw.appendChild(allWeeks);
@@ -6348,13 +6382,9 @@
 
     var wc = el("div", "colm wild");
     wc.appendChild(el("div", "wn tiny", "Wild\u00adcard"));
-    var open = 0;
-    WILDCARD.sessions.forEach(function (s, si) {
-      if (s.parked || sessionDone(s)) { return; }
-      wc.appendChild(homeItem(s, "wc", si));
-      open += 1;
-    });
-    if (!open) { wc.appendChild(el("span", "mk", "Nothing open.")); }
+    var open = wildOpen();
+    open.forEach(function (x) { wc.appendChild(homeItem(x.s, "wc", x.i)); });
+    if (!open.length) { wc.appendChild(nothingOpen()); }
     var toWild = el("button", "linkish more", "Open the wildcard");
     toWild.addEventListener("click", function () { go("wild"); });
     wc.appendChild(toWild);
@@ -6415,14 +6445,11 @@
     wc.appendChild(el("div", "wd", "when an interview lands"));
     if (WILDCARD.sessions.length) {
       wc.appendChild(el("div", "wt", WILDCARD.note || "In progress"));
-      WILDCARD.sessions.forEach(function (s) {
-        if (s.parked) { return; }
-        var shut = sessionDone(s);
-        var m = el("span", "mk " + tone(s.track) + (shut ? " shut" : ""));
-        m.appendChild(document.createTextNode(SHORT[s.id] || s.name));
-        if (shut && state.done[s.id]) { m.appendChild(el("em", "", "closed " + stampShort(state.done[s.id]))); }
-        wc.appendChild(m);
+      var wo = wildOpen();
+      wo.forEach(function (x) {
+        wc.appendChild(el("span", "mk " + tone(x.s.track), SHORT[x.s.id] || x.s.name));
       });
+      if (!wo.length) { wc.appendChild(el("span", "mk", "Nothing open.")); }
     } else {
       wc.appendChild(el("div", "wt", "Empty"));
       wc.appendChild(el("span", "mk", "Ask for sessions when a loop is scheduled. They append here."));
@@ -7141,10 +7168,24 @@
   }
 
 
+  /* Show done on the wildcard page: per viewer, in memory only, off on every load. */
+  var wildShowDone = false;
   function viewWild() {
     var v = document.getElementById("view");
     v.appendChild(el("h1", "", "Wildcard"));
-    v.appendChild(el("p", "lede", "A slot kept permanently open for whatever a scheduled interview demands. It is not week six and it does not move the gate."));
+    v.appendChild(el("p", "lede", "What a scheduled interview demands. It is not week six and it does not move the gate."));
+
+    /* The loop in play, first and on one line. */
+    var cur = LOOPS[0];
+    if (cur) {
+      var ip = el("p", "inplay");
+      var ca = document.createElement("a");
+      ca.href = cur.file;
+      ca.textContent = cur.name;
+      ip.appendChild(ca);
+      ip.appendChild(document.createTextNode(", " + cur.when + ". " + cur.note));
+      v.appendChild(ip);
+    }
 
     var wcCards = cardsFor("wc");
     if (wcCards.length) {
@@ -7153,83 +7194,86 @@
       if (wcBand) { v.appendChild(wcBand); }
     }
 
-    v.appendChild(rubric("How it works"));
-    v.appendChild(el("p", "", "When a loop is scheduled, sessions get written into this slot: same shape as any other, with steps, pointers and a closing quiz. Three of them, or eight, depending on what the interview actually asks for. They append rather than replace, and they disappear from the planner once the milestone re-plans."));
-    v.appendChild(el("p", "", "Closing a wildcard session earns one credit. A credit lets you fold one planned session in, marking it covered without doing it separately, because interview prep genuinely does cover some of this material. The cap is " + FOLD_CAP + " folds across the whole milestone, out of fifteen sessions. Interview work can cover part of the plan. It can never quietly become the plan, which is the failure this whole thing exists to prevent."));
+    /* One list: open sessions. Done ones hide behind a toggle, parked ones in Past loops. */
+    var open = wildOpen(), done = [];
+    WILDCARD.sessions.forEach(function (s, si) { if (!s.parked && sessionDone(s)) { done.push({ s: s, i: si }); } });
+    v.appendChild(rubric("Open", open.length ? open.length + " to do" : ""));
+    var rows = open.concat(wildShowDone ? done : []);
+    if (rows.length) {
+      var t = el("table", "t");
+      var hr = el("tr");
+      ["Session", "For", "Est.", "Steps"].forEach(function (x, i) { hr.appendChild(el("th", i >= 2 ? "r" : "", x)); });
+      t.appendChild(hr);
+      rows.forEach(function (x) {
+        var s = x.s, tr = el("tr", "clickable" + (sessionDone(s) ? " shut" : ""));
+        var td = el("td");
+        td.appendChild(document.createTextNode(s.name));
+        td.appendChild(el("span", "sub", s.blurb || ""));
+        tr.appendChild(td);
+        tr.appendChild(el("td", "", s.forWhat || "\u2014"));
+        tr.appendChild(el("td", "r", s.len));
+        tr.appendChild(el("td", "r", stepsDone(s) + " of " + s.steps.length));
+        tr.addEventListener("click", function () { go("session", "wc", x.i); });
+        t.appendChild(tr);
+      });
+      v.appendChild(t);
+    } else {
+      v.appendChild(el("p", "sm dim", "Nothing open. Sessions append here when a loop needs them."));
+    }
+    if (done.length) {
+      var tg = el("button", "linkish sm", wildShowDone ? "Hide done" : "Show done (" + done.length + ")");
+      tg.addEventListener("click", function () { wildShowDone = !wildShowDone; draw(); });
+      v.appendChild(tg);
+    }
 
     var cr = el("div", "credit");
     cr.appendChild(htm("span", "", "<b>" + wildClosed() + "</b> wildcard sessions closed, <b>" +
       foldsFree() + "</b> credit unspent, " + foldsUsed() + " of " + FOLD_CAP + " folds used."));
     v.appendChild(cr);
 
-    if (!WILDCARD.sessions.length) {
-      v.appendChild(rubric("Nothing in it"));
-      var e = el("div", "empty");
-      e.appendChild(el("p", "", "Empty by design. When a loop lands, say what it is and what they interview on, and the sessions get written in here with their own pointers and quizzes."));
-      e.appendChild(el("p", "", "Until then the five weeks are the whole job."));
-      v.appendChild(e);
-      return;
-    }
-
-    if (WILDCARD.note) { v.appendChild(el("p", "sm dim", WILDCARD.note)); }
-
-    v.appendChild(rubric("Interview loops", "each has its own page"));
-    var loopsBox = el("div", "loops");
-    LOOPS.forEach(function (lp) {
-      var ss = loopSessions(lp);
-      var mins = 0, closed = 0;
-      ss.forEach(function (x) { mins += x.est || 0; if (sessionDone(x)) { closed += 1; } });
-      var card = el("a", "loopcard");
-      card.href = lp.file;
-      card.appendChild(el("div", "ln", lp.name));
-      card.appendChild(el("div", "lw", lp.when));
-      card.appendChild(el("div", "lt", lp.note));
-      card.appendChild(el("div", "lm", ss.length + " sessions, about " + Math.round(mins / 60) + " hours, " + closed + " done"));
-      card.appendChild(el("div", "lo", "Open the page"));
-      loopsBox.appendChild(card);
-    });
-    v.appendChild(loopsBox);
-    var live = WILDCARD.sessions.filter(function (s) { return !s.parked; });
-    v.appendChild(rubric("The same sessions, in the tracker", live.length + " in the slot"));
-    var t = el("table", "t");
-    var hr = el("tr");
-    ["Session", "For", "Est.", "Steps", "Posted"].forEach(function (x, i) {
-      hr.appendChild(el("th", i >= 2 ? "r" : "", x));
-    });
-    t.appendChild(hr);
-    WILDCARD.sessions.forEach(function (s, si) {
-      if (s.parked) { return; }
-      var tr = el("tr", "clickable");
-      var td = el("td");
-      td.appendChild(document.createTextNode(s.name));
-      td.appendChild(el("span", "sub", s.blurb || ""));
-      tr.appendChild(td);
-      tr.appendChild(el("td", "", s.forWhat || "\u2014"));
-      tr.appendChild(el("td", "r", s.len));
-      tr.appendChild(el("td", "r", stepsDone(s) + " of " + s.steps.length));
-      tr.appendChild(el("td", "r" + (state.done[s.id] ? " posted" : ""), state.done[s.id] || "\u2014"));
-      tr.addEventListener("click", function () { go("session", "wc", si); });
-      t.appendChild(tr);
-    });
-    v.appendChild(t);
-
-    /* Parked: an interview that has happened. Its sessions still count toward
-       credit and hours, and stay openable, but they are no longer what to do. */
-    var parked = WILDCARD.sessions.filter(function (s) { return s.parked; });
-    if (parked.length) {
-      v.appendChild(rubric("Parked", parked.length + " from loops that have happened"));
-      var pl = el("ul", "visits");
-      WILDCARD.sessions.forEach(function (s, si) {
-        if (!s.parked) { return; }
-        var li = document.createElement("li");
-        var a = el("button", "linkish", s.name);
-        a.addEventListener("click", function () { go("session", "wc", si); });
-        li.appendChild(a);
-        li.appendChild(el("span", "w", (s.forWhat || "") + (state.done[s.id] ? ", closed " + state.done[s.id] : "")));
-        pl.appendChild(li);
+    /* Past loops: interviews that have happened. Their sessions are parked: still counted
+       toward credit and hours, still openable at #/w/<n>, no longer what to do. */
+    var parked = [];
+    WILDCARD.sessions.forEach(function (s, si) { if (s.parked) { parked.push({ s: s, i: si }); } });
+    if (LOOPS.length > 1 || parked.length) {
+      var past = el("details", "sxs");
+      past.appendChild(el("summary", "", "Past loops" + (parked.length ? ", " + parked.length + " parked sessions" : "")));
+      var parkedList = function (xs) {
+        var ul = el("ul", "visits");
+        xs.forEach(function (x) {
+          var li = document.createElement("li");
+          var b = el("button", "linkish", (SHORT[x.s.id] || x.s.name).replace(/^(Oxus|ZenML): /, ""));
+          b.addEventListener("click", function () { go("session", "wc", x.i); });
+          li.appendChild(b);
+          li.appendChild(el("span", "w", state.done[x.s.id] ? "closed " + stampShort(state.done[x.s.id]) : "parked"));
+          ul.appendChild(li);
+        });
+        return ul;
+      };
+      LOOPS.slice(1).forEach(function (lp) {
+        var h = el("p", "pastloop");
+        var a = document.createElement("a");
+        a.href = lp.file;
+        a.textContent = lp.name;
+        h.appendChild(a);
+        h.appendChild(document.createTextNode(", " + lp.when + ". " + lp.note));
+        past.appendChild(h);
+        var mine = parked.filter(function (x) { return loopOf(x.s) === lp; });
+        if (mine.length) { past.appendChild(parkedList(mine)); }
       });
-      v.appendChild(pl);
+      var loose = parked.filter(function (x) { return !loopOf(x.s); });
+      if (loose.length) {
+        past.appendChild(el("p", "pastloop", "Not tied to one loop"));
+        past.appendChild(parkedList(loose));
+      }
+      v.appendChild(past);
     }
+
+    var how = el("details", "sxs");
+    how.appendChild(el("summary", "", "How it works"));
+    how.appendChild(el("p", "", "When a loop is scheduled, sessions get written into this slot: same shape as any other, with steps, pointers and a closing quiz. They append rather than replace. When the loop has happened, its sessions are parked."));
+    how.appendChild(el("p", "", "Closing a wildcard session earns one credit. A credit lets you fold one planned session in, marking it covered without doing it separately, because interview prep genuinely does cover some of this material. The cap is " + FOLD_CAP + " folds across the whole milestone, out of fifteen sessions. Interview work can cover part of the plan. It can never quietly become the plan."));
+    v.appendChild(how);
 
     var folded = Object.keys(state.folded);
     if (folded.length) {
@@ -8321,6 +8365,7 @@
       "Generated from the tracker on " + stampNow() + ". Tick an item only when you can say it out loud without notes.",
       ""];
     if (scope === "wc" && WILDCARD.note) { lines.push(WILDCARD.note); lines.push(""); }
+    if (!sessions.length) { lines.push("Nothing open. Loops that have happened are parked on the wildcard page."); lines.push(""); }
     groups.forEach(function (g) {
       lines.push("---"); lines.push("");
       if (g) { lines.push("## " + g); lines.push(""); }

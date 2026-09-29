@@ -32,6 +32,7 @@
   --amber-soft: #FBF0D6;
   --code-bg: #EEF2F4;
   --tabs-h: 56px;
+  --bar-h: 46px;
   --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-hand: "Kalam", "Segoe Print", "Bradley Hand", "Comic Neue", cursive;
   --font-code: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
@@ -82,7 +83,7 @@
 }
 *, *::before, *::after { box-sizing: border-box; }
 html {
-  scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--tabs-h) + 18px);
+  scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--tabs-h) + var(--bar-h) + 14px);
   -webkit-text-size-adjust: 100%;
 }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
@@ -211,7 +212,6 @@ code {
 .side-top { margin-bottom: 6px; }
 .side-fam { font-size: 13.5px; font-weight: 700; color: var(--teal); margin: 16px 0 4px; }
 .side-list { list-style: none; margin: 0; padding: 0; }
-.side-steps a { display: flex; gap: 6px; align-items: baseline; }
 .side .mini-num { width: 16px; flex: none; }
 @media (max-width: 900px) {
   .split { grid-template-columns: minmax(0, 1fr); gap: 0; }
@@ -297,22 +297,30 @@ code {
 @media (max-width: 640px) { .used-list li { grid-template-columns: minmax(0, 1fr); gap: 2px; } .tech-dl { grid-template-columns: minmax(0, 1fr); gap: 0; } .tech-dl dd { margin-bottom: 8px; } }
 
 /* Design page */
-.ex-head { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; padding: 34px 0 30px; align-items: start; }
+.ex-head { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; padding: 24px 0 18px; align-items: start; }
 .ex-kind { color: var(--teal); font-weight: 700; font-size: 15px; margin-bottom: 4px; }
-.ex-head h2 { font-family: var(--font-hand); font-size: clamp(36px, 4.6vw, 54px); font-weight: 700; }
+.ex-head h2 { font-family: var(--font-hand); font-size: clamp(32px, 3.6vw, 44px); font-weight: 700; }
 .prompt {
-  margin: 16px 0 0; padding: 14px 18px; background: var(--board);
-  border-left: 4px solid var(--ink); border-radius: 0 10px 10px 0; font-size: 18px; max-width: 66ch;
+  margin: 12px 0 0; padding: 12px 16px; background: var(--board);
+  border-left: 4px solid var(--ink); border-radius: 0 10px 10px 0; font-size: 17px; max-width: 72ch;
 }
-.lens { background: var(--board); border: 1px solid var(--line); border-radius: 14px; padding: 16px 20px 18px; }
-.lens h3 { font-family: var(--font-hand); font-size: 23px; color: var(--blue); }
-.lens ul { margin: 8px 0 0; padding-left: 20px; }
+.ex-aside { display: grid; gap: 12px; margin-top: 30px; }
+.lens { background: var(--board); border: 1px solid var(--line); border-radius: 14px; }
+.lens > summary { list-style: none; cursor: pointer; position: relative; padding: 12px 16px 12px 38px; display: grid; gap: 2px; }
+.lens > summary::-webkit-details-marker { display: none; }
+.lens > summary::before { content: ""; position: absolute; left: 16px; top: 20px; border-left: 9px solid var(--blue); border-top: 5.5px solid transparent; border-bottom: 5.5px solid transparent; }
+.lens[open] > summary::before { transform: rotate(90deg); }
+.lens-title { font-family: var(--font-hand); font-size: 21px; font-weight: 700; color: var(--blue); line-height: 1.2; }
+.lens-sub { color: var(--muted); font-size: 15px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lens[open] .lens-sub { display: none; }
+.lens ul { margin: 0; padding: 0 18px 14px 38px; }
+.home-card { background: var(--teal-soft); border-radius: 12px; padding: 12px 16px; font-size: 15.5px; }
+.home-card a { font-weight: 700; }
 .lens li { margin: 7px 0; }
 .mini-num { font-family: var(--font-hand); font-weight: 700; width: 22px; text-align: center; }
 
 .steps, .board, .blk, .col { min-width: 0; }
-.step { padding-bottom: 42px; margin-bottom: 38px; border-bottom: 1px dashed var(--line); }
-.step:last-of-type { border-bottom: 0; }
+.step { padding: 16px 0 8px; }
 .step-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .num {
   width: 42px; height: 42px; border-radius: 50%; flex: none; display: grid; place-items: center;
@@ -320,9 +328,9 @@ code {
   border: 1.6px solid var(--teal);
   background: repeating-linear-gradient(45deg, var(--hatch) 0 2px, var(--teal-soft) 2px 6px);
 }
-.step-head h3 { font-family: var(--font-hand); font-size: 31px; font-weight: 700; }
+.step-head h3 { font-family: var(--font-hand); font-size: 28px; font-weight: 700; }
 .step-time { color: var(--muted); font-size: 15px; }
-.step-goal { color: var(--muted); max-width: 72ch; margin: 8px 0 18px; }
+.step-goal { color: var(--muted); max-width: 86ch; margin: 6px 0 14px; }
 
 /* Patterns this design uses */
 .ugrid { columns: 2 380px; column-gap: 16px; }
@@ -416,19 +424,19 @@ a.nn-chip:hover { background: var(--teal-soft); }
 .swatch.edge-async { height: 0; border-width: 0; border-top: 2px dashed var(--ink); border-radius: 0; background: none; }
 
 /* Think / say columns */
-.talk { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
+.talk { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 28px; }
+.talk:not(:has(> :not([hidden]))) { display: none; }
 .col h4 { font-family: var(--font-hand); font-size: 22px; margin-bottom: 8px; }
 .think ol { margin: 0; padding-left: 22px; }
 .think li { margin: 7px 0; }
 .say h4 { color: var(--blue); }
 .say p { margin: 0 0 12px; padding: 2px 0 2px 14px; border-left: 3px solid var(--blue); font-size: 17.5px; }
-.probes { margin-top: 20px; padding-top: 14px; border-top: 1px dotted var(--line); }
+.probes { margin-top: 16px; }
 .probes h4 { font-family: var(--font-hand); font-size: 20px; color: var(--red); margin-bottom: 6px; }
 .probes ul { margin: 0; padding-left: 22px; }
 .probes li { margin: 6px 0; max-width: 90ch; }
 .contrast { margin-top: 18px; padding: 11px 15px; border-radius: 8px; background: var(--blue-soft); max-width: 90ch; }
-.refs { padding: 4px 0 50px; color: var(--muted); font-size: 15px; }
-.refs h3 { font-family: var(--font-hand); font-size: 21px; color: var(--ink); margin-bottom: 6px; }
+.refs { color: var(--muted); font-size: 15px; }
 .refs ul { margin: 0; padding-left: 20px; }
 
 /* Tables */
@@ -466,7 +474,7 @@ details.fold > summary:hover .fold-title { color: var(--teal); }
 
 @media (max-width: 900px) {
   .ex-head { grid-template-columns: minmax(0, 1fr); }
-  .talk { grid-template-columns: minmax(0, 1fr); }
+  .talk { grid-auto-flow: row; }
 }
 @media (max-width: 640px) {
   body { font-size: 16px; }
@@ -478,6 +486,118 @@ details.fold > summary:hover .fold-title { color: var(--teal); }
   .step-head h3 { font-size: 27px; }
   .fold-body { padding: 0 14px 20px; }
   .fold-title { font-size: 22px; }
+}
+
+/* Step bar: the design's steps as tabs, sticky under the top bar. Also the pattern index. */
+.stepbar {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--tabs-h)); z-index: 10;
+  display: flex; align-items: center; gap: 10px; min-height: var(--bar-h);
+  background: var(--page); border-bottom: 1px solid var(--line);
+}
+.stepbar-list { position: relative; list-style: none; margin: 0; padding: 0; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
+.stepbar-list::-webkit-scrollbar { display: none; }
+.stepbar-list a {
+  display: flex; align-items: center; gap: 7px; white-space: nowrap; text-decoration: none;
+  color: var(--muted); font-size: 14.5px; padding: 10px 7px 9px; border-bottom: 3px solid transparent;
+}
+.stepbar-list a:hover { color: var(--ink); }
+.sb-num {
+  width: 22px; height: 22px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  font-family: var(--font-hand); font-weight: 700; font-size: 13.5px; border: 1.4px solid var(--line); color: var(--muted);
+}
+.stepbar-list a.visited .sb-num { border-color: var(--teal); background: var(--teal-soft); color: var(--ink); }
+.stepbar-list a.current { color: var(--ink); font-weight: 700; border-bottom-color: var(--teal); }
+.stepbar-list a.current .sb-num { border-color: var(--teal); color: var(--ink); background: repeating-linear-gradient(45deg, var(--hatch) 0 2px, var(--teal-soft) 2px 6px); }
+.stepbar-count { color: var(--muted); font-size: 13.5px; white-space: nowrap; }
+.patbar { margin-bottom: 18px; }
+.pb-arrow {
+  flex: none; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%;
+  border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-size: 20px; line-height: 1; background: var(--board);
+}
+a.pb-arrow:hover { border-color: var(--teal); color: var(--teal); }
+.pb-arrow.off { opacity: 0.35; }
+
+/* A folded board: titles and first items, in two columns; diagrams scaled to fit. */
+.board { margin-bottom: 14px; padding: 14px 20px 14px; }
+.board.folded { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 26px; align-items: start; }
+.board.folded > .board-title, .board.folded > .blk-diagram, .board.folded > .blk-note, .board.folded > .board-foot { grid-column: 1 / -1; }
+.board.folded .blk { margin-top: 12px; }
+.board.folded .blk-list li:nth-child(n+2),
+.board.folded .blk-defs dl > :nth-child(n+3),
+.board.folded .blk-math li:nth-child(n+2),
+.board.folded .blk-math.has-conclusion ul,
+.board.folded .dive .problem,
+.board.folded .dive dl,
+.board.folded .legend { display: none; }
+.board.folded .blk-math .conclusion { margin-top: 0; }
+.board.folded .blk-defs dl { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+.board.folded .blk-code pre { max-height: calc(8 * 1.55em + 28px); overflow: hidden; }
+.board.folded .dive { padding: 10px 14px 12px; }
+.board.folded .dive .pick { margin-top: 6px; }
+.board.folded .diagram svg { max-height: var(--fold-fig, 46vh); width: 100%; min-width: 0 !important; }
+.board.folded .diagram.shared figcaption { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.blk-more { display: none; color: var(--muted); font-size: 14px; margin-top: 4px; }
+.folded .blk-more { display: block; }
+.folded .tight-more { display: none; }
+.board.tight .dive .pick, .board.tight .dive > .blk-more:not(.tight-more) { display: none; }
+.board.tight .dive .tight-more { display: block; }
+.board.tight .blk-code pre { max-height: calc(4 * 1.55em + 28px); }
+.ufold.folded .use-techs, .ufold.folded .not-needed li:nth-child(n+2) { display: none; }
+.ufold.folded .use-why { margin-bottom: 0; }
+.board-foot { display: flex; align-items: baseline; justify-content: flex-end; gap: 16px; margin-top: 12px; }
+.board-rest { color: var(--muted); font-size: 14.5px; margin-right: auto; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.board-toggle, .tray-btn {
+  appearance: none; font: inherit; font-size: 15px; cursor: pointer; white-space: nowrap;
+  border: 1px solid var(--line); background: var(--page); color: var(--ink); border-radius: 999px; padding: 5px 14px;
+}
+.board-toggle { color: var(--teal); font-weight: 700; border-color: var(--teal); }
+.board-toggle:hover, .tray-btn:hover { background: var(--teal-soft); }
+
+/* The talk track and follow-ups: toggles, shut by default. */
+.tray-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.tray-btn { display: inline-flex; align-items: center; gap: 8px; }
+.tray-btn::before { content: ""; border-left: 8px solid var(--muted); border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+.tray-btn[aria-expanded="true"] { background: var(--board); border-color: var(--ink); }
+.tray-btn[aria-expanded="true"]::before { transform: rotate(90deg); }
+.tray-say::before { border-left-color: var(--blue); }
+.tray-probes::before { border-left-color: var(--red); }
+.tray .talk { margin-top: 14px; }
+.tray .contrast { margin-top: 14px; }
+.step .refs { padding: 14px 0 0; }
+.refs > summary { cursor: pointer; font-family: var(--font-hand); font-size: 20px; font-weight: 700; color: var(--ink); }
+.refs ul { margin-top: 6px; }
+
+/* Previous and next, with a line on how to move */
+.pager { align-items: flex-end; }
+.pager-hint { flex: 1; text-align: center; color: var(--muted); font-size: 13.5px; align-self: center; }
+.step-pager { margin-top: 14px; padding-top: 10px; }
+.step-pager a { font-size: 19px; }
+.pager a { max-width: 40%; }
+
+/* Framework cards: the same step in every design */
+.fw-in { margin-top: 10px; font-size: 14.5px; color: var(--muted); }
+.fw-in span { font-weight: 700; }
+
+@media (max-width: 900px) {
+  .board.folded { grid-template-columns: minmax(0, 1fr); }
+  .ex-aside { margin-top: 0; }
+  .stepbar-count { display: none; }
+}
+@media (max-width: 640px) {
+  .pager-hint { display: none; }
+  .pager a { max-width: 48%; font-size: 18px; }
+  .stepbar-list a { padding: 10px 7px 9px; font-size: 14.5px; }
+  .stepbar-list a:not(.current) .sb-name { display: none; }
+  .board-foot { flex-wrap: wrap; }
+  .board-toggle, .tray-btn { font-size: 14px; padding: 4px 11px; }
+  .tray-bar { gap: 6px; }
+  .step-goal { font-size: 15.5px; }
+}
+/* A phone on its side: the top bar scrolls away so the step keeps the screen. */
+@media (max-height: 500px) {
+  .topbar { position: static; }
+  .stepbar, .side { top: env(safe-area-inset-top, 0px); }
+  html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--bar-h) + 10px); }
 }
 </style>
 </head>
@@ -499,6 +619,10 @@ details.fold > summary:hover .fold-title { color: var(--teal); }
 const GUIDE = {
   config: {
     storageKey: "sd-delivery-guide:view",
+    visitedKey: "sd-delivery-guide:visited",
+    /* Folding a design step to one screen: code shows this many lines, a board keeps at least
+       minBoard px, folding must save minSaving px to be worth a toggle, swipe is in px. */
+    fold: { codeLines: 8, minBoard: 240, minFig: 190, figFloor: 300, margin: 14, minSaving: 90, swipe: 70 },
     logPrefix: "[sd-guide]",
     diagram: {
       cellW: 214,
@@ -567,7 +691,7 @@ const GUIDE = {
       serves: "Serves: ",
       asyncEdge: "Async or push",
       optional: "optional",
-      heroCaption: "Select a step to jump to its card below.",
+      heroCaption: "Select a step to jump to its card below. Each card links to that step in every design.",
       tabFramework: "Framework",
       tabPatterns: "Patterns",
       tabDesigns: "Designs",
@@ -582,6 +706,24 @@ const GUIDE = {
       designsNav: "Designs",
       allDesigns: "All designs",
       stepsInDesign: "Steps in this design",
+      stepOf: "{n} of {total}",
+      visited: "visited",
+      showAll: "Show the whole board",
+      showLess: "Fold the board",
+      alsoOnBoard: "Also on the board: ",
+      alsoHere: "Also used here: ",
+      more: "+{n} more",
+      moreLines: "+{n} more lines",
+      moreOptions: "+ the problem and {n} options",
+      moreDive: "+ the problem, {n} options and the pick",
+      moreTechniques: "+{n} techniques, how each is used here",
+      previousStep: "Previous step",
+      nextStep: "Next step",
+      nextDesign: "Next design",
+      previousDesign: "Previous design",
+      moveHint: "Left and right arrow keys, or a swipe, move between steps.",
+      workedIn: "Worked in: ",
+      patternArrows: "Left and right arrow keys move to the previous and next pattern.",
       missingStep: "This step is not written for this design yet.",
       blockFailed: "This part of the board could not be drawn. The browser console has the details.",
       viewFailed: "This view could not be displayed. The browser console has the details."
@@ -2884,28 +3026,10 @@ GUIDE.examples.push({
   tabLabel: "alfred_ (real system)",
   title: "alfred_",
   kind: "A shipped email and calendar agent, read from its own code",
-  start: {
-    title: "Start here: the three answers",
-    blocks: [
-      { type: "list", title: "Where does the agent run?", items: [
-        "In a Deno edge function on Supabase: `conv-v6-turn` for SMS, `conv-v6-web` for the web app.",
-        "Long-running work (documents, routines, the phone agent, EmailEngine for IMAP) runs in containers on Railway.",
-        "State lives in one Postgres, with pgmq for queues and pg_cron for schedules. Postgres is where state lives, never where the agent runs."
-      ]},
-      { type: "fig", key: "alfredDeploy" },
-      { type: "list", title: "One SMS, end to end", ordered: true, items: [
-        "Linq webhook → `conv-v6-ingress`: checks the signature, dedupes, stores the message, inserts a job row, returns fast.",
-        "The job worker claims the job (`SKIP LOCKED`) and hands it to `conv-v6-turn`.",
-        "The turn runs: lease, trace, context, prompt, then the LangGraph agent, up to 12 steps.",
-        "Every tool call goes through the wrapper stack, then guards check the reply before it is sent back through Linq."
-      ]},
-      { type: "list", title: "Memory across conversations: three kinds, each reaching the turn a different way", items: [
-        "**The conversation.** The last 30 messages, trimmed to 6,000 tokens, go in as the transcript, plus a rolling summary and related past chats.",
-        "**Facts** sit in the cached per-user block.",
-        "**Working memory** is fetched on demand through a lookup tool."
-      ]},
-      { type: "fig", key: "alfredMemory" }
-    ]
+  home: {
+    text: "Where the agent runs, one SMS end to end, and memory across conversations now live on their own page.",
+    label: "The three answers, the figures and the stories: alfred_ page",
+    href: "ALFRED.html"
   },
   prompt: "Design alfred_. It watches a user's inboxes and calendars, acts on mail without being asked (archive, label, draft, notify), and answers the user over SMS, web chat, and an MCP connector with tools over email, calendar, tasks, and memory.",
   lens: [
@@ -4708,9 +4832,15 @@ function renderPatternPage(group) {
       h("p", { class: "crumb" }, link(["patterns"], L.allPatterns), family ? ` / ${family.title}` : null),
       h("h2", null, group.name),
       h("p", { class: "vlede" }, inline(group.definition)),
-      group.when ? h("p", { class: "pat-when" }, h("strong", null, L.when), inline(group.when)) : null,
-      h("ul", { class: "chips", "aria-label": L.techniquesLabel }, techniques.map((t) =>
-        h("li", null, link(["patterns", group.id, t.id], t.name))))),
+      group.when ? h("p", { class: "pat-when" }, h("strong", null, L.when), inline(group.when)) : null),
+    /* Sticky index: previous and next pattern, and every technique on this page. */
+    h("nav", { class: "stepbar patbar", "aria-label": L.techniquesLabel },
+      prev ? link(["patterns", prev.id], "‹", { class: "pb-arrow", title: `${L.previous}: ${prev.name}`, "aria-label": `${L.previous}: ${prev.name}` })
+        : h("span", { class: "pb-arrow off", "aria-hidden": "true" }, "‹"),
+      h("ol", { class: "stepbar-list" }, techniques.map((t, i) => h("li", null,
+        link(["patterns", group.id, t.id], [h("span", { class: "sb-num", "aria-hidden": "true" }, i + 1), h("span", { class: "sb-name" }, t.name)], { "data-tech": t.id })))),
+      next ? link(["patterns", next.id], "›", { class: "pb-arrow", title: `${L.next}: ${next.name}`, "aria-label": `${L.next}: ${next.name}` })
+        : h("span", { class: "pb-arrow off", "aria-hidden": "true" }, "›")),
     group.diagram ? h("div", { class: "pfig" }, renderPatternDiagram(group, "full")) : null,
     group.say ? h("div", { class: "say pat-say" }, h("p", null, h("strong", null, L.say), inline(group.say))) : null,
     h("section", { class: "techs" },
@@ -4724,8 +4854,9 @@ function renderPatternPage(group) {
         h("span", null, inline(use.why)))))) : null,
     renderAccelerateLinks(group.id),
     h("nav", { class: "pager", "aria-label": L.pagerLabel },
-      prev ? link(["patterns", prev.id], [h("span", null, L.previous), prev.name], { class: "prev" }) : null,
-      next ? link(["patterns", next.id], [h("span", null, L.next), next.name], { class: "next" }) : null));
+      prev ? pagerLink("prev", ["patterns", prev.id], L.previous, prev.name) : null,
+      h("p", { class: "pager-hint" }, LABELS.patternArrows),
+      next ? pagerLink("next", ["patterns", next.id], L.next, next.name) : null));
 }
 
 function renderUsageCard(use) {
@@ -4733,11 +4864,12 @@ function renderUsageCard(use) {
   if (!group) throw new Error(`Unknown pattern group "${use.group}"`);
   const family = familyOf(group);
   const techniques = new Map(ensureArray(group.techniques, `${group.id} techniques`).map((t) => [t.id, t]));
-  return h("article", { class: "ucard" },
+  return h("article", { class: "ucard fold-item" },
     h("header", { class: "ucard-head" },
       h("h4", null, link(["patterns", group.id], group.name)),
       family ? h("span", { class: "ucard-fam" }, family.title) : null),
     h("p", { class: "use-why" }, inline(use.why)),
+    h("p", { class: "blk-more" }, fillTemplate(LABELS.moreTechniques, { n: ensureArray(use.techniques, `${group.id} usage techniques`).length })),
     h("dl", { class: "use-techs" }, ensureArray(use.techniques, `${group.id} usage techniques`).map((entry) => {
       const technique = techniques.get(entry.id);
       if (!technique) log.warn("Pattern usage names an unknown technique", { group: group.id, technique: entry.id });
@@ -4751,7 +4883,7 @@ function renderUsageCard(use) {
 function renderNotNeeded(entries) {
   const L = patternLabels();
   const index = patternIndex();
-  return h("div", { class: "not-needed" },
+  return h("div", { class: "not-needed fold-item" },
     h("h4", null, L.notNeeded),
     h("ul", null, entries.map((entry) => h("li", null,
       h("span", { class: "nn-names" }, ensureArray(entry.groups, "not-needed groups").map((id) => {
@@ -4774,9 +4906,14 @@ function renderPatternUsage(example) {
       h("h3", { id: `${id}-title` }, L.usageTitle),
       h("span", { class: "step-time" }, fillTemplate(L.usageCount, { count: uses.length }))),
     usage.intro ? h("p", { class: "step-goal" }, inline(usage.intro)) : null,
-    h("div", { class: "ugrid" }, uses.map((use) =>
-      safeRun(`render pattern usage ${example.id}/${use.group}`, () => renderUsageCard(use), () => errorPanel(LABELS.blockFailed)))),
-    notNeeded.length ? safeRun(`render not-needed ${example.id}`, () => renderNotNeeded(notNeeded), () => errorPanel(LABELS.blockFailed)) : null);
+    (() => {
+      const fold = h("div", { class: "ufold" },
+        h("div", { class: "ugrid" }, uses.map((use) =>
+          safeRun(`render pattern usage ${example.id}/${use.group}`, () => renderUsageCard(use), () => errorPanel(LABELS.blockFailed)))),
+        notNeeded.length ? safeRun(`render not-needed ${example.id}`, () => renderNotNeeded(notNeeded), () => errorPanel(LABELS.blockFailed)) : null);
+      fold.append(foldFoot(fold));
+      return fold;
+    })());
 }
 
 function validatePatterns() {
@@ -4925,7 +5062,9 @@ function renderFrameworkView() {
       h("h3", null, step.name),
       h("span", { class: "step-time" }, timeOf(step))),
     h("p", { class: "fw-goal" }, inline(step.goal)),
-    h("p", { class: "fw-end" }, h("strong", null, LABELS.endProduct), inline(step.endProduct)))));
+    h("p", { class: "fw-end" }, h("strong", null, LABELS.endProduct), inline(step.endProduct)),
+    h("p", { class: "fw-in" }, h("span", null, LABELS.workedIn),
+      GUIDE.examples.map((ex, i) => [i ? " · " : null, link(["designs", ex.id, step.id], ex.title)])))));
 
   const compareTable = h("div", { class: "tbl-wrap" }, h("table", null,
     h("thead", null, h("tr", null, h("th", { scope: "col" }, "Step"), h("th", { scope: "col" }, "Classic design"), h("th", { scope: "col" }, "Agentic design"))),
@@ -4969,12 +5108,200 @@ function renderFrameworkView() {
         onward(["designs"], LABELS.tabDesigns, LABELS.onwardDesigns))));
 }
 
-function renderTalk(data) {
-  const reasoning = ensureArray(data.reasoning, "reasoning");
-  const script = ensureArray(data.script, "script");
-  return h("div", { class: "talk" },
-    h("div", { class: "col think" }, h("h4", null, LABELS.think), h("ol", null, reasoning.map((r) => h("li", null, inline(r))))),
-    h("div", { class: "col say" }, h("h4", null, LABELS.say), script.map((line) => h("p", null, inline(line)))));
+/* ------------------------------------------------------------------ */
+/* Design pages: one step on screen at a time                          */
+/* ------------------------------------------------------------------ */
+
+/* The tabs of a design: the framework's six steps, then the patterns it uses. */
+function designSteps(example) {
+  const L = patternLabels();
+  const steps = GUIDE.framework.map((step) => ({ id: step.id, n: step.n, name: step.name, step }));
+  if (GUIDE.patterns && patternUsageFor(example.id)) steps.push({ id: L.usageAnchor, n: "+", name: L.navLabel });
+  return steps;
+}
+
+function readVisited() {
+  const all = safeRun("read visited steps", () => JSON.parse(Store.get(GUIDE.config.visitedKey) || "{}"), {});
+  return all && typeof all === "object" ? all : {};
+}
+
+function markVisited(exampleId, stepId) {
+  const all = readVisited();
+  const list = Array.isArray(all[exampleId]) ? all[exampleId] : [];
+  if (list.includes(stepId)) return new Set(list);
+  list.push(stepId);
+  all[exampleId] = list;
+  Store.set(GUIDE.config.visitedKey, JSON.stringify(all));
+  return new Set(list);
+}
+
+/* What a folded block hides, said in a few words; null when it hides nothing. */
+function foldNote(block) {
+  const count = (arr) => (Array.isArray(arr) ? arr.length : 0);
+  const more = (n) => (n > 0 ? fillTemplate(LABELS.more, { n }) : null);
+  switch (block.type) {
+    case "list": return more(count(block.items) - 1);
+    case "defs": return more(count(block.items) - 1);
+    case "math": return more(count(block.lines) - (block.conclusion ? 0 : 1));
+    case "code": {
+      const lines = String(block.code ?? "").replace(/^\n+|\s+$/g, "").split("\n").length - GUIDE.config.fold.codeLines;
+      return lines > 0 ? fillTemplate(LABELS.moreLines, { n: lines }) : null;
+    }
+    case "dive": return fillTemplate(LABELS.moreOptions, { n: count(block.options) });
+    default: return null;
+  }
+}
+
+function stickyOffset() {
+  const bar = document.querySelector(".topbar");
+  const strip = document.querySelector("#view .stepbar");
+  const barH = bar && getComputedStyle(bar).position === "sticky" ? bar.offsetHeight : 0;
+  return barH + (strip ? strip.offsetHeight : 0);
+}
+
+/* Fold a board so its step fits one screen: every block shows its title and first item,
+   then trailing blocks give way (named in a line) until the step fits. */
+function fitBoard(section) {
+  const board = section && section.querySelector(".board, .ufold");
+  if (!board || board.classList.contains("open") || section.hidden) return;
+  const cfg = GUIDE.config.fold;
+  const items = [...board.querySelectorAll(".fold-item")];
+  const rest = board.querySelector(".board-rest");
+  const toggle = board.querySelector(".board-toggle");
+  items.forEach((b) => { b.hidden = false; });
+  rest.hidden = true;
+  toggle.hidden = false;
+  board.style.removeProperty("--fold-fig");
+  board.classList.remove("folded");
+  const natural = board.offsetHeight;
+  board.classList.add("folded");
+  const budget = Math.max(cfg.minBoard, window.innerHeight - stickyOffset() - cfg.margin - (section.offsetHeight - board.offsetHeight));
+  const note = () => {
+    const dropped = items.filter((b) => b.hidden);
+    const titles = dropped.map((b) => b.querySelector("h5, h4")).filter(Boolean).map((t) => t.textContent);
+    rest.textContent = titles.length ? (board.classList.contains("ufold") ? LABELS.alsoHere : LABELS.alsoOnBoard) + titles.join(", ") : fillTemplate(LABELS.more, { n: dropped.length });
+    rest.hidden = dropped.length === 0;
+    return dropped;
+  };
+  /* Later diagrams give way first (they are the tallest), then parts from the end; the first part (after any
+     opening note) always stays.
+     If one part is still too tall, fold tighter (a dive keeps its title) and try again. */
+  const keep = Math.max(0, items.findIndex((b) => !b.classList.contains("blk-note")));
+  const order = [...items.keys()].slice(keep + 1).reverse();
+  const drop = order.filter((i) => items[i].querySelector(".diagram")).concat(order.filter((i) => !items[i].querySelector(".diagram")));
+  /* Diagrams scale down before anything is dropped, but no smaller than floor px. */
+  const scaleFigs = (floor) => {
+    board.style.removeProperty("--fold-fig");
+    const svgs = [...board.querySelectorAll(".fold-item:not([hidden]) .diagram svg")];
+    if (!svgs.length || board.offsetHeight <= budget) return;
+    const tallest = Math.max(...svgs.map((svg) => svg.getBoundingClientRect().height));
+    const target = Math.floor(tallest - (board.offsetHeight - budget) / svgs.length);
+    board.style.setProperty("--fold-fig", `${Math.max(floor, target)}px`);
+  };
+  const shrink = () => {
+    items.forEach((b) => { b.hidden = false; });
+    note();
+    scaleFigs(cfg.figFloor);
+    for (const i of drop) {
+      if (board.offsetHeight <= budget) break;
+      items[i].hidden = true;
+      note();
+      scaleFigs(cfg.figFloor);
+    }
+  };
+  board.classList.remove("tight");
+  shrink();
+  if (board.offsetHeight > budget) {
+    board.classList.add("tight");
+    shrink();
+  }
+  /* A narrow screen may not have room for the opening note too. */
+  for (let i = 0; i < keep && board.offsetHeight > budget; i += 1) {
+    items[i].hidden = true;
+    note();
+    scaleFigs(cfg.figFloor);
+  }
+  const dropped = note();
+  /* Still too tall: let the diagrams go smaller, down to minFig. */
+  if (board.offsetHeight > budget) scaleFigs(cfg.minFig);
+  if (!dropped.length && natural - board.offsetHeight < cfg.minSaving) {
+    board.classList.remove("folded", "tight");
+    board.style.removeProperty("--fold-fig");
+    toggle.hidden = true;
+  }
+}
+
+/* The foot of a foldable part: what is left out, and the toggle that shows it all. */
+function foldFoot(board) {
+  const toggle = h("button", { type: "button", class: "board-toggle", "aria-expanded": "false" }, LABELS.showAll);
+  const rest = h("p", { class: "board-rest", hidden: true });
+  toggle.addEventListener("click", () => {
+    const section = board.closest(".step");
+    if (board.classList.contains("open")) {
+      board.classList.remove("open");
+      fitBoard(section);
+      const top = board.getBoundingClientRect().top - stickyOffset();
+      if (top < 0) window.scrollTo({ top: window.scrollY + top - 8, behavior: "instant" });
+    } else {
+      board.classList.add("open");
+      board.classList.remove("folded", "tight");
+      board.style.removeProperty("--fold-fig");
+      board.querySelectorAll(".fold-item").forEach((b) => { b.hidden = false; });
+      rest.hidden = true;
+    }
+    const open = board.classList.contains("open");
+    toggle.textContent = open ? LABELS.showLess : LABELS.showAll;
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  return h("div", { class: "board-foot" }, rest, toggle);
+}
+
+function renderBoard(blocks, context) {
+  const body = blocks.map((block) => {
+    const node = renderBlock(block, context);
+    node.classList.add("fold-item");
+    const note = safeRun(`fold note ${context}`, () => foldNote(block), null);
+    if (note && node.tagName !== "P") node.append(h("p", { class: "blk-more" }, note));
+    if (block.type === "dive") node.append(h("p", { class: "blk-more tight-more" }, fillTemplate(LABELS.moreDive, { n: ensureArray(block.options, `${context} dive options`).length })));
+    if (block.type === "math" && block.conclusion) node.classList.add("has-conclusion");
+    return node;
+  });
+  const board = h("div", { class: "board" }, h("h4", { class: "board-title" }, LABELS.board), body);
+  board.append(foldFoot(board));
+  return board;
+}
+
+/* The talk track and the probes, each behind its own toggle, shut until you have tried. */
+function renderTray(data, context, uid) {
+  const reasoning = ensureArray(data.reasoning, `${context} reasoning`);
+  const script = ensureArray(data.script, `${context} script`);
+  const probes = ensureArray(data.probes, `${context} probes`);
+  const think = h("div", { class: "col think" }, h("h4", null, LABELS.think), h("ol", null, reasoning.map((r) => h("li", null, inline(r)))));
+  const say = h("div", { class: "col say" }, h("h4", null, LABELS.say), script.map((line) => h("p", null, inline(line))));
+  const panels = [
+    ["think", LABELS.think, think],
+    ["say", LABELS.say, say],
+    probes.length ? ["probes", `${LABELS.probes} (${probes.length})`,
+      h("div", { class: "probes" }, h("h4", null, LABELS.probes), h("ul", null, probes.map((p) => h("li", null, inline(p)))))] : null,
+    data.contrast ? ["contrast", LABELS.contrast.replace(/\.$/, ""),
+      h("p", { class: "contrast" }, h("strong", null, `${LABELS.contrast} `), inline(data.contrast))] : null
+  ].filter(Boolean);
+  const buttons = panels.map(([key, label, panel]) => {
+    panel.hidden = true;
+    panel.id = `${uid}-${key}`;
+    return h("button", {
+      type: "button", class: `tray-btn tray-${key}`, "aria-expanded": "false", "aria-controls": panel.id,
+      onclick: (event) => {
+        const open = panel.hidden;
+        panel.hidden = !open;
+        event.currentTarget.setAttribute("aria-expanded", open ? "true" : "false");
+      }
+    }, label);
+  });
+  return h("div", { class: "tray" },
+    h("div", { class: "tray-bar" }, buttons),
+    h("div", { class: "talk" }, think, say),
+    panels.slice(2).map(([, , panel]) => panel));
 }
 
 function renderStep(example, step) {
@@ -4989,37 +5316,53 @@ function renderStep(example, step) {
     return h("section", { class: "step", id, "aria-labelledby": `${id}-title` }, head, errorPanel(LABELS.missingStep));
   }
   const context = `${example.id}/${step.id}`;
-  const probes = ensureArray(data.probes, `${context} probes`);
   return h("section", { class: "step", id, "aria-labelledby": `${id}-title` },
     head,
     h("p", { class: "step-goal" }, inline(step.goal)),
-    h("div", { class: "board" },
-      h("h4", { class: "board-title" }, LABELS.board),
-      ensureArray(data.board, `${context} board`).map((block) => renderBlock(block, context))),
-    renderTalk(data),
-    probes.length ? h("div", { class: "probes" }, h("h4", null, LABELS.probes), h("ul", null, probes.map((p) => h("li", null, inline(p))))) : null,
-    data.contrast ? h("p", { class: "contrast" }, h("strong", null, `${LABELS.contrast} `), inline(data.contrast)) : null);
+    renderBoard(ensureArray(data.board, `${context} board`), context),
+    renderTray(data, context, id));
+}
+
+function renderStepBar(example, steps) {
+  return h("nav", { class: "stepbar", "aria-label": LABELS.stepsInDesign },
+    h("ol", { class: "stepbar-list" }, steps.map((s) => h("li", null,
+      link(["designs", example.id, s.id], [
+        h("span", { class: "sb-num", "aria-hidden": "true" }, s.n),
+        h("span", { class: "sb-name" }, s.name)
+      ], { "data-step": s.id })))),
+    h("span", { class: "stepbar-count" }));
+}
+
+function stepName(s) {
+  return typeof s.n === "number" ? `${s.n}. ${s.name}` : s.name;
+}
+
+function pagerLink(dir, parts, kicker, name) {
+  return link(parts, [h("span", null, kicker), name], { class: dir, "data-go": dir });
+}
+
+function renderStepPager(example, steps, i) {
+  const at = GUIDE.examples.indexOf(example);
+  const prev = steps[i - 1];
+  const next = steps[i + 1];
+  const prevEx = !prev ? GUIDE.examples[at - 1] : null;
+  const nextEx = !next ? GUIDE.examples[at + 1] : null;
+  return h("nav", { class: "pager step-pager", "aria-label": LABELS.stepsInDesign },
+    prev ? pagerLink("prev", ["designs", example.id, prev.id], LABELS.previousStep, stepName(prev))
+      : prevEx ? pagerLink("prev", ["designs", prevEx.id, designSteps(prevEx).slice(-1)[0].id], LABELS.previousDesign, prevEx.title) : null,
+    h("p", { class: "pager-hint" }, LABELS.moveHint),
+    next ? pagerLink("next", ["designs", example.id, next.id], LABELS.nextStep, stepName(next))
+      : nextEx ? pagerLink("next", ["designs", nextEx.id], LABELS.nextDesign, nextEx.title) : null);
 }
 
 function renderDesignSide(currentId) {
-  const L = patternLabels();
-  const current = currentId ? designById(currentId) : null;
-  const hasUsage = Boolean(current && GUIDE.patterns && patternUsageFor(current.id));
   return h("nav", { class: "side", "aria-label": LABELS.designsNav },
     link(["designs"], LABELS.allDesigns, { class: currentId ? "side-top" : "side-top current" }),
     h("ul", { class: "side-list" }, GUIDE.examples.map((ex) => h("li", null,
       link(["designs", ex.id], ex.tabLabel || ex.title, {
         class: ex.id === currentId ? "current" : null,
         "aria-current": ex.id === currentId ? "page" : null
-      })))),
-    current ? [
-      h("p", { class: "side-fam" }, LABELS.stepsInDesign),
-      h("ol", { class: "side-list side-steps" },
-        GUIDE.framework.map((step) => h("li", null,
-          link(["designs", current.id, step.id], [h("span", { class: "mini-num", "aria-hidden": "true" }, step.n), step.name], { "data-step": step.id }))),
-        hasUsage ? h("li", null,
-          link(["designs", current.id, L.usageAnchor], [h("span", { class: "mini-num", "aria-hidden": "true" }, "+"), L.navLabel], { "data-step": L.usageAnchor })) : null)
-    ] : null);
+      })))));
 }
 
 function renderDesignCard(example) {
@@ -5047,39 +5390,81 @@ function renderDesignsGallery() {
 function renderDesignPage(example) {
   const lens = ensureArray(example.lens, `${example.id} lens`);
   const refs = ensureArray(example.refs, `${example.id} refs`);
-  const hasUsage = Boolean(GUIDE.patterns && patternUsageFor(example.id));
+  const steps = designSteps(example);
+  const sections = steps.map((s, i) => {
+    const section = safeRun(`render step ${example.id}/${s.id}`,
+      () => (s.step ? renderStep(example, s.step) : renderPatternUsage(example)),
+      () => h("section", { class: "step" }, errorPanel(LABELS.blockFailed)));
+    section.setAttribute("data-step", s.id);
+    section.hidden = true;
+    if (i === steps.length - 1 && refs.length) {
+      section.append(h("details", { class: "refs" }, h("summary", null, `${LABELS.refs} (${refs.length})`),
+        h("ul", null, refs.map((ref) => h("li", null, h("a", { href: ref.url, target: "_blank", rel: "noopener noreferrer" }, ref.label))))));
+    }
+    section.append(renderStepPager(example, steps, i));
+    return section;
+  });
   return h("article", { class: "example" },
-    h("div", { class: "ex-head" },
-      h("div", null,
+    h("header", { class: "ex-head" },
+      h("div", { class: "ex-main" },
         h("p", { class: "ex-kind" }, example.kind),
         h("h2", null, example.title),
         h("blockquote", { class: "prompt" }, h("strong", null, LABELS.interviewer), inline(example.prompt))),
-      lens.length ? h("aside", { class: "lens" }, h("h3", null, LABELS.lens), h("ul", null, lens.map((item) => h("li", null, inline(item))))) : null),
-    example.start ? h("div", { class: "board start-board" },
-      h("h4", { class: "board-title" }, example.start.title),
-      ensureArray(example.start.blocks, `${example.id} start`).map((block) => renderBlock(block, `${example.id}/start`))) : null,
-    h("div", { class: "steps" },
-      GUIDE.framework.map((step) => safeRun(`render step ${example.id}/${step.id}`, () => renderStep(example, step), () => errorPanel(LABELS.blockFailed))),
-      hasUsage ? safeRun(`render pattern usage ${example.id}`, () => renderPatternUsage(example), () => errorPanel(LABELS.blockFailed)) : null,
-      refs.length ? h("div", { class: "refs" }, h("h3", null, LABELS.refs),
-        h("ul", null, refs.map((ref) => h("li", null, h("a", { href: ref.url, target: "_blank", rel: "noopener noreferrer" }, ref.label))))) : null));
+      h("div", { class: "ex-aside" },
+        lens.length ? h("details", { class: "lens" },
+          h("summary", null, h("span", { class: "lens-title" }, LABELS.lens), h("span", { class: "lens-sub" }, inline(lens[0].split(/(?<=\.)\s/)[0]))),
+          h("ul", null, lens.map((item) => h("li", null, inline(item))))) : null,
+        example.home ? h("p", { class: "home-card" }, inline(example.home.text), " ",
+          h("a", { href: example.home.href, target: "_blank", rel: "noopener" }, example.home.label)) : null)),
+    renderStepBar(example, steps),
+    h("div", { class: "steps" }, sections));
 }
 
-function observeSteps(exampleId) {
+/* Show one step of the design on screen: the tab bar marks where you are and what you have seen. */
+function showStep(example, key) {
+  const article = document.querySelector("#view .example");
+  if (!article) return null;
+  const steps = designSteps(example);
+  let at = steps.findIndex((s) => s.id === key);
+  if (at < 0) {
+    if (key) log.warn("Unknown step in the URL; showing the first step", { design: example.id, step: key });
+    at = 0;
+  }
+  const current = steps[at].id;
+  const visited = markVisited(example.id, current);
+  Store.set(GUIDE.config.storageKey, `designs/${example.id}/${current}`);
+  let section = null;
+  article.querySelectorAll(".steps > .step").forEach((node) => {
+    node.hidden = node.getAttribute("data-step") !== current;
+    if (!node.hidden) section = node;
+  });
+  article.querySelectorAll(".stepbar a[data-step]").forEach((a) => {
+    const id = a.getAttribute("data-step");
+    a.classList.toggle("current", id === current);
+    a.classList.toggle("visited", visited.has(id) && id !== current);
+    if (id === current) {
+      a.setAttribute("aria-current", "step");
+      const list = a.closest(".stepbar-list");
+      if (list && list.scrollWidth > list.clientWidth) list.scrollLeft = a.offsetLeft - (list.clientWidth - a.offsetWidth) / 2;
+    } else a.removeAttribute("aria-current");
+  });
+  const count = article.querySelector(".stepbar-count");
+  if (count) count.textContent = fillTemplate(LABELS.stepOf, { n: at + 1, total: steps.length });
+  safeRun("fold board", () => fitBoard(section));
+  return section;
+}
+
+/* On a pattern page, mark the technique in view in the sticky index. */
+function observeTechniques(groupId) {
   if (state.observer) {
     state.observer.disconnect();
     state.observer = null;
   }
-  if (!exampleId) return;
-  if (!("IntersectionObserver" in window)) {
-    log.info("IntersectionObserver unavailable; step highlighting disabled");
-    return;
-  }
-  const sections = [...document.querySelectorAll("#view .step")];
+  if (!groupId || !("IntersectionObserver" in window)) return;
+  const sections = [...document.querySelectorAll("#view .tech")];
   if (sections.length === 0) return;
-  const links = new Map([...document.querySelectorAll("#view .side-steps a")].map((a) => [a.getAttribute("data-step"), a]));
+  const links = new Map([...document.querySelectorAll("#view .patbar a[data-tech]")].map((a) => [a.getAttribute("data-tech"), a]));
   const visible = new Set();
-  const prefix = `${exampleId}--`;
   state.observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (entry.isIntersecting) visible.add(entry.target);
@@ -5087,10 +5472,58 @@ function observeSteps(exampleId) {
     }
     const first = sections.find((section) => visible.has(section));
     if (!first) return;
-    const stepId = first.id.slice(prefix.length);
-    links.forEach((a, key) => a.classList.toggle("current", key === stepId));
-  }, { rootMargin: "-20% 0px -65% 0px", threshold: 0 });
+    const techId = first.id.slice("tech--".length);
+    links.forEach((a, key) => {
+      a.classList.toggle("current", key === techId);
+      const list = a.parentElement && a.parentElement.parentElement;
+      if (key === techId && list && list.scrollWidth > list.clientWidth) list.scrollLeft = a.offsetLeft - (list.clientWidth - a.offsetWidth) / 2;
+    });
+  }, { rootMargin: "-25% 0px -60% 0px", threshold: 0 });
   sections.forEach((section) => state.observer.observe(section));
+}
+
+/* Arrow keys and a sideways swipe follow the page's previous and next links. */
+function go(dir) {
+  const target = [...document.querySelectorAll(`#view [data-go="${dir}"]`)].find((a) => a.offsetParent !== null);
+  if (!target) return false;
+  target.click();
+  return true;
+}
+
+function bindMovement() {
+  document.addEventListener("keydown", (event) => {
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    const t = event.target;
+    if (t && t.closest && t.closest("input, textarea, select, [contenteditable], #tabs")) return;
+    if (go(event.key === "ArrowRight" ? "next" : "prev")) event.preventDefault();
+  });
+  const view = document.getElementById("view");
+  let touch = null;
+  view.addEventListener("touchstart", (event) => {
+    const t = event.touches[0];
+    const inDesign = Boolean(event.target.closest(".example .steps"));
+    const scroller = event.target.closest("pre, .diagram, .tbl-wrap, .stepbar");
+    touch = event.touches.length === 1 && inDesign && !scroller ? { x: t.clientX, y: t.clientY } : null;
+  }, { passive: true });
+  view.addEventListener("touchend", (event) => {
+    if (!touch) return;
+    const t = event.changedTouches[0];
+    const dx = t.clientX - touch.x;
+    const dy = t.clientY - touch.y;
+    touch = null;
+    if (Math.abs(dx) > GUIDE.config.fold.swipe && Math.abs(dx) > 2 * Math.abs(dy)) go(dx < 0 ? "next" : "prev");
+  }, { passive: true });
+  let timer = 0;
+  const refit = () => {
+    const section = document.querySelector("#view .example .steps > .step:not([hidden])");
+    if (section) safeRun("refit board", () => fitBoard(section));
+  };
+  window.addEventListener("resize", () => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(refit, 150);
+  });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
 }
 
 function renderView(route) {
@@ -5116,7 +5549,7 @@ function renderView(route) {
   }
   state.page = route.page;
   Store.set(GUIDE.config.storageKey, route.page);
-  safeRun("observe steps", () => observeSteps(route.tab === "designs" ? route.id : null));
+  safeRun("observe techniques", () => observeTechniques(route.tab === "patterns" ? route.id : null));
   log.info("View rendered", { page: route.page });
 }
 
@@ -5186,14 +5619,15 @@ function anchorFor(route) {
   return anchorId(route.id, route.key);
 }
 
-function scrollToAnchor(route) {
+/* A new page lands at once; a jump within the page glides. */
+function scrollToAnchor(route, changed) {
   const target = document.getElementById(anchorFor(route));
   if (!target) {
     log.warn("Anchor not found on this page", { page: route.page, anchor: route.key });
     return;
   }
   openAncestors(target);
-  window.requestAnimationFrame(() => target.scrollIntoView({ block: "start" }));
+  window.requestAnimationFrame(() => target.scrollIntoView({ block: "start", behavior: changed ? "instant" : "smooth" }));
 }
 
 function handleRoute() {
@@ -5203,8 +5637,19 @@ function handleRoute() {
     if (changed) renderView(route);
     updateTabs(route.tab);
     if (route.tab === "framework") setHeroActive(route.key);
-    if (route.key) scrollToAnchor(route);
-    else if (changed) window.scrollTo(0, 0);
+    const example = route.tab === "designs" && route.id ? designById(route.id) : null;
+    if (example) {
+      /* One step at a time. A new design with a step in the URL opens at that step; moving
+         between steps keeps your place unless you had scrolled past the step's top. */
+      showStep(example, route.key);
+      const steps = document.querySelector("#view .steps");
+      const top = steps ? Math.max(0, steps.getBoundingClientRect().top + window.scrollY - stickyOffset()) : 0;
+      if (changed) window.scrollTo({ top: route.key ? top : 0, behavior: "instant" });
+      else if (window.scrollY > top) window.scrollTo({ top, behavior: "instant" });
+      return;
+    }
+    if (route.key) scrollToAnchor(route, changed);
+    else if (changed) window.scrollTo({ top: 0, behavior: "instant" });
   });
 }
 
@@ -5291,6 +5736,7 @@ function boot() {
     safeRun("render tabs", renderTabs);
     safeRun("render footer", renderFooter);
     window.addEventListener("hashchange", handleRoute);
+    safeRun("bind movement", bindMovement);
     handleRoute();
     log.info("Guide ready", { page: state.page });
   }, () => {
