@@ -29,16 +29,31 @@
     return '<span class="ex-in">' + esc(ex.i) + '</span><span class="ex-arrow">&rarr;</span><span class="ex-out">' + esc(ex.o) + "</span>" +
       (ex.w && !short ? '<span class="ex-w">' + esc(ex.w) + "</span>" : "");
   }
-  // A full statement: the problem, two worked examples, constraints.
-  function stHtml(st) {
-    if (!st) { return ""; }
-    var h = String(st.p).split(/\n\s*\n/).map(function (x) { return "<p>" + md(x) + "</p>"; }).join("");
-    h += (st.ex || []).map(function (e, i) {
-      return '<div class="st-ex"><b>Example ' + (i + 1) + '</b><div><span class="k">Input</span><code>' + esc(e.i) + '</code></div><div><span class="k">Output</span><code>' +
-        esc(e.o) + "</code></div>" + (e.why ? '<div><span class="k">Why</span><span>' + md(e.why) + "</span></div>" : "") + "</div>";
-    }).join("");
-    if (st.k && st.k.length) { h += '<div class="st-k"><b>Constraints</b><ul>' + st.k.map(function (k) { return "<li>" + md(k) + "</li>"; }).join("") + "</ul></div>"; }
-    return '<div class="st">' + h + "</div>";
+  // A worked example as aligned rows: Input, Output and, when there is one, Why.
+  function ioHtml(e) {
+    var why = e.why || e.w;
+    return '<div class="io"><span class="k">Input</span><code>' + esc(e.i) + '</code><span class="k">Output</span><code>' + esc(e.o) + "</code>" +
+      (why ? '<span class="k">Why</span><span>' + md(why) + "</span>" : "") + "</div>";
+  }
+  // One part on the label rail: a small label, then the part.
+  function row(label, html, cls) {
+    return '<div class="r' + (cls ? " " + cls : "") + '"><div class="rl">' + label + '</div><div class="rv">' + html + "</div></div>";
+  }
+  // A full statement: the problem, two worked examples, constraints; then the extra parts ([label, html] pairs).
+  function stHtml(st, extra) {
+    var h = "";
+    if (st) {
+      h += row("Problem", String(st.p).split(/\n\s*\n/).map(function (x) { return "<p>" + md(x) + "</p>"; }).join(""));
+      h += (st.ex || []).map(function (e, i) { return row("Example " + (i + 1), ioHtml(e), "r-ex"); }).join("");
+      if (st.k && st.k.length) { h += row("Constraints", "<ul>" + st.k.map(function (k) { return li(md(k)); }).join("") + "</ul>"); }
+    }
+    h += (extra || []).map(function (r) { return row(r[0], r[1], r[2]); }).join("");
+    return h ? '<div class="st">' + h + "</div>" : "";
+  }
+  // A problem or variation: its statement, or, without one, its task and its one example; then the extra parts.
+  function partsHtml(q, extra) {
+    var rows = q.st ? [] : [q.task && ["Problem", "<p>" + md(q.task) + "</p>"], q.ex && ["Example", ioHtml(q.ex), "r-ex"]];
+    return stHtml(q.st, rows.filter(Boolean).concat(extra || []));
   }
   // A shared figure from figures/figures.js, when the page loads the registry.
   function figHtml(key) {
@@ -56,8 +71,8 @@
     var h = target ? '<div class="cs-card cs-click" data-pop="' + target + '" data-at="' + (c.at || 0) + '" tabindex="0" role="button">' : '<div class="cs-card">';
     h += "<h3>" + esc(p ? p.title : c.title) + "</h3>";
     if (ex) { h += '<p class="cs-ex">' + exLine(ex, true) + "</p>"; }
-    if (c.spot) { h += "<p><b>Spot:</b> " + c.spot + "</p>"; }
-    if (c.move) { h += "<p><b>Move:</b> " + c.move + "</p>"; }
+    if (c.spot) { h += '<p><span class="cs-l">Spot</span>' + c.spot + "</p>"; }
+    if (c.move) { h += '<p><span class="cs-l">Move</span>' + c.move + "</p>"; }
     if (c.code) { h += "<pre>" + hl(c.code) + "</pre>"; }
     // On a wide screen a clickable card keeps its sharpest nuance; a phone shows them all.
     if (c.notes) { h += "<ul>" + c.notes.map(function (n, i) { return "<li" + (target && i ? ' class="more"' : "") + ">" + n + "</li>"; }).join("") + "</ul>"; }
@@ -145,14 +160,14 @@
     ensurePop();
     lastFocus = document.activeElement;
     function btn(i) {
-      var it = items[i], sub = it.ex ? it.ex.i + " → " + it.ex.o : it.t || "";
+      var it = items[i], sub = it.ex ? it.ex.i + " → " + it.ex.o : it.t || it.chg || "";
       return '<button type="button" class="pi" data-i="' + i + '"><b>' + esc(it.n) + "</b><span>" + esc(sub) + "</span></button>";
     }
-    var h = "<h2>" + esc(p.title) + '</h2><p class="spot">' + p.spot + "</p>" + (p.ex ? '<div class="ex">' + exLine(p.ex) + "</div>" : "");
+    var h = "<h2>" + esc(p.title) + '</h2><p class="spot">' + p.spot + "</p>" + (p.ex ? stHtml(null, [["Example", ioHtml(p.ex), "r-ex"]]) : "");
     if (p.parts) {
       items = [{ kind: "End to end", n: "End to end", ex: p.ex, t: p.cx, code: p.tpl, fig: (p.figs || [])[0], hld: p.hld }]
         .concat(p.parts.map(function (c) { return { kind: "Component", n: c.n, t: c.t, code: c.code }; }))
-        .concat(p.vars.map(function (v) { return { kind: "Variation", n: v.n, ex: v.ex, t: "What changes: " + v.t, code: v.code, st: v.st }; }));
+        .concat(p.vars.map(function (v) { return { kind: "Variation", n: v.n, ex: v.ex, chg: v.t, code: v.code, st: v.st }; }));
       h += '<h4>What to remember</h4><ul class="nu">' + p.remember.map(function (r) { return li(md(r)); }).join("") + "</ul>" +
         "<h4>They will ask</h4>" + p.asks.map(function (a) { return '<details class="ask"><summary>' + md(a.q) + "</summary><p>" + md(a.a) + "</p></details>"; }).join("") +
         "<h4>The whole thing</h4>" + btn(0) +
@@ -160,8 +175,8 @@
         "<h4>Variations</h4>" + p.vars.map(function (v, i) { return btn(1 + p.parts.length + i); }).join("");
     } else {
       items = [{ kind: "The template", n: "Template", ex: p.ex, t: p.sheet.move ? "<b>The move.</b> " + p.sheet.move : p.sheet.spot, th: true, code: p.tpl, c: p.cx }]
-        .concat(p.probs.map(function (q) { return { kind: "Classic problem", n: q.n, ex: q.ex, t: q.task, st: q.st, hint: q.hint, code: q.sol, c: q.c }; }))
-        .concat(p.vars.map(function (v) { return { kind: "Variation", n: v.n, ex: v.ex, t: "What changes: " + v.t, st: v.st, code: v.code }; }));
+        .concat(p.probs.map(function (q) { return { kind: "Classic problem", n: q.n, ex: q.ex, task: q.task, st: q.st, hint: q.hint, code: q.sol, c: q.c }; }))
+        .concat(p.vars.map(function (v) { return { kind: "Variation", n: v.n, ex: v.ex, chg: v.t, st: v.st, code: v.code }; }));
       h += '<h4>Nuances</h4><ul class="nu">' + p.sheet.notes.map(li).join("") + li(esc(p.cx)) + "</ul>" +
         "<h4>The core</h4>" + btn(0) +
         "<h4>Classic problems</h4>" + p.probs.map(function (q, i) { return btn(1 + i); }).join("") +
@@ -191,10 +206,11 @@
   }
   function pick(i) {
     at = Math.max(0, Math.min(items.length - 1, i));
-    var it = items[at];
-    var body = it.st ? stHtml(it.st) + (it.hint ? '<p class="cx"><b>Hint.</b> ' + esc(it.hint) + "</p>" : "")
-      : '<p class="pr-t">' + (it.th ? it.t : md(it.t || "")) + "</p>";
-    popR.innerHTML = '<div class="pr-kind">' + it.kind + "</div><h3>" + esc(it.n) + "</h3>" + (it.ex && !it.st ? '<div class="ex">' + exLine(it.ex) + "</div>" : "") + body +
+    var it = items[at], extra = [];
+    if (it.hint) { extra.push(["Hint", esc(it.hint)]); }
+    if (it.chg) { extra.push(["What changes", md(it.chg)]); }
+    popR.innerHTML = "<h3>" + esc(it.n) + (it.kind.toLowerCase().indexOf(it.n.toLowerCase()) < 0 ?'<span class="pr-kind">' + it.kind.toLowerCase() + "</span>" : "") + "</h3>" +
+      (it.t ? '<p class="pr-t">' + (it.th ? it.t : md(it.t)) + "</p>" : "") + partsHtml(it, extra) +
       (it.hld ? '<ol class="nu">' + it.hld.map(function (x) { return li(md(x)); }).join("") + "</ol>" : "") +
       (it.fig ? figHtml(it.fig) : "") + (it.code ? "<pre><code>" + hl(it.code) + "</code></pre>" : "") + (it.c ? '<p class="cx">' + esc(it.c) + "</p>" : "");
     popL.querySelectorAll(".pi").forEach(function (b) { b.classList.toggle("on", +b.getAttribute("data-i") === at); });
@@ -231,6 +247,6 @@
     try { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { document.exitFullscreen(); } } catch (e) { /* not supported */ }
   }
 
-  var CS = window.CS = { data: D, byId: byId, esc: esc, md: md, hl: hl, exLine: exLine, stHtml: stHtml, figHtml: figHtml, cardHtml: cardHtml,
+  var CS = window.CS = { data: D, byId: byId, esc: esc, md: md, hl: hl, exLine: exLine, ioHtml: ioHtml, stHtml: stHtml, partsHtml: partsHtml, figHtml: figHtml, cardHtml: cardHtml,
     mountSheet: mountSheet, openPop: openPop, closePop: closePop, popOpen: popOpen, fullScreen: fullScreen, pageBase: "", onPopClose: null };
 }());

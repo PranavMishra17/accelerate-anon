@@ -1,49 +1,50 @@
 /* The site badges (site/nav.js): an icon and a short word per page.
-   Their own colours, so they look the same whatever the page calls its tokens; dark follows
-   the page's own switch. Two placements:
-   - in the header (class sn-top): compact, one row at the right end of the page's top bar, or in
+   The values are site/tokens.css's, copied into --sn-* so the badges look the same on a page
+   that names its own tokens differently; dark follows the page's own switch. Flat, 13px, a
+   hairline; the current page takes the accent. Two placements:
+   - in the header (class sn-top): one compact row at the right end of the page's top bar, or in
      a strip of its own above it (sn-strip) when the bar is full. On a phone the row scrolls sideways.
-   - beside a title (sn-titlerow): the tracker's home. */
-:root { --sn-ink: #1D1B17; --sn-face: #FFFDF8; --sn-line: #D9D1C1; }
+   - beside a title or a button (no sn-top): the tracker's home. */
+:root { --sn-ink: #1D1B17; --sn-soft: #45413A; --sn-muted: #736D62; --sn-face: #FFFDF8; --sn-line: #E5DDCD;
+  --sn-accent: #2447E0; --sn-accent-soft: #E8EDFC; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --sn-ink: #EDEDF2; --sn-face: #25242D; --sn-line: #3E3D48; } }
-:root[data-theme="dark"] { --sn-ink: #EDEDF2; --sn-face: #25242D; --sn-line: #3E3D48; }
+  --sn-ink: #ECEBF1; --sn-soft: #C7C5D1; --sn-muted: #9A98A6; --sn-face: #222128; --sn-line: #34333D;
+  --sn-accent: #8FA8FF; --sn-accent-soft: #2A2F4A; } }
+:root[data-theme="dark"] { --sn-ink: #ECEBF1; --sn-soft: #C7C5D1; --sn-muted: #9A98A6; --sn-face: #222128; --sn-line: #34333D;
+  --sn-accent: #8FA8FF; --sn-accent-soft: #2A2F4A; }
 
 /* the title and the badges on one row; on a narrow screen the badges wrap under the title */
-.sn-titlerow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; margin: 0 0 8px; }
+.sn-titlerow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin: 0 0 8px; }
 .sn-titlerow > h1 { margin: 0; }
 
 /* position: relative keeps the hidden 'opens in a new tab' text inside a scrolling row */
-.site-nav { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 320px; margin: 0;
+.site-nav { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; flex: 1 1 320px; margin: 0;
   font-family: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif; }
-.site-nav .sn-b { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px 0 9px; margin: 0;
-  border-radius: 8px; background: var(--sn-face); border: 1px solid var(--sn-line); color: var(--sn-ink);
-  box-shadow: 0 2px 0 var(--sn-line); font-size: 14px; font-weight: 400; line-height: 1; letter-spacing: 0; white-space: nowrap;
-  text-decoration: none; transition: transform .12s, box-shadow .12s, border-color .12s; }
-.site-nav a.sn-b:hover, .site-nav a.sn-b:focus-visible { transform: translateY(-2px); border-color: var(--sn-ink); box-shadow: 0 4px 0 var(--sn-ink); text-decoration: none; }
-.site-nav a.sn-b:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--sn-ink); }
-.site-nav a.sn-b:focus-visible { outline: 2px solid var(--sn-ink); outline-offset: 2px; }
-.site-nav .sn-here { background: var(--sn-ink); border-color: var(--sn-ink); color: var(--sn-face); box-shadow: none; font-weight: 700; cursor: default; }
-.site-nav svg { display: block; flex: none; margin: 0; max-width: none; width: 16px; height: 16px;
-  fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-.site-nav img { display: block; flex: none; margin: 0; width: 16px; height: 16px; border-radius: 4px; }
+.site-nav .sn-b { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; margin: 0;
+  border-radius: 6px; background: var(--sn-face); border: 1px solid var(--sn-line); color: var(--sn-soft);
+  font-size: 13px; font-weight: 400; line-height: 1; letter-spacing: 0; white-space: nowrap; text-decoration: none;
+  transition: color .12s, border-color .12s; }
+.site-nav a.sn-b:hover, .site-nav a.sn-b:focus-visible { color: var(--sn-ink); border-color: var(--sn-muted); text-decoration: none; }
+.site-nav a.sn-b:focus-visible { outline: 2px solid var(--sn-accent); outline-offset: 2px; }
+.site-nav .sn-here { background: var(--sn-accent-soft); border-color: transparent; color: var(--sn-accent); font-weight: 600; cursor: default; }
+.site-nav svg { display: block; flex: none; margin: 0; max-width: none; width: 14px; height: 14px; color: var(--sn-muted);
+  fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.site-nav a.sn-b:hover svg, .site-nav .sn-here svg { color: inherit; }
+.site-nav img { display: block; flex: none; margin: 0; width: 14px; height: 14px; border-radius: 3px; }
 .site-nav .sn-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .site-nav .sn-b { transition: none; } }
-@media (max-width: 720px) { .site-nav { flex-basis: 100%; gap: 6px; } }
+@media (max-width: 720px) { .site-nav { flex-basis: 100%; } }
 
-/* In the header: one compact row, pushed to the right; it scrolls sideways rather than wrap.
-   The padding leaves room for a badge's lift and shadow inside the scroller. */
-.site-nav.sn-top { flex: 0 1 auto; flex-wrap: nowrap; min-width: 0; margin-left: auto; gap: 5px; padding: 5px 2px 7px;
+/* In the header: one compact row, pushed to the right; it scrolls sideways rather than wrap. */
+.site-nav.sn-top { flex: 0 1 auto; flex-wrap: nowrap; min-width: 0; margin-left: auto; padding: 4px 0;
   overflow-x: auto; overflow-y: hidden; scrollbar-width: none; align-self: center; }
 .site-nav.sn-top::-webkit-scrollbar { display: none; }
-.site-nav.sn-top .sn-b { flex: none; height: 28px; padding: 0 9px 0 7px; gap: 5px; font-size: 13.5px; }
-.site-nav.sn-top svg, .site-nav.sn-top img { width: 15px; height: 15px; }
+.site-nav.sn-top .sn-b { flex: none; height: 26px; }
 /* A strip of its own above a full top bar; it scrolls away with the page. */
 .sn-strip { display: flex; max-width: 1180px; margin: 0 auto; padding: 4px 24px 0; }
-/* On a phone the badges take a row of their own at the top of the header, a little tighter. */
+/* On a phone the badges take a row of their own at the top of the header. */
 @media (max-width: 720px) {
   .site-nav.sn-top { flex-basis: 100%; order: -1; margin-left: 0; }
-  .site-nav.sn-top .sn-b { padding: 0 7px 0 6px; gap: 4px; font-size: 13px; }
-  .site-nav.sn-top svg, .site-nav.sn-top img { width: 14px; height: 14px; }
-  .sn-strip { padding: 2px 12px 0; }
+  .site-nav.sn-top .sn-b { padding: 0 6px; gap: 4px; }
+  .sn-strip { padding: 2px 16px 0; }
 }

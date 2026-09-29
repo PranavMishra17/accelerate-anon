@@ -64,6 +64,15 @@ def loosen(text):
     return "\n".join(out)
 
 
+def dedash(page):
+    """No em dashes on the page (DESIGN.md): quoted Alaap and TrenTorch text gets a comma instead.
+    Scripts, styles and code blocks are left exactly as they are."""
+    parts = re.split(r"(<script[\s\S]*?</script>|<style[\s\S]*?</style>|<pre[\s\S]*?</pre>)", page)
+    for i in range(0, len(parts), 2):
+        parts[i] = re.sub(r"\s*\u2014\s*", ", ", parts[i])
+    return "".join(parts)
+
+
 def md(text):
     for a, b in SYMBOLS:
         text = text.replace(a, b)
@@ -429,6 +438,7 @@ def main():
     left = re.findall(r"\{\{\w+\}\}", page)
     if left:
         sys.exit("unfilled: %s" % left)
+    page = dedash(page)
     io.open(OUT, "w", encoding="utf-8", newline="\n").write(page)
     import wire
     wire.wire(plan, {f: figs[f]["title"] for f in order})

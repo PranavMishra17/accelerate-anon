@@ -33,7 +33,7 @@ SESSION_IDS = [
 
 # Prep hub. How to show up comes first; each bank opens in the one-screen panel.
 PREP_LEAD = ("Start with how to show up. Then open a bank: each question shows what they are testing, the nuance, "
-             "figures and reading on the light side, and what to say on the dark sheet. Mark each one revised as you go.")
+             "figures and reading on one side, and what to say on the sheet beside it. Mark each one revised as you go.")
 
 SHOW_UP = [
     ("Headline first, then stop.", "About 45 seconds, then offer the depth: 'I can go into the bench or the memory work.' The first answer sets the pace for ninety minutes; in the mock it ran over three."),

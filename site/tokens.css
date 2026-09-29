@@ -1,0 +1,67 @@
+/* Accelerate design tokens: the one home for type, colour, space and radius on every page.
+   Read DESIGN.md before changing anything here. Pages use these variables and add no
+   font sizes, families or colours of their own. */
+:root {
+  /* Two families. Nothing else: no handwriting, no display face. */
+  --font: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", Consolas, ui-monospace, monospace;
+
+  /* Six sizes. A component uses at most three of them. */
+  --fs-xs: 12px;      /* meta: dates, counts, captions */
+  --fs-sm: 13px;      /* secondary: labels, hints, table notes, badges */
+  --fs-md: 15px;      /* body: reading text and controls */
+  --fs-lg: 17px;      /* section and item headings */
+  --fs-xl: 20px;      /* page section titles */
+  --fs-2xl: 24px;     /* the page title, once per page */
+  --fs-code: 13px;    /* code blocks and inline code */
+  --lh-body: 1.55;
+  --lh-tight: 1.25;
+  --measure: 72ch;    /* longest line of running text */
+  --w-regular: 400;
+  --w-strong: 600;
+
+  /* Space: a 4px scale. */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+
+  /* Shape: hairlines, small radii, no shadows except floating layers. */
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 8px;
+  --hair: 1px solid var(--rule);
+  --shadow-float: 0 12px 32px rgba(29, 27, 23, .18);
+
+  /* Colour: warm neutrals, one accent for action and the current state. */
+  --bg: #FBF8F1;
+  --surface: #FFFDF8;
+  --sunken: #F4EEE2;
+  --ink: #1D1B17;
+  --soft: #45413A;
+  --muted: #736D62;
+  --rule: #E5DDCD;
+  --accent: #2447E0;
+  --accent-soft: #E8EDFC;
+  --ok: #3F7A55;
+  --warn: #A85F3F;
+  --code-bg: #F4EEE2;
+  --code-ink: #2B2722;
+
+  /* Categorical: one per interview loop or track, muted, used as a 3px rule or a dot, never as a fill. */
+  --cat-1: #3F6EA8; --cat-2: #3F7A55; --cat-3: #A85F3F; --cat-4: #7A3B5C; --cat-5: #8A6F2F; --cat-6: #4F6B73;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1B1A1F; --surface: #222128; --sunken: #28272F; --ink: #ECEBF1; --soft: #C7C5D1; --muted: #9A98A6;
+    --rule: #34333D; --accent: #8FA8FF; --accent-soft: #2A2F4A; --ok: #7FB894; --warn: #D99A7A;
+    --code-bg: #F4EEE2; --code-ink: #2B2722;
+    --cat-1: #8DB0DD; --cat-2: #8FC4A1; --cat-3: #DDA48A; --cat-4: #C990AE; --cat-5: #CDB47A; --cat-6: #9DB7BF;
+    --shadow-float: 0 12px 32px rgba(0, 0, 0, .45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1B1A1F; --surface: #222128; --sunken: #28272F; --ink: #ECEBF1; --soft: #C7C5D1; --muted: #9A98A6;
+  --rule: #34333D; --accent: #8FA8FF; --accent-soft: #2A2F4A; --ok: #7FB894; --warn: #D99A7A;
+  --cat-1: #8DB0DD; --cat-2: #8FC4A1; --cat-3: #DDA48A; --cat-4: #C990AE; --cat-5: #CDB47A; --cat-6: #9DB7BF;
+  color-scheme: dark;
+}

@@ -150,8 +150,8 @@ def build(module_name):
     # Shared figure files carry a hash of their contents, so a changed figure is never
     # served from a stale browser cache.
     import hashlib
-    # The site badges (site/) are stamped the same way.
-    for f in [("figures", f) for f in ("icons.js", "figures.js", "notes.js", "viewer.js", "viewer.css", "figures.css")] + [("site", "nav.js"), ("site", "nav.css")]:
+    # The design tokens and the site badges (site/) are stamped the same way.
+    for f in [("figures", f) for f in ("icons.js", "figures.js", "notes.js", "viewer.js", "viewer.css", "figures.css")] + [("site", "tokens.css"), ("site", "nav.js"), ("site", "nav.css")]:
         p = os.path.join(HERE, "..", *f)
         if os.path.exists(p):
             v = hashlib.sha1(io.open(p, "rb").read()).hexdigest()[:8]

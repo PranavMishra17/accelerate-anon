@@ -619,3 +619,19 @@ job post and company links. Mphasis has happened and shows so. `STUDY-LIST.md` i
 (the sheet view is its source). The gate's requeue bar is the six named maths items; the
 other six clear with their sessions. No change to `CHARTER.md`; the gate's bar is now stated
 rather than changed.
+
+**2026-09-29 — Design standard: no more AI slop.**
+Pranav called the pages AI slop: text too large on his 1920x1080 at 125%, five or six fonts in
+one board, the Alaap plan and alfred_ page generated-looking, the alfred_ page one long scroll.
+A survey found 24 and 25 font sizes on the guide and Alaap, a handwriting face, and hundreds of
+em dashes. After reading what the tells of generated UI are, the rules went into `DESIGN.md`
+and the values into `site/tokens.css`: two families, six sizes (body 15), one accent, warm
+neutrals, a muted colour per company, no em dashes in written copy (his verbatim answers
+exempt), no eyebrow labels, no boxes in boxes, navigation on every long page. Every page now
+loads the tokens and was redone against them: the guide (no Kalam, definition rows as a clean
+table, boards fold by whole parts before trimming lists, the "+0 more" bug fixed), coding (a
+problem's parts in labelled rows with clear dividers), the interviews hub (a grid, a colour
+per company), the loop pages, Alaap (a stage index with one stage at a time; the plan's prose
+rewritten; quoted em dashes and hype lines cleaned at build time), alfred_ (a reader with tabs
+and one item at a time) and the shared badges and figure viewer. `CLAUDE.md` now requires
+`DESIGN.md`. No change to the plan or to `CHARTER.md`.

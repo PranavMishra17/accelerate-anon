@@ -4,7 +4,7 @@
 
 Never edit ALFRED.html by hand: edit content.py (or the template) and rebuild.
 
-The shared figure files and the site badges (site/) are loaded with ?v=<hash of their contents>, so a changed figure is
+The shared figure files, the design tokens and the site badges (site/) are loaded with ?v=<hash of their contents>, so a changed figure is
 never served from a stale cache. Every figure key must exist in figures/figures.js, and
 Pranav's verbatim answers are checked word for word against interviews/zenml_round3.py
 while that module exists.
@@ -58,10 +58,10 @@ def build():
             text = read("interviews/" + f)
             pages.append((re.search(r"<title>(.*?)</title>", text).group(1), text, "interviews/" + f))
     also = {k: [[label, href] for label, text, href in pages if re.search(r"[\"']%s[\"']" % k, text)] for k in keys}
-    data = {"title": c.TITLE, "kicker": c.KICKER, "lead": c.LEAD, "start": c.START, "layers": c.LAYERS,
+    data = {"title": c.TITLE, "lead": c.LEAD, "start": c.START, "layers": c.LAYERS,
             "stories": c.STORIES, "asks": c.ASKS, "elsewhere": c.ELSEWHERE, "also": also}
     tpl = io.open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
-    for f in ["figures/" + f for f in FIG_FILES] + ["site/nav.js", "site/nav.css"]:
+    for f in ["figures/" + f for f in FIG_FILES] + ["site/tokens.css", "site/nav.js", "site/nav.css"]:
         v = hashlib.sha1(io.open(os.path.join(ROOT, f), "rb").read()).hexdigest()[:8]
         tpl = tpl.replace('%s"' % f, '%s?v=%s"' % (f, v))
     page = tpl.replace("{{DATA}}", json.dumps(data, ensure_ascii=False).replace("</", "<\\/"))

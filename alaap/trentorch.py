@@ -23,9 +23,16 @@ def cells(src):
     return re.findall(r'# %% \[markdown\]\s*\n"""\n(.*?)\n"""', src, re.S)
 
 
+def calm(text):
+    """A hype line ("Learning! Training! The ability to ...!") keeps only its last, plain clause."""
+    if text.count("!") < 2:
+        return text
+    return [x.strip() for x in text.split("!") if x.strip()][-1] + "."
+
+
 def field(text, name):
     m = re.search(r"\*\*%s\*\*:\s*(.+)" % re.escape(name), text)
-    return clean(m.group(1)) if m else ""
+    return calm(clean(m.group(1))) if m else ""
 
 
 def section(text, heading):
@@ -43,6 +50,7 @@ def module(folder):
     head = md[0] if md else ""
     title = re.search(r"^# Module \d+: (.+)$", head, re.M)
     objectives = [clean(re.sub(r"\*\*", "", o)) for o in re.findall(r"^\d+\. (.+)$", section(head, "Learning Objectives"), re.M)]
+    objectives = [o for o in objectives if o.count("!") < 2]   # drop hype lines ("Learning! Training! ...")
     cmap = re.search(r"\*\*Connection Map\*\*:?\s*```\n(.*?)```", head, re.S)
     export = re.search(r"#\| default_exp (\S+)", src)
     headings = [clean(h) for h in re.findall(r"^### (.+)$", src, re.M)]

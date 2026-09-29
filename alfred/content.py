@@ -12,24 +12,23 @@ Inline markup in any string: `code` and **bold**. Figures are keys into figures/
 """
 
 TITLE = "alfred_"
-KICKER = "The system you own"
 LEAD = ("alfred_ is a consumer AI assistant over email, calendar, SMS, web and MCP, and you are its founding LLM engineer. "
         "Two loops share one tool layer: an agent the user talks to, and a background pipeline that acts on mail alone and never sends. "
-        "Open a section, look at the figure, say it out loud, then open the answer.")
+        "Pick an item, look at the figure, say the answer out loud, then open it. The arrow keys move to the next item.")
 
 # 1. Start here: the three answers (moved here from the guide's start board; the guide links to it).
 START = [
-    {"title": "Where does the agent run?", "items": [
+    {"id": "where", "title": "Where does the agent run?", "items": [
         "In a Deno edge function on Supabase: `conv-v6-turn` for SMS, `conv-v6-web` for the web app.",
         "Long-running work (documents, routines, the phone agent, EmailEngine for IMAP) runs in containers on Railway.",
         "State lives in one Postgres, with pgmq for queues and pg_cron for schedules. Postgres is where state lives, never where the agent runs."],
      "fig": "alfredDeploy"},
-    {"title": "One SMS, end to end", "ordered": True, "items": [
+    {"id": "sms", "title": "One SMS, end to end", "ordered": True, "items": [
         "Linq webhook to `conv-v6-ingress`: checks the signature, dedupes, stores the message, inserts a job row, returns fast.",
         "The job worker claims the job (`SKIP LOCKED`) and hands it to `conv-v6-turn`.",
         "The turn runs: lease, trace, context, prompt, then the LangGraph agent, up to 12 steps (50 on the web).",
         "Every tool call goes through the wrapper stack, then guards check the reply before it is sent back through Linq."]},
-    {"title": "Memory across conversations: three kinds, each reaching the turn a different way", "items": [
+    {"id": "memory", "title": "Memory across conversations: three kinds, three ways in", "items": [
         "**The conversation.** The last 30 messages, trimmed to 6,000 tokens, go in as the transcript, plus a rolling summary and related past chats.",
         "**Facts** sit in the cached per-user block.",
         "**Working memory** is fetched on demand through a lookup tool."],
@@ -38,7 +37,7 @@ START = [
 
 GUIDE = "SYSTEM%20DESIGN.html#/designs/alfred"
 
-# 2. The system, layer by layer. A figure drawn in Start here is linked, not drawn twice.
+# 2. The system, layer by layer. `figIn` names a figure first drawn in Start here; the page draws it again beside the layer.
 LAYERS = [
     {"id": "doors", "title": "Three doors, ingress and the job queue",
      "point": "SMS, web and MCP converge on one tool package. SMS goes through a webhook and a job row, because the reply can take longer than a webhook should.",
@@ -85,7 +84,7 @@ LAYERS = [
      "nuances": [
          "A tool (`ToolDef` in `packages/tools`) declares a name, a description, a zod schema, a capability (`read`, `write` or `bulk`), whether it is idempotent with an `idempotencyKey(input)`, and `execute(input, ctx)`, where `ctx.db` is service-role, scoped by `user_id`.",
          "Surfaces call `compose(tool)`, which wraps it in order: schemaValidation, capabilityGate, preview, confirmationPolicy, idempotency, conflictCheck, toolExecutionLog, entityEmission, proceduralObservation, timeout.",
-         "The first MCP version called execute() raw, and would have double-booked meetings on a retry. That is the cost of skipping the stack.",
+         "The first MCP version called execute() raw, and would have double-booked meetings on a retry.",
          "**No risk score.** Sending mail is never a matter of a threshold: the background executor has no send path, and only one function sends, after approval.",
          "**The effects ledger.** `turn_effects` and `side_effects` record what actually changed in the world. They, not the assistant's text, decide whether an action happened.",
          "**Every email is untrusted input.** Email bodies are tagged as data, a guard strips tool-call markup the model echoes, the fabrication guard checks that claimed reads happened this turn, and the silent action set is small and fixed."],
@@ -141,7 +140,7 @@ LAYERS = [
          "**Compute** is Supabase edge functions in Deno: conv-v6 ingress, job worker and turn for SMS, `conv-v6-web` for the web app, `mcp-exec` for MCP, and the email pipeline.",
          "**Work that outlives a request** runs in Railway containers: the document writer, the routines worker, the LiveKit phone agent, and EmailEngine for IMAP. Edge invocations are short-lived, so those containers claim jobs from the same Postgres rows and run as long as they need.",
          "**State** is one Supabase Postgres with row-level security: jobs, traces and product data, pgmq queues for the event bus, pg_cron for schedules, storage buckets for files. Outside: Anthropic for the agent, and Google and Microsoft mail and calendars.",
-         "**The honest ceiling.** One Postgres carries every workload: chat, ingestion, triage, briefs and crons. Isolation is in the schema today: partitioned event tables, partial indexes on hot statuses, SKIP LOCKED consumers, tuned vacuum on the pending-actions table. The signal to split is chat latency moving with triage batch size."],
+         "**The ceiling.** One Postgres carries every workload: chat, ingestion, triage, briefs and crons. Isolation is in the schema today: partitioned event tables, partial indexes on hot statuses, SKIP LOCKED consumers, tuned vacuum on the pending-actions table. The signal to split is chat latency moving with triage batch size."],
      "numbers": [["Edge functions", "about 370 Deno functions, about 250 cron registrations, one Postgres"],
                  ["Users", "5,000+ active users"]],
      "say": ["Compute is Deno edge functions on Supabase, with a few long-running containers on Railway for documents, routines and phone calls; state is one Postgres with row-level security, pg_cron for schedules and pgmq for the event bus. That is a deliberate choice for a small team; the trade-off is that one database carries every workload.",
@@ -181,10 +180,10 @@ STORIES = [
              "**Outcome.** It's how we signed off the orchestration rewrite: old and new agent against the same hundred-plus cases, and we could point at exactly which cases got better, which got worse, and why."]},
          {"q": "What makes a run count as done, and how is it scored?", "a": [
              "The snapshot decides it, not a model. For 'make a todo list from this email', the snapshot knows the right email and its action items, so the run passes only if the agent read that email and the tasks match.",
-             "Tool calls per completed task is only counted over runs that pass, so an agent that wraps up early on an empty result doesn't look efficient, it fails. We moved it from 2.5 to 2.2 for the same outcomes.",
+             "Tool calls per completed task is only counted over runs that pass, so an agent that wraps up early on an empty result fails instead of looking efficient. We moved it from 2.5 to 2.2 for the same outcomes.",
              "And we never pin expected text. The assertions come from what the snapshot holds, so if there are four action items, all four have to appear. Pinning a known-good answer would be teaching to the test."]},
          {"q": "How do you decide what becomes an eval case, and is the judge still right?", "a": [
-             "The first filter is the whole game, because everything downstream depends on it. Early on a signal flagged 'abandoned' conversations, and a lot of them were one-way notifications where nobody expected a reply. Another class, 'agent did nothing', was wrong: the agent had acted, we weren't joining against the tool-execution record. Both got fixed by grounding the signal in what actually executed, not by tuning a threshold.",
+             "The first filter matters most: everything downstream depends on it. Early on a signal flagged 'abandoned' conversations, and a lot of them were one-way notifications where nobody expected a reply. Another class, 'agent did nothing', was wrong: the agent had acted, we weren't joining against the tool-execution record. Both got fixed by grounding the signal in what actually executed, not by tuning a threshold.",
              "Then there are two judges, in different states. The scanner's judge, which decides whether a flag is a real bug, is calibrated weekly against fresh human labels: about three in four agreement. The completeness judge on the bench isn't calibrated yet; where the answer is countable I replaced it with assertions, so it only judges what can't be counted.",
              "To tell judge drift from agent change I'd keep a frozen set of past outputs and re-judge it whenever the judge's model or prompt changes. The outputs didn't move, so if the verdicts did, the judge moved."]},
          {"q": "A tool the snapshot doesn't cover: what does the agent get back?", "a": [
