@@ -1,6 +1,9 @@
-/* The site badges (site/nav.js), right of each page's title: an icon and a short word per page.
+/* The site badges (site/nav.js): an icon and a short word per page.
    Their own colours, so they look the same whatever the page calls its tokens; dark follows
-   the page's own switch. */
+   the page's own switch. Two placements:
+   - in the header (class sn-top): compact, one row at the right end of the page's top bar, or in
+     a strip of its own above it (sn-strip) when the bar is full. On a phone the row scrolls sideways.
+   - beside a title (sn-titlerow): the tracker's home. */
 :root { --sn-ink: #1D1B17; --sn-face: #FFFDF8; --sn-line: #D9D1C1; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --sn-ink: #EDEDF2; --sn-face: #25242D; --sn-line: #3E3D48; } }
@@ -10,7 +13,8 @@
 .sn-titlerow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; margin: 0 0 8px; }
 .sn-titlerow > h1 { margin: 0; }
 
-.site-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 320px; margin: 0;
+/* position: relative keeps the hidden 'opens in a new tab' text inside a scrolling row */
+.site-nav { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 320px; margin: 0;
   font-family: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif; }
 .site-nav .sn-b { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px 0 9px; margin: 0;
   border-radius: 8px; background: var(--sn-face); border: 1px solid var(--sn-line); color: var(--sn-ink);
@@ -26,3 +30,20 @@
 .site-nav .sn-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .site-nav .sn-b { transition: none; } }
 @media (max-width: 720px) { .site-nav { flex-basis: 100%; gap: 6px; } }
+
+/* In the header: one compact row, pushed to the right; it scrolls sideways rather than wrap.
+   The padding leaves room for a badge's lift and shadow inside the scroller. */
+.site-nav.sn-top { flex: 0 1 auto; flex-wrap: nowrap; min-width: 0; margin-left: auto; gap: 5px; padding: 5px 2px 7px;
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none; align-self: center; }
+.site-nav.sn-top::-webkit-scrollbar { display: none; }
+.site-nav.sn-top .sn-b { flex: none; height: 28px; padding: 0 9px 0 7px; gap: 5px; font-size: 13.5px; }
+.site-nav.sn-top svg, .site-nav.sn-top img { width: 15px; height: 15px; }
+/* A strip of its own above a full top bar; it scrolls away with the page. */
+.sn-strip { display: flex; max-width: 1180px; margin: 0 auto; padding: 4px 24px 0; }
+/* On a phone the badges take a row of their own at the top of the header, a little tighter. */
+@media (max-width: 720px) {
+  .site-nav.sn-top { flex-basis: 100%; order: -1; margin-left: 0; }
+  .site-nav.sn-top .sn-b { padding: 0 7px 0 6px; gap: 4px; font-size: 13px; }
+  .site-nav.sn-top svg, .site-nav.sn-top img { width: 14px; height: 14px; }
+  .sn-strip { padding: 2px 12px 0; }
+}

@@ -72,6 +72,7 @@ svg{display:block;margin:0 auto;max-width:100%;height:auto}
 .chips li{font-family:var(--sans);font-size:12.5px;line-height:1.35;padding:2px 9px;border:1px solid var(--line);border-radius:999px;background:var(--box);color:var(--muted)}
 
 /* top bar */
+.sn-strip{max-width:1200px}
 .topbar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
 .topin{display:flex;align-items:flex-end;gap:26px;min-height:var(--top)}
 .brand{font-size:21px;font-weight:700;letter-spacing:-.02em;color:var(--fg);text-decoration:none;padding-bottom:12px;white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
@@ -199,6 +200,7 @@ svg.ov a:hover rect{stroke-width:2.6}
 </head>
 <body>
 {{ARCH_DEFS}}
+<div class="sn-strip"><nav class="sn-top" data-site-nav data-here="alaap"></nav></div>
 <header class="topbar"><div class="wrap topin">
   <a class="brand" href="#/plan"><img src="brand/alaap.svg" width="22" height="22" alt=""><span>Alaap and TrenTorch</span></a>
   <nav class="tabs" aria-label="Sections">
@@ -211,7 +213,7 @@ svg.ov a:hover rect{stroke-width:2.6}
 
 <main class="wrap">
 <section id="tab-plan" data-tab="plan">
-<div class="lead"><div class="sn-titlerow"><h1>Alaap and TrenTorch: one study plan</h1><nav data-site-nav data-here="alaap"></nav></div></div>
+<div class="lead"><h1>Alaap and TrenTorch: one study plan</h1></div>
 {{PLAN}}
 </section>
 <section id="tab-architecture" data-tab="architecture" class="arch" hidden>{{ARCH}}</section>

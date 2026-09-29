@@ -14,8 +14,8 @@
 <script src="figures/figures.js?v=b8b66284"></script>
 <script src="figures/notes.js?v=074e5fe8" defer></script>
 <script src="figures/viewer.js?v=ecb99aae" defer></script>
-<link rel="stylesheet" href="site/nav.css?v=555ea0f2">
-<script src="site/nav.js?v=fb3915ee" defer></script>
+<link rel="stylesheet" href="site/nav.css?v=eae2485c">
+<script src="site/nav.js?v=f2cbfc37" defer></script>
 <style>
 /* One calm column of folded sections, the same cream and type as CODING.html. */
 :root { --bg: #FBF8F1; --ink: #1D1B17; --soft: #45413A; --muted: #736D62; --rule: #E7E0D2; --tint: #F2ECE0; --accent: #0A5BD3;
@@ -33,7 +33,7 @@ code { font-family: var(--mono); font-size: .86em; background: var(--tint); padd
 p { margin: 0 0 .8em; }
 ul, ol { margin: 4px 0 12px; padding-left: 22px; } li { margin: 3px 0; }
 .top { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--rule); }
-.top-in { max-width: 1180px; margin: 0 auto; padding: 12px 24px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.top-in { max-width: 1180px; margin: 0 auto; padding: 8px 24px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
 .top b { font-size: 17px; }
 .shell { max-width: 1180px; margin: 0 auto; padding: 0 24px 120px; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 48px; }
 nav.side { position: sticky; top: 64px; align-self: start; padding-top: 28px; font-size: 15px; max-height: calc(100vh - 70px); overflow-y: auto; }
@@ -87,6 +87,7 @@ figure.fig figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; }
 .also { color: var(--muted); font-size: 13.5px; margin: 2px 0 14px; }
 .also code { font-size: .9em; }
 @media (max-width: 820px) {
+  html { scroll-padding-top: 110px; }
   .shell { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0 16px 80px; }
   nav.side { position: static; max-height: none; padding-top: 12px; display: flex; flex-wrap: wrap; gap: 2px 16px; }
   nav.side a.sub { display: none; }
@@ -103,6 +104,7 @@ figure.fig figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; }
 <body>
 <div class="top"><div class="top-in">
   <b>alfred_</b>
+  <nav class="sn-top" data-site-nav data-here="alfred"></nav>
 </div></div>
 <div class="shell">
   <nav class="side" id="side" aria-label="Sections"></nav>
@@ -121,8 +123,7 @@ figure.fig figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; }
 
   var main = document.getElementById("main"), side = document.getElementById("side");
   main.appendChild(el("div", "kicker", esc(D.kicker)));
-  var trow = main.appendChild(el("div", "sn-titlerow", "<h1>" + esc(D.title) + "</h1>")), snav = trow.appendChild(el("nav"));
-  snav.setAttribute("data-site-nav", ""); snav.setAttribute("data-here", "alfred");   /* the site badges, site/nav.js */
+  main.appendChild(el("h1", "", esc(D.title)));
   main.appendChild(el("p", "lead", esc(D.lead)));
 
   /* A shared figure by key, drawn from figures.js inside [data-fig] so the viewer's notes work. */

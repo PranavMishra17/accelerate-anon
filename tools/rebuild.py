@@ -1,6 +1,6 @@
 """Rebuild everything generated, then run every check. One command, so no step is skipped.
 
-    python tools/rebuild.py            stamp, build, check
+    python tools/rebuild.py            stamp, build (loop pages, the interviews hub, alfred_, the sheet), check
     python tools/rebuild.py --alaap    also rebuild ALAAP.html (needs the Alaap repo and a TrenTorch checkout)
 
 Order matters: figure and coding files first, then the pages that stamp or inline them.
@@ -10,10 +10,11 @@ import os, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOOPS = [f[:-3] for f in sorted(os.listdir(os.path.join(ROOT, "interviews")))
-         if f.endswith(".py") and f not in ("build.py",) and not f.startswith("_")]
+         if f.endswith(".py") and f not in ("build.py", "hub.py") and not f.startswith("_")]
 
 steps = [["node", "figures/check.js"], ["python", "coding/test_data.py"], ["python", "figures/stamp.py"]]
 steps += [["python", "interviews/build.py", m] for m in LOOPS]
+steps.append(["python", "interviews/hub.py"])   # INTERVIEWS.html, after the loop pages
 if os.path.exists(os.path.join(ROOT, "alfred", "build.py")):
     steps.append(["python", "alfred/build.py"])
 steps.append(["python", "coding/build_sheet.py"])

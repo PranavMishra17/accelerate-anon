@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>System design delivery, worked end to end</title>
 <link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="site/nav.css?v=eae2485c">
+<script src="site/nav.js?v=f2cbfc37" defer></script>
 <link rel="stylesheet" href="figures/viewer.css?v=7a5bfc4f">
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
 <script src="figures/icons.js?v=129ef92b"></script>
@@ -108,7 +110,7 @@ code {
 }
 .wrap { max-width: 1260px; margin: 0 auto; padding: 0 20px; }
 
-/* Top bar: the title, three tabs, and the way back to Accelerate */
+/* Top bar: the title, three tabs, and the site badges (site/nav.css) */
 .topbar {
   position: sticky;
   top: env(safe-area-inset-top, 0px);
@@ -131,12 +133,11 @@ code {
 }
 .tab:hover { color: var(--ink); }
 .tab[aria-selected="true"] { color: var(--ink); font-weight: 700; border-bottom-color: var(--teal); }
-.to-accelerate {
-  display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--blue);
-  text-decoration: none; padding-bottom: 15px; white-space: nowrap;
+/* A phone: the badges take their own row above the tabs, and the sticky offsets follow. */
+@media (max-width: 720px) {
+  :root { --tabs-h: 96px; }
+  .topbar-in { flex-wrap: wrap; align-content: flex-end; row-gap: 0; }
 }
-.to-accelerate img { border-radius: 5px; }
-.to-accelerate:hover, .to-accelerate:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
 
 /* View headers, shared by every page */
 .vhead { padding: 34px 0 22px; }
@@ -479,7 +480,6 @@ details.fold > summary:hover .fold-title { color: var(--teal); }
 @media (max-width: 640px) {
   body { font-size: 16px; }
   .brand { display: none; }
-  .to-accelerate span { display: none; }
   .board { padding: 16px 14px 20px; }
   .blk dl { grid-template-columns: 1fr; gap: 2px 0; }
   .blk dd { margin-bottom: 8px; }
@@ -606,7 +606,7 @@ a.pb-arrow:hover { border-color: var(--teal); color: var(--teal); }
   <div class="wrap topbar-in">
     <a class="brand" href="#/framework"><img src="brand/system-design.svg" width="24" height="24" alt="">System design</a>
     <div class="tabs" id="tabs" role="tablist" aria-label="Sections"></div>
-    <a class="to-accelerate" href="index.html" target="_blank" rel="noopener"><img src="brand/accelerate.svg" width="22" height="22" alt=""><span>Open Accelerate</span></a>
+    <nav class="sn-top" data-site-nav data-here="guide"></nav>
   </div>
 </header>
 <main class="wrap" id="view" tabindex="-1"></main>

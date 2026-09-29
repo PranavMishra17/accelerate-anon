@@ -66,3 +66,11 @@ and `learning/01-STUDY-GUIDE.md` are both there, the study guide's parts line up
 with what the sessions reference, and `demo_out/` holds the rendered audio the Part 0
 session asks you to listen to. Cleared the same day it was opened. Kept rather than
 deleted, because the lesson is that searching by folder name is not searching.
+
+**2026-09-29 — Cleared: the gate's bar is the named six.** Decided with Pranav. The
+gate requires the six maths items `MILESTONE-1.md` schedules as requeue work, each with its
+own session and its own 'Requeue cleared this week' line: Q6, Q7, Q8, Q9, Q10, Q11. The
+other six milestone-1 rows (Q14 backpressure, Q1 overfitting, Q3 embeddings, Q4 Q, K and V,
+Q12 the 100M answer, Q16 the cache trade-off) are the heart of regular systems and ML
+sessions; they clear when those sessions close and do not add a separate bar. The table
+above stays as it is. `MILESTONE-1.md` now names the six.

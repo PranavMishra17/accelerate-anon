@@ -47,7 +47,7 @@ figure is drawn once and shown by key, a story or an answer has one home.
 | <img src="brand/system-design.svg" width="40" alt=""> | **[Algorithms and coding](https://pranavmishra17.github.io/self-study/CODING.html)**<br>`CODING.html` | Fourteen coding patterns in three tabs, every problem written out in full with two worked examples and constraints, and variations of each; plus an AI systems tab: fourteen topics beyond LeetCode (NumPy, PyTorch, embeddings and vector search, RAG over a parser, GraphRAG, an agent loop, a research agent, a voice pipeline, a transformer block, BPE, evals, structured output, serving, LoRA), each as its design, a figure, a skeleton per component, what to remember and what they ask, and a card of AI-flavoured coding. All code runs offline and is tested. The **[cheat sheet](https://pranavmishra17.github.io/self-study/CHEATSHEET.html)** is the same material on one screen, and works on a phone. |
 | <img src="brand/alaap.svg" width="40" alt=""> | **[Alaap and TrenTorch](https://pranavmishra17.github.io/self-study/ALAAP.html)**<br>`ALAAP.html` | A linear plan of twenty-two stages from tensors and autograd to a speech model: for each stage, the goal, a diagram, the module to build, and an exit check with its answer. Generated. |
 | <img src="brand/accelerate.svg" width="40" alt=""> | **[alfred_](https://pranavmishra17.github.io/self-study/ALFRED.html)**<br>`ALFRED.html` | Your own system, for a refresh before any interview: where it runs, one SMS end to end and memory in three kinds; the system layer by layer, each with its figure, the nuances and the numbers; the stories in your own words; and the questions they keep asking. Facts are checked against the alfred_ code. Generated from `alfred/content.py`. |
-| <img src="brand/accelerate.svg" width="40" alt=""> | **[Interview loops](https://pranavmishra17.github.io/self-study/interviews/zenml-round3.html)**<br>`interviews/` | One page per interview loop: the brief, what to say and how to say it, timed spoken drills, a technical question bank with figures and reading, questions to ask, traps, their system drawn from source and set against yours, and mocks. Your own system lives on the alfred_ page; the ZenML page is also the home for what you learned about Kitaru. |
+| <img src="brand/accelerate.svg" width="40" alt=""> | **[Interviews](https://pranavmishra17.github.io/self-study/INTERVIEWS.html)**<br>`INTERVIEWS.html`, `interviews/` | The hub: a card per loop, newest first, with its date, total hours, how much is done, and links to the job post and the company. Then one page per loop: the brief, what to say and how to say it, timed spoken drills, a technical question bank with figures and reading, questions to ask, traps, their system drawn from source and set against yours, and mocks. Your own system lives on the alfred_ page; the ZenML page is also the home for what you learned about Kitaru. |
 
 **Every diagram can be explored.** Click one and it opens full screen. Hover a box or an
 arrow for a one-line note; click it for a plain explanation in the context of that figure,
@@ -113,16 +113,18 @@ copy are four separate stores. Export from the Data page and commit the file int
 - **Drill** (`#/drill/<scope>`) turns one card at a time: say it, turn it, rate it. The cards
   you couldn't answer come first next time. **Sheet** (`#/sheet/<scope>`) prints a
   session, a week or the wildcard as a dense page, and can copy itself as markdown.
-- **The home page** keeps four things: the next session, this week's sessions, what is open
-  in the wildcard, and three open questions from sessions you've started, weighted towards
-  what you missed. The buttons at the top right open each reference in a new tab: the system
-  design guide, coding, the cheat sheet, Alaap and TrenTorch, alfred_, and the interview
-  loops. Every page carries the same bar, so each can reach the others.
+- **The home page** opens on where you are and the next session, with three numbers that
+  move every time you work (hours in, sessions closed, this week against the floor) and, beside
+  the Start button, a badge for each reference: System design, Coding, Cheat sheet, Alaap,
+  alfred_, Interviews. Then the five weeks in a row with the wildcard, three open questions
+  for today, and the map of the work ahead. Every other page carries the same badges in its
+  header, from one file (`site/nav.js`), so each page can reach the others.
 - **The wildcard** (`#/wild`) is one list of open sessions, with done ones hidden behind a
-  "Show done" toggle. Its note is one line, the loop in play. Loops that have happened are
-  parked under Past loops, folded: their sessions still count, out of sight.
-- **Progress** (`#/progress`) holds the five weeks at a glance, the figures, the craft, the
-  day board and every session. **Explain a figure** (`#/figure`): one figure to explain
+  "Show done" toggle. Loops that have happened are parked under Past loops, folded: their
+  sessions still count, out of sight. On the home page the wildcard column shows only what
+  is open, how many hours are left, and a button to the interviews hub.
+- **Progress** (`#/progress`) holds where it stands, the craft, the day board and every
+  session. **Explain a figure** (`#/figure`): one figure to explain
   aloud in a minute.
 - **The book and the sky.** When a week closes, it binds into the book (`#/book`): one page
   per week, printable. The sky (`#/sky`) draws every session as a star, lit when it
@@ -140,7 +142,6 @@ copy are four separate stores. Export from the Data page and commit the file int
 | `PROTOCOL.md` | Week states, the re-entry ramp, the working rules, the re-plan ritual, and how you study best. |
 | `WILDCARD.md` | The interview slot: how sessions and loop pages are added, the fold rule, what is in it now. |
 | `REVAMP.md` | The revamp plan of 29 September, phase by phase, and what is left. |
-| `STUDY-LIST.md` | The current wildcard sessions as a flat checklist with reading, generated from the tracker's sheet. |
 | `REQUEUE.md` | Things set aside. Answered, never deleted. |
 | `IMPROVEMENTS.md` | Tracker improvements built, reversed, and deliberately not done. |
 | `CHANGELOG.md` | Append only. Every re-plan and deviation, with its reason. |
@@ -155,6 +156,7 @@ copy are four separate stores. Export from the Data page and commit the file int
 |---|---|
 | `python tools/rebuild.py` | Everything below in the right order, then every check; stops at the first failure. `--alaap` adds the Alaap build. |
 | `python interviews/build.py <module>` | One loop's page, `interviews/<loop>.html`, from `interviews/<module>.py` (`zenml_round3`, `mphasis`, `oxus`). |
+| `python interviews/hub.py` | `INTERVIEWS.html`, the hub, from every loop module and the tracker's sessions. |
 | `python alfred/build.py` | `ALFRED.html` from `alfred/content.py`. Never edit the page by hand. |
 | `python figures/stamp.py` | The cache-busting hashes on the figure and site files, in the tracker, the guide and `CODING.html`. |
 | `python coding/build_sheet.py` | `CHEATSHEET.html`, one self-contained file (data, code, figures and fonts inlined) to send anyone. |

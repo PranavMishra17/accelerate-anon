@@ -128,8 +128,7 @@ Parked, 29 September 2026:
 - **`wc18`, 'alfred_ from the outside: draw it cold'.** Parked, not tied to one loop. Your
   own system now has its own page, `ALFRED.html`, as study material rather than a drill.
 
-`STUDY-LIST.md` is regenerated from `#/sheet/wc` and so reads "Nothing open" until the
-next loop adds sessions.
+The wildcard as a flat checklist is the tracker's `#/sheet/wc`, Copy as markdown; no copy is kept in the repo.
 
 ## At the re-plan
 

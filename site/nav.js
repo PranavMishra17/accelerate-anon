@@ -1,10 +1,13 @@
 /* The site bar: the one list of Accelerate's pages, and the badges every page draws from it.
 
-   A page adds site/nav.css and this file, and puts the element right of its title:
-     <div class="sn-titlerow"><h1>Title</h1><nav data-site-nav data-here="coding" data-base=""></nav></div>
+   A page adds site/nav.css and this file, and puts the element in its header: at the right end
+   of its top bar, or in a strip of its own above a full bar:
+     <div class="top-in"><b>Page</b> ... <nav class="sn-top" data-site-nav data-here="coding" data-base=""></nav></div>
+     <div class="sn-strip"><nav class="sn-top" data-site-nav data-here="alaap"></nav></div>
+   (The tracker's home puts it beside its Start button instead, without sn-top.)
    data-here   this page's key (or its href), marked and not a link
    data-base   the path back to the site root: "" at the root, "../" from interviews/
-   Every other page opens in a new tab. A page that renders its title with script can add the
+   Every other page opens in a new tab. A page that renders its header with script can add the
    element at any time: it is drawn when it appears. */
 (function () {
   "use strict";

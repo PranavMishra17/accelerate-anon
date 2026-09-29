@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Accelerate</title>
 <link rel="icon" type="image/svg+xml" href="brand/accelerate.svg">
 <link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="site/nav.css?v=eae2485c">
+<script src="site/nav.js?v=f2cbfc37" defer></script>
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
 <link rel="stylesheet" href="figures/viewer.css?v=7a5bfc4f">
 <link rel="alternate icon" type="image/png" href="brand/accelerate-32.png">
@@ -592,30 +594,30 @@
   .hero .go-inline { font-family: var(--display); font-size: 14px; background: none; border: none; padding: 0;
     color: var(--flight); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
-  /* the launch bar: one button per reference, each opens in a new tab; the label shows on hover */
+  /* the site badges (site/nav.js): in the home hero right of the start button, in the bar elsewhere.
+     The brand already leads home, so the tracker's own badge is not repeated. */
   .bar { align-items: center; }
-  .launch { display: flex; gap: 8px; align-items: center; margin-left: auto; }
-  .launch a { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 11px;
-    background: var(--sheet); border: 1px solid var(--line); color: var(--ink); box-shadow: 0 2px 0 var(--line);
-    transition: transform .12s, box-shadow .12s, border-color .12s; }
-  .launch a:hover, .launch a:focus-visible { transform: translateY(-2px); border-color: var(--ink); box-shadow: 0 4px 0 var(--ink); }
-  .launch a:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--ink); }
-  .launch svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .launch a::after { content: attr(data-tip); position: absolute; top: calc(100% + 8px); right: 0; z-index: 20; white-space: nowrap;
-    font-size: 12.5px; background: var(--ink); color: var(--sheet); padding: 4px 8px; opacity: 0; pointer-events: none; transition: opacity .12s; }
-  .launch a:hover::after, .launch a:focus-visible::after { opacity: 1; }
-  @media (prefers-reduced-motion: reduce) { .launch a { transition: none; } }
+  .bar .site-nav { justify-content: flex-end; }
+  .site-nav .sn-tracker { display: none; }
+  .hero .hacts .site-nav { flex: 1 1 300px; }
+  .hero { margin-bottom: 20px; }
+  .hero h1.next { max-width: 40ch; }
+  .hero .hsub { margin-bottom: 16px; }
+  .hero .hstatus { max-width: none; margin-top: 12px; }
 
-  /* home: this week and the open wildcard, side by side */
-  .homecols { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-bottom: 8px; }
-  .homecols .colm { cursor: default; }
-  .homecols .colm:hover { background: var(--sheet); }
-  .homecols .colm.live:hover { background: var(--live); }
-  .homecols button.mk { background: none; border: 0; width: 100%; text-align: left; cursor: pointer; position: relative; }
-  .homecols button.mk:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
-  .homecols .more { margin-top: 10px; }
-  .homefoot { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 26px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13.5px; }
-  @media (max-width: 720px) { .homecols { grid-template-columns: 1fr; } .launch a { width: 36px; height: 36px; } }
+  /* home: three small numbers that move when a session closes or time is banked */
+  .tally { display: grid; grid-template-columns: repeat(3, max-content); gap: 6px 34px; margin: 18px 0 0; }
+  @media (max-width: 720px) { .tally { grid-template-columns: repeat(3, 1fr); gap: 6px 14px; } .tally b { font-size: 19px; } }
+  .tally div { font-size: 12.5px; color: var(--dim); }
+  .tally b { display: block; font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
+  .tally b small { font-size: 14px; font-weight: 400; color: var(--faint); }
+
+  /* the wildcard column: open sessions, what is left, the interviews hub */
+  .colm.wild { cursor: pointer; }
+  .colm.wild .wn { background: none; border: 0; padding: 0; color: inherit; cursor: pointer; text-align: left; }
+  .colm.wild .ivbtn { display: inline-block; margin-top: 12px; padding: 6px 12px; border: 1px solid var(--ink); background: var(--sheet);
+    color: var(--ink); font-size: 13px; font-weight: 600; text-decoration: none; }
+  .colm.wild .ivbtn:hover { background: var(--ink); color: var(--sheet); }
   @media (max-width: 720px) {
     .bar .brand .mission { display: none; }
     .hero h1.next { font-size: 28px; }
@@ -653,7 +655,7 @@
       <span class="word">ACCELERATE</span>
       <span class="mission">Milestone 1, Primitives. 21 September to 25 October 2026.</span>
     </a>
-    <nav class="launch" id="launch" aria-label="References, each opens in a new tab"></nav>
+    <nav data-site-nav data-here="tracker" id="barnav"></nav>
     <button class="railtoggle" id="railtoggle" aria-expanded="false">Contents</button>
   </div>
   <div class="layout">
@@ -5920,27 +5922,6 @@
   var MONTHNAME = ["January", "February", "March", "April", "May", "June", "July",
     "August", "September", "October", "November", "December"];
 
-  /* The launch bar: one button per reference, each in a new tab. The loop is the first in LOOPS. */
-  function drawLaunch() {
-    var bar = document.getElementById("launch");
-    if (!bar || bar.childNodes.length) { return; }
-    var loop = LOOPS[0];
-    [[SD.file, "System design guide", "network"], ["CODING.html", "Algorithms and coding", "code"],
-     ["CHEATSHEET.html", "Coding cheat sheet", "layout-grid"], [AL.file, "Alaap and TrenTorch", "audio-waveform"],
-     ["ALFRED.html", "alfred_", "bot"]]
-      .concat(loop ? [[loop.file, loop.name, "message-square"]] : [])
-      .forEach(function (x) {
-        var a = document.createElement("a");
-        a.href = x[0];
-        a.target = "_blank";
-        a.rel = "noopener";
-        a.setAttribute("data-tip", x[1]);
-        a.setAttribute("aria-label", x[1] + ", opens in a new tab");
-        a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + ((window.ICONS && window.ICONS[x[2]]) || "") + "</svg>";
-        bar.appendChild(a);
-      });
-  }
-
   function statusLine(wk) {
     var parts = [], decl = declaredFor(wk), act = weekState(wk);
     if (!decl) {
@@ -5957,11 +5938,31 @@
     parts.push(st > 0
       ? "The streak is <b>" + st + (st === 1 ? " week" : " weeks") + "</b>."
       : "Close any session this week and the streak begins.");
-    var m = weekMinutesFor(wk);
-    parts.push(m > 0
-      ? "<b>" + mins(m) + "</b> on the clock this week, against the four-to-six-hour floor."
-      : "Nothing on the clock yet this week. The floor is four to six hours.");
     return parts.join(" ");
+  }
+
+  /* Three numbers that move every time a session closes or the clock banks time.
+     Wildcard work counts here, labelled so; it never counts in the plan figure on Progress. */
+  function tallyBlock() {
+    var banked = 0, done = 0, total = 0;
+    eachSession(function (s) { banked += clockBanked(s.id); total += 1; if (sessionDone(s)) { done += 1; } });
+    eachWild(function (s) {
+      var d = sessionDone(s);
+      banked += clockBanked(s.id);
+      if (d) { done += 1; }
+      if (d || !s.parked) { total += 1; }
+    });
+    var box = el("div", "tally");
+    [[fmtMinutes(banked), "", "hours in, wildcard included"],
+     [String(done), " of " + total, "sessions closed, wildcard included"],
+     [fmtMinutes(weekMinutesFor(currentWeek())), " of 4–6h", "on the clock this week"]].forEach(function (t) {
+      var d = el("div"), b = el("b", "", t[0]);
+      if (t[1]) { b.appendChild(el("small", "", t[1])); }
+      d.appendChild(b);
+      d.appendChild(document.createTextNode(t[2]));
+      box.appendChild(d);
+    });
+    return box;
   }
 
   function mostCold() {
@@ -5980,7 +5981,7 @@
     var dayN = Math.floor((today - START) / 864e5);
     var dayInWeek = Math.max(1, Math.min(7, dayN - wk * 7 + 1));
 
-    hero.appendChild(el("p", "hdate", DAYNAME[today.getDay()] + " " + today.getDate() + " " +
+    hero.appendChild(el("p", "hdate", "Accelerate. " + DAYNAME[today.getDay()] + " " + today.getDate() + " " +
       MONTHNAME[today.getMonth()] + ". Week " + (wk + 1) + " of " + PLAN.length + ", day " + dayInWeek + "."));
 
     if (nx) {
@@ -6011,13 +6012,13 @@
       });
       acts.appendChild(start);
     }
-    var cold = mostCold();
-    if (cold) {
-      var dr = el("button", "go-soft", "Drill the " + cold.n + " you could not say");
-      dr.addEventListener("click", function () { drill.scope = null; go("drill", cold.scope); });
-      acts.appendChild(dr);
-    }
+    /* the references, right of the start button; site/nav.js draws them */
+    var nv = document.createElement("nav");
+    nv.setAttribute("data-site-nav", "");
+    nv.setAttribute("data-here", "tracker");
+    acts.appendChild(nv);
     hero.appendChild(acts);
+    hero.appendChild(tallyBlock());
 
     var status = el("p", "hstatus");
     status.innerHTML = statusLine(wk);
@@ -6026,6 +6027,13 @@
       dec.addEventListener("click", function () { go("week", wk); });
       status.appendChild(document.createTextNode(" "));
       status.appendChild(dec);
+    }
+    var cold = mostCold();
+    if (cold) {
+      var dr = el("button", "go-inline", "Drill the " + cold.n + " you could not say");
+      dr.addEventListener("click", function () { drill.scope = null; go("drill", cold.scope); });
+      status.appendChild(document.createTextNode(" "));
+      status.appendChild(dr);
     }
     hero.appendChild(status);
     v.appendChild(hero);
@@ -6350,95 +6358,39 @@
     setTimeout(function () { if (f.parentNode) { f.remove(); } }, 2200);
   }
 
-  /* Home: the next session, this week, what is open in the wildcard, three for today.
-     Everything else is one step away in the rail. */
-  function homeItem(s, w, i) {
-    var m = el("button", "mk " + tone(s.track) + (sessionDone(s) ? " shut" : ""));
-    m.appendChild(document.createTextNode(SHORT[s.id] || s.name));
-    m.addEventListener("click", function () { go("session", w, i); });
-    return m;
-  }
-  /* "Nothing open. Mphasis, technical" with the loop's page linked. */
-  function nothingOpen() {
-    var p = el("span", "mk", "Nothing open. ");
-    var lp = LOOPS[0];
-    if (lp) {
-      var a = document.createElement("a");
-      a.href = lp.file;
-      a.textContent = lp.name;
-      p.appendChild(a);
-    }
-    return p;
-  }
-  function viewHome() {
-    var v = document.getElementById("view");
-    heroHome(v, nextSession());
-    var wk = currentWeek(), cols = el("div", "homecols");
-
-    var tw = el("div", "colm live");
-    tw.appendChild(el("div", "wn", String(wk + 1)));
-    tw.appendChild(el("div", "wd", "This week, " + range(wk)));
-    tw.appendChild(el("div", "wt", PLAN[wk].title));
-    /* What is done does not show here; the week page and Progress still list it. */
-    var closedHere = 0;
-    PLAN[wk].sessions.forEach(function (s, si) {
-      if (sessionDone(s)) { closedHere += 1; return; }
-      tw.appendChild(homeItem(s, wk, si));
-    });
-    if (closedHere) { tw.appendChild(el("span", "mk", closedHere + " closed this week")); }
-    else if (!PLAN[wk].sessions.length) { tw.appendChild(el("span", "mk", "Nothing planned.")); }
-    var allWeeks = el("button", "linkish more", "All five weeks");
-    allWeeks.addEventListener("click", function () { go("progress"); });
-    tw.appendChild(allWeeks);
-    cols.appendChild(tw);
-
+  /* Home: the next session and the numbers, the five weeks and the wildcard in one row,
+     three for today, the work ahead. Everything else is one step away in the rail. */
+  function wildColumn() {
     var wc = el("div", "colm wild");
-    wc.appendChild(el("div", "wn tiny", "Wild\u00adcard"));
-    var open = wildOpen();
-    open.forEach(function (x) { wc.appendChild(homeItem(x.s, "wc", x.i)); });
-    if (!open.length) { wc.appendChild(nothingOpen()); }
-    var toWild = el("button", "linkish more", "Open the wildcard");
-    toWild.addEventListener("click", function () { go("wild"); });
-    wc.appendChild(toWild);
-    cols.appendChild(wc);
-    v.appendChild(cols);
-
-    v.appendChild(rubric("Three for today", "open questions from what you have started"));
-    v.appendChild(coldBlock());
-
-    var foot = el("div", "homefoot");
-    [["progress", "Progress and the day board"], ["figure", "Explain a figure"], ["map", "The work ahead"], ["book", "The book"], ["sky", "The sky"]].forEach(function (t) {
-      var b = el("button", "linkish", t[1]);
-      b.addEventListener("click", function () { go(t[0]); });
-      foot.appendChild(b);
+    var head = el("button", "wn tiny", "Wild\u00adcard");
+    head.setAttribute("aria-label", "Open the wildcard");
+    wc.appendChild(head);
+    var open = wildOpen(), left = 0;
+    open.forEach(function (x) { left += Math.max(0, (x.s.est || 0) - clockBanked(x.s.id)); });
+    wc.appendChild(el("div", "wd", open.length
+      ? open.length + " open \u00b7 " + (Math.round(left / 6) / 10) + "h left" : "Nothing open"));
+    open.forEach(function (x) {
+      wc.appendChild(el("span", "mk " + tone(x.s.track), SHORT[x.s.id] || x.s.name));
     });
-    v.appendChild(foot);
+    var iv = el("a", "ivbtn", "Interviews");
+    iv.href = "INTERVIEWS.html";
+    wc.appendChild(iv);
+    wc.addEventListener("click", function (e) { if (!e.target.closest("a")) { go("wild"); } });
+    return wc;
   }
-
-  function viewFigure() {
-    var v = document.getElementById("view");
-    v.appendChild(el("h1", "", "Explain a figure"));
-    v.appendChild(el("p", "sm dim", "A minute, out loud, then the caption. The figure comes from sessions you have started, or this week's."));
-    v.appendChild(figureBlock() || el("p", "sm dim", "Start a session and a figure appears here."));
-  }
-
-  function viewProgress() {
-    var v = document.getElementById("view");
-    v.appendChild(el("h1", "", "Progress"));
-    v.appendChild(rubric("Five weeks", "open a week to see its sessions"));
-    v.appendChild(el("p", "sm dim", exportStaleNote()));
-
+  /* The five weeks in a row, done sessions struck through, then the wildcard. */
+  function plannerGrid() {
     var grid = el("div", "planner");
     PLAN.forEach(function (w, wi) {
       var c = el("button", "colm" + (wi === currentWeek() ? " live" : ""));
       c.appendChild(el("div", "wn", String(wi + 1)));
       c.appendChild(el("div", "wd", range(wi)));
       c.appendChild(el("div", "wt", w.title));
-      var declHome = declaredFor(wi);
-      if (declHome) {
-        var actualHome = weekState(wi);
-        var declLine = "Declared " + stateWord(declHome.state);
-        if (actualHome !== declHome.state) { declLine += ", actual " + stateWord(actualHome) + " so far"; }
+      var decl = declaredFor(wi);
+      if (decl) {
+        var actual = weekState(wi);
+        var declLine = "Declared " + stateWord(decl.state);
+        if (actual !== decl.state) { declLine += ", actual " + stateWord(actual) + " so far"; }
         c.appendChild(el("div", "sm dim", declLine));
       }
       w.sessions.forEach(function (s) {
@@ -6451,25 +6403,15 @@
       c.addEventListener("click", function () { go("week", wi); });
       grid.appendChild(c);
     });
+    grid.appendChild(wildColumn());
+    return grid;
+  }
+  function viewHome() {
+    var v = document.getElementById("view");
+    heroHome(v, nextSession());
 
-    var wc = el("button", "colm wild");
-    wc.appendChild(el("div", "wn tiny", "Wild\u00adcard"));
-    wc.appendChild(el("div", "wd", "when an interview lands"));
-    if (WILDCARD.sessions.length) {
-      wc.appendChild(el("div", "wt", WILDCARD.note || "In progress"));
-      var wo = wildOpen();
-      wo.forEach(function (x) {
-        wc.appendChild(el("span", "mk " + tone(x.s.track), SHORT[x.s.id] || x.s.name));
-      });
-      if (!wo.length) { wc.appendChild(el("span", "mk", "Nothing open.")); }
-    } else {
-      wc.appendChild(el("div", "wt", "Empty"));
-      wc.appendChild(el("span", "mk", "Ask for sessions when a loop is scheduled. They append here."));
-    }
-    wc.addEventListener("click", function () { go("wild"); });
-    grid.appendChild(wc);
-    v.appendChild(grid);
-
+    v.appendChild(rubric("Five weeks", "open a week to see its sessions"));
+    v.appendChild(plannerGrid());
     var lg = el("div", "legend");
     [["Systems", "sys"], ["Mathematics", "math"], ["Alaap", "alaap"], ["Requeue", "req"], ["Interview", "iv"]].forEach(function (t) {
       var s = el("span");
@@ -6478,6 +6420,32 @@
       lg.appendChild(s);
     });
     v.appendChild(lg);
+
+    v.appendChild(rubric("Three for today", "open questions from what you have started"));
+    v.appendChild(coldBlock());
+
+    v.appendChild(rubric("The work ahead", "every milestone through 2027"));
+    v.appendChild(el("p", "sm dim", "Time runs downward, one band per milestone; each column is a track, and a line means the lower thing needs the upper thing first."));
+    v.appendChild(mapLegend());
+    v.appendChild(mapPanel(""));
+    var mapActs = el("div", "row-act");
+    var mapOpen = el("button", "sec", "Open the map on its own page");
+    mapOpen.addEventListener("click", function () { go("map"); });
+    mapActs.appendChild(mapOpen);
+    v.appendChild(mapActs);
+  }
+
+  function viewFigure() {
+    var v = document.getElementById("view");
+    v.appendChild(el("h1", "", "Explain a figure"));
+    v.appendChild(el("p", "sm dim", "A minute, out loud, then the caption. The figure comes from sessions you have started, or this week's."));
+    v.appendChild(figureBlock() || el("p", "sm dim", "Start a session and a figure appears here."));
+  }
+
+  function viewProgress() {
+    var v = document.getElementById("view");
+    v.appendChild(el("h1", "", "Progress"));
+    v.appendChild(el("p", "sm dim", exportStaleNote()));
 
     var nb = PLAN.filter(function (w, wi) { return weekBound(wi); }).length;
     var shelf = el("div", "shelf");
@@ -6562,17 +6530,6 @@
       cr.appendChild(goWild);
       v.appendChild(cr);
     }
-
-    /* the work ahead, from here to 2027 */
-    v.appendChild(rubric("The work ahead", "every milestone through 2027"));
-    v.appendChild(el("p", "sm dim", "Time runs downward, one band per milestone; each column is a track, and a line means the lower thing needs the upper thing first."));
-    v.appendChild(mapLegend());
-    v.appendChild(mapPanel(""));
-    var mapActs = el("div", "row-act");
-    var mapOpen = el("button", "sec", "Open the map on its own page");
-    mapOpen.addEventListener("click", function () { go("map"); });
-    mapActs.appendChild(mapOpen);
-    v.appendChild(mapActs);
 
     /* day board */
     v.appendChild(rubric("Day board", "session closures above, the rest of life below"));
@@ -8838,6 +8795,8 @@
       drawCrumb();
       var v = document.getElementById("view");
       v.innerHTML = "";
+      var barNav = document.getElementById("barnav");
+      if (barNav) { barNav.style.display = view.page === "home" ? "none" : ""; }
       if (view.page === "home") { viewHome(); }
       else if (view.page === "week") { viewWeek(); }
       else if (view.page === "wild") { viewWild(); }
@@ -8866,7 +8825,6 @@
   }
 
   load();
-  drawLaunch();
   sweepClocks();
   eachSession(function (s) { markSession(s); });
   eachWild(function (s) { markSession(s); });

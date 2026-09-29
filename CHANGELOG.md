@@ -605,3 +605,17 @@ global search moved to `CODING.html`. A guide link said twice on a step now show
 keeps them); `handoffs/` moved to `archive/`. `CLAUDE.md` gains three rules: one home per
 thing, one screen in every orientation, and a pass ends with the live check. No change to
 the plan or to `CHARTER.md`.
+
+**2026-09-29 — Revamp finished: a home that motivates, an interviews hub, badges everywhere.**
+After Pranav's review of phase 1: the tracker's home returns to the five weeks in a row with
+the wildcard, and opens on where you are and the next session, with three numbers that move
+every time you work (hours in, wildcard included; sessions closed; this week against the
+floor). A badge per reference (System design, Coding, Cheat sheet, Alaap, alfred_,
+Interviews) sits beside Start this session; every other page carries the same badges in its
+header, from one file, `site/nav.js`. The map is back on the home, below three for today.
+The wildcard column shows only what is open and the hours left, with a button to the new
+hub, `INTERVIEWS.html`: a card per loop with its date, total hours, how much is done, and its
+job post and company links. Mphasis has happened and shows so. `STUDY-LIST.md` is removed
+(the sheet view is its source). The gate's requeue bar is the six named maths items; the
+other six clear with their sessions. No change to `CHARTER.md`; the gate's bar is now stated
+rather than changed.

@@ -23,6 +23,12 @@ text appears on two pages, one of them becomes a link.
 
 ## Phase 1. The tracker's home page and the launch bar
 
+**Reworked, 29 Sep, on Pranav's review:** the home went back to the five weeks in a row with the
+wildcard, opening on where you are, the next session and three numbers that move (hours in,
+sessions closed, this week); the reference badges sit beside Start this session on the home and in
+the header on every other page (`site/nav.js`); the map returned below three for today; interview
+loops got a hub, `INTERVIEWS.html`. Requeue bar decided: the six named maths items.
+
 **Done, 29 Sep** (commit a137ca6): the launch bar, the flight plan gone, a lean home; Progress and Explain a figure on their own routes.
 
 - A launch bar at the top right of `index.html`: icon buttons with hover labels for System
@@ -138,7 +144,7 @@ Candidates found so far, to confirm one by one:
    `WILDCARD.md`) and the wildcard has no loop in play.
 3. **`progress/`.** Nothing was ever committed there, and the repo is public. Keep the
    folder, or remove it and change the README line to "keep the export somewhere private"?
-4. **`STUDY-LIST.md`.** It is a generated copy of `#/sheet/wc` and reads "Nothing open".
+4. **`STUDY-LIST.md`.** Removed, 29 Sep, on Pranav's word. It is a generated copy of `#/sheet/wc` and reads "Nothing open".
    Keep it, or remove it and use the sheet's copy-as-markdown when needed?
 5. **Six or twelve.** `MILESTONE-1.md` says six requeue items are what the milestone exists
    to clear; `REQUEUE.md` has twelve. Which six, or all twelve? Due before 26 October.

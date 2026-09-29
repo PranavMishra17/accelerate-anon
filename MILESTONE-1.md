@@ -300,8 +300,12 @@ planned.
 
 **The bar:**
 
-- Every requeued item from milestone 1 answered. Not perfectly — answered. Those six
-  are what this milestone exists to clear.
+- The six requeued maths items answered: Q6 (shape of (AB)ᵀ), Q7 (sigmoid derivative),
+  Q8 (eigenvector), Q9 (Bayes with base rates), Q10 (what the learning rate multiplies),
+  Q11 (chain rule and backprop). Not perfectly — answered. Those six are what this
+  milestone exists to clear. The other six milestone-1 rows in `REQUEUE.md` (Q14, Q1, Q3,
+  Q4, Q12, Q16) are the core of regular sessions and clear when those sessions close; they
+  do not add a separate bar.
 - The five-minute spoken answer recorded, and it uses primitives rather than product
   names.
 - Seventy percent on the systems section.
