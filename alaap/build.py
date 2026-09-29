@@ -14,9 +14,11 @@ architecture diagrams' metadata, and links into Accelerate.
 
 Re-run whenever either repo, or the plan, changes:
 
-    python alaap/build.py
+    python alaap/build.py             ALAAP.html, and the AL block in index.html
+    python alaap/build.py --public    DEEP-LEARNING.html only: the same plan as a public learning
+                                      path (plan.PUBLIC), nothing personal; never touches index.html
 """
-import html, io, os, re, sys
+import copy, hashlib, html, io, json, os, re, sys
 import markdown
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -26,7 +28,9 @@ import trentorch  # noqa: E402
 
 SRC = r"E:\VoiceForge TTV Pipeine\v3\learning"
 OUT = os.path.join(os.path.dirname(HERE), "ALAAP.html")
-TT_WEB = "https://github.com/TrenTorch/TrenTorch/tree/main/"
+TT_WEB = "https://github.com/TrenTorch/TrenTorch/tree/TrenTorch-Main/TrenTorch_CLI/"
+WHY = "Why it matters for Alaap"
+PUB = None   # plan.PUBLIC while building the public page
 
 SYMBOLS = [("\u2705", '<span class="ok">\u2713</span>'), ("\u274c", '<span class="bad">\u2717</span>'),
            ("\u26d4", '<span class="bad">\u2717</span>'), ("\U0001f7e1", '<span class="warn">\u25d0</span>'),
@@ -90,7 +94,7 @@ def relink(out):
         base = href.split("#")[0].split("/")[-1]
         if href.startswith("http"):
             return '<a href="%s" target="_blank" rel="noopener">%s</a>' % (href, label)
-        if base in DOCS and not href.startswith("../"):
+        if base in DOCS and not href.startswith("../") and not (PUB and DOCS[base] in ("#/status", "#/accent")):
             return '<a href="%s">%s</a>' % (DOCS[base], label)
         path = href[3:] if href.startswith("../") else "learning/" + href
         return '<span class="repo" title="In the Alaap repo: %s">%s</span>' % (esc(path), label)
@@ -263,7 +267,7 @@ def overview():
         for i, s in enumerate(stages):
             x = 16 + (i % per_row) * cw
             yy = y + (i // per_row) * rh
-            kind = "TrenTorch" if s.get("tt") and not s.get("alaap") else ("Alaap guide" if not s.get("tt") else "both")
+            kind = s.get("kind") or ("TrenTorch" if s.get("tt") and not s.get("alaap") else ("Alaap guide" if not s.get("tt") else "both"))
             short = s["title"].split(":")[0]
             short = short if len(short) <= 24 else short[:22].rsplit(" ", 1)[0] + "\u2026"
             out.append('<a href="#/plan/stage-%d"><rect class="%s" x="%d" y="%d" width="%d" height="%d" rx="8"/>'
@@ -337,9 +341,11 @@ def stage(s, pieces, parts, figs, tt, milestones):
         acc.append('<b>On the map</b> <a href="index.html#/map" target="_blank" rel="noopener">%s</a>' % esc(s["map"]))
     body = []
     body.append('<p class="k after"><b class="lab">After this you can</b> %s</p>' % esc(s["goal"]))
-    body.append('<p class="k why"><b class="lab">Why it matters for Alaap</b> %s</p>' % esc(s["why"]))
+    body.append('<p class="k why"><b class="lab">%s</b> %s</p>' % (WHY, esc(s["why"])))
     if s.get("diagram"):
         body.append(diagram(s["diagram"]))
+    if s.get("html"):
+        body.append(s["html"])
     for n in s.get("tt", []):
         body.append(tt_card(tt[n]))
     for u in s.get("unlocks", []):
@@ -378,9 +384,12 @@ def plan_tab(pieces, parts, pre, figs, tt, milestones):
         side.append('<li class="msh">%s</li>' % esc(ms["name"].split(" \u00b7 ")[1]))
         side += ['<li><a href="#/plan/stage-%d"><span class="sn">%d</span>%s</a></li>' % (s["n"], s["n"], esc(s["title"].split(":")[0]))
                  for s in stages]
-        main.append('<section class="ms" id="ms-%d"><h2>%s</h2><p class="pm">%s \u00b7 about %s across %d stages</p><p>%s</p></section>'
-                    % (ms["id"], esc(ms["name"]), esc(ms["when"]), fmt_h(hours), len(stages), esc(ms["note"])))
+        main.append('<section class="ms" id="ms-%d"><h2>%s</h2><p class="pm">%sabout %s across %d stages</p><p>%s</p></section>'
+                    % (ms["id"], esc(ms["name"]), esc(ms["when"]) + " \u00b7 " if ms["when"] else "", fmt_h(hours), len(stages), esc(ms["note"])))
         main += [stage(s, pieces, parts, figs, tt, milestones) for s in stages]
+    if PUB:
+        return ('<div class="split"><nav class="side" aria-label="Stages of the path"><ol>%s</ol></nav><div class="main">%s%s</div></div>'
+                % ("".join(side), public_intro(total), "\n".join(main)))
     side.append('<li class="msh">Appendix</li><li><a href="#/plan/ten-hours">If you only have 10 hours</a></li>')
     cards = "".join('<div class="kc k%d"><b class="lab">%s</b><p>%s</p></div>'
                     % (i, esc(re.sub(r"^\u27f6 ", "", c[0])), inline_md(c[1])) for i, c in enumerate(pre["cards"]))
@@ -415,6 +424,180 @@ def document(name, prefix):
     return title, out
 
 
+# ------------------------------------------------------------------ the public page
+
+def public_view(P):
+    """plan.py as the public path: parts for milestones, stages renumbered in path order, the maths
+    stage added, and tracker pointers, project status and personal framing left out."""
+    order = [o for part in P["parts"] for o in part["stages"]]
+    num = {o: i for i, o in enumerate(order, 1)}
+
+    def renum(text):
+        return re.sub(r"\b(stages?) (\d+(?:(?:, | and )\d+)*)", lambda m: m.group(1) + " " + re.sub(
+            r"\d+", lambda d: str(num[int(d.group())]), m.group(2)), text)
+
+    byn = {s["n"]: s for s in plan.STAGES}
+    stages, parts = [], []
+    for i, part in enumerate(P["parts"], 1):
+        parts.append({"id": i, "name": part["name"], "when": "", "note": part["note"]})
+        for o in part["stages"]:
+            s = dict(P["maths"] if o == "maths" else byn[o], **P["stage"].get(o, {}))
+            s.pop("accel", None)
+            s.pop("map", None)
+            s["arch"] = [f for f in s.get("arch", []) if f not in P["drop_arch"]]
+            s["goal"], s["why"], s["check"] = renum(s["goal"]), renum(s["why"]), tuple(renum(x) for x in s["check"])
+            s["n"], s["ms"] = num[o], i
+            if o == "maths":
+                s["html"] = maths_table(P["maths_rows"], num)
+            stages.append(s)
+    meta = {f: dict(m, stages=[num[n] for n in m["stages"]]) for f, m in plan.ARCH_META.items() if f not in P["drop_arch"]}
+    dias = copy.deepcopy(plan.DIAGRAMS)
+    for k, v in P["diagrams"].items():
+        dias[k].update(v)
+    for d in dias.values():
+        d["caption"] = renum(d["caption"])
+        for n in d["nodes"]:
+            if n.get("sub"):
+                n["sub"] = renum(n["sub"])
+
+    class View:
+        STAGES, MILESTONES, ARCH_META, DIAGRAMS, TT_HOURS = stages, parts, meta, dias, plan.TT_HOURS
+    return View, num
+
+
+def maths_table(rows, num):
+    out = []
+    for topic, can, used, reads in rows:
+        out.append("<tr><td><b>%s</b></td><td>%s</td><td>%s</td><td>%s</td></tr>" % (
+            esc(topic), esc(can), ", ".join('<a href="#/plan/stage-%d">%d</a>' % (num[u], num[u]) for u in sorted(used, key=num.get)),
+            "<br>".join('<a href="%s%s" target="_blank" rel="noopener">%s</a>' % (plan.MATHS_LESSON, slug_, esc(r)) for r, slug_ in reads)))
+    return ('<div class="guide"><h4 class="gs">The maths, piece by piece</h4><p>Work down the table. If a row is already easy, '
+            'do its task on paper and move on; if not, read the lesson beside it. Each reading is a free lesson from AI Engineering from Scratch.</p>'
+            '<table><thead><tr><th>Topic</th><th>Be able to</th><th>Used in stage</th><th>Read</th></tr></thead><tbody>%s</tbody></table></div>'
+            % "".join(out))
+
+
+def public_text(piece):
+    """Quoted Alaap guide text, read from outside the Alaap repo: 'this repo' names it."""
+    piece = piece.replace("tinytorch", "TrenTorch")
+    piece = re.sub(r"<li>(?:(?!</li>).)*00-SANITY-CHECK(?:(?!</li>).)*</li>\s*", "", piece, flags=re.S)   # project status: not on this page
+    piece = re.sub(r"\b([Tt])his (repo|project)\b", lambda m: ("The" if m.group(1) == "T" else "the") + " Alaap " + m.group(2), piece)
+    return piece
+
+
+def public_intro(total):
+    P = PUB
+    fill = {"total": fmt_h(total), "tt": "%g" % plan.TT_HOURS, "weeks": int(round(total / 5.0))}
+    rows = "".join('<div class="kc"><b class="lab">%s</b><p>%s</p></div>' % (esc(a), esc(b.format(**fill))) for a, b in P["intro"])
+    cards = "".join('<div class="kc"><b class="lab">%s</b><p>%s</p></div>' % (esc(a), esc(b)) for a, b in P["cards"])
+    return """<div class="lead">
+<p class="big">Build a deep learning framework from nothing, then use it to understand how machines hear and speak: %d stages in three parts, from the maths to a speech model.</p>
+<div class="kcards">%s</div>
+<h3>Set up</h3>
+<p><a href="%s" target="_blank" rel="noopener">TrenTorch</a> is an open framework you build yourself, module by module, in NumPy: its own take on the TinyTorch curriculum. Clone it and start the first module (the README has the Windows version):</p>
+<pre>git clone https://github.com/TrenTorch/TrenTorch.git
+cd TrenTorch/TrenTorch_CLI
+python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -r requirements.txt &amp;&amp; pip install -e .
+tren setup
+tren module start 01</pre>
+<p><a href="%s" target="_blank" rel="noopener">Alaap</a> is an open research system for voice design: a written character description becomes a persistent voice identity that can speak any dialogue. Part 3 quotes its study guide and its architecture diagrams, which are in the architecture tab.</p>
+<h3>The path</h3>
+<figure class="plan-fig">%s<figcaption><b>The whole path.</b> Green is part 1, blue part 2, amber part 3. Select a stage to open it.</figcaption></figure>
+<h3>How each stage is laid out</h3>
+<div class="kcards">%s</div>
+</div>""" % (len(plan.STAGES), rows, P["tt_repo"], P["alaap_repo"], overview(), cards)
+
+
+NOTES_JS = """<script>
+/* The shared figure notes (figures/notes-alaap.js) were written for the personal plan. Here, stage
+   links point at this page with its own numbers, TrenTorch links at the published source, and links
+   into the study tracker are left out. */
+document.addEventListener("DOMContentLoaded", function () {
+  var num = %s, tt = %s, notes = window.FIG_NOTES || {};
+  Object.keys(notes).forEach(function (key) {
+    if (key.indexOf("al:") !== 0) { return; }
+    ["nodes", "edges"].forEach(function (part) {
+      var all = notes[key][part] || {};
+      Object.keys(all).forEach(function (id) {
+        if (!all[id].links) { return; }
+        all[id].links = all[id].links.filter(function (l) { return !/^index\\.html/.test(l.url); }).map(function (l) {
+          var m = /^ALAAP\\.html#\\/plan\\/stage-(\\d+)$/.exec(l.url);
+          if (m && num[m[1]]) { return { label: l.label.replace(/^Stage \\d+/, "Stage " + num[m[1]]), url: "#/plan/stage-" + num[m[1]] }; }
+          return { label: l.label, url: l.url.replace("https://github.com/TrenTorch/TrenTorch/tree/TrenTorch-Main/TrenTorch_CLI/", tt) };
+        });
+      });
+    });
+  });
+});
+</script>
+"""
+
+
+def stamp(page):
+    """The ?v=<hash> on each shared file, as figures/stamp.py writes it."""
+    def one(m):
+        p = os.path.join(os.path.dirname(HERE), m.group(1), m.group(2))
+        if not os.path.exists(p):
+            return m.group(0)
+        return '"%s/%s?v=%s"' % (m.group(1), m.group(2), hashlib.sha1(io.open(p, "rb").read()).hexdigest()[:8])
+    return re.sub(r'"(figures|coding|site)/([a-z-]+\.(?:js|css))(?:\?v=[0-9a-f]+)?"', one, page)
+
+
+def main_public():
+    global PUB, WHY, TT_WEB, plan
+    PUB = P = plan.PUBLIC
+    WHY, TT_WEB = "Why it matters", P["tt_web"]
+    pieces, parts, pre = guide_pieces()
+    pieces = {k: public_text(v) for k, v in pieces.items()}
+    for p in parts.values():
+        p["meta"] = re.sub(r"^weeks? [^,]+, ", "", p["meta"])
+    head, css, defs, figs, order = architecture()
+    order = [f for f in order if f not in P["drop_arch"]]
+    data = trentorch.load()
+    tt = {m["n"]: m for m in data["modules"]}
+    for m in tt.values():
+        m["path"] = "TrenTorch_CLI/" + m["path"]
+    real = plan
+    plan, num = public_view(P)
+    try:
+        body, arch = plan_tab(pieces, parts, pre, figs, tt, data["milestones"]), arch_tab(figs, order, head)
+        n_stages = len(plan.STAGES)
+    finally:
+        plan = real
+    page = io.open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
+    shell = {"TITLE": P["title"], "ICON": "brand/accelerate.svg", "BRAND": P["brand"], "HERE": "dl", "NAV_ASSETS": LOCAL["NAV_ASSETS"],
+             "TABS": '    <a href="#/plan" data-tab="plan">The path</a>\n    <a href="#/architecture" data-tab="architecture">Architecture</a>\n',
+             "DOCS": "", "TABS_JS": '["plan", "architecture"]', "H1_JS": json.dumps(P["title"]), "KEY_JS": json.dumps(P["key"]),
+             "EXTRA": NOTES_JS % (json.dumps({str(k): v for k, v in num.items() if k != "maths"}), json.dumps(P["tt_web"]))}
+    for k, v in list(shell.items()) + [("PLAN", body), ("ARCH", arch), ("ARCH_CSS", css), ("ARCH_DEFS", defs)]:
+        page = page.replace("{{%s}}" % k, v)
+    left = re.findall(r"\{\{\w+\}\}", page)
+    if left:
+        sys.exit("unfilled: %s" % left)
+    page = page.replace('title="In E:/TrenTorch"', 'title="In the TrenTorch repo"').replace(
+        "Each diagram now carries what it involves, its topics, and the plan stages that teach it.",
+        "Each diagram lists what it involves, its topics, and the stages of the path that teach it.")
+    page = stamp(dedash(page))
+    for bad in ("index.html", "ALAAP.html", "E:/", "E:\\", "#/status", "#/accent", "Pranav"):
+        if bad in page.replace(P["alaap_repo"], ""):
+            sys.exit("public page still mentions %r" % bad)
+    out = os.path.join(os.path.dirname(HERE), P["out"])
+    io.open(out, "w", encoding="utf-8", newline="\n").write(page)
+    print("wrote %s: %d bytes, %d stages, %d architecture diagrams" % (out, len(page), n_stages, len(order)))
+
+
+# the local page's shell, filled into the template it shares with the public page
+LOCAL = {"TITLE": "Alaap and TrenTorch", "ICON": "brand/alaap.svg", "BRAND": "Alaap and TrenTorch", "HERE": "alaap",
+         "NAV_ASSETS": '<link rel="stylesheet" href="site/nav.css">\n<script src="site/nav.js" defer></script>\n',
+         "TABS": ('    <a href="#/plan" data-tab="plan">The plan</a>\n    <a href="#/architecture" data-tab="architecture">Architecture</a>\n'
+                  '    <a href="#/status" data-tab="status">Where Alaap stands</a>\n    <a href="#/accent" data-tab="accent">Accent and rights</a>\n'),
+         "DOCS": ('<section id="tab-status" data-tab="status" class="doc" hidden><h1>{{STATUS_TITLE}}</h1>{{STATUS}}</section>\n'
+                  '<section id="tab-accent" data-tab="accent" class="doc" hidden><h1>{{ACCENT_TITLE}}</h1>{{ACCENT}}</section>\n'),
+         "TABS_JS": '["plan", "architecture", "status", "accent"]', "H1_JS": '"Alaap and TrenTorch: one study plan"',
+         "KEY_JS": '"alaap.progress.v1"', "EXTRA": ""}
+
+
 def main():
     pieces, parts, pre = guide_pieces()
     used = set(sum([s.get("alaap", []) for s in plan.STAGES], [])) | {"ten-hours"}
@@ -430,9 +613,10 @@ def main():
     s_title, status = document("00-SANITY-CHECK.md", "st")
     a_title, accent = document("02-ACCENT-AND-RIGHTS.md", "ac")
     page = io.open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
-    fill = {"PLAN": plan_tab(pieces, parts, pre, figs, tt, data["milestones"]), "ARCH": arch_tab(figs, order, head),
-            "STATUS_TITLE": s_title, "STATUS": status, "ACCENT_TITLE": a_title, "ACCENT": accent,
-            "ARCH_CSS": css, "ARCH_DEFS": defs}
+    fill = dict(LOCAL)
+    fill.update({"PLAN": plan_tab(pieces, parts, pre, figs, tt, data["milestones"]), "ARCH": arch_tab(figs, order, head),
+                 "STATUS_TITLE": s_title, "STATUS": status, "ACCENT_TITLE": a_title, "ACCENT": accent,
+                 "ARCH_CSS": css, "ARCH_DEFS": defs})
     for k, v in fill.items():
         page = page.replace("{{%s}}" % k, v)
     left = re.findall(r"\{\{\w+\}\}", page)
@@ -447,4 +631,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main_public() if "--public" in sys.argv else main()

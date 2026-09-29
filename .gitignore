@@ -6,3 +6,10 @@ __pycache__/
 brand/craft-512.png
 figures/check.html
 .claude/
+
+# Private pages and extensions: local only, never published (see private/README.md)
+private/
+ALFRED.html
+
+# The public site, built by tools/build_public.py (and in CI by .github/workflows/pages.yml)
+_site/

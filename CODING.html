@@ -10,12 +10,13 @@
 <link rel="stylesheet" href="figures/viewer.css?v=d06369af">
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
 <script src="figures/icons.js?v=129ef92b"></script>
-<script src="figures/figures.js?v=b8b66284"></script>
-<script src="figures/notes.js?v=074e5fe8" defer></script>
+<script src="figures/figures.js?v=66f8622b"></script>
+<script src="figures/notes.js?v=8b66e380" defer></script>
 <script src="figures/viewer.js?v=ecb99aae" defer></script>
 <link rel="stylesheet" href="coding/sheet.css?v=ba0b44d8">
 <link rel="stylesheet" href="site/nav.css?v=5222bb0d">
-<script src="site/nav.js?v=f2cbfc37" defer></script>
+<script src="private/site.js"></script>
+<script src="site/nav.js?v=25b230b4" defer></script>
 <style>
 /* Tabs of folded sections: a pattern opens to an example, a template, problems and variations; an AI topic to its
    design, components, what to remember and what they will ask. Every size and colour is a token (site/tokens.css).
@@ -55,6 +56,9 @@ th, td { text-align: left; padding: 6px var(--s3) 6px 0; border-bottom: var(--ha
 th { color: var(--muted); font-weight: var(--w-regular); font-size: var(--fs-sm); }
 ol.how { padding-left: 22px; max-width: var(--measure); } ol.how li { margin: 0 0 var(--s2); }
 .hidden { display: none; }
+/* Visitor progress: a quiet tick before each problem and variation (coding.progress.v1, this browser only) */
+input.dn { flex: none; align-self: center; width: 15px; height: 15px; margin: 0; accent-color: var(--ok); cursor: pointer; }
+.tabs a .n + .n { margin-left: var(--s2); }
 /* A pattern or a topic: one folded section. Its title, a count, one line of what it is for. */
 details.pat { border-top: var(--hair); }
 details.pat > summary { list-style: none; cursor: pointer; padding: var(--s3) 0; display: grid; grid-template-columns: 1fr auto; gap: 0 var(--s4); }
@@ -122,6 +126,7 @@ details.sol > pre { margin: var(--s2) 0; }
     <h1 id="g-title">Algorithms and coding</h1>
     <p class="lead" id="g-blurb"></p>
     <div id="g-start">
+    <p class="spot" id="dn-note">Tick a problem or variation once you can solve it without the hint. Ticks stay in this browser; nothing is sent anywhere.</p>
     <section class="pat" id="how">
       <h2>How to code in an interview</h2>
       <ol class="how">
@@ -170,17 +175,31 @@ details.sol > pre { margin: var(--s2) 0; }
   // A problem or variation: the parts on a label rail (statement, examples, constraints, hint or what changes),
   // then the code, shut until you have tried.
   function probHtml(p, q) {
-    return '<details class="prob" data-text="' + esc((p.title + " " + q.n + " " + q.task).toLowerCase()) + '"><summary><span class="pn">' + esc(q.n) +
+    return '<details class="prob" data-text="' + esc((p.title + " " + q.n + " " + q.task).toLowerCase()) + '"><summary>' + tick(p.id + "/" + q.n, q.n) + '<span class="pn">' + esc(q.n) +
       '</span><span class="pl">' + esc(q.l) + '</span></summary><div class="pb">' + CS.partsHtml(q, [["Hint", esc(q.hint)]]) +
       '<details class="sol"><summary>Show the solution</summary><pre><code>' + hl(q.sol) + '</code></pre><p class="cx">' + esc(q.c) + "</p></details></div></details>";
   }
   function varHtml(p, v) {
-    return '<details class="prob var" data-text="' + esc((p.title + " " + v.n + " " + v.t).toLowerCase()) + '"><summary><span class="pn">' + esc(v.n) +
+    return '<details class="prob var" data-text="' + esc((p.title + " " + v.n + " " + v.t).toLowerCase()) + '"><summary>' + tick(p.id + "/v/" + v.n, v.n) + '<span class="pn">' + esc(v.n) +
       '</span><span class="pl">variation</span></summary><div class="pb">' + CS.partsHtml(v, [["What changes", md(v.t)]]) +
       '<details class="sol"><summary>Show the code</summary><pre><code>' + hl(v.code) + "</code></pre></details></div></details>";
   }
+  // Visitor progress: which problems and variations this browser has ticked. Keys are
+  // "<pattern>/<problem>" and "<pattern>/v/<variation>"; the landing page counts them.
+  var KEY = "coding.progress.v1", done = {};
+  try { done = JSON.parse(window.localStorage.getItem(KEY) || "{}").done || {}; } catch (e) { done = {}; }
+  function save() {
+    try { window.localStorage.setItem(KEY, JSON.stringify({ v: 1, done: done })); } catch (e) { /* storage blocked: ticks last until the page closes */ }
+  }
+  function tick(k, name) {
+    return '<input type="checkbox" class="dn" data-k="' + esc(k) + '" title="Mark done" aria-label="Mark done: ' + esc(name) + '"' + (done[k] ? " checked" : "") + ">";
+  }
+  function keysOf(p) {
+    return (p.probs || []).map(function (q) { return p.id + "/" + q.n; }).concat(p.vars.map(function (v) { return p.id + "/v/" + v.n; }));
+  }
+  function countDone(keys) { return keys.filter(function (k) { return done[k]; }).length; }
   function head(p, count) {
-    return '<details class="pat" id="' + p.id + '" data-group="' + groupOf(p) + '"><summary><span class="pt">' + esc(p.title) + '</span><span class="pc">' + count +
+    return '<details class="pat" id="' + p.id + '" data-group="' + groupOf(p) + '"><summary><span class="pt">' + esc(p.title) + '</span><span class="pc" data-count="' + esc(count) + '">' + count +
       '</span><span class="ps">' + p.sheet.spot + '</span></summary><div class="pat-body"><p class="spot">' + p.spot + "</p>" + (p.ex ? CS.stHtml(null, [["Example", CS.ioHtml(p.ex), "r-ex"]]) : "");
   }
   function patHtml(p) {
@@ -216,6 +235,29 @@ details.sol > pre { margin: var(--s2) 0; }
     var n = P.filter(function (p) { return groupOf(p) === g.id; }).length;
     return '<a href="#' + g.id + '" data-g="' + g.id + '">' + g.title + (n ? '<span class="n">' + n + "</span>" : "") + "</a>";
   }).join("");
+  // The done counts: after each pattern's own count, and beside each tab's number.
+  function drawCounts() {
+    P.forEach(function (p) {
+      var pc = host.querySelector("#" + p.id + " > summary .pc"), n = countDone(keysOf(p));
+      if (pc) { pc.textContent = pc.getAttribute("data-count") + (n ? ", " + n + " done" : ""); }
+    });
+    GROUPS.forEach(function (g) {
+      var keys = [].concat.apply([], P.filter(function (p) { return groupOf(p) === g.id; }).map(keysOf));
+      var a = tabs.querySelector('a[data-g="' + g.id + '"]'), n = countDone(keys), el = a && a.querySelector(".dn-n");
+      if (!a || !keys.length) { return; }
+      if (!el) { el = document.createElement("span"); el.className = "n dn-n"; a.appendChild(el); }
+      el.textContent = n ? n + "/" + keys.length : "";
+      el.title = n + " of " + keys.length + " problems and variations done";
+    });
+  }
+  host.addEventListener("change", function (e) {
+    var k = e.target.getAttribute && e.target.getAttribute("data-k");
+    if (!k) { return; }
+    if (e.target.checked) { done[k] = new Date().toISOString(); } else { delete done[k]; }
+    save();
+    drawCounts();
+  });
+  drawCounts();
   var cur = "start";
   function setHead(title, blurb) {
     document.getElementById("g-title").textContent = title;

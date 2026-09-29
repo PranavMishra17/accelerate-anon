@@ -33,10 +33,6 @@ guide, al: the Alaap page.
 - **sd:email-agent:email-and-calendar-agent-high-level-desi**: No edge shows what happens when the gate blocks an action outright rather than requiring confirmation or clarification; every outgoing edge from gate (notify, trace, outbox) is a path where the action proceeds in some form or is only logged.
 - **sd:coding-agent:cloud-coding-agent-high-level-design**: No edge shows a task being marked complete once the PR opens; completion presumably rides on the same events stream as ordinary progress updates, but the diagram doesn't distinguish the two.
 - **sd:ticketmaster:ticketmaster-high-level-design**: No path shows seat availability reaching the CDN-cached event pages; a cached page could keep showing a seat as available after it has been held or sold, until the page's own cache TTL expires.
-- **sd:alfred:background-pipeline-dana-mail-in-actions**: No edge connects draft (where the reply text is written) to user or send; pend>draft shows a draft being written and user>send shows the user approving one, but nothing in between shows how the drafted reply actually reaches the user for review.
-- **sd:alfred:one-chat-turn-sms-shown-web-and-mcp-ente**: turn>trace is drawn as one edge but stands for two separate events, opening the trace at the start of the turn and closing it at the end, which the single arrow doesn't distinguish.
-- **sd:alfred:alfred-high-level-design**: No edge from follow (the follow-up family) to notify; briefs has an edge to notify showing how a brief reaches the user, but follow-ups have no equivalent path shown.
-- **sd:alfred:what-one-tool-call-passes-through**: The diagram draws one path from the capability gate through preview and confirm for every call, regardless of whether it is a read, write, or bulk operation; presumably only some calls actually pause for user confirmation, but the diagram doesn't branch to show that.
 - **sd:kitaru:kitaru-high-level-design**: No edge shows an evaluator's score being written back to Postgres; plug is only ever spawned by the worker, with no path back to persist what an evaluator actually found.
 - **sd:scaling-reads:read-path-progression**: No routing rule is shown for a read right after that same client's own write; app>primary and app>replicas both exist with nothing distinguishing the read-your-writes case from an ordinary read that can tolerate replica lag.
 - **sd:denormalize**: The insert and the increment are two separate writes with nothing shown to keep them atomic; a crash between them leaves the precomputed count wrong until something reconciles it.
@@ -135,4 +131,4 @@ guide, al: the Alaap page.
 ## Not yet reviewed
 
 The figures added since 26 September have had no review pass: the thirteen AI systems
-figures on the coding page (`numpyShapes` to `lora`), `alfredDeploy` and `alfredMemory`.
+figures on the coding page (`numpyShapes` to `lora`).

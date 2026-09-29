@@ -10,13 +10,11 @@
 </p>
 
 <p align="center">
-  <a href="https://pranavmishra17.github.io/self-study/">Tracker</a> ·
+  <a href="https://pranavmishra17.github.io/self-study/">The public toolkit</a> ·
   <a href="https://pranavmishra17.github.io/self-study/SYSTEM%20DESIGN.html">System design guide</a> ·
   <a href="https://pranavmishra17.github.io/self-study/CODING.html">Algorithms and coding</a> ·
   <a href="https://pranavmishra17.github.io/self-study/CHEATSHEET.html">Cheat sheet</a> ·
-  <a href="https://pranavmishra17.github.io/self-study/ALAAP.html">Alaap and TrenTorch</a> ·
-  <a href="https://pranavmishra17.github.io/self-study/ALFRED.html">alfred_</a> ·
-  <a href="https://pranavmishra17.github.io/self-study/interviews/zenml-round3.html">An interview loop</a>
+  <a href="https://pranavmishra17.github.io/self-study/DEEP-LEARNING.html">Deep learning from scratch</a>
 </p>
 
 ---
@@ -25,9 +23,10 @@
 
 Pranav Mishra's plan for 2026 to 2027: systems vocabulary, the mathematics under machine
 learning, PyTorch from first principles, and preparation for the interviews that interrupt
-all three. It is public so the method and the material can be reused. Every page works
-straight from GitHub Pages, and the study content (the system design guide, the figures,
-the reading lists) is useful on its own without following the plan.
+all three. It is public so the method and the material can be reused. The pages useful
+to anyone (the system design guide, the coding page and its cheat sheet, the deep learning
+path) are published as a toolkit of their own (see Public site); the tracker and the pages
+tied to the plan run locally.
 
 The problem it is built around: a year of production work teaches you what works and never
 makes you explain why. Plans to fix that usually die at the first interview sprint, when
@@ -42,17 +41,37 @@ figure is drawn once and shown by key, a story or an answer has one home.
 
 | | Page | What you get |
 |:---:|---|---|
-| <img src="brand/accelerate.svg" width="40" alt=""> | **[Tracker](https://pranavmishra17.github.io/self-study/)**<br>`index.html` | Five weeks of sessions (systems, mathematics, audio ML), each a list of steps. A step opens to what the idea is, a figure you can take apart, what to read with minutes, the system design technique it uses, and the answer, hidden until you have tried. Open-question quizzes, a drill deck, printable sheets, a map of the year. |
-| <img src="brand/system-design.svg" width="40" alt=""> | **[System design guide](https://pranavmishra17.github.io/self-study/SYSTEM%20DESIGN.html)**<br>`SYSTEM DESIGN.html` | A six-step framework, fifteen deep-dive patterns with nearly a hundred techniques, each with its own mechanism diagram, and seven designs worked end to end (NotebookLM, prior authorisation, an email agent, a coding agent, Ticketmaster, alfred_, Kitaru). A design reads one step at a time, in tabs with a sticky step bar; arrow keys and a swipe move between steps, and long boards open folded. |
+| <img src="brand/accelerate.svg" width="40" alt=""> | **Tracker** (local)<br>`index.html` | Five weeks of sessions (systems, mathematics, audio ML), each a list of steps. A step opens to what the idea is, a figure you can take apart, what to read with minutes, the system design technique it uses, and the answer, hidden until you have tried. Open-question quizzes, a drill deck, printable sheets, a map of the year. |
+| <img src="brand/system-design.svg" width="40" alt=""> | **[System design guide](https://pranavmishra17.github.io/self-study/SYSTEM%20DESIGN.html)**<br>`SYSTEM DESIGN.html` | A six-step framework, fifteen deep-dive patterns with nearly a hundred techniques, each with its own mechanism diagram, and six designs worked end to end (NotebookLM, prior authorisation, an email agent, a coding agent, Ticketmaster, Kitaru). A design reads one step at a time, in tabs with a sticky step bar; arrow keys and a swipe move between steps, and long boards open folded. |
 | <img src="brand/system-design.svg" width="40" alt=""> | **[Algorithms and coding](https://pranavmishra17.github.io/self-study/CODING.html)**<br>`CODING.html` | Fourteen coding patterns in three tabs, every problem written out in full with two worked examples and constraints, and variations of each; plus an AI systems tab: fourteen topics beyond LeetCode (NumPy, PyTorch, embeddings and vector search, RAG over a parser, GraphRAG, an agent loop, a research agent, a voice pipeline, a transformer block, BPE, evals, structured output, serving, LoRA), each as its design, a figure, a skeleton per component, what to remember and what they ask, and a card of AI-flavoured coding. All code runs offline and is tested. The **[cheat sheet](https://pranavmishra17.github.io/self-study/CHEATSHEET.html)** is the same material on one screen, and works on a phone. |
-| <img src="brand/alaap.svg" width="40" alt=""> | **[Alaap and TrenTorch](https://pranavmishra17.github.io/self-study/ALAAP.html)**<br>`ALAAP.html` | A linear plan of twenty-two stages from tensors and autograd to a speech model: for each stage, the goal, a diagram, the module to build, and an exit check with its answer. Generated. |
-| <img src="brand/accelerate.svg" width="40" alt=""> | **[alfred_](https://pranavmishra17.github.io/self-study/ALFRED.html)**<br>`ALFRED.html` | Your own system, for a refresh before any interview: where it runs, one SMS end to end and memory in three kinds; the system layer by layer, each with its figure, the nuances and the numbers; the stories in your own words; and the questions they keep asking. Facts are checked against the alfred_ code. Generated from `alfred/content.py`. |
-| <img src="brand/accelerate.svg" width="40" alt=""> | **[Interviews](https://pranavmishra17.github.io/self-study/INTERVIEWS.html)**<br>`INTERVIEWS.html`, `interviews/` | The hub: a card per loop, newest first, with its date, total hours, how much is done, and links to the job post and the company. Then one page per loop: the brief, what to say and how to say it, timed spoken drills, a technical question bank with figures and reading, questions to ask, traps, their system drawn from source and set against yours, and mocks. Your own system lives on the alfred_ page; the ZenML page is also the home for what you learned about Kitaru. |
+| <img src="brand/alaap.svg" width="40" alt=""> | **Alaap and TrenTorch** (local)<br>`ALAAP.html` | A linear plan of twenty-two stages from tensors and autograd to a speech model: for each stage, the goal, a diagram, the module to build, and an exit check with its answer. Generated. Its public form is **[Deep learning from scratch](https://pranavmishra17.github.io/self-study/DEEP-LEARNING.html)** (`DEEP-LEARNING.html`, `python alaap/build.py --public`): twenty-three stages in three parts, with nothing personal in it. |
+| <img src="brand/accelerate.svg" width="40" alt=""> | **Interviews** (local)<br>`INTERVIEWS.html`, `interviews/` | The hub: a card per loop, newest first, with its date, total hours, how much is done, and links to the job post and the company. Then one page per loop: the brief, what to say and how to say it, timed spoken drills, a technical question bank with figures and reading, questions to ask, traps, their system drawn from source and set against yours, and mocks. The ZenML page is also the home for what you learned about Kitaru. |
 
 **Every diagram can be explored.** Click one and it opens full screen. Hover a box or an
 arrow for a one-line note; click it for a plain explanation in the context of that figure,
 with links to where it is taught. **Walk through** steps the flow one part at a time; arrow
 keys move, Escape closes. More than two hundred diagrams have notes on every part.
+
+## Public site
+
+GitHub Pages serves a toolkit built from `main`, not the repo as it is. On every push,
+`.github/workflows/pages.yml` runs `python tools/build_public.py`, which writes `_site/`
+(gitignored) from an allowlist and deploys it: a landing page written by the script, then
+`SYSTEM DESIGN.html`, `CODING.html`, `CHEATSHEET.html` and `DEEP-LEARNING.html`, and only
+the files they load. In each copied page the `private/` script tags and every region between
+`/* local-only */` and `/* end local-only */` are cut, and `window.SITE_PUBLIC = true` is set
+before `site/nav.js`, so the badges list the public pages and the guide hides its links into
+the tracker. Figure notes lose links into pages that are not published. The build then reads
+every published file back and fails on a private name, a link to an unpublished page
+(`INTERVIEWS.html`, `interviews/`, `ALAAP.html`, tracker routes), a local path, a personal
+name, or a local link that does not resolve.
+
+The landing page shows each visitor's own progress, read from their browser: the guide's
+visited steps, the coding problems they ticked (`coding.progress.v1`) and the deep learning
+stages (`dl.progress.v1`). Nothing is sent anywhere. `DEEP-LEARNING.html` needs local Alaap
+and TrenTorch checkouts to build, so it is committed and the workflow only copies it.
+
+Run `python tools/build_public.py` and serve `_site/` to see the public site locally.
 
 ## The method
 
@@ -79,8 +98,9 @@ building this, and the shape all new material takes.
 
 ## Make it yours
 
-1. **Fork it and turn on GitHub Pages** (Settings, Pages, deploy from `main`). There is
-   nothing to install. A `.nojekyll` file makes Pages serve the files as they are.
+1. **Fork it and turn on GitHub Pages** (Settings, Pages, source "GitHub Actions"). The
+   workflow publishes the public toolkit (see Public site); to publish something else, edit
+   the allowlist in `tools/build_public.py`.
 2. **Rewrite the plan.**
    - The charter and the milestone are prose: `CHARTER.md`, `MILESTONE-1.md`,
      `ROADMAP-AHEAD.md`.
@@ -96,8 +116,8 @@ building this, and the shape all new material takes.
    Windows, `study.cmd` does both.
 
 **Progress** lives in the browser's localStorage under `selfstudy.m1.planner`, separately
-for each address: `localhost:8000`, `127.0.0.1:8000`, a `file://` page and the GitHub Pages
-copy are four separate stores. Export from the Data page and commit the file into
+for each address: `localhost:8000`, `127.0.0.1:8000` and a `file://` page are three separate
+stores. Export from the Data page and commit the file into
 `progress/`; that is the only durable copy.
 
 ## Using the tracker
@@ -116,7 +136,7 @@ copy are four separate stores. Export from the Data page and commit the file int
 - **The home page** opens on where you are and the next session, with three numbers that
   move every time you work (hours in, sessions closed, this week against the floor) and, beside
   the Start button, a badge for each reference: System design, Coding, Cheat sheet, Alaap,
-  alfred_, Interviews. Then the five weeks in a row with the wildcard, three open questions
+  Interviews. Then the five weeks in a row with the wildcard, three open questions
   for today, and the map of the work ahead. Every other page carries the same badges in its
   header, from one file (`site/nav.js`), so each page can reach the others.
 - **The wildcard** (`#/wild`) is one list of open sessions, with done ones hidden behind a
@@ -154,14 +174,14 @@ copy are four separate stores. Export from the Data page and commit the file int
 
 | Command | What it rebuilds |
 |---|---|
-| `python tools/rebuild.py` | Everything below in the right order, then every check; stops at the first failure. `--alaap` adds the Alaap build. |
+| `python tools/rebuild.py` | Everything below in the right order, then every check, then the public site; stops at the first failure. `--alaap` adds both Alaap builds. |
+| `python tools/build_public.py` | `_site/`, the public site, from its allowlist, then its checks (see Public site). |
 | `python interviews/build.py <module>` | One loop's page, `interviews/<loop>.html`, from `interviews/<module>.py` (`zenml_round3`, `mphasis`, `oxus`). |
 | `python interviews/hub.py` | `INTERVIEWS.html`, the hub, from every loop module and the tracker's sessions. |
-| `python alfred/build.py` | `ALFRED.html` from `alfred/content.py`. Never edit the page by hand. |
 | `python figures/stamp.py` | The cache-busting hashes on the figure and site files, in the tracker, the guide and `CODING.html`. |
 | `python coding/build_sheet.py` | `CHEATSHEET.html`, one self-contained file (data, code, figures and fonts inlined) to send anyone. |
 | `python coding/test_data.py` | Runs every code block in `coding/data.js` and re-checks each statement's examples. |
-| `python alaap/build.py` | `ALAAP.html` from `alaap/plan.py`, the Alaap repo's `learning/` folder and a local TrenTorch checkout. Never edit the page by hand. |
+| `python alaap/build.py` | `ALAAP.html` from `alaap/plan.py`, the Alaap repo's `learning/` folder and a local TrenTorch checkout. Never edit the page by hand. `--public` builds `DEEP-LEARNING.html` instead. |
 | `node figures/check.js` | Checks every figure renders and every part has a note. Writes `figures/check.html`, a gallery. |
 | `python fonts/fetch.py` | The typefaces in `fonts/`, so the pages look the same offline. |
 | `python brand/render.py` | The icon and favicons from `brand/accelerate.svg`, through headless Edge. |

@@ -7,13 +7,16 @@
 <link rel="stylesheet" href="site/tokens.css?v=0e3b75d2">
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="site/nav.css?v=5222bb0d">
-<script src="site/nav.js?v=f2cbfc37" defer></script>
+<script src="site/nav.js?v=25b230b4" defer></script>
 <link rel="stylesheet" href="figures/viewer.css?v=d06369af">
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
 <script src="figures/icons.js?v=129ef92b"></script>
-<script src="figures/figures.js?v=b8b66284"></script>
-<script src="figures/notes.js?v=074e5fe8" defer></script>
-<script src="figures/notes-sd.js?v=6831da86" defer></script>
+<script src="private/site.js"></script>
+<script src="figures/figures.js?v=66f8622b"></script>
+<script src="private/figures.js"></script>
+<script src="figures/notes.js?v=8b66e380" defer></script>
+<script src="figures/notes-sd.js?v=12b71940" defer></script>
+<script src="private/notes.js" defer></script>
 <script src="figures/viewer.js?v=ecb99aae" defer></script>
 <link rel="icon" type="image/svg+xml" href="brand/system-design.svg">
 <style>
@@ -613,13 +616,13 @@ const GUIDE = {
       tabPatterns: "Patterns",
       tabDesigns: "Designs",
       frameworkTitle: "System design delivery, worked end to end",
-      frameworkLede: "Seven designs run through the six-step delivery framework. Every step shows what should be on your whiteboard when the step ends, how to reason your way there, and what to say out loud. Four designs are agentic, Ticketmaster is the classic baseline for contrast, alfred_ is a shipped agent read from its own code, and Kitaru is an agent-eval product read from its source.",
+      frameworkLede: "Six designs run through the six-step delivery framework. Every step shows what should be on your whiteboard when the step ends, how to reason your way there, and what to say out loud. Four designs are agentic, Ticketmaster is the classic baseline for contrast, and Kitaru is an agent-eval product read from its source.",
       endProduct: "On the board: ",
       onwardTitle: "Where to go next",
       onwardPatterns: "Fifteen recurring deep-dive problems. Each one opens with a diagram, then every technique with its own mechanism diagram.",
-      onwardDesigns: "Seven designs worked through all six steps, each ending with the patterns it uses and why.",
+      onwardDesigns: "Six designs worked through all six steps, each ending with the patterns it uses and why.",
       designsTitle: "Worked designs",
-      designsLede: "Each design runs through the same six steps, then lists the deep-dive patterns it uses. Four are agentic, Ticketmaster is the classic baseline for contrast, alfred_ is a shipped agent read from its own code, and Kitaru is an agent-eval product read from its source.",
+      designsLede: "Each design runs through the same six steps, then lists the deep-dive patterns it uses. Four are agentic, Ticketmaster is the classic baseline for contrast, and Kitaru is an agent-eval product read from its source.",
       designsNav: "Designs",
       allDesigns: "All designs",
       stepsInDesign: "Steps in this design",
@@ -2939,423 +2942,21 @@ POST /v1/bookings/{bookingId}/confirm       body: { payment_token }
 });
 
 GUIDE.examples.push({
-  id: "alfred",
-  tabLabel: "alfred_ (real system)",
-  title: "alfred_",
-  kind: "A shipped email and calendar agent, read from its own code",
-  home: {
-    text: "Where the agent runs, one SMS end to end, and memory across conversations now live on their own page.",
-    label: "The three answers, the figures and the stories: alfred_ page",
-    href: "ALFRED.html#start"
-  },
-  prompt: "Design alfred_. It watches a user's inboxes and calendars, acts on mail without being asked (archive, label, draft, notify), and answers the user over SMS, web chat, and an MCP connector with tools over email, calendar, tasks, and memory.",
-  lens: [
-    "This is the email agent example as it actually shipped: one Postgres, about 370 Deno edge functions, about 250 cron registrations, a few long-running containers on Railway, and one tool package that every surface imports. The interesting design is what sits around the model, not the model.",
-    "Two loops share one tool layer. A conversational agent the user talks to, and a background pipeline that watches the mailbox and acts alone. The pipeline never sends mail; only a user-approved path does.",
-    "Every claim below is grounded in a file path. Where the design cut a corner, the corner is named, because the corners are where the interviewer's follow-ups live."
-  ],
-  steps: {
-    requirements: {
-      board: [
-        { type: "list", title: "Functional (top 3)", ordered: true, items: [
-          "Act on inbound mail without being asked: classify each email, then archive, label, move, draft a reply, or notify the user by SMS.",
-          "Converse with the user over SMS, web chat, and MCP, with tools that read and write email, calendar, tasks, notes, and memory.",
-          "Produce briefs from the mailbox: a working-memory brief, a morning briefing, and follow-up nudges on open loops."
-        ]},
-        { type: "list", title: "Out of scope for the interview", items: [
-          "Billing (Stripe), onboarding scans, the team workspace, voice calls, semantic search, and the ~40 lifecycle and monitoring emails. They exist; they are not the hard problem."
-        ]},
-        { type: "defs", title: "Non-functional (quantified)", items: [
-          { term: "Action safety", desc: "The background pipeline never sends an email. A send happens only through `donna-send-approved-draft` after the user approves. Silent actions are limited to archive, mark read, label, move, and are reversible." },
-          { term: "No double action", desc: "One turn per conversation at a time (a row lease), one job claim at a time (`SKIP LOCKED`), and idempotency keys on write tools, because SMS webhooks and MCP clients both retry." },
-          { term: "Cost per turn", desc: "The cacheable prompt prefix is ~107k tokens per model call. Target: above 90% cache hit inside the TTL. Measured: 91.4% inside 5 minutes at $0.38 per Mtok, 62% outside it at $1.04." },
-          { term: "SMS latency", desc: "Return 200 to the SMS webhook fast, do the work off the request. First-ack time is stamped on every turn trace." },
-          { term: "Pipeline completeness", desc: "Every INBOX message reaches triage. A monitor samples the provider against staging, because a stage-to-stage diff cannot see the mail that never entered the pipeline." },
-          { term: "Quality gate", desc: "A production scanner turns real failing turns into eval cases. Prompt, model, and tool changes replay against them." }
-        ]},
-        { type: "math", title: "Math that changed a decision", lines: [
-          "Chat runs ~310 turns per day fleet-wide, one every ~4.6 minutes.",
-          "A cache write costs 1.25x input; a 5-minute TTL expires between most users' turns.",
-          "Another user's turn inside 5 minutes warms the shared prefix: 70.8% cached versus 57.8% alone, 27% cheaper per token.",
-          "So Block 1 is fleet-shared (byte-identical for every user) and stamped with a 1-hour TTL."
-        ], conclusion: "The prompt layout is a cost decision, not a prompt-engineering one. Say that in step 1 and the interviewer knows you have run a fleet." }
-      ],
-      reasoning: [
-        "Three requirements, three runtimes: a request-driven chat turn, a cron-and-queue-driven pipeline, and scheduled generators for briefs.",
-        "The headline non-functional is action safety, and it is a structural rule (no send path in the executor), not a threshold.",
-        "Do the token math because it picks the prompt layout. Skip QPS math; this fleet is small and Postgres is not the bottleneck."
-      ],
-      script: [
-        "alfred_ does three things: it acts on mail by itself, it talks to the user with tools, and it writes briefs. Everything else is plumbing around those three.",
-        "The non-functional that matters most is action safety: the pipeline may archive or label on its own, and it may draft, but it can never send. Sending is a separate function that only runs after approval.",
-        "Second is no double action. SMS webhooks retry, MCP clients retry, and two isolates can wake for the same conversation, so I need leases and idempotency keys, not hope.",
-        "Third is cost. The tool catalog alone is about a hundred thousand tokens per call, so prompt caching is the difference between a viable product and not. I will do that math now because it decides the prompt layout."
-      ],
-      contrast: "Same skeleton as the email-agent example, with the numbers filled in from production. The difference from a whiteboard design: the safety requirement is enforced by which function has a send path, not by a risk score."
-    },
-
-    entities: {
-      board: [
-        { type: "defs", title: "Business entities", items: [
-          { term: "User, Account", desc: "A user connects up to six Gmail, Outlook, or IMAP accounts, plus calendars, Zoom, Slack, Teams." },
-          { term: "Message, Thread, Event", desc: "Provider-owned. alfred_ stores staging copies and references (`thread_ref`, `event_ref`), not a full mirror." },
-          { term: "EmailRule", desc: "`user_email_rules`: a deterministic match (sender, subject, folder) to an action (archive, label, move, forward, draft, notify). Fires before the model sees the mail." },
-          { term: "Draft, Todo, Note, Fact", desc: "What the agent creates. Facts are the memory the user can read and edit." }
-        ]},
-        { type: "defs", title: "Execution entities (the ones that carry the hard problems)", items: [
-          { term: "PendingAction", desc: "`donna_pending_actions`: what triage decided for one email. Carries the category, the autonomy level, the rule that matched, `status` (including `queued`), and `background_effect_verified_at`. The contended entity." },
-          { term: "AgentJob", desc: "`v6_agent_jobs`: one unit of work for the SMS engine (`process_turn`, `bulk_email_action`). Claimed atomically, one at a time." },
-          { term: "TurnTrace, ToolExecution", desc: "`v6_turn_traces` and `v6_tool_executions`: one row per turn and per tool call, with latency stamps, cache hits, and preview status. The eval scanner reads these." },
-          { term: "Effect", desc: "`turn_effects` and `side_effects`: the ledger of what actually changed in the world. The ground truth for any behavioural assertion; the assistant's text is not." },
-          { term: "AttentionItem, WorkingMemoryBrief", desc: "Open loops and the brief built from them. Knowledge entities for the briefing surfaces." }
-        ]},
-        { type: "defs", title: "Memory across conversations: three kinds", items: [
-          { term: "The conversation", desc: "The last 30 messages, trimmed to 6,000 tokens, as the transcript; a rolling summary every 8 messages and the three most related past chats in the per-turn block." },
-          { term: "Facts", desc: "`v6_user_facts`: written by the agent's remember and update tools and by an extraction job every 12 messages; up to 40 in the cached per-user block; the user can correct them." },
-          { term: "Working memory", desc: "`working_memory_items`: one row per loop (owed reply, awaited reply, obligation), built by scheduled reconcilers in code; fetched on demand by `working_memory_lookup`, not placed in every prompt." }
-        ]}
-      ],
-      reasoning: [
-        "Call out PendingAction as the contended entity now. Two consumers (executor and drafter) and one reverser all move its status.",
-        "Separate what the model decided (PendingAction) from what happened (Effect). Every later dive leans on that split."
-      ],
-      script: [
-        "Business nouns first: User, Account, Message, Thread, Event, EmailRule, Draft, Todo, Fact.",
-        "Then the execution nouns, which are where the design lives: PendingAction is triage's decision for one email, AgentJob is one unit of chat work, TurnTrace and ToolExecution are the trace, and Effect is the ledger of what actually changed.",
-        "PendingAction is the contended one. The executor, the drafter, the reverser, and the user all move its status."
-      ],
-      contrast: "The email-agent example names Run, Step, Action, Trace. In the shipped system the split that matters is decision versus effect: `donna_pending_actions` says what the model chose; `turn_effects` says what the world did."
-    },
-
-    api: {
-      board: [
-        { type: "code", title: "User-facing contracts (three surfaces, one brain)", code: `
-# SMS (Linq webhook -> conv-v6/ingress)
-POST /functions/v1/conv-v6-ingress     body: signed Linq envelope
-  -> 200 immediately; inserts v6_agent_jobs{kind: process_turn}
-  (job-worker claims it; conv-v6/turn does the work; reply goes back via Linq)
-
-# Web chat (alfred-web -> conv-v6-web), JWT user
-POST /functions/v1/conv-v6-web         body: { conversation_id, message }
-  -> text/event-stream: connected, status{tool_start|tool_end}, delta, data{structuredData}, done
-
-# MCP (Claude -> alfred-web /api/mcp -> mcp-exec), alf_mcp_* API token
-POST /functions/v1/mcp-exec            body: { op: "call", tool, input }
-  -> { ok, data } | { ok:false, code, message, retryable }
-  writes return requires_confirmation:true first; call again with confirmed:true
-` },
-        { type: "code", title: "Tool interface (packages/tools ToolDef), what every surface calls", code: `
-ToolDef {
-  name, description, schema (zod),
-  capability: "read" | "write" | "bulk",   // gate + confirmation policy
-  idempotent?: true, idempotencyKey?(input)  // replay-safe writes
-  execute(input, ctx: ToolContext)          // ctx.db is service-role, scoped by user_id
-}
-// Surfaces do not call execute(). They call compose(tool), which wraps it in:
-// schemaValidation -> capabilityGate -> preview -> confirmationPolicy
-//   -> idempotency -> conflictCheck -> toolExecutionLog -> entityEmission
-//   -> proceduralObservation -> timeout
-` },
-        { type: "list", title: "Choices to state out loud", items: [
-          "The SMS surface is 202-shaped even though it returns 200: the webhook is acknowledged and the turn runs later from a job row.",
-          "Web is one SSE stream with the old frame protocol kept on purpose, so the client did not change when the brain did.",
-          "MCP is the same tool registry behind an allowlist. The web route holds no service key; the edge function resolves the API token to a user and runs the tool as that user.",
-          "Every write tool declares its side-effect class. The wrapper stack, not the model, decides whether it previews, confirms, or replays."
-        ]}
-      ],
-      reasoning: [
-        "Map each functional requirement to an entry point. Chat has three doors and one brain; the pipeline has no API at all, it is cron and queues.",
-        "The second contract is the tool interface. Put the wrapper order on the board; it is the safety design in one line."
-      ],
-      script: [
-        "Three doors, one brain. SMS arrives as a signed webhook that I acknowledge immediately and turn into a job. Web is a JWT call that streams events. MCP is an API token resolved to a user, running the same tools behind an allowlist.",
-        "The second contract is the tool interface. A tool declares its schema, its capability class, and whether it is idempotent. No surface calls a tool directly; they all go through one compose function that validates, gates, previews, confirms, and replays.",
-        "That ordering is the action-safety design. I will come back to it in the deep dives."
-      ],
-      contrast: "The whiteboard version says 'two contracts'. The shipped version has three doors and one tool contract, and the cost of forgetting the wrapper stack is documented: the first MCP version called execute() raw and would have double-booked meetings on a retry."
-    },
-
-    dataflow: {
-      board: [
-        { type: "diagram", title: "Background pipeline (DANA): mail in, actions out", nodes: [
-          { id: "prov", label: "Gmail, Outlook, IMAP", sub: "provider APIs", col: 0, row: 1, tone: "external" },
-          { id: "push", label: "ingress-* webhooks", sub: "push, 5 functions", col: 1, row: 0, tone: "service" },
-          { id: "pull", label: "donna-email-poller", sub: "pull, cron", col: 1, row: 2, tone: "service" },
-          { id: "bus", label: "pgmq event bus", sub: "email.received", col: 2, row: 0, tone: "queue" },
-          { id: "cons", label: "Staging consumer", sub: "gate, skip, fetch body", col: 3, row: 0, tone: "service" },
-          { id: "stage", label: "donna_inbox_staging", sub: "idempotent upsert", col: 3, row: 1, tone: "store" },
-          { id: "rules", label: "Email rules", sub: "deterministic match", col: 4, row: 0, tone: "guard" },
-          { id: "triage", label: "donna-triage", sub: "category + autonomy", col: 4, row: 1, tone: "model" },
-          { id: "pend", label: "Pending actions", sub: "donna_pending_actions", col: 5, row: 1, tone: "store" },
-          { id: "exec", label: "Action executor", sub: "archive, label, move", col: 6, row: 0, tone: "service" },
-          { id: "draft", label: "donna-worker", sub: "writes the draft", col: 6, row: 1, tone: "model" },
-          { id: "notify", label: "Notify SMS", sub: "important, fyi", col: 6, row: 2, tone: "service" },
-          { id: "send", label: "Send approved draft", sub: "only after user approval", col: 5, row: 3, tone: "guard" },
-          { id: "user", label: "User", sub: "SMS, app, email", col: 6, row: 3, tone: "human" },
-          { id: "rev", label: "Reverser + reconciler", sub: "undo, verify effect", col: 4, row: 2, tone: "service" },
-          { id: "mon", label: "Completeness monitor", sub: "provider vs staging", col: 2, row: 2, tone: "guard" }
-        ], edges: [
-          { from: "prov", to: "push", label: "watch", async: true },
-          { from: "pull", to: "prov", label: "list changes" },
-          { from: "push", to: "bus" },
-          { from: "bus", to: "cons", label: "rollout_pct", async: true },
-          { from: "cons", to: "stage", label: "upsert" },
-          { from: "pull", to: "stage", label: "upsert" },
-          { from: "stage", to: "triage", label: "batch" },
-          { from: "rules", to: "triage", label: "rule fires first" },
-          { from: "triage", to: "pend", label: "one row per email" },
-          { from: "pend", to: "exec", label: "execute_silent" },
-          { from: "pend", to: "draft", label: "draft" },
-          { from: "pend", to: "notify", label: "execute_inform" },
-          { from: "exec", to: "prov", label: "write back", bend: -140, async: true },
-          { from: "notify", to: "user", label: "text" },
-          { from: "user", to: "send", label: "approve" },
-          { from: "send", to: "prov", label: "send once", bend: 120, async: true },
-          { from: "rev", to: "pend", label: "reverse, verify" },
-          { from: "mon", to: "stage", label: "sample", async: true }
-        ]},
-        { type: "list", title: "Steps, tagged", ordered: true, items: [
-          "**Ingest (code).** Push webhooks land on a pgmq queue; a consumer gates the user (entitlement, onboarding, deletion, two circuit breakers), applies skip filters (calendar invites, self-mail, older than 48h), fetches the body, and upserts into staging. A cron poller covers the accounts without push, using the same upsert.",
-          "**Rule match (code).** `user_email_rules` runs deterministically inside triage before any model call. A rule fire is recorded on the pending action with `rule_id`.",
-          "**Triage (model).** Batched, one call per user batch, on Gemini 3.1 Flash Lite by default (it was 2.5 Flash), with a live dial (`triage_model_rollout_pct`) that moves a per-user cohort to an OpenAI model. Output per email: a category (archive, important, fyi, draft) and an autonomy level (`execute_silent`, `execute_inform`, `suggested`). A cheap-tier router sends obvious batches to a smaller model; a shadow path scores a candidate model on the same batch.",
-          "**Persist decision (code).** One `donna_pending_actions` row per email. Money extraction, security-email detection, and sender relationship run alongside as code with model fallbacks.",
-          "**Execute silent (code).** The executor performs archive, mark read, label, move against the provider. It has no send path by construction.",
-          "**Draft (model).** The worker writes a reply in the user's voice from exemplars; the user sees it as a pending draft in chat or the app.",
-          "**Notify (code).** Important and fyi items go to the user by SMS through the same Linq path chat uses, subject to quiet hours and per-category preferences.",
-          "**Send (code, gated).** Only `donna-send-approved-draft` sends, and only after the user approves. Sent mail is polled back so open loops close.",
-          "**Verify and reverse (code).** A reconciler checks the provider for the effect and stamps `background_effect_verified_at`; a reverser undoes a silent action the user rejects."
-        ]},
-        { type: "diagram", title: "One chat turn (SMS shown; web and MCP enter at the turn)", nodes: [
-          { id: "linq", label: "Linq SMS", sub: "signed webhook", col: 0, row: 1, tone: "external" },
-          { id: "ing", label: "conv-v6 ingress", sub: "HMAC, dedupe, persist", col: 1, row: 1, tone: "service" },
-          { id: "jobs", label: "v6_agent_jobs", sub: "claim via SKIP LOCKED", col: 2, row: 1, tone: "queue" },
-          { id: "turn", label: "conv-v6 turn", sub: "lease, trace, context", col: 3, row: 1, tone: "orchestrator" },
-          { id: "prompt", label: "Prompt builder", sub: "4 blocks, 3 cache breaks", col: 3, row: 0, tone: "service" },
-          { id: "loop", label: "Agent graph", sub: "LangGraph, 12 on SMS", col: 4, row: 1, tone: "orchestrator" },
-          { id: "model", label: "Model stack", sub: "sonnet, opus, haiku", col: 4, row: 0, tone: "model" },
-          { id: "wrap", label: "compose() wrappers", sub: "gate, preview, replay", col: 5, row: 1, tone: "guard" },
-          { id: "tools", label: "packages/tools", sub: "ToolDef registry", col: 6, row: 1, tone: "service" },
-          { id: "prov", label: "Providers", sub: "mail, calendar, Zoom", col: 6, row: 0, tone: "external" },
-          { id: "guards", label: "Turn guards", sub: "fabrication, claims", col: 4, row: 2, tone: "guard" },
-          { id: "trace", label: "Turn trace", sub: "v6_turn_traces", col: 3, row: 2, tone: "store" },
-          { id: "texec", label: "Tool executions", sub: "+ turn_effects ledger", col: 6, row: 2, tone: "store" },
-          { id: "out", label: "Outbound", sub: "tone filter, Linq send", col: 2, row: 2, tone: "service" },
-          { id: "msgs", label: "linq_messages", sub: "alfred_chat_messages", col: 1, row: 2, tone: "store" }
-        ], edges: [
-          { from: "linq", to: "ing", label: "200 fast" },
-          { from: "ing", to: "jobs", label: "process_turn" },
-          { from: "ing", to: "msgs", label: "inbound row" },
-          { from: "jobs", to: "turn", label: "job-worker" },
-          { from: "turn", to: "prompt", label: "L1..L4 context" },
-          { from: "prompt", to: "model", label: "cached prefix" },
-          { from: "turn", to: "loop" },
-          { from: "loop", to: "model", label: "step" },
-          { from: "loop", to: "wrap", label: "tool_use" },
-          { from: "wrap", to: "tools" },
-          { from: "tools", to: "prov" },
-          { from: "wrap", to: "texec", label: "log, effects" },
-          { from: "loop", to: "guards", label: "before reply" },
-          { from: "turn", to: "trace", label: "open, close" },
-          { from: "guards", to: "out", label: "final text", bend: 60 },
-          { from: "out", to: "msgs", label: "assistant row" },
-          { from: "out", to: "linq", label: "reply", bend: -150, async: true }
-        ]},
-        { type: "note", text: "The web surface skips ingress and jobs: `conv-v6-web` authenticates the JWT, loads the same context, runs the same loop, and streams tool_start, tool_end, and delta frames. MCP skips the loop entirely: `mcp-exec` runs one allowlisted tool through the same wrappers as the user the token belongs to." }
-      ],
-      reasoning: [
-        "The pipeline is the product, so list it before drawing. Tag each step as code or model; only two of nine are model calls, and neither can send.",
-        "Draw the chat turn as its own flow. The senior signal is the layer order: lease, trace, context, prompt, loop, outbound, close.",
-        "Say where the three surfaces converge. One loop, one wrapper stack, one tool registry."
-      ],
-      script: [
-        "This is a pipeline, so I will list the steps and mark which ones are model calls. Nine steps, two model calls: triage and drafting. Everything that touches the provider is code.",
-        "Ingest lands mail in staging through a queue, with the user gate and the skip filters before the body fetch. Rules match deterministically before the model. Triage emits a category and an autonomy level per email.",
-        "Silent actions are archive, label, move. Drafts wait for the user. Notify texts them. Sending is a separate function that only runs after approval, and a reconciler verifies every silent effect against the provider afterwards.",
-        "For chat: acknowledge the webhook, enqueue a job, and let the turn function take a lease on the conversation, open a trace, build a cached prompt, run a bounded loop where every tool call goes through the wrapper stack, then filter tone and send."
-      ],
-      contrast: "The whiteboard email agent had a 'verdict gate' after the orchestrator. Here the gate is split in two: a rule matcher and an autonomy level before any action, and a wrapper stack around every tool call. The reverser and the effect reconciler are the parts a whiteboard design forgets."
-    },
-
-    hld: {
-      board: [
-        { type: "note", text: "Draw it cold first: the drill 'alfred_ from the outside' is the first session in your tracker's wildcard. Where everything runs is at the top of this design, checked against the code on 28 September 2026." },
-        { type: "diagram", title: "alfred_ high-level design", nodes: [
-          { id: "sms", label: "SMS user", sub: "Linq number", col: 0, row: 0, tone: "human" },
-          { id: "web", label: "Web + mobile", sub: "Next.js, Flutter", col: 0, row: 1, tone: "human" },
-          { id: "claude", label: "Claude via MCP", sub: "alfred-web /api/mcp", col: 0, row: 2, tone: "external" },
-          { id: "mailin", label: "Email to alfred_", sub: "email-channel", col: 0, row: 3, tone: "external" },
-          { id: "v6", label: "conv-v6 engine", sub: "ingress, jobs, turn", col: 1, row: 0, tone: "orchestrator" },
-          { id: "v6web", label: "conv-v6-web", sub: "SSE stream", col: 1, row: 1, tone: "orchestrator" },
-          { id: "mcp", label: "mcp-exec", sub: "allowlist, as user", col: 1, row: 2, tone: "service" },
-          { id: "tools", label: "packages/tools", sub: "one registry, wrappers", col: 2, row: 1, tone: "guard" },
-          { id: "prompt", label: "Prompt builder", sub: "fleet-shared block 1", col: 2, row: 0, tone: "service" },
-          { id: "models", label: "Model registry", sub: "Anthropic, OpenAI", col: 3, row: 0, tone: "model" },
-          { id: "pg", label: "Supabase Postgres", sub: "RLS, pg_cron, pgmq", col: 3, row: 2, tone: "store" },
-          { id: "prov", label: "Google, Microsoft", sub: "mail, calendar, Zoom", col: 4, row: 1, tone: "external" },
-          { id: "ingest", label: "Ingestion", sub: "ingress-*, poller", col: 4, row: 3, tone: "service" },
-          { id: "triage", label: "donna-triage", sub: "rules, category", col: 3, row: 3, tone: "model" },
-          { id: "act", label: "Executor + worker", sub: "silent acts, drafts", col: 2, row: 3, tone: "service" },
-          { id: "notify", label: "Notify + send", sub: "SMS, approved send", col: 1, row: 3, tone: "guard" },
-          { id: "briefs", label: "Brief generators", sub: "WM brief, briefing v3", col: 2, row: 4, tone: "service" },
-          { id: "follow", label: "Follow-up family", sub: "promises, waiting", col: 3, row: 4, tone: "service" },
-          { id: "routines", label: "Routines worker", sub: "scheduled workflows", col: 4, row: 4, tone: "queue" },
-          { id: "eval", label: "Eval scanner", sub: "prod failures to cases", col: 4, row: 0, tone: "store" },
-          { id: "ctrl", label: "Control plane", sub: "donna_consumer_config", col: 4, row: 2, tone: "guard" },
-          { id: "ops", label: "Monitors + spend", sub: "monitor-*, ai-spend", col: 5, row: 0, tone: "store" },
-          { id: "slack", label: "Slack, email, SMS", sub: "Resend, Linq", col: 5, row: 2, tone: "external" }
-        ], edges: [
-          { from: "sms", to: "v6", label: "Linq webhook" },
-          { from: "web", to: "v6web", label: "JWT, SSE" },
-          { from: "claude", to: "mcp", label: "API token" },
-          { from: "mailin", to: "notify", label: "reply by mail" },
-          { from: "v6", to: "tools" },
-          { from: "v6web", to: "tools" },
-          { from: "mcp", to: "tools" },
-          { from: "v6", to: "prompt" },
-          { from: "prompt", to: "models", label: "cached prefix" },
-          { from: "tools", to: "models", label: "agent loop" },
-          { from: "tools", to: "prov", label: "read, write" },
-          { from: "tools", to: "pg", label: "traces, effects" },
-          { from: "prov", to: "ingest", label: "push, pull", async: true },
-          { from: "ingest", to: "triage", label: "staging" },
-          { from: "triage", to: "act", label: "pending actions" },
-          { from: "act", to: "prov", label: "archive, label", bend: -160, async: true },
-          { from: "act", to: "notify", label: "drafts, important" },
-          { from: "notify", to: "sms", label: "text", bend: 40, async: true },
-          { from: "triage", to: "pg" },
-          { from: "pg", to: "briefs", label: "cron", async: true, bend: 70 },
-          { from: "pg", to: "follow", label: "cron", async: true },
-          { from: "pg", to: "routines", label: "cron", async: true, bend: -70 },
-          { from: "briefs", to: "notify", label: "email, SMS" },
-          { from: "ctrl", to: "ingest", label: "rollout_pct" },
-          { from: "ctrl", to: "triage", label: "model rollout" },
-          { from: "pg", to: "eval", label: "turn traces", async: true },
-          { from: "eval", to: "ops", label: "digest" },
-          { from: "ops", to: "slack", label: "alerts" },
-          { from: "models", to: "ops", label: "trackAIUsage" }
-        ]},
-        { type: "list", title: "Walk each request through it", ordered: true, items: [
-          "**SMS turn.** Linq posts a signed envelope to `conv-v6/ingress`, which verifies the HMAC, dedupes on event id, resolves the phone number to a user, persists the inbound row, inserts a job, and returns. The job worker claims it and calls `conv-v6/turn`, which takes a lease on the conversation, opens a trace, loads context in parallel, builds the cached prompt, runs the loop, filters tone, and replies through Linq.",
-          "**Web turn.** The Next.js app streams from `conv-v6-web` and nothing else. Same context, same loop, same tools; the difference is a JWT instead of a phone number, and tool events are emitted as SSE frames so the UI shows tool progress and structured cards.",
-          "**MCP call.** Claude calls `/api/mcp` on alfred-web, which forwards the user's API token to `mcp-exec`. The function resolves the token, builds a ToolContext as that user, and runs one allowlisted tool through the full wrapper stack. Writes preview first and require a second call with `confirmed: true`.",
-          "**Inbound mail.** Push webhooks or the poller stage the message. Triage matches rules, then classifies. The executor performs silent actions; the worker drafts; notify texts. A reconciler verifies effects; a reverser undoes rejected ones.",
-          "**Briefs.** pg_cron wakes the working-memory brief, the morning briefing, and the follow-up family. They read the attention ledger and staging, write a brief, and deliver by email or SMS through the same notify path.",
-          "**Rollout.** Nothing ships behind an environment variable. `donna_consumer_config` holds the percentage dials and `alfred_feature_flags` the kill switches; a wing ships dark and is turned up by one UPDATE."
-        ]},
-        { type: "defs", title: "Fields worth writing next to the stores", items: [
-          { term: "donna_pending_actions", desc: "`user_id, staging_id, category, autonomy, action_type, rule_id, status (queued, pending, executed, reversed...), exec_latency, background_effect_verified_at`" },
-          { term: "v6_agent_jobs", desc: "`kind, status, claimed_at, started_at, lease` (claimed_at is overwritten on re-claim; measure from started_at)" },
-          { term: "v6_turn_traces", desc: "`surface, model, steps, first_ack_ms, block1_cache_hit, block2_cache_hit, usage`" },
-          { term: "turn_effects / side_effects", desc: "`message_id, kind (archive, move_email, rsvp_event, propose_draft...), external_id, unique key` (the assertion source for any behavioural claim)" },
-          { term: "donna_consumer_config", desc: "one row of dials: `rollout_pct, calendar_rollout_pct, rule_suggest_enabled, wm_force_user_ids...`" }
-        ]}
-      ],
-      reasoning: [
-        "Build the diagram one door at a time: SMS, then web, then MCP. They converge on one tool package; draw that box once and say why.",
-        "Then the pipeline as its own row, flowing right to left so the arrows back to the providers are visible. The reverser and the effect reconciler are the two boxes a first draft forgets.",
-        "Put the control plane and the eval store on the diagram as boxes, not footnotes. Both are tables in the same Postgres; both gate what runs."
-      ],
-      script: [
-        "Three doors, one brain, one tool package. SMS goes through a webhook and a job queue because the reply can take longer than a webhook should. Web streams directly. MCP runs single tools as the user, behind an allowlist.",
-        "The background pipeline is a separate row: ingestion stages mail, triage decides, the executor and the worker act, notify tells the user, and a reconciler checks the provider afterwards.",
-        "Compute is Deno edge functions on Supabase, with a few long-running containers on Railway for documents, routines, phone calls and EmailEngine for IMAP; state is one Postgres with row-level security, pg_cron for schedules and pgmq for the event bus. That is a deliberate choice for a small team; the trade-off is that one database carries every workload, which I will come back to.",
-        "Two boxes people leave off: the control plane, which is a config table with percentage dials, and the eval scanner, which turns real failing turns into regression cases."
-      ],
-      contrast: "The whiteboard email-agent design has an orchestrator, a gateway, a tool executor, a gate, and a trace store. Here the same boxes exist with names, and two extra rows appear: the delivery surfaces (notify, send, briefs) and the operations layer (monitors, spend, control plane), because a shipped agent spends most of its code there."
-    },
-
-    deepdives: {
-      board: [
-        { type: "dive", title: "Action safety without a risk score", nfr: "Action safety", problem: "The model proposes a write. Some writes are reversible (archive), some are not (send, delete, RSVP). Retries make any write a potential double.", options: [
-          { name: "Model self-reports confidence; gate on it", take: "Not testable, and the model is the thing you distrust." },
-          { name: "One deterministic gate after planning", take: "Better, but a single gate cannot see retries or partial side effects." },
-          { name: "Declare a capability per tool; wrap every call", take: "Each tool states read, write, or bulk and whether it is idempotent. One compose() stack validates, gates, previews, confirms, replays, logs, and times out. No surface calls execute() directly." }
-        ], pick: "The wrapper stack, plus a structural rule: the background executor has no send path, and only one function sends, after approval. Sending mail is never a matter of a threshold." },
-        { type: "diagram", title: "What one tool call passes through", nodes: [
-          { id: "m", label: "Model", sub: "tool_use block", col: 0, row: 0, tone: "model" },
-          { id: "s", label: "Schema", sub: "zod, name the field", col: 1, row: 0, tone: "guard" },
-          { id: "c", label: "Capability gate", sub: "read, write, bulk", col: 2, row: 0, tone: "guard" },
-          { id: "p", label: "Preview + confirm", sub: "requires_confirmation", col: 3, row: 0, tone: "guard" },
-          { id: "i", label: "Idempotency", sub: "replay on retry", col: 4, row: 0, tone: "guard" },
-          { id: "x", label: "Execute", sub: "with timeout", col: 5, row: 0, tone: "service" },
-          { id: "l", label: "Log + effects", sub: "v6_tool_executions", col: 5, row: 1, tone: "store" },
-          { id: "e", label: "Entity emission", sub: "refs for next turn", col: 4, row: 1, tone: "service" },
-          { id: "u", label: "User", sub: "confirms the preview", col: 3, row: 1, tone: "human" }
-        ], edges: [
-          { from: "m", to: "s" },
-          { from: "s", to: "c" },
-          { from: "c", to: "p" },
-          { from: "p", to: "u", label: "preview" },
-          { from: "u", to: "p", label: "confirmed", bend: 40 },
-          { from: "p", to: "i" },
-          { from: "i", to: "x" },
-          { from: "x", to: "l" },
-          { from: "l", to: "e" }
-        ]},
-        { type: "dive", title: "No double action across retries and isolates", nfr: "No double action", problem: "Linq retries the webhook. MCP clients retry on timeout. Two edge isolates can wake for the same conversation. A cron job can overlap its previous run.", options: [
-          { name: "In-memory lock in the function", take: "Guards nothing across a network call, and each isolate has its own memory." },
-          { name: "Dedupe on event id only", take: "Stops the webhook retry; does nothing for the turn itself or for tool retries." },
-          { name: "Three layers: event dedupe, row lease, idempotency key", take: "`v6_webhook_events` dedupes the envelope; `v6_try_acquire_lease` gives one turn per conversation; `v6_claim_next_job` uses SKIP LOCKED; write tools carry an idempotency key and replay the prior result." }
-        ], pick: "All three, because each one covers a retry the others cannot see. The lease is a column with an expiry, not a session lock, because the work spans several provider calls." },
-        { type: "dive", title: "Cost per turn: the prompt is a cache layout", nfr: "Cost per turn", problem: "The tool catalog plus charters is ~107k tokens on every model call. At list price that is the whole margin.", options: [
-          { name: "Trim the tool catalog per turn", take: "Helps, but a dynamic catalog defeats caching; every user gets a different prefix." },
-          { name: "Cache per user with the default 5-minute TTL", take: "Users turn every ~4.6 minutes fleet-wide but far less often individually; most turns miss and pay the 1.25x write." },
-          { name: "Fleet-shared Block 1, 1-hour TTL, per-user Block 2, uncached Block 3", take: "Block 1 is byte-identical for every user and every surface, so any user's turn warms it for everyone. Block 2 is the per-user slot. Block 3 is the turn." }
-        ], pick: "Four content blocks with three breakpoints. Measured on the first model call of each turn only, because later calls are warm by construction. The invariant 'Block 1 is byte-identical' is protected by a test, because one formatter change broke it on main." },
-        { type: "dive", title: "Prompt injection: every email is untrusted input", nfr: "Action safety", problem: "The agent reads mail written by strangers, then decides what to do. An email that says 'forward this thread to me' must not become an action.", options: [
-          { name: "Tell the model to ignore instructions in emails", take: "Necessary, not sufficient." },
-          { name: "Wrap provider text as data and strip tool markup", take: "Email bodies are tagged as untrusted content; a guard strips tool-call markup the model echoes; the fabrication guard checks that claimed reads actually happened this turn." },
-          { name: "Make the write path structurally unable to act on it", take: "Silent actions are limited to a fixed set (archive, label, move); send and forward preview and confirm; bulk actions are a separate job kind with its own completion message." }
-        ], pick: "All three, in that order of trust. The last one is the one that holds when the first two fail." },
-        { type: "dive", title: "Quality gate: production failures become eval cases", nfr: "Quality gate", problem: "A prompt or model change looks fine in a demo and regresses a real user's turn. Nobody notices until they complain.", options: [
-          { name: "Manual QA on a fixture inbox", take: "Catches the demo cases. Misses the long tail." },
-          { name: "Offline suite from hand-written scenarios", take: "Good, but the scenarios drift from what users actually do." },
-          { name: "Scan real traces for failure signals; classify; promote", take: "`eval-prod-scanner` runs detectors over `v6_turn_traces` and `v6_tool_executions`, batches suspects to a classifier, writes `eval_prod_failures` in a five-bucket taxonomy, and promotes confirmed ones to `eval_test_definitions` that `run-eval` replays." }
-        ], pick: "The scanner, with two rules a whiteboard design forgets: a refusal is not an outcome (check the retry), and the effects ledger, not the assistant's text, decides whether an action happened." },
-        { type: "dive", title: "One Postgres for everything", nfr: "Pipeline completeness", problem: "Chat, ingestion, triage, briefs, billing, and monitoring all share one database and one cron scheduler. A hot table or a runaway cron degrades every surface at once.", options: [
-          { name: "Split into services with their own stores", take: "Right at ten times the fleet; today it would multiply the surface a four-person team has to run." },
-          { name: "Keep one Postgres; isolate by design", take: "Partitioned event tables, partial indexes on hot statuses, autovacuum tuned on the pending-actions table, SKIP LOCKED consumers, and a completeness monitor that samples the provider directly." }
-        ], pick: "One Postgres, deliberately, with the isolation done in the schema. State the ceiling: the day chat latency moves with triage batch size is the day the pipeline gets its own instance." }
-      ],
-      reasoning: [
-        "Lead with action safety; it is the correctness requirement and it is structural.",
-        "Then the retry story, because every surface here retries and the fix is three layers, not one.",
-        "Cost next, because the math from step 1 pays off here. Then injection, eval, and the single-database ceiling.",
-        "Each dive ends with the corner that was cut and what would change it."
-      ],
-      script: [
-        "The riskiest requirement is action safety, so I start there. I do not gate on a risk score. Every tool declares what class of side effect it has, and one wrapper stack around every call decides whether it previews, confirms, or replays. On top of that, the background executor has no send path at all.",
-        "Retries come from three places, so I need three layers: dedupe the webhook, lease the conversation, and key every write. A lock in memory would guard nothing across a provider call.",
-        "Cost is a cache layout problem. The shared prefix is a hundred thousand tokens, so it has to be byte-identical across users and cached for an hour, with the per-user part in its own slot.",
-        "Every email is untrusted input. I tag it as data, strip tool markup, check claimed reads against the trace, and, most importantly, keep the silent action set small and fixed.",
-        "For quality, real failing turns get scanned, classified, and promoted into the eval suite, so the regression set is what users actually do.",
-        "Finally the honest ceiling: it is one Postgres. That is right for this team size, isolated in the schema, and I can name the signal that would make me split it."
-      ],
-      contrast: "The email-agent example's dives are the right list. What changes in the shipped version is the evidence: each pick names the table, the RPC, or the wrapper that enforces it, and the corner it cut."
-    }
-  },
-  refs: [
-    { label: "Backend: llm-supabase, packages/tools (agent loop, wrappers, prompt builder), supabase/functions (conv-v6, conv-v6-web, mcp-exec, donna-*)", url: "https://github.com/scribehq" },
-    { label: "Frontend: alfred-web (Next.js chat streaming from conv-v6-web; /api/mcp transport)", url: "https://github.com/scribehq" },
-    { label: "alfred_ Claude plugin (MCP client manifest)", url: "https://github.com/scribehq/alfred-claude-plugin" },
-    { label: "Anthropic prompt caching (the TTL and 1.25x write pricing the cost dive relies on)", url: "https://docs.claude.com/en/docs/build-with-claude/prompt-caching" }
-  ]
-});
-
-GUIDE.examples.push({
   id: "kitaru",
   tabLabel: "Kitaru (replay evals)",
   title: "Kitaru",
   kind: "Replay-based evals for agents, read from source",
+  /* local-only */
   home: {
     text: "This page walks Kitaru as a design exercise. What you learned about Kitaru itself, its mechanisms as tables and the questions they asked, lives on the ZenML page.",
     label: "Kitaru, as learned: the ZenML page",
     href: "interviews/zenml-round3.html#/design/tables"
   },
+  /* end local-only */
   prompt: "Design a replay-based evaluation product for AI agents. Teams import or record real agent sessions, change their agent, and replay those sessions against the change, with the outside world answered from the recording, so they can see what the change would have done before it ships.",
   lens: [
     "Built from the Kitaru source (zenml-io/kitaru), not the marketing pages. Where the design below says 'today', it describes the implementation; the deep dives are where you would take it.",
-    "Your alfred_ eval bench is the other answer to the same problem. Kitaru freezes the transcript; the bench froze the world. They fail in opposite directions, and the deep dives use both.",
+    "A snapshot eval bench is the other answer to the same problem. Kitaru freezes the transcript; the bench freezes the world. They fail in opposite directions, and the deep dives use both.",
     "Capture is the easy half. The hard half is what happens when the changed agent diverges from what was recorded."
   ],
   steps: {
@@ -3544,7 +3145,7 @@ sha256(tool_name + "\\0" + json.dumps(args, sort_keys=True,
         { type: "dive", title: "Divergence: the better the change, the worse the replay", nfr: "Faithful under change", problem: "Exact-argument keys mean an improved agent that rephrases a search or adds a disambiguation step misses the cache, and every escape is bad: fail throws the run away, passthrough calls production, error_result grades recovery from an invented error.", options: [
           { name: "Exact keys plus on_miss (today)", take: "Deterministic and cheap; punishes exactly the change you are measuring." },
           { name: "A productive miss", take: "Fail with a diff of recorded against attempted arguments and one command to accept the variant as a static alias. Deterministic, auditable, and it produces labelled pairs." },
-          { name: "Freeze the world (the alfred_ bench)", take: "Tools run real queries against a queryable snapshot built from about twenty-five real instances plus distractors; any path gets a truthful answer. Costs hours of authoring per case." },
+          { name: "Freeze the world (a snapshot bench)", take: "Tools run real queries against a queryable snapshot built from about twenty-five real instances plus distractors; any path gets a truthful answer. Costs hours of authoring per case." },
           { name: "Promote on fork", take: "Keep import free; when a forked session misses, offer to promote that one session into a small queryable world from its recording plus sessions with the same intent." }
         ], pick: "Ship the productive miss first, then promote-on-fork, so the common case stays free and only the sessions people explore pay the authoring cost." },
         { type: "fig", key: "kitaruKey" },
@@ -3579,8 +3180,7 @@ sha256(tool_name + "\\0" + json.dumps(args, sort_keys=True,
           { term: "Completeness checks", desc: "Kitaru: no ground truth to count against. The bench: assert against what the fixture holds." },
           { term: "Scale", desc: "Kitaru: designed for thousands of sessions and frozen cohorts. The bench: a hundred-plus cases." }
         ]},
-        { type: "fig", key: "kitaruScale" },
-        { type: "fig", key: "alfredVsKitaru" }
+        { type: "fig", key: "kitaruScale" }
       ],
       reasoning: [
         "Lead with divergence; it is the product's defining trade-off.",
@@ -3588,7 +3188,7 @@ sha256(tool_name + "\\0" + json.dumps(args, sort_keys=True,
         "Use the bench as evidence, not as a pitch: it shows the other end of the trade and what it cost."
       ],
       script: [
-        "The defining problem is divergence. Keys are exact, so an improved agent misses the cache, and every miss policy is a bad escape. I would ship a productive miss first, a diff and one command to accept a variant, and then let a forked session be promoted into a small queryable world, which is what I built at alfred_ by hand.",
+        "The defining problem is divergence. Keys are exact, so an improved agent misses the cache, and every miss policy is a bad escape. I would ship a productive miss first, a diff and one command to accept a variant, and then let a forked session be promoted into a small queryable world, which is what I have built by hand before.",
         "Second, provenance: a passthrough call leaves no mark on the node today. I would stamp every node with how it was served, because a silent live call in an eval product is a hidden false pass.",
         "Then the smaller ones: server-assigned occurrence for concurrency, a calibrated simulated user for multi-turn, and k runs only for sessions that flip."
       ],
@@ -3853,72 +3453,6 @@ GUIDE.patternUsage = {
       { groups: ["llm-cost", "grounding", "agent-safety", "agent-durability"], why: "No model in the loop. That absence is the contrast with the agentic designs." }
     ]
   },
-
-  "alfred": {
-    uses: [
-      { group: "agent-safety", why: "The agent acts on mail written by strangers, often without asking.", techniques: [
-        { id: "effect-classes", how: "Every ToolDef declares read, write, or bulk and whether it is idempotent; the wrappers read that, not the model." },
-        { id: "policy-gate", how: "No risk score: the `compose()` stack validates, gates, previews, confirms, and replays every call, and the background executor has no send path by construction." },
-        { id: "hitl-undo", how: "Writes return `requires_confirmation` first; only `donna-send-approved-draft` sends, after approval; the reverser undoes silent actions the user rejects." },
-        { id: "injection", how: "Email bodies are tagged as untrusted, echoed tool markup is stripped, and silent actions are limited to archive, label, and move." },
-        { id: "least-privilege", how: "MCP runs one allowlisted tool as the token's user; the web route holds no service key." },
-        { id: "budgets", how: "The agent graph (`runAgentGraph`, on LangGraph) is capped at 12 steps on SMS and 50 on web." }
-      ]},
-      { group: "contention", why: "Webhook retries, MCP retries, overlapping crons, and two isolates can all hit the same conversation.", techniques: [
-        { id: "single-writer", how: "`v6_try_acquire_lease` gives one turn per conversation; the lease is a column with an expiry, because the work spans several provider calls." },
-        { id: "claim-skip-locked", how: "`v6_claim_next_job` claims jobs with SKIP LOCKED." }
-      ]},
-      { group: "consistency", why: "The model's decision and the state of the world can disagree.", techniques: [
-        { id: "exactly-once", how: "`v6_webhook_events` dedupes envelopes, write tools replay prior results by idempotency key, and a reconciler stamps `background_effect_verified_at` after checking the provider." },
-        { id: "event-sourcing", how: "`turn_effects` and `side_effects` are the ledger of what changed; behavioural assertions read it, not the assistant's text." }
-      ]},
-      { group: "multi-step", why: "Each email moves through staging, rule match, triage, action, verification, and sometimes reversal.", techniques: [
-        { id: "state-machine", how: "`donna_pending_actions.status` moves through queued, pending, executed, reversed." },
-        { id: "saga", how: "The reverser is the compensation step for a silent action the user rejects." },
-        { id: "idempotency", how: "Staging is an idempotent upsert, shared by the push consumer and the poller." }
-      ]},
-      { group: "llm-cost", why: "The cacheable prefix is about 107k tokens on every model call.", techniques: [
-        { id: "prompt-cache", how: "A fleet-shared, byte-identical Block 1 with a 1-hour TTL, a per-user Block 2, and an uncached turn; 91.4% cache hit inside 5 minutes." },
-        { id: "early-exit", how: "`user_email_rules` fire deterministically before triage calls the model." },
-        { id: "routing", how: "A cheap-tier router sends obvious triage batches to a smaller model." }
-      ]},
-      { group: "grounding", why: "Claimed actions must match real ones, and quality must survive model swaps.", techniques: [
-        { id: "citations", how: "Turn guards check that claimed reads actually happened this turn before the reply goes out." },
-        { id: "eval-gate", how: "`eval-prod-scanner` turns real failing turns into eval cases that `run-eval` replays on every change." },
-        { id: "shadow-online", how: "A shadow path scores a candidate triage model on the same batch." }
-      ]},
-      { group: "long-running", why: "An SMS reply can take longer than a webhook should wait.", techniques: [
-        { id: "async-job", how: "`conv-v6` ingress returns 200 and inserts a `process_turn` job." },
-        { id: "worker-pool", how: "The job worker claims jobs and calls `conv-v6/turn`." },
-        { id: "leases", how: "The conversation lease expires, so a crashed turn frees the conversation for the next one." }
-      ]},
-      { group: "scaling-writes", why: "Every inbound email becomes writes through staging, triage, and pending actions in one Postgres.", techniques: [
-        { id: "queue-buffer", how: "pgmq buffers `email.received` events ahead of the staging consumer." },
-        { id: "batching", how: "Triage makes one model call per user batch." },
-        { id: "load-shedding", how: "`rollout_pct` dials in `donna_consumer_config` decide how much traffic enters the pipeline." },
-        { id: "sharding", how: "Not sharded across servers: event tables are partitioned inside the one Postgres, which is the step before sharding." }
-      ]},
-      { group: "scaling-reads", why: "Chat, briefs, and monitors read hot statuses from the same database the pipeline writes.", techniques: [
-        { id: "indexing", how: "Partial indexes on hot statuses, plus autovacuum tuned on the pending-actions table." }
-      ]},
-      { group: "reliability", why: "One Postgres carries every workload, and mail that silently never arrives is the worst failure.", techniques: [
-        { id: "circuit-breaker", how: "Two circuit breakers sit in the staging consumer's user gate." },
-        { id: "flags", how: "`donna_consumer_config` holds percentage dials and `alfred_feature_flags` the kill switches; a change ships dark and is turned up by one UPDATE." },
-        { id: "monitoring", how: "A completeness monitor samples the provider against staging, because a stage-to-stage diff cannot see mail that never entered." }
-      ]},
-      { group: "real-time", why: "Three surfaces with different transports, and mail arrives by push.", techniques: [
-        { id: "sse", how: "Web chat streams connected, status, delta, data, and done frames from `conv-v6-web`." },
-        { id: "pubsub", how: "Provider push through the `ingress-*` webhooks lands on the pgmq bus." },
-        { id: "polling", how: "`donna-email-poller` pulls changes for accounts without push." }
-      ]}
-    ],
-    notNeeded: [
-      { groups: ["agent-durability"], why: "Turns take seconds; a lease with an expiry and job re-claim cover crashes, so there is no transcript checkpointing." },
-      { groups: ["large-blobs"], why: "Mail stays with the provider; staging keeps copies and references." },
-      { groups: ["search"], why: "Semantic search is out of scope for this interview." },
-      { groups: ["geo"], why: "No location in the product." }
-    ]
-  },
   "kitaru": {
     intro: "Kitaru is mostly a durable-execution and evaluation system wrapped around someone else's agent. The patterns below are what it uses today, and where the deep dives would take it.",
     uses: [
@@ -3962,6 +3496,7 @@ GUIDE.patternUsage = {
 /* Logging and safe execution                                          */
 /* ------------------------------------------------------------------ */
 
+/* local-only */
 /* Links back into Accelerate, the study tracker this guide sits beside. For each
    pattern, the sessions whose items point at it. Kept by hand against the
    tracker's pointers into this file. Wildcard sessions are linked by id
@@ -4097,6 +3632,7 @@ GUIDE.accelerate = {
     ]
   }
 };
+/* end local-only */
 
 function createLogger(prefix) {
   const emit = (method, level, message, detail) => {
@@ -4726,6 +4262,7 @@ function renderTechnique(group, technique) {
 
 /* Where this pattern is practised in Accelerate. New tab, so the guide keeps its place. */
 function renderAccelerateLinks(groupId) {
+  if (window.SITE_PUBLIC) return null;   /* the public site has no tracker to link into */
   const map = GUIDE.accelerate && GUIDE.accelerate.patterns;
   const links = (map && map[groupId]) || [];
   if (!links.length) return null;
@@ -5343,7 +4880,7 @@ function renderDesignPage(example) {
         lens.length ? h("details", { class: "lens" },
           h("summary", null, h("span", { class: "lens-title" }, LABELS.lens), h("span", { class: "lens-sub" }, inline(lens[0].split(/(?<=\.)\s/)[0]))),
           h("ul", null, lens.map((item) => h("li", null, inline(item))))) : null,
-        example.home ? h("p", { class: "home-card" }, inline(example.home.text), " ",
+        example.home && !window.SITE_PUBLIC ? h("p", { class: "home-card" }, inline(example.home.text), " ",
           h("a", { href: example.home.href, target: "_blank", rel: "noopener" }, example.home.label)) : null)),
     renderStepBar(example, steps),
     h("div", { class: "steps" }, sections));
@@ -5677,5 +5214,6 @@ function boot() {
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
 else boot();
 </script>
+<script src="private/sd.js"></script>
 </body>
 </html>

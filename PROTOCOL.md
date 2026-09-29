@@ -122,9 +122,9 @@ text to memorise, with about twenty-five recall questions each, were tried on 25
 September and thrown out the same day.
 
 **One home per thing.** The plan is the tracker; the guide, the coding page, Alaap and
-TrenTorch, alfred_ and each loop page are references beside it. A story, an answer, a piece
+TrenTorch and each loop page are references beside it. A story, an answer, a piece
 of code or a figure lives in one of them; everywhere else links to it. Copies drift: by
-29 September alfred_'s agent loop, its cost cut and its safety gate were each told two
+29 September one system's agent loop, its cost cut and its safety gate were each told two
 different ways on different pages.
 
 **Diagrams you can take apart.** Each part of a figure explains itself on hover, in the
@@ -157,7 +157,7 @@ did not, how to approach it, and the answer to give, with a full answer for ever
 not sure". It is read in one screen, not scrolled: the turns on one side, the answer on
 the other. How a loop page is built is in `WILDCARD.md`; how a mock runs, in
 `interviews/MOCKS.md`. Your own system is not re-told on a loop page: it links to
-`ALFRED.html`.
+the one page that holds it.
 
 **One screen, in every orientation.** Where a page promises one screen, it holds on a
 wide display, on a phone upright and on a phone on its side, unless said otherwise.

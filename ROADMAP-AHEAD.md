@@ -74,7 +74,7 @@ In the plan these are stages 16 to 21, including TrenTorch's optimisation module
 DSA moves to maintenance, two problems a week, permanently.
 
 The second artifact starts taking shape here: the open-source tool extracted from
-the alfred_ work. Eval harness, decision layer or memory system, generalised out of
+the production agent work. Eval harness, decision layer or memory system, generalised out of
 the product and made usable by strangers.
 
 ---

@@ -455,3 +455,91 @@ DIAGRAMS = {
         "edges": [("d", "m", ""), ("m", "id", ""), ("id", "r", "", "ln2"), ("r", "g", ""), ("g", "a", ""), ("r", "s", "")],
         "caption": "<b>Every box, and the stage that taught it.</b> The system context from stage 0 again. Now you can say how each part works, because you built or read every one."},
 }
+
+
+# ------------------------------------------------------------------ the public page
+# DEEP-LEARNING.html (python alaap/build.py --public) is this same plan as a learning path for
+# anyone: three parts instead of dated milestones, stages renumbered in path order, a maths stage
+# first, and nothing personal (no tracker links, no project status, no accent document, no dates).
+# Keys of "stage" are the original stage numbers; their values replace fields for the public page.
+# "stage N" in goal, why, check, diagram captions and node subs is renumbered by the build.
+MATHS_LESSON = "https://aiengineeringfromscratch.com/lesson?path=phases%2F01-math-foundations%2F"
+
+PUBLIC = {
+    "out": "DEEP-LEARNING.html",
+    "title": "Deep learning from scratch: PyTorch and audio ML",
+    "brand": "Deep learning from scratch",
+    "key": "dl.progress.v1",
+    "tt_web": "https://github.com/TrenTorch/TrenTorch/tree/TrenTorch-Main/TrenTorch_CLI/",
+    "tt_repo": "https://github.com/TrenTorch/TrenTorch",
+    "alaap_repo": "https://github.com/PranavMishra17/alaap",
+    "drop_arch": ["stages"],   # the plan-status diagram: project status, not design
+    "parts": [
+        {"name": "Part 1 · Foundations", "stages": ["maths", 1, 2],
+         "note": "No framework yet. The maths every later stage leans on, and what sound is as numbers. The two sound stages need no PyTorch, so you can also run them alongside part 2."},
+        {"name": "Part 2 · PyTorch from scratch", "stages": [3, 4, 5, 6, 7, 8, 9, 10, 14, 15, 19],
+         "note": "Build a deep learning framework on NumPy, one TrenTorch module at a time: tensors, layers, losses, data, autograd, optimisers, convolutions, embeddings and attention, then the tools that make a model run fast. Halfway through, map every piece to real PyTorch."},
+        {"name": "Part 3 · Audio ML", "stages": [0, 11, 12, 13, 16, 17, 18, 20, 21],
+         "note": "Use what you built to read a real speech system, Alaap: spectrograms, speaker embeddings, neural codecs, text-to-speech as a language model, and evaluation that does not fool you. The text is quoted from Alaap's own study guide and architecture."},
+    ],
+    "maths": {
+        "n": "maths", "title": "The maths you need, and where it is used", "hours": 8, "kind": "maths",
+        "goal": "Do by hand the maths the path leans on: matrix shapes, the chain rule, logarithms and softmax, cross-entropy, cosine similarity, and what an FFT bin measures.",
+        "why": "Every later stage uses some of it, and the table says which. With it fresh, the code reads as the maths it is.",
+        "check": ("A softmax outputs p = (0.7, 0.2, 0.1) and the correct class is the first. What is the cross-entropy loss, and its gradient with respect to the logits?",
+                  "The loss is minus ln 0.7, about 0.36. The gradient is p minus the one-hot target: (-0.3, 0.2, 0.1). It is largest where the prediction is most wrong, which is why this pairing keeps training.")},
+    # (topic, what to be able to do, original stages that use it, [(reading, lesson slug)])
+    "maths_rows": [
+        ("Vectors, matrices and shapes", "Multiply a (32, 80) matrix by an (80, 256) one, and say the result's shape before you compute it.",
+         [3, 7, 15], [("Vectors, matrices, operations", "02-vectors-matrices-operations"), ("Tensor operations", "12-tensor-operations")]),
+        ("Derivatives and the chain rule", "Differentiate a composition of three functions, then write the gradients of y = x @ W for x and for W.",
+         [7, 8], [("Calculus for ML", "04-calculus-for-ml"), ("Chain rule and autodiff", "05-chain-rule-and-autodiff")]),
+        ("Logarithms and probability", "Say why training adds log-probabilities instead of multiplying probabilities, and compute softmax without overflow.",
+         [5, 17], [("Probability and distributions", "06-probability-and-distributions"), ("Numerical stability", "13-numerical-stability")]),
+        ("Cross-entropy", "Compute the cross-entropy between a predicted distribution and a one-hot target, and say what it measures.",
+         [5, 15], [("Information theory", "09-information-theory")]),
+        ("Distances and directions", "Compute a cosine similarity, and say what the first principal component of a cloud of points points along.",
+         [12, 13], [("Norms and distances", "14-norms-and-distances"), ("Dimensionality reduction", "10-dimensionality-reduction")]),
+        ("Complex numbers and the Fourier transform", "Say what one FFT bin measures, and why n real samples give n / 2 + 1 useful bins.",
+         [1, 11], [("Complex numbers", "19-complex-numbers"), ("Fourier transform", "20-fourier-transform")]),
+    ],
+    "stage": {
+        0: {"title": "A speech system, end to end: what Alaap does",
+            "goal": "Say what Alaap does in one sentence, and trace one written description through its architecture to audio."},
+        3: {"why": "Every model file is tensor shapes. Once you have built a tensor yourself, you read them without guessing."},
+        7: {"why": "The Alaap guide's Part 1 promises you will know what backward() does, and what no_grad() and detach() switch off. You learn it here by building it."},
+        8: {"why": "This is the first real checkpoint: a small network trained from scratch, with every line and every gradient explained."},
+        17: {"why": "One description fits many valid voices. A mixture density network predicts a family of them instead of one point."},
+        19: {"why": "A trained model is only useful once it runs fast and cheaply enough. A speech service is judged on p95 latency and cost per minute under load, and these modules teach you to measure and move both."},
+    },
+    "diagrams": {
+        "serve": {
+            "nodes": [
+                {"id": "p", "c": 0, "r": 0, "label": "profile", "sub": "FLOPs, memory, where time goes", "cls": "b3"},
+                {"id": "q", "c": 1, "r": 0, "label": "quantize", "sub": "float32 to int8, x4 smaller", "cls": "b2"},
+                {"id": "c", "c": 1, "r": 1, "label": "prune, distil", "sub": "fewer weights", "cls": "b2"},
+                {"id": "a", "c": 2, "r": 0, "label": "fuse, vectorise", "sub": "fewer memory trips", "cls": "b2"},
+                {"id": "kv", "c": 2, "r": 1, "label": "KV cache", "sub": "reuse past keys, values", "cls": "b1"},
+                {"id": "b", "c": 3, "r": 0, "label": "benchmark", "sub": "p95 latency, CI", "cls": "b3"},
+                {"id": "svc", "c": 3, "r": 1, "label": "a speech service", "sub": "over HTTP, $/min", "cls": "b4"},
+            ],
+            "edges": [("p", "q", ""), ("q", "a", ""), ("p", "c", ""), ("c", "kv", ""), ("a", "b", ""), ("kv", "b", ""), ("b", "svc", "", "ln3")],
+            "caption": "<b>Measure, shrink, speed up, prove.</b> A speech service is judged on its p95 latency and cost per minute under load, so every change to the model is measured before and after."},
+    },
+    # the starting point, above the path: (label, text); {total}, {tt}, {weeks} are filled in
+    "intro": [
+        ("What this is", "A path for a developer who wants to understand deep learning by building it. You write a small PyTorch-like framework on NumPy, one module at a time, then use it to read a real speech system: how audio becomes numbers, how a model recognises a speaker, and how a text-to-speech model turns a written description into a voice."),
+        ("Who it is for", "You program in Python and have met machine learning before: you know roughly what a loss and a gradient are. You have not built a framework, and you have not worked with audio."),
+        ("What you will build", "A NumPy framework with tensors, layers, losses, a data loader, autograd, optimisers, convolutions, attention and a transformer, then profiling, quantization, a KV cache and benchmarks. On the way it runs six historical milestones, from Rosenblatt's perceptron (1958) to a transformer (2017)."),
+        ("What you need first", "Python, NumPy and school algebra; stage 1 covers the rest of the maths, with a reading for each piece. A computer with Python 3.10 or later. TrenTorch needs no GPU. The audio stages read code in the Alaap repo; running its demo needs the environment its README describes."),
+        ("How long it takes", "About {total} in all: each TrenTorch module about {tt} hours, the rest as each stage states. At five hours a week, about {weeks} weeks."),
+        ("How to use it", "Take the stages in order. Try each exit check before you open its answer, and if you cannot answer it, stay on the stage. Mark a stage done when you pass. Your progress stays in this browser; nothing is sent anywhere."),
+    ],
+    "cards": [
+        ("After this you can", "the capability, stated as something you can do"),
+        ("Why it matters", "where the idea shows up in real models"),
+        ("TrenTorch module", "what you build, its objectives, and its reflection questions"),
+        ("From the Alaap guide", "what to read and do, quoted from Alaap's study guide; paths such as alaap/acoustics.py are files in the Alaap repo"),
+        ("Exit check", "one question with a short model answer; if you cannot answer it, do not move on"),
+    ],
+}

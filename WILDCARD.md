@@ -23,8 +23,8 @@ things:
    in the words to say it, timed spoken drills, a technical question bank, figures,
    questions to ask, traps, and every session readable in place. Add a `LOOPS` entry in
    `index.html` so the wildcard page shows it as a card. Optional `OWN` in the module sets
-   their system against yours; your own system's facts live in `alfred/content.py`
-   (`ALFRED.html`), and a loop page links there rather than copying them. Code that
+   their system against yours; your own system's facts live on one page of their own,
+   and a loop page links there rather than copying them. Code that
    `CODING.html` already holds is linked (`../CODING.html#<id>`), not pasted. The Prep tab is a hub: `SHOW_UP` (how to
    present yourself), then each bank (`SCRIPTS`, then each `QA` group in `QA_ORDER`) as one
    row that opens in the one-screen panel, then drills, questions to ask, traps and
@@ -125,8 +125,8 @@ Parked, 29 September 2026:
 - **Oxus, technical, 23 September.** Happened. Its three design sessions moved into weeks
   2, 3 and 4 as extra systems practice; the other three are parked. Its page,
   `interviews/oxus.html`, is a minimal archive.
-- **`wc18`, 'alfred_ from the outside: draw it cold'.** Parked, not tied to one loop. Your
-  own system now has its own page, `ALFRED.html`, as study material rather than a drill.
+- **`wc18`, 'your own system from the outside: draw it cold'.** Parked, not tied to one loop.
+  Your own system now has its own page, as study material rather than a drill.
 
 The wildcard as a flat checklist is the tracker's `#/sheet/wc`, Copy as markdown; no copy is kept in the repo.
 

@@ -19,20 +19,36 @@
     code: '<polyline points="16 18 22 12 16 6"/> <polyline points="8 6 2 12 8 18"/>',
     "layout-grid": '<rect width="7" height="7" x="3" y="3" rx="1"/> <rect width="7" height="7" x="14" y="3" rx="1"/> <rect width="7" height="7" x="14" y="14" rx="1"/> <rect width="7" height="7" x="3" y="14" rx="1"/>',
     "audio-waveform": '<path d="M2 13a2 2 0 0 0 2-2V7a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0V4a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0v-4a2 2 0 0 1 2-2"/>',
-    bot: '<path d="M12 8V4H8"/> <rect width="16" height="12" x="4" y="8" rx="2"/> <path d="M2 14h2"/> <path d="M20 14h2"/> <path d="M15 13v2"/> <path d="M9 13v2"/>',
     "message-square": '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'
   };
 
   /* label: the page's name (its title, and the hover text); short: the word on the badge */
-  var HOME = { key: "tracker", href: "index.html", label: "Accelerate tracker", short: "Accelerate" };
+  /* The public site (tools/build_public.py sets window.SITE_PUBLIC first) has its own home and
+     list. The build also cuts everything between the local-only comments out of its copy. */
+  var PUBLIC = !!window.SITE_PUBLIC;
+  var HOME = PUBLIC ? { key: "home", href: "index.html", label: "Accelerate, the toolkit's home", short: "Home" }
+    : { key: "tracker", href: "index.html", label: "Accelerate tracker", short: "Accelerate" };
   var PAGES = [
     { key: "guide", href: "SYSTEM%20DESIGN.html", label: "System design guide", short: "System design", icon: ICON.network },
     { key: "coding", href: "CODING.html", label: "Algorithms and coding", short: "Coding", icon: ICON.code },
-    { key: "cheatsheet", href: "CHEATSHEET.html", label: "Coding cheat sheet", short: "Cheat sheet", icon: ICON["layout-grid"] },
-    { key: "alaap", href: "ALAAP.html", label: "Alaap and TrenTorch", short: "Alaap", icon: ICON["audio-waveform"] },
-    { key: "alfred", href: "ALFRED.html", label: "alfred_", short: "alfred_", icon: ICON.bot },
-    { key: "interviews", href: "INTERVIEWS.html", label: "Interview loops", short: "Interviews", icon: ICON["message-square"] }
+    { key: "cheatsheet", href: "CHEATSHEET.html", label: "Coding cheat sheet", short: "Cheat sheet", icon: ICON["layout-grid"] }
   ];
+  if (PUBLIC) {
+    PAGES.push({ key: "dl", href: "DEEP-LEARNING.html", label: "Deep learning from scratch", short: "Deep learning", icon: ICON["audio-waveform"] });
+  }
+  /* local-only */
+  else {
+    PAGES.push(
+      { key: "alaap", href: "ALAAP.html", label: "Alaap and TrenTorch", short: "Alaap", icon: ICON["audio-waveform"] },
+      { key: "interviews", href: "INTERVIEWS.html", label: "Interview loops", short: "Interviews", icon: ICON["message-square"] });
+    /* A private script (private/site.js, gitignored) may have listed pages of its own before this
+       file ran: each goes in before the page named by its "before" key, or at the end. */
+    (window.SITE_PAGES || []).forEach(function (p) {
+      var at = PAGES.map(function (q) { return q.key; }).indexOf(p.before);
+      PAGES.splice(at < 0 ? PAGES.length : at, 0, p);
+    });
+  }
+  /* end local-only */
   window.SITE_HOME = HOME;
   window.SITE_PAGES = PAGES;
 

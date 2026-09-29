@@ -644,3 +644,14 @@ company's colour, taken from its own logo or site (Mphasis magenta, ZenML green,
 Vanguard red), with a lighter value for dark mode. A new loop, Vanguard, technical, has a
 skeleton page (`interviews/vanguard.py`) ready for its details and leads the tracker's loops.
 No change to the plan or to `CHARTER.md`.
+
+**2026-09-29 — A public toolkit on Pages; personal pages stay local.**
+GitHub Pages is now built by a workflow (`.github/workflows/pages.yml`, `tools/build_public.py`)
+from an allowlist: a landing page explaining the toolkit, the system design guide, the coding
+page and its cheat sheet, and a new deep learning path built from the Alaap plan
+(`DEEP-LEARNING.html`: foundations, PyTorch from scratch, audio ML). Visitors mark their own
+progress in their browser. The build fails if anything personal or unpublished leaks. The
+local app is unchanged. Material about one employer now lives in a gitignored `private/`
+folder that local pages load when present. The interview cards carry each company's name as a
+full-width wordmark, open the loop page in a new tab, and flip to the brand colour on hover.
+No change to the plan or to `CHARTER.md`.
