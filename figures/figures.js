@@ -1439,6 +1439,33 @@ var FIGURES = (function () {
     }
   };
 
+  /* Voice agent design (SYSTEM DESIGN.html#/designs/voice-agent): 110 px a second, t = 0 at x = 16. */
+  DIA.voiceParallel = {
+    title: "Escalate then wait, or both agents on every turn",
+    cap: "<b>Starting the heavy agent with the fast one saves the model turn and the handoff.</b> Illustrative timings for one read that needs the scheduling agent. Escalate-then-wait spends about 2.5 s deciding to escalate and handing off before any work starts. Sending the same utterance to both agents at once hides that time: the front agent acknowledges straight away and speaks the result when it lands. The price is a background run on every turn, including the ones the front agent answers alone.",
+    svg: function () {
+      var b = "";
+      b += S.text(16, 14, "Escalate, then wait", "d-t-b");
+      b += S.box({ id: "e-front", x: 16, y: 24, w: 86, h: 38, label: "Front turn", sub: "escalates", tone: "alaap" });
+      b += S.box({ id: "e-hand", x: 106, y: 24, w: 183, h: 38, label: "Handoff", sub: "context moves, agent starts", tone: "alaap" });
+      b += S.box({ id: "e-back", x: 293, y: 24, w: 271, h: 38, label: "Back agent works", sub: "reads the schedule", tone: "sys" });
+      b += S.box({ id: "e-speak", x: 568, y: 24, w: 53, h: 38, label: "Speak", tone: "now" });
+      b += S.path("M16,68 L16,74 L289,74 L289,68", "alaap");
+      b += S.text(152, 90, "about 2.5 s before any work starts", "d-t-s", "middle");
+      b += S.text(16, 110, "Both agents on every turn", "d-t-b");
+      b += S.box({ id: "p-front", x: 16, y: 118, w: 86, h: 38, label: "Front turn", sub: "acknowledges", tone: "math" });
+      b += S.box({ id: "p-speak", x: 293, y: 118, w: 53, h: 38, label: "Speak", tone: "now" });
+      b += S.box({ id: "p-back", x: 16, y: 176, w: 273, h: 38, label: "Back agent works", sub: "started with the front turn", tone: "sys" });
+      b += S.arrow(290, 195, 318, 158, { id: "p-back>p-speak" });
+      b += S.text(360, 141, "the answer, about 2.5 s sooner", "d-t-s");
+      b += S.text(330, 199, "result lands; the front agent speaks it", "d-t-s");
+      b += '<path d="M16,236 L621,236" class="d-line" stroke-width="1"/>';
+      [0, 1, 2, 3, 4, 5].forEach(function (s) { b += S.text(16 + s * 110, 250, s + " s", "d-t-x", "middle"); });
+      b += S.text(621, 266, "seconds after the caller stops talking", "d-t-x", "end");
+      return S.frame(640, 274, b);
+    }
+  };
+
   /* ---- AI engineering fundamentals, 13 figures added 2026-09-28 ---- */
 
   DIA.numpyShapes = {

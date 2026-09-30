@@ -691,3 +691,11 @@ No charter deviation: parked, not scheduled.
 A recruiter screen, date to be set. `interviews/commure.py` with Commure's own pages and the
 posting as sources, checked the same day; numbers from the resume he applied with. A `LOOPS`
 entry and a hub card. No charter deviation.
+
+**2026-09-30 — A seventh worked design: a voice agent for patient calls; the voice story leads.**
+The guide gains `voice-agent`: six steps, a high-level design, and `DIA.voiceParallel`, a timeline
+of escalate-then-wait against starting the fast and heavy agents together on every turn. Sizing
+anchors on a deployment Commure reports (200K calls a year), shown as assumptions. The Commure and
+River pages now lead with his own voice agent (live, phone and web, the parallel front and back
+agents), then MockFlow-AI; UIC is a healthcare swap. Sizing for his own system is written as
+"sized for", never as traffic. README counts seven designs. No charter deviation.

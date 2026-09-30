@@ -30,10 +30,11 @@ you have tried. Nothing is behind a login, and nothing you do is sent anywhere.
 
 A six-step framework for any design question (requirements, core entities, the API, the data
 flow, the high-level design and deep dives, each with a time budget), fifteen deep-dive
-patterns holding nearly a hundred techniques, each with its own mechanism diagram, and six
+patterns holding nearly a hundred techniques, each with its own mechanism diagram, and seven
 designs worked end to end: NotebookLM, a prior authorisation agent, an email and calendar
-agent, a coding agent, Ticketmaster, and an agent-evaluation product. A design reads one step
-at a time, with the board, how to get there, what to say, and the follow-ups to expect.
+agent, a coding agent, a voice agent for patient calls, Ticketmaster, and an agent-evaluation
+product. A design reads one step at a time, with the board, how to get there, what to say,
+and the follow-ups to expect.
 
 <p align="center"><img src="docs/screenshots/system-design.png" width="860" alt="A worked design, one step at a time"></p>
 

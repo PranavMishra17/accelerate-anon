@@ -12,10 +12,10 @@
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
 <script src="figures/icons.js?v=129ef92b"></script>
 <script src="private/site.js"></script>
-<script src="figures/figures.js?v=66f8622b"></script>
+<script src="figures/figures.js?v=b640a982"></script>
 <script src="private/figures.js"></script>
-<script src="figures/notes.js?v=e25459fa" defer></script>
-<script src="figures/notes-sd.js?v=12b71940" defer></script>
+<script src="figures/notes.js?v=8d0651f2" defer></script>
+<script src="figures/notes-sd.js?v=d13f9a7f" defer></script>
 <script src="private/notes.js" defer></script>
 <script src="figures/viewer.js?v=ecb99aae" defer></script>
 <link rel="icon" type="image/svg+xml" href="brand/system-design.svg">
@@ -616,13 +616,13 @@ const GUIDE = {
       tabPatterns: "Patterns",
       tabDesigns: "Designs",
       frameworkTitle: "System design delivery, worked end to end",
-      frameworkLede: "Six designs run through the six-step delivery framework. Every step shows what should be on your whiteboard when the step ends, how to reason your way there, and what to say out loud. Four designs are agentic, Ticketmaster is the classic baseline for contrast, and Kitaru is an agent-eval product read from its source.",
+      frameworkLede: "Seven designs run through the six-step delivery framework. Every step shows what should be on your whiteboard when the step ends, how to reason your way there, and what to say out loud. Five designs are agentic, Ticketmaster is the classic baseline for contrast, and Kitaru is an agent-eval product read from its source.",
       endProduct: "On the board: ",
       onwardTitle: "Where to go next",
       onwardPatterns: "Fifteen recurring deep-dive problems. Each one opens with a diagram, then every technique with its own mechanism diagram.",
-      onwardDesigns: "Six designs worked through all six steps, each ending with the patterns it uses and why.",
+      onwardDesigns: "Seven designs worked through all six steps, each ending with the patterns it uses and why.",
       designsTitle: "Worked designs",
-      designsLede: "Each design runs through the same six steps, then lists the deep-dive patterns it uses. Four are agentic, Ticketmaster is the classic baseline for contrast, and Kitaru is an agent-eval product read from its source.",
+      designsLede: "Each design runs through the same six steps, then lists the deep-dive patterns it uses. Five are agentic, Ticketmaster is the classic baseline for contrast, and Kitaru is an agent-eval product read from its source.",
       designsNav: "Designs",
       allDesigns: "All designs",
       stepsInDesign: "Steps in this design",
@@ -2755,6 +2755,300 @@ git_commit(message)            open_pr(title, body)         (no merge tool)
 });
 
 GUIDE.examples.push({
+  id: "voice-agent",
+  tabLabel: "Patient call voice agent",
+  title: "Voice agent for patient calls",
+  kind: "Real-time voice agent",
+  prompt: "Design an AI voice agent that answers a health system's patient phone line. It handles scheduling, rescheduling, cancellations, confirmations, FAQs and intake, writes changes back to the EHR's scheduling system, and hands clinical, authorization and medication questions to staff.",
+  lens: [
+    "The hard number is time to first audio. On a phone, a second and a half of silence sounds like a dropped call, so latency is budgeted stage by stage from the first sketch, not tuned at the end.",
+    "Two agents run on every turn: a fast one that talks and a heavy one that works. Most of the design is the policy between them, set by intent.",
+    "Anything that must happen every time is code: the filler line, the read-back before a write, the transfer to staff, the hangup. The model chooses the words, never whether these happen."
+  ],
+  steps: {
+    requirements: {
+      board: [
+        { type: "list", title: "Functional (top 3)", ordered: true, items: [
+          "Answer every call to the line and hold a spoken conversation: scheduling, rescheduling, cancellations, confirmations, FAQs and intake.",
+          "Write changes back to the EHR's scheduling system, so staff never enter them twice. Every change is read back and the patient says yes before it commits.",
+          "Hand clinical, authorization and medication questions to staff with a warm transfer and a summary, and text the caller when a task finishes after the call."
+        ]},
+        { type: "list", title: "Out of scope", items: [
+          "Clinical advice or triage, outbound campaigns, billing, and running our own carrier or EHR. A web voice surface over WebRTC is optional; the phone is primary."
+        ]},
+        { type: "defs", title: "Non-functional (quantified)", items: [
+          { term: "Responsiveness", desc: "First audio about 1 to 1.5s after the caller stops talking. Filler within about 1s of silence during a lookup. Heavy multi-step reads in 3 to 10s, with a check-in about every 5s." },
+          { term: "Write safety", desc: "No booking, cancellation or reschedule commits without a read-back and a yes. A retry or a hang-up never double-books." },
+          { term: "Scope safety", desc: "Clinical, authorization and medication questions always reach a person. What the agent declined is logged and counted." },
+          { term: "Availability", desc: "Every call is answered, even with the EHR slow or down. Abandonment at or under 3%, the figure reported for one multi-site deployment." },
+          { term: "Privacy", desc: "Audio, transcripts and records are PHI, handled under a BAA with every vendor that touches them. Each call gets a short-lived, narrowly scoped token." },
+          { term: "Replayable", desc: "Every call leaves a record that can be replayed: per-turn timing, the exact config, what the agent declined, and cost." }
+        ]},
+        { type: "math", title: "Sizing, anchored on one reported deployment (assumptions labelled)", lines: [
+          "One multi-site deployment reports 200K+ inbound calls a year across 45+ locations and 225+ providers. Over about 250 working days that is about 800 calls a day.",
+          "Assumed: 30% handled end to end, the low end of the 30 to 80% one vendor reports, depending on the workflow. The rest are routed or handed off, but the agent still answers all 800.",
+          "Assumed: 3 minutes a call, and 15% of the day's calls in the peak hour. That is about 120 calls in the peak hour.",
+          "Little's law: 120 calls an hour x 3 minutes / 60 = about 6 calls at once. Bursts at 4x reach about 25, so provision 50 concurrent calls.",
+          "Assumed: about 12 caller turns a call, so about 800 x 12 = 9,600 turns a day."
+        ], conclusion: "The fleet is small. The number to load-test is calls per worker, because noise isolation, VAD and end-of-turn detection run on CPU for every call. The 9,600 turns a day matter in the deep dives: each one starts a background run." }
+      ],
+      reasoning: [
+        "Start from the call, not the model: who calls, what they want, and which of those the agent may finish on its own.",
+        "Split the work by risk: reads the agent can answer, writes the patient must confirm, and topics that always go to a person.",
+        "On a phone, latency is a product requirement. Put a number on first audio in step 1.",
+        "Do the concurrency math. It shows the fleet is small, and that worker CPU is what to measure."
+      ],
+      script: [
+        "Three things: answer every call and hold a spoken conversation for scheduling, changes, confirmations, FAQs and intake; write changes back to the EHR's scheduler; and hand clinical, authorization and medication questions to staff.",
+        "The non-functional I would lead with is responsiveness: first audio about a second to a second and a half after the caller stops. On a phone, silence reads as a dropped call.",
+        "Then write safety. Nothing commits without a read-back and a yes, and a retry or a hang-up never books twice. And the scope rule: clinical questions always go to a person.",
+        "Sizing: one deployment reports about 200K calls a year. That is about 800 a day, about 120 in the peak hour, and around 6 calls at once. So the fleet is small; what I would load-test is how many calls one worker carries."
+      ],
+      probes: [
+        "Why not let the agent answer medication questions it is confident about? Confidence is not permission. The scope rule is policy, enforced in code, and the deployments that report results keep these with people.",
+        "What does ‘handled end to end’ mean, and how would you measure it? A call that ends with the task done and no transfer, checked against the EHR record, not the transcript."
+      ]
+    },
+
+    entities: {
+      board: [
+        { type: "defs", title: "Core entities (first draft)", items: [
+          { term: "Call", desc: "One phone or web session: channel, room, caller number, outcome, and the config it ran with." },
+          { term: "Caller and Patient", desc: "The number that called, and the patient record it resolves to after verification. Not always the same person." },
+          { term: "Turn", desc: "One caller utterance and the agent's reply, with stage timings." },
+          { term: "BackgroundJob", desc: "The heavy agent's run for one turn, tied to the call by a correlation id: status, result, and whether it was used." },
+          { term: "Appointment and SlotHold", desc: "The EHR's appointment, and our short-lived hold on a slot while the patient decides." },
+          { term: "ChangeRequest", desc: "A proposed booking, cancellation or reschedule: read-back text, the confirming turn, idempotency key, EHR result." },
+          { term: "Handoff", desc: "A transfer to staff: reason (clinical, authorization, medication, asked for a person), summary, queue." }
+        ]}
+      ],
+      reasoning: [
+        "ChangeRequest carries the hard problem: confirmation, idempotency and the EHR result meet there.",
+        "BackgroundJob is the execution noun the parallel design needs. Without a correlation id, a late result has nowhere to go.",
+        "Keep Caller and Patient apart. A parent calling for a child is ordinary."
+      ],
+      script: [
+        "Call, Turn, Caller and Patient, Appointment and SlotHold, ChangeRequest, BackgroundJob, and Handoff.",
+        "The one I would underline is ChangeRequest. Every write becomes one first, with the read-back text, the turn where the patient said yes, and an idempotency key. Nothing touches the EHR without one.",
+        "BackgroundJob ties a heavy run to the call with a correlation id, so a result that lands late still knows where it belongs."
+      ]
+    },
+
+    api: {
+      board: [
+        { type: "code", title: "Channels, the worker's one door, background jobs, and scheduling writes", code: `
+Channels
+SIP INVITE -> trunk -> media room             (one room per call)
+POST /v1/web-calls             -> { room, join_token }   (WebRTC, optional)
+
+The worker's one door into the backend
+POST /v1/calls/authorize       { room_id, caller_number, channel }
+  -> { call_id, patient_ref?, profile, token (short-lived, renewable) }
+
+Background agent
+POST /v1/calls/{callId}/jobs   { turn_id, utterance, intent } -> 202 { job_id }
+     result pushed to the call's worker by job_id; SMS if the call has ended
+
+Scheduling writes
+POST   /v1/slots/{slotId}/holds  { patient_ref, idempotency_key } -> { hold_id, expires_at }
+POST   /v1/holds/{holdId}/commit { idempotency_key, confirmed_turn_id } -> { appointment_id }
+DELETE /v1/holds/{holdId}
+
+Front agent tools (typed, small)
+find_patient(phone, dob)              effect: read
+list_appointments(patient_ref)        effect: read
+search_slots(provider, window)        effect: read
+answer_faq(topic)                     effect: read
+transfer_to_staff(reason, summary)    effect: external
+send_sms(patient_ref, template)       effect: external
+` },
+        { type: "list", title: "Choices to state out loud", items: [
+          "The worker reaches the backend through one authorize call that verifies the caller, loads the profile and issues a short-lived, renewable token. One small function to audit.",
+          "The front agent has no write tool. The back agent places holds; worker code calls commit after the patient says yes, never a model.",
+          "Every write carries an idempotency key, so a retried commit returns the first result.",
+          "Jobs return 202 and a job id. The result is pushed to the call's worker when it lands, or sent by SMS if the call has ended."
+        ]}
+      ],
+      reasoning: [
+        "Three contracts: how audio arrives, how the worker reaches the backend, and what the agents may call.",
+        "Give each tool an effect class. The front agent's set is mostly reads, on purpose.",
+        "Make commit a code path, not a tool. That one choice removes the most expensive mistake."
+      ],
+      script: [
+        "Calls come in over a SIP trunk into a media room, one per call; the web can join the same kind of room over WebRTC.",
+        "The worker has one door into the backend, an authorize call that verifies the caller and returns a short-lived token. Everything after uses that token.",
+        "Each turn posts a background job with a correlation id. Writes are a hold, then a commit with an idempotency key, and commit is called by code after the patient says yes. The front agent's own tools are reads, plus transfer and SMS."
+      ]
+    },
+
+    dataflow: {
+      board: [
+        { type: "list", title: "One caller turn", ordered: true, items: [
+          "Caller audio reaches the media room at the phone's native rate and streams to the call's worker, with no resampling. [code]",
+          "Noise isolation, then VAD, then end-of-turn detection decide the caller has finished. [small models, on CPU]",
+          "In the cascade, streaming STT finalizes the transcript; a realtime model takes the audio directly. [model]",
+          "The same utterance goes to the front agent and, as a job with a correlation id, to the back agent. [code]",
+          "The front agent answers a read from its own tools, or acknowledges and says what it is looking at. [model: fast]",
+          "If a lookup is running and the agent has been quiet for about 1s, the worker plays a filler line. [code]",
+          "The back agent's result lands. For a read the front agent speaks it; for a write it reads the change back and asks for a yes. [model: fast]",
+          "On a yes, worker code commits the hold with its idempotency key; on a no, it releases the hold. [code]",
+          "Stage timings, the config hash and cost are written to the call record. [code]"
+        ]},
+        { type: "list", title: "Around the turns", items: [
+          "A clinical, authorization or medication question, or a request for a person, triggers a warm transfer with a spoken summary. [code decides, model summarizes]",
+          "A caller who hangs up mid-task does not cancel the job; its result goes out by SMS, and an unconfirmed hold is released. [code]",
+          "An idle line gets a check-in, then a graceful end that says why. [code]"
+        ]},
+        { type: "note", text: "A prompted lead-in (‘say you are checking before a lookup’) failed on real calls, and a stricter prompt made the model say it was checking without checking. So the filler, the read-back, the transfer rule and the hangup are code." }
+      ],
+      reasoning: [
+        "Each turn is a pipeline, and latency is spent in every stage. List the stages before drawing boxes.",
+        "Tag the model steps; there are more than usual: VAD, end of turn, STT, the fast model, TTS and the back agent.",
+        "Mark the two places code overrides the model: the filler and the commit."
+      ],
+      script: [
+        "Per turn: audio at the phone's native rate into the worker; noise isolation, VAD and end-of-turn detection; then the transcript, or the realtime model takes the audio directly.",
+        "The utterance goes to both agents at once. The front agent answers or acknowledges; if it goes quiet during a lookup, the worker plays a filler line, from code.",
+        "When the back agent's result lands, a read is spoken, and a write is read back and waits for a yes. Only then does code commit it, with an idempotency key."
+      ]
+    },
+
+    hld: {
+      board: [
+        { type: "diagram", title: "Voice agent high-level design", nodes: [
+          { id: "patient", label: "Patient", sub: "phone, or web", col: 0, row: 1, tone: "external" },
+          { id: "staff", label: "Staff queue", sub: "clinical, auth, meds", col: 1, row: 0, tone: "human" },
+          { id: "room", label: "Media room", sub: "SIP trunk or WebRTC", col: 1, row: 1, tone: "service" },
+          { id: "sms", label: "SMS follow-up", sub: "late results, confirms", col: 1, row: 2, tone: "service" },
+          { id: "speech", label: "Speech brain", sub: "realtime or cascade", col: 2, row: 0, tone: "model" },
+          { id: "worker", label: "Agent worker", sub: "one per call, prewarmed", col: 2, row: 1, tone: "orchestrator" },
+          { id: "record", label: "Call records", sub: "timings, config, replay", col: 2, row: 2, tone: "store" },
+          { id: "edge", label: "Authorize edge", sub: "verify, profile, token", col: 3, row: 0, tone: "guard" },
+          { id: "back", label: "Back agent", sub: "scheduling, records", col: 3, row: 1, tone: "orchestrator" },
+          { id: "writeback", label: "Write-back", sub: "hold, commit, keyed", col: 3, row: 2, tone: "guard" },
+          { id: "ehr", label: "EHR scheduling", sub: "source of truth", col: 4, row: 1, tone: "external" }
+        ], edges: [
+          { from: "patient", to: "room", label: "call" },
+          { from: "room", to: "worker", label: "audio" },
+          { from: "room", to: "staff", label: "warm transfer" },
+          { from: "worker", to: "speech", label: "each turn" },
+          { from: "worker", to: "edge", label: "authorize" },
+          { from: "worker", to: "back", label: "utterance" },
+          { from: "back", to: "worker", label: "result" },
+          { from: "back", to: "ehr", label: "reads" },
+          { from: "back", to: "writeback", label: "hold" },
+          { from: "worker", to: "writeback", label: "commit on yes" },
+          { from: "writeback", to: "ehr", label: "once, keyed" },
+          { from: "worker", to: "record", label: "timings" },
+          { from: "worker", to: "sms", label: "follow-up", async: true },
+          { from: "sms", to: "patient", label: "text", async: true }
+        ]},
+        { type: "list", title: "Walk each request through it", ordered: true, items: [
+          "**Connect.** A call arrives over the SIP trunk, or over WebRTC from the web, into a media room. A prewarmed worker joins; the same worker code serves both channels, with the persona, turn rules and call record defined once.",
+          "**Authorize.** The worker calls the authorize edge: verify the caller, load their profile, get a short-lived renewable token. It is the worker's only door into the backend.",
+          "**Each turn.** Audio at the phone's native rate goes to the speech brain, realtime or cascade as config picks for this call. At the same moment the utterance goes to the back agent as a job.",
+          "**Reads.** The back agent reads the EHR and pushes back a result; the front agent speaks it, or has already answered from its own tools.",
+          "**Writes.** The back agent places a hold through the write-back service and returns the proposed change. The front agent reads it back; on a yes, worker code commits it once, keyed.",
+          "**Handoff and after.** Scope rules send clinical, authorization and medication questions to staff by warm transfer. Late results go out by SMS. Every turn's timings land in the call record."
+        ]},
+        { type: "defs", title: "Fields worth writing next to the stores", items: [
+          { term: "Turn", desc: "`turn_id, call_id, t_end_of_speech, t_model_start, tool_ms, t_first_audio, filler_played, job_id`" },
+          { term: "ChangeRequest", desc: "`change_id, call_id, job_id, kind, hold_id, readback_text, confirmed_turn_id, idempotency_key, ehr_result, status`" },
+          { term: "Call", desc: "`call_id, channel, room_id, brain (realtime | cascade), config_hash, outcome, declined[], cost`" }
+        ]}
+      ],
+      reasoning: [
+        "Draw the worker as the one place a call lives; everything else is a service it reaches through one door.",
+        "Put the back agent beside the worker, not behind a tool call. The two arrows between them are the design.",
+        "Draw the write path apart from reads. It is the only path that changes the EHR, and it has two guards: the hold and the keyed commit."
+      ],
+      script: [
+        "Calls land in a media room over a SIP trunk, or WebRTC from the web, and one prewarmed worker owns each call. Phone and web share the same worker code, so the persona and turn rules are defined once.",
+        "The worker authorizes once through a small edge and gets a short-lived token. Each turn goes to the speech brain, realtime or a cascade, and at the same moment to the back agent as a job.",
+        "Reads come back as results the front agent speaks. Writes come back as a held slot and a proposed change; the agent reads it back, and on a yes, code commits it once with an idempotency key.",
+        "Out-of-scope questions go to staff by warm transfer, late results go out by SMS, and every turn's timings land in the call record."
+      ],
+      probes: [
+        "Why one worker for phone and web? Forking the persona and turn rules per channel means two agents that drift apart. The channel only changes how audio arrives.",
+        "What happens when the EHR is down? Reads become ‘I will text you’. Writes take the request, and a job commits it and confirms by SMS when the EHR is back."
+      ]
+    },
+
+    deepdives: {
+      board: [
+        { type: "math", title: "Latency budget for first audio (design targets, cascade)", lines: [
+          "End-of-turn detected: 300 to 500ms after the caller stops.",
+          "Final transcript: 100 to 200ms after that.",
+          "Fast model first token: 300 to 500ms.",
+          "TTS first audio: 100 to 200ms.",
+          "Telephony and network: 100 to 150ms."
+        ], conclusion: "The sum is about 0.9 to 1.55s, so first audio lands 1 to 1.5s after the caller stops. A heavy multi-step read takes 3 to 10s, so it can never sit on the spoken path." },
+        { type: "dive", title: "A fast front agent and a heavy back agent, in parallel", nfr: "Responsiveness", problem: "A caller hears silence as failure, but a real scheduling task takes several tool calls. The fast model cannot finish it, and the heavy agent cannot answer in a second.", options: [
+          { name: "One heavy agent", take: "Correct and slow: 3 to 10s of silence on every turn that needs work." },
+          { name: "Escalate, then wait", take: "The front agent calls an escalate tool and waits. It spends a model turn plus the handoff, about 2 to 3s, on every turn that needs heavy work." },
+          { name: "Both on every turn", take: "Send the same utterance to both at the same moment. The front agent has a small, curated tool set and two lean model calls; the back agent is told to finish the task and hand back the result." }
+        ], pick: "Both on every turn, with policy by intent. For reads, the front agent answers if its tools can; otherwise it acknowledges, says what it is looking at, and uses the back agent's result when it lands, or first if it lands first. For writes, the front agent never acts alone: it waits, reads the change back, and the patient confirms before commit. The price is a background run on every turn, including ones already answered: about 9,600 a day at this size. At 10x, gate the run by intent, or cancel it once the front agent has answered." },
+        { type: "fig", key: "voiceParallel" },
+        { type: "defs", title: "The hard parts of running two agents", items: [
+          { term: "Correlation", desc: "A correlation id ties each job to its call and turn, so a late result is used, or dropped, on purpose." },
+          { term: "A long wait", desc: "Filler after about 1s of silence, then a check-in about every 5s that says what it is still looking at." },
+          { term: "A hang-up mid-task", desc: "The job runs to the end. A read result goes out by SMS; an unconfirmed hold expires and never commits." },
+          { term: "Two answers", desc: "If the back agent's result contradicts what the front agent said, the agent corrects itself out loud, and the call becomes an eval case." }
+        ]},
+        { type: "dive", title: "Things that must happen every time belong in code", nfr: "Responsiveness, write safety", problem: "A prompted lead-in (‘say you are checking before a lookup’) worked in isolation and failed on real calls with impatient callers. A stricter prompt made the model say ‘checking your calendar’ without checking.", options: [
+          { name: "A stronger prompt", take: "Moves the failure; the model now claims actions it did not take." },
+          { name: "Filler from the worker", take: "When a lookup is running and the agent has been quiet about 1s, worker code says ‘let me check’. The model never decides whether to." },
+          { name: "The same rule for the rest", take: "Hangups, the read-back before a write, and the transfer rule are code paths too." }
+        ], pick: "Code for anything that must happen every time. The model chooses the words; code decides whether they happen." },
+        { type: "dive", title: "Turn-taking and interruptions", nfr: "Responsiveness", problem: "Phone audio is noisy, callers say ‘mm-hm’ while the agent talks, and a TV in the room is not an interruption. Stop on every sound and the agent never finishes a sentence; ignore sound and it talks over people.", options: [
+          { name: "VAD with a fixed silence timeout", take: "Simple; cuts people off mid-thought and stops for a cough." },
+          { name: "Noise isolation, VAD, then end-of-turn detection", take: "A turn ends when the end-of-turn model says so, 300 to 500ms after speech, not after a fixed pause." },
+          { name: "An explicit interruption policy", take: "A backchannel keeps the agent talking, a real interruption stops it, and background noise resumes where it left off. An idle line gets a check-in, then a graceful end that says why." }
+        ], pick: "All three layers, with the interruption policy written as code and tested on recorded calls." },
+        { type: "dive", title: "EHR write-back without double-booking", nfr: "Write safety", problem: "The caller says yes, the commit times out, and the worker retries. Or the caller hangs up between the read-back and the yes.", options: [
+          { name: "Book on the yes", take: "One network failure and the retry books twice." },
+          { name: "Hold, confirm, commit with a key", take: "The back agent holds the slot; the read-back names it; the commit carries an idempotency key, so a retry returns the first result. A hang-up before the yes lets the hold expire." },
+          { name: "EHR slow or down", take: "Take the request, say ‘I will text you to confirm’, and let a job commit and send the SMS." }
+        ], pick: "Hold, confirm, commit, keyed. The agent never tells a caller they are booked until the EHR has returned an appointment id." },
+        { type: "dive", title: "Two brains behind one seam, chosen by evals", nfr: "Responsiveness, replayable", problem: "A realtime speech-to-speech model is fast and natural; a cascade is easier to inspect and swap. Taste picks one, and voice regressions hide: a wrong tool, a model 300ms slower, a detector that cuts people off.", options: [
+          { name: "Realtime speech-to-speech", take: "Lowest latency. Session config can be all-or-nothing: on some providers one unsupported option silently drops turn detection and transcription." },
+          { name: "Cascade", take: "Streaming STT with end-of-turn detection, a fast text model, streaming TTS. Each stage timed and swappable." },
+          { name: "Both, and three eval layers", take: "Text-mode scenarios in CI, where a wrong tool or argument fails the build; simulated callers with noise and network jitter, nightly; and replay of real calls." }
+        ], pick: "Both behind one interface, config picks per call, and the eval harness decides which ships. Build the evals before tuning; write the gates as code and run them in warning mode until cutover. Keep a measured allowlist of session options per model version." },
+        { type: "list", title: "Lessons worth saying out loud", items: [
+          "Read the SDK for event order. A disconnect can fire before a failed connect rejects, and muting a mic does not stop its track.",
+          "Missing data is not evidence. An empty timing field means a stage was not measured, not that it took no time.",
+          "Merged is not deployed when the worker ships separately. Verify on a real call.",
+          "Keep audio at the phone's native rate end to end, and prewarm imports; resampling and cold starts cost latency for nothing."
+        ]}
+      ],
+      reasoning: [
+        "Open with the latency budget; it explains every choice after it.",
+        "Lead with the two agents; it is where latency and correctness trade.",
+        "Then the rules that must hold every time, the write path, and how you know it works.",
+        "Each dive names its number: first audio, double-book count, handled-end-to-end rate."
+      ],
+      script: [
+        "The budget first: end of turn, transcript, first token, first audio and the network add up to about a second to a second and a half. A heavy lookup takes 3 to 10 seconds, so it can never be on that path.",
+        "So two agents run on every turn. The utterance goes to a fast front agent and a heavy back agent at the same moment. Escalating instead would spend a model turn and a handoff, 2 to 3 seconds, every time. For reads the front agent answers or acknowledges and uses the result when it lands; for writes it waits, reads the change back, and the patient confirms. The cost is a background run on every turn, about 9,600 a day here; at 10x I would gate it by intent.",
+        "Anything that must happen every time is code. A prompted ‘let me check’ failed on real calls, and a stricter prompt made the model claim it was checking when it was not. So the filler, the read-back and the transfer are code.",
+        "Writes are hold, confirm, commit with an idempotency key, so a retry or a hang-up never double-books. And the brain, realtime or cascade, is chosen by an eval harness built before tuning: text scenarios in CI, simulated callers nightly, and replay of real calls."
+      ],
+      probes: [
+        "The back agent's result arrives after the front agent already said something different. Which wins? The back agent's result; the agent corrects itself, and the call becomes an eval case.",
+        "The caller hangs up during a 10-second lookup. The job finishes, a read result goes out by SMS, and an unconfirmed hold expires.",
+        "What would you cut at 10x? The background run on turns the front agent can answer: gate it by intent, or cancel it once answered."
+      ]
+    }
+  },
+  refs: [
+    { label: "Commure: voice AI systems for patient call automation", url: "https://www.commure.com/blog-agents/voice-ai-systems-patient-call-automation" },
+    { label: "Commure: best voice AI agents in healthcare (the multi-site deployment they report)", url: "https://www.commure.com/blog-agents/best-voice-ai-agents-in-healthcare" },
+    { label: "Commure: how AI agents expand call center capacity and patient access", url: "https://www.commure.com/blog/how-ai-agents-expand-call-center-capacity-and-patient-access" }
+  ]
+});
+
+GUIDE.examples.push({
   id: "ticketmaster",
   tabLabel: "Ticketmaster (baseline)",
   title: "Ticketmaster",
@@ -3413,6 +3707,55 @@ GUIDE.patternUsage = {
       { groups: ["search"], why: "ripgrep inside the sandbox beats maintaining a code index per repo at this scale." },
       { groups: ["multi-step"], why: "The agent loop is the process; a workflow engine would duplicate the lease and checkpoint design." },
       { groups: ["geo"], why: "No location in the product." }
+    ]
+  },
+
+  "voice-agent": {
+    uses: [
+      { group: "llm-cost", why: "First audio in about a second leaves no room for a heavy model on the spoken path.", techniques: [
+        { id: "streaming", how: "STT, the fast model and TTS all stream, and first audio is timed on every turn." },
+        { id: "routing", how: "A fast model talks; the heavy agent works in the background." },
+        { id: "batch-parallel", how: "The front and back agents start on the same utterance at the same moment, saving the 2 to 3s an escalation would cost." }
+      ]},
+      { group: "agent-safety", why: "The agent changes real appointments and talks to patients about their care.", techniques: [
+        { id: "policy-gate", how: "Scope rules in code send clinical, authorization and medication questions to staff." },
+        { id: "effect-classes", how: "The front agent's tools are reads plus transfer and SMS; it has no write tool." },
+        { id: "hitl-undo", how: "Every write is read back, and the patient says yes before it commits." },
+        { id: "least-privilege", how: "The worker reaches the backend through one authorize call and a short-lived, renewable token." }
+      ]},
+      { group: "multi-step", why: "A booking is hold, read back, confirm and commit, on a call that can drop at any step.", techniques: [
+        { id: "state-machine", how: "A ChangeRequest moves proposed, held, read back, confirmed, committed, or released." },
+        { id: "idempotency", how: "The commit carries an idempotency key, so a retry or a hang-up never double-books." }
+      ]},
+      { group: "contention", why: "Two callers, or a caller and the front desk, can want the same slot.", techniques: [
+        { id: "reservation", how: "A short hold on the slot while the patient decides, then a commit or an expiry." }
+      ]},
+      { group: "long-running", why: "Heavy reads take 3 to 10s and can outlive the call.", techniques: [
+        { id: "async-job", how: "Each turn starts a background job with a correlation id; the result is pushed to the call's worker." },
+        { id: "priority-cancel", how: "A job whose turn the front agent already answered can be cancelled; at 10x, gate it by intent." }
+      ]},
+      { group: "reliability", why: "Every call must be answered, and the EHR is sometimes slow or down.", techniques: [
+        { id: "degradation", how: "With the EHR down, the agent takes the request and confirms by SMS later." },
+        { id: "timeouts-retries", how: "EHR calls have timeouts; a commit retries safely under its idempotency key." },
+        { id: "monitoring", how: "Stage timings on every turn, watched per model version; an empty field means unmeasured, not fast." }
+      ]},
+      { group: "real-time", why: "Audio streams both ways, and results must reach a live call.", techniques: [
+        { id: "stateful-routing", how: "One worker owns a call for its whole life; audio and job results route to it by call id." }
+      ]},
+      { group: "grounding", why: "A wrong tool or a slower turn hides until real calls.", techniques: [
+        { id: "structured", how: "The back agent returns typed results and proposed changes, not free text." },
+        { id: "eval-gate", how: "Text-mode scenarios in CI fail the build on a wrong tool or argument; simulated callers run nightly." },
+        { id: "shadow-online", how: "Gates run in warning mode until cutover, and real calls are replayed against a candidate config." }
+      ]},
+      { group: "large-blobs", why: "Call audio is kept so real calls can be replayed.", techniques: [
+        { id: "metadata-split", how: "Audio sits in encrypted object storage; the call record holds the timings, the config hash and the key." }
+      ]}
+    ],
+    notNeeded: [
+      { groups: ["scaling-reads", "scaling-writes"], why: "About 6 calls at once and 9,600 turns a day; one Postgres and a small worker fleet carry it." },
+      { groups: ["agent-durability"], why: "Calls last minutes and jobs seconds; a dropped call is a callback, and the keyed commit covers retries." },
+      { groups: ["search"], why: "Lookups are by patient, provider and date, which ordinary indexes cover." },
+      { groups: ["geo"], why: "Location is only a clinic filter on the slot search." }
     ]
   },
 
