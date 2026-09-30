@@ -37,8 +37,8 @@ PREP_LEAD = ("A recruiter screen. Read how to show up, then say the intro, why C
 
 SHOW_UP = [
     ("Know the product in one line.", "AI call center agents that pick up every patient call: scheduling, rescheduling, cancellations, confirmations, FAQs and intake, written back to Epic, Cerner or Athena. Clinical questions go to staff."),
-    ("Lead with healthcare voice.", "At UIC you deployed an INT8 audio model at 150 ms p95 for assistant-patient voice interaction, for 200 concurrent users across the hospital network. Then MockFlow-AI on LiveKit, under 400 ms."),
-    ("Then production agents.", "alfred_: tool execution, conversation state, evals over 12 failure classes, and irreversible actions confirmed in code. EHR write-back is the same problem."),
+    ("Lead with MockFlow-AI.", "A real-time voice agent you built end to end on LiveKit: streaming speech in and out, under 400 ms, a conversation that moves through stages only by tool call, and an LLM-as-judge you calibrated against human grades. That is the role in miniature."),
+    ("Then alfred_ for production.", "alfred_: tool execution, conversation state, evals over 12 failure classes, and irreversible actions confirmed in code. EHR write-back is the same problem."),
     ("Say Python.", "The role is Python first. Your Python: FastAPI services, the UIC backend, the eval tooling, PyTorch. alfred_'s product code is TypeScript; say so if asked."),
     ("Outcomes, then stop.", "A recruiter wants what changed and what you owned, with a number. Leave the architecture for the technical rounds."),
     ("Logistics: one line each.", "The posting says Mountain View, on site five days. Pay, relocation, work authorization, start date: your answers are in chat."),
@@ -82,8 +82,8 @@ SCRIPTS = [
          "From there I joined WheelPrice, which was a much more startup-oriented environment. I was working across the stack and got a lot more exposure to shipping things that were actually being used by customers. It was a small engineering team, so I had to be pretty broad — backend, AI, infrastructure, and product work all kind of blended together.",  # verbatim
          "After that I joined alfred_, where I've been working as a founding LLM engineer. It's an AI assistant, and my work has become much more focused on reliability and evaluation — things like building the eval harness, production failure detection, working memory, and making sure agent changes actually improve the product rather than just looking better on a benchmark.",  # verbatim
          "The common thread through all of that has really been building AI systems in environments where you don't have a perfectly defined problem in front of you. You have to figure out what's broken, decide what to build, and then own it through production.",  # verbatim
-         "And voice in healthcare is where a lot of that started for me: at the UIC lab I deployed an audio model for patient voice interaction across the hospital network. So a voice agent that actually answers patients' calls is pretty much where I want to be."],
-     "land": "Research, shipping, production agents; and healthcare voice is where it started.",
+         "And on the side I've built real-time voice agents, a voice interview platform on LiveKit. So an agent that actually answers patients' calls and finishes the job is pretty much where I want to be."],
+     "land": "Research, shipping, production agents, and real-time voice on the side.",
      "notes": ["Paragraphs 1 to 4 are your words, unchanged. Only the last line is new."]},
 
     {"id": "why-commure", "title": "Why Commure? Why voice agents?", "length": "about 60 seconds",
@@ -92,23 +92,26 @@ SCRIPTS = [
      "say": [
          "A couple of things. From what I read, around 30% of patient calls never get answered, and each one is someone trying to see a doctor. Your agents pick up every call and actually finish the job: they book, reschedule, do intake, and write it back to Epic or Athena. That's a real problem with a real person on the other end.",
          "Second, it's the hardest version of the work I like. Real-time voice, where latency and interruptions matter, plus an agent that takes actions in a system of record, where a wrong booking is worse than no booking. I've worked on both sides: real-time voice with LiveKit, and a production agent that sends email and changes calendars for 5,000-plus people.",
-         "And healthcare isn't new to me. At UIC I built the backend and deployed an audio model for patient voice interaction on the hospital network, and my research is on multi-agent medical reasoning.",
+         "And healthcare isn't new to me: my research is on multi-agent medical reasoning, and at the UIC lab I worked on voice for patients in the hospital.",
          "So it's a problem I care about, in a domain I've worked in, at a company that's already deployed at scale."],
      "swaps": [{"when": "If she asks what stood out", "line": "That clinical questions go to staff by design. Knowing what an agent shouldn't handle is most of what makes it safe."}],
      "land": "Every patient call answered and finished; real-time voice plus actions in the EHR; healthcare I've worked in.",
      "notes": ["Facts from Commure's own pages (Sources). Say 'from what I read' for their figures."],
      "never": ["Don't quote their savings figures as fact: 'they report'."]},
 
-    {"id": "voice", "title": "Your voice and healthcare work", "length": "about 90 seconds",
+    {"id": "voice", "title": "Your voice work: MockFlow-AI first", "length": "about 90 seconds",
      "when": "When she asks what you've done that's closest to the role. Outcomes first.",
-     "probes": ["What was the latency?", "What did you own?", "Was it used by real patients?"],
+     "probes": ["What was the latency?", "What did you own?", "How do you handle interruptions?", "Is it live?"],
      "say": [
-         "Three pieces. At the UIC lab I deployed an audio ML inference service for assistant-patient voice interaction: the model quantized to INT8 and served with TorchScript at 150 milliseconds p95, with a Python and Postgres backend, supporting 200 concurrent users across the UIC hospital network.",
-         "Then MockFlow-AI, a real-time voice interview platform I built on LiveKit: streaming speech-to-text and text-to-speech, under 400 milliseconds end to end, with the conversation moving through stages only when the model calls a tool, so it can't wander.",
-         "And at alfred_, the production side: an agent that takes real actions, sending email and changing calendars, with an eval harness that replays production scenarios nightly across 12 failure classes, and code that confirms every irreversible action."],
-     "swaps": [{"when": "If she asks how that maps to EHR write-back", "line": "It's the same shape as alfred_ confirming a send or a delete in code, whatever the model thinks: the model proposes the booking, code checks it and writes it."}],
-     "land": "Healthcare voice in production, real-time voice under 400 ms, and agents that act safely.",
-     "notes": ["Numbers from the resume you applied with: 150 ms p95, INT8, TorchScript, 200 concurrent users; sub-400ms; 12 failure classes."]},
+         "The closest is MockFlow-AI, a real-time voice interview platform I built end to end. It runs on LiveKit over WebRTC: Deepgram for speech to text, a small GPT model, streaming text to speech, and Silero to detect when someone is speaking. It's live, and it's under 400 milliseconds end to end, about five times faster than the polling version I started with.",
+         "The part that maps to Commure is control. An interview, like a scheduling call, has stages. The model can't drift to the next one on its own: it has to call a transition tool, after a minimum number of questions, and a timer forces the move if a stage runs long. And if a transition fires while the person is still talking, it queues an acknowledgement so it doesn't cut them off.",
+         "It also grades the interview: evidence-cited scoring across five competencies, with the verdict computed in code, calibrated against 50 human-graded items at a weighted Cohen's kappa of 0.82.",
+         "And at alfred_, the production side: an agent that takes real actions for 5,000-plus people, with an eval harness that replays production scenarios nightly across 12 failure classes, and code that confirms every irreversible action."],
+     "swaps": [{"when": "If she asks how that maps to EHR write-back", "line": "It's the same shape as alfred_ confirming a send or a delete in code, whatever the model thinks: the model proposes the booking, code checks it and writes it."},
+               {"when": "If she asks about healthcare", "line": "My research is multi-agent medical reasoning, TeamMedAgents, and at the UIC lab I deployed an INT8 audio model at 150 milliseconds p95 for patient voice interaction on the hospital network."}],
+     "land": "A live real-time voice agent under 400 ms with tool-driven stages, plus agents that act safely in production.",
+     "notes": ["Numbers from the resume you applied with and the master reference: sub-400ms, 5x over polling, kappa 0.82 over 50 items, 12 failure classes, 150 ms p95.",
+               "UIC is a swap now, for when she asks about healthcare, not the opener."]},
 
     {"id": "logistics", "title": "Logistics she will ask", "length": "a line each",
      "when": "Your answers are in chat, not on this page.",
@@ -124,12 +127,12 @@ QA = [
     {"group": "The posting, mapped to your work", "blurb": "Each line of the posting and where you've done it. Say the first answer; the rest are for when she reads a line back.", "items": [
         {"q": "How does your background fit the role?", "short": "The fit, in one answer", "tests": "Is the resume real, and does it match?",
          "a": ["Most of it maps directly. The posting asks for Python backends for real-time voice agents, conversation state and tool execution, low-latency pipelines from telephony through ASR, the LLM and TTS, and quality: testing, LLM evaluation and observability.",
-               "I've done real-time voice twice, in a hospital setting and on LiveKit, and evaluation and tool execution for a production agent. What I haven't done is EHR integrations like Epic or telephony at call-center scale, and I'd rather say that plainly."],
+               "I've built a real-time voice agent end to end on LiveKit, and done evaluation and tool execution for a production agent. What I haven't done is EHR integrations like Epic or telephony at call-center scale, and I'd rather say that plainly."],
          "land": "Real-time voice, tool execution and evals, done; EHRs and call-center telephony named as new.",
          "parts": [
              {"title": "Where you've done each line",
               "items": ["**Python backends:** the UIC Python and Postgres backend; FastAPI services; the eval tooling.",
-                        "**Real-time voice pipeline:** MockFlow-AI: LiveKit over WebRTC, Deepgram, Silero VAD, streaming TTS, under 400 ms.",
+                        "**Real-time voice pipeline:** MockFlow-AI first: LiveKit over WebRTC, Deepgram, Silero VAD, streaming TTS, under 400 ms, live.",
                         "**Conversation state and tool execution:** alfred_'s agent loop and tools; MockFlow-AI's stage machine with tool-driven transitions.",
                         "**Write-back safely:** at alfred_ code confirms every send and irreversible delete, whatever the model thinks.",
                         "**LLM evaluation:** the eval harness, scenario replay, deterministic checks plus an LLM judge, 12 failure classes, nightly; MockFlow-AI's judge at weighted kappa 0.82 against human grades.",
