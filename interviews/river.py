@@ -49,7 +49,7 @@ STORY_BLURB = "Your intro, why River, the real-time voice story, and logistics."
 SOURCES = [
     {"label": "River: company site", "url": "https://rivergtm.com",
      "why": "Liv, the AI account executive: inbound demos, objections and closing under about $25K, larger deals handed to people. Names founders of Ramp, Kalshi, Lean and Hearth as backers."},
-    {"label": "Founding Engineer posting (Jack & Jill)", "url": "https://www.jackandjill.ai/jobs/engineer/founding-engineer-170k-220k-equity-at-river-b9f2a2ae-8c33-45a2-8653-56fc6370e0a4",
+    {"label": "Founding Engineer: the job post (Jack & Jill)", "url": "https://www.jackandjill.ai/jobs/engineer/founding-engineer-170k-220k-equity-at-river-b9f2a2ae-8c33-45a2-8653-56fc6370e0a4",
      "why": "$170K to $220K plus equity. 5+ years running production backends with on-call, real-time or WebRTC depth. TypeScript, Node, WebRTC, inference serving, CI/CD, observability."},
     {"label": "Founding Engineer posting (Workfindy)", "url": "https://workfindy.com/jobs/573b10f3-171b-40fc-bf4f-123f2b60cf3b",
      "why": "The live call: speech, a rendered avatar, several LLMs and a live browser-use agent. Adds Next.js, Postgres, Redis and LiveKit."},

@@ -50,7 +50,7 @@ STORY_BLURB = "Your intro, why FDE, the one story in STAR shape, what you want n
 
 # Every outside link, checked 2026-09-29.
 SOURCES = [
-    {"label": "Founding Forward Deployed Engineer: the posting (Workable)", "url": "https://jobs.workable.com/view/4KUx4od5tWQuAWeMoxENqF/founding-forward-deployed-engineer-in-chicago-at-raydar",
+    {"label": "Founding Forward Deployed Engineer: the job post (Workable)", "url": "https://jobs.workable.com/view/4KUx4od5tWQuAWeMoxENqF/founding-forward-deployed-engineer-in-chicago-at-raydar",
      "why": "For an unnamed AI-first permanent-capital group that buys vertical SaaS companies: $50M+ raised, 8 businesses in under 2 years. Build the forward-deployed function, run discovery with executives, own deployments through adoption, build shared data infrastructure. 3 to 5 years; full stack, systems, data pipelines, LLM workflows. New York or Chicago, in office, travel."},
     {"label": "The same posting on Raydar's Workable page", "url": "https://apply.workable.com/raydar/j/6198E62EFE/",
      "why": "The original; the mirror above has the full text."},

@@ -224,7 +224,7 @@ h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--
     }
     grid.innerHTML = LOOPS.map(function (L) {
       var past = !!L.when_iso && new Date(L.when_iso).getTime() <= now;   /* no date yet: still to come */
-      if (!past) { next = L; }
+      if (!past && !next) { next = L; }   // the first upcoming: cards are sorted soonest first
       var ctx = L.subtitle || L.company;
       var brand = (L.brand ? "--b:" + L.brand + ";" : "") + (L.brandDark ? "--bd:" + L.brandDark + ";" : "");
       return '<li class="loop"' + (brand ? ' style="' + esc(brand) + '"' : "") + ">" +
