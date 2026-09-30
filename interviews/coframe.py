@@ -12,8 +12,8 @@ pay, work authorization, start date) are kept in chat, never on this public page
 
 LOOP = {
     "id": "coframe",
-    "title": "Coframe, recruiter screen",
-    "subtitle": "Agent Platform Engineer, 15 minutes",
+    "title": "Coframe, Agent Platform Engineer",
+    "subtitle": "Recruiter screen, 15 minutes",
     # Brand colour for the hub's wordmark. Coframe's violet: background:#5A52EC on the buttons
     # and labels of coframe.com (the most used accent in its inline styles; the logo SVG is
     # white and the favicon near-black). 5.4:1 on the light surface. brand_dark: the same hue

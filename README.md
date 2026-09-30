@@ -10,11 +10,14 @@
 </p>
 
 <p align="center">
-  <a href="https://pranavmishra17.github.io/self-study/"><b>Open the site</b></a> ·
-  <a href="https://pranavmishra17.github.io/self-study/SYSTEM%20DESIGN.html">System design</a> ·
-  <a href="https://pranavmishra17.github.io/self-study/CODING.html">Coding primer</a> ·
-  <a href="https://pranavmishra17.github.io/self-study/CHEATSHEET.html">Cheat sheet</a> ·
-  <a href="https://pranavmishra17.github.io/self-study/DEEP-LEARNING.html">Deep learning</a>
+  <a href="https://pranavmishra17.github.io/self-study/"><img alt="Open the site" src="https://img.shields.io/badge/Open_the_site-live-1B1A1F?style=for-the-badge"></a>
+  <a href="https://github.com/PranavMishra17/self-study"><img alt="Star on GitHub" src="https://img.shields.io/github/stars/PranavMishra17/self-study?style=for-the-badge&label=Star"></a>
+</p>
+<p align="center">
+  <a href="https://pranavmishra17.github.io/self-study/SYSTEM%20DESIGN.html"><img alt="System design: 6 designs, 15 patterns" src="https://img.shields.io/badge/System_design-6_designs_%C2%B7_15_patterns-3F6EA8?style=for-the-badge"></a>
+  <a href="https://pranavmishra17.github.io/self-study/CODING.html"><img alt="Coding primer: 121 problems, 14 AI topics" src="https://img.shields.io/badge/Coding_primer-121_problems_%C2%B7_14_AI_topics-3F7A55?style=for-the-badge"></a>
+  <a href="https://pranavmishra17.github.io/self-study/CHEATSHEET.html"><img alt="Cheat sheet: one screen" src="https://img.shields.io/badge/Cheat_sheet-one_screen-A85F3F?style=for-the-badge"></a>
+  <a href="https://pranavmishra17.github.io/self-study/DEEP-LEARNING.html"><img alt="Deep learning: 23 stages" src="https://img.shields.io/badge/Deep_learning-23_stages-7A3B5C?style=for-the-badge"></a>
 </p>
 
 <p align="center">
@@ -68,6 +71,15 @@ from spectrograms to a text-to-speech system, with the architecture drawn at eac
 stage has its goal, what to build, and an exit check with its answer.
 
 <p align="center"><img src="docs/screenshots/deep-learning.png" width="860" alt="The path, one stage at a time"></p>
+
+## Diagrams you can take apart
+
+Every diagram on the site opens full screen: hover or tap a part for a one-line note, click it
+for the explanation, and walk through the flow one step at a time.
+
+<p align="center"><img src="docs/screenshots/diagram-design.png" width="860" alt="The high-level design of an email and calendar agent"></p>
+<p align="center"><img src="docs/screenshots/diagram-deep-learning.png" width="760" alt="A speech model's architecture, from the deep learning path"></p>
+<p align="center"><img src="docs/screenshots/diagram-pattern.png" width="560" alt="A caching technique, from the system design patterns"></p>
 
 ## How to use it
 
