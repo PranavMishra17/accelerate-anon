@@ -49,7 +49,7 @@ an agent loop, a research agent, a voice pipeline, a transformer block, a BPE to
 evaluating model output, structured output, serving, and LoRA. Every code block runs offline
 and is tested.
 
-<p align="center"><img src="docs/screenshots/coding.png" width="860" alt="A problem with its examples, constraints and hint"></p>
+<p align="center"><img src="docs/screenshots/coding.png" width="860" alt="The patterns in tabs, each opening to its template, problems and variations"></p>
 
 ### Cheat sheet
 

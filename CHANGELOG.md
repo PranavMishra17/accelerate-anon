@@ -664,3 +664,11 @@ for a non-technical listener, the common questions, and questions to ask in thre
 location and work authorization are handled in chat only; the repo is public. The hub now
 lists the next call first, then undated loops, then past ones. Loop-page headings are generic.
 No change to the plan or to `CHARTER.md`.
+
+**2026-09-29 — The README is the public toolkit; a name slot and a star.**
+The README now describes only what the public site holds, with the Accelerate icon and
+screenshots of the live pages (`tools/screenshots.py`, headless Edge). The landing page's title
+reads "anon Accelerate": the name is drawn in the background colour and a soft band of light
+reveals it every few seconds; a visitor can click it and put in their own name, kept in their
+browser. A "Star on GitHub" link shows the repository's star count; the repository name lives in
+one constant in `tools/build_public.py`. `CLAUDE.md` is now local only (gitignored).

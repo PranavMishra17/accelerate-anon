@@ -13,7 +13,7 @@ OUT = os.path.join(ROOT, "docs", "screenshots")
 SHOTS = {
     "home": "",
     "system-design": "SYSTEM%20DESIGN.html#/designs/notebooklm/entities",
-    "coding": "CODING.html#pointers",
+    "coding": "CODING.html#core",
     "cheatsheet": "CHEATSHEET.html",
     "deep-learning": "DEEP-LEARNING.html",
 }
