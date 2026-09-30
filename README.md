@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="brand/accelerate.svg" width="96" height="96" alt="Accelerate">
+  <a href="https://pranavmishra17.github.io/self-study/"><img src="docs/art/accelerate.svg" width="128" height="128" alt="Accelerate"></a>
+  <a href="https://pranavmishra17.github.io/self-study/SYSTEM%20DESIGN.html"><img src="docs/art/system-design.svg" width="128" height="128" alt="System design"></a>
+  <a href="https://pranavmishra17.github.io/self-study/CODING.html"><img src="docs/art/coding.svg" width="128" height="128" alt="Coding primer"></a>
+  <a href="https://pranavmishra17.github.io/self-study/CHEATSHEET.html"><img src="docs/art/cheatsheet.svg" width="128" height="128" alt="Cheat sheet"></a>
+  <a href="https://pranavmishra17.github.io/self-study/DEEP-LEARNING.html"><img src="docs/art/deep-learning.svg" width="128" height="128" alt="Deep learning"></a>
 </p>
 
 <h1 align="center">Accelerate</h1>
@@ -12,16 +16,6 @@
 <p align="center">
   <a href="https://pranavmishra17.github.io/self-study/"><img alt="Open the site" src="https://img.shields.io/badge/Open_the_site-live-1B1A1F?style=for-the-badge"></a>
   <a href="https://github.com/PranavMishra17/self-study"><img alt="Star on GitHub" src="https://img.shields.io/github/stars/PranavMishra17/self-study?style=for-the-badge&label=Star"></a>
-</p>
-<p align="center">
-  <a href="https://pranavmishra17.github.io/self-study/SYSTEM%20DESIGN.html"><img alt="System design: 6 designs, 15 patterns" src="https://img.shields.io/badge/System_design-6_designs_%C2%B7_15_patterns-3F6EA8?style=for-the-badge"></a>
-  <a href="https://pranavmishra17.github.io/self-study/CODING.html"><img alt="Coding primer: 121 problems, 14 AI topics" src="https://img.shields.io/badge/Coding_primer-121_problems_%C2%B7_14_AI_topics-3F7A55?style=for-the-badge"></a>
-  <a href="https://pranavmishra17.github.io/self-study/CHEATSHEET.html"><img alt="Cheat sheet: one screen" src="https://img.shields.io/badge/Cheat_sheet-one_screen-A85F3F?style=for-the-badge"></a>
-  <a href="https://pranavmishra17.github.io/self-study/DEEP-LEARNING.html"><img alt="Deep learning: 23 stages" src="https://img.shields.io/badge/Deep_learning-23_stages-7A3B5C?style=for-the-badge"></a>
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/home.png" width="860" alt="The Accelerate home page: a card for each part of the toolkit">
 </p>
 
 ---

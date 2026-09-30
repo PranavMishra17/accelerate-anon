@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <title>Deep learning</title>
+  <defs>
+    <radialGradient id="g" cx="0.5" cy="0.3" r="0.75"><stop offset="0" stop-color="#7A3B5C" stop-opacity="0.32"/><stop offset="1" stop-color="#7A3B5C" stop-opacity="0"/></radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.04"/></linearGradient>
+  </defs>
+  <rect x="1" y="1" width="126" height="126" rx="26" fill="#1B1A1F"/>
+  <rect x="1" y="1" width="126" height="126" rx="26" fill="url(#g)"/>
+  <rect x="1.5" y="1.5" width="125" height="125" rx="25.5" fill="none" stroke="url(#rim)"/>
+  <g transform="translate(44 22) scale(1.6667)" fill="none" stroke="#C990AE" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13a2 2 0 0 0 2-2V7a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0V4a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0v-4a2 2 0 0 1 2-2"/></g>
+  <g fill="#ECEBF1" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="600"><text x="64" y="92" text-anchor="middle">Deep</text><text x="64" y="107" text-anchor="middle">learning</text></g>
+</svg>
