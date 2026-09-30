@@ -686,3 +686,8 @@ backend fundamentals it runs on learned in depth alongside. A six-phase sketch, 
 weeks part-time; placement decided at the re-plan after Milestone 3. Raydar's page gained the
 stack item by item, the resume lines to call out, and how AI interviewers grade.
 No charter deviation: parked, not scheduled.
+
+**2026-09-30 — A new loop: Commure, Software Engineer, Voice Agents.**
+A recruiter screen, date to be set. `interviews/commure.py` with Commure's own pages and the
+posting as sources, checked the same day; numbers from the resume he applied with. A `LOOPS`
+entry and a hub card. No charter deviation.
