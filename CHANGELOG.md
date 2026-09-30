@@ -672,3 +672,9 @@ reads "anon Accelerate": the name is drawn in the background colour and a soft b
 reveals it every few seconds; a visitor can click it and put in their own name, kept in their
 browser. A "Star on GitHub" link shows the repository's star count; the repository name lives in
 one constant in `tools/build_public.py`. `CLAUDE.md` is now local only (gitignored).
+
+**2026-09-29 — Two new loops: Raydar and River.**
+Raydar, a 15-minute screen with an AI interviewer for a Founding Forward Deployed Engineer role
+(30 September), and River, a founder call with Tarek Abillama for a founding engineer role (date
+to be set). Each is an `interviews/<module>.py` with its sources checked the same day, a `LOOPS`
+entry and a card on the hub. Logistics answers stay in chat. No charter deviation.
