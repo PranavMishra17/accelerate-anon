@@ -1810,5 +1810,171 @@ var FIGURES = (function () {
     }
   };
 
+  /* ---- Voice agent mechanisms, 4 figures added 2026-09-30 ---- */
+
+  DIA.callPath = {
+    title: "How a phone call reaches a voice agent",
+    cap: "<b>Signalling sets a call up; media carries the audio, and they travel as separate streams.</b> A phone call crosses the carrier and a SIP trunk as SIP messages (dashed) and RTP audio (solid). The media server's SIP service turns the call into a participant in a room, and a browser joins the same kind of room over WebRTC. The SFU forwards each track without mixing, and the agent worker is one more participant: it subscribes to the caller's audio and publishes its own.",
+    svg: function () {
+      var b = "";
+      b += S.text(0, 14, "Dashed: signalling, which sets the call up. SIP sends INVITE, then ringing, then answered.", "d-t-s");
+      b += S.text(0, 30, "Solid: media, the audio itself. RTP carries G.711 mu-law at 8 kHz, one packet every 20 ms.", "d-t-s");
+      b += S.box({ id: "caller", x: 0, y: 42, w: 118, h: 56, label: "Caller", sub: "phone on the PSTN", tone: "req" });
+      b += S.box({ id: "carrier", x: 174, y: 42, w: 118, h: 56, label: "Carrier", sub: "phone company", tone: "flat" });
+      b += S.box({ id: "trunk", x: 348, y: 42, w: 118, h: 56, label: "SIP trunk", sub: "PSTN meets IP", tone: "flat" });
+      b += S.box({ id: "sip", x: 522, y: 42, w: 118, h: 56, label: "SIP service", sub: "call joins a room", tone: "sys" });
+      [["caller", "carrier", 118, "dial", "voice"], ["carrier", "trunk", 292, "SIP", "RTP"], ["trunk", "sip", 466, "SIP", "RTP"]].forEach(function (h) {
+        b += S.arrow(h[2] + 2, 56, h[2] + 54, 56, { id: h[0] + ">" + h[1], dash: true, label: h[3] });
+        b += S.arrow(h[2] + 2, 84, h[2] + 54, 84, { id: h[0] + ">" + h[1] + "#2", label: h[4] });
+      });
+      b += S.arrow(560, 100, 420, 168, { id: "sip>room" });
+      b += S.text(498, 142, "caller's audio track", "d-t-s");
+      b += S.box({ id: "browser", x: 0, y: 170, w: 120, h: 52, label: "Browser", sub: "WebRTC client", tone: "req", icon: "globe" });
+      b += S.box({ id: "room", x: 250, y: 170, w: 190, h: 52, label: "Room on the SFU", sub: "forwards, never mixes", tone: "sys", icon: "server" });
+      b += S.box({ id: "agent", x: 510, y: 170, w: 130, h: 52, label: "Agent worker", sub: "a participant", tone: "iv", icon: "bot" });
+      b += S.arrow(122, 184, 248, 184, { id: "browser>room", dash: true, label: "WebSocket, SDP" });
+      b += S.arrow(122, 210, 248, 210, { id: "browser>room#2", label: "DTLS-SRTP, Opus" });
+      b += S.arrow(442, 184, 508, 184, { id: "room>agent", label: "subscribes" });
+      b += S.arrow(508, 210, 442, 210, { id: "agent>room", label: "publishes" });
+      b += S.box({ id: "nat", x: 0, y: 250, w: 240, h: 44, label: "ICE, STUN, TURN", sub: "find a path through NAT", tone: "math" });
+      b += S.arrow(60, 248, 60, 224, { id: "nat>browser", dash: true });
+      b += S.arrow(220, 248, 280, 224, { id: "nat>room", dash: true });
+      return S.frame(640, 304, b);
+    }
+  };
+
+  /* 160 px a second, t = 0 (the caller stops) at x = 260. */
+  DIA.turnTaking = {
+    title: "Turn-taking: deciding the caller has finished, then answering",
+    cap: "<b>The agent cannot start its reply until it decides the caller has finished, and that decision is the largest wait in the turn.</b> Illustrative targets for one exchange: the end-of-turn detector waits 300 to 500 ms of silence, the final transcript lands 100 to 200 ms later, the LLM's first token 300 to 500 ms after that, and the first audio 100 to 200 ms after the token, so the caller hears the agent about 1 to 1.5 s after they stop. Below: while the agent speaks, a sound from the caller can be a backchannel, a real interruption or noise, and each needs a different response.",
+    svg: function () {
+      var b = "";
+      function X(t) { return 260 + t * 160; }
+      [[-1, "-1 s"], [-0.5, "-0.5 s"], [0.5, "0.5 s"], [1, "1 s"], [1.5, "1.5 s"], [2, "2 s"]].forEach(function (t) {
+        b += S.text(X(t[0]), 12, t[1], "d-t-x", "middle");
+      });
+      b += S.text(260, 12, "caller stops", "d-t-x", "middle");
+      b += S.path("M260,18 L260,168", "flat", true);
+      ["Caller", "VAD", "End of turn", "STT", "LLM", "TTS"].forEach(function (l, i) { b += S.text(0, 39 + i * 30, l, "d-t-s"); });
+      b += S.box({ id: "speech", x: 100, y: 24, w: 160, h: 22, label: "speaking", tone: "req" });
+      b += S.box({ id: "vad", x: 104, y: 54, w: 164, h: 22, label: "speech detected", tone: "flat" });
+      b += S.text(276, 69, "then silence", "d-t-s");
+      b += S.box({ id: "eot", x: 260, y: 84, w: 64, h: 22, label: "waits", tone: "alaap" });
+      b += S.text(332, 99, "decides the turn is over: 300 to 500 ms", "d-t-s");
+      b += S.box({ id: "partials", x: 110, y: 114, w: 150, h: 22, label: "partials", tone: "flat", dash: true });
+      b += S.box({ id: "final", x: 324, y: 114, w: 24, h: 22, tone: "sys" });
+      b += S.text(356, 129, "final transcript, 100 to 200 ms later", "d-t-s");
+      b += S.box({ id: "llm", x: 348, y: 144, w: 64, h: 22, tone: "sys" });
+      b += S.text(420, 159, "first token, 300 to 500 ms", "d-t-s");
+      b += S.text(404, 189, "first audio 100 to 200 ms after the first token", "d-t-s", "end");
+      b += S.box({ id: "synth", x: 412, y: 174, w: 24, h: 22, tone: "sys" });
+      b += S.box({ id: "audio", x: 436, y: 174, w: 184, h: 22, label: "agent speaks", tone: "now" });
+      b += S.node("ttfa", S.path("M260,200 L260,210 L436,210 L436,200", "now") +
+        S.text(348, 226, "time to first audio: about 1.1 s", "d-t-b", "middle"));
+
+      b += S.text(0, 254, "A sound from the caller while the agent speaks", "d-t-b");
+      var y = 266;
+      b += S.node("backchannel", S.text(0, y + 13, "Backchannel", "d-t-s") +
+        S.bar({ x: 100, y: y, w: 520, h: 18, tone: "now" }) + S.text(440, y + 13, "agent keeps talking", "d-t-s", "middle") +
+        S.bar({ x: 220, y: y + 22, w: 50, h: 16, tone: "req" }) + S.text(245, y + 34, "mm-hm", "d-t-s", "middle") +
+        S.text(280, y + 34, "short, asks for nothing: not a turn", "d-t-x"));
+      y = 312;
+      b += S.node("interruption", S.text(0, y + 13, "Interruption", "d-t-s") +
+        S.bar({ x: 100, y: y, w: 232, h: 18, tone: "now" }) + S.text(216, y + 13, "agent speaks", "d-t-s", "middle") +
+        S.text(342, y + 13, "stops within about 200 ms, listens", "d-t-s") +
+        S.bar({ x: 300, y: y + 22, w: 320, h: 16, tone: "req" }) + S.text(460, y + 34, "caller: \"wait, make it Tuesday\"", "d-t-s", "middle"));
+      y = 358;
+      b += S.node("noise", S.text(0, y + 13, "Noise", "d-t-s") +
+        S.bar({ x: 100, y: y, w: 200, h: 18, tone: "now" }) + S.text(200, y + 13, "agent speaks", "d-t-s", "middle") +
+        S.text(340, y + 13, "pauses", "d-t-s", "middle") +
+        S.bar({ x: 380, y: y, w: 240, h: 18, tone: "now" }) + S.text(500, y + 13, "resumes: no words heard", "d-t-s", "middle") +
+        S.bar({ x: 290, y: y + 22, w: 36, h: 16, tone: "flat" }) + S.text(334, y + 34, "a door, a TV: sound but no words", "d-t-x"));
+      return S.frame(640, 404, b);
+    }
+  };
+
+  DIA.eventLoop = {
+    title: "One event loop, many calls",
+    cap: "<b>An asyncio event loop runs many calls on one thread by switching whenever a call awaits I/O.</b> Each call runs for a moment, then awaits audio frames, a model stream or a tool's HTTP reply, and the loop runs whichever call is ready. That only works while every call keeps awaiting: one call doing CPU work inline (VAD, resampling) holds the thread, and every call on the loop stalls with it. The fix moves that work off the loop, with asyncio.to_thread or run_in_executor on a thread or process pool, or into a separate worker process, so the loop stays free.",
+    svg: function () {
+      var b = "";
+      var TONE = ["sys", "math", "iv"];
+      function slices(xs, y, tone) { return xs.map(function (x) { return S.bar({ x: x, y: y, w: 16, h: 18, tone: tone }); }).join(""); }
+      function waiting(x, y, w) { return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="18" rx="3" class="d-fill-flat d-str-alaap" stroke-width="1" stroke-dasharray="4 3"/>'; }
+      var H = [[110, 230, 350, 470, 590], [130, 270, 390, 510], [150, 310, 430, 550]];
+      var AW = [[178, "awaits audio"], [208, "awaits model tokens"], [238, "awaits tool HTTP"]];
+
+      b += S.text(0, 12, "One thread, many calls: each runs until it awaits I/O, then the loop switches", "d-t-b");
+      H.forEach(function (xs, i) {
+        var y = 22 + i * 24;
+        b += S.node("h-call" + (i + 1), S.text(0, y + 13, "Call " + (i + 1), "d-t-s") + slices(xs, y, TONE[i]) +
+          S.text(AW[i][0], y + 13, AW[i][1], "d-t-x", "middle"));
+      });
+      b += S.node("h-thread", S.text(0, 107, "Thread", "d-t-s") + H.map(function (xs, i) { return slices(xs, 94, TONE[i]); }).join(""));
+
+      b += S.text(0, 136, "Blocking: call 1 runs VAD on the loop, and every call stalls", "d-t-b");
+      b += S.node("b-cpu", S.text(0, 159, "Call 1", "d-t-s") + S.bar({ x: 110, y: 146, w: 260, h: 18, tone: "alaap" }) +
+        S.text(240, 159, "VAD inline: 200 ms of CPU, no await", "d-t-s", "middle") +
+        S.text(380, 159, "the loop cannot switch", "d-t-x"));
+      b += S.node("b-waiting", S.text(0, 183, "Call 2", "d-t-s") + waiting(150, 170, 220) +
+        S.text(260, 183, "tokens ready, waiting", "d-t-x", "middle") + slices([370], 170, "math") +
+        S.text(0, 207, "Call 3", "d-t-s") + waiting(170, 194, 220) +
+        S.text(280, 207, "reply ready, waiting", "d-t-x", "middle") + slices([390], 194, "iv"));
+      b += S.node("b-thread", S.text(0, 231, "Thread", "d-t-s") + S.bar({ x: 110, y: 218, w: 260, h: 18, tone: "alaap" }) +
+        S.text(240, 231, "busy with call 1 only", "d-t-s", "middle") + slices([370], 218, "math") + slices([390], 218, "iv") +
+        S.text(420, 231, "every call's audio queues up", "d-t-x"));
+
+      b += S.text(0, 260, "Offloaded: call 1 awaits a worker thread, so the loop keeps switching", "d-t-b");
+      b += S.text(0, 283, "Call 1", "d-t-s");
+      b += S.box({ id: "f-call1", x: 110, y: 270, w: 16, h: 18, tone: "sys" });
+      b += S.text(134, 283, "await asyncio.to_thread(vad)", "d-t-x");
+      b += S.box({ id: "f-call1", x: 374, y: 270, w: 16, h: 18, tone: "sys" });
+      b += S.text(396, 283, "result back, carries on", "d-t-x");
+      b += S.node("f-others", S.text(0, 307, "Call 2", "d-t-s") + slices([150, 250, 330, 450, 550], 294, "math") +
+        S.text(0, 331, "Call 3", "d-t-s") + slices([190, 290, 410, 510, 590], 318, "iv"));
+      b += S.text(0, 355, "Pool", "d-t-s");
+      b += S.box({ id: "f-pool", x: 130, y: 342, w: 240, h: 18, label: "VAD on a worker thread", tone: "math" });
+      b += S.text(380, 355, "or a process pool, or a separate worker", "d-t-x");
+      b += S.arrow(120, 290, 134, 340, {});
+      b += S.arrow(366, 340, 380, 290, {});
+      return S.frame(640, 370, b);
+    }
+  };
+
+  DIA.idempotencyKey = {
+    title: "A retry must not do it twice",
+    cap: "<b>An idempotency key lets the server recognise a retry and answer it from the record instead of doing the work again.</b> The client sends the booking with a key. The server books the slot and stores the key with its result in the same transaction, so both happen or neither does. The response is lost, so the client retries with the same key; the server finds the key and returns the stored result, and the slot is booked once. With no key, the retry looks like a new request and books a second slot.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "client", x: 0, y: 0, w: 130, h: 40, label: "Client", sub: "retries on timeout", tone: "req" });
+      b += S.box({ id: "server", x: 240, y: 0, w: 150, h: 40, label: "Booking API", tone: "sys", icon: "server" });
+      b += S.box({ id: "db", x: 480, y: 0, w: 160, h: 40, label: "Database", tone: "math", icon: "database" });
+      b += S.path("M65,42 L65,282", "flat", true);
+      b += S.path("M315,42 L315,282", "flat", true);
+      b += S.path("M560,42 L560,72", "flat", true);
+      b += S.arrow(67, 62, 313, 62, { id: "client>server", label: "book 3 pm, key k7" });
+      b += S.arrow(317, 100, 468, 100, { id: "server>tx", label: "one commit" });
+      b += S.box({ id: "tx", x: 470, y: 74, w: 170, h: 52, label: "One transaction", sub: "book 3 pm + save k7", tone: "math" });
+      b += S.arrow(313, 131, 198, 131, { id: "server>lost", dash: true, label: "201, booking 42" });
+      b += S.box({ id: "lost", x: 120, y: 118, w: 74, h: 26, label: "lost", tone: "alaap", icon: "x" });
+      b += S.text(67, 162, "the client times out and cannot tell if it booked", "d-t-s");
+      b += S.arrow(555, 128, 555, 202, { id: "tx>ledger" });
+      b += S.text(547, 170, "writes the row", "d-t-s", "end");
+      b += S.node("ledger", '<rect x="440" y="204" width="200" height="52" rx="0" class="d-fill-math d-str-math" stroke-width="1.25"/>' +
+        '<path d="M440,226 L640,226" class="d-str-math" stroke-width="1"/>' +
+        S.text(452, 220, "key", "d-t-x") + S.text(494, 220, "status", "d-t-x") + S.text(556, 220, "result", "d-t-x") +
+        S.text(452, 245, "k7", "d-t") + S.text(494, 245, "done", "d-t") + S.text(556, 245, "booking 42", "d-t"));
+      b += S.arrow(67, 196, 313, 196, { id: "client>server#2", label: "retry, same key k7" });
+      b += S.arrow(317, 222, 438, 222, { id: "server>ledger", label: "look up k7" });
+      b += S.arrow(438, 248, 317, 248, { id: "ledger>server", dash: true, label: "found" });
+      b += S.arrow(313, 274, 67, 274, { id: "server>client", label: "201, booking 42 again, no new booking" });
+      b += S.text(0, 312, "Without a key", "d-t-b");
+      b += S.box({ id: "nokey", x: 0, y: 322, w: 300, h: 44, label: "Retry with no key", sub: "the server cannot tell it is a repeat", tone: "alaap" });
+      b += S.arrow(302, 344, 358, 344, { id: "nokey>twice" });
+      b += S.box({ id: "twice", x: 360, y: 322, w: 280, h: 44, label: "Two bookings at 3 pm", sub: "booking 42 and booking 43", tone: "alaap", icon: "triangle-alert" });
+      return S.frame(640, 376, b);
+    }
+  };
+
   return { S: S, DIA: DIA, slug: slug };
 })();

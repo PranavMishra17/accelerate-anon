@@ -699,3 +699,14 @@ anchors on a deployment Commure reports (200K calls a year), shown as assumption
 River pages now lead with his own voice agent (live, phone and web, the parallel front and back
 agents), then MockFlow-AI; UIC is a healthcare swap. Sizing for his own system is written as
 "sized for", never as traffic. README counts seven designs. No charter deviation.
+
+**2026-09-30 — Commure prep rebuilt: understand, then design, then say.**
+Six wildcard sessions, wc19 to wc24, Thursday to Sunday before the Commure screen on 5 October:
+how a call reaches an agent (SIP, RTP, WebRTC, the SFU, dispatch), the conversation loop,
+the backend under a live agent (edge functions and workers, push and pull, idempotency,
+timeouts, scaling), Python async with a small orchestrator to build, his own voice agent drawn
+cold, and the guide's patient-call design timed, then the pitch. Each step teaches first, with
+checked reading in `data/reading.js`. Four shared figures: `callPath`, `turnTaking`, `eventLoop`,
+`idempotencyKey`. The Commure page opens with the order of work and an "Understand first" bank;
+its answers link to the sessions behind them. Why: the page had become answers to say without
+the understanding under them. No charter deviation: interview-driven wildcard sessions.

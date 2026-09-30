@@ -360,5 +360,94 @@ window.FIG_NOTES = Object.assign(window.FIG_NOTES || {}, {
       "B>merge": { "d": "B (combined with A and the alpha/r scale) is the other component folded into the merge — after merging, A and B no longer need to exist as separate matrices at serving time." }
     },
     "walk": ["x", "x>W", "W", "x>A", "A", "A>B", "B", "B>scale", "scale", "W>sum", "scale>sum", "sum", "sum>output", "output", "W>merge", "B>merge", "merge"]
+  },
+  "callPath": {
+    "nodes": {
+      "caller": { "t": "Caller", "d": "The person calling, on an ordinary phone on the public switched telephone network (PSTN). Nothing on their side knows an agent will answer: to the phone network this is a normal call to a normal number." },
+      "carrier": { "t": "Carrier", "d": "The phone company that owns the number and routes the call. Inside the phone network the call has its own signalling and its own voice channel; at the edge the carrier hands it to the internet as SIP and RTP." },
+      "trunk": { "t": "SIP trunk", "d": "A SIP trunk carries phone calls between a carrier and your system over IP. Providers such as Twilio or Telnyx sell it: you point a phone number at the trunk, and each incoming call arrives at your SIP endpoint as a SIP INVITE." },
+      "sip": { "t": "SIP service", "d": "The media server's SIP service answers the SIP call and turns it into a participant in a room. It speaks SIP and RTP on one side and the room's protocol on the other, so nothing past it sees SIP, and it converts the 8 kHz phone audio to the room's codec.\n\nIn LiveKit this is the SIP service, and its dispatch rules decide which room each call lands in." },
+      "browser": { "t": "Browser", "d": "A browser or a mobile app joins a room directly over WebRTC, with no phone network involved. It sends Opus audio at up to 48 kHz, far richer than the phone's 8 kHz, which is one reason speech-to-text does better on web calls than on phone calls." },
+      "room": { "t": "Room on the SFU", "d": "The room lives on an SFU, a selective forwarding unit: it receives each participant's tracks and forwards copies to whoever subscribes. It never decodes and mixes the audio into one stream, which keeps it cheap and fast.\n\nHere the phone caller and a browser user look the same: participants with tracks." },
+      "agent": { "t": "Agent worker", "d": "The agent worker joins the room as one more participant, as a person would. It subscribes to the caller's audio track, runs its pipeline (VAD, speech-to-text, the LLM, text-to-speech), and publishes its speech as its own track. It usually runs close to the media server, so the hop between them adds little delay.", "links": [{ "label": "Design: a voice agent for patient calls", "url": "SYSTEM%20DESIGN.html#/designs/voice-agent" }] },
+      "nat": { "t": "ICE, STUN, TURN", "d": "ICE is how two WebRTC peers find a network path to each other through NAT and firewalls. STUN tells a device its public address; TURN relays the media when no direct path works, at the cost of an extra hop. ICE tests the candidate paths and keeps one that connects." }
+    },
+    "edges": {
+      "caller>carrier": { "t": "Dialling", "d": "Dialling is the phone network's own signalling: it finds the route, rings the far end and reports when the call is answered." },
+      "caller>carrier#2": { "t": "Voice on the phone network", "d": "Once the call is up, the caller's voice travels as a channel separate from the signalling that set it up." },
+      "carrier>trunk": { "t": "SIP signalling", "d": "The carrier signals the call over SIP: an INVITE describes the call and the audio it offers (in SDP), 180 Ringing reports ringing, 200 OK means answered, and BYE ends it. SIP never carries the voice itself." },
+      "carrier>trunk#2": { "t": "RTP audio", "d": "RTP carries the audio, on its own ports, apart from SIP. Phone audio is usually G.711 mu-law: 8,000 samples a second at 8 bits each, so 64 kbit/s, sent as one packet every 20 ms of 160 samples." },
+      "trunk>sip": { "t": "SIP to your SIP service", "d": "The trunk forwards the INVITE to your SIP endpoint, the media server's SIP service. This is where the trunk is authenticated and the call is matched to a room." },
+      "trunk>sip#2": { "t": "RTP to your SIP service", "d": "The RTP audio follows on the ports agreed in the SDP. Lost or late packets are never resent, because a late packet is useless for live voice; the receiver smooths the gaps with a jitter buffer." },
+      "sip>room": { "t": "The call becomes a participant", "d": "The SIP service joins the room on the caller's behalf and publishes the caller's voice as an audio track. From here on, nothing downstream needs to know the audio came from a phone." },
+      "browser>room": { "t": "WebRTC signalling", "d": "Before any audio flows, the browser connects to the server over a WebSocket with an access token and exchanges SDP offers and answers that describe codecs and network candidates. Signalling only sets the session up; the audio takes a different path." },
+      "browser>room#2": { "t": "WebRTC media", "d": "The audio goes over UDP as SRTP, encrypted with keys agreed in a DTLS handshake, so WebRTC media is always encrypted. The codec is Opus, usually in 20 ms frames. UDP, because a resent packet would arrive too late to play." },
+      "room>agent": { "t": "The agent subscribes", "d": "The agent subscribes to the caller's audio track, and the SFU forwards those packets to it. The agent decodes them into audio frames for its VAD and speech-to-text." },
+      "agent>room": { "t": "The agent publishes", "d": "The agent publishes its synthesised speech as its own track, and the SFU forwards it to the caller: through the SIP service and back down the trunk for a phone call, or straight to the browser. To stop talking on an interruption, it stops sending frames." },
+      "nat>browser": { "t": "ICE on the browser side", "d": "The browser gathers candidate addresses: its local one, its public one from STUN, and a TURN relay. It sends them over signalling and tests each pair with the server." },
+      "nat>room": { "t": "ICE on the server side", "d": "The media server offers its own candidates, and ICE keeps a pair that passes a connectivity check. Most calls connect directly; TURN catches the corporate networks and strict NATs that block direct UDP." }
+    },
+    "walk": ["caller", "caller>carrier", "caller>carrier#2", "carrier", "carrier>trunk", "carrier>trunk#2", "trunk", "trunk>sip", "trunk>sip#2", "sip", "sip>room", "room", "browser", "browser>room", "browser>room#2", "nat", "nat>browser", "nat>room", "agent", "room>agent", "agent>room"]
+  },
+  "turnTaking": {
+    "nodes": {
+      "speech": { "t": "Caller speaking", "d": "The caller speaks, up to the moment they stop at 0 s. Everything after that is time the caller spends waiting in silence." },
+      "vad": { "t": "VAD", "d": "Voice activity detection marks, frame by frame, whether the audio holds speech. It is fast, a few tens of milliseconds a frame, but a gap in speech is not the end of a turn: people pause mid-sentence to think." },
+      "eot": { "t": "End-of-turn detector", "d": "The end-of-turn detector waits after the speech stops and decides whether the caller has finished. A plain silence timeout waits a fixed 300 to 500 ms or more; a turn-detection model also reads the words so far, so it can reply sooner after \"that's all, thanks\" and wait longer after \"my date of birth is\".\n\nToo short and the agent cuts the caller off; too long and every reply feels slow." },
+      "partials": { "t": "Partial transcripts", "d": "Streaming speech-to-text sends partial transcripts while the caller is still talking. Partials can change as more audio arrives, so they suit early work, such as a turn-detection model reading them, but not acting on." },
+      "final": { "t": "Final transcript", "d": "The final transcript lands 100 to 200 ms after the turn is judged over, once the speech-to-text has flushed its last audio. This is the text the LLM gets. Some systems start the LLM on a stable partial to save this time, and throw the work away if the caller keeps talking." },
+      "llm": { "t": "LLM to first token", "d": "The LLM reads the prompt and the transcript and produces its first token, 300 to 500 ms here. That time grows with prompt length, so a long system prompt or history costs latency on every turn; prompt caching cuts it." },
+      "synth": { "t": "TTS to first audio", "d": "Streaming text-to-speech starts on the first phrase and returns its first audio 100 to 200 ms later. It does not wait for the full reply, which is why the LLM's first token matters more than its last." },
+      "audio": { "t": "Agent speaks", "d": "The first audio reaches the caller, and the agent keeps streaming speech as tokens arrive. From here on the agent listens for the caller the whole time it talks." },
+      "ttfa": { "t": "Time to first audio", "d": "Time to first audio is the gap the caller feels: from when they stop talking to when they hear the agent. It is about 1.1 s here, inside a typical 1 to 1.5 s target; much longer and the line starts to feel dead.\n\nThe end-of-turn wait is usually its largest single part." },
+      "backchannel": { "t": "Backchannel", "d": "A backchannel is a short sound like \"mm-hm\" or \"right\" that tells the speaker to go on. The agent should keep talking. Treating it as an interruption makes the agent stop and restart every few seconds; systems tell the two apart by length, by the words, or with a model trained on turn-taking." },
+      "interruption": { "t": "Interruption", "d": "A real interruption is the caller taking the turn, often to correct something. The agent stops its audio within about 200 ms, cancels the rest of its reply and listens.\n\nIt should also keep only the part of its reply the caller heard in its history, so it does not believe it said the rest." },
+      "noise": { "t": "Noise", "d": "Background noise, like a door or a TV, can trip VAD while the agent is speaking. The agent pauses as if interrupted; when no words reach the transcript within a short window, it treats the sound as a false interruption and resumes. Noise cancellation on the caller's audio prevents many of these." }
+    },
+    "edges": {},
+    "walk": ["speech", "vad", "eot", "partials", "final", "llm", "synth", "audio", "ttfa", "backchannel", "interruption", "noise"]
+  },
+  "eventLoop": {
+    "nodes": {
+      "h-call1": { "t": "Call 1", "d": "Call 1 is one coroutine: it runs for a moment, then awaits the next audio frame and gives the thread back. While it waits the loop runs other calls, and when the frame arrives the loop resumes it where it stopped. With 20 ms frames, that is a short turn about fifty times a second." },
+      "h-call2": { "t": "Call 2", "d": "Call 2 awaits tokens from a model stream. Every await on the network is a point where the loop can switch, so a slow model on one call costs the other calls nothing." },
+      "h-call3": { "t": "Call 3", "d": "Call 3 awaits the HTTP reply of a tool call, such as a booking API. It may wait 300 ms, and for all of that time it holds no thread at all." },
+      "h-thread": { "t": "The one thread", "d": "The loop's one thread runs one coroutine at a time and switches at each await. Because each turn is short, one thread can serve many calls and still sit idle much of the time.\n\nThis is cooperative multitasking: it works only while every coroutine yields often." },
+      "b-cpu": { "t": "CPU work on the loop", "d": "Call 1 runs VAD, or resampling, inside its coroutine: 200 ms of CPU with no await in it. asyncio only switches at an await, so the loop cannot take the thread back, and nothing else runs for those 200 ms." },
+      "b-waiting": { "t": "Calls 2 and 3, stalled", "d": "Calls 2 and 3 have data ready, tokens and a tool reply, but cannot run until call 1 lets go. Their callers hear gaps and stutters though nothing is wrong with their calls: one heavy call hurts every call in the process." },
+      "b-thread": { "t": "The blocked thread", "d": "The thread is busy with call 1 alone, so audio frames for every call queue up and replies go out late. asyncio's debug mode logs any step that holds the loop longer than 100 ms, which is how this is usually found." },
+      "f-call1": { "t": "Call 1, offloaded", "d": "Call 1 hands the CPU work to a pool and awaits the result, so it yields the thread like any I/O wait. When the work is done, the loop resumes call 1 with the result." },
+      "f-pool": { "t": "Worker pool", "d": "The CPU work runs on a worker thread from asyncio.to_thread or loop.run_in_executor. A thread is enough when the work releases the GIL, as NumPy and ONNX Runtime do for most of their compute; pure Python work needs a process pool or a separate worker process to run in parallel.\n\nVoice frameworks often run each call, or each model, in its own process for the same reason." },
+      "f-others": { "t": "Calls 2 and 3, on time", "d": "Calls 2 and 3 keep running on time while the pool works, because the loop is free to switch. The loop's own work stays small: moving frames and awaiting." }
+    },
+    "edges": {
+      "f-call1>f-pool": { "t": "Hand off to the pool", "d": "await asyncio.to_thread(vad, frame) sends the work to a worker thread and suspends call 1 until it returns. The loop gets the thread back at once." },
+      "f-pool>f-call1": { "t": "Result back", "d": "When the worker finishes, its result completes a future on the loop, and the loop resumes call 1 on its next turn." }
+    },
+    "walk": ["h-call1", "h-call2", "h-call3", "h-thread", "b-cpu", "b-waiting", "b-thread", "f-call1", "f-call1>f-pool", "f-pool", "f-pool>f-call1", "f-others"]
+  },
+  "idempotencyKey": {
+    "nodes": {
+      "client": { "t": "Client", "d": "The client is whatever calls the booking API, such as the voice agent's booking tool. It makes one idempotency key per intended action, a random UUID in practice, and sends the same key on every retry of that action." },
+      "server": { "t": "Booking API", "d": "The booking API treats the key as the identity of the request. Same key, same request, same answer." },
+      "db": { "t": "Database", "d": "The database holds both the bookings and the idempotency ledger. Keeping them in one database is what lets one transaction cover both." },
+      "tx": { "t": "One transaction", "d": "The booking and the ledger row commit in one transaction, so either both exist or neither does. As two separate writes, a crash between them would leave a booking with no record of its key, and the retry would book again." },
+      "lost": { "t": "Response lost", "d": "The response never arrives: a timeout, a dropped connection, a crashed client. The client cannot tell whether the booking happened, so a safe retry needs the server to recognise it." },
+      "ledger": { "t": "Idempotency ledger", "d": "The ledger keeps one row per key: the key, its status and the stored result. A unique constraint on the key means a concurrent duplicate cannot insert a second row; while the status is pending, a duplicate waits or gets a 409 instead of booking again.\n\nRows expire after a window, such as 24 hours." },
+      "nokey": { "t": "Retry with no key", "d": "Without a key, the retry looks like a new request. The server has nothing to compare it to." },
+      "twice": { "t": "Two bookings", "d": "The slot is booked twice, or a card charged twice. Retries are unavoidable on a network, so any write that may be retried needs a key, or has to be idempotent by nature, like setting a value rather than adding to it." }
+    },
+    "edges": {
+      "client>server": { "t": "Request with a key", "d": "The request carries the key in a header, often called Idempotency-Key, with the booking in the body." },
+      "server>tx": { "t": "Book and record", "d": "The server opens a transaction, inserts the key, books the slot and stores the result against the key, then commits once." },
+      "tx>ledger": { "t": "The key's row", "d": "The commit leaves the key's row in the ledger: status done, result booking 42." },
+      "server>lost": { "t": "Response lost", "d": "The server answers 201 with booking 42, and the answer is lost on the way back. The booking exists; only the client does not know it." },
+      "client>server#2": { "t": "Retry, same key", "d": "The client retries with the same key, k7. A new key here would make it a new request, and it would book again." },
+      "server>ledger": { "t": "Look up the key", "d": "Before doing any work, the server looks the key up in the ledger." },
+      "ledger>server": { "t": "Key found", "d": "The key is there with status done, so the server skips the booking. A careful API also checks that the retry's body matches the original and rejects a mismatch, since one key must mean one request." },
+      "server>client": { "t": "Stored result returned", "d": "The server returns the stored response, 201 with booking 42, exactly as the first time. The client cannot tell the difference, and that is the point." },
+      "nokey>twice": { "t": "Books again", "d": "With nothing to match on, the server runs the booking a second time." }
+    },
+    "walk": ["client", "server", "db", "client>server", "server>tx", "tx", "tx>ledger", "ledger", "server>lost", "lost", "client>server#2", "server>ledger", "ledger>server", "server>client", "nokey", "nokey>twice", "twice"]
   }
 });

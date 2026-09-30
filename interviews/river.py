@@ -149,7 +149,7 @@ ASK = []
 TRAPS = [
     ("The wrong River", "River AI, with a large round, is a different company."),
     ("Quoting their numbers as fact", "Revenue and customer logos are their claims."),
-    ("Overselling scale", "alfred_'s voice is live for everyone, but sized for tens of calls at once, not thousands. MockFlow-AI is live but small."),
+    ("Overselling scale", "Over a thousand daily phone users is real traffic, not a contact center. MockFlow-AI is live but small."),
     ("Raising logistics first", "Only if he asks."),
     ("Funding, crunch, colleagues' names", "Never, about alfred_."),
 ]

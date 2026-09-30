@@ -19,8 +19,8 @@ LOOP = {
     # on its buttons and links: kept for the dark surface (brand_dark). On the light surface the
     # same hue darkened to teal, #00707F, 5.8:1, so it reads apart from River's blue.
     "brand": "#00707F", "brand_dark": "#A8F4FF",
-    "when_iso": "",   # empty: the hub shows "Upcoming, date to be set"
-    "when": "Date to be set: reply to Audrey to schedule",
+    "when_iso": "2026-10-05T09:00:00-05:00",   # the day is set; the time is a placeholder until the invite lands
+    "when": "Monday 5 October (time to be confirmed)",
     "who": "Audrey Huynh, Commure talent team.",
     "format": ("An initial recruiter interview, about 30 minutes by candidate reports (unconfirmed). Your background, "
                "why Commure and why voice agents, and logistics. Reported loop after it: two technical rounds that "
@@ -28,15 +28,22 @@ LOOP = {
     "bar": ("Speed, ownership and plain communication are their stated values. Show you have shipped real-time "
             "voice and production agents, in Python, and that you care about the patient on the call."),
     "plan_kicker": "Before the call",
-    "extra": ("The posting and what Commure publishes are under <b>What this rests on</b> on the Prep tab. "
-              "For the system design round: the guide's "
-              "<a href=\"../SYSTEM%20DESIGN.html#/designs/voice-agent\" target=\"_blank\" rel=\"noopener\">voice agent for patient calls</a>, worked in six steps."),
+    "extra": ("<b>Work in this order.</b> 1. Understand: six sessions, Thursday to Sunday, on the Plan tab, each teaching what a thing is "
+              "and why before anything to say. 2. Design: the guide's "
+              "<a href=\"../SYSTEM%20DESIGN.html#/designs/voice-agent\" target=\"_blank\" rel=\"noopener\">voice agent for patient calls</a>, "
+              "in six steps, and your own voice agent on the "
+              "<a href=\"../ALFRED.html#l-voice\" target=\"_blank\" rel=\"noopener\">alfred_ page</a>, Voice 1 and Voice 2. "
+              "3. Say: the Prep tab, last, once every sentence is one you could explain."),
 }
 
-SESSION_IDS = []
+# Tracker sessions for this loop, in order, with the day each belongs to.
+SESSION_IDS = [
+    ("wc19", "Thu"), ("wc20", "Thu or Fri"), ("wc21", "Fri"),
+    ("wc22", "Sat"), ("wc23", "Sat or Sun"), ("wc24", "Sun"),
+]
 
-PREP_LEAD = ("A recruiter screen. Read how to show up, then say the intro, why Commure and the healthcare voice "
-             "story out loud. The bank maps the posting to your work for the questions after.")
+PREP_LEAD = ("Say comes last. Start with the <b>Understand first</b> bank: four questions that everything else rests on, each with its "
+             "figure and the session that teaches it. Then the design, then your story out loud with the timer.")
 
 SHOW_UP = [
     ("Know the product in one line.", "AI call center agents that pick up every patient call: scheduling, rescheduling, cancellations, confirmations, FAQs and intake, written back to Epic, Cerner or Athena. Clinical questions go to staff."),
@@ -110,11 +117,10 @@ SCRIPTS = [
          "The design choice I'd point to: the agent on the call is deliberately lean, a small set of tools and two quick model calls, so it stays responsive. Every time the caller says something, the same request also goes, in parallel, to our main agent, the one behind chat and SMS. So when a request needs real work, there's no escalation step and no extra two to three seconds of silence. Reads it answers fast; anything that writes waits for the main agent, and the person confirms. It never acts on a half-heard instruction.",
          "Before alfred_, I built MockFlow-AI from scratch: a real-time voice interview platform on LiveKit, under 400 milliseconds end to end, where the conversation moves between stages only when the model calls a tool, so it can't drift. It's live, and it grades its own interviews with a judge I calibrated against human scores."],
      "swaps": [{"when": "If she asks how that maps to EHR write-back", "line": "It's the same policy: on the call, the agent can look things up fast, but a write waits for the careful path, gets read back, and the person confirms. For Commure that's a booking in Epic instead of an email."},
-               {"when": "If she asks how many users", "line": "alfred_ has 5,000-plus subscribers, and we sized the voice stack for about a thousand daily actives: around twenty calls at once at peak. Every call leaves a record with its timing and cost, so we can see what's actually happening."},
+               {"when": "If she asks how many users", "line": "alfred_ has 5,000-plus subscribers, and over a thousand use the phone agent daily. Every call leaves a record with its timing and cost, so we can see what's actually happening."},
                {"when": "If she asks about healthcare", "line": "My research is multi-agent medical reasoning, TeamMedAgents, and at the UIC lab I deployed an INT8 audio model at 150 milliseconds p95 for patient voice interaction on the hospital network."}],
      "land": "A live voice agent I own, phone and web, with a lean agent on the call and heavy work in parallel; and one I built from scratch.",
      "notes": ["For a recruiter, the first paragraph and one sentence of the second are enough. The rest is for when she asks.",
-               "Say 'sized for', never 'we handle': measured chat traffic is far lower than the sizing. The sizing is on the Prep bank.",
                "Numbers: sub-400ms and kappa 0.82 over 50 items (MockFlow-AI); 2 to 3 s escalation avoided (your estimate: confirm it)."]},
 
     {"id": "logistics", "title": "Logistics she will ask", "length": "a line each",
@@ -128,6 +134,32 @@ SCRIPTS = [
 ]
 
 QA = [
+    {"group": "Understand first", "blurb": "The ground under every answer. Each question opens to its figure and the session that teaches it; read those before the answer.", "items": [
+        {"q": "What happens between the phone ringing and the agent speaking?", "short": "The call path", "tests": "Do you know what each piece is for, not only its name?",
+         "a": ["Two things travel separately. SIP signalling sets the call up through the SIP trunk: invite, ring, answer. The audio goes as RTP packets over UDP, 20 ms each, 8 kHz on a phone line, because late audio is worthless and is dropped, not resent.",
+               "The media server turns the call into a participant in a room; a browser joins the same kind of room over WebRTC. The agent joins as one more participant, subscribes to the caller's audio track and publishes its own. That's why one worker serves phone and web."],
+         "land": "Signalling sets it up, media flows separately, and the agent is a participant in the room.",
+         "figs": ["callPath"],
+         "learn": {"read": [{'url': '../index.html#/w/wc19', 'label': 'Session wc19: How a voice call reaches an agent', 'why': 'SIP, RTP, WebRTC, the SFU and dispatch, step by step.'}], "figs": [], "sdLinks": []}},
+        {"q": "Why does a call get its own process instead of a row in a job queue?", "short": "Push and pull", "tests": "The backend reasoning behind your own system.",
+         "a": ["Work that can wait goes in a queue: a worker claims a row with SKIP LOCKED, and if it dies, another picks it up. That's how alfred_'s SMS turns run.",
+               "A call can't wait and can't move: its audio is bound to one process for minutes, with a frame every 20 ms. So the media server dispatches the call straight to a worker with capacity, which runs it in its own process. Capacity is CPU per call, so you scale by adding workers."],
+         "land": "Pull for work that can wait and be retried; push for a live session pinned to a process.",
+         "figs": ["skipLocked"],
+         "learn": {"read": [{'url': '../index.html#/w/wc21', 'label': 'Session wc21: The backend under a live agent', 'why': 'Processes and edge functions, push and pull, idempotency, timeouts, scaling.'}, {'url': '../index.html#/w/wc19', 'label': 'Session wc19: How a voice call reaches an agent', 'why': 'Step 3: dispatch.'}], "figs": [], "sdLinks": []}},
+        {"q": "How does a retried booking avoid booking twice?", "short": "Idempotency", "tests": "The write-back safety every voice agent needs.",
+         "a": ["You can't tell a lost request from a lost response, so you retry. The client sends the same idempotency key on every attempt; the server stores the key and the result in the same transaction as the booking, and a repeat with that key returns the stored result without booking again.",
+               "In alfred_ it's at three levels: tool calls replay a stored execution for ten minutes, one draft sends once, and a retried authorize reuses the session for the same call."],
+         "land": "Same key every attempt; key and result stored with the effect; a repeat returns the stored result.",
+         "figs": ["idempotencyKey"],
+         "learn": {"read": [{'url': '../index.html#/w/wc21', 'label': 'Session wc21: The backend under a live agent', 'why': 'Step 2: idempotency.'}], "figs": [], "sdLinks": []}},
+        {"q": "How does one Python process hold several live calls?", "short": "The event loop", "tests": "Python async, for a Python-first role.",
+         "a": ["asyncio runs many tasks on one thread; each gives control back at every await. Most of a call is waiting on audio frames, model tokens and tool replies, so the waits overlap.",
+               "The rule that follows: never block the loop. One synchronous call or a burst of CPU work stalls every call on that process, so CPU work like resampling goes to a thread or another process. Barge-in is task cancellation."],
+         "land": "One thread, turns at every await, never block the loop, cancel to barge in.",
+         "figs": ["eventLoop"],
+         "learn": {"read": [{'url': '../index.html#/w/wc22', 'label': 'Session wc22: Python async for real-time backends', 'why': 'The event loop, cancellation, and a small orchestrator you build.'}], "figs": [], "sdLinks": []}},
+    ]},
     {"group": "The posting, mapped to your work", "blurb": "Each line of the posting and where you've done it. Say the first answer; the rest are for when she reads a line back.", "items": [
         {"q": "How does your background fit the role?", "short": "The fit, in one answer", "tests": "Is the resume real, and does it match?",
          "a": ["Most of it maps directly. The posting asks for Python backends for real-time voice agents, conversation state and tool execution, low-latency pipelines from telephony through ASR, the LLM and TTS, and quality: testing, LLM evaluation and observability.",
@@ -144,35 +176,43 @@ QA = [
                         "**Observability and reliability:** a replayable record per call (per-turn timing, hashed config, what it declined, cost); the production failure scanner over real conversations.",
                         "**Healthcare:** UIC hospital deployment; TeamMedAgents, multi-agent medical reasoning."]},
              {"title": "Not done yet: say so",
-              "items": ["Epic, Cerner or Athena integrations.", "Telephony at call-center volume: our SIP line is sized for tens of calls at once, not thousands.", "HIPAA compliance work beyond a research setting."]},
+              "items": ["Epic, Cerner or Athena integrations.", "Telephony at contact-center volume: yours is a consumer assistant's line, not a health system's call center.", "HIPAA compliance work beyond a research setting."]},
          ]},
         {"q": "How would you keep a patient call from going wrong?", "short": "Safety on a live call", "tests": "Patient-centred judgement.",
          "a": ["Decide in code what the agent may do, and hand everything else to a person: clinical questions, anything it isn't sure of. Answer from the schedule through tools, never from the model's memory, and confirm a booking back to the patient before writing it.",
                "Then learn from real calls: flag the ones that went wrong, turn them into test cases, and run every change against them before it ships. That's how I work at alfred_."],
-         "land": "Code decides what the agent may do; real failures become tests."},
+         "land": "Code decides what the agent may do; real failures become tests.",
+         "learn": {"read": [{'url': '../index.html#/w/wc23', 'label': 'Session wc23: Your voice agent at depth', 'why': 'Step 2: the write path, draft, restate, confirm.'}, {'url': '../SYSTEM%20DESIGN.html#/designs/voice-agent/deepdives', 'label': "Guide: the patient-call design's deep dives", 'why': 'Write-back without double booking.'}], "figs": [], "sdLinks": []},
+         "figs": ['idempotencyKey']},
         {"q": "What's hard about latency in a voice agent?", "short": "Latency", "tests": "Real-time depth, in plain words.",
          "a": ["Every stage adds up: speech recognition, the model, speech synthesis, and the phone line. So everything streams, so no stage waits for the whole of the one before, and the model on the critical path stays small. Slow work, like an EHR lookup, runs while the agent says something natural.",
                "In MockFlow-AI moving from polling to streaming was most of the win: about five times faster, under 400 milliseconds."],
-         "land": "Stream every stage, keep the critical path small, cover slow lookups."},
+         "land": "Stream every stage, keep the critical path small, cover slow lookups.",
+         "learn": {"read": [{'url': '../index.html#/w/wc20', 'label': 'Session wc20: The conversation loop', 'why': 'Step 3: streaming every stage and the budget.'}], "figs": [], "sdLinks": []},
+         "figs": ['voicePipeline']},
         {"q": "Walk me through one turn of a voice call, and the latency budget.", "short": "One turn, timed", "tests": "Real-time depth; for the technical rounds more than for her.",
          "a": ["The caller stops talking. Noise isolation, voice activity and end-of-turn detection decide they're done, about 300 to 500 ms: that's the number that makes it feel like a conversation. The streaming transcript is final about 100 to 200 ms later.",
                "A fast model starts answering, first token about 300 to 500 ms, and at the same moment the heavy agent has already started on the same request. Streaming speech out gives first audio in about 100 to 200 ms, and the phone line adds about 100 to 150.",
                "So first audio is about 1 to 1.5 seconds after they stop. If a lookup is running and nothing has been said for about a second, the worker, not the model, says 'let me check'."],
          "land": "About 1 to 1.5 s to first audio, timed stage by stage; the filler is code.",
+         "learn": {"read": [{'url': '../index.html#/w/wc20', 'label': 'Session wc20: The conversation loop', 'why': 'Steps 2 to 4: end of turn, the budget, interruptions.'}], "figs": [], "sdLinks": []},
+         "figs": ['turnTaking'],
          "notes": ["These are design targets. At alfred_ every turn logs the stages, so the argument about where time goes is settled with data."]},
         {"q": "How would you size a voice agent's infrastructure?", "short": "Sizing, on a whiteboard", "tests": "Capacity thinking.",
-         "a": ["Start from calls, not users. For alfred_ we sized for about 1,000 daily actives out of 5,000-plus subscribers: say 20% use voice on a day, about 300 sessions of about 3 minutes, around 3,600 caller turns.",
-               "The peak hour at about 15% of the day is 45 sessions; Little's law, 45 times 3 minutes over 60, is 2 to 3 calls at once, about 10 in a burst, so we provision 20. Noise isolation and turn detection run on CPU per call, so the capacity of one worker is the number you load-test."],
+         "a": ["Start from calls, not users. alfred_ has over a thousand daily active phone users; at about 1.5 calls each that's around 1,500 calls a day.",
+               "If 15% land in the peak hour, that's about 225 calls at 3 minutes each; Little's law, 225 times 3 over 60, is about 11 at once on average and about 45 in a burst. Each call is a process doing CPU work, so calls per container is the number to load-test; at about 8 a container, that's about 12 replicas at peak."],
          "land": "Calls in the peak hour times duration: Little's law, a burst factor, then load-test one worker.",
-         "notes": ["Sizing, not traffic: say 'sized for'. For Commure's scale, one health system they report takes 200K+ calls a year, about 800 a working day: the same arithmetic gives about 6 at once in the peak hour and about 25 in a burst."]},
+         "learn": {"read": [{'url': '../index.html#/w/wc21', 'label': 'Session wc21: The backend under a live agent', 'why': 'Step 5: scaling a service that holds live calls.'}], "figs": [], "sdLinks": []},
+         "notes": ["For Commure's scale, one health system they report takes 200K+ calls a year, about 800 a working day: the same arithmetic gives about 6 at once in the peak hour and about 25 in a burst."]},
         {"q": "How do you evaluate a voice agent?", "short": "Evals for voice", "tests": "The posting's 'LLM evaluation' line.",
          "a": ["Three layers, built before tuning. Text-mode scenarios in CI, where a wrong tool or a wrong argument fails the build. Simulated callers with background noise and network jitter, nightly. And replay of real calls.",
                "Every call leaves a replayable record: the timing of every turn, the exact config, what the agent declined to do, and the cost. When something sounds wrong on a call, we can see why."],
-         "land": "CI scenarios, simulated noisy callers, real-call replay; a record per call."},
+         "land": "CI scenarios, simulated noisy callers, real-call replay; a record per call.",
+         "learn": {"read": [{'url': '../index.html#/w/wc23', 'label': 'Session wc23: Your voice agent at depth', 'why': 'Step 5: evals and what went wrong.'}], "figs": [], "sdLinks": []}},
     ]},
 ]
 
-QA_ORDER = ["The posting, mapped to your work"]
+QA_ORDER = ["Understand first", "The posting, mapped to your work"]
 
 ASK_3C = [
     {"id": "audrey", "title": "For Audrey", "when": "At the end. One or two.",
@@ -194,9 +234,8 @@ ASK_3C = [
 ASK = []
 
 TRAPS = [
-    ("Claiming EHR or telephony at scale", "You run a SIP line sized for tens of calls, not a call center, and haven't integrated Epic. Say so, then say what carries over."),
-    ("Quoting sizing as traffic", "The 1,000 daily actives and 20 concurrent calls are what you sized for. Say 'sized for'."),
-    ("Naming internals", "Say 'our main agent, the one behind chat and SMS'. Function names and schemas stay out of a recruiter call."),
+    ("Claiming EHR or telephony at scale", "You run a consumer assistant's phone line, not a health system's call center, and haven't integrated Epic. Say so, then say what carries over."),
+        ("Naming internals", "Say 'our main agent, the one behind chat and SMS'. Function names and schemas stay out of a recruiter call."),
     ("Calling alfred_ Python", "alfred_'s product code is TypeScript. Your Python is UIC, FastAPI, evals and PyTorch."),
     ("Quoting their numbers as fact", "Savings and resolution rates are theirs: 'they report'."),
     ("Going deep technically", "A recruiter screen: outcomes and scope."),

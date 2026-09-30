@@ -668,8 +668,8 @@
   </div>
 </div>
 <script src="figures/icons.js?v=129ef92b"></script>
-<script src="figures/figures.js?v=b640a982"></script>
-<script src="figures/notes.js?v=8d0651f2"></script>
+<script src="figures/figures.js?v=46349820"></script>
+<script src="figures/notes.js?v=d1690023"></script>
 <script src="figures/viewer.js?v=ecb99aae"></script>
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
@@ -2213,7 +2213,7 @@
       file: "interviews/coframe.html", note: "Agent Platform Engineer. Fifteen minutes with Founding Talent: your story in outcomes, then her pitch." },
     { id: "vanguard", name: "Vanguard, technical", when: "date to be set", forWhat: "Vanguard",
       file: "interviews/vanguard.html", note: "Details to be filled." },
-    { id: "commure", name: "Commure, Voice Agents", when: "date to be set", forWhat: "Commure",
+    { id: "commure", name: "Commure, Voice Agents", when: "Mon 5 Oct", forWhat: "Commure",
       file: "interviews/commure.html", note: "Software Engineer, Voice Agents. Recruiter screen: healthcare voice, real-time, production agents." },
     { id: "river", name: "River, founder call", when: "date to be set", forWhat: "River",
       file: "interviews/river.html", note: "Founding Engineer, likely. Tarek Abillama, CEO: real-time voice and a live sales agent." },
@@ -2249,8 +2249,393 @@
   var WILDCARD = {
     title: "Wildcard",
     /* One line: the loop in play. Loops that have happened are parked, not described here. */
-    note: "Mphasis, technical.",
+    note: "Commure, Software Engineer, Voice Agents: Monday 5 October.",
     sessions: [
+      {
+        id: "wc19", track: "Systems", forWhat: "Commure, 5 Oct", len: "2h", est: 120,
+        name: "How a voice call reaches an agent",
+        blurb: "Thursday. From a phone on the street to a Python process holding the call: SIP, RTP, WebRTC, the media server, and dispatch.",
+        intro: "You can name every piece of alfred_'s phone path; this session is about why each piece exists. A call is two things travelling separately: signalling, which sets the call up, and media, the audio itself, 50 packets a second in each direction. Everything in a voice stack follows from keeping that audio moving with no gaps, which is also why a call gets a process of its own instead of a row in a queue.",
+        steps: [
+          { t: "Signalling and media: SIP and RTP", m: 20,
+            d: "When a phone dials your number, the carrier and your SIP provider (Twilio for alfred_) exchange SIP messages: INVITE to ask for the call, 180 Ringing, 200 OK when it is answered, BYE to end it. SIP only sets the call up; it carries no sound. The sound goes separately as RTP packets over UDP, typically G.711 mu-law: 8,000 samples a second, 8 bits each, 64 kbit/s, cut into 20 ms packets, so 50 packets a second each way. UDP because a late packet is useless: you would rather lose 20 ms of audio than wait for a resend. A SIP trunk is the link between the phone network and your software, and the media server (LiveKit's SIP service) is where those packets become an audio track your code can read.",
+            ans: [
+              "SIP sets up and tears down the call; RTP carries the audio; they travel separately",
+              "G.711 mu-law: 8 kHz, 8 bits, 64 kbit/s, 20 ms packets, 50 a second each way",
+              "UDP, because late audio is worthless: drop it, don't resend it",
+              "8 kHz is why phone audio sounds thin, and why the models on a phone path get 8 kHz input"
+            ],
+            close: [
+              { k: "short", q: "Why does call audio go over UDP and not TCP?", a: "A resent packet arrives too late to play. Dropping 20 ms of audio is better than stalling the stream to wait for it." },
+              { k: "why", q: "What is the difference between what SIP does and what RTP does?", a: "SIP is signalling: it sets the call up, rings, answers and hangs up. RTP carries the audio packets themselves, on a separate path." }
+            ] },
+          { t: "WebRTC: how a browser joins", m: 20,
+            d: "A browser can't open raw UDP sockets to anyone it likes, and most users sit behind NAT routers that block incoming packets. WebRTC solves both. The two sides swap SDP, a description of the codecs and addresses each can use (offer and answer). ICE then tries candidate paths: a direct address, the public address a STUN server reports back, and as a last resort a TURN server that relays every packet. Media is encrypted with DTLS-SRTP and the audio codec is usually Opus at 48 kHz, which sounds far better than a phone line. On the receiving side a jitter buffer holds a few tens of milliseconds of packets so uneven arrival times don't become clicks and gaps. In alfred_'s web voice, the browser does exactly this with LiveKit's client library.",
+            ans: [
+              "SDP offer and answer: which codecs and addresses each side supports",
+              "ICE tries paths; STUN finds your public address; TURN relays when nothing else works",
+              "DTLS-SRTP encrypts the media; Opus at 48 kHz is the usual audio codec",
+              "A jitter buffer trades a little latency for smooth playback"
+            ],
+            close: [
+              { k: "short", q: "When is a TURN server needed, and what does it cost you?", a: "When no direct or STUN-discovered path works, usually strict NAT or firewalls. It relays every packet, so it adds latency and bandwidth cost." },
+              { k: "why", q: "Why does a jitter buffer add latency on purpose?", a: "Packets arrive unevenly. Holding a few tens of milliseconds lets playback run smoothly instead of glitching every time a packet is late." }
+            ] },
+          { t: "The media server: rooms, tracks and the agent as a participant", m: 20,
+            d: "A media server sits between everyone on a call. An MCU decodes every stream and mixes them into one, which is expensive. An SFU, a selective forwarding unit, only forwards: each participant publishes tracks (an audio track, maybe video) and subscribes to the tracks it wants, and the server copies packets without decoding them. LiveKit is an SFU organised as rooms. The key idea for voice agents: your agent is not a special service on the side, it joins the room as one more participant. It subscribes to the caller's audio track and publishes its own. A phone caller arrives through the SIP service as a participant too, so the agent code is the same for phone and web; only the sample rate and codec differ.",
+            ans: [
+              "MCU mixes (decodes everything); SFU forwards (decodes nothing)",
+              "Rooms, participants, tracks: publish yours, subscribe to theirs",
+              "The agent is a participant: it subscribes to the caller's audio and publishes its own",
+              "Phone and web look the same to the agent: that is why alfred_ has one worker for both"
+            ],
+            close: [
+              { k: "why", q: "Why can one agent worker serve both phone and web callers?", a: "Both arrive as participants in a room with an audio track. The SIP service turns the phone call into a participant, so the agent code doesn't care where the caller came from." }
+            ] },
+          { t: "Dispatch: why a call gets a process, not a queue row", m: 25,
+            d: "Background work, like answering an SMS, can wait a second: you write a job row and a worker claims it with SELECT ... FOR UPDATE SKIP LOCKED, and if the worker dies another one picks the row up later. A call can't wait and can't move. The audio stream is bound to one process for the whole call, often minutes, and every 20 ms a frame must be read and answered. So voice uses push dispatch: when a room is created (a SIP dispatch rule makes one room per call in alfred_), LiveKit picks a registered worker (its docs now call it an agent server) with spare capacity and hands it a job, and the worker runs that job in its own child process. Capacity is CPU: voice activity detection, turn detection and audio handling run per call. More calls means more worker containers, and the dispatcher balances new jobs across them.",
+            ans: [
+              "Pull: a worker claims a job row (SKIP LOCKED); fine for work that can wait and be retried",
+              "Push: the media server dispatches a live call to a worker with capacity",
+              "One job, one child process, for the whole call",
+              "Scale out by adding workers; capacity is CPU per call"
+            ],
+            close: [
+              { k: "why", q: "alfred_'s SMS path claims jobs from Postgres, but its voice path doesn't. Why?", a: "An SMS turn can wait and be retried from a row. A call is a live stream bound to one process for minutes, so it is dispatched straight to a worker with capacity." },
+              { k: "short", q: "What limits how many calls one worker container can hold?", a: "CPU: every call runs voice activity detection, turn detection and audio processing in its own process." }
+            ] },
+          { t: "Trace your own call, then say it", m: 25,
+            d: "Now put your own system on top of this. Open the alfred_ page, section Voice 1, and follow one phone call: Twilio's SIP trunk, LiveKit's inbound trunk, the dispatch rule that makes a room per call, the Python worker on Railway taking the job, the edge function that decides who is calling, and the MCP path for tools. For each hop, say which of today's ideas it is: signalling, media, the room, dispatch. Then close the page and say it in sixty seconds. If you stumble on a hop, that hop is what an interviewer will ask about.",
+            ans: [
+              "Phone: SIP trunk into a LiveKit room, one room per call, the agent dispatched into it",
+              "Web: an edge function verifies the login and mints a one-time room claim; the browser joins over WebRTC",
+              "One Python worker on Railway serves both; one process per call",
+              "Its only door into the backend is one edge function: who is calling, what they may do, a short-lived token"
+            ],
+            close: [
+              { k: "short", q: "Say alfred_'s phone path in one breath, hop by hop.", a: "Twilio SIP trunk, LiveKit inbound trunk, a dispatch rule that makes a room per call and dispatches the phone agent, the Python worker on Railway takes the job, calls the authorize edge function, then works through MCP tools." }
+            ] }
+        ]
+      },
+
+      {
+        id: "wc20", track: "Systems", forWhat: "Commure, 5 Oct", len: "2h", est: 120,
+        name: "The conversation loop: hearing, thinking, speaking",
+        blurb: "Thursday or Friday. Audio as numbers, knowing when someone has finished, streaming every stage, interruptions, and realtime against a cascade.",
+        intro: "The model is the easy part of a voice agent. What makes it feel like a conversation is deciding when the caller has finished, speaking before the whole answer exists, and stopping the instant they talk over you. This session builds that loop stage by stage, with the number each stage costs, so you can reason about latency instead of reciting it.",
+        steps: [
+          { t: "Audio as numbers", m: 15,
+            d: "Sound in a computer is a list of samples: amplitude measured many times a second. The sample rate caps the highest frequency you can capture at half the rate (Nyquist), so 8 kHz phone audio holds nothing above 4 kHz, which is why it sounds muffled and why speech models trained on 16 kHz audio do worse on it. Streams are cut into frames, 10 to 20 ms each, and every stage downstream works on frames. Speech models rarely read raw samples; they read a spectrogram, energy per frequency band over time, usually on the mel scale that matches human hearing. Your deep learning path covers this in its audio stages.",
+            ans: [
+              "Samples per second; the highest frequency is half the sample rate",
+              "Phone 8 kHz keeps up to 4 kHz; web audio is 16 to 48 kHz",
+              "Frames of 10 to 20 ms are the unit every stage works on",
+              "Speech models read log-mel spectrograms, not raw samples"
+            ],
+            close: [
+              { k: "why", q: "Why does a speech model do worse on a phone call than on a web call?", a: "Phone audio is 8 kHz, so nothing above 4 kHz survives, and it is compressed. Most models are trained on wider-band audio, so they lose detail they rely on." }
+            ] },
+          { t: "Knowing when the caller has finished", m: 25,
+            d: "Two different questions. Voice activity detection asks: is someone speaking in this frame? It is a small model (Silero is common) run on every frame. End-of-turn detection asks: have they finished their thought? Silence alone is a bad signal, because people pause mid-sentence. So you either wait a fixed silence (endpointing), or run a turn-detection model that also reads the words so far. The trade-off is the whole feel of the agent: wait too little and you cut people off; wait too long and every reply feels slow. alfred_ uses Silero with a 0.4 s minimum silence, a turn detector, and endpointing between 0.4 and 3.0 s, and starts generating a reply before the turn is certain.",
+            ans: [
+              "VAD: is there speech in this frame; end of turn: are they done",
+              "Silence alone cuts people off mid-thought",
+              "Turn-detection models read the words as well as the silence",
+              "Preemptive generation starts the reply early and throws it away if they keep talking"
+            ],
+            close: [
+              { k: "why", q: "Why isn't voice activity detection enough to decide the caller has finished?", a: "It only knows whether there is speech right now. People pause mid-sentence, so silence alone ends turns too early; you need a model or a longer wait that looks at what was said." },
+              { k: "short", q: "What goes wrong if the end-of-turn wait is too long, and if it is too short?", a: "Too long, every reply feels slow. Too short, the agent talks over people who were only pausing." }
+            ] },
+          { t: "Streaming every stage, and the latency budget", m: 25,
+            d: "If each stage waited for the one before to finish, a reply would take many seconds. Instead every stage streams: speech-to-text emits partial words as audio arrives and a final transcript soon after the turn ends; the model streams tokens; a chunker groups tokens into sentences; text-to-speech starts speaking the first sentence while the model is still writing the rest. The number that matters is time to first audio: from the caller stopping to the agent's first sound. A budget: end-of-turn 300 to 500 ms, final transcript 100 to 200 ms, first model token 300 to 500 ms, first audio 100 to 200 ms, the network 100 to 150 ms, so about 1 to 1.5 s. alfred_'s phone calls measure around 800 ms, up to about 3 s. Build the streaming pipeline once on the coding page's voice topic.",
+            ans: [
+              "Every stage streams into the next before the previous one finishes",
+              "Time to first audio is the metric, not total reply time",
+              "Budget: 0.3 to 0.5 + 0.1 to 0.2 + 0.3 to 0.5 + 0.1 to 0.2 + 0.1 to 0.15, about 1 to 1.5 s",
+              "Measure every turn in stages, so an argument about latency is settled with data"
+            ],
+            close: [
+              { k: "short", q: "Walk the latency budget from the caller stopping to first audio.", a: "End of turn 300 to 500 ms, final transcript 100 to 200, first model token 300 to 500, first TTS audio 100 to 200, network 100 to 150: about 1 to 1.5 s." },
+              { k: "why", q: "Why start speech synthesis before the model has finished its answer?", a: "Time to first audio is what the caller feels. Speaking the first sentence while the rest is generated removes the whole generation time from it." }
+            ] },
+          { t: "Interruptions, backchannels and silence", m: 20,
+            d: "People talk over agents. A barge-in means the caller started speaking while the agent is talking: the agent must stop its audio within a couple of hundred milliseconds, cancel what it was about to say, and listen. But not every sound is an interruption. 'Mm-hm' is a backchannel: the caller is listening, keep going. A cough or a door is noise: resume where you were. alfred_ treats speech shorter than 0.5 s as not an interruption, and resumes within 2 s after a false one. On the phone, the agent's own voice can echo back through the caller's handset, so echo cancellation matters too. And silence has rules: a filler when a lookup runs long (alfred_ says 'Let me check.' after 1.2 s, from code, not the prompt), a check-in when the line goes quiet (10 s), and a graceful hangup (20 s later).",
+            ans: [
+              "Barge-in: stop audio fast, cancel the pending reply, listen",
+              "Backchannel keeps talking; noise resumes; only real speech interrupts",
+              "Echo cancellation, so the agent doesn't interrupt itself",
+              "Fillers, check-ins and hangups are timers in code"
+            ],
+            close: [
+              { k: "why", q: "Why is 'mm-hm' not treated as an interruption?", a: "It is a backchannel: the caller is saying keep going. Stopping for it makes the agent feel jumpy; a minimum speech duration filters it out." },
+              { k: "why", q: "Why does alfred_'s 'Let me check' come from the worker and not the model?", a: "A prompted lead-in worked in isolation and failed on real calls with impatient callers, and tightening the prompt made the model claim to check without checking. Something that must happen every time belongs in code." }
+            ] },
+          { t: "Realtime speech-to-speech or a cascade", m: 20,
+            d: "A cascade is three models in a row: speech-to-text, a text model, text-to-speech. You control each stage, you get a transcript at every step, you can pick any text model, and you can put your own end-of-turn detection in front. A realtime speech-to-speech model takes audio in and gives audio out in one model: lower latency and more natural prosody, but less control, and tool calling and transcripts come on the provider's terms. alfred_ keeps both behind one seam (OpenAI Realtime by default; a cascade of Deepgram Flux, a small GPT model and Cartesia), picks the arm per call from config, and lets the eval harness decide which ships. One lesson worth saying: on some providers the realtime session config is all or nothing, so one unsupported option can silently drop turn detection.",
+            ans: [
+              "Cascade: control, transcripts, any model, your own turn detection",
+              "Realtime: lower latency, natural speech, less control",
+              "Keep both behind one seam; config picks; evals decide",
+              "Keep a measured allowlist of realtime options per model version"
+            ],
+            close: [
+              { k: "why", q: "When would you choose a cascade over a realtime model?", a: "When you need control: your own end-of-turn detection, a specific text model, a transcript at every step, or tighter tool calling, and can afford a little more latency." }
+            ] },
+          { t: "How the speech models work, in one page", m: 20,
+            d: "Speech-to-text models like Whisper are encoder-decoder transformers: the encoder reads a log-mel spectrogram, the decoder writes text tokens, like translation from audio to text. Streaming models are trained to emit words before the utterance ends. Text-to-speech runs the other way: text becomes an acoustic representation (a mel spectrogram or audio tokens), and a vocoder or codec decoder turns that into a waveform; streaming TTS emits audio in chunks so the first sound arrives fast. This connects straight to the audio stages of your deep learning path, where you build these pieces yourself. For the interview you need the shape, not the maths: what goes in, what comes out, and where latency comes from.",
+            ans: [
+              "STT: log-mel spectrogram in, encoder-decoder transformer, text tokens out",
+              "TTS: text to acoustic features or audio tokens, then a vocoder to a waveform",
+              "Streaming versions emit partial output early",
+              "Your deep learning path builds these in its audio stages"
+            ],
+            close: [
+              { k: "short", q: "What does Whisper take in, and what does it put out?", a: "A log-mel spectrogram of the audio in; text tokens out, from an encoder-decoder transformer." }
+            ] }
+        ]
+      },
+
+      {
+        id: "wc21", track: "Systems", forWhat: "Commure, 5 Oct", len: "2h 15m", est: 135,
+        name: "The backend under a live agent",
+        blurb: "Friday. Processes and edge functions, push and pull, idempotency, timeouts and retries, and scaling a service that holds live calls. Taught through your own system.",
+        intro: "This is the gap you named after ZenML: knowing what the pieces are without knowing how they work. Every idea here is one you already use in alfred_; the session makes you able to explain why it is built that way and what breaks if it isn't. By the end you should be able to draw where every piece of your voice agent runs, and defend each choice.",
+        steps: [
+          { t: "Processes, and edge functions against long-running workers", m: 25,
+            d: "A process is a running program with its own memory; a container is a process (or a few) packaged with its files. An edge function (Supabase's run on Deno) is a short-lived invocation: a request comes in, a fresh or reused isolate handles it, and it must finish within a time and memory limit. Supabase's limits are 2 s of CPU time per request, a 150 to 400 s wall clock and 256 MB. That is ideal for quick request-response work, like alfred_'s authorize check, and it scales to zero; it can't hold a call. A long-running worker is a process you keep alive, like the voice worker in a container on Railway: it can hold a call open for minutes, keep models warm in memory, and hold open connections. The rule of thumb: if the work is shorter than the request and holds no state, use a function; if it outlives a request or needs warm state, use a worker.",
+            ans: [
+              "Edge function: short, stateless, time-limited, scales to zero",
+              "Worker: long-lived, holds state and connections, pays for idle",
+              "alfred_: authorize is an edge function; the voice agent is a worker",
+              "Work that outlives a request needs a worker"
+            ],
+            close: [
+              { k: "why", q: "Why can't the voice agent itself run as an edge function?", a: "A call lasts minutes and needs warm models and an open media connection. Edge functions are short-lived and time-limited, so the call needs a long-running worker." }
+            ] },
+          { t: "Push and pull: two ways work reaches a worker", m: 25,
+            d: "Pull: jobs sit in a queue and workers take them. In Postgres, SELECT ... FOR UPDATE SKIP LOCKED lets many workers each grab a different row without waiting on each other. A lease (claimed_at plus a timeout) and a heartbeat mean that if a worker dies, the job becomes claimable again. That gives at-least-once delivery: a job may run twice, never zero times. Push: a dispatcher hands work to a worker it has chosen, as LiveKit does with calls. Push fits live sessions that can't wait; pull fits work that can wait, retry and survive a crash. alfred_ uses both: pull for SMS turns and background jobs, push for calls.",
+            ans: [
+              "SKIP LOCKED: many workers, no two take the same row, none wait",
+              "Leases and heartbeats turn a crash into a retry",
+              "At-least-once: a job can run twice, so effects must be safe to repeat",
+              "Push for live sessions, pull for work that can wait"
+            ],
+            close: [
+              { k: "why", q: "Why does at-least-once delivery force you to make effects idempotent?", a: "A worker can finish the effect and crash before recording it, so the job runs again. Without idempotency the effect happens twice." },
+              { k: "short", q: "What does SKIP LOCKED do that a plain FOR UPDATE doesn't?", a: "It skips rows other transactions have locked instead of waiting on them, so workers claim different jobs in parallel." }
+            ] },
+          { t: "Idempotency: a retry must not do it twice", m: 25,
+            d: "Retries happen because you can't tell a lost request from a lost response: the booking may have been made and only the reply timed out. An idempotency key makes a retry safe: the client sends the same key with every attempt, the server records the key and the result in the same transaction as the effect, and a repeat with that key returns the stored result without acting again. alfred_ does this at three levels: tool calls go through a wrapper that replays a stored execution for 10 minutes; a draft is keyed on the user and a hash of its arguments, and a send on the draft, so one draft sends once; and the voice authorize call reuses the open session for the same call id instead of opening a second. For Commure the same idea protects a booking in the EHR.",
+            ans: [
+              "You can't tell a lost request from a lost response, so you retry",
+              "Same key on every attempt; key and result stored with the effect",
+              "A repeat returns the stored result and does nothing new",
+              "alfred_: tool replay window, draft and send keys, authorize by call id"
+            ],
+            close: [
+              { k: "why", q: "Why must the idempotency key be stored in the same transaction as the effect?", a: "If they are written separately, a crash between them leaves an effect with no key, and the retry does it again." },
+              { k: "short", q: "Name the three places alfred_'s voice path is idempotent.", a: "Tool calls replay a stored execution for 10 minutes; drafts and sends are keyed so one draft sends once; authorize reuses the session for the same call id." }
+            ] },
+          { t: "Timeouts, budgets and retries", m: 20,
+            d: "Every network call needs a timeout, and the timeouts must fit inside the caller's own budget: alfred_'s authorize handler has 5 s in total, its room check 1.5 s, and the worker gives up on it at 8 s; each tool call gets 5 s. When something fails you retry with exponential backoff and jitter, so a thousand clients don't retry in lockstep and flatten a service that is already struggling (the retry-storm figure). And decide which way to fail: authorize fails closed when the caller is absent from the room (no access), but fails open when LiveKit itself can't be reached (don't drop every call because a check is down). Those are product decisions written as code.",
+            ans: [
+              "Every call has a timeout that fits inside the caller's budget",
+              "Backoff with jitter, so retries don't arrive in a wave",
+              "Fail closed when the answer is no; fail open when the checker is down, if the risk allows",
+              "Write the choice down, in code"
+            ],
+            close: [
+              { k: "why", q: "Why add jitter to retry backoff?", a: "Without it, every client that failed together retries together, and the wave hits the service exactly when it has least capacity." }
+            ] },
+          { t: "Scaling a service that holds live calls", m: 25,
+            d: "Start from calls, not users. Little's law: calls in progress = arrival rate x call length. With 1,000-plus daily phone users at 1.5 calls each, about 1,500 calls a day; if 15% land in the peak hour, 225 calls in that hour at 3 minutes each is about 11 at once on average, and a burst four times that is about 45. Each call is a process doing CPU work, so calls per container is the number to load-test; at about 8 a container, the provisioned peak is about 12 replicas, and the dispatcher sends each new call to a worker with room. Cold starts matter: alfred_'s worker imported its audio libraries in 10.8 s cold and 2.4 s with precompiled bytecode, and prewarms them before the first call. What bites first as it grows: CPU per call, the model provider's rate limits, and the authorize budget under load.",
+            ans: [
+              "Little's law: concurrent calls = arrivals per unit time x duration",
+              "About 11 at once on average in the peak hour, about 45 in a burst",
+              "Load-test calls per container; scale out with replicas",
+              "Prewarm and precompile to kill cold starts"
+            ],
+            close: [
+              { k: "short", q: "225 calls arrive in an hour and each lasts 3 minutes. How many are in progress on average?", a: "225 x 3 / 60, about 11." },
+              { k: "why", q: "Why does a voice worker scale out rather than up?", a: "Each call is its own process doing CPU work, so capacity grows by adding containers; a bigger machine only helps until one process per call saturates it." }
+            ] }
+        ]
+      },
+
+      {
+        id: "wc22", track: "Systems", forWhat: "Commure, 5 Oct", len: "2h 15m", est: 135,
+        name: "Python async for real-time backends",
+        blurb: "Saturday. The event loop, tasks, timeouts and cancellation, not blocking the loop, and a small call orchestrator you build yourself.",
+        intro: "Commure's role is Python first, and its technical rounds reportedly have you build a small backend. A voice worker is an async program: one event loop juggling audio frames, a model stream and tool calls for each call. This session makes asyncio concrete, then you build the part of a call that matters most: a tool call with a filler and a timeout that a barge-in can cancel.",
+        steps: [
+          { t: "The event loop", m: 20,
+            d: "asyncio runs many tasks on one thread. A coroutine (async def) runs until it hits await on something slow, like network I/O; it then hands control back to the event loop, which runs another task that is ready. Nothing runs in parallel; tasks take turns at every await. That is why one process can hold several calls: most of a call is waiting, for the next audio frame, the next model token, the tool's reply. asyncio.create_task starts a coroutine running alongside; await waits for its result.",
+            ans: [
+              "One thread; tasks take turns at every await",
+              "Good for I/O-bound work: most of a call is waiting",
+              "create_task runs a coroutine alongside; await collects its result",
+              "Nothing runs in parallel unless you use threads or processes"
+            ],
+            close: [
+              { k: "why", q: "How can one Python process handle several calls on one thread?", a: "Each call is mostly waiting on I/O. At every await the event loop switches to another task that is ready, so the waits overlap." }
+            ] },
+          { t: "Running things together: gather, TaskGroup, queues", m: 20,
+            d: "To run several things at once and wait for all of them, use asyncio.gather or, better, asyncio.TaskGroup (Python 3.11+), which cancels the others if one fails. To pass data between stages, use asyncio.Queue: the mic stage puts frames in, the transcription stage takes them out. A bounded queue (maxsize) gives you backpressure: when the consumer falls behind, the producer waits instead of filling memory. That is the same idea as the backpressure figure in the guide's patterns, inside one process.",
+            ans: [
+              "TaskGroup: run together, cancel all on failure",
+              "asyncio.Queue connects pipeline stages",
+              "maxsize gives backpressure: producers wait when consumers lag",
+              "An unbounded queue hides overload until memory runs out"
+            ],
+            close: [
+              { k: "why", q: "Why give the queue between two pipeline stages a maxsize?", a: "So a slow consumer slows the producer down instead of the queue growing without bound and hiding the overload until the process runs out of memory." }
+            ] },
+          { t: "Timeouts and cancellation: the heart of barge-in", m: 25,
+            d: "asyncio.timeout(5) wraps a block and cancels it if it runs longer; that is a tool-call timeout. Cancellation is how barge-in works: when the caller starts talking, you call task.cancel() on the speaking task, and asyncio raises CancelledError inside it at its next await, so it can stop audio and clean up in a finally block. Two rules: never swallow CancelledError (re-raise it after cleanup), and keep references to tasks you create, or they can be garbage-collected mid-flight. A filler is a timer racing the tool: start the tool call, wait up to 1.2 s for it, and if it hasn't finished, say 'Let me check' and keep waiting.",
+            ans: [
+              "asyncio.timeout bounds a block; TimeoutError when it runs over",
+              "task.cancel() raises CancelledError at the next await",
+              "Clean up in finally; re-raise CancelledError",
+              "A filler is a timer racing the tool call"
+            ],
+            close: [
+              { k: "why", q: "How does cancellation implement barge-in?", a: "When speech is detected, the speaking task is cancelled; CancelledError is raised at its next await, it stops the audio and cleans up, and the agent listens." },
+              { k: "short", q: "How would you say 'Let me check' only when a tool is slow?", a: "Start the tool as a task, wait for it with a 1.2 s timeout using asyncio.wait or shield; if it times out, speak the filler, then keep awaiting the same task." }
+            ] },
+          { t: "Never block the loop", m: 20,
+            d: "Because everything shares one thread, one slow synchronous call freezes every call on that loop: a heavy computation, a blocking HTTP library, a big file read. CPU work like resampling or voice activity detection must run in a thread (asyncio.to_thread) or a separate process. asyncio's debug mode logs any callback slower than 100 ms, which is how you find them. alfred_ measured exactly this: the first call on a fresh container blocked the loop about 400 ms before its first filler; prewarming brought later calls to about 135 to 150 ms.",
+            ans: [
+              "One blocking call stalls every task on the loop",
+              "CPU work goes to asyncio.to_thread or a process pool",
+              "Debug mode flags callbacks slower than 100 ms",
+              "alfred_: first-call loop block about 400 ms, then 135 to 150 ms after prewarm"
+            ],
+            close: [
+              { k: "why", q: "A requests.get() call inside a coroutine works fine in testing. Why is it a production bug?", a: "It is synchronous, so it blocks the whole event loop while it waits, freezing every other call on that process. Use an async client or to_thread." }
+            ] },
+          { t: "Build it: a small call orchestrator", m: 45,
+            d: "Write this in plain Python with asyncio, no framework, in about 40 minutes. A fake caller coroutine puts utterances onto a queue with pauses. The agent loop takes each utterance and decides: a 'read' calls a fake tool that sleeps 0.5 to 3 s; a 'write' produces a draft, reads it back and waits for 'yes' before calling the fake send. Every tool call has a 5 s timeout, says 'Let me check' if it runs past 1.2 s, and is keyed so a retried send doesn't send twice (a dict of keys is enough). If the caller speaks while the agent is 'speaking' (a task that prints words with small sleeps), cancel it. Print timestamps for every event so you can see the timing. Compare with the voice topic on the coding page when you're done.",
+            ans: [
+              "Queue from the fake caller; one agent loop task",
+              "Tool call: create_task, wait 1.2 s, filler, then await with a 5 s timeout",
+              "Speaking is a task; new speech cancels it; finally stops the audio",
+              "Send keyed by draft id: a second send with the same key returns the first result",
+              "Timestamps on every event, so you can read the latency"
+            ],
+            close: [
+              { k: "short", q: "In your orchestrator, what happens if the caller talks while a tool call is still running?", a: "Your choice, stated: either keep the tool running and answer after, or cancel it. Speaking is always cancelled; a read tool can keep running; a write never proceeds without a fresh confirmation." }
+            ] }
+        ]
+      },
+
+      {
+        id: "wc23", track: "Interview", forWhat: "Commure, 5 Oct", len: "2h", est: 120,
+        name: "Your voice agent at depth, drawn cold",
+        blurb: "Saturday or Sunday. Draw alfred_'s voice design from memory, walk one call with every number, the parallel heavy agent, traffic, and what went wrong.",
+        intro: "Everything this week so far has been the ground under your own system. Now you stand on it. The alfred_ page has the full design in two sections, Voice 1 and Voice 2, with its high-level figure and a one-call flow chart. The rule for this session: draw or say it first, then open the page and check. Every gap you find is a question you would otherwise have met for the first time in the room.",
+        steps: [
+          { t: "Draw the high-level design from memory", m: 25,
+            d: "On paper, draw alfred_'s voice agent: the two ways in (phone through the SIP trunk, web over WebRTC), LiveKit and dispatch, the worker on Railway, the edge function that authorizes, the MCP path to the tools, the heavy agent in parallel, and where each call is recorded. Label every arrow with what crosses it: signalling, audio, a token, a tool call. Then open the alfred_ page, Voice 1, and compare with its high-level figure. Redraw anything you missed.",
+            ans: [
+              "Phone and web in; LiveKit room per call; dispatch to the worker",
+              "Worker on Railway; one process per call; brains behind one seam",
+              "Authorize edge function: who, whether, a short-lived token",
+              "Tools over MCP with idempotency; the heavy agent in parallel; the call record in Postgres"
+            ],
+            close: [
+              { k: "short", q: "What is the worker's only door into the backend, and what does it hand back?", a: "The authorize edge function. It checks the caller is really in the room, resolves them, checks billing, and hands back the profile, the persona, the brain arm and a 15-minute token that can read and draft but never send." }
+            ] },
+          { t: "Walk one call, with every number", m: 25,
+            d: "Say one call out loud from dial to hangup, using the flow chart on the alfred_ page: the dispatch, the authorize check (5 s budget, 1.5 s room check), the greeting, the turn loop (end of turn, the brain, a tool call with its 5 s timeout and the filler at 1.2 s), a write (draft, read back, confirm, sent once), the idle check at 10 s, and the end, where the record is flushed with its end reason. Time yourself: three minutes. Then answer the check questions without the page.",
+            ans: [
+              "Dispatch, authorize, greet",
+              "Turn loop: end of turn, brain, tool with timeout and filler",
+              "Write: draft, restate, confirm, send once",
+              "Idle check, hangup, record flushed with the end reason"
+            ],
+            close: [
+              { k: "short", q: "What stops the agent sending an email on a half-heard instruction?", a: "It can only draft. The send tool refuses unless the restated recipient and subject match the draft, the person confirms, and one draft sends once." },
+              { k: "why", q: "What happens if the caller hangs up in the middle of a write?", a: "The draft is either complete or aborted, never half-written, and nothing sends without a confirmation; an eval scenario hangs up mid-tool and asserts exactly that." }
+            ] },
+          { t: "The parallel heavy agent", m: 20,
+            d: "Explain the design in three parts: what (every turn goes to the lean voice agent and, at the same time, to the main agent behind chat and SMS), why (an escalation tool call would cost a model turn and about 2 to 3 s on exactly the turns that are already slow), and the policy (reads answered by whichever has the answer first; writes always wait for the main agent and the person confirms). Then the costs and hard parts, because the interviewer will go there: one background run per turn even when unneeded, tying the two runs together, what to say during a long wait, a hang-up mid-task, and how the result reaches the person afterwards. Be ready to say concretely how the turn reaches the main agent and how its result comes back.",
+            ans: [
+              "What: both agents get every turn",
+              "Why: no escalation turn, about 2 to 3 s saved where it hurts most",
+              "Policy: reads, first answer wins; writes, wait and confirm",
+              "Costs and hard parts: background runs, correlation, long waits, hang-ups, delivery afterwards"
+            ],
+            close: [
+              { k: "why", q: "What does the parallel design cost, and how would you reduce it at ten times the traffic?", a: "A background run on every turn, including ones the voice agent answers alone. Start it only for intents that can need it, or cancel it once the voice agent has answered." }
+            ] },
+          { t: "Traffic on a whiteboard", m: 20,
+            d: "Redo the capacity maths from memory, from your 1,000-plus daily phone users: calls a day, the peak hour, Little's law for calls at once, the burst, calls per container, replicas. Then say what breaks first as traffic grows and what you would watch: CPU per call on the workers, the model provider's rate limits, the authorize budget under load, and the background runs from the parallel design. Check against the alfred_ page's traffic item.",
+            ans: [
+              "About 1,500 calls a day; peak hour about 225",
+              "About 11 at once on average, about 45 in a burst",
+              "Load-test calls per container; about 12 replicas at 8 each",
+              "Watch CPU per call, provider rate limits, the authorize budget, background runs"
+            ],
+            close: [
+              { k: "short", q: "Give the capacity estimate for alfred_'s phone traffic in four numbers.", a: "About 1,500 calls a day, about 225 in the peak hour, about 11 at once on average and about 45 in a burst." }
+            ] },
+          { t: "Evals, and what went wrong", m: 25,
+            d: "Two stories to tell well. Evals: 34 scenarios in text and audio layers, a stub brain in CI, and a verdict that only names a winning configuration if it passes every gate, like time to first audio under 2 s at p95 and the worst interruption stopping within 500 ms; every call leaves a record with a config hash so you know exactly what ran. Lessons: the filler that had to move from prompt to code; realtime config that can silently drop turn detection; event ordering you learn from the SDK, not the docs; missing data that looked like a bug; a worker deployed separately, so merged is not deployed. Pick the two you tell best and say each in under a minute.",
+            ans: [
+              "34 scenarios; gates as code; a winner only if it passes all",
+              "A config hash on every call record",
+              "Lessons: code over prompt; allowlist realtime options; read the SDK; missing data is not evidence; verify on a real call"
+            ],
+            close: [
+              { k: "short", q: "How does the eval harness decide which brain ships?", a: "It runs the scenarios for each arm and applies gates such as time to first audio p95 under 2,000 ms and worst interruption stop under 500 ms; it names a winner only if an arm passes all of them." }
+            ] }
+        ]
+      },
+
+      {
+        id: "wc24", track: "Interview", forWhat: "Commure, 5 Oct", len: "2h", est: 120,
+        name: "Design a patient-call voice agent, then pitch yourself",
+        blurb: "Sunday. The guide's voice agent design once, then from scratch against the clock, then your story for the recruiter.",
+        intro: "Two jobs today. First, the system design you are most likely to meet if you go past the recruiter: an AI agent answering a health system's phone line. The guide works it in six steps, built from the same patterns as your own agent. Second, the Commure call itself: what to say, in your words, after you understand everything underneath it.",
+        steps: [
+          { t: "Read the design once, all six steps", m: 25,
+            sd: [{ v: "voice-agent", a: "requirements", why: "The requirements and the sizing." }, { v: "voice-agent", a: "hld", why: "The high-level design." }, { v: "voice-agent", a: "deepdives", why: "Parallel agents, turn-taking, write-back, evals." }],
+            d: "Read the guide's voice agent for patient calls, step by step, with 'How to get there' open. Notice how each part maps to what you already know: the call path and dispatch from Thursday, the latency budget and turn-taking from the conversation session, idempotent write-back from Friday, the parallel agents from your own system. Note the three things you would not have thought of yourself.",
+            ans: [
+              "Requirements: every call answered; scheduling, intake, FAQs; clinical questions to staff",
+              "Sizing from about 800 calls a day",
+              "High level: SIP into a room, one worker, fast and heavy agents, EHR write-back, staff handoff, call records",
+              "Deep dives: latency budget, parallel agents, turn-taking, no double booking, evals"
+            ],
+            close: [
+              { k: "why", q: "How does the design stop a retried booking from double-booking a slot?", a: "Hold the slot, read it back, confirm, then commit with an idempotency key, so a retry or a hang-up never books twice." }
+            ] },
+          { t: "Design it from scratch, timed", m: 45,
+            d: "Close the guide. Set a 45-minute timer and design it on paper, out loud, as if an interviewer is listening: requirements (3 minutes), entities, API, data flow, a high-level diagram, then two deep dives you choose. Then open the guide and mark what you missed. The deep dives are where you shine: use your own agent as the example every time ('in the agent I own, we...').",
+            ans: [
+              "Requirements and numbers first",
+              "Draw the path of one call before any box for scale",
+              "Deep dives: latency and parallel agents, then write-back safety",
+              "Use your own system as the example"
+            ],
+            close: [
+              { k: "short", q: "What do you draw first on the whiteboard, and why?", a: "The path of one call from the phone to the agent and back, because every later decision, latency, dispatch, write-back, hangs off it." }
+            ] },
+          { t: "Commure, and your story for the recruiter", m: 30,
+            d: "Now the pitch, on the Commure page's Prep tab: the intro, why Commure, and your voice work, in your words. You understand every sentence now, so say it, don't recite it. Commure's agents answer patient calls end to end and write back to the EHR; they report around 30 to 80% of calls resolved without staff. Your angle: you own a live voice agent that does real work in people's email and calendars, you built another from scratch, and you know what's underneath both. Run each drill with the timer, then the check questions.",
+            ans: [
+              "Intro, 90 seconds; why Commure, 60; your voice work, 2 minutes",
+              "alfred_'s voice agent first, then MockFlow-AI",
+              "Understand before you speak: every sentence should be one you could explain",
+              "Close with the next steps and one question"
+            ],
+            close: [
+              { k: "short", q: "In two sentences: why Commure?", a: "Their agents answer every patient call and actually finish the job, writing back to the EHR, which is the hardest version of the voice agent I already own. And it's measured by whether patients get seen." }
+            ] }
+        ]
+      },
+
       {
         id: "wc18", parked: true, track: "Interview", forWhat: "Every interview: your own system", len: "1h 15m", est: 75,
         name: "alfred_ from the outside: draw it cold",
