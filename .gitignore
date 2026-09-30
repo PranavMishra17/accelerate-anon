@@ -13,3 +13,6 @@ ALFRED.html
 
 # The public site, built by tools/build_public.py (and in CI by .github/workflows/pages.yml)
 _site/
+
+# Working notes for Claude: local only
+CLAUDE.md

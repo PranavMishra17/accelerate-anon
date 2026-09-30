@@ -13,7 +13,8 @@ tracker, no interview pages and nothing from private/. The copy of each page:
     its src, href and url() references; figure notes drop links into pages that are not
     published, and links into the Alaap plan are pointed at the deep learning path.
 Then every file is checked and the build exits non-zero on: "alfred" in any case, "private/",
-"Pranav" (a GitHub handle in a github.com URL excepted), a link to a page that is not
+"Pranav" (a GitHub handle in a github.com URL excepted, and api.github.com/repos/<REPO> for the
+star count), a link to a page that is not
 published (INTERVIEWS.html, interviews/, ALAAP.html, ALFRED.html, tracker routes #/w/ and #/s/),
 a local path like E:/, or a local link or asset that is not in _site/.
 
@@ -22,6 +23,9 @@ DEEP-LEARNING.html is built by `python alaap/build.py --public`, which needs loc
 so the built file is committed and this script only copies it.
 """
 import hashlib, html, io, json, os, re, shutil, sys, urllib.parse
+
+REPO = "PranavMishra17/self-study"         # the repo the landing page's star link points at; a rename is this one edit
+OWNER, NAME = REPO.split("/")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "_site")
@@ -32,7 +36,8 @@ TEXT = (".html", ".js", ".css", ".json", ".svg", ".txt", ".md")
 BAD = [
     (re.compile(r"(?i)alfred"), "alfred"),
     (re.compile(r"private/"), "private/"),
-    (re.compile(r"Pranav(?!Mishra17/)|(?<!github\.com/)PranavMishra17"), "Pranav"),
+    (re.compile(r"Pranav(?!Mishra17/)|(?<!github\.com/)(?<!api\.github\.com/repos/)PranavMishra17"
+                r"|api\.github\.com/repos/%s/(?!%s(?![\w.-]))" % (re.escape(OWNER), re.escape(NAME))), "Pranav"),
     (re.compile(r"INTERVIEWS\.html|interviews/|ALAAP\.html|ALFRED\.html|#/w/|#/s/"), "a link to an unpublished page"),
     (re.compile(r"(?<![A-Za-z])[A-Z]:[\\/]"), "a local path"),
 ]
@@ -150,6 +155,7 @@ def main():
             text = re.sub(r'(<script src="site/nav\.js)', r"<script>window.SITE_PUBLIC = true;</script>\n\1", text, count=1)
         io.open(dst, "w", encoding="utf-8", newline="\n").write(text)
     landing = LANDING.replace("{{DATA}}", json.dumps({k: c[k] for k in c if k != "num"}).replace("</", "<\\/"))
+    landing = landing.replace("{{REPO}}", REPO)   # only ever after github.com/ or api.github.com/repos/
     for k, v in c.items():
         landing = landing.replace("{{%s}}" % k, str(v) if not isinstance(v, (list, dict)) else "")
     landing = landing.replace("{{design_names}}", names([d["title"] for d in c["designs"]]))
@@ -208,7 +214,35 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 b, strong { font-weight: var(--w-strong); }
 .wrap { max-width: 1180px; margin: 0 auto; padding: 0 var(--s5); }
 .top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s5); padding: var(--s4) 0 var(--s3); border-bottom: var(--hair); }
-h1 { font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--lh-tight); margin: 0; }
+h1 { display: flex; align-items: baseline; gap: .25em; min-width: 0; max-width: 100%; white-space: nowrap;
+  font-size: var(--fs-2xl); font-weight: var(--w-strong); line-height: var(--lh-tight); margin: 0; }
+h1 > span { flex: none; }
+/* The visitor's name before the title, "anon" until they set one. Drawn in the page's own
+   background, so it cannot be seen; every 7 s a soft band of the ink colour, mixed into the
+   background (so it reads lighter in dark mode), sweeps across it left to right. Requested:
+   the one exception to motion only on interaction (DESIGN.md rule 10). */
+.who {
+  flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  font: inherit; margin: 0; padding: 0; border: 0; cursor: text; border-radius: var(--radius-sm);
+  color: transparent; -webkit-text-fill-color: transparent;
+  background: linear-gradient(100deg, var(--bg) 30%, color-mix(in srgb, var(--ink) 55%, var(--bg)) 50%, var(--bg) 70%) 100% 0 / 400% 100% no-repeat;
+  -webkit-background-clip: text; background-clip: text;
+  animation: glint 7s ease-in-out 1.2s infinite;
+}
+@keyframes glint { 0% { background-position: 100% 0; } 30%, 100% { background-position: 0 0; } }
+.who:hover, .who:focus-visible { color: var(--muted); -webkit-text-fill-color: var(--muted); }
+.who-in { font: inherit; color: var(--ink); background: var(--surface); border: var(--hair); border-radius: var(--radius-sm);
+  padding: 0 var(--s1); margin: 0; min-width: 0; max-width: 100%; }
+@media (prefers-reduced-motion: reduce) {
+  .who { animation: none; background: none; color: var(--muted); -webkit-text-fill-color: var(--muted); }
+}
+/* Star on GitHub: a quiet link beside the title; the count is filled in when GitHub answers. */
+.star { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 var(--s2); font-size: var(--fs-sm); color: var(--soft);
+  border: var(--hair); border-radius: var(--radius); transition: color 150ms ease-out, border-color 150ms ease-out; }
+.star:hover { text-decoration: none; color: var(--ink); border-color: var(--muted); }
+.star svg { width: 14px; height: 14px; fill: currentColor; flex: none; }
+.star .sc { padding-left: var(--s2); border-left: var(--hair); color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .star { transition: none; } }
 .lead { color: var(--soft); margin: var(--s4) 0 var(--s5); max-width: var(--measure); }
 .lead b { color: var(--ink); }
 .note { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s6); max-width: var(--measure); }
@@ -265,7 +299,8 @@ footer { border-top: var(--hair); padding: var(--s4) 0 var(--s6); font-size: var
 <body>
 <div class="wrap">
   <header class="top">
-    <h1>Accelerate</h1>
+    <h1><button type="button" class="who" id="who" aria-label="Your name; click to change">anon</button><span>Accelerate</span></h1>
+    <a class="star" href="https://github.com/{{REPO}}" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"/></svg>Star on GitHub<span class="sc" id="stars" hidden></span></a>
     <nav class="sn-top" data-site-nav data-here="home"></nav>
   </header>
   <main>
@@ -427,6 +462,53 @@ footer { border-top: var(--hair); padding: var(--s4) 0 var(--s6); font-size: var
   }
   if (document.fonts) { document.fonts.ready.then(fit); }
 }());
+
+/* The name before the title: "anon" until the visitor sets one, kept in this browser only.
+   Click it to type a name; Enter or leaving the field saves, Escape cancels, empty resets. */
+(function () {
+  var KEY = "accelerate.name", DEF = "anon", MAX = 24, who = document.getElementById("who");
+  function get() { try { return (window.localStorage.getItem(KEY) || "").trim().slice(0, MAX); } catch (err) { return ""; } }
+  function put(v) { try { if (v) { window.localStorage.setItem(KEY, v); } else { window.localStorage.removeItem(KEY); } } catch (err) { /* storage blocked */ } }
+  function show() { var n = get(); who.textContent = n || DEF; document.title = n ? n + " Accelerate" : "Accelerate"; }
+  who.addEventListener("click", function () {
+    var box = document.createElement("input"), done = false;
+    box.className = "who-in"; box.maxLength = MAX; box.value = get(); box.placeholder = DEF;
+    box.setAttribute("aria-label", "Your name, up to " + MAX + " characters; empty resets to anon");
+    function size() { box.style.width = Math.max(DEF.length, box.value.length) + 1 + "ch"; }
+    function end(save, refocus) {
+      if (done) { return; }
+      done = true;
+      if (save) { put(box.value.trim().slice(0, MAX)); }
+      box.parentNode.replaceChild(who, box);
+      show();
+      if (refocus) { who.focus(); }
+    }
+    box.addEventListener("input", size);
+    box.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); end(true, true); }
+      else if (e.key === "Escape") { e.preventDefault(); end(false, true); }
+    });
+    box.addEventListener("blur", function () { end(true, false); });
+    size();
+    who.parentNode.replaceChild(box, who);
+    box.focus();
+    box.select();
+  });
+  show();
+}());
+
+/* The star count, from GitHub's public API. Any failure (offline, rate limited) leaves the
+   link without a count. */
+(function () {
+  if (!window.fetch) { return; }
+  fetch("https://api.github.com/repos/{{REPO}}").then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+    if (!j || typeof j.stargazers_count !== "number") { return; }
+    var el = document.getElementById("stars");
+    el.textContent = j.stargazers_count.toLocaleString("en");
+    el.hidden = false;
+    el.parentNode.setAttribute("aria-label", "Star on GitHub, " + j.stargazers_count + " stars");
+  }).catch(function () {});
+}());
 </script>
 </body>
 </html>
@@ -435,6 +517,7 @@ footer { border-top: var(--hair); padding: var(--s4) 0 var(--s6); font-size: var
 if __name__ == "__main__":
     assert flagged("see ALFRED.html") and flagged("x Alfred_ y") and flagged("E:/kitaru") and flagged("index.html#/s/2/1")
     assert not flagged("https://github.com/PranavMishra17/alaap") and flagged("Pranav's harness") and not flagged("index.html")
+    assert not flagged("https://api.github.com/repos/" + REPO) and flagged("https://api.github.com/repos/%s/x" % OWNER) and flagged('"%s"' % REPO)
     assert clean('a<script src="private/site.js"></script>\nb') == "ab"
     assert clean("x /* local-only */ y /* end local-only */z") == "xz"
     assert clean("/* tracker (index.html#/s/1/1) */k") == "k" and clean("/* keep */k") == "/* keep */k"

@@ -35,6 +35,7 @@ pages with no way around them. The fix is fewer decisions, made on purpose.
 9. **Colour with a job.** Categorical colours (`--cat-1` to `--cat-6`) mark one thing per
    colour, such as one interview loop, as a 3 px rule or a dot, never as a fill.
 10. **Motion only on interaction**, 150 ms or less, and none with reduced motion.
+    One deliberate exception, requested by Pranav: the landing page's hidden name before the title, revealed every 7 s by a soft band of light (a gradient clipped to the text); with reduced motion it is shown static at a faint contrast.
 11. **States are designed.** Empty, loading and error states say what happened and what to do.
 
 ## Words
