@@ -616,7 +616,7 @@ details.item > .sbody { padding-left: 0; }
       /* Questions you ask, as three Cs: when, why and how for each kind, then each question
          with who to ask, how to loop it in, and what it shows. */
       var n3 = three.reduce(function (n, k) { return n + k.items.length; }, 0);
-      var a3 = fold("ask", "Questions to ask: clarify, contribute, collaborate", n3 + " questions, in three kinds");
+      var a3 = fold("ask", "Questions to ask", n3 + " questions, in three kinds");
       three.forEach(function (k) {
         var sec = el("div", "c3"); sec.id = "ask-" + k.id;
         sec.appendChild(el("h3", "c3-t", esc(k.title) + '<span class="c3-w">' + inl(k.when) + "</span>"));
@@ -637,11 +637,11 @@ details.item > .sbody { padding-left: 0; }
       LOOP.ask.forEach(function (x) { a.appendChild(el("div", "ask", '<span class="to">' + esc(x.to) + "</span><span>" + inl(x.q) + "</span>")); });
     }
     if (LOOP.traps.length) {
-      var t = fold("traps", "Traps", LOOP.traps.length + " things that cost points before");
+      var t = fold("traps", "Traps", LOOP.traps.length + " things to avoid");
       LOOP.traps.forEach(function (x) { t.appendChild(el("div", "trap", "<b>" + esc(x[0]) + "</b><span>" + inl(x[1]) + "</span>")); });
     }
     if (LOOP.sources && LOOP.sources.length) {
-      var so = fold("sources", "What this rests on", LOOP.sources.length + " checked links: the job post, their values, the launch");
+      var so = fold("sources", "What this rests on", LOOP.sources.length + " checked links");
       var ul = el("ul", "reading");
       LOOP.sources.forEach(function (x) {
         var lab = x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + inl(x.label) + "</a>" : inl(x.label);

@@ -76,7 +76,13 @@ def loops():
             "links": links(getattr(m, "SOURCES", [])),
         })
     # Newest first; a loop with no date yet is still to come, so it goes on top.
-    out.sort(key=lambda x: datetime.datetime.fromisoformat(x["when_iso"]).timestamp() if x["when_iso"] else float("inf"), reverse=True)
+    now = datetime.datetime.now(datetime.timezone.utc).timestamp()
+    def order(x):
+        if not x["when_iso"]:
+            return (1, 0)
+        t = datetime.datetime.fromisoformat(x["when_iso"]).timestamp()
+        return (0, t) if t > now else (2, -t)
+    out.sort(key=order)   # the next call first, then loops with no date yet, then the past, newest first
     return out
 
 

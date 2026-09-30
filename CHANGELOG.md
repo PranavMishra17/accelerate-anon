@@ -655,3 +655,12 @@ local app is unchanged. Material about one employer now lives in a gitignored `p
 folder that local pages load when present. The interview cards carry each company's name as a
 full-width wordmark, open the loop page in a new tab, and flip to the brand colour on hover.
 No change to the plan or to `CHARTER.md`.
+
+**2026-09-29 — Coframe, recruiter screen (Thu 1 Oct).**
+A new loop page, `interviews/coframe.py`: the company and the Agent Platform Engineer posting
+researched with checked links, how to run fifteen minutes with a founding talent lead, the
+intro (his verbatim paragraphs, a Coframe closing line), why Coframe, why leave, one story told
+for a non-technical listener, the common questions, and questions to ask in three groups. Pay,
+location and work authorization are handled in chat only; the repo is public. The hub now
+lists the next call first, then undated loops, then past ones. Loop-page headings are generic.
+No change to the plan or to `CHARTER.md`.
