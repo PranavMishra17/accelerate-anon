@@ -678,3 +678,11 @@ Raydar, a 15-minute screen with an AI interviewer for a Founding Forward Deploye
 (30 September), and River, a founder call with Tarek Abillama for a founding engineer role (date
 to be set). Each is an `interviews/<module>.py` with its sources checked the same day, a `LOOPS`
 entry and a card on the hub. Logistics answers stay in chat. No charter deviation.
+
+**2026-09-30 — Parked: inference engineering, with the backend and cloud under it.**
+Added to `ROADMAP-AHEAD.md` "Beyond", after the deep learning and PyTorch track: host,
+batch, quantize and measure a small open model (a voice one by preference), with the
+backend fundamentals it runs on learned in depth alongside. A six-phase sketch, about twenty
+weeks part-time; placement decided at the re-plan after Milestone 3. Raydar's page gained the
+stack item by item, the resume lines to call out, and how AI interviewers grade.
+No charter deviation: parked, not scheduled.

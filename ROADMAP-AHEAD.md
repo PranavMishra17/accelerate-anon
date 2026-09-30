@@ -92,5 +92,33 @@ Named so they stop being background anxiety. Nothing here has a date.
   recurring daydream.
 - **Writing.** The film criticism, the screenwriting. Tracked in the life strip as a
   binary, never planned, never assigned a target.
+- **Inference engineering, and the backend and cloud underneath it.** After the deep
+  learning and PyTorch track, when the mathematics and the model internals are solid.
+  Learn it by doing: take a small open model, preferably a voice one, host it yourself,
+  batch it, quantize it, and measure time to first token, time per token and throughput
+  as each knob moves. Alongside it, the fundamentals the serving sits on, in depth rather
+  than definitions: processes and sockets, a job queue on Postgres, Docker, then
+  Kubernetes, metrics and a load test. A sketch, about twenty weeks part-time:
+  1. The mental model, 2 weeks. Prefill is bound by compute, decode by memory bandwidth;
+     the KV cache and GPU memory worked by hand. Kiely's *Inference Engineering*
+     (baseten.co/inference-engineering/book), kipply's inference arithmetic, the
+     Anyscale post on continuous batching.
+  2. Host and measure, 4 weeks. A small model on vLLM on a free or cheap GPU
+     (Modal, Kaggle, Lightning), benchmarked with `vllm bench serve`, then the same
+     model on SGLang or llama.cpp, compared.
+  3. Backend core, alongside, 6 weeks. An HTTP server on raw sockets, a Postgres queue
+     with `SKIP LOCKED` and retries, Docker; OSTEP's processes and concurrency, the
+     transport and application layers of Kurose and Ross, DDIA's replication and
+     transactions.
+  4. Run it like production, 4 weeks. The model server on Kubernetes (minikube), metrics
+     in Prometheus, a load test, autoscaling; the SRE book on SLOs and overload.
+  5. Voice, 3 weeks. faster-whisper and Kokoro behind a streaming socket, with a latency
+     budget per stage.
+  6. Depth, after. The PagedAttention paper, speculative decoding, the roofline and
+     inference chapters of *How to Scale Your Model*.
+
+  Time to useful competence (can serve, benchmark and explain the trade-offs) is
+  probably two to three months of this; kernels and multi-node serving are longer.
+  Placement is decided at the re-plan after Milestone 3.
 - **Systems depth beyond interview level.** Consensus, distributed transactions, the
   back half of DDIA. Only if it stays interesting.
