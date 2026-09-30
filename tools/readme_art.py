@@ -18,30 +18,34 @@ def icon(name):
         raise SystemExit("no icon " + name)
     return json.loads(m.group(1))
 
-# The four pages: file, label, icon, the page's colour (the dark-theme --cat-* token), a deeper shade for the glow.
+# The four pages: file, label, icon, and a bold pair of the page's colour (the --cat-* hue): lighter and deeper.
 PAGES = [
-    ("system-design", ["System", "design"], "network", "#8DB0DD", "#3F6EA8"),
-    ("coding", ["Coding", "primer"], "code", "#8FC4A1", "#3F7A55"),
-    ("cheatsheet", ["Cheat", "sheet"], "layout-grid", "#DDA48A", "#A85F3F"),
-    ("deep-learning", ["Deep", "learning"], "audio-waveform", "#C990AE", "#7A3B5C"),
+    ("system-design", ["System", "design"], "network", "#5B8FDB", "#28508F"),
+    ("coding", ["Coding", "primer"], "code", "#52A572", "#27623F"),
+    ("cheatsheet", ["Cheat", "sheet"], "layout-grid", "#DC7E54", "#94441F"),
+    ("deep-learning", ["Deep", "learning"], "audio-waveform", "#B25B92", "#632A4F"),
 ]
 
 def button(name, label, ic, colour, deep):
+    """A bold tile: the page's colour, lighter at the top-left, deeper at the bottom-right, a soft
+    light from above, a white icon and label."""
     lines = "".join('<text x="64" y="%d" text-anchor="middle">%s</text>' % (92 + 15 * i, w) for i, w in enumerate(label))
     return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">\n'
             '  <title>%s</title>\n'
             '  <defs>\n'
-            '    <radialGradient id="g" cx="0.5" cy="0.3" r="0.75"><stop offset="0" stop-color="%s" stop-opacity="0.32"/>'
-            '<stop offset="1" stop-color="%s" stop-opacity="0"/></radialGradient>\n'
-            '    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>'
-            '<stop offset="1" stop-color="#FFFFFF" stop-opacity="0.04"/></linearGradient>\n'
+            '    <linearGradient id="fill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%s"/>'
+            '<stop offset="1" stop-color="%s"/></linearGradient>\n'
+            '    <radialGradient id="light" cx="0.3" cy="0.05" r="0.9"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.28"/>'
+            '<stop offset="0.6" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>\n'
+            '    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.35"/>'
+            '<stop offset="1" stop-color="#FFFFFF" stop-opacity="0.06"/></linearGradient>\n'
             '  </defs>\n'
-            '  <rect x="1" y="1" width="126" height="126" rx="26" fill="#1B1A1F"/>\n'
-            '  <rect x="1" y="1" width="126" height="126" rx="26" fill="url(#g)"/>\n'
+            '  <rect x="1" y="1" width="126" height="126" rx="26" fill="url(#fill)"/>\n'
+            '  <rect x="1" y="1" width="126" height="126" rx="26" fill="url(#light)"/>\n'
             '  <rect x="1.5" y="1.5" width="125" height="125" rx="25.5" fill="none" stroke="url(#rim)"/>\n'
-            '  <g transform="translate(44 22) scale(1.6667)" fill="none" stroke="%s" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">%s</g>\n'
-            '  <g fill="#ECEBF1" font-family="%s" font-size="13" font-weight="600">%s</g>\n'
-            '</svg>\n') % (" ".join(label), deep, deep, colour, ic, FONT, lines)
+            '  <g transform="translate(44 22) scale(1.6667)" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">%s</g>\n'
+            '  <g fill="#FFFFFF" font-family="%s" font-size="13" font-weight="700">%s</g>\n'
+            '</svg>\n') % (" ".join(label), colour, deep, ic, FONT, lines)
 
 def hero():
     src = io.open(os.path.join(ROOT, "brand", "accelerate.svg"), encoding="utf-8").read()

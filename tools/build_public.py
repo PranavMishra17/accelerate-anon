@@ -24,7 +24,7 @@ so the built file is committed and this script only copies it.
 """
 import hashlib, html, io, json, os, re, shutil, sys, urllib.parse
 
-REPO = "PranavMishra17/self-study"         # the repo the landing page's star link points at; a rename is this one edit
+REPO = "PranavMishra17/accelerate-anon"         # the repo the landing page's star link points at; a rename is this one edit
 OWNER, NAME = REPO.split("/")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

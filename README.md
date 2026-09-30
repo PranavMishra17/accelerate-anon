@@ -1,12 +1,6 @@
-<p align="center">
-  <a href="https://pranavmishra17.github.io/self-study/"><img src="docs/art/accelerate.svg" width="128" height="128" alt="Accelerate"></a>
-  <a href="https://pranavmishra17.github.io/self-study/SYSTEM%20DESIGN.html"><img src="docs/art/system-design.svg" width="128" height="128" alt="System design"></a>
-  <a href="https://pranavmishra17.github.io/self-study/CODING.html"><img src="docs/art/coding.svg" width="128" height="128" alt="Coding primer"></a>
-  <a href="https://pranavmishra17.github.io/self-study/CHEATSHEET.html"><img src="docs/art/cheatsheet.svg" width="128" height="128" alt="Cheat sheet"></a>
-  <a href="https://pranavmishra17.github.io/self-study/DEEP-LEARNING.html"><img src="docs/art/deep-learning.svg" width="128" height="128" alt="Deep learning"></a>
-</p>
+<h1 align="center"><img src="docs/art/accelerate.svg" width="96" height="96" align="center" alt=""> accelerate-anon</h1>
 
-<h1 align="center">Accelerate</h1>
+---
 
 <p align="center">
   A free study toolkit for system design, coding interviews and deep learning from scratch.<br>
@@ -14,11 +8,18 @@
 </p>
 
 <p align="center">
-  <a href="https://pranavmishra17.github.io/self-study/"><img alt="Open the site" src="https://img.shields.io/badge/Open_the_site-live-1B1A1F?style=for-the-badge"></a>
-  <a href="https://github.com/PranavMishra17/self-study"><img alt="Star on GitHub" src="https://img.shields.io/github/stars/PranavMishra17/self-study?style=for-the-badge&label=Star"></a>
+  <a href="https://pranavmishra17.github.io/accelerate-anon/"><img alt="Open the site" src="https://img.shields.io/badge/Open_the_site-live-1B1A1F?style=for-the-badge"></a>
+  <a href="https://github.com/PranavMishra17/accelerate-anon"><img alt="Star on GitHub" src="https://img.shields.io/github/stars/PranavMishra17/accelerate-anon?style=for-the-badge&label=Star"></a>
 </p>
 
 ---
+
+<p align="center">
+  <a href="https://pranavmishra17.github.io/accelerate-anon/SYSTEM%20DESIGN.html"><img src="docs/art/system-design.svg" width="128" height="128" alt="System design"></a>
+  <a href="https://pranavmishra17.github.io/accelerate-anon/CODING.html"><img src="docs/art/coding.svg" width="128" height="128" alt="Coding primer"></a>
+  <a href="https://pranavmishra17.github.io/accelerate-anon/CHEATSHEET.html"><img src="docs/art/cheatsheet.svg" width="128" height="128" alt="Cheat sheet"></a>
+  <a href="https://pranavmishra17.github.io/accelerate-anon/DEEP-LEARNING.html"><img src="docs/art/deep-learning.svg" width="128" height="128" alt="Deep learning"></a>
+</p>
 
 ## What is inside
 
@@ -90,6 +91,40 @@ for the explanation, and walk through the flow one step at a time.
 Every diagram can be explored: click one for a full-screen view, hover or tap a part for a
 one-line note, and step through it with "walk through".
 
+## Use it with an agent
+
+The whole toolkit is plain data in plain files, so a coding agent (Claude Code, Codex, Cursor,
+or any other) can study with you from it, quiz you, and extend it. Clone it and open the folder
+in your agent:
+
+```bash
+git clone https://github.com/PranavMishra17/accelerate-anon.git
+cd accelerate-anon
+```
+
+Then paste this to get going:
+
+```text
+You are my study partner for this repository, Accelerate. Read README.md and DESIGN.md first.
+The material is data: the coding patterns, problems, variations and AI systems topics are in
+coding/data.js; the system design framework, patterns and worked designs are the GUIDE object
+in "SYSTEM DESIGN.html"; the deep learning path is alaap/plan.py.
+
+1. Ask what I am preparing for and how much time I have each week, then propose a plan built
+   from these pages, with links to the exact sections.
+2. Quiz me one open question at a time from the material. Never show the answer until I try.
+3. When I miss something, point me to the section to reread and quiz me on it again later.
+4. If I ask for more, add problems, variations or topics in the same shape as the existing
+   ones, then run `python coding/test_data.py` so every code block still runs.
+
+Keep your replies short, and name the page and section you are drawing on.
+```
+
+Tune it to your liking: change the pace, narrow it to one page ("only the system design
+patterns"), ask for mock interviews in the style of the worked designs, or skip the prompt
+and point your agent at a single file when you want a quick answer. The design rules in
+`DESIGN.md` keep anything it adds consistent with the rest.
+
 ## Run it yourself
 
 Everything is static HTML. To build and serve the public site locally:
@@ -108,7 +143,21 @@ If the toolkit helps you, a star on the repository is the nicest thanks.
 
 ## Credits
 
-- Icons: [Lucide](https://lucide.dev) (ISC), bundled in `figures/icons.js`.
-- Typefaces: Atkinson Hyperlegible and JetBrains Mono (SIL Open Font License), bundled in `fonts/`.
-- Reading draws on *Designing Data-Intensive Applications* (2nd edition) and
-  [AI Engineering from Scratch](https://aiengineeringfromscratch.com).
+This toolkit stands on other people's work. The ones it leans on most:
+
+| Source | By | Used for |
+|---|---|---|
+| [System Design in a Hurry: Delivery Framework](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery) and [common patterns](https://www.hellointerview.com/learn/system-design/in-a-hurry/patterns) | Hello Interview | The system design guide's six steps, their timings, and the core deep-dive patterns |
+| [Designing Data-Intensive Applications, 2nd edition](https://dataintensive.net/) | Martin Kleppmann and Chris Riccomini | Background reading behind the system design material |
+| [AI Engineering from Scratch](https://aiengineeringfromscratch.com/) | Rohit Ghumare | Lessons linked from the diagrams and the deep learning path |
+| [TinyTorch](https://mlsysbook.ai/tinytorch/) | Vijay Janapa Reddi and the ML Systems Book community | The curriculum behind the deep learning path's build stages |
+| [TrenTorch](https://github.com/TrenTorch/TrenTorch) | TrenTorch | The framework the deep learning path builds module by module |
+| [Alaap](https://github.com/PranavMishra17/alaap) | The author of this toolkit | The voice design system the deep learning path's audio stages read |
+| [LeetCode](https://leetcode.com/problemset/), [Blind 75](https://www.teamblind.com/post/New-Year-Gift---Curated-List-of-Top-75-LeetCode-Questions-to-Save-Your-Time-OaM1orEU), [NeetCode 150](https://neetcode.io/practice) | Their authors | Where the classic problems are known from; every statement, example and solution here is written fresh |
+| [Lucide](https://lucide.dev/) | Lucide Contributors (ISC) | The icons in the diagrams and on this page |
+| [Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) and [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | Braille Institute; JetBrains (SIL OFL 1.1) | The text and code typefaces |
+| [Playwright](https://playwright.dev/python/), [Shields.io](https://shields.io/), [GitHub Pages](https://docs.github.com/en/pages) | Microsoft; Shields.io; GitHub | Screenshots, badges and hosting |
+
+The full list, with every paper and article the pages link to, grouped by page, and the
+licence of each asset and tool, is in **[CREDITS.md](CREDITS.md)**. If something of yours is used
+here and is missing or credited wrongly, open an issue and it will be fixed.

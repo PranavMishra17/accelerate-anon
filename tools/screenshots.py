@@ -9,7 +9,7 @@ import os
 from playwright.sync_api import sync_playwright
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SITE = "https://pranavmishra17.github.io/self-study/"
+SITE = "https://pranavmishra17.github.io/accelerate-anon/"
 OUT = os.path.join(ROOT, "docs", "screenshots")
 
 PAGES = {

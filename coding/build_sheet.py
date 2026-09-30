@@ -9,7 +9,7 @@ Run it after any change in coding/, figures/ or site/tokens.css. Never edit CHEA
 import base64, io, os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SITE = "https://pranavmishra17.github.io/self-study/"
+SITE = "https://pranavmishra17.github.io/accelerate-anon/"
 
 
 def read(path):

@@ -1,12 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
   <title>Coding primer</title>
   <defs>
-    <radialGradient id="g" cx="0.5" cy="0.3" r="0.75"><stop offset="0" stop-color="#3F7A55" stop-opacity="0.32"/><stop offset="1" stop-color="#3F7A55" stop-opacity="0"/></radialGradient>
-    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.04"/></linearGradient>
+    <linearGradient id="fill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#52A572"/><stop offset="1" stop-color="#27623F"/></linearGradient>
+    <radialGradient id="light" cx="0.3" cy="0.05" r="0.9"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.28"/><stop offset="0.6" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.35"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.06"/></linearGradient>
   </defs>
-  <rect x="1" y="1" width="126" height="126" rx="26" fill="#1B1A1F"/>
-  <rect x="1" y="1" width="126" height="126" rx="26" fill="url(#g)"/>
+  <rect x="1" y="1" width="126" height="126" rx="26" fill="url(#fill)"/>
+  <rect x="1" y="1" width="126" height="126" rx="26" fill="url(#light)"/>
   <rect x="1.5" y="1.5" width="125" height="125" rx="25.5" fill="none" stroke="url(#rim)"/>
-  <g transform="translate(44 22) scale(1.6667)" fill="none" stroke="#8FC4A1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/> <polyline points="8 6 2 12 8 18"/></g>
-  <g fill="#ECEBF1" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="600"><text x="64" y="92" text-anchor="middle">Coding</text><text x="64" y="107" text-anchor="middle">primer</text></g>
+  <g transform="translate(44 22) scale(1.6667)" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/> <polyline points="8 6 2 12 8 18"/></g>
+  <g fill="#FFFFFF" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="700"><text x="64" y="92" text-anchor="middle">Coding</text><text x="64" y="107" text-anchor="middle">primer</text></g>
 </svg>
