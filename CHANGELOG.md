@@ -854,3 +854,16 @@ questions in seven groups); six teach-first wildcard sessions, wc25 to wc30, abo
 for his 5 to 6 hours; a new Baseline field, NLP and conversational AI (18 topics, the sixteenth
 field); and a guide design, Enterprise virtual assistant. Each links the others instead of copying.
 Charter deviation: none; a wildcard loop, its sessions count toward wildcard credit as usual.
+
+**2026-10-01 — The 3 Dots IT sessions get figures, points and links; loop page sessions in two panes.**
+Pranav found the six new sessions to be walls of paragraphs with no diagrams, the loop page's
+Sessions tab still one column with an answer box that had no question, the Prep tab's cards
+template-looking, Baseline's type too large, and the NLP map unlinked. Now: twelve new shared
+figures (the NLP map, the representation ladder, the classification ladder, contrastive learning,
+ANN indexes, the LLM lifecycle, a virtual assistant turn, confidence bands, the repair ladder, an
+intent taxonomy, a confusion matrix, the error-analysis loop), each step's text cut to a short
+lead plus key points, and 143 links from steps to the Baseline map and topics, the guide design
+and the Prep questions they prepare for (and every Prep question back to its step). Loop page
+session steps open one at a time in two panes like the tracker, the answer box asks the step's
+question, Prep sections are a coloured spine with plain rows, and Baseline's sizes are back on
+the shared scale (body 15, title 24). No charter deviation.

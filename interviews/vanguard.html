@@ -115,7 +115,7 @@ details.item > summary:hover .qt { color: var(--accent); }
 .transcript .note { color: color-mix(in srgb, var(--bg) 70%, transparent); }
 /* your answer: optional, saved as you go, beside the tracker's own */
 .mine { margin: var(--s3) 0 0; }
-.mine label { display: block; font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--soft); margin-bottom: var(--s1); }
+.mine label { display: block; font-size: var(--fs-md); font-weight: var(--w-strong); color: var(--ink); line-height: 1.4; margin-bottom: var(--s2); }
 .mine textarea { min-height: 72px; }
 .mine .mine-st { font-size: var(--fs-xs); color: var(--muted); min-height: 1em; margin-top: 2px; }
 .transcript .line { display: block; }
@@ -184,15 +184,17 @@ details.pq > .pq-cols { margin: 0 0 var(--s5); }
 .pq-cols .cv-say { margin-top: 0; }
 .pq-cols.one { grid-template-columns: minmax(0, 1fr); max-width: var(--measure); }
 details.pq { scroll-margin-top: calc(var(--top) + var(--s2)); }
-.bank-sec { background: color-mix(in srgb, var(--sec) 5%, var(--surface)); border: 1px solid color-mix(in srgb, var(--sec) 30%, var(--rule)); border-top: 3px solid var(--sec); border-radius: var(--radius-lg);
-  padding: var(--s4) var(--s5) var(--s2); margin: var(--s5) 0; }
-.bank-sec > h2 { display: flex; align-items: center; gap: var(--s2) var(--s3); flex-wrap: wrap; margin-top: 0; }
-.bank-sec > h2::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--sec); flex: none; }
+.bank-sec { border-left: 3px solid var(--sec); padding: 0 0 0 var(--s5); margin: var(--s7) 0; }
+.bank-sec > h2 { display: flex; align-items: baseline; gap: var(--s2) var(--s3); flex-wrap: wrap; margin-top: 0; }
 .bank-sec .bank-n { font-size: var(--fs-sm); font-weight: var(--w-regular); color: var(--muted); }
-.bank-sec > .hsub { margin-bottom: var(--s2); }
-.bank-sec details.pq:last-of-type { border-bottom: 0; }
-.bank-sec details.pq[open] > summary { box-shadow: inset 3px 0 0 var(--sec); padding-left: var(--s3); }
+.bank-sec > .hsub { margin-bottom: var(--s3); }
+.bank-sec details.pq[open] > summary .qt { color: var(--sec); }
 .bank-sec details.pq > summary:hover .qt { color: var(--sec); }
+.pq-land { margin: 0 0 var(--s3); color: var(--soft); }
+.pq-land b { color: var(--ink); font-weight: var(--w-strong); }
+.pq-work .transcript { margin: 0 0 var(--s3); max-width: none; }
+.pq-work .swap { border-left-color: var(--rule); }
+.pq-work .lab { font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); margin: var(--s3) 0 var(--s1); }
 .pq-tests { font-size: var(--fs-sm); color: var(--soft); margin: 0 0 var(--s2); }
 .pq-tests b { color: var(--ink); font-weight: var(--w-strong); }
 details.pq.rev > summary .qt::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-right: var(--s2); vertical-align: middle; }
@@ -324,6 +326,17 @@ td:first-child { font-weight: var(--w-strong); }
   display: grid; place-items: center; font-size: var(--fs-xs); margin-top: 3px; padding: 0; }
 .tick.on { background: var(--ok); border-color: var(--ok); }
 .sbody { padding: 0 0 var(--s5) 30px; }
+.step { scroll-margin-top: calc(var(--top) + var(--s2)); }
+.sbody2 { margin: 0 0 var(--s5); grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); }
+.sbody2 > .cv-said { padding: 0 var(--s4) 0 30px; }
+.sbody2 > .cv-said > p.d { margin: 0 0 var(--s3); }
+.pts { margin: 0 0 var(--s3); padding-left: var(--s5); }
+.pts li { margin: 0 0 var(--s2); padding-left: var(--s1); }
+.pts li b { font-weight: var(--w-strong); color: var(--ink); }
+.pq-work { align-self: start; position: sticky; top: calc(var(--top) + var(--s3)); background: var(--surface); border: var(--hair); border-radius: var(--radius-lg); padding: var(--s4); }
+.pq-work .mine { margin-top: 0; }
+.pq-work details.say .transcript { margin-top: var(--s3); }
+@media (max-width: 760px) { .sbody2 > .cv-said { padding: 0; } .pq-work { position: static; } }
 .sbody > p.d, .sbody > p.point { margin: 0 0 var(--s1); }
 .reading { margin: 0; padding: 0; list-style: none; }
 .reading li { margin: 0 0 var(--s2); padding-left: var(--s3); position: relative; }
@@ -390,9 +403,9 @@ details.item > .sbody { padding-left: 0; }
 <dialog id="quiz" aria-label="Quiz"></dialog>
 <dialog id="convo" class="convo" aria-label="Mock conversation"></dialog>
 <script src="../figures/icons.js?v=f5a48822"></script>
-<script src="../figures/figures.js?v=46349820"></script>
+<script src="../figures/figures.js?v=bba2fb33"></script>
 <script src="../private/figures.js?v=5e8ca23c"></script>
-<script src="../figures/notes.js?v=d1690023"></script>
+<script src="../figures/notes.js?v=b0f43ed5"></script>
 <script src="../private/notes.js?v=64ed8baa"></script>
 <script src="../figures/viewer.js?v=ecb99aae"></script>
 <script type="application/json" id="loop-data">{"id": "vanguard", "title": "Vanguard, technical", "subtitle": "Details to be filled", "when": "Date to be set", "when_iso": "", "who": "To be filled.", "format": "To be filled: the length, who is on the call, and whether there is coding on a shared screen.", "bar": "", "sessions": [], "scripts": [], "drills": [], "qa": [], "ask": [], "ask3": [], "traps": [], "tables": [], "admire": "", "kitaruLead": "", "figures": [], "mockHow": "", "mocks": [], "planKicker": "", "mechTitle": "", "designLink": null, "extra": "Nothing is prepared yet. When the details arrive, this page gets a Prep tab with your story and the question banks, and the tracker gets sessions for it.", "emphasis": [], "own": null, "showUp": [], "prepLead": "", "storyBlurb": "", "sources": [{"label": "Vanguard: company site", "url": "https://corporate.vanguard.com/", "why": "Company information and investment research."}], "company": [], "posting": null, "rounds": []}</script>
@@ -606,7 +619,7 @@ details.item > .sbody { padding-left: 0; }
   }
   function prepBody(x) {
     var c = el("div", "cv-cols pq-cols");
-    var left = el("div", "cv-col cv-said"), right = el("div", "cv-col cv-say");
+    var left = el("div", "cv-col cv-said"), right = el("div", "pq-work");
     c.appendChild(left); c.appendChild(right);
     if (x.tests) { left.appendChild(el("p", "pq-tests", "<b>They are testing:</b> " + inl(x.tests))); }
     panelSection(left, "What they may probe", panelList(x.probes));
@@ -632,8 +645,8 @@ details.item > .sbody { padding-left: 0; }
     acts.appendChild(rv);
     if (x.drill) { acts.appendChild(el("span", "sep")); acts.appendChild(el("a", "", "Practise it aloud, timed")).href = link("prep", "drill-" + x.drill); }
     left.appendChild(acts);
-    if (x.land) { right.appendChild(el("p", "cv-land", "<b>Land on this.</b> " + inl(x.land))); }
-    if (x.a && x.a.length) { right.appendChild(transcript(x.a, "You", "")); }
+    if (x.land) { right.appendChild(el("p", "pq-land", "<b>Land on this.</b> " + inl(x.land))); }
+    if (x.a && x.a.length) { right.appendChild(transcript(x.a, "What you would say", "")); }
     if (x.swaps && x.swaps.length) {
       right.appendChild(el("div", "lab", "Lines you can swap in"));
       x.swaps.forEach(function (w) {
@@ -884,7 +897,6 @@ details.item > .sbody { padding-left: 0; }
     box.appendChild(meta);
     if (x.intro) { box.appendChild(el("p", "intro", inl(x.intro))); }
     (x.figs || []).forEach(function (k, i) { var f = figNode(k, i + 1); if (f) { box.appendChild(f); } });
-    bulk(box);
     x.steps.forEach(function (st, i) { box.appendChild(stepNode(x.id + ":" + i, st, false)); });
     if (x.study && x.study.length) {
       box.appendChild(el("h3", "", "What to know for it"));
@@ -945,11 +957,11 @@ details.item > .sbody { padding-left: 0; }
   /* A step that asks you to say, explain or answer something gets a box: typed or dictated
      (Win+H), saved in the tracker's own answers so the tracker shows it too. Optional. */
   var SAYS = /out loud|say|saying|record yourself|explain|in your own words|answer the|talk through|walk through/i;
-  function mineBox(key) {
+  function mineBox(key, prompt) {
     var box = el("div", "mine"), id = "mine-" + key.replace(/[^a-z0-9]/gi, "-");
-    var lb = el("label", "", "Your answer"); lb.setAttribute("for", id);
+    var lb = el("label", "", inl(prompt)); lb.setAttribute("for", id);
     var ta = el("textarea"); ta.id = id;
-    ta.placeholder = "Say it, then type or dictate it here (Win+H). Optional; saved as you go.";
+    ta.placeholder = "Your answer. Say it, then type or dictate it here (Win+H). Optional; saved as you go.";
     var t0 = tracker(), rec = (t0.answers || {})[key];
     ta.value = rec && rec.text ? rec.text : "";
     var st = el("div", "mine-st", rec && rec.at ? "Saved " + esc(rec.at) : "");
@@ -975,9 +987,26 @@ details.item > .sbody { padding-left: 0; }
   }
   /* A step opens to what it is, what to read, where it sits in the system design guide
      and the figure that draws it. What you would say stays shut until you have tried. */
+  /* The question the answer box answers: the step's done-when, else its title, explained. */
+  function promptOf(it) {
+    var p = String(it.out || "Explain in your own words. " + it.t).replace(/[.\s]+$/, "");
+    return (/^[a-z]+\b/.test(p) ? p.charAt(0).toUpperCase() + p.slice(1) : p) + (/[?!]$/.test(p) ? "" : QWORD.test(p) ? "?" : ".");
+  }
+  var QWORD = /^(how|what|why|when|which|who|where|do|does|did|can|could|is|are|should|would|will)\b/i;
+  /* Key points: the term before the first colon in bold. */
+  function ptsList(pts) {
+    var ul = el("ul", "pts");
+    pts.forEach(function (q) {
+      var m = /^([^:]{2,60}):\s+([\s\S]+)$/.exec(String(q));
+      ul.appendChild(el("li", "", m ? "<b>" + inl(m[1]) + "</b> " + inl(m[2]) : inl(q)));
+    });
+    return ul;
+  }
   function stepNode(key, it, isStudy) {
     var t = tracker();
     var row = el("details", "step");
+    row.setAttribute("name", "step");
+    row.addEventListener("toggle", function () { if (row.open) { glideTo(row); } });
     var sm = el("summary");
     var tick = el("button", "tick" + (t.steps[key] ? " on" : ""), t.steps[key] ? "&#10003;" : "");
     tick.setAttribute("aria-label", "Mark done: " + it.t);
@@ -997,9 +1026,11 @@ details.item > .sbody { padding-left: 0; }
     sm.appendChild(el("span", "sm", mins ? mins + " min" : ""));
     row.appendChild(sm);
 
-    var body = el("div", "sbody");
-    if (!isStudy && it.d) { body.appendChild(el("p", "d", inl(it.d))); }
-    learn(body, { figs: it.figs || [] });
+    var body = el("div", "cv-cols pq-cols sbody2"), left = el("div", "cv-col cv-said"), work = el("div", "pq-work");
+    body.appendChild(left); body.appendChild(work);
+    if (!isStudy && it.d) { left.appendChild(el("p", "d", inl(it.d))); }
+    if (it.pts && it.pts.length) { left.appendChild(ptsList(it.pts)); }
+    learn(left, { figs: it.figs || [] });
 
     var pre = [];
     if (isStudy && it.do) {
@@ -1008,10 +1039,11 @@ details.item > .sbody { padding-left: 0; }
       });
     }
     if (!isStudy && (it.where || it.url)) { pre.push(it.url ? { url: it.url, label: it.where || it.url } : { book: it.where }); }
-    learn(body, { figs: [], read: pre.concat(isStudy ? (it.res || []) : (it.links || []), it.read || []), sdLinks: it.sdLinks });
+    learn(left, { figs: [], read: pre.concat(isStudy ? (it.res || []) : (it.links || []), it.read || []), sdLinks: it.sdLinks });
     var say = isStudy ? it.say : it.ans;
-    if (say || SAYS.test(it.t || "")) { body.appendChild(mineBox(key)); }
-    if (say) { body.appendChild(sayToggle(isStudy ? "The idea, in the words you would use" : "What you would say", transcript(Array.isArray(say) ? say : [say], "", ""))); }
+    if (say || it.out || SAYS.test(it.t || "")) { work.appendChild(mineBox(key, promptOf(it))); }
+    if (say) { work.appendChild(sayToggle(isStudy ? "The idea, in the words you would use" : "What you would say", transcript(Array.isArray(say) ? say : [say], "", ""))); }
+    if (!work.children.length) { work.remove(); body.classList.add("one"); }
     row.appendChild(body);
     return row;
   }

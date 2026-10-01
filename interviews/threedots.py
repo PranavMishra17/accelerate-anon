@@ -260,9 +260,41 @@ def B(topic, label, why):
     return {"url": "../BASELINE.html#/nlp/" + topic, "label": "Baseline: " + label, "why": why}
 
 
+_MAP = {"url": "../BASELINE.html#/nlp", "label": "Baseline: the map of NLP and conversational AI", "why": "The whole field, by cluster."}
+
+# Step titles of wc25 to wc30, in order, as in index.html; "w28.3" in R() names step 3 of wc28.
+_STEPS = {
+    "w25": ["Foundations and representations", "Tasks and model eras", "Where conversational AI sits",
+            "Evaluation: what each metric measures and hides", "Draw the map cold, then say it"],
+    "w26": ["The classification ladder, cheapest first", "Imbalance, calibration and out-of-scope",
+            "Word embeddings: word2vec, GloVe, fastText", "Contextual and sentence embeddings, and contrastive training",
+            "Vector search: HNSW, IVF, PQ", "Choosing an embedding model, and how embeddings fail"],
+    "w27": ["Tokenization: BPE, WordPiece, SentencePiece", "From pretraining to an assistant",
+            "Decoding, and prompt against RAG against fine-tuning", "Hallucination and grounding",
+            "Attention, and the block around it", "Three shapes, the cost of attention, and the KV cache"],
+    "w28": ["Persona, and prompts for voice and for chat", "No-match and no-input: escalating help",
+            "Confirmation: implicit, explicit, and confidence", "Repair: disambiguation, digressions and corrections",
+            "Handoff to a human", "Design one task end to end, aloud"],
+    "w29": ["The taxonomy: actions as intents, objects as entities", "Training utterances and the out-of-scope intent",
+            "Entities, slots and dialogue state", "Confidence thresholds and multi-intent", "How the platforms differ",
+            "The LLM shift: hybrid routing, tools as intents, RAG, guardrails"],
+    "w30": ["Per-intent metrics and the confusion matrix", "Mining misses and reviewing transcripts",
+            "Testing: golden conversations, simulation, judges", "KPIs that tell the truth",
+            "Experiments, drift, release and rollback", "Your own work, and where you have not worked"],
+}
+
+
+def _ref(k):
+    """A shared entry by key; 'w28.3' is wc28's link, labelled with its step 3."""
+    if "." not in k:
+        return _S[k]
+    s, n = k.split(".")
+    return dict(_S[s], label="%s, step %s: %s" % (_S[s]["label"], n, _STEPS[s][int(n) - 1]))
+
+
 def R(*keys, extra=None):
     """A question's reading: Baseline and repo links first (extra), then shared entries by key."""
-    return {"read": (extra or []) + [_S[k] for k in keys], "figs": [], "sdLinks": []}
+    return {"read": (extra or []) + [_ref(k) for k in keys], "figs": [], "sdLinks": []}
 
 
 QA = [
@@ -283,7 +315,7 @@ QA = [
                               "Persona: Google's recipe is four to six traits, an archetype and a one-paragraph description. In an enterprise bot it's mostly a style guide for the copy and the prompt, and it settles whether the bot says 'I' and what it says when asked 'are you a bot?'"]}],
          "notes": ["Rasa's conversation-driven development is the same loop after launch: review real conversations, tag them, fix in batches."],
          "swaps": [{"when": "If they ask about personas", "line": "I'd keep it short: a handful of traits and a paragraph, used as the style guide for every prompt and line of copy. The point isn't to pass as human; it's that the assistant sounds like one consistent, helpful person."}],
-         "learn": R("w28", "g_persona", "rasa_cdd", extra=[B("conversation-design", "conversation design", "The topic, with links to the rest of the field."), _S["va"]])},
+         "learn": R("w28.6", "g_persona", "rasa_cdd", extra=[B("conversation-design", "conversation design", "The topic, with links to the rest of the field."), _S["va"]])},
 
         {"q": "How do you handle no-match and no-input?", "short": "No-match and no-input",
          "tests": "The most common event in any assistant, handled with care.",
@@ -297,7 +329,7 @@ QA = [
          "notes": ["Don't blame the user and don't over-apologise. One short apology with the rephrase is enough.",
                    "Measure it: no-match rate per page, and how many sessions recover after the first reprompt."],
          "swaps": [{"when": "If they ask for the Dialogflow CX specifics", "line": "Numbered event handlers, sys.no-match-1 to 6 and sys.no-input-1 to 6, scoped to the flow, the page or a parameter, plus reprompt handlers on form parameters for invalid input."}],
-         "learn": R("w28", "g_err", "alexa_err", "cx_handler", extra=[B("conversation-design", "conversation design", "Errors and reprompts.")])},
+         "learn": R("w28.2", "g_err", "alexa_err", "cx_handler", extra=[B("conversation-design", "conversation design", "Errors and reprompts.")])},
 
         {"q": "Explicit or implicit confirmation: when do you use which?", "short": "Confirmation",
          "tests": "Judgement about risk versus friction.",
@@ -309,7 +341,7 @@ QA = [
          "notes": ["Lex returns transcription confidence and up to three alternative transcriptions; its docs suggest comparing close candidates (John vs Juan) against a database before asking.",
                    "Cognigy builds the middle band into its thresholds: between reconfirmation and confidence it asks 'did you mean X?'"],
          "swaps": [{"when": "If they ask how alfred_ decides", "line": "Code scores the risk of the action, not the model's opinion of it. A send or a delete can't happen without the person confirming, whatever the model thinks."}],
-         "learn": R("w28", "g_conf", "lex_asr", extra=[B("conversation-design", "conversation design", "Confirmation.")])},
+         "learn": R("w28.3", "g_conf", "lex_asr", extra=[B("conversation-design", "conversation design", "Confirmation.")])},
 
         {"q": "How do you handle ambiguity, corrections and digressions?", "short": "Repair",
          "tests": "What happens off the happy path, where most bots fail.",
@@ -320,7 +352,7 @@ QA = [
          "probes": ["How close is 'close' for the top two?", "What must be remembered deterministically?", "How do you test digressions?"],
          "notes": ["The design question for carry-over: what must be remembered for sure (account, order id, authentication state) versus what the model may infer from the transcript. In an LLM stack carry-over is easier but harder to guarantee.",
                    "alfred_'s working memory takes the first kind seriously: the model picks from real items and code attaches the real ids, which made 'a whole class of hallucination structurally impossible, not probabilistically reduced'."],
-         "learn": R("w28", "rasa_patterns", "rasa_dev", "cx_flow", extra=[B("dialogue-state", "dialogue state", "Slots carried across turns.")])},
+         "learn": R("w28.4", "rasa_patterns", "rasa_dev", "cx_flow", extra=[B("dialogue-state", "dialogue state", "Slots carried across turns.")])},
 
         {"q": "When should the assistant hand off to a human, and how?", "short": "Handoff",
          "tests": "Do you design the exit, or treat it as failure?",
@@ -330,7 +362,7 @@ QA = [
          "land": "Designed triggers; a summary, intent, ids and what was tried; never a dead end.",
          "probes": ["What's in the handoff payload?", "Warm or cold?", "Does a handoff count against containment?"],
          "notes": ["Send an AI summary, not a 40-turn transcript; write the outcome back to the customer record."],
-         "learn": R("w28", "twilio", extra=[B("conversation-design", "conversation design", "Handoff.")])},
+         "learn": R("w28.5", "twilio", extra=[B("conversation-design", "conversation design", "Handoff.")])},
 
         {"q": "What do you design differently for voice and for chat?", "short": "Voice and chat",
          "tests": "Channel sense, from someone who's built voice.",
@@ -343,7 +375,7 @@ QA = [
                     "items": ["Separate ASR errors from NLU errors first: word error rate and slot error rate on real audio.", "Phrase hints or speech adaptation for domain words; constrained grammars for known-set slots.",
                               "N-best transcripts checked against the database; DTMF or spelling for IDs.", "Re-measure on real audio, never on typed text."]}],
          "notes": ["Accessibility: generous timeouts and 'repeat' or 'slower' on voice; screen-reader friendly chat, plain language, nothing carried only by colour or emoji, an easy path to a person."],
-         "learn": R("w28", "lex_asr", extra=[B("conversation-design", "conversation design", "Voice and chat."), {"url": "../BASELINE.html#/audio/voice-agent-pipeline", "label": "Baseline: the voice agent pipeline", "why": "Where ASR, the model and TTS sit."}, {"url": "commure.html#/prep/q-what-s-hard-about-latency-in-a-voice-agent", "label": "Commure page: latency in a voice agent", "why": "Your voice latency answer, already written."}])},
+         "learn": R("w28.1", "lex_asr", extra=[B("conversation-design", "conversation design", "Voice and chat."), {"url": "../BASELINE.html#/audio/voice-agent-pipeline", "label": "Baseline: the voice agent pipeline", "why": "Where ASR, the model and TTS sit."}, {"url": "commure.html#/prep/q-what-s-hard-about-latency-in-a-voice-agent", "label": "Commure page: latency in a voice agent", "why": "Your voice latency answer, already written."}])},
 
         {"q": "Flows or a generative agent: how do you decide?", "short": "Flows or generative",
          "tests": "Where you put determinism, and why.",
@@ -354,7 +386,7 @@ QA = [
          "probes": ["What goes in the middle layer?", "How do you stop prompt injection reaching a tool?", "How do you migrate an existing bot?"],
          "notes": ["OWASP's top risks for LLM apps include prompt injection, sensitive information disclosure and excessive agency. Server-side authorisation on every tool, and an explicit confirmation turn for risky ones."],
          "swaps": [{"when": "If they ask how you'd migrate a classic bot", "line": "Inventory intents by volume and success rate, keep the accurate ones with strict flows, move the long tail and FAQs to retrieval or an LLM classifier, run old and new in shadow on logged traffic, compare on the golden set, then shift traffic gradually with a rollback."}],
-         "learn": R("w28", "cx_playbook", "copilot", "rasa_du", "owasp", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "The hybrid at depth."), _S["vadd"]])},
+         "learn": R("w29.5", "w28", "cx_playbook", "copilot", "rasa_du", "owasp", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "The hybrid at depth."), _S["vadd"]])},
     ]},
 
     {"group": "Intents, entities and the NLU model", "blurb": "The taxonomy, training data, entities, thresholds and dialogue state, and where LLMs change them. Taught in wc29.", "items": [
@@ -370,7 +402,7 @@ QA = [
                               "**Keep both and ask** when users' words genuinely can't separate them: a disambiguation question when the scores are close.", "**One schema style** across the project: don't model half as action-as-intent and half as information-as-intent."]},
                    {"title": "Past a few hundred intents",
                     "items": ["Route by domain first (Dialogflow CX flows; Microsoft orchestration across CLU and question answering), then classify within it.", "Or head intents plus a modifier entity."]}],
-         "learn": R("w29", "clu_bp", extra=[B("intents-entities", "intents and entities", "The modelling, with platform terms side by side."), _S["va"]])},
+         "learn": R("w29.1", "clu_bp", extra=[B("intents-entities", "intents and entities", "The modelling, with platform terms side by side."), _S["va"]])},
 
         {"q": "How many training phrases does an intent need, and where do they come from?", "short": "Training data",
          "tests": "Data quality judgement, not a magic number.",
@@ -381,7 +413,7 @@ QA = [
          "probes": ["How do you generate examples for a new intent with no traffic?", "Can you use an LLM to write training phrases?", "How do you keep the test set clean?"],
          "notes": ["An LLM can draft examples for a cold start, but they share the model's phrasing. Replace them with real utterances as traffic arrives, and never let generated text into the test set.",
                    "Watch for leakage: the same utterance, or a near duplicate, in train and test."],
-         "learn": R("w29", "cx_intent", "clu_bp", "cog_an", extra=[B("intents-entities", "intents and entities", "Training phrases.")])},
+         "learn": R("w29.2", "cx_intent", "clu_bp", "cog_an", extra=[B("intents-entities", "intents and entities", "Training phrases.")])},
 
         {"q": "How do you model entities and slots?", "short": "Entities and slots",
          "tests": "The right extractor for each kind of value.",
@@ -393,7 +425,7 @@ QA = [
          "parts": [{"title": "Entity types across platforms",
                     "items": ["**System or prebuilt:** date, number, email.", "**List with synonyms:** a reference value plus synonyms; Dialogflow CX can auto-generate up to 3 synonyms.",
                               "**Regex:** IDs, order numbers.", "**Learned:** context decides; needs examples.", "**Lex custom slot types:** expand values by ML (the default) or restrict to listed values and synonyms; up to five resolved values come back."]}],
-         "learn": R("w29", "cx_entity", "lex_slot", "clu_bp", extra=[B("intents-entities", "intents and entities", "Entities."), B("sequence-labelling", "sequence labelling", "NER under the entity extractor.")])},
+         "learn": R("w29.3", "cx_entity", "lex_slot", "clu_bp", extra=[B("intents-entities", "intents and entities", "Entities."), B("sequence-labelling", "sequence labelling", "NER under the entity extractor.")])},
 
         {"q": "What is dialogue state, and how do you track it?", "short": "Dialogue state",
          "tests": "The formal name for what flows and slots do.",
@@ -403,7 +435,7 @@ QA = [
          "land": "The slots and the position at each turn; joint goal accuracy; pages, slots or tool arguments hold it.",
          "probes": ["Why joint goal accuracy and not per-slot?", "Where does state live in an LLM agent?", "How do you test it?"],
          "notes": ["Joint goal accuracy is strict on purpose: a right intent with one wrong slot still fails the task."],
-         "learn": R("w29", "cx_page", "p_fnctod", extra=[B("dialogue-state", "dialogue state", "Tracking, and how it's measured.")])},
+         "learn": R("w29.3", "cx_page", "p_fnctod", extra=[B("dialogue-state", "dialogue state", "Tracking, and how it's measured.")])},
 
         {"q": "How do you set confidence thresholds?", "short": "Thresholds",
          "tests": "Calibration and risk, not a default.",
@@ -414,7 +446,7 @@ QA = [
          "probes": ["What if the model is overconfident?", "One threshold or one per intent?", "How do you choose the middle band's width?"],
          "notes": ["CLU warns a model can predict the wrong intent at 1.00 confidence, which makes any threshold useless. That's a calibration problem: temperature scaling, or the platform's newer training configs.",
                    "Lex: you set nluIntentConfidenceThreshold per locale; it returns the top intent and up to four alternates."],
-         "learn": R("w29", "cog_thr", "lex_conf", "p_calib", extra=[B("out-of-scope", "out-of-scope detection", "Thresholds as a detector."), B("classification-metrics", "classification metrics", "Precision and recall against a threshold.")])},
+         "learn": R("w29.4", "cog_thr", "lex_conf", "p_calib", extra=[B("out-of-scope", "out-of-scope detection", "Thresholds as a detector."), B("classification-metrics", "classification metrics", "Precision and recall against a threshold.")])},
 
         {"q": "Classic NLU or an LLM for intent classification?", "short": "Classic or LLM",
          "tests": "A grounded trade-off, with numbers.",
@@ -430,7 +462,7 @@ QA = [
          "notes": ["Whatever the choice, the same evaluation set and the same thresholds for both, or the comparison means nothing.",
                    "Multi-intent ('open an account and send me the details'): classic NLU returns one intent a turn, so you split, queue the detected intents, or let an LLM planner call them in turn, as Copilot Studio's generative orchestration does."],
          "swaps": [{"when": "If they ask how the router knows it's uncertain", "line": "A calibrated confidence with a threshold, the margin between the top two, or, in the Amazon paper, Monte Carlo dropout: run the classifier a few times with dropout on and route when the answers disagree."}],
-         "learn": R("w29", "p_decide", "p_hybrid", "copilot", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "Routing between them."), _S["vadd"]])},
+         "learn": R("w29.6", "p_decide", "p_hybrid", "copilot", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "Routing between them."), _S["vadd"]])},
 
         {"q": "How would you add an LLM to an existing Dialogflow bot safely?", "short": "An LLM, added safely",
          "tests": "Incremental, measured change to a live system.",
@@ -440,7 +472,7 @@ QA = [
          "land": "Lowest risk first, evals before traffic, shadow then experiment, flows keep the money paths.",
          "probes": ["What would you measure in the experiment?", "What's in the judge's rubric?", "How do you stop it answering account questions from documents?"],
          "notes": ["I haven't run this on Dialogflow. Say so if asked, then the method."],
-         "learn": R("w29", "cx_genfb", "cx_playbook", "cx_exp", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "Generative fallback and playbooks.")])},
+         "learn": R("w29.6", "cx_genfb", "cx_playbook", "cx_exp", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "Generative fallback and playbooks.")])},
 
         {"q": "How do function calling and tools relate to intents and slots?", "short": "Tools as intents",
          "tests": "Do you see the old and new as one model?",
@@ -451,7 +483,7 @@ QA = [
          "probes": ["How do you validate arguments?", "What's pass^k?", "How many tools before selection degrades?"],
          "notes": ["Structured output with a JSON schema for extraction; validate with regex, list lookups and database existence checks, the same as classic slots.",
                    "Keep the tool list small with precise descriptions; Copilot Studio says names carry more weight than descriptions when its planner picks."],
-         "learn": R("w29", "p_fnctod", "p_tau", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "Function calling as NLU."), {"url": "mphasis.html#/prep/q-how-does-tool-calling-actually-work", "label": "Mphasis page: how tool calling works", "why": "The mechanism, already written."}, {"url": "../CODING.html#structured", "label": "Coding page: structured output and function calling", "why": "The code."}])},
+         "learn": R("w29.6", "p_fnctod", "p_tau", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "Function calling as NLU."), {"url": "mphasis.html#/prep/q-how-does-tool-calling-actually-work", "label": "Mphasis page: how tool calling works", "why": "The mechanism, already written."}, {"url": "../CODING.html#structured", "label": "Coding page: structured output and function calling", "why": "The code."}])},
 
         {"q": "An FAQ intent and a transactional intent keep colliding, like 'my card...'. What do you do?", "short": "FAQ or transaction",
          "tests": "Routing between knowledge and action.",
@@ -461,7 +493,7 @@ QA = [
          "land": "Action plus account context means transaction; questions mean retrieval; ask when close; test on near-miss pairs.",
          "probes": ["How would you replace dozens of FAQ intents?", "How do you keep retrieval fresh?"],
          "notes": ["Replacing FAQ intents with retrieval over a curated knowledge base is the usual move: Lex has KendraSearchIntent, Dialogflow data stores, Copilot Studio knowledge sources."],
-         "learn": R("w29", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "Retrieval for FAQs."), {"url": "../BASELINE.html#/ai/rag", "label": "Baseline: RAG", "why": "Retrieval, grounding and citations."}])},
+         "learn": R("w29.6", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "Retrieval for FAQs."), {"url": "../BASELINE.html#/ai/rag", "label": "Baseline: RAG", "why": "Retrieval, grounding and citations."}])},
 
         {"q": "Which conversational AI platforms do you know, and how do they differ?", "short": "The platforms",
          "tests": "Breadth, and honesty about what you've used.",
@@ -479,7 +511,7 @@ QA = [
                               "**Cognigy:** intent thresholds in three bands; an Intent Analyzer for weak and overlapping intents.",
                               "**IBM watsonx Assistant:** not checked; say you'd read current docs before asserting anything."]}],
          "never": ["Never say you've used one. 'I've read how it works' is true; 'I've used it' is not."],
-         "learn": R("w29", "cx_flow", "copilot", "rasa_du", "kore_val", extra=[B("intents-entities", "intents and entities", "Platform terms side by side.")])},
+         "learn": R("w29.5", "cx_flow", "copilot", "rasa_du", "kore_val", extra=[B("intents-entities", "intents and entities", "Platform terms side by side.")])},
     ]},
 
     {"group": "Error analysis and production", "blurb": "Finding what's wrong in real conversations and improving the assistant safely. Taught in wc30.", "items": [
@@ -495,7 +527,7 @@ QA = [
                               "**Data:** counts per intent, accidental patterns, mislabelled examples.", "**Decide:** merge, split with contrastive examples, or keep both and disambiguate.",
                               "**Check:** rerun the frozen test set; look at the neighbours."]}],
          "notes": ["Platforms flag this for you: Kore.ai's validation and Cognigy's Intent Analyzer show overlapping intents; Cognigy marks weak intents below 0.6."],
-         "learn": R("w30", "clu_eval", "kore_val", "cog_an", extra=[B("error-analysis", "error analysis", "Confusion and overlap."), B("classification-metrics", "classification metrics", "The confusion matrix.")])},
+         "learn": R("w30.1", "clu_eval", "kore_val", "cog_an", extra=[B("error-analysis", "error analysis", "Confusion and overlap."), B("classification-metrics", "classification metrics", "The confusion matrix.")])},
 
         {"q": "Containment dropped 10% after a release. Walk me through it.", "short": "Containment dropped",
          "tests": "Calm, ordered debugging of a live metric.",
@@ -506,7 +538,7 @@ QA = [
          "probes": ["What if it's not the release?", "How fast would you roll back?", "What's your first query?"],
          "notes": ["Dialogflow CX analytics shows no-match, escalation and exit rates by page, and webhook errors and latency: the first place to look on that platform.",
                    "Containment can also drop for a good reason: a fix that stops the bot trapping people. Check repeat contact before calling it a regression."],
-         "learn": R("w30", "cx_analytics", extra=[B("error-analysis", "error analysis", "Localising a regression."), B("assistant-metrics", "assistant metrics", "What containment does and doesn't measure.")])},
+         "learn": R("w30.4", "cx_analytics", extra=[B("error-analysis", "error analysis", "Localising a regression."), B("assistant-metrics", "assistant metrics", "What containment does and doesn't measure.")])},
 
         {"q": "How do you find the intents you're missing?", "short": "Finding new intents",
          "tests": "Mining production for what the taxonomy doesn't cover.",
@@ -516,7 +548,7 @@ QA = [
          "land": "Embed the misses, cluster, name with an LLM, rank by volume and cost, then decide intent, examples or content.",
          "probes": ["Why HDBSCAN over k-means?", "How big must a cluster be to become an intent?", "How do you stop overlap?"],
          "notes": ["HDBSCAN finds clusters of varying density and leaves noise unclustered, so you don't need to guess k; k-means is simpler when you roughly know how many topics to expect."],
-         "learn": R("w30", "rasa_cdd", extra=[B("error-analysis", "error analysis", "Mining misses."), B("sentence-embeddings", "sentence embeddings", "What the clustering runs on.")])},
+         "learn": R("w30.2", "rasa_cdd", extra=[B("error-analysis", "error analysis", "Mining misses."), B("sentence-embeddings", "sentence embeddings", "What the clustering runs on.")])},
 
         {"q": "How do you evaluate an NLU model beyond accuracy?", "short": "NLU evaluation",
          "tests": "The full set of metrics, and why each.",
@@ -527,7 +559,7 @@ QA = [
          "probes": ["Macro or micro, and why?", "How do you evaluate entities?", "How big should the test set be?"],
          "notes": ["CLU's worked example has the intent right and the entity span wrong: count those separately.",
                    "With a small test set, report confidence intervals or several seeds before claiming a gain."],
-         "learn": R("w30", "clu_eval", extra=[B("classification-metrics", "classification metrics", "Macro, micro, the confusion matrix."), B("assistant-metrics", "assistant metrics", "From turn to conversation.")])},
+         "learn": R("w30.1", "w25.4", "clu_eval", extra=[B("classification-metrics", "classification metrics", "Macro, micro, the confusion matrix."), B("assistant-metrics", "assistant metrics", "From turn to conversation.")])},
 
         {"q": "How do you structure transcript review?", "short": "Transcript review",
          "tests": "A repeatable labelling process, not ad-hoc reading.",
@@ -542,7 +574,7 @@ QA = [
                    {"title": "Why one cause",
                     "items": ["The split tells you where to spend: training data, flows, integrations or the product.", "Report it as a share of lost containment."]}],
          "notes": ["Agreement: Cohen's kappa on the double-labelled subset. In MockFlow-AI the judge was calibrated against human grades at weighted kappa 0.82."],
-         "learn": R("w30", "rasa_cdd", extra=[B("error-analysis", "error analysis", "The failure taxonomy."), {"url": "coframe.html#/prep/say-now", "label": "Coframe page: the eval harness story", "why": "Real failures become cases: your answer, already written."}])},
+         "learn": R("w30.2", "rasa_cdd", extra=[B("error-analysis", "error analysis", "The failure taxonomy."), {"url": "coframe.html#/prep/say-now", "label": "Coframe page: the eval harness story", "why": "Real failures become cases: your answer, already written."}])},
 
         {"q": "Which KPIs do you report, and which ones mislead?", "short": "KPIs",
          "tests": "Knowing what a number hides.",
@@ -556,7 +588,7 @@ QA = [
                               "**Automation rate:** workflows completed.", "**Solution rate:** the customer confirms it's resolved.", "(Rasa's split; a vendor blog, but the distinctions are standard.)"]},
                    {"title": "A per-intent funnel",
                     "items": ["Intent recognised, required slots filled, authenticated, backend call succeeded, confirmation shown, completed.", "Dialogflow CX's page view (traffic, no-match, escalation, exit rate) is that funnel per state."]}],
-         "learn": R("w30", "rasa_kpi", "cx_analytics", extra=[B("assistant-metrics", "assistant metrics", "Containment and what it hides.")])},
+         "learn": R("w30.4", "rasa_kpi", "cx_analytics", extra=[B("assistant-metrics", "assistant metrics", "Containment and what it hides.")])},
 
         {"q": "How would you A/B test a change to a flow?", "short": "A/B testing",
          "tests": "Experiment design on a live assistant.",
@@ -566,7 +598,7 @@ QA = [
          "land": "One change, assign by user, a pre-registered primary metric and guardrails, full weeks.",
          "probes": ["How long would you run it?", "What if the primary and a guardrail disagree?", "How do you test a prompt change the same way?"],
          "notes": ["A prompt or knowledge-base change is a release too: same pipeline, same tests, same experiment."],
-         "learn": R("w30", "cx_exp", extra=[B("assistant-metrics", "assistant metrics", "Experiments.")])},
+         "learn": R("w30.5", "cx_exp", extra=[B("assistant-metrics", "assistant metrics", "Experiments.")])},
 
         {"q": "How do you monitor a live assistant for drift?", "short": "Drift",
          "tests": "Knowing what to watch and what a shift means.",
@@ -576,7 +608,7 @@ QA = [
          "land": "Watch the mix and the confidence, alert on a rolling baseline, annotate releases; new topic or regression.",
          "probes": ["What's the difference between data drift and concept drift here?", "How would you detect it with embeddings?"],
          "notes": ["A drop in average confidence with a stable intent mix often means new phrasing: users talk about the same things differently. Embedding the new traffic and comparing it with training data shows it."],
-         "learn": R("w30", extra=[B("assistant-metrics", "assistant metrics", "Monitoring."), B("error-analysis", "error analysis", "Fallback spikes.")])},
+         "learn": R("w30.5", extra=[B("assistant-metrics", "assistant metrics", "Monitoring."), B("error-analysis", "error analysis", "Fallback spikes.")])},
 
         {"q": "How do you use an LLM as a judge on conversations, and where does it fail?", "short": "LLM-as-judge",
          "tests": "Using it with its biases in view.",
@@ -586,7 +618,7 @@ QA = [
          "land": "Rubric per criterion, small scales, order randomised, calibrated against humans; never the only gate for compliance.",
          "probes": ["How do you know the judge is still right?", "Which bias bites most?", "Pass^k, what is it?"],
          "notes": ["Simulated users (tau-bench) give breadth, but a simulated user is more cooperative than a real one; real transcript replay stays the anchor."],
-         "learn": R("w30", "p_mtbench", extra=[B("error-analysis", "error analysis", "Judges on transcripts."), {"url": "zenml-round3.html#/prep/q-how-do-you-decide-what-becomes-an-eval-case-and-is-the-judge", "label": "ZenML page: what becomes an eval case, and is the judge still right", "why": "Your fuller answer on judges, already written."}, {"url": "../BASELINE.html#/ai/llm-as-judge", "label": "Baseline: LLM-as-judge", "why": "The core topic."}])},
+         "learn": R("w30.3", "p_mtbench", extra=[B("error-analysis", "error analysis", "Judges on transcripts."), {"url": "zenml-round3.html#/prep/q-how-do-you-decide-what-becomes-an-eval-case-and-is-the-judge", "label": "ZenML page: what becomes an eval case, and is the judge still right", "why": "Your fuller answer on judges, already written."}, {"url": "../BASELINE.html#/ai/llm-as-judge", "label": "Baseline: LLM-as-judge", "why": "The core topic."}])},
 
         {"q": "How do you test a conversational system before release?", "short": "Testing before release",
          "tests": "Layers of tests, and reliability over a single run.",
@@ -596,7 +628,7 @@ QA = [
          "land": "NLU set, golden conversations, simulated users, human sample; run each scenario k times; gate on a never-break suite.",
          "probes": ["What goes in the never-break suite?", "How do you build golden conversations?", "How many runs per scenario?"],
          "notes": ["Lex's Test Workbench builds test sets from existing transcripts and shows intent and slot performance against a bot."],
-         "learn": R("w30", "cx_test", "p_tau", extra=[B("error-analysis", "error analysis", "Regression sets."), {"url": "commure.html#/prep/q-how-do-you-evaluate-a-voice-agent", "label": "Commure page: how you evaluate a voice agent", "why": "Your three layers for voice, already written."}, {"url": "../BASELINE.html#/ai/evaluation", "label": "Baseline: evaluation", "why": "The core topic."}])},
+         "learn": R("w30.3", "cx_test", "p_tau", extra=[B("error-analysis", "error analysis", "Regression sets."), {"url": "commure.html#/prep/q-how-do-you-evaluate-a-voice-agent", "label": "Commure page: how you evaluate a voice agent", "why": "Your three layers for voice, already written."}, {"url": "../BASELINE.html#/ai/evaluation", "label": "Baseline: evaluation", "why": "The core topic."}])},
     ]},
 
     {"group": "NLP and text classification", "blurb": "The map of the field, then classification at depth: the ladder, metrics, out-of-scope, imbalance, calibration, latency. Taught in wc25 and wc26.", "items": [
@@ -612,7 +644,7 @@ QA = [
                               "**Neural:** RNN, LSTM, GRU; CNNs for text; seq2seq with attention, which removed the fixed-vector bottleneck.",
                               "**Transformers:** encoders (BERT, RoBERTa, DeBERTa), decoders (GPT, Llama), encoder-decoders (T5, BART).", "**LLMs:** large decoders, pretrained, then instruction- and preference-tuned."]}],
          "notes": ["Perplexity measures a language model, not task quality.", "At UIC your coursework included Advanced NLP; you built a Transformer from scratch for English-German translation."],
-         "learn": R("w25", extra=[{"url": "../BASELINE.html#/nlp", "label": "Baseline: NLP and conversational AI", "why": "The whole field, by cluster."}, {"url": "https://huggingface.co/learn/llm-course/chapter1/2", "label": "Hugging Face LLM course: NLP and LLMs", "why": "A short orientation.", "m": 10}])},
+         "learn": R("w25.5", extra=[{"url": "../BASELINE.html#/nlp", "label": "Baseline: NLP and conversational AI", "why": "The whole field, by cluster."}, {"url": "https://huggingface.co/learn/llm-course/chapter1/2", "label": "Hugging Face LLM course: NLP and LLMs", "why": "A short orientation.", "m": 10}])},
 
         {"q": "Classify 200 intents with 50 examples each. What do you do?", "short": "200 intents, 50 each",
          "tests": "The ladder, with judgement about where to stop.",
@@ -632,7 +664,7 @@ QA = [
                               "Thousands of examples, under about 20 ms: a fine-tuned small encoder.", "Hundreds of overlapping labels: retrieve candidate labels by embedding, then a reranker or LLM chooses."]}],
          "notes": ["The fine-tuning hyperparameters are typical values from memory in the research, not from a source: say 'typically'."],
          "swaps": [{"when": "If they ask about multi-label", "line": "Then it's a sigmoid per label with binary cross-entropy instead of one softmax, a threshold per label, and per-label F1. Subset accuracy only if the product needs every label right at once."}],
-         "learn": R("w26", "slp4", "hf_cls", "setfit", extra=[B("text-classification", "text classification", "The ladder.")])},
+         "learn": R("w26.1", "slp4", "hf_cls", "setfit", extra=[B("text-classification", "text classification", "The ladder.")])},
 
         {"q": "TF-IDF: what does it do, and when is it still the right tool?", "short": "TF-IDF",
          "tests": "The classic baseline, understood, with a real use.",
@@ -643,7 +675,7 @@ QA = [
          "probes": ["How does BM25 differ?", "Why the log?", "How exactly did MetaRAG weight the embeddings?"],
          "notes": ["BM25 adds term-frequency saturation and document-length normalisation to the same idea.",
                    "Before Friday, check in the MetaRAG code or paper exactly how the TF-IDF weights enter the embedding, so you can say it in one sentence if asked. Don't guess on the call."],
-         "learn": R("w25", "slp4", extra=[B("bow-tfidf", "bag of words and TF-IDF", "The sparse representations."), {"url": "../SYSTEM%20DESIGN.html#/patterns/search/hybrid-rerank", "label": "Guide: hybrid search and reranking", "why": "Sparse and dense together."}])},
+         "learn": R("w25.1", "slp4", extra=[B("bow-tfidf", "bag of words and TF-IDF", "The sparse representations."), {"url": "../SYSTEM%20DESIGN.html#/patterns/search/hybrid-rerank", "label": "Guide: hybrid search and reranking", "why": "Sparse and dense together."}])},
 
         {"q": "How do you handle out-of-scope queries?", "short": "Out-of-scope",
          "tests": "Treating 'none of the above' as a first-class class.",
@@ -657,7 +689,7 @@ QA = [
                               "**Ensemble disagreement.**", "**An LLM judge** for the borderline band."]}],
          "notes": ["Platforms: CLU's None intent with a score threshold (not applied during evaluation); Dialogflow CX's default negative intent; Lex's AMAZON.FallbackIntent.",
                    "In the 2026 preprint the LLM's out-of-scope recall was 85.6 against 58.1 for the fine-tuned encoder: the main reason to route uncertain turns to one."],
-         "learn": R("w26", "p_clinc", "p_calib", extra=[B("out-of-scope", "out-of-scope detection", "Detectors and how to measure them.")])},
+         "learn": R("w26.2", "p_clinc", "p_calib", extra=[B("out-of-scope", "out-of-scope detection", "Detectors and how to measure them.")])},
 
         {"q": "Your classes are 100 to 1 imbalanced. What do you try, in order?", "short": "Imbalance",
          "tests": "Cheapest effective fix first, and the right metric.",
@@ -667,7 +699,7 @@ QA = [
          "land": "Fix the metric, then weights, resampling, per-class thresholds, focal loss; clean and collect the rare class.",
          "probes": ["Why not resample the test set?", "What does focal loss do?", "How does oversampling overfit?"],
          "notes": ["Oversampling duplicates can overfit to those exact examples.", "Focal loss (Lin et al., from object detection) down-weights easy examples so the rare, hard ones dominate the gradient."],
-         "learn": R("w26", "p_focal", extra=[B("text-classification", "text classification", "Imbalance."), B("classification-metrics", "classification metrics", "Precision-recall curves.")])},
+         "learn": R("w26.2", "p_focal", extra=[B("text-classification", "text classification", "Imbalance."), B("classification-metrics", "classification metrics", "Precision-recall curves.")])},
 
         {"q": "Macro or micro F1, and when does accuracy lie?", "short": "Metrics",
          "tests": "Choosing the metric that matches the product.",
@@ -677,7 +709,7 @@ QA = [
          "land": "Micro pools, macro averages per class; accuracy lies under imbalance; report per-intent recall.",
          "probes": ["When would you prefer micro?", "Why the harmonic mean?", "What's a precision-recall trade-off in an assistant?"],
          "notes": ["Micro-F1 equals accuracy for single-label multi-class, which is why it hides rare classes."],
-         "learn": R("w26", "clu_eval", extra=[B("classification-metrics", "classification metrics", "Macro, micro and the confusion matrix."), {"url": "../BASELINE.html#/ml/evaluation-splits", "label": "Baseline: evaluation and splits", "why": "Precision and recall in the ML field."}])},
+         "learn": R("w25.4", "w26", "clu_eval", extra=[B("classification-metrics", "classification metrics", "Macro, micro and the confusion matrix."), {"url": "../BASELINE.html#/ml/evaluation-splits", "label": "Baseline: evaluation and splits", "why": "Precision and recall in the ML field."}])},
 
         {"q": "Why does calibration matter, and how do you fix it?", "short": "Calibration",
          "tests": "Knowing that every routing rule depends on it.",
@@ -687,7 +719,7 @@ QA = [
          "land": "Confidence must mean what it says; every threshold depends on it; temperature scaling, refitted each retrain.",
          "probes": ["Why are networks overconfident?", "What's ECE?", "Does temperature scaling change accuracy?"],
          "notes": ["ECE: bin predictions by confidence, then average the gap between confidence and accuracy in each bin, weighted by bin size."],
-         "learn": R("w26", "p_calib", extra=[B("classification-metrics", "classification metrics", "Calibration."), B("out-of-scope", "out-of-scope detection", "Thresholds that depend on it.")])},
+         "learn": R("w26.2", "p_calib", extra=[B("classification-metrics", "classification metrics", "Calibration."), B("out-of-scope", "out-of-scope detection", "Thresholds that depend on it.")])},
 
         {"q": "How would you reduce the latency of a BERT classifier?", "short": "BERT latency",
          "tests": "Practical serving, in order of effort.",
@@ -697,7 +729,7 @@ QA = [
          "land": "Truncate and batch, export, quantise, distil; cache and cascade; measure p95 on real hardware.",
          "probes": ["What does int8 cost in accuracy?", "How does distillation work?", "Where does the time go in a BERT forward pass?"],
          "notes": ["Distillation trains a small student to match the big teacher's output probabilities, not only the labels."],
-         "learn": R("w26", "weng_inf", extra=[B("text-classification", "text classification", "Serving."), {"url": "../BASELINE.html#/inference/quantization", "label": "Baseline: quantisation", "why": "What int8 changes."}])},
+         "learn": R("w26.1", "weng_inf", extra=[B("text-classification", "text classification", "Serving."), {"url": "../BASELINE.html#/inference/quantization", "label": "Baseline: quantisation", "why": "What int8 changes."}])},
 
         {"q": "What is SetFit, and why does it work with so few examples?", "short": "SetFit",
          "tests": "A modern few-shot method, understood.",
@@ -706,7 +738,7 @@ QA = [
                "It's the classifier in the Amazon hybrid paper: SetFit handles the confident turns and the LLM the uncertain ones. For a new intent with little traffic, I think it's the first thing I'd try after a TF-IDF baseline."],
          "land": "Contrastive pairs on a sentence encoder, then a head; many pairs from few examples.",
          "probes": ["How many pairs from 8 examples per class?", "How does it compare to prompting an LLM?"],
-         "learn": R("w26", "setfit", extra=[B("text-classification", "text classification", "Few-shot methods."), B("sentence-embeddings", "sentence embeddings", "The contrastive training it uses.")])},
+         "learn": R("w26.1", "setfit", extra=[B("text-classification", "text classification", "Few-shot methods."), B("sentence-embeddings", "sentence embeddings", "The contrastive training it uses.")])},
 
         {"q": "Your model scores 92% on the test set but poorly in production. Why?", "short": "Test vs production",
          "tests": "Debugging the gap between offline and online.",
@@ -715,7 +747,7 @@ QA = [
                "Then the fix is the loop: production samples into training, a time-based split so the test set looks like the future, and monitoring on the live mix. It's the same lesson as alfred_'s test set: cases from real production, not from what we imagined."],
          "land": "Shift, a flawed test set, or a prior shift; label production samples, compare distributions, check preprocessing.",
          "probes": ["How would you detect leakage?", "What's a time-based split?"],
-         "learn": R("w26", extra=[B("text-classification", "text classification", "Data, leakage and shift."), B("error-analysis", "error analysis", "Production samples.")])},
+         "learn": R("w30.5", "w26", extra=[B("text-classification", "text classification", "Data, leakage and shift."), B("error-analysis", "error analysis", "Production samples.")])},
     ]},
 
     {"group": "Embeddings", "blurb": "Why embeddings work, how sentence embeddings are trained, choosing a model, similarity, search and failure modes. Taught in wc26.", "items": [
@@ -730,7 +762,7 @@ QA = [
                     "items": ["**word2vec (2013):** skip-gram or CBOW, negative sampling, subsampling of frequent words. Typical: 300 dimensions, window about 5.", "**GloVe (2014):** factorises a global co-occurrence matrix so dot products approximate log co-occurrence counts.",
                               "**fastText:** a word is the sum of its character n-gram vectors, so it handles rare words, typos and unseen words."]}],
          "figs": ["embed"],
-         "learn": R("w26", "al_w2v", "slp5", extra=[B("word-embeddings", "word embeddings", "word2vec, GloVe, fastText."), {"url": "../BASELINE.html#/ml/embeddings", "label": "Baseline: embeddings (ML field)", "why": "The core topic."}])},
+         "learn": R("w26.3", "al_w2v", "slp5", extra=[B("word-embeddings", "word embeddings", "word2vec, GloVe, fastText."), {"url": "../BASELINE.html#/ml/embeddings", "label": "Baseline: embeddings (ML field)", "why": "The core topic."}])},
 
         {"q": "Static or contextual embeddings: what's the difference?", "short": "Static and contextual",
          "tests": "Why BERT changed things.",
@@ -739,7 +771,7 @@ QA = [
                "For an assistant that matters for words like 'card', 'balance' or 'charge', which mean different things in different intents."],
          "land": "One vector per word versus one per occurrence; context resolves the sense.",
          "probes": ["What did ELMo add?", "When would you still use static vectors?"],
-         "learn": R("w26", "al_bert", extra=[B("word-embeddings", "word embeddings", "Static versus contextual.")])},
+         "learn": R("w26.4", "al_bert", extra=[B("word-embeddings", "word embeddings", "Static versus contextual.")])},
 
         {"q": "Why can't you mean-pool BERT for sentence similarity?", "short": "Sentence embeddings",
          "tests": "How sentence embeddings are trained, at depth.",
@@ -752,7 +784,7 @@ QA = [
                     "items": ["For each query: a softmax over its similarity to one positive and many negatives, each divided by a temperature.", "The loss is minus the log of the positive's share.",
                               "A low temperature (around 0.05 to 0.1, from memory) penalises hard negatives sharply."]}],
          "notes": ["Hard negatives for an assistant: utterances from the intent it's most often confused with."],
-         "learn": R("w26", "p_sbert", "weng_con", extra=[B("sentence-embeddings", "sentence embeddings", "Contrastive training.")])},
+         "learn": R("w26.4", "p_sbert", "weng_con", extra=[B("sentence-embeddings", "sentence embeddings", "Contrastive training.")])},
 
         {"q": "How do you choose an embedding model?", "short": "Choosing a model",
          "tests": "A method, not a leaderboard rank.",
@@ -764,7 +796,7 @@ QA = [
          "notes": ["MTEB, in the original paper: 8 task types, 58 datasets, 112 languages; it has grown since. Check rankings live; don't quote them from memory.",
                    "Families to name: OpenAI text-embedding-3, Cohere, Voyage, Google's Gemini embeddings; open ones like BGE, E5, GTE, Nomic, Qwen. From memory: say 'families like'.",
                    "Switching models means re-embedding everything; vectors from two models aren't comparable."],
-         "learn": R("w26", "p_mteb", "mteb_lb", extra=[B("sentence-embeddings", "sentence embeddings", "Choosing a model."), {"url": "mphasis.html#/prep/q-what-are-embeddings-and-how-does-similarity-search-work", "label": "Mphasis page: embeddings and similarity search", "why": "Your general answer, already written."}])},
+         "learn": R("w26.6", "p_mteb", "mteb_lb", extra=[B("sentence-embeddings", "sentence embeddings", "Choosing a model."), {"url": "mphasis.html#/prep/q-what-are-embeddings-and-how-does-similarity-search-work", "label": "Mphasis page: embeddings and similarity search", "why": "Your general answer, already written."}])},
 
         {"q": "Cosine, dot product or Euclidean distance?", "short": "Similarity",
          "tests": "Knowing they're often the same, and when they're not.",
@@ -775,7 +807,7 @@ QA = [
          "probes": ["Prove the L2 equivalence.", "When does magnitude matter?"],
          "notes": ["For unit vectors, squared distance is 2 minus 2 times the cosine, so ranking by one ranks by the other."],
          "figs": ["vectors"],
-         "learn": R("w26", extra=[B("sentence-embeddings", "sentence embeddings", "Similarity."), {"url": "../CODING.html#embed", "label": "Coding page: embeddings and vector search", "why": "The code."}])},
+         "learn": R("w26.4", extra=[B("sentence-embeddings", "sentence embeddings", "Similarity."), {"url": "../CODING.html#embed", "label": "Coding page: embeddings and vector search", "why": "The code."}])},
 
         {"q": "HNSW, IVF and PQ: what are they, and when do you use each?", "short": "Vector search",
          "tests": "Approximate nearest neighbour search, practically.",
@@ -785,7 +817,7 @@ QA = [
          "land": "Flat to a million, HNSW for recall and speed, IVF-PQ for billions; hybrid often beats dense alone.",
          "probes": ["What does efSearch trade?", "What are Matryoshka embeddings?", "How do filters interact with ANN?"],
          "swaps": [{"when": "If they ask about Matryoshka embeddings", "line": "The model is trained so the first k dimensions are a good embedding on their own, for several k. You can truncate to, say, 256 and renormalise to cut storage and search cost with a small quality drop, then rerank with the full vectors."}],
-         "learn": R("w26", "faiss", "p_mrl", extra=[B("sentence-embeddings", "sentence embeddings", "Search."), {"url": "../BASELINE.html#/data/vector-db", "label": "Baseline: vector databases", "why": "The core topic."}, {"url": "../SYSTEM%20DESIGN.html#/patterns/search/vector", "label": "Guide: vector search", "why": "As a design technique."}])},
+         "learn": R("w26.5", "faiss", "p_mrl", extra=[B("sentence-embeddings", "sentence embeddings", "Search."), {"url": "../BASELINE.html#/data/vector-db", "label": "Baseline: vector databases", "why": "The core topic."}, {"url": "../SYSTEM%20DESIGN.html#/patterns/search/vector", "label": "Guide: vector search", "why": "As a design technique."}])},
 
         {"q": "Where do embeddings fail, and how do you use them in an assistant?", "short": "Failures and uses",
          "tests": "Knowing the limits, and the practical uses.",
@@ -795,7 +827,7 @@ QA = [
          "land": "Negation, numbers, IDs, domain words, truncation; hybrid, rerankers, fine-tuning; three uses in an assistant.",
          "probes": ["How would you fix negation?", "What does a reranker add?", "When would you fine-tune an embedding model?"],
          "notes": ["A cross-encoder reads the query and the passage together, so it's slower but far better at the details embeddings blur, like negation."],
-         "learn": R("w26", extra=[B("sentence-embeddings", "sentence embeddings", "Failure modes."), {"url": "../BASELINE.html#/ai/hybrid-search-reranking", "label": "Baseline: hybrid search and reranking", "why": "The core topic."}, {"url": "../SYSTEM%20DESIGN.html#/patterns/search/hybrid-rerank", "label": "Guide: hybrid search and reranking", "why": "As a design technique."}])},
+         "learn": R("w26.6", extra=[B("sentence-embeddings", "sentence embeddings", "Failure modes."), {"url": "../BASELINE.html#/ai/hybrid-search-reranking", "label": "Baseline: hybrid search and reranking", "why": "The core topic."}, {"url": "../SYSTEM%20DESIGN.html#/patterns/search/hybrid-rerank", "label": "Guide: hybrid search and reranking", "why": "As a design technique."}])},
     ]},
 
     {"group": "LLM fundamentals and the Transformer", "blurb": "Attention and the block, encoders and decoders, the KV cache, tokens, decoding, post-training, and fine-tune versus RAG. Taught in wc27; lightly.", "items": [
@@ -810,7 +842,7 @@ QA = [
                     "items": ["Attention(Q, K, V) = softmax(Q Kᵀ / √d_k) V.", "**Causal mask:** position i can't attend to j greater than i, so training is many next-token predictions at once.",
                               "**Cross-attention:** queries from the decoder, keys and values from the encoder (translation, T5)."]}],
          "figs": ["qkvAttention"],
-         "learn": R("w27", "al_tf", "b1b_att", "raschka", extra=[B("attention", "attention", "The mechanism."), {"url": "../BASELINE.html#/ml/transformers", "label": "Baseline: Transformers and attention (ML field)", "why": "The core topic."}, {"url": "../CODING.html#transformer", "label": "Coding page: attention and a Transformer block", "why": "The code."}])},
+         "learn": R("w27.5", "al_tf", "b1b_att", "raschka", extra=[B("attention", "attention", "The mechanism."), {"url": "../BASELINE.html#/ml/transformers", "label": "Baseline: Transformers and attention (ML field)", "why": "The core topic."}, {"url": "../CODING.html#transformer", "label": "Coding page: attention and a Transformer block", "why": "The code."}])},
 
         {"q": "Why divide the attention scores by the square root of d_k?", "short": "The √d_k",
          "tests": "A classic follow-up: do you know why, not only that?",
@@ -821,7 +853,7 @@ QA = [
          "probes": ["Why the square root and not d_k?", "What does a saturated softmax do to gradients?"],
          "notes": ["The square root because variance scales with d_k, so the standard deviation scales with its root."],
          "figs": ["attention"],
-         "learn": R("w27", extra=[B("attention", "attention", "Scaling."), {"url": "../BASELINE.html#/ml/transformers", "label": "Baseline: Transformers and attention", "why": "The core topic."}])},
+         "learn": R("w27.5", extra=[B("attention", "attention", "Scaling."), {"url": "../BASELINE.html#/ml/transformers", "label": "Baseline: Transformers and attention", "why": "The core topic."}])},
 
         {"q": "Why multiple heads, and how does position get in?", "short": "Heads and position",
          "tests": "Two standard follow-ups in one.",
@@ -829,7 +861,7 @@ QA = [
                "Attention itself is order-blind, so position has to be injected. The original paper added fixed sine and cosine waves to the embeddings. BERT and GPT-2 learned a vector per position, capped at the training length. RoPE, the default in Llama-style models, rotates the query and key vectors by an angle that depends on position, so their dot product depends on relative distance, and it extends better to longer contexts."],
          "land": "Heads: several relations at the same cost. Position: sinusoidal, learned, or RoPE's rotation for relative distance.",
          "probes": ["Why does RoPE extend to longer context?", "What do heads actually learn?"],
-         "learn": R("w27", "al_tf", "p_rope", extra=[B("attention", "attention", "Heads and positions.")])},
+         "learn": R("w27.5", "al_tf", "p_rope", extra=[B("attention", "attention", "Heads and positions.")])},
 
         {"q": "Walk me through one Transformer block.", "short": "The block",
          "tests": "The whole layer, lightly, and where the parameters are.",
@@ -845,7 +877,7 @@ QA = [
                     "items": ["Every token is scored against every other, so time and memory grow with the square of the length.", "FlashAttention keeps it exact and cuts memory traffic by tiling.",
                               "Sparse or windowed attention restricts the pattern; the KV cache avoids recomputation during generation."]}],
          "figs": ["transformerBlock"],
-         "learn": R("w27", "p_preln", "b1b_mlp", extra=[B("encoders-decoders", "encoders and decoders", "The block in each family."), {"url": "../CODING.html#transformer", "label": "Coding page: attention and a Transformer block", "why": "The code."}])},
+         "learn": R("w27.5", "p_preln", "b1b_mlp", extra=[B("encoders-decoders", "encoders and decoders", "The block in each family."), {"url": "../CODING.html#transformer", "label": "Coding page: attention and a Transformer block", "why": "The code."}])},
 
         {"q": "BERT versus GPT: what's the difference?", "short": "BERT and GPT",
          "tests": "Encoders, decoders, and which to use for what.",
@@ -855,7 +887,7 @@ QA = [
          "land": "Encoder, both directions, understanding; decoder, left to right, generation; encoders still win on cost for classification.",
          "probes": ["Why can't BERT generate?", "Which would you use for intent classification?", "What's span corruption?"],
          "notes": ["T5's span corruption masks spans and generates the missing ones."],
-         "learn": R("w27", "al_bert", "hf_arch", "slp9", extra=[B("encoders-decoders", "encoders and decoders", "The three families."), {"url": "mphasis.html#/prep/q-how-does-a-large-language-model-work", "label": "Mphasis page: how an LLM works", "why": "Your general answer, already written."}])},
+         "learn": R("w27.2", "al_bert", "hf_arch", "slp9", extra=[B("encoders-decoders", "encoders and decoders", "The three families."), {"url": "mphasis.html#/prep/q-how-does-a-large-language-model-work", "label": "Mphasis page: how an LLM works", "why": "Your general answer, already written."}])},
 
         {"q": "What is the KV cache, and why does it matter?", "short": "KV cache",
          "tests": "Inference cost, from the mechanism.",
@@ -865,7 +897,7 @@ QA = [
          "land": "Store past keys and values; it grows with layers, context and batch; GQA shrinks it.",
          "probes": ["What's prefill versus decode?", "How does GQA work?", "Why is decode memory-bound?"],
          "notes": ["The half megabyte is arithmetic: 2 (K and V) × 32 layers × 4,096 × 2 bytes = 524,288 bytes per token, assuming no GQA."],
-         "learn": R("w27", "weng_inf", "p_gqa", extra=[{"url": "../BASELINE.html#/inference/kv-cache", "label": "Baseline: KV cache", "why": "The core topic."}, {"url": "../BASELINE.html#/inference/prefill-decode", "label": "Baseline: prefill and decode", "why": "Why decode is memory-bound."}])},
+         "learn": R("w27.6", "weng_inf", "p_gqa", extra=[B("encoders-decoders", "encoders and decoders", "Why decoders cache keys and values."), {"url": "../BASELINE.html#/inference/kv-cache", "label": "Baseline: KV cache", "why": "The core topic."}, {"url": "../BASELINE.html#/inference/prefill-decode", "label": "Baseline: prefill and decode", "why": "Why decode is memory-bound."}])},
 
         {"q": "Why subword tokenization, and how does BPE work?", "short": "Tokenization",
          "tests": "Where cost and quirks begin.",
@@ -875,7 +907,7 @@ QA = [
          "land": "Subwords: fixed vocabulary, any word; BPE merges frequent pairs; it drives cost and odd failures.",
          "probes": ["WordPiece versus BPE?", "Why do LLMs struggle to count letters?", "What's a unigram tokeniser?"],
          "figs": ["bpeMerge"],
-         "learn": R("w27", "hf_bpe", "slp2", extra=[B("tokenization", "tokenization", "BPE, WordPiece, SentencePiece."), {"url": "../CODING.html#bpe", "label": "Coding page: a tokenizer, byte-pair encoding", "why": "The code."}])},
+         "learn": R("w27.1", "hf_bpe", "slp2", extra=[B("tokenization", "tokenization", "BPE, WordPiece, SentencePiece."), {"url": "../CODING.html#bpe", "label": "Coding page: a tokenizer, byte-pair encoding", "why": "The code."}])},
 
         {"q": "Temperature, top-k and top-p: what are they, and when do you use each?", "short": "Decoding",
          "tests": "Knowing which knob for which task.",
@@ -885,7 +917,7 @@ QA = [
          "land": "Temperature reshapes, top-k and top-p truncate; zero or constrained for anything the assistant acts on.",
          "probes": ["Why does top-p adapt better than top-k?", "Is temperature zero deterministic?", "What's constrained decoding?"],
          "notes": ["Temperature zero is close to deterministic but not guaranteed across providers and batches; don't promise byte-identical output."],
-         "learn": R("w27", "p_nucleus", extra=[B("decoding", "decoding", "Greedy, beam, sampling.")])},
+         "learn": R("w27.3", "p_nucleus", extra=[B("decoding", "decoding", "Greedy, beam, sampling.")])},
 
         {"q": "How does a pretrained model become an assistant?", "short": "Post-training",
          "tests": "Pretraining, SFT and preference tuning, in order.",
@@ -895,7 +927,7 @@ QA = [
          "land": "Pretrain, then SFT for behaviour, then RLHF or DPO for preferences.",
          "probes": ["Why does SFT on unknown facts cause hallucination?", "DPO or RLHF?", "What's in-context learning?"],
          "notes": ["Weng's survey: fine-tuning on facts the model doesn't know teaches it to guess.", "In-context learning: the model adapts from examples in the prompt with no weight updates; choose examples by embedding similarity."],
-         "learn": R("w27", "slp8", "p_instruct", "p_dpo", extra=[B("llm-training", "LLM training", "Pretraining to assistant."), {"url": "../BASELINE.html#/ml/preference-tuning", "label": "Baseline: preference tuning", "why": "The core topic."}])},
+         "learn": R("w27.2", "slp8", "p_instruct", "p_dpo", extra=[B("llm-training", "LLM training", "Pretraining to assistant."), {"url": "../BASELINE.html#/ml/preference-tuning", "label": "Baseline: preference tuning", "why": "The core topic."}])},
 
         {"q": "Fine-tune, LoRA, prompt or RAG: how do you choose?", "short": "Fine-tune or RAG",
          "tests": "Matching the method to the problem, for an assistant.",
@@ -905,7 +937,7 @@ QA = [
          "land": "Knowledge in retrieval, behaviour in tuning, prompting first; LoRA for cheap fine-tunes.",
          "probes": ["How do you reduce hallucination in production?", "What's QLoRA?", "When would you fine-tune for an assistant?"],
          "swaps": [{"when": "If they ask about hallucination", "line": "Ground answers in retrieved evidence with citations, constrain the model to that context, use tools for facts and arithmetic, allow 'I don't know', and measure faithfulness on a regression set. At alfred_ we went further for one case: the model picks from real items and code attaches the ids, so it can't invent a thread at all."}],
-         "learn": R("w27", "p_lora", "weng_hal", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "Where each fits."), {"url": "mphasis.html#/prep/q-prompting-rag-or-fine-tuning-when-do-you-use-which", "label": "Mphasis page: prompting, RAG or fine-tuning", "why": "Your general answer, already written."}, {"url": "mphasis.html#/prep/q-how-do-you-reduce-hallucination", "label": "Mphasis page: reducing hallucination", "why": "Already written."}, {"url": "../CODING.html#lora", "label": "Coding page: LoRA", "why": "The code."}])},
+         "learn": R("w27.3", "p_lora", "weng_hal", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "Where each fits."), {"url": "mphasis.html#/prep/q-prompting-rag-or-fine-tuning-when-do-you-use-which", "label": "Mphasis page: prompting, RAG or fine-tuning", "why": "Your general answer, already written."}, {"url": "mphasis.html#/prep/q-how-do-you-reduce-hallucination", "label": "Mphasis page: reducing hallucination", "why": "Already written."}, {"url": "../CODING.html#lora", "label": "Coding page: LoRA", "why": "The code."}])},
     ]},
 
     {"group": "Your work, mapped to the role", "blurb": "What you've built that matches, and the gaps said plainly.", "items": [
@@ -922,7 +954,7 @@ QA = [
                               "**Transformers:** a from-scratch Transformer for English-German translation; Advanced NLP at UIC.", "**Cost:** per-user LLM cost cut about 30% with a deterministic matcher in place of per-message model calls."]},
                    {"title": "Not done yet: say so",
                     "items": ["Dialogflow CX, Lex, CLU, Rasa, Kore.ai or Cognigy in production.", "An intent taxonomy in the hundreds, with a team adding to it.", "Contact-centre analytics at enterprise volume: containment and CSAT across millions of sessions."]}],
-         "learn": R("w29", "w30")},
+         "learn": R("w29", "w30.6", extra=[_MAP])},
 
         {"q": "Tell me about the decision layer at alfred_.", "short": "The decision layer",
          "tests": "Depth on your closest work.",
@@ -934,7 +966,7 @@ QA = [
          "notes": ["From the master reference: 'every candidate action classified into five verdicts (SILENT / NOTIFY / CONFIRM / CLARIFY / REFUSE) via deterministic risk scoring, not LLM-as-judge'.",
                    "The Coframe page says 'no risk score; a code floor confirms every send and irreversible delete'. Check which matches today's code, and what goes into the score, before Friday. If you're unsure on the call, describe the verdicts and the code floor, and leave the scoring detail out."],
          "never": ["Don't invent the inputs to the risk score."],
-         "learn": R("w28", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "The model proposes, code decides.")])},
+         "learn": R("w28.3", extra=[B("nlu-llm-hybrid", "classic NLU and LLMs together", "The model proposes, code decides.")])},
 
         {"q": "Tell me about the production failure scanner.", "short": "The failure scanner",
          "tests": "Error analysis you've actually run.",
@@ -944,7 +976,7 @@ QA = [
          "land": "Real conversations, failure versus expected behaviour, real bugs promoted, each one a test case.",
          "probes": ["How does it tell failure from expected behaviour?", "How often does it run?", "What did it find that you didn't expect?"],
          "notes": ["From the master reference: 'scans real production conversations, classifies genuine failures vs. expected behavior, auto-promotes real bugs for triage'. The Coframe page says it runs daily."],
-         "learn": R("w30", extra=[B("error-analysis", "error analysis", "The same loop, by hand."), {"url": "coframe.html#/prep/say-now", "label": "Coframe page: what you're working on now", "why": "The eval harness story, already written."}])},
+         "learn": R("w30.6", extra=[B("error-analysis", "error analysis", "The same loop, by hand."), {"url": "coframe.html#/prep/say-now", "label": "Coframe page: what you're working on now", "why": "The eval harness story, already written."}])},
 
         {"q": "Tell me about MetaRAG.", "short": "MetaRAG",
          "tests": "Your NLP research, with its numbers.",
@@ -955,7 +987,7 @@ QA = [
          "probes": ["How did the TF-IDF weighting work?", "What's Hit Rate at 10?", "How did you measure hallucination?"],
          "notes": ["Metrics verbatim from the master reference: 82.5% precision vs 73.3% baseline; 0.925 Hit Rate@10; 25% hallucination reduction; 10K queries/day; p99 under 300ms.",
                    "Check the weighting mechanism and how hallucination was measured in the paper before Friday; don't improvise either."],
-         "learn": R("w26", extra=[B("bow-tfidf", "bag of words and TF-IDF", "The sparse half."), {"url": "../BASELINE.html#/ai/rag", "label": "Baseline: RAG", "why": "The core topic."}])},
+         "learn": R("w26.6", extra=[B("bow-tfidf", "bag of words and TF-IDF", "The sparse half."), {"url": "../BASELINE.html#/ai/rag", "label": "Baseline: RAG", "why": "The core topic."}])},
 
         {"q": "Tell me about a time you improved an assistant from production data.", "short": "An improvement from production",
          "tests": "Root cause over symptom, with a result.",
@@ -965,7 +997,7 @@ QA = [
          "land": "Make the mistake impossible by design; then cost and latency from the same habit.",
          "probes": ["How did you find it?", "How do you know it's fixed?", "What would you do on a classic platform?"],
          "swaps": [{"when": "If they ask what that means on a classic platform", "line": "The same move as validating a slot against the system of record instead of trusting the extractor: the model understands, code supplies the facts."}],
-         "learn": R("w30")},
+         "learn": R("w30.6", extra=[B("error-analysis", "error analysis", "Mining misses and the failure taxonomy.")])},
 
         {"q": "You haven't used our platform. How would you get productive?", "short": "Ramping up",
          "tests": "Honesty plus a credible plan.",
@@ -974,7 +1006,7 @@ QA = [
                "That's how I work with any new stack: I built MockFlow-AI on LiveKit from scratch, and it runs under 400 milliseconds end to end."],
          "land": "Learn the platform on real work: taxonomy, transcripts, one small measurable fix end to end.",
          "probes": ["Which platform would be hardest for you?", "What would you need from the team?"],
-         "learn": R("w29", extra=[B("intents-entities", "intents and entities", "Platform terms side by side.")])},
+         "learn": R("w29.5", extra=[B("intents-entities", "intents and entities", "Platform terms side by side.")])},
     ]},
 ]
 

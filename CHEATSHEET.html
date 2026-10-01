@@ -2359,6 +2359,438 @@ var FIGURES = (function () {
     }
   };
 
+  /* ------------------------------------------------ NLP and conversational AI (wc25 to wc30) */
+
+  function fLine(x1, y1, x2, y2, cls) {
+    return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" class="' + (cls || "d-str-flat") + '" stroke-width="1"/>';
+  }
+  function fDot(x, y, tone, r) {
+    return '<circle cx="' + x + '" cy="' + y + '" r="' + (r || 3.5) + '" class="d-fill-' + tone + ' d-str-' + tone + '" stroke-width="1"/>';
+  }
+  function fArr(x1, y1, x2, y2) {
+    return '<path d="M' + x1 + ',' + y1 + ' L' + x2 + ',' + y2 + '" class="d-line" stroke-width="1.25" marker-end="url(#ah)"/>';
+  }
+  function fCell(x, y, w, h, tone) {
+    return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" class="d-fill-' + tone + ' d-str-' + tone + '" stroke-width="1"/>';
+  }
+
+  DIA.nlpMap = {
+    title: "The field of NLP as one map, with conversational AI built on top",
+    cap: "<b>Conversational AI is not a separate field: it is a stack built from the tasks under it.</b> Read the map from the bottom up. Foundations turn text into units: tokens, morphology, tagging, parsing. Representations turn units into numbers, from counts and TF-IDF to contextual and sentence embeddings. Tasks use those numbers, and evaluation scores each task. A virtual assistant combines several of them: intent classification and NER in front, retrieval for knowledge, an LLM for generation and tool calls, plus dialogue state and safety. Along the bottom, the model eras say how each layer has been learned; each era replaced hand-built features with learned representations.",
+    svg: function () {
+      var b = "";
+      b += S.tag(0, 10, "Where conversational AI sits");
+      b += S.box({ id: "convai", x: 0, y: 16, w: 640, h: 46, label: "conversational AI", sub: "intents and NER in front, retrieval, an LLM, dialogue state, safety", tone: "iv", icon: "message-square" });
+      b += S.arrow(74, 96, 74, 64, {});
+      b += S.text(82, 84, "built from", "d-t-x");
+      b += S.tag(0, 92, "Tasks");
+      [["classification", "classification", "intent, sentiment"], ["ner", "NER, labelling", "a label per token"],
+        ["qa", "question answering", "span or open domain"], ["summarization", "summarization", "watch faithfulness"],
+        ["translation", "translation", "gave us attention"], ["retrieval", "retrieval", "BM25, dense, rerank"],
+        ["dialogue", "dialogue", "task or open chat"], ["extraction", "extraction", "relations, events"]].forEach(function (t, i) {
+        b += S.box({ id: t[0], x: (i % 4) * 164, y: 98 + Math.floor(i / 4) * 48, w: 148, h: 40, label: t[1], sub: t[2], tone: "sys" });
+      });
+      b += S.tag(0, 212, "Text to numbers");
+      b += S.tag(416, 212, "How it is scored");
+      b += S.box({ id: "repr", x: 0, y: 218, w: 400, h: 44, label: "representations", sub: "one-hot, counts, TF-IDF, static, contextual, sentence", tone: "math" });
+      b += S.box({ id: "eval", x: 416, y: 218, w: 224, h: 44, label: "evaluation", sub: "F1, BLEU, perplexity, judges", tone: "now" });
+      b += S.arrow(200, 216, 200, 188, {});
+      b += S.arrow(450, 216, 450, 188, {});
+      b += S.text(444, 200, "scores", "d-t-x", "end");
+      b += S.tag(0, 292, "Text to units");
+      b += S.box({ id: "foundations", x: 0, y: 300, w: 640, h: 44, label: "foundations", sub: "tokens and subwords, morphology, part-of-speech tagging, parsing", tone: "req" });
+      b += S.arrow(200, 298, 200, 264, {});
+      b += S.tag(0, 372, "Model eras: how each layer is learned");
+      var eras = '<path d="M20,404 L622,404" class="d-line" stroke-width="1.25" marker-end="url(#ah)"/>';
+      [["rules", "precise, brittle"], ["statistical", "NB, HMM, CRF, n-grams"], ["neural", "RNN, LSTM, seq2seq"],
+        ["Transformers", "BERT, GPT, T5"], ["LLMs", "one model, many tasks"]].forEach(function (e, i) {
+        var x = 64 + i * 128;
+        eras += fDot(x, 404, "sys", 4.5) + S.text(x, 394, e[0], "d-t-b", "middle") + S.text(x, 422, e[1], "d-t-x", "middle");
+      });
+      b += S.node("eras", eras);
+      return S.frame(640, 436, b);
+    }
+  };
+
+  DIA.reprLadder = {
+    title: "The representation ladder: each rung closes a gap the one below left open",
+    cap: "<b>Every step up the ladder answers one complaint about the step below.</b> One-hot gives each word its own dimension, so every two words are equally far apart. Bag of words counts them, TF-IDF weights the counts by rarity, and n-grams add a little local order: all four are sparse counts. Static embeddings (word2vec, GloVe, fastText) learn one dense vector per word from the contexts it appears in, so similar words sit close, but \"bank\" has one vector. Contextual embeddings (ELMo, BERT) give each occurrence its own vector. Sentence embeddings (Sentence-BERT, contrastive training) give a whole text one vector where cosine means similar meaning; they drive semantic search, clustering and RAG.",
+    svg: function () {
+      var b = "";
+      var R = [
+        ["onehot", "one-hot", "one dimension per word", "the start: a word becomes a number", "still: every two words equally far apart"],
+        ["bow", "bag of words", "counts, order ignored", "a whole text becomes one vector of counts", "still: \"the\" outweighs everything"],
+        ["tfidf", "TF-IDF", "counts weighted by rarity", "common words count less, rare words carry signal", "still: no order, no synonyms"],
+        ["ngrams", "n-grams", "counts of word sequences", "some local order: \"not good\" is not \"good\"", "still: synonyms look unrelated"],
+        ["static", "static embeddings", "word2vec, GloVe, fastText", "dense and learned: similar words sit close", "still: one vector for \"bank\", river or money"],
+        ["contextual", "contextual embeddings", "ELMo, BERT", "a vector per token, from the whole sentence", "still: pooled tokens make a poor sentence vector"],
+        ["sentence", "sentence embeddings", "Sentence-BERT, contrastive", "one vector per text: cosine means similar meaning", "used for: semantic search, clustering, RAG"]
+      ];
+      b += S.text(70, 14, "rung", "d-t-x");
+      b += S.text(268, 14, "the gap it closes, and what it still misses", "d-t-x");
+      R.forEach(function (r, i) {
+        var y = 24 + i * 50;
+        b += S.box({ id: r[0], x: 70, y: y, w: 180, h: 38, label: r[1], sub: r[2], tone: i < 4 ? "req" : "math" });
+        b += S.text(268, y + 16, r[3], "d-t-s");
+        b += S.text(268, y + 31, r[4], "d-t-x");
+        if (i < R.length - 1) { b += S.arrow(160, y + 39, 160, y + 49, {}); }
+      });
+      b += S.path("M64,26 L58,26 L58,210 L64,210", "flat");
+      b += S.text(0, 122, "SPARSE", "d-t-x");
+      b += S.path("M64,226 L58,226 L58,360 L64,360", "flat");
+      b += S.text(0, 297, "DENSE", "d-t-x");
+      return S.frame(640, 372, b);
+    }
+  };
+
+  DIA.clfLadder = {
+    title: "The text classification ladder: labelled data needed against cost per call",
+    cap: "<b>Pick the cheapest rung that meets the bar, and measure what each bigger model buys on your own data.</b> TF-IDF with logistic regression trains in seconds on a CPU and tells you how hard the problem is. A fine-tuned encoder wins with thousands of labelled examples and strict latency. SetFit and a frozen encoder with a small head work from a few examples per class. Zero-shot NLI and LLM prompting need no labels but cost a forward pass per label or a full LLM call. One preprint measured a p50 of about 2.4 ms for fine-tuned RoBERTa against about 981 ms for an LLM. The hybrid route, a fast classifier with the LLM only for uncertain turns, came within 2% of the LLM's accuracy at half the latency in Amazon's study.",
+    svg: function () {
+      var b = "";
+      b += S.axes(60, 20, 560, 270, "", "latency and cost per call");
+      b += S.text(56, 50, "about 1 s", "d-t-x", "end");
+      b += S.text(56, 270, "about 2 ms", "d-t-x", "end");
+      b += S.text(145, 306, "none", "d-t-x", "middle");
+      b += S.text(255, 306, "a few per class", "d-t-x", "middle");
+      b += S.text(405, 306, "hundreds", "d-t-x", "middle");
+      b += S.text(545, 306, "thousands", "d-t-x", "middle");
+      b += S.text(340, 324, "labelled examples needed", "d-t-s", "middle");
+      b += S.box({ id: "llm", x: 70, y: 30, w: 150, h: 40, label: "LLM prompting", sub: "zero or few shot", tone: "iv" });
+      b += S.box({ id: "nli", x: 70, y: 100, w: 150, h: 40, label: "zero-shot NLI", sub: "one pass per label", tone: "iv" });
+      b += S.box({ id: "embhead", x: 330, y: 150, w: 150, h: 40, label: "embeddings + head", sub: "50 to 500 per class", tone: "math" });
+      b += S.box({ id: "setfit", x: 180, y: 196, w: 130, h: 40, label: "SetFit", sub: "8 to 64 per class", tone: "math" });
+      b += S.box({ id: "encoder", x: 470, y: 196, w: 150, h: 40, label: "fine-tuned encoder", sub: "thousands, under 20 ms", tone: "sys" });
+      b += S.box({ id: "tfidf", x: 330, y: 238, w: 150, h: 40, label: "TF-IDF + LR", sub: "CPU, seconds to train", tone: "req" });
+      b += S.arrow(310, 194, 224, 60, { dash: true });
+      b += S.text(280, 128, "uncertain turns only", "d-t-x");
+      return S.frame(640, 334, b);
+    }
+  };
+
+  DIA.contrastive = {
+    title: "Contrastive training: pull the positive in, push the rest of the batch away",
+    cap: "<b>A sentence embedding model learns by comparison, not by labels.</b> For each query, the loss (InfoNCE) is a softmax over its similarity to one positive and many negatives, so raising the positive means lowering the rest. With in-batch negatives, every other example's positive is a free negative, which is why large batches help. Hard negatives, close but wrong, teach the most. The temperature T divides every similarity before the softmax: a small T sharpens it, so the closest negatives are penalised hardest. SetFit uses the same idea on pairs built from a few labelled examples per class.",
+    svg: function () {
+      var b = "";
+      b += S.tag(0, 12, "Embedding space");
+      b += '<rect x="0" y="20" width="380" height="250" rx="8" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 4" opacity="0.5"/>';
+      b += S.box({ id: "query", x: 140, y: 140, w: 80, h: 26, r: 13, label: "query", tone: "now" });
+      b += S.box({ id: "positive", x: 250, y: 86, w: 90, h: 26, r: 13, label: "positive", tone: "math" });
+      b += S.box({ id: "hardneg", x: 24, y: 84, w: 116, h: 26, r: 13, label: "hard negative", tone: "alaap" });
+      b += S.box({ id: "neg1", x: 150, y: 34, w: 136, h: 26, r: 13, label: "in-batch negative", tone: "flat" });
+      b += S.box({ id: "neg2", x: 24, y: 224, w: 136, h: 26, r: 13, label: "in-batch negative", tone: "flat" });
+      b += S.box({ id: "neg3", x: 230, y: 214, w: 136, h: 26, r: 13, label: "in-batch negative", tone: "flat" });
+      b += S.arrow(222, 146, 252, 114, {});
+      b += S.text(240, 140, "pull", "d-t-s");
+      b += S.arrow(150, 138, 110, 112, {});
+      b += S.text(104, 132, "push", "d-t-s", "end");
+      b += S.arrow(190, 138, 205, 62, {});
+      b += S.arrow(160, 168, 110, 222, {});
+      b += S.arrow(210, 168, 270, 212, {});
+      b += S.node("infonce", S.text(400, 40, "InfoNCE, per query", "d-t-b") +
+        S.text(400, 60, "a softmax over similarities: the", "d-t-s") +
+        S.text(400, 76, "positive against every negative", "d-t-s") +
+        S.text(400, 98, "loss = -log( e^(s+/T) / Σ e^(s/T) )", "d-t-s"));
+      b += S.node("inbatch", S.text(400, 130, "In-batch negatives", "d-t-b") +
+        S.text(400, 150, "every other pair's positive is a", "d-t-s") +
+        S.text(400, 166, "free negative: a bigger batch gives", "d-t-s") +
+        S.text(400, 182, "more, and harder, negatives", "d-t-s"));
+      b += S.node("temperature", S.text(400, 214, "Temperature T", "d-t-b") +
+        S.text(400, 234, "a small T sharpens the softmax, so", "d-t-s") +
+        S.text(400, 250, "close negatives cost the most", "d-t-s"));
+      return S.frame(640, 280, b);
+    }
+  };
+
+  DIA.annIndex = {
+    title: "Four ways to find nearest neighbours, each paying in memory, recall or speed",
+    cap: "<b>Approximate search gives up a little recall for a lot of speed, and each index pays in a different currency.</b> Flat compares the query with every vector: exact, and fine up to roughly a million vectors. HNSW builds a layered proximity graph and descends greedily from a sparse top layer to the dense bottom one: very good recall and speed, high memory. IVF splits the space into nlist k-means cells and searches only the nprobe nearest. PQ cuts each vector into sub-vectors and stores a short code for each: 10x to 50x less memory at some recall cost. IVF-PQ combines the last two for billions of vectors.",
+    svg: function () {
+      var b = "";
+      var P = [
+        ["flat", "flat", "exact, every vector", ["memory: every vector", "recall: exact", "time: scans them all", "fine to about 1M"]],
+        ["hnsw", "HNSW", "layered graph", ["memory: high, the graph", "recall: very good", "speed: fast", "knobs: M, efSearch"]],
+        ["ivf", "IVF", "k-means cells", ["memory: lower", "recall: set by nprobe", "speed: a few cells", "knobs: nlist, nprobe"]],
+        ["pq", "PQ", "short codes", ["memory: 10x to 50x less", "recall: some loss", "pairs with IVF", "IVF-PQ for billions"]]
+      ];
+      P.forEach(function (p, i) {
+        var x0 = i * 164, d = "", k, j;
+        b += S.box({ id: p[0], x: x0, y: 0, w: 148, h: 40, label: p[1], sub: p[2], tone: i === 0 ? "flat" : "sys" });
+        if (p[0] === "flat") {
+          for (k = 0; k < 4; k++) { for (j = 0; j < 3; j++) { d += fLine(x0 + 74, 130, x0 + 22 + k * 35, 70 + j * 40) + fDot(x0 + 22 + k * 35, 70 + j * 40, "sys"); } }
+          d += fDot(x0 + 74, 130, "now", 5);
+        } else if (p[0] === "hnsw") {
+          [66, 108, 150].forEach(function (y) { d += S.path("M" + (x0 + 8) + "," + y + " L" + (x0 + 140) + "," + y, "flat", true); });
+          [26, 116].forEach(function (x) { d += fDot(x0 + x, 66, "sys"); });
+          [26, 60, 92, 116].forEach(function (x) { d += fDot(x0 + x, 108, "sys"); });
+          for (k = 0; k < 8; k++) { d += fDot(x0 + 16 + k * 17, 150, "sys"); }
+          d += S.path("M" + (x0 + 26) + ",66 L" + (x0 + 116) + ",66 L" + (x0 + 116) + ",108 L" + (x0 + 92) + ",108 L" + (x0 + 84) + ",150", "now");
+          d += fDot(x0 + 84, 150, "now", 5);
+        } else if (p[0] === "ivf") {
+          d += fCell(x0 + 52, 56, 44, 52, "math") + fCell(x0 + 96, 56, 44, 52, "math");
+          d += '<rect x="' + (x0 + 8) + '" y="56" width="132" height="104" fill="none" class="d-str-flat" stroke-width="1"/>';
+          d += fLine(x0 + 52, 56, x0 + 52, 160) + fLine(x0 + 96, 56, x0 + 96, 160) + fLine(x0 + 8, 108, x0 + 140, 108);
+          [30, 74, 118].forEach(function (x) { d += fDot(x0 + x, 82, "sys") + fDot(x0 + x, 134, "sys"); });
+          d += fDot(x0 + 92, 92, "now", 5);
+          d += S.text(x0 + 74, 176, "nprobe = 2 of 6 cells", "d-t-x", "middle");
+        } else {
+          d += S.text(x0 + 74, 56, "one vector", "d-t-x", "middle");
+          d += fCell(x0 + 8, 64, 132, 20, "req");
+          [41, 74, 107].forEach(function (x) { d += fLine(x0 + x, 64, x0 + x, 84); });
+          ["12", "7", "201", "33"].forEach(function (c, n) {
+            var cx = x0 + 24.5 + n * 33;
+            d += fArr(cx, 86, cx, 117) + fCell(cx - 14, 120, 28, 22, "math") + S.text(cx, 135, c, "d-t", "middle");
+          });
+          d += S.text(x0 + 74, 162, "a short code per part", "d-t-x", "middle");
+        }
+        p[3].forEach(function (t, n) { d += S.text(x0 + 4, 198 + n * 16, t, "d-t-s"); });
+        b += S.node(p[0], d);
+      });
+      b += S.node("choose", S.text(0, 276, "Under about a million vectors: flat or HNSW. Billions: IVF-PQ.", "d-t-b"));
+      return S.frame(640, 288, b);
+    }
+  };
+
+  DIA.llmLifecycle = {
+    title: "From next-token predictor to assistant, and where your own changes plug in",
+    cap: "<b>Three training stages make the model; inference is where it is used, and where most of your changes go.</b> Pretraining predicts the next token over raw text. Supervised fine-tuning on instruction and response pairs teaches format and following more than new knowledge. Preference tuning shapes quality and safety: RLHF trains a reward model on human rankings, then optimises the model with PPO and a KL penalty that keeps it near the SFT model; DPO skips both with a classification-style loss on preferred and rejected pairs. At inference, decoding picks each token. On the right, what you control: prompting and RAG change only what the model sees at call time, and LoRA trains small adapters on a frozen base. Knowledge goes in retrieval, behaviour goes in tuning, and prompting comes first.",
+    svg: function () {
+      var b = "";
+      b += S.tag(0, 10, "How the model is made");
+      b += S.box({ id: "pre", x: 0, y: 20, w: 220, h: 50, label: "pretraining", sub: "next token on raw text", tone: "math" });
+      b += S.box({ id: "sft", x: 0, y: 110, w: 220, h: 50, label: "supervised fine-tuning", sub: "instruction, response pairs", tone: "sys" });
+      b += S.box({ id: "pref", x: 0, y: 200, w: 220, h: 50, label: "preference tuning", sub: "preferred vs rejected answers", tone: "sys" });
+      b += S.box({ id: "inf", x: 0, y: 310, w: 220, h: 50, label: "inference", sub: "one token at a time", tone: "now" });
+      b += S.box({ id: "decoding", x: 0, y: 400, w: 220, h: 50, label: "decoding", sub: "greedy, temperature, top-k, top-p", tone: "flat" });
+      b += S.arrow(110, 72, 110, 108, {});
+      b += S.arrow(110, 162, 110, 198, {});
+      b += S.arrow(110, 252, 110, 308, {});
+      b += S.arrow(110, 362, 110, 398, {});
+      b += S.box({ id: "rlhf", x: 260, y: 180, w: 190, h: 44, label: "RLHF", sub: "reward model, then PPO", tone: "iv" });
+      b += S.box({ id: "dpo", x: 260, y: 236, w: 190, h: 44, label: "DPO", sub: "no reward model, no RL", tone: "iv" });
+      b += S.arrow(222, 215, 258, 202, {});
+      b += S.arrow(222, 235, 258, 256, {});
+      b += S.text(236, 230, "or", "d-t-x", "middle");
+      b += S.tag(490, 102, "What you change");
+      b += S.box({ id: "lora", x: 490, y: 110, w: 150, h: 50, label: "LoRA", sub: "base frozen, adapters", tone: "alaap", dash: true });
+      b += S.box({ id: "prompting", x: 490, y: 290, w: 150, h: 40, label: "prompting", sub: "first resort", tone: "alaap", dash: true });
+      b += S.box({ id: "rag", x: 490, y: 340, w: 150, h: 40, label: "RAG", sub: "fresh, citable facts", tone: "alaap", dash: true });
+      b += S.arrow(488, 135, 222, 135, { label: "tunes behaviour" });
+      b += S.arrow(488, 310, 222, 325, { label: "no weights change" });
+      b += S.arrow(488, 360, 222, 345, { label: "context at call time" });
+      return S.frame(640, 460, b);
+    }
+  };
+
+  DIA.vaTurn = {
+    title: "One user turn through an enterprise virtual assistant",
+    cap: "<b>A fast classifier decides most turns; the LLM and the human are for the turns it is unsure of.</b> The turn arrives by chat, or by voice through speech recognition. The NLU classifier returns an intent and a confidence, and the confidence falls in one of three bands: high, act; middle, ask \"did you mean X?\"; low, send the turn to an LLM fallback, which either resolves it or hands off to a human. Entities are extracted and then validated in code (an account number is checked, not guessed). Dialogue state holds the slots, the authentication and the current step; fulfilment calls the backend API, or retrieval for an FAQ. Every stage logs what it saw and decided, which is the raw material for error analysis.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "user", x: 0, y: 20, w: 140, h: 48, label: "user", tone: "req", icon: "user" });
+      b += S.box({ id: "channel", x: 166, y: 20, w: 140, h: 48, label: "channel", sub: "chat, or voice + ASR", tone: "flat" });
+      b += S.box({ id: "nlu", x: 332, y: 20, w: 140, h: 48, label: "NLU classifier", sub: "intent + confidence", tone: "sys" });
+      b += S.box({ id: "llm", x: 500, y: 20, w: 140, h: 48, label: "LLM fallback", sub: "uncertain turns", tone: "iv", icon: "bot" });
+      b += S.box({ id: "response", x: 0, y: 130, w: 140, h: 48, label: "response", sub: "text, or speech", tone: "now" });
+      b += S.box({ id: "state", x: 166, y: 130, w: 140, h: 48, label: "dialogue state", sub: "slots, auth, step", tone: "math" });
+      b += S.box({ id: "entities", x: 332, y: 130, w: 140, h: 48, label: "entities", sub: "validated in code", tone: "math" });
+      b += S.box({ id: "handoff", x: 500, y: 130, w: 140, h: 48, label: "human handoff", sub: "summary, IDs, intent", tone: "alaap" });
+      b += S.box({ id: "fulfilment", x: 166, y: 240, w: 140, h: 48, label: "fulfilment", sub: "API, or RAG for FAQ", tone: "sys" });
+      b += S.box({ id: "log", x: 0, y: 320, w: 640, h: 40, label: "log every turn", sub: "text, intent, confidence, band, entities, outcome", tone: "flat", dash: true });
+      b += S.arrow(140, 44, 164, 44, {});
+      b += S.arrow(306, 44, 330, 44, {});
+      b += S.arrow(472, 44, 498, 44, { label: "low" });
+      b += S.arrow(402, 70, 402, 128, {});
+      b += S.text(408, 102, "high: act", "d-t-s");
+      b += S.arrow(340, 70, 120, 70, { curve: -44 });
+      b += S.text(230, 110, "middle: did you mean X?", "d-t-s", "middle");
+      b += S.arrow(520, 70, 474, 128, {});
+      b += S.text(506, 114, "resolved", "d-t-s");
+      b += S.arrow(570, 70, 570, 128, {});
+      b += S.text(576, 102, "unsure", "d-t-s");
+      b += S.arrow(330, 154, 308, 154, {});
+      b += S.arrow(236, 180, 236, 238, {});
+      b += S.arrow(166, 262, 110, 180, {});
+      b += S.arrow(50, 128, 50, 70, {});
+      b += S.text(56, 102, "reply", "d-t-s");
+      b += S.arrow(236, 290, 236, 318, { dash: true });
+      return S.frame(640, 370, b);
+    }
+  };
+
+  DIA.thresholdBands = {
+    title: "Three confidence bands: act, confirm, fall back",
+    cap: "<b>One threshold forces a choice between acting wrongly and refusing too often; two thresholds make a middle band where the assistant asks.</b> The bands here are Cognigy's defaults: act above 0.4, confirm between 0.2 and 0.4, fall back below 0.2. Set your own from evaluation data, per intent family: a high-risk intent gets a higher bar and an explicit confirmation. The top score alone is not enough: when the top two are close (0.75 against 0.72 in the Lex docs) the request is ambiguous, so ask which. Thresholds only mean something if the scores are calibrated, so fit temperature scaling on validation data, and re-tune after every model change, because scores shift.",
+    svg: function () {
+      var b = "";
+      function X(v) { return 40 + 560 * v; }
+      b += S.tag(0, 12, "Top intent's confidence, Cognigy's default bands");
+      b += S.node("fallback", S.bar({ x: X(0), y: 24, w: X(0.2) - X(0), h: 34, tone: "alaap" }) + S.text(96, 46, "fall back", "d-t-b", "middle") +
+        S.text(96, 102, "None, a rephrase,", "d-t-s", "middle") + S.text(96, 118, "or the LLM", "d-t-s", "middle"));
+      b += S.node("confirm", S.bar({ x: X(0.2), y: 24, w: X(0.4) - X(0.2), h: 34, tone: "req" }) + S.text(208, 46, "confirm", "d-t-b", "middle") +
+        S.text(208, 102, "did you mean X?", "d-t-s", "middle") + S.text(208, 118, "or which of two?", "d-t-s", "middle"));
+      b += S.node("act", S.bar({ x: X(0.4), y: 24, w: X(1) - X(0.4), h: 34, tone: "math" }) + S.text(400, 46, "act", "d-t-b", "middle") +
+        S.text(400, 102, "run the intent and fill its slots", "d-t-s", "middle"));
+      b += fLine(X(0), 66, X(1), 66, "d-line");
+      [[0, "0"], [0.2, "0.2"], [0.4, "0.4"], [1, "1"]].forEach(function (t) { b += S.text(X(t[0]), 82, t[1], "d-t-x", "middle"); });
+      b += S.node("perintent", '<line x1="' + X(0.8) + '" y1="18" x2="' + X(0.8) + '" y2="64" class="d-str-now" stroke-width="1.5" stroke-dasharray="4 3"/>' +
+        S.text(X(0.8) + 6, 12, "high-risk intent: a higher bar", "d-t-x"));
+      b += S.text(0, 152, "Top-two margin", "d-t-b");
+      function M(v) { return 220 + 380 * v; }
+      b += S.node("close", S.text(0, 180, "0.75 against 0.72: too close", "d-t-s") + fLine(M(0), 176, M(1), 176) +
+        fDot(M(0.72), 176, "req", 4.5) + fDot(M(0.75), 176, "req", 4.5) + S.text(M(0.735), 194, "ask which one", "d-t-x", "middle"));
+      b += S.node("clear", S.text(0, 220, "0.95 against 0.65: clear", "d-t-s") + fLine(M(0), 216, M(1), 216) +
+        fDot(M(0.65), 216, "flat", 4.5) + fDot(M(0.95), 216, "math", 4.5) + S.text(M(0.8), 234, "act on the top one", "d-t-x", "middle"));
+      b += S.box({ id: "calibration", x: 0, y: 252, w: 640, h: 44, label: "calibrate, then set per intent", sub: "temperature scaling on validation data; scores shift with every model change", tone: "flat" });
+      return S.frame(640, 304, b);
+    }
+  };
+
+  DIA.repairLadder = {
+    title: "Repair: escalate help on each miss, and confirm in proportion to risk",
+    cap: "<b>Each failed turn should get more help, never the same prompt again.</b> On a no-match or a no-input, counted per state, the first reprompt is a short rephrase with a brief apology, not a verbatim repeat; the second offers options or examples; after about two failed attempts the assistant exits with a way out, a human or another channel, never a dead end. An explicit request for a human skips the ladder. On the right, confirmation: implicit (\"So, a table for two\") is the default because it keeps the flow; explicit yes or no is for when the cost of being wrong times the chance of being wrong is high: payments, deletions, names, or a low recognition score.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "event", x: 0, y: 10, w: 300, h: 44, label: "no-match or no-input", sub: "counted per state", tone: "flat" });
+      b += S.box({ id: "a1", x: 0, y: 84, w: 300, h: 44, label: "1. rephrase", sub: "short, with a brief apology", tone: "req" });
+      b += S.box({ id: "a2", x: 0, y: 158, w: 300, h: 44, label: "2. offer options", sub: "choices or examples", tone: "req" });
+      b += S.box({ id: "exit", x: 0, y: 232, w: 300, h: 44, label: "3. exit with a way out", sub: "a human, or another channel; never a dead end", tone: "alaap" });
+      b += S.arrow(150, 56, 150, 82, {});
+      b += S.arrow(150, 130, 150, 156, {});
+      b += S.arrow(150, 204, 150, 230, {});
+      b += S.text(158, 73, "first miss", "d-t-x");
+      b += S.text(158, 147, "still no match", "d-t-x");
+      b += S.text(158, 221, "about two failed tries", "d-t-x");
+      b += S.text(340, 14, "Confirm by cost x chance of being wrong", "d-t-b");
+      b += S.text(374, 69, "high cost", "d-t-x", "end");
+      b += S.text(374, 145, "low cost", "d-t-x", "end");
+      b += S.box({ id: "explicit-cost", x: 380, y: 30, w: 125, h: 70, label: "explicit", sub: "payments, deletions", tone: "req" });
+      b += S.box({ id: "explicit-both", x: 511, y: 30, w: 125, h: 70, label: "explicit", sub: "read back, or DTMF", tone: "alaap" });
+      b += S.box({ id: "implicit", x: 380, y: 106, w: 125, h: 70, label: "implicit", sub: "\"a table for two\"", tone: "math" });
+      b += S.box({ id: "explicit-unsure", x: 511, y: 106, w: 125, h: 70, label: "explicit", sub: "low confidence", tone: "req" });
+      b += S.text(442, 192, "low chance", "d-t-x", "middle");
+      b += S.text(573, 192, "high chance", "d-t-x", "middle");
+      b += S.text(380, 214, "over-confirming costs turns", "d-t-x");
+      return S.frame(640, 286, b);
+    }
+  };
+
+  DIA.intentTaxonomy = {
+    title: "An intent taxonomy for a bank: actions are intents, objects are entities",
+    cap: "<b>An intent should map to a distinct next action; the things the action needs are entities.</b> Route by domain first (accounts, cards, payments, fraud) so each classifier has a manageable label space, with fraud and \"I want a human\" as priority routes. Under each domain sit the intents; the entities (account type, amount, date, account number) are shared across them and fill the slots. Two more branches: knowledge, where retrieval over FAQ content replaces dozens of FAQ intents, and None, trained with near misses, greetings and bare numbers so out-of-scope turns have somewhere to go. The test for a split: same flow and same API call means merge and use an entity; same words needing different handling means split.",
+    svg: function () {
+      var b = "";
+      b += S.tag(0, 30, "Domains first, then intents");
+      b += S.box({ id: "root", x: 220, y: 0, w: 200, h: 40, label: "bank assistant", sub: "route by domain first", tone: "now" });
+      var D = [["accounts", "accounts", null, "sys", "check balance", "open account"], ["cards", "cards", null, "sys", "report lost card", "card declined"],
+        ["payments", "payments", null, "sys", "transfer money", "dispute a charge"], ["fraud", "fraud", null, "sys", "report fraud", "to a human, fast"],
+        ["knowledge", "knowledge", "RAG over FAQ", "math", "FAQ answers", "grounded, cited"], ["none", "None", "out of scope", "alaap", "near misses", "bare numbers"]];
+      var starts = [250, 285, 310, 330, 355, 390];
+      D.forEach(function (d, i) {
+        var x = [0, 109, 218, 326, 435, 544][i], c = x + 48;
+        b += S.box({ id: d[0], x: x, y: 80, w: 96, h: 40, label: d[1], sub: d[2] || undefined, tone: d[3] });
+        b += S.arrow(starts[i], 42, c, 78, {});
+        b += S.node(d[0], S.text(c, 140, d[4], "d-t-s", "middle") + S.text(c, 156, d[5], "d-t-s", "middle"));
+      });
+      b += S.tag(0, 194, "Entities, shared across intents");
+      b += S.box({ id: "accounttype", x: 0, y: 202, w: 150, h: 40, label: "account type", sub: "list + synonyms", tone: "req" });
+      b += S.box({ id: "amount", x: 163, y: 202, w: 150, h: 40, label: "amount", sub: "prebuilt number", tone: "req" });
+      b += S.box({ id: "date", x: 326, y: 202, w: 150, h: 40, label: "date", sub: "prebuilt date", tone: "req" });
+      b += S.box({ id: "accountno", x: 490, y: 202, w: 150, h: 40, label: "account number", sub: "regex, then validate", tone: "req" });
+      b += S.arrow(266, 162, 238, 200, { dash: true, id: "payments>amount" });
+      b += S.arrow(280, 162, 380, 200, { dash: true, id: "payments>date" });
+      b += S.text(326, 172, "slots", "d-t-x");
+      b += S.node("rules", S.text(0, 268, "Cancel is one intent and the product an entity: no \"Cancel Contoso\" intent.", "d-t-s") +
+        S.text(0, 284, "Same flow and API call: merge. Same words, different handling: split.", "d-t-s"));
+      return S.frame(640, 294, b);
+    }
+  };
+
+  DIA.confusionMatrix = {
+    title: "An intent confusion matrix: the diagonal is right, the hot cells are the work",
+    cap: "<b>Per-intent metrics come from one table.</b> Rows are the true intent, columns the predicted one, and the counts here are illustrative. The diagonal is what the model got right. Read along a row: the diagonal over the row sum is recall, of the turns that really were that intent, how many it found. Read down a column: the diagonal over the column sum is precision, of the turns it predicted as that intent, how many were right. Two hot cells: lost card read as card declined, and dispute read as transfer. Read the actual utterances, then fix: merge if they are one action with different entities, add contrastive examples if the wording is ambiguous, or disambiguate with a question when the top two scores are close. Re-run the frozen test set so the error does not move to a neighbour.",
+    svg: function () {
+      var b = "";
+      var L = ["balance", "lost card", "declined", "transfer", "dispute"];
+      var C = [[47, 0, 1, 2, 0], [0, 38, 9, 0, 3], [1, 2, 46, 0, 1], [2, 0, 0, 44, 4], [0, 1, 1, 7, 41]];
+      var hot = { "1,2": "hot1", "4,3": "hot2" };
+      var diag = "", rest = "", i, j;
+      function cx(j) { return 112 + j * 56; }
+      function cy(i) { return 40 + i * 32; }
+      b += S.text(252, 14, "predicted", "d-t-x", "middle");
+      b += S.text(0, 32, "true intent", "d-t-x");
+      L.forEach(function (l, k) {
+        b += S.text(cx(k) + 27, 32, l, "d-t-s", "middle");
+        b += S.text(106, cy(k) + 20, l, "d-t-s", "end");
+      });
+      for (i = 0; i < 5; i++) {
+        for (j = 0; j < 5; j++) {
+          var cell, n = String(C[i][j]);
+          if (i === j) {
+            diag += fCell(cx(j), cy(i), 54, 30, "math") + S.text(cx(j) + 27, cy(i) + 20, n, "d-t-b", "middle");
+          } else if (hot[i + "," + j]) {
+            cell = fCell(cx(j), cy(i), 54, 30, "alaap") + S.text(cx(j) + 27, cy(i) + 20, n, "d-t-b", "middle");
+            b += S.node(hot[i + "," + j], cell);
+          } else {
+            rest += fCell(cx(j), cy(i), 54, 30, "flat") + S.text(cx(j) + 27, cy(i) + 20, n, "d-t-x", "middle");
+          }
+        }
+      }
+      b += rest + S.node("diagonal", diag);
+      var rec = S.text(430, 32, "recall", "d-t-s", "middle"), prec = S.text(106, 222, "precision", "d-t-s", "end");
+      for (i = 0; i < 5; i++) {
+        var rs = 0, cs = 0;
+        for (j = 0; j < 5; j++) { rs += C[i][j]; cs += C[j][i]; }
+        rec += S.text(430, cy(i) + 20, Math.round(100 * C[i][i] / rs) + "%", "d-t-b", "middle");
+        prec += S.text(cx(i) + 27, 222, Math.round(100 * C[i][i] / cs) + "%", "d-t-b", "middle");
+      }
+      b += S.node("recall", rec) + S.node("precision", prec);
+      b += S.tag(480, 30, "Fix a hot cell");
+      b += S.box({ id: "merge", x: 480, y: 40, w: 160, h: 44, label: "merge", sub: "one intent + an entity", tone: "sys" });
+      b += S.box({ id: "examples", x: 480, y: 100, w: 160, h: 44, label: "add examples", sub: "contrastive pairs", tone: "sys" });
+      b += S.box({ id: "disambiguate", x: 480, y: 160, w: 160, h: 44, label: "disambiguate", sub: "ask if top two close", tone: "sys" });
+      b += S.text(0, 254, "Diagonal over its row sum is recall: of the true ones, how many found.", "d-t-s");
+      b += S.text(0, 270, "Diagonal over its column sum is precision: of those predicted, how many right.", "d-t-s");
+      return S.frame(640, 280, b);
+    }
+  };
+
+  DIA.errorLoop = {
+    title: "The production improvement loop: from logs back to logs",
+    cap: "<b>Improvement is a loop run every week, not a project.</b> Sample transcripts by stratum (all escalations, abandoned sessions, low-confidence turns, negative feedback, and a random slice), not only at random. Label each failed conversation with one primary cause: ASR, NLU, entity, dialog, backend, content, policy or abandonment; the split says whether to fix training data, flows, integrations or content. Cluster the misses (embed, cluster, have an LLM name each cluster) into candidate intents, ranked by volume times cost. Every fix gets a regression test and a golden conversation, ships to a small traffic share first, and is watched on KPIs that tell the truth: containment beside resolution and repeat contact, plus fallback and escalation rates.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "logs", x: 0, y: 20, w: 140, h: 50, label: "transcripts, logs", sub: "every turn", tone: "req" });
+      b += S.box({ id: "sample", x: 166, y: 20, w: 140, h: 50, label: "stratified sample", sub: "not only at random", tone: "sys" });
+      b += S.box({ id: "label", x: 332, y: 20, w: 140, h: 50, label: "label the cause", sub: "one primary cause", tone: "sys" });
+      b += S.box({ id: "cluster", x: 500, y: 20, w: 140, h: 50, label: "cluster misses", sub: "candidate intents", tone: "math" });
+      b += S.arrow(140, 45, 164, 45, {});
+      b += S.arrow(306, 45, 330, 45, {});
+      b += S.arrow(472, 45, 498, 45, {});
+      var tax = "";
+      ["ASR", "NLU", "entity", "dialog", "backend", "content", "policy", "abandoned"].forEach(function (t, i) {
+        var x = 162 + (i % 4) * 80, y = 104 + Math.floor(i / 4) * 26;
+        tax += S.bar({ x: x, y: y, w: 74, h: 20, tone: "alaap" }) + S.text(x + 37, y + 14, t, "d-t-s", "middle");
+      });
+      tax += S.text(162, 168, "one primary cause per failed conversation", "d-t-x");
+      b += S.node("taxonomy", tax);
+      b += S.arrow(402, 72, 402, 102, { id: "label>taxonomy" });
+      b += S.box({ id: "fix", x: 487, y: 200, w: 153, h: 50, label: "fix", sub: "data, flow, API, content", tone: "now" });
+      b += S.box({ id: "tests", x: 318, y: 200, w: 145, h: 50, label: "regression tests", sub: "golden conversations", tone: "math" });
+      b += S.box({ id: "canary", x: 164, y: 200, w: 130, h: 50, label: "canary, A/B", sub: "small traffic share", tone: "sys" });
+      b += S.box({ id: "monitor", x: 0, y: 200, w: 140, h: 50, label: "monitor KPIs", sub: "fallback, escalation", tone: "now" });
+      b += S.arrow(570, 72, 570, 198, {});
+      b += S.arrow(485, 225, 465, 225, {});
+      b += S.arrow(316, 225, 296, 225, {});
+      b += S.arrow(162, 225, 142, 225, {});
+      b += S.arrow(70, 198, 70, 72, {});
+      b += S.text(78, 140, "back to logs", "d-t-s");
+      b += S.node("kpis", S.text(0, 276, "Containment alone can hide a wall: pair it with resolution and repeat contact.", "d-t-s"));
+      return S.frame(640, 288, b);
+    }
+  };
+
   return { S: S, DIA: DIA, slug: slug };
 })();
 

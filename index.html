@@ -319,7 +319,10 @@
     background: color-mix(in srgb, var(--tone, var(--accent)) 10%, transparent); }
   .sdgrid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: var(--s6); align-items: start; line-height: 1.6; }
   .sdgrid.one { grid-template-columns: minmax(0, 1fr); max-width: 72ch; }
-  .sdwork { background: var(--surface); border-radius: var(--radius); padding: var(--s4); }
+  .sxpts { margin: 0 0 var(--s3); padding-left: var(--s5); }
+  .sxpts li { margin: 0 0 var(--s2); padding-left: var(--s1); }
+  .sxpts li b { font-weight: 600; color: var(--ink); }
+  .sdwork { background: var(--surface); border-radius: var(--radius); padding: var(--s4); position: sticky; top: calc(var(--bar-h, 52px) + 8px); }
   .sdwork > :first-child { margin-top: 0; }
   .sxt { width: 18px; height: 18px; border: 1.5px solid var(--tone, var(--muted)); border-radius: var(--radius-sm); background: var(--surface);
     padding: 0; margin-top: 3px; cursor: pointer; display: grid; place-items: center; font-size: var(--fs-xs); line-height: 1; color: var(--bg); }
@@ -615,6 +618,7 @@
     .site-nav.sn-grid { grid-column: 1; grid-row: auto; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: var(--s4) 0 0; }
     .crumb .pn { display: none; }
     .sdgrid { grid-template-columns: minmax(0, 1fr); gap: var(--s4); }
+    .sdwork { position: static; }
     .stable .hide-sm { display: none; }
     .stable th.c, .stable td.c { width: 52px; }
     .sxfin .wb-phase { grid-template-columns: minmax(0, 1fr); }
@@ -696,8 +700,8 @@
   </main>
 </div>
 <script src="figures/icons.js?v=f5a48822"></script>
-<script src="figures/figures.js?v=46349820"></script>
-<script src="figures/notes.js?v=d1690023"></script>
+<script src="figures/figures.js?v=bba2fb33"></script>
+<script src="figures/notes.js?v=b0f43ed5"></script>
 <script src="figures/viewer.js?v=ecb99aae"></script>
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
@@ -2680,7 +2684,24 @@
         steps: [
           { t: "Foundations and representations: text to units, units to numbers", m: 12,
             out: "Name the layers under every NLP system, and say what gap each rung of the representation ladder closes",
-            d: "Foundations turn text into units. Normalization and tokenization split text into words, subwords or bytes; LLM cost and quirks with numbers, code and other languages start here. Morphology (stemming, lemmatization) reduces word forms to a base, so 'run, runs, running' share signal; subword tokenization has mostly replaced it. POS tagging gives each word a grammatical role, a classic sequence-labelling task. Parsing (constituency, dependency) recovers sentence structure; rare in LLM stacks, still used in information extraction. Representations turn units into numbers, and each rung fixes the gap of the one below. One-hot: one dimension per word, huge and sparse, every pair of words equally distant. Bag of words: counts, order ignored, strong for topic-like classification. TF-IDF: counts weighted by how rare a term is across documents, the default sparse baseline. N-grams: counts of short sequences, so some local order. Static embeddings (word2vec, GloVe, fastText): one dense vector per word learned from co-occurrence, so similar words sit close, but 'bank' has one vector whatever the sentence. Contextual embeddings (ELMo, BERT): a vector per token that depends on the whole sentence. Sentence and document embeddings: one vector per text, trained so similar meanings are close; these drive semantic search, clustering and RAG.",
+            d: "Every NLP system first turns text into units, then units into numbers. Each rung of the representation ladder closes a gap left by the one below it.",
+            pts: [
+              "Tokenization: normalization and tokenization split text into words, subwords or bytes; LLM cost and quirks with numbers, code and other languages start here",
+              "Morphology: stemming and lemmatization reduce word forms to a base, so 'run, runs, running' share signal; subword tokenization has mostly replaced it",
+              "POS tagging and parsing: POS tagging gives each word a grammatical role, a classic sequence-labelling task; constituency and dependency parsing recover sentence structure, rare in LLM stacks, still used in information extraction",
+              "One-hot and bag of words: one-hot is one dimension per word, huge and sparse, every pair of words equally distant; bag of words counts words with order ignored, strong for topic-like classification",
+              "TF-IDF and n-grams: TF-IDF weights counts by how rare a term is across documents, the default sparse baseline; n-grams count short sequences, so some local order",
+              "Static embeddings: word2vec, GloVe and fastText learn one dense vector per word from co-occurrence, so similar words sit close, but 'bank' has one vector whatever the sentence",
+              "Contextual embeddings: ELMo and BERT give a vector per token that depends on the whole sentence",
+              "Sentence embeddings: one vector per text, trained so similar meanings are close; they drive semantic search, clustering and RAG"
+            ],
+            links: [
+              { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
+              { label: "Baseline, NLP: tokenization", url: "BASELINE.html#/nlp/tokenization" },
+              { label: "Baseline, NLP: sentence embeddings", url: "BASELINE.html#/nlp/sentence-embeddings" },
+              { label: "3 Dots IT prep: TF-IDF, and when it is still the right tool", url: "interviews/threedots.html#/prep/q-tf-idf-what-does-it-do-and-when-is-it-still-the-right-tool" },
+              { label: "3 Dots IT prep: static or contextual embeddings", url: "interviews/threedots.html#/prep/q-static-or-contextual-embeddings-what-s-the-difference" }
+            ],
             ans: [
               "Foundations turn text into units: normalization, tokenization, morphology, POS tags, parsing",
               "Sparse representations: one-hot, bag of words, TF-IDF, n-grams",
@@ -2692,7 +2713,25 @@
             ] },
           { t: "Tasks and model eras", m: 12,
             out: "Walk me through the history of NLP in two minutes",
-            d: "The tasks: text classification (intent, sentiment, topic, spam); sequence labelling and NER (a label per token); question answering (extractive span, abstractive, or open-domain with retrieval); summarization, where faithfulness is the main failure; machine translation; generation; retrieval and ranking (BM25, dense embeddings, rerankers: the front half of RAG); dialogue (task-oriented with intents and slots, or open-domain chat); information extraction into records; coreference and entity linking. The eras: rules and regexes, precise and brittle, still right for narrow high-precision cases. Statistical: Naive Bayes and logistic regression for classification, HMMs and CRFs for tagging, n-gram language models, all on hand-built features. Neural: RNN, LSTM, GRU and CNNs for text, then seq2seq with attention, which removed the fixed-vector bottleneck. Transformers (2017): encoder-only (BERT, RoBERTa, DeBERTa) for understanding, decoder-only (GPT, Llama) for generation, encoder-decoder (T5, BART) for input-to-output tasks. BERT (2018) made pretrain then fine-tune the standard. LLMs: very large decoders pretrained on next-token prediction, then instruction-tuned and preference-tuned, one model doing many tasks from a prompt. The thread to say: each step replaced feature engineering with learned representations. Machine translation is the task that produced seq2seq, attention and the Transformer.",
+            d: "The tasks are what NLP is used for; the eras are how the methods changed. The thread to say: each era replaced feature engineering with learned representations.",
+            pts: [
+              "Classification and labelling: text classification (intent, sentiment, topic, spam); sequence labelling and NER give a label per token",
+              "QA, summarization, translation: QA is an extractive span, abstractive, or open-domain with retrieval; in summarization faithfulness is the main failure; then machine translation and open generation",
+              "Retrieval and ranking: BM25, dense embeddings and rerankers, the front half of RAG",
+              "Dialogue and extraction: task-oriented dialogue with intents and slots, or open-domain chat; information extraction into records; coreference and entity linking",
+              "Rules and statistical: rules and regexes are precise and brittle, still right for narrow high-precision cases; then Naive Bayes and logistic regression for classification, HMMs and CRFs for tagging, n-gram language models, all on hand-built features",
+              "Neural: RNN, LSTM, GRU and CNNs for text, then seq2seq with attention, which removed the fixed-vector bottleneck; machine translation is the task that produced seq2seq, attention and the Transformer",
+              "Transformers, 2017: encoder-only (BERT, RoBERTa, DeBERTa) for understanding, decoder-only (GPT, Llama) for generation, encoder-decoder (T5, BART) for input-to-output tasks; BERT (2018) made pretrain then fine-tune the standard",
+              "LLMs: very large decoders pretrained on next-token prediction, then instruction-tuned and preference-tuned, one model doing many tasks from a prompt"
+            ],
+            links: [
+              { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
+              { label: "Baseline, NLP: text classification", url: "BASELINE.html#/nlp/text-classification" },
+              { label: "Baseline, NLP: sequence labelling", url: "BASELINE.html#/nlp/sequence-labelling" },
+              { label: "Baseline, NLP: LLM training", url: "BASELINE.html#/nlp/llm-training" },
+              { label: "Baseline, ML: Transformers and attention", url: "BASELINE.html#/ml/transformers" },
+              { label: "3 Dots IT prep: the map of NLP in two minutes", url: "interviews/threedots.html#/prep/q-give-me-the-map-of-nlp-in-two-minutes" }
+            ],
             ans: [
               "Rules, then statistical models on hand-built features: n-grams, Naive Bayes, HMMs, CRFs",
               "Word embeddings and RNN or LSTM seq2seq; attention removed the fixed-vector bottleneck",
@@ -2705,7 +2744,22 @@
             ] },
           { t: "Where conversational AI sits", m: 8,
             out: "Where does conversational AI sit on the NLP map, and which tasks does one assistant turn use",
-            d: "Conversational AI is a stack over the map, not a branch of it. One turn of a task-oriented assistant uses several tasks at once: the intent is text classification, the entities and slots are sequence labelling, an FAQ answer is retrieval, the reply and any tool call are generation. Around them sit dialogue state (what has been collected so far), safety, and evaluation; for voice, ASR and TTS at each end. The classic enterprise platforms (Dialogflow CX, Lex, CLU, Rasa, Kore.ai, Cognigy) are classification plus labelling plus a state machine. LLM-first stacks fold understanding and generation into one model, but classifiers and embeddings still sit in front as routers and guards because they are fast and cheap. Your own system is this map in miniature: alfred_'s 'Inbound message (SMS/web) routed through intent classification → decision layer → callable tools'.",
+            d: "Conversational AI is a stack over the NLP map, not a branch of it. One assistant turn uses several tasks at once.",
+            pts: [
+              "One turn: the intent is text classification, entities and slots are sequence labelling, an FAQ answer is retrieval, the reply and any tool call are generation",
+              "Around the tasks: dialogue state (what has been collected so far), safety and evaluation; for voice, ASR and TTS at each end",
+              "Classic platforms: Dialogflow CX, Lex, CLU, Rasa, Kore.ai and Cognigy are classification plus labelling plus a state machine",
+              "LLM-first stacks: one model folds understanding and generation together, but classifiers and embeddings still sit in front as routers and guards because they are fast and cheap",
+              "Your system: alfred_'s 'Inbound message (SMS/web) routed through intent classification → decision layer → callable tools', this map in miniature"
+            ],
+            links: [
+              { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
+              { label: "Baseline, NLP: dialogue state", url: "BASELINE.html#/nlp/dialogue-state" },
+              { label: "Baseline, NLP: conversation design", url: "BASELINE.html#/nlp/conversation-design" },
+              { label: "Baseline, audio: speech recognition", url: "BASELINE.html#/audio/asr" },
+              { label: "3 Dots IT prep: classic NLU or an LLM", url: "interviews/threedots.html#/prep/q-classic-nlu-or-an-llm-for-intent-classification" },
+              { label: "3 Dots IT prep: how your background fits", url: "interviews/threedots.html#/prep/q-how-does-your-background-fit-this-role" }
+            ],
             ans: [
               "A stack over the map, not a branch of it",
               "Intent is classification, entities are sequence labelling, FAQ is retrieval, the reply and tool calls are generation",
@@ -2717,7 +2771,24 @@
             ] },
           { t: "Evaluation: what each metric measures and hides", m: 13,
             out: "When does accuracy lie, and what do you report instead for an intent classifier",
-            d: "Accuracy is fine when classes are balanced and misleading otherwise: with 95% of data in one class, a model that always predicts it scores 95% accuracy and near-zero macro-F1. Precision is 'of what I flagged, how much was right'; recall is 'of what was there, how much I found'; F1 is their harmonic mean, so it drops when either one is low. Micro averaging pools every decision, so big classes dominate; macro averaging takes per-class F1 and averages it, so every class counts equally. Report macro when classes are imbalanced, which intent sets always are, with per-class recall and a confusion matrix to show which classes collide. Perplexity is exp of the average negative log-likelihood: it measures how well a language model predicts text, not whether its answers are right. BLEU and ROUGE count n-gram overlap with a reference for translation and summarization; cheap, weakly correlated with quality. Exact match and token F1 score extractive QA. For open-ended output, human and LLM judges are the practical standard; they need rubrics, position-bias controls and calibration against humans. The MT-bench study found strong LLM judges agreed with human preferences over 80% of the time, about the human-to-human rate, with position, verbosity and self-enhancement biases.",
+            d: "Every error-analysis question comes back to what a metric measures and what it hides. Know when accuracy lies and what to report instead.",
+            pts: [
+              "Accuracy: fine when classes are balanced; with 95% of data in one class, always predicting it scores 95% accuracy and near-zero macro-F1",
+              "Precision and recall: precision is 'of what I flagged, how much was right'; recall is 'of what was there, how much I found'",
+              "F1: the harmonic mean of the two, so it drops when either one is low",
+              "Micro and macro: micro pools every decision, so big classes dominate; macro averages per-class F1, so every class counts equally; report macro for imbalanced intent sets, which they always are, with per-class recall and a confusion matrix",
+              "Perplexity: exp of the average negative log-likelihood; how well a language model predicts text, not whether its answers are right",
+              "BLEU, ROUGE, exact match: BLEU and ROUGE count n-gram overlap with a reference for translation and summarization, cheap and weakly tied to quality; exact match and token F1 score extractive QA",
+              "Judges: human and LLM judges are the practical standard for open-ended output; they need rubrics, position-bias controls and calibration against humans",
+              "MT-bench: strong LLM judges agreed with human preferences over 80% of the time, about the human-to-human rate, with position, verbosity and self-enhancement biases"
+            ],
+            links: [
+              { label: "Baseline, AI: evaluation", url: "BASELINE.html#/ai/evaluation" },
+              { label: "Baseline, AI: LLM-as-judge", url: "BASELINE.html#/ai/llm-as-judge" },
+              { label: "Coding page: evals", url: "CODING.html#evals" },
+              { label: "3 Dots IT prep: macro or micro F1, and when accuracy lies", url: "interviews/threedots.html#/prep/q-macro-or-micro-f1-and-when-does-accuracy-lie" },
+              { label: "3 Dots IT prep: evaluating an NLU model beyond accuracy", url: "interviews/threedots.html#/prep/q-how-do-you-evaluate-an-nlu-model-beyond-accuracy" }
+            ],
             ans: [
               "Accuracy lies under imbalance: 95% in one class gives 95% accuracy and near-zero macro-F1",
               "Precision: of what I flagged, how much was right. Recall: of what was there, how much I found",
@@ -2731,7 +2802,21 @@
             ] },
           { t: "Draw the map cold, then say it", m: 10,
             out: "Draw the NLP map from memory, then say it in ninety seconds with an example from your own work on each branch you can",
-            d: "Close everything. On one sheet, draw the field as a tree with five branches: foundations, representations, tasks, model eras, evaluation, with three to six leaves under each. Circle the leaves one assistant turn uses. Then mark where your own work sits: MetaRAG's recursive chunking with TF-IDF weighted embeddings (representations and retrieval), your 'Transformer Neural Machine Translation' project, a from-scratch Transformer for English-German (eras and tasks), and alfred_'s intent classification (classification). Open the Baseline NLP field and compare; add what you missed in a second colour. Then say the map aloud in ninety seconds.",
+            d: "Draw the field from memory before you check it. Then say it aloud in ninety seconds, with your own work on the branches where it sits.",
+            pts: [
+              "The sheet: close everything and draw the field as a tree with five branches, foundations, representations, tasks, model eras, evaluation, with three to six leaves under each",
+              "One turn: circle the leaves one assistant turn uses",
+              "MetaRAG: recursive chunking with TF-IDF weighted embeddings, under representations and retrieval",
+              "Translation project: your 'Transformer Neural Machine Translation' project, a from-scratch Transformer for English-German, under eras and tasks",
+              "alfred_: intent classification, under classification",
+              "Check it: open the Baseline NLP field, compare, and add what you missed in a second colour",
+              "Say it: the map aloud in ninety seconds"
+            ],
+            links: [
+              { label: "Baseline, AI: RAG", url: "BASELINE.html#/ai/rag" },
+              { label: "3 Dots IT prep: the map of NLP in two minutes", url: "interviews/threedots.html#/prep/q-give-me-the-map-of-nlp-in-two-minutes" },
+              { label: "3 Dots IT prep: MetaRAG", url: "interviews/threedots.html#/prep/q-tell-me-about-metarag" }
+            ],
             ans: [
               "Foundations: tokenization, morphology, POS, parsing",
               "Representations: sparse (bag of words, TF-IDF, n-grams) to dense (static, contextual, sentence)",
@@ -2753,7 +2838,24 @@
         steps: [
           { t: "The classification ladder, cheapest first", m: 10,
             out: "Classify 200 intents with 50 examples each. What do you build, in what order, and how do you choose",
-            d: "Climb only as far as your data and latency need. TF-IDF with logistic regression, a linear SVM or Naive Bayes trains in seconds on a CPU and is interpretable; always run it first, because it tells you how hard the problem is. fastText: word and subword n-gram embeddings with a linear layer, very fast on large data. Fine-tuned encoders (BERT, RoBERTa, DeBERTa) give the best supervised accuracy with hundreds to thousands of examples; DistilBERT or MiniLM when latency matters. A frozen sentence-embedding model plus a logistic head or kNN is strong with little data and cheap to retrain or extend. SetFit fine-tunes a sentence transformer contrastively on pairs built from 8 to 64 examples per class, then fits a logistic head, and is competitive with much larger models. Zero-shot NLI poses each label as a hypothesis: no data, but one forward pass per label and weak on fine-grained labels. LLM prompting needs no training and handles changing label sets, at a price per call in latency and money. Choosing: under 50 examples and changing labels, an LLM or SetFit; 50 to 500 per class, stable, tight latency, embeddings plus a head or SetFit; thousands of examples and under 20 ms, a fine-tuned small encoder; hundreds of overlapping labels, embedding kNN to the top 10 candidates and an LLM or reranker picks. Multi-class is softmax and cross-entropy; multi-label is a sigmoid per label, binary cross-entropy and a threshold per label. One data point, a 2026 preprint: fine-tuned RoBERTa beat Claude Haiku on ATIS (95.9 against 84.1), tied on CLINC150, but the LLM caught far more out-of-scope queries (85.6 against 58.1 recall), at about 981 ms p50 against 2.4 ms.",
+            d: "Climb the ladder only as far as your data and latency need. The cheap baseline runs first, because it tells you how hard the problem is.",
+            pts: [
+              "TF-IDF baseline: logistic regression, a linear SVM or Naive Bayes; trains in seconds on a CPU and is interpretable; always run it first",
+              "fastText and frozen embeddings: fastText puts a linear layer on word and subword n-gram embeddings, very fast on large data; a frozen sentence-embedding model plus a logistic head or kNN is strong with little data and cheap to retrain or extend",
+              "Fine-tuned encoders: BERT, RoBERTa and DeBERTa give the best supervised accuracy with hundreds to thousands of examples; DistilBERT or MiniLM when latency matters",
+              "SetFit: fine-tunes a sentence transformer contrastively on pairs built from 8 to 64 examples per class, then fits a logistic head; competitive with much larger models",
+              "Zero-shot NLI and LLMs: NLI poses each label as a hypothesis, no data but one forward pass per label and weak on fine-grained labels; LLM prompting needs no training and handles changing label sets, at a price per call in latency and money",
+              "Choosing: under 50 examples and changing labels, an LLM or SetFit; 50 to 500 per class, stable, tight latency, embeddings plus a head or SetFit; thousands of examples and under 20 ms, a fine-tuned small encoder; hundreds of overlapping labels, embedding kNN to the top 10 candidates and an LLM or reranker picks",
+              "Multi-class and multi-label: multi-class is softmax and cross-entropy; multi-label is a sigmoid per label, binary cross-entropy and a threshold per label",
+              "One data point: a 2026 preprint found fine-tuned RoBERTa beat Claude Haiku on ATIS (95.9 against 84.1) and tied on CLINC150, but the LLM caught far more out-of-scope queries (85.6 against 58.1 recall), at about 981 ms p50 against 2.4 ms"
+            ],
+            links: [
+              { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
+              { label: "Baseline, NLP: bag of words and TF-IDF", url: "BASELINE.html#/nlp/bow-tfidf" },
+              { label: "Baseline, NLP: sentence embeddings", url: "BASELINE.html#/nlp/sentence-embeddings" },
+              { label: "3 Dots IT prep: 200 intents, 50 examples each", url: "interviews/threedots.html#/prep/q-classify-200-intents-with-50-examples-each-what-do-you-do" },
+              { label: "3 Dots IT prep: SetFit", url: "interviews/threedots.html#/prep/q-what-is-setfit-and-why-does-it-work-with-so-few-examples" }
+            ],
             ans: [
               "Baseline first: TF-IDF plus logistic regression, to learn how hard it is",
               "Then sentence embeddings plus a logistic head, then SetFit or a fine-tuned small encoder",
@@ -2767,7 +2869,23 @@
             ] },
           { t: "Imbalance, calibration and out-of-scope", m: 10,
             out: "How do you handle out-of-scope queries, and why does calibration matter for it",
-            d: "Imbalance: fix the evaluation first (macro-F1, per-class recall, PR curves). Then class weights in the loss, the cheapest change; resampling, where oversampled duplicates can overfit and the validation and test sets are never resampled; focal loss, which down-weights easy examples so rare, hard ones drive the gradient; and per-class threshold tuning on a validation set, often the highest-value fix. Fixing 2 to 5% bad labels often beats a bigger model. Calibration: a model is calibrated if '80% confident' is right about 80% of the time. Modern networks are overconfident (Guo et al., 2017). Measure with a reliability diagram and expected calibration error; fix with temperature scaling, one scalar fitted on a validation set that leaves accuracy unchanged. It matters because every downstream rule (route, abstain, escalate) reads the confidence; Microsoft's CLU docs note a model can predict the wrong intent at 1.00 confidence, which makes any threshold useless. Out-of-scope: the CLINC150 paper (Larson et al., 2019) showed classifiers do well on supported intents and struggle on out-of-scope queries. Options: a threshold on max softmax (needs calibration); an explicit 'none of the above' class trained on real and synthetic off-topic queries, often the most reliable; distance to class centroids or kNN in embedding space; an LLM judge for borderline cases. Measure in-scope accuracy, OOS recall, and OOS false-accept rate at a fixed in-scope accuracy.",
+            d: "Every downstream rule (route, abstain, escalate) reads the model's confidence, so imbalance, calibration and out-of-scope are one problem. Fix the evaluation first.",
+            pts: [
+              "Imbalance, metric first: macro-F1, per-class recall and PR curves before any fix",
+              "Imbalance, the fixes: class weights in the loss, the cheapest; resampling, where oversampled duplicates can overfit and validation and test sets are never resampled; focal loss, which down-weights easy examples so rare, hard ones drive the gradient; per-class thresholds tuned on validation, often the highest-value fix",
+              "Labels: fixing 2 to 5% bad labels often beats a bigger model",
+              "Calibration: a model is calibrated if '80% confident' is right about 80% of the time; modern networks are overconfident (Guo et al., 2017); measure with a reliability diagram and expected calibration error",
+              "Temperature scaling: one scalar fitted on a validation set; it changes confidence and leaves accuracy unchanged",
+              "Why it matters: Microsoft's CLU docs note a model can predict the wrong intent at 1.00 confidence, which makes any threshold useless",
+              "Out-of-scope: CLINC150 (Larson et al., 2019) showed classifiers do well on supported intents and struggle out of scope; options are a max-softmax threshold (needs calibration), an explicit 'none of the above' class trained on real and synthetic off-topic queries (often the most reliable), distance to class centroids or kNN in embedding space, and an LLM judge for borderline cases",
+              "Measuring OOS: in-scope accuracy, OOS recall, and OOS false-accept rate at a fixed in-scope accuracy"
+            ],
+            links: [
+              { label: "Baseline, NLP: classification metrics", url: "BASELINE.html#/nlp/classification-metrics" },
+              { label: "Baseline, NLP: text classification", url: "BASELINE.html#/nlp/text-classification" },
+              { label: "3 Dots IT prep: out-of-scope queries", url: "interviews/threedots.html#/prep/q-how-do-you-handle-out-of-scope-queries" },
+              { label: "3 Dots IT prep: why calibration matters", url: "interviews/threedots.html#/prep/q-why-does-calibration-matter-and-how-do-you-fix-it" }
+            ],
             ans: [
               "Out-of-scope is a first-class case: a none class trained on real and synthetic off-topic queries",
               "Calibrate with temperature scaling, then set the threshold for a target in-scope accuracy",
@@ -2781,7 +2899,20 @@
             ] },
           { t: "Word embeddings: word2vec, GloVe, fastText", m: 8,
             out: "Explain word2vec skip-gram with negative sampling, and what GloVe and fastText change",
-            d: "The idea underneath is the distributional hypothesis: words used in similar contexts have similar meanings, so training a vector to predict its context puts similar words close together. word2vec (Mikolov, 2013) has two forms: skip-gram predicts the context words from the centre word, CBOW predicts the centre from its context. A softmax over the whole vocabulary is expensive, so negative sampling turns training into binary classification: raise the score of the true (word, context) pair and lower it for k random pairs, k of 5 to 20 on small data and 2 to 5 on large. Typical settings: 300 dimensions, a window of about 5, frequent words subsampled. The learned input vectors become the embeddings. GloVe (2014) reaches similar quality another way: it factorizes the global co-occurrence matrix so dot products approximate log co-occurrence counts. fastText builds each word from character n-gram vectors, so it handles rare words, typos and morphologically rich languages and can embed a word it never saw. All three give one vector per word type, which is the limit the next step removes.",
+            d: "Words used in similar contexts have similar meanings, so training a vector to predict its context puts similar words close together. That distributional hypothesis sits under all three methods.",
+            pts: [
+              "word2vec: Mikolov, 2013; skip-gram predicts the context words from the centre word, CBOW predicts the centre from its context",
+              "Negative sampling: a softmax over the whole vocabulary is expensive, so training becomes binary classification, raising the true (word, context) pair and lowering k random pairs, k of 5 to 20 on small data and 2 to 5 on large",
+              "Typical settings: 300 dimensions, a window of about 5, frequent words subsampled; the learned input vectors become the embeddings",
+              "GloVe: 2014; factorizes the global co-occurrence matrix so dot products approximate log co-occurrence counts, similar quality reached another way",
+              "fastText: builds each word from character n-gram vectors, so it handles rare words, typos and morphologically rich languages and can embed a word it never saw",
+              "The limit: all three give one vector per word type, which the next step removes"
+            ],
+            links: [
+              { label: "Baseline, ML: embeddings", url: "BASELINE.html#/ml/embeddings" },
+              { label: "3 Dots IT prep: why embeddings work", url: "interviews/threedots.html#/prep/q-why-do-embeddings-work" },
+              { label: "3 Dots IT prep: static or contextual embeddings", url: "interviews/threedots.html#/prep/q-static-or-contextual-embeddings-what-s-the-difference" }
+            ],
             ans: [
               "Distributional hypothesis: words in similar contexts get similar vectors",
               "Skip-gram predicts the context from the centre word; CBOW does the reverse",
@@ -2793,7 +2924,23 @@
             ] },
           { t: "Contextual and sentence embeddings, and contrastive training", m: 10,
             out: "Why can't you mean-pool BERT for sentence similarity, and how does contrastive training fix it",
-            d: "ELMo (a bidirectional LSTM language model) and BERT (a Transformer encoder trained with masked language modelling) give a vector per token in context, so 'bank' by a river and 'bank' with money differ. For whole sentences, raw mean-pooled BERT vectors are poor: BERT was trained to predict masked tokens, not to compare sentences, and its vectors sit in a narrow cone (anisotropy), so every cosine is high. Sentence-BERT trains a siamese BERT on sentence pairs (NLI, paraphrase) so cosine similarity works, and because each sentence is encoded once, finding the most similar pair among 10,000 sentences drops from about 65 hours to about 5 seconds. The modern recipe is contrastive learning: pull a query and its positive together, push other texts apart. With in-batch negatives, every other example in the batch is a free negative, so larger batches help. The loss is InfoNCE: the negative log of exp(sim(q, positive) / T) over the sum of exp(sim / T) across the positive and the negatives, with temperature T around 0.05 to 0.1. Hard negatives, similar but wrong, help most. SimCSE showed even dropout noise works as augmentation, and that contrastive training spreads the vectors out. Matryoshka training makes the first k dimensions useful alone, so you can truncate and renormalize to cut storage. On unit-normalized vectors cosine, dot product and L2 give the same ranking: normalize at write time and use the fastest, unless the model card says the norm carries meaning.",
+            d: "Contextual models give a vector per token, but a useful sentence vector has to be trained for comparison. Contrastive training is the modern recipe.",
+            pts: [
+              "Contextual: ELMo (a bidirectional LSTM language model) and BERT (a Transformer encoder trained with masked language modelling) give a vector per token in context, so 'bank' by a river and 'bank' with money differ",
+              "Mean-pooled BERT: poor for whole sentences; BERT was trained to predict masked tokens, not to compare sentences, and its vectors sit in a narrow cone (anisotropy), so every cosine is high",
+              "Sentence-BERT: a siamese BERT trained on sentence pairs (NLI, paraphrase) so cosine similarity works; each sentence is encoded once, so the most similar pair among 10,000 sentences drops from about 65 hours to about 5 seconds",
+              "Contrastive and InfoNCE: pull a query and its positive together, push other texts apart; the loss is the negative log of exp(sim(q, positive) / T) over the sum of exp(sim / T) across the positive and the negatives, with T around 0.05 to 0.1",
+              "In-batch and hard negatives: every other example in the batch is a free negative, so larger batches help; hard negatives, similar but wrong, help most",
+              "SimCSE: even dropout noise works as augmentation, and contrastive training spreads the vectors out",
+              "Matryoshka: the first k dimensions are useful alone, so you can truncate and renormalize to cut storage",
+              "Normalize at write time: on unit vectors cosine, dot product and L2 give the same ranking, so use the fastest, unless the model card says the norm carries meaning"
+            ],
+            links: [
+              { label: "Baseline, NLP: encoders and decoders", url: "BASELINE.html#/nlp/encoders-decoders" },
+              { label: "Coding page: embeddings and vector search", url: "CODING.html#embed" },
+              { label: "3 Dots IT prep: why not mean-pool BERT", url: "interviews/threedots.html#/prep/q-why-can-t-you-mean-pool-bert-for-sentence-similarity" },
+              { label: "3 Dots IT prep: cosine, dot product or Euclidean", url: "interviews/threedots.html#/prep/q-cosine-dot-product-or-euclidean-distance" }
+            ],
             ans: [
               "BERT was trained to predict masked tokens, not to compare sentences; pooled vectors sit in a narrow cone",
               "Sentence-BERT trains a siamese encoder on pairs so cosine means something; about 65 hours to 5 seconds on 10,000 sentences",
@@ -2806,7 +2953,20 @@
             ] },
           { t: "Vector search: HNSW, IVF, PQ", m: 8,
             out: "Explain HNSW, IVF and PQ, and when you use each",
-            d: "Exact (flat) search compares the query with every vector, which is fine up to roughly a million vectors. HNSW builds a layered proximity graph and searches by greedy descent from sparse top layers to the dense bottom one: very good recall and speed, high memory; its knobs are M, efConstruction and efSearch. IVF partitions the space into nlist cells with k-means and searches only the nprobe nearest cells: less memory and compute, recall you can tune. PQ splits each vector into sub-vectors and stores a short code for each: 10 to 50 times less memory at some recall cost. IVF-PQ combines them for billions of vectors. In practice, add filter-aware search and hybrid search: BM25 plus dense with rank fusion often beats dense alone, because exact terms (product codes, names) are where embeddings are weak. In an assistant, the same index serves intent detection (nearest labelled example or class centroid), clustering of missed utterances, and RAG.",
+            d: "Exact search compares the query with every vector, which stops scaling past about a million. Approximate indexes trade some recall for speed or memory, each with its own knobs.",
+            pts: [
+              "Flat: exact, compares the query with every vector, fine up to roughly a million vectors",
+              "HNSW: a layered proximity graph searched by greedy descent from sparse top layers to the dense bottom one; very good recall and speed, high memory; knobs M, efConstruction and efSearch",
+              "IVF: k-means partitions the space into nlist cells and search visits only the nprobe nearest; less memory and compute, recall you can tune",
+              "PQ: splits each vector into sub-vectors and stores a short code for each, 10 to 50 times less memory at some recall cost; IVF-PQ combines them for billions of vectors",
+              "Filters and hybrid: add filter-aware search; BM25 plus dense with rank fusion often beats dense alone, because exact terms (product codes, names) are where embeddings are weak",
+              "In an assistant: the same index serves intent detection (nearest labelled example or class centroid), clustering of missed utterances, and RAG"
+            ],
+            links: [
+              { label: "Baseline, NLP: sentence embeddings", url: "BASELINE.html#/nlp/sentence-embeddings" },
+              { label: "Baseline, AI: RAG", url: "BASELINE.html#/ai/rag" },
+              { label: "3 Dots IT prep: HNSW, IVF and PQ", url: "interviews/threedots.html#/prep/q-hnsw-ivf-and-pq-what-are-they-and-when-do-you-use-each" }
+            ],
             ans: [
               "Flat: exact, fine to about a million vectors",
               "HNSW: a layered graph and greedy descent; high recall, low latency, high memory; M and efSearch",
@@ -2819,7 +2979,24 @@
             ] },
           { t: "Choosing an embedding model, and how embeddings fail", m: 9,
             out: "How do you choose an embedding model for a RAG product or an intent router",
-            d: "MTEB (Muennighoff et al., 2022) is the standard benchmark: in the original paper 8 task types, 58 datasets and 112 languages, since extended, covering retrieval, classification, clustering, reranking and semantic similarity. The families to name are OpenAI text-embedding-3, Cohere embed, Voyage, Google's Gemini embedding, and open models such as BGE, E5, GTE, Nomic and Qwen; check the leaderboard live and never quote ranks from memory. To choose: filter MTEB to your task and language; check maximum input length, dimension, license, hosting, latency and price; then build 100 to 300 real query-to-document pairs and compare recall@k and MRR. Small leaderboard gaps rarely survive on your own data. The failure modes: anisotropy, domain shift (legal, medical, code), weak handling of negation, numbers and entity names, short queries against long passages (models need query and document prefixes), silent truncation in chunking, and drift when you switch model versions, which forces re-embedding everything. Mitigations: domain fine-tuning with hard negatives, hybrid search, rerankers, query rewriting. Your own number: MetaRAG reached 82.5% precision with recursive chunking and TF-IDF weighted embeddings, against a 73.3% baseline.",
+            d: "Shortlist from the public benchmark, then decide on your own data, because small leaderboard gaps rarely survive there. Know how embeddings fail before production shows you.",
+            pts: [
+              "MTEB: Muennighoff et al., 2022, the standard benchmark; in the original paper 8 task types, 58 datasets and 112 languages, since extended, covering retrieval, classification, clustering, reranking and semantic similarity",
+              "Families: OpenAI text-embedding-3, Cohere embed, Voyage, Google's Gemini embedding, and open models such as BGE, E5, GTE, Nomic and Qwen; check the leaderboard live and never quote ranks from memory",
+              "Choosing: filter MTEB to your task and language; check maximum input length, dimension, license, hosting, latency and price",
+              "Your own eval: build 100 to 300 real query-to-document pairs and compare recall@k and MRR",
+              "Failure modes: anisotropy, domain shift (legal, medical, code), weak handling of negation, numbers and entity names, short queries against long passages (models need query and document prefixes), silent truncation in chunking",
+              "Model drift: switching model versions forces re-embedding everything",
+              "Mitigations: domain fine-tuning with hard negatives, hybrid search, rerankers, query rewriting",
+              "Your number: MetaRAG reached 82.5% precision with recursive chunking and TF-IDF weighted embeddings, against a 73.3% baseline"
+            ],
+            links: [
+              { label: "Baseline, NLP: sentence embeddings", url: "BASELINE.html#/nlp/sentence-embeddings" },
+              { label: "Baseline, AI: hybrid search and reranking", url: "BASELINE.html#/ai/hybrid-search-reranking" },
+              { label: "Baseline, AI: RAG", url: "BASELINE.html#/ai/rag" },
+              { label: "3 Dots IT prep: choosing an embedding model", url: "interviews/threedots.html#/prep/q-how-do-you-choose-an-embedding-model" },
+              { label: "3 Dots IT prep: where embeddings fail", url: "interviews/threedots.html#/prep/q-where-do-embeddings-fail-and-how-do-you-use-them-in-an-assis" }
+            ],
             ans: [
               "Shortlist from MTEB for your task and language; check it live, never quote ranks from memory",
               "Then context length, dimension, license, hosting, latency and price",
@@ -2842,7 +3019,19 @@
           { t: "Tokenization: BPE, WordPiece, SentencePiece", m: 8,
             al: [{ p: "plan/stage-14", why: "Tokens and embeddings: the stage that builds a tokenizer and an embedding table." }],
             out: "Why do models use subword tokenization, and how does BPE build its vocabulary",
-            d: "Models read subword tokens, not words. A word vocabulary explodes and cannot represent a word it has not seen; characters make sequences long. Subwords sit between: a fixed vocabulary of about 30k to 200k pieces that composes any word. BPE (Sennrich et al., 2016) starts from characters or bytes and repeatedly merges the most frequent adjacent pair into a new symbol until the vocabulary is the size you want. Byte-level BPE (GPT-2, RoBERTa) starts from 256 byte symbols, so nothing is ever out of vocabulary. WordPiece (BERT) is similar but picks merges by likelihood and marks continuations with '##'. SentencePiece treats the input as a raw stream with spaces included, so it needs no language-specific pre-tokenizer, and implements BPE or a unigram model. The consequences you can name: token count drives cost and context use, and tokenization explains odd behaviour on spelling, arithmetic and rare languages; in an assistant, order numbers and spelled-out IDs split into many tokens.",
+            d: "Models read subword tokens, not words. A fixed vocabulary of about 30k to 200k pieces composes any word, between an exploding word vocabulary and long character sequences.",
+            pts: [
+              "Why subwords: a word vocabulary explodes and cannot represent a word it has not seen; characters make sequences long",
+              "BPE: Sennrich et al., 2016; starts from characters or bytes and repeatedly merges the most frequent adjacent pair into a new symbol until the vocabulary is the size you want",
+              "Byte-level BPE: GPT-2 and RoBERTa start from 256 byte symbols, so nothing is ever out of vocabulary",
+              "WordPiece: BERT's tokenizer; similar, but picks merges by likelihood and marks continuations with '##'",
+              "SentencePiece: treats the input as a raw stream with spaces included, so it needs no language-specific pre-tokenizer; implements BPE or a unigram model",
+              "Consequences: token count drives cost and context use; tokenization explains odd behaviour on spelling, arithmetic and rare languages; in an assistant, order numbers and spelled-out IDs split into many tokens"
+            ],
+            links: [
+              { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
+              { label: "3 Dots IT prep: subword tokenization and BPE", url: "interviews/threedots.html#/prep/q-why-subword-tokenization-and-how-does-bpe-work" }
+            ],
             ans: [
               "Words: the vocabulary explodes and unseen words break. Characters: sequences get long",
               "BPE starts from characters or bytes and merges the most frequent adjacent pair, again and again",
@@ -2855,7 +3044,22 @@
             ] },
           { t: "From pretraining to an assistant: objectives, SFT, RLHF and DPO", m: 10,
             out: "How does a model go from pretrained to a helpful assistant",
-            d: "Pretraining objectives: causal language modelling predicts the next token left to right (decoder-only models such as GPT and Llama); it trains on every position and generates naturally. Masked language modelling hides about 15% of tokens and predicts them from both sides (BERT): best for understanding and embeddings, awkward for generation. Span corruption masks spans and has the decoder generate them (T5, encoder-decoder). Scaling, in one line: loss falls as a power law in parameters, data and compute (Kaplan, 2020), and Chinchilla (2022) showed compute-optimal training grows data with model size, roughly 20 tokens per parameter, so many early models were undertrained; labs now train smaller models on far more tokens because inference cost matters. Supervised fine-tuning on (instruction, response) pairs turns a next-token predictor into an assistant; it teaches format and behaviour more than new knowledge. RLHF collects human preference rankings, trains a reward model, and optimizes the policy with PPO plus a KL penalty that keeps it near the SFT model; InstructGPT's 1.3B RLHF model was preferred over 175B GPT-3. DPO (Rafailov, 2023) drops the reward model and the RL loop: a classification-style loss on preferred against rejected pairs, relative to a frozen reference model; simpler, more stable, widely used. In-context learning adapts from examples in the prompt with no weight update; it is sensitive to example choice, order and format, and examples picked by embedding similarity usually beat fixed ones.",
+            d: "A pretrained model predicts text; post-training makes it follow instructions and prefer good answers. Know each stage and the number that shows it matters.",
+            pts: [
+              "Causal LM: predicts the next token left to right (decoder-only GPT and Llama); trains on every position and generates naturally",
+              "Masked LM: hides about 15% of tokens and predicts them from both sides (BERT); best for understanding and embeddings, awkward for generation",
+              "Span corruption: masks spans and has the decoder generate them (T5, encoder-decoder)",
+              "Scaling: loss falls as a power law in parameters, data and compute (Kaplan, 2020); Chinchilla (2022) showed compute-optimal training grows data with model size, roughly 20 tokens per parameter, so many early models were undertrained, and labs now train smaller models on far more tokens because inference cost matters",
+              "SFT: fine-tuning on (instruction, response) pairs turns a next-token predictor into an assistant; it teaches format and behaviour more than new knowledge",
+              "RLHF: human preference rankings train a reward model, then PPO with a KL penalty keeps the policy near the SFT model; InstructGPT's 1.3B RLHF model was preferred over 175B GPT-3",
+              "DPO: Rafailov, 2023; drops the reward model and the RL loop for a classification-style loss on preferred against rejected pairs, relative to a frozen reference model; simpler, more stable, widely used",
+              "In-context learning: adapts from examples in the prompt with no weight update; sensitive to example choice, order and format; examples picked by embedding similarity usually beat fixed ones"
+            ],
+            links: [
+              { label: "Baseline, NLP: encoders and decoders", url: "BASELINE.html#/nlp/encoders-decoders" },
+              { label: "3 Dots IT prep: pretrained to assistant", url: "interviews/threedots.html#/prep/q-how-does-a-pretrained-model-become-an-assistant" },
+              { label: "3 Dots IT prep: BERT versus GPT", url: "interviews/threedots.html#/prep/q-bert-versus-gpt-what-s-the-difference" }
+            ],
             ans: [
               "Pretraining: next token for decoders, masked tokens for BERT, span corruption for T5",
               "SFT on instruction and response pairs teaches format and behaviour, little new knowledge",
@@ -2868,7 +3072,24 @@
             ] },
           { t: "Decoding, and prompt against RAG against fine-tuning", m: 10,
             out: "Prompt, RAG, fine-tune or LoRA: how do you decide, and how do you set decoding for each kind of task",
-            d: "Decoding: greedy takes the top token every time, deterministic and repetitive. Beam search keeps the top b partial sequences: good for translation and summarization, bland on open text. Temperature divides the logits before the softmax: below 1 sharpens, above 1 flattens, near 0 approaches greedy. Top-k samples from the k most likely tokens. Top-p (nucleus, Holtzman 2019) samples from the smallest set whose probability reaches p, so it adapts to how peaked the distribution is. For classification and extraction use temperature 0 or constrained decoding; for creative output, temperature and top-p. Choosing how to change behaviour: prompting first, fast and with no training, limited by context and consistency. RAG when the gap is knowledge that is private, large or changing: updatable, citable, and it reduces hallucination. Fine-tuning when the gap is behaviour, format, tone, or latency and cost at scale. LoRA freezes the base weights and trains small low-rank matrices (W + BA): up to 10,000 times fewer trainable parameters than full GPT-3 fine-tuning and no added inference latency once merged; QLoRA does it on a 4-bit base. The rule: knowledge goes in retrieval, behaviour goes in tuning, and prompting comes before either. Function calling is the same model emitting a JSON call your code executes: make it reliable with a schema or grammar-constrained decoding, validation and retry, a small tool set with clear descriptions, idempotent tools, and a log of every call.",
+            d: "Decoding settings decide how each next token is picked; prompting, retrieval and tuning decide what the model knows and how it behaves. The rule: knowledge goes in retrieval, behaviour goes in tuning, and prompting comes before either.",
+            pts: [
+              "Greedy and beam: greedy takes the top token every time, deterministic and repetitive; beam search keeps the top b partial sequences, good for translation and summarization, bland on open text",
+              "Temperature: divides the logits before the softmax; below 1 sharpens, above 1 flattens, near 0 approaches greedy",
+              "Top-k and top-p: top-k samples from the k most likely tokens; top-p (nucleus, Holtzman 2019) samples from the smallest set whose probability reaches p, so it adapts to how peaked the distribution is",
+              "By task: temperature 0 or constrained decoding for classification and extraction; temperature and top-p for creative output",
+              "Prompt, RAG or fine-tune: prompting first, fast and with no training, limited by context and consistency; RAG when the gap is private, large or changing knowledge, updatable, citable, and it reduces hallucination; fine-tuning when the gap is behaviour, format, tone, or latency and cost at scale",
+              "LoRA: freezes the base weights and trains small low-rank matrices (W + BA); up to 10,000 times fewer trainable parameters than full GPT-3 fine-tuning and no added inference latency once merged; QLoRA does it on a 4-bit base",
+              "Function calling: the model emits a JSON call your code executes; make it reliable with a schema or grammar-constrained decoding, validation and retry, a small tool set with clear descriptions, idempotent tools, and a log of every call"
+            ],
+            links: [
+              { label: "Baseline, ML: fine-tuning and LoRA", url: "BASELINE.html#/ml/fine-tuning-lora" },
+              { label: "Baseline, AI: RAG", url: "BASELINE.html#/ai/rag" },
+              { label: "Baseline, AI: structured output", url: "BASELINE.html#/ai/structured-output" },
+              { label: "Coding page: structured output and function calling", url: "CODING.html#structured" },
+              { label: "3 Dots IT prep: temperature, top-k and top-p", url: "interviews/threedots.html#/prep/q-temperature-top-k-and-top-p-what-are-they-and-when-do-you-us" },
+              { label: "3 Dots IT prep: fine-tune, LoRA, prompt or RAG", url: "interviews/threedots.html#/prep/q-fine-tune-lora-prompt-or-rag-how-do-you-choose" }
+            ],
             ans: [
               "Prompt first: no training, fast to change",
               "RAG when the gap is knowledge that is private, large or changing: updatable and citable",
@@ -2881,7 +3102,21 @@
             ] },
           { t: "Hallucination and grounding", m: 7,
             out: "How do you reduce hallucinations in a production assistant",
-            d: "A model generates plausible text, not verified text. The causes: gaps or errors in pretraining data; fine-tuning on facts the model does not know, which teaches it to guess (Lilian Weng's survey); and decoding randomness. The mitigations: retrieval with citations, requiring quotes, constraining the answer to the provided context, tools for facts and arithmetic, a verification or entailment pass, abstention when evidence is weak, and a faithfulness metric on a regression set. Lower temperature helps a little and does not fix missing knowledge. Your own two examples, both measured or structural: MetaRAG's 25% hallucination reduction, and alfred_'s strict-ID working-memory pipeline, which made 'a whole class of hallucination structurally impossible, not probabilistically reduced'.",
+            d: "A model generates plausible text, not verified text. Grounding and checks reduce hallucination; lower temperature adds no knowledge.",
+            pts: [
+              "Causes: gaps or errors in pretraining data; fine-tuning on facts the model does not know, which teaches it to guess (Lilian Weng's survey); decoding randomness",
+              "Grounding: retrieval with citations, required quotes, the answer constrained to the provided context",
+              "Checks: tools for facts and arithmetic, a verification or entailment pass, abstention when evidence is weak",
+              "Measure: a faithfulness metric on a regression set",
+              "Temperature: lower helps a little and does not fix missing knowledge",
+              "MetaRAG: 25% hallucination reduction, measured",
+              "alfred_: the strict-ID working-memory pipeline made 'a whole class of hallucination structurally impossible, not probabilistically reduced'"
+            ],
+            links: [
+              { label: "Baseline, AI: RAG", url: "BASELINE.html#/ai/rag" },
+              { label: "Baseline, AI: guardrails", url: "BASELINE.html#/ai/guardrails" },
+              { label: "3 Dots IT prep: MetaRAG", url: "interviews/threedots.html#/prep/q-tell-me-about-metarag" }
+            ],
             ans: [
               "Cause: plausible text, not verified text; data gaps, fine-tuning on unknown facts, sampling",
               "Ground in retrieved evidence and require citations or quotes; constrain to the context",
@@ -2895,7 +3130,21 @@
           { t: "Attention, and the block around it", m: 12,
             al: [{ p: "plan/stage-15", why: "Attention and transformers: scaled dot-product attention built from the three projections." }],
             out: "Explain attention, and why the scores are divided by the square root of d_k",
-            d: "Each token's vector is projected into a query, a key and a value. A token's query is compared by dot product with every key, softmax turns the scores into weights, and the output is the weighted sum of the values. The query asks 'what am I looking for', the key says 'what I contain', the value carries 'what I give if chosen'. Every token gathers information from all the others in one parallel step, where an RNN passes it along step by step. Why divide by sqrt(d_k): dot products of d_k-dimensional vectors with unit-variance entries have variance d_k, so scores grow with dimension; large scores saturate the softmax into near one-hot, which gives tiny gradients; dividing by sqrt(d_k) restores unit variance. Multi-head attention runs h attentions in parallel on smaller projections (d_k = d_model / h), then concatenates and projects, so heads can learn different relations at the same total cost. Attention is order-blind, so position is injected: sinusoidal waves added to the embeddings (the original), learned position vectors (BERT, GPT-2, capped at the training length), or RoPE, which rotates queries and keys by an angle proportional to position so their dot product depends on relative distance; RoPE is the default in Llama-style models. Around attention: each sub-layer is a residual, x + Sublayer(x); pre-LN normalizes before the sublayer and trains stably without warmup (Xiong et al., 2020), many models use RMSNorm. Then a feed-forward block per token: expand to about 4 times the width, a nonlinearity, project back; it holds about two thirds of the parameters (about 116B of GPT-3's 175B).",
+            d: "Attention lets every token gather information from all the others in one parallel step, where an RNN passes it along step by step. The block around it, residuals, norms and a feed-forward layer, holds most of the parameters.",
+            pts: [
+              "Q, K and V: each token's vector is projected into a query ('what am I looking for'), a key ('what I contain') and a value ('what I give if chosen')",
+              "The operation: a query is compared by dot product with every key, softmax turns the scores into weights, and the output is the weighted sum of the values",
+              "Divide by sqrt(d_k): dot products of d_k-dimensional vectors with unit-variance entries have variance d_k; large scores saturate the softmax into near one-hot, which gives tiny gradients; dividing restores unit variance",
+              "Multi-head: h attentions in parallel on smaller projections (d_k = d_model / h), concatenated and projected, so heads learn different relations at the same total cost",
+              "Position: attention is order-blind; sinusoidal waves added to the embeddings (the original), learned position vectors (BERT, GPT-2, capped at the training length), or RoPE, which rotates queries and keys by an angle proportional to position so their dot product depends on relative distance, the default in Llama-style models",
+              "Residual and norm: each sub-layer is x + Sublayer(x); pre-LN normalizes before the sublayer and trains stably without warmup (Xiong et al., 2020); many models use RMSNorm",
+              "Feed-forward: per token, expand to about 4 times the width, a nonlinearity, project back; it holds about two thirds of the parameters (about 116B of GPT-3's 175B)"
+            ],
+            links: [
+              { label: "Baseline, NLP: encoders and decoders", url: "BASELINE.html#/nlp/encoders-decoders" },
+              { label: "3 Dots IT prep: explain attention", url: "interviews/threedots.html#/prep/q-attention" },
+              { label: "3 Dots IT prep: why divide by the square root of d_k", url: "interviews/threedots.html#/prep/q-why-divide-the-attention-scores-by-the-square-root-of-d-k" }
+            ],
             ans: [
               "Each token makes a query, a key and a value",
               "Query against every key, softmax into weights, output is the weighted sum of values",
@@ -2909,7 +3158,22 @@
             ] },
           { t: "Three shapes, the cost of attention, and the KV cache", m: 8,
             out: "Encoder, decoder or encoder-decoder: which for what, and why is long context expensive",
-            d: "Masks decide the shape. A causal mask stops position i attending to any j after it, so training on one sequence is many next-token predictions at once and the model cannot peek; a padding mask stops attention to pad tokens in a batch. Encoder-only (BERT family) has no causal mask: bidirectional, for classification, NER, embeddings and reranking. Decoder-only (GPT, Llama) is causal: generation, and now the default LLM. Encoder-decoder (T5, BART): the encoder reads the input and the decoder generates while cross-attending to it; translation and summarization. Cost: every token is scored against every other, O(n^2) in time and memory; FlashAttention keeps the result exact and cuts memory traffic by tiling. During generation past keys and values do not change, so they are cached and each new token computes only its own Q, K and V. The cache grows with layers, context and batch: a 7B Llama-style model (32 layers, hidden size 4096, fp16) stores about 0.5 MB per token, so 4,000 tokens is about 2 GB per sequence. Grouped-query attention shares K and V across heads to shrink it. Rough sizes: about 12 x d_model^2 parameters per layer (4 for the attention projections, 8 for a 4x FFN); GPT-3 with 96 layers at 12,288 gives about 174B against the published 175B. BERT-base: 12 layers, 768 hidden, about 110M. Training compute is about 6 x parameters x tokens; inference about 2 x parameters per token.",
+            d: "Masks decide which shape a Transformer is, and the shape decides what it is for. Attention cost and the KV cache explain why long context is expensive.",
+            pts: [
+              "Masks: a causal mask stops position i attending to any j after it, so training on one sequence is many next-token predictions at once and the model cannot peek; a padding mask stops attention to pad tokens in a batch",
+              "Encoder-only: the BERT family, no causal mask, bidirectional; classification, NER, embeddings and reranking",
+              "Decoder-only: GPT and Llama, causal; generation, and now the default LLM",
+              "Encoder-decoder: T5 and BART; the encoder reads the input and the decoder generates while cross-attending to it; translation and summarization",
+              "Cost: every token is scored against every other, O(n^2) in time and memory; FlashAttention keeps the result exact and cuts memory traffic by tiling",
+              "KV cache: past keys and values do not change in generation, so they are cached and each new token computes only its own Q, K and V; a 7B Llama-style model (32 layers, hidden size 4096, fp16) stores about 0.5 MB per token, so 4,000 tokens is about 2 GB per sequence; grouped-query attention shares K and V across heads to shrink it",
+              "Rough sizes: about 12 x d_model^2 parameters per layer (4 for the attention projections, 8 for a 4x FFN); GPT-3 with 96 layers at 12,288 gives about 174B against the published 175B; BERT-base is 12 layers, 768 hidden, about 110M",
+              "Compute: training is about 6 x parameters x tokens; inference about 2 x parameters per token"
+            ],
+            links: [
+              { label: "Baseline, ML: Transformers and attention", url: "BASELINE.html#/ml/transformers" },
+              { label: "3 Dots IT prep: the KV cache", url: "interviews/threedots.html#/prep/q-what-is-the-kv-cache-and-why-does-it-matter" },
+              { label: "3 Dots IT prep: BERT versus GPT", url: "interviews/threedots.html#/prep/q-bert-versus-gpt-what-s-the-difference" }
+            ],
             ans: [
               "Encoder-only (BERT): bidirectional; classification, NER, embeddings, reranking",
               "Decoder-only (GPT, Llama): causal mask; generation, now the default LLM",
@@ -2931,7 +3195,23 @@
         steps: [
           { t: "Persona, and prompts for voice and for chat", m: 9,
             out: "What changes when you design the same assistant for voice and for chat",
-            d: "Persona, Google's recipe: brainstorm adjectives, narrow them to 4 to 6 traits, pick an archetype, write a one-paragraph description, give it a visual. It warns against pinning gender or age, and says the aim is not to make users think the bot is human but to use conversation, the interface people already know. In enterprise work the persona is mostly a style guide for the prompt and the copy deck; it also settles whether the bot says 'I' and how it answers 'are you a bot'. Voice and chat differ at every turn. Voice has no scanning: prompts are short with the question last, lists hold three options or fewer, barge-in is allowed, silence (no-input) is a first-class event, ASR errors dominate the failures, sensitive digits go by DTMF, and numbers and alphanumerics need spelling styles (Lex supports spell-by-letter and spell-by-word). Chat has buttons and carousels; users type fragments and misspellings, scroll back, and expect asynchronous replies. Messaging (WhatsApp, SMS) adds session windows, opt-in rules and no custom UI. Accessibility: generous timeouts and repeat options in voice, screen-reader friendly structure and plain language in chat, and an easy path to a human in both.",
+            d: "The same assistant needs different prompts for voice and for chat, because a listener cannot scan and a reader can. The persona is the style guide that keeps both consistent.",
+            pts: [
+              "Persona: Google's recipe is to brainstorm adjectives, narrow them to 4 to 6 traits, pick an archetype, write a one-paragraph description and give it a visual",
+              "Not human: Google warns against pinning gender or age; the aim is not to make users think the bot is human but to use conversation, the interface people already know",
+              "In enterprise work: the persona is mostly a style guide for the prompt and the copy deck; it also settles whether the bot says 'I' and how it answers 'are you a bot'",
+              "Voice prompts: no scanning, so prompts are short with the question last, lists hold three options or fewer, barge-in is allowed, and silence (no-input) is a first-class event",
+              "Voice input: ASR errors dominate the failures, sensitive digits go by DTMF, and numbers and alphanumerics need spelling styles (Lex supports spell-by-letter and spell-by-word)",
+              "Chat: buttons and carousels; users type fragments and misspellings, scroll back, and expect asynchronous replies",
+              "Messaging: WhatsApp and SMS add session windows, opt-in rules and no custom UI",
+              "Accessibility: generous timeouts and repeat options in voice, screen-reader friendly structure and plain language in chat, and an easy path to a human in both"
+            ],
+            links: [
+              { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
+              { label: "Guide: enterprise virtual assistant, the whole design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant" },
+              { label: "Baseline, audio: speech recognition", url: "BASELINE.html#/audio/asr" },
+              { label: "3 Dots IT prep: voice and chat", url: "interviews/threedots.html#/prep/q-what-do-you-design-differently-for-voice-and-for-chat" }
+            ],
             ans: [
               "Persona is a style guide for prompts and copy: 4 to 6 traits, never pretending to be human",
               "Voice: short prompts, question last, three options or fewer, barge-in, silence is an event",
@@ -2944,7 +3224,21 @@
             ] },
           { t: "No-match and no-input: escalating help", m: 9,
             out: "How do you handle no-match and no-input",
-            d: "Treat errors as three types: no-input (silence), no-match (heard but not understood), and system error. Google escalates by a counter: the first time, a short rephrase with a brief apology, never a verbatim repeat; the second time, add options or examples; after about two failed attempts, exit gracefully to another path. For no-input, do not say 'I didn't hear you'; rephrase and offer options. Alexa's guidance says the same in other words: first repeat, then explain, then suggest leaving the task. Do not blame the user and do not over-apologize. Make the messages specific to the state the user is in, never one global 'sorry', and always leave a way out, a human or a menu. In Dialogflow CX this maps to numbered event handlers, sys.no-match-1 to 6 and sys.no-input-1 to 6, set at flow, page or parameter level, plus reprompt handlers for form filling. Reviewing no-match by page each week points straight at design or NLU gaps.",
+            d: "Errors are part of the design, not an afterthought. Help escalates with each failure, and there is always a way out.",
+            pts: [
+              "Three error types: no-input (silence), no-match (heard but not understood), and system error",
+              "Escalate by count: Google's first reprompt is a short rephrase with a brief apology, never a verbatim repeat; the second adds options or examples; after about two failed attempts, exit gracefully to another path",
+              "No-input: do not say 'I didn't hear you'; rephrase and offer options",
+              "Alexa's version: first repeat, then explain, then suggest leaving the task",
+              "Tone: no blaming the user and no over-apologizing; messages specific to the state the user is in, never one global 'sorry'; always a way out, a human or a menu",
+              "Dialogflow CX: numbered event handlers, sys.no-match-1 to 6 and sys.no-input-1 to 6, set at flow, page or parameter level, plus reprompt handlers for form filling",
+              "Weekly review: no-match by page points straight at design or NLU gaps"
+            ],
+            links: [
+              { label: "Baseline, NLP: conversation design", url: "BASELINE.html#/nlp/conversation-design" },
+              { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
+              { label: "3 Dots IT prep: no-match and no-input", url: "interviews/threedots.html#/prep/q-how-do-you-handle-no-match-and-no-input" }
+            ],
             ans: [
               "Three error types: no-input, no-match, system error",
               "Escalate help by count: rephrase, then options or examples, then exit to another path after about two failures",
@@ -2957,7 +3251,21 @@
             ] },
           { t: "Confirmation: implicit, explicit, and confidence", m: 9,
             out: "When do you confirm explicitly and when implicitly",
-            d: "Google's default is implicit confirmation, 'So, a table for two', which keeps the flow and lets the user correct a mistake. Explicit yes-or-no confirmation is reserved for irreversible or costly actions: deleting data, completing a transaction, sending a message, names and addresses. Add a third signal, confidence: Lex returns a transcription confidence and up to three alternative transcriptions, and its docs suggest reprompting when confidence is low and checking close candidates (John against Juan) against a database. Cognigy builds this into its NLU thresholds: above the confidence threshold (default 0.4) the intent is accepted, between that and the reconfirmation threshold (default 0.2) the bot asks 'did you mean X?', below it nothing is found. The rule of thumb: confirm in proportion to the cost of being wrong times the chance of being wrong. Over-confirming is a real cost, so measure turn count and abandonment. You built the same policy in code: in alfred_ every candidate action is classified into five verdicts (SILENT / NOTIFY / CONFIRM / CLARIFY / REFUSE) via deterministic risk scoring, not LLM-as-judge; and its voice agent drafts, reads back, confirms and sends once.",
+            d: "Confirm in proportion to the cost of being wrong times the chance of being wrong. Over-confirming is a real cost too, so measure turn count and abandonment.",
+            pts: [
+              "Implicit: Google's default, 'So, a table for two', keeps the flow and lets the user correct a mistake",
+              "Explicit: a yes-or-no check reserved for irreversible or costly actions, deleting data, completing a transaction, sending a message, names and addresses",
+              "Confidence in Lex: it returns a transcription confidence and up to three alternative transcriptions; its docs suggest reprompting when confidence is low and checking close candidates (John against Juan) against a database",
+              "Confidence in Cognigy: above the confidence threshold (default 0.4) the intent is accepted; between that and the reconfirmation threshold (default 0.2) the bot asks 'did you mean X?'; below it nothing is found",
+              "alfred_ decision layer: 'every candidate action classified into five verdicts (SILENT / NOTIFY / CONFIRM / CLARIFY / REFUSE) via deterministic risk scoring, not LLM-as-judge', the same policy in code",
+              "alfred_ voice agent: drafts, reads back, confirms and sends once"
+            ],
+            links: [
+              { label: "Baseline, NLP: conversation design", url: "BASELINE.html#/nlp/conversation-design" },
+              { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
+              { label: "3 Dots IT prep: explicit or implicit confirmation", url: "interviews/threedots.html#/prep/q-explicit-or-implicit-confirmation-when-do-you-use-which" },
+              { label: "3 Dots IT prep: the decision layer at alfred_", url: "interviews/threedots.html#/prep/q-tell-me-about-the-decision-layer-at-alfred" }
+            ],
             ans: [
               "Implicit by default: it keeps the flow and lets the user correct",
               "Explicit before irreversible or costly actions: payments, deletions, names, addresses, sending messages",
@@ -2970,7 +3278,21 @@
             ] },
           { t: "Repair: disambiguation, digressions and corrections", m: 10,
             out: "A user changes their mind mid-flow, or asks something unrelated. How does the assistant handle it",
-            d: "Disambiguate with a short closed question ('Do you mean the card or the account?') when the top two intents are close: Lex's docs call 0.75 against 0.72 ambiguous and 0.95 against 0.65 not. Digressions: Dialogflow CX route groups at flow or agent level let 'cancel', 'agent' or FAQ intents match anywhere, pages are states with one current page, and session parameters carry context; Rasa returns to the interrupted flow afterwards. Corrections: detect that an earlier slot is being updated, change the state, re-run only the steps that depend on it, and reconfirm the new value implicitly. Accept over-answering: a user who gives the date and the city at once should skip both questions (Dialogflow CX prefills parameters; Rasa collect steps support ask_before_filling: false). Rasa CALM's default patterns make a good checklist of what any mature assistant handles: correction, clarification, cannot handle, continue interrupted, cancel flow, skip question, chitchat, human handoff, internal error, repeat bot messages, user silence, validate slot. The design question to ask: what must be remembered deterministically (account, order ID, authentication state) and what can the model infer?",
+            d: "Happy-path bots fail when the user changes their mind, asks something else, or says two things at once. Repair is how the assistant handles those turns and gets back to the task.",
+            pts: [
+              "Disambiguation: a short closed question ('Do you mean the card or the account?') when the top two intents are close; Lex's docs call 0.75 against 0.72 ambiguous and 0.95 against 0.65 not",
+              "Digressions: Dialogflow CX route groups at flow or agent level let 'cancel', 'agent' or FAQ intents match anywhere, pages are states with one current page, and session parameters carry context; Rasa returns to the interrupted flow afterwards",
+              "Corrections: detect that an earlier slot is being updated, change the state, re-run only the steps that depend on it, and reconfirm the new value implicitly",
+              "Over-answering: a user who gives the date and the city at once should skip both questions (Dialogflow CX prefills parameters; Rasa collect steps support ask_before_filling: false)",
+              "Rasa CALM patterns: a checklist of what any mature assistant handles, correction, clarification, cannot handle, continue interrupted, cancel flow, skip question, chitchat, human handoff, internal error, repeat bot messages, user silence, validate slot",
+              "The design question: what must be remembered deterministically (account, order ID, authentication state) and what can the model infer"
+            ],
+            links: [
+              { label: "Baseline, NLP: dialogue state", url: "BASELINE.html#/nlp/dialogue-state" },
+              { label: "Baseline, NLP: conversation design", url: "BASELINE.html#/nlp/conversation-design" },
+              { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
+              { label: "3 Dots IT prep: ambiguity, corrections and digressions", url: "interviews/threedots.html#/prep/q-how-do-you-handle-ambiguity-corrections-and-digressions" }
+            ],
             ans: [
               "Correction: spot that an earlier slot is being updated, change it, re-run only what depends on it, reconfirm implicitly",
               "Digression: global routes for cancel, agent and FAQ match anywhere, then return to the interrupted flow",
@@ -2983,7 +3305,21 @@
             ] },
           { t: "Handoff to a human", m: 9,
             out: "When should the assistant hand off to a human, and what goes with the handoff",
-            d: "Design the triggers up front: an explicit request (transfer at once, no further attempts), a second failed attempt, a high-stakes category, frustration or a shift in sentiment, regulated topics. Twilio's guidance: escalation is cold unless someone designs it otherwise. Specify the payload: history, customer profile, identifiers, order number or tier, the intent, and what was already tried; send an AI summary, not a 40-turn transcript; keep context across channels; write the outcome back to the customer record. A warm transfer, where the agent is briefed before the customer joins, fits high emotion, urgency and regulated topics. Handoff must also work when agents are closed: offer a callback or a ticket, never a dead end. Measure the repeat-explanation rate and the time to first useful response after transfer, and for escalated contacts, handle time, which should fall when the handoff carries context.",
+            d: "Escalation is cold unless someone designs it otherwise (Twilio's guidance). Decide the triggers and what travels with the customer before you build.",
+            pts: [
+              "Triggers: an explicit request (transfer at once, no further attempts), a second failed attempt, a high-stakes category, frustration or a shift in sentiment, regulated topics",
+              "Payload: history, customer profile, identifiers, order number or tier, the intent, and what was already tried",
+              "Summary: send an AI summary, not a 40-turn transcript; keep context across channels; write the outcome back to the customer record",
+              "Warm transfer: the agent is briefed before the customer joins; fits high emotion, urgency and regulated topics",
+              "Agents closed: offer a callback or a ticket, never a dead end",
+              "Measure: the repeat-explanation rate, the time to first useful response after transfer, and handle time on escalated contacts, which should fall when the handoff carries context"
+            ],
+            links: [
+              { label: "Baseline, NLP: conversation design", url: "BASELINE.html#/nlp/conversation-design" },
+              { label: "Baseline, NLP: assistant metrics", url: "BASELINE.html#/nlp/assistant-metrics" },
+              { label: "Guide: enterprise virtual assistant, the whole design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant" },
+              { label: "3 Dots IT prep: handoff to a human", url: "interviews/threedots.html#/prep/q-when-should-the-assistant-hand-off-to-a-human-and-how" }
+            ],
             ans: [
               "Triggers: an explicit request (at once), a second failure, high-stakes or regulated topics, frustration",
               "Payload: a summary, the intent, identifiers, profile, what was already tried",
@@ -2996,7 +3332,22 @@
             ] },
           { t: "Design one task end to end, aloud", m: 9,
             out: "Design the conversation for checking an order's status by voice: happy path, failure paths, confirmation, handoff and the metric",
-            d: "Put it together on one task. Start from the top tasks by volume; write the happy path as a sample dialog and say it aloud. Then list the failure paths: no-match, no-input, system error (the order service times out), the user changes their mind, the user wants a human. Ask for information in the order users know it and accept over-answering. The order number is alphanumeric, so in voice offer spelling or DTMF and confirm it before the lookup. Keep voice menus to 3 to 5 options at most. Decide which steps confirm explicitly (none here, since a status read changes nothing; a cancellation would), where handoff triggers, and what goes in the payload. Name the metric that says it works: task completion, with escalation and repeat contact as guardrails, not turn count. Compare with MockFlow-AI, where you used 'FSM-driven stage progression' and the 'LLM must call transition_stage()': the states live in code and the model understands, the same split the platforms use. Then open the guide's enterprise virtual assistant design and check what you missed.",
+            d: "Put the pieces together on one task: checking an order's status by voice. The states live in code and the model understands, the same split the platforms use.",
+            pts: [
+              "Start: from the top tasks by volume; write the happy path as a sample dialog and say it aloud",
+              "Failure paths: no-match, no-input, system error (the order service times out), the user changes their mind, the user wants a human",
+              "Slot order: ask for information in the order users know it, and accept over-answering",
+              "Order number: alphanumeric, so in voice offer spelling or DTMF and confirm it before the lookup",
+              "Menus: 3 to 5 options at most in voice",
+              "Confirmation and handoff: no explicit confirmation here, since a status read changes nothing (a cancellation would); decide where handoff triggers and what goes in the payload",
+              "The metric: task completion, with escalation and repeat contact as guardrails, not turn count",
+              "MockFlow-AI: you used 'FSM-driven stage progression' and the 'LLM must call transition_stage()'; then open the guide's enterprise virtual assistant design and check what you missed"
+            ],
+            links: [
+              { label: "Guide: enterprise virtual assistant, high-level design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/hld" },
+              { label: "Baseline, NLP: assistant metrics", url: "BASELINE.html#/nlp/assistant-metrics" },
+              { label: "3 Dots IT prep: designing the conversation for a new use case", url: "interviews/threedots.html#/prep/q-how-do-you-design-the-conversation-for-a-new-use-case" }
+            ],
             ans: [
               "Happy path written as a sample dialog and said aloud",
               "Failure paths: no-match, no-input, a service timeout, a change of mind, a request for a human",
@@ -3018,7 +3369,21 @@
         steps: [
           { t: "The taxonomy: actions as intents, objects as entities", m: 9,
             out: "How do you design the intent taxonomy for a bank assistant",
-            d: "Microsoft's CLU guidance states the rule most cleanly: actions and queries are intents; the information needed to fulfil them is entities. Cancel is one intent and the product is an entity; do not build 'Cancel Contoso' as its own intent. Pick one schema style and keep it across the project. Aim for intents that map to a distinct next action or backend call. The test: if two intents would get the same flow and the same API call, merge them and use an entity; if the same words need different handling (card lost against card declined), split. Flat taxonomies break down past a few hundred intents. Then route by domain first (Dialogflow CX flows, or Microsoft's orchestration across CLU and question answering) and classify within the domain, or use head intents with a modifier entity. The confusion matrix finds overlap: intents mistaken for each other get merged or given more distinguishing examples. For a bank: start from call and chat logs and rank tasks by volume and risk, not by the product catalogue; domains such as accounts, cards, loans and fraud; fraud and 'I want a human' get top-priority routes.",
+            d: "Actions and queries are intents; the information needed to fulfil them is entities (Microsoft CLU's rule). Each intent should map to a distinct next action or backend call.",
+            pts: [
+              "Action and object: cancel is one intent and the product is an entity; do not build 'Cancel Contoso' as its own intent",
+              "One style: pick one schema style and keep it across the project",
+              "Merge or split: if two intents get the same flow and the same API call, merge them and use an entity; if the same words need different handling (card lost against card declined), split",
+              "Past a few hundred: flat taxonomies break down; route by domain first (Dialogflow CX flows, or Microsoft's orchestration across CLU and question answering) and classify within it, or use head intents with a modifier entity",
+              "Confusion matrix: finds overlap; intents mistaken for each other get merged or given more distinguishing examples",
+              "For a bank: start from call and chat logs and rank tasks by volume and risk, not by the product catalogue; domains such as accounts, cards, loans and fraud; fraud and 'I want a human' get top-priority routes"
+            ],
+            links: [
+              { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
+              { label: "Baseline, NLP: text classification", url: "BASELINE.html#/nlp/text-classification" },
+              { label: "Guide: enterprise virtual assistant, high-level design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/hld" },
+              { label: "3 Dots IT prep: the intent taxonomy for a bank", url: "interviews/threedots.html#/prep/q-how-would-you-design-the-intent-taxonomy-for-say-a-bank-assi" }
+            ],
             ans: [
               "Start from call and chat logs; rank tasks by volume and risk, not by the product catalogue",
               "Actions are intents, products and accounts are entities; one style throughout",
@@ -3031,7 +3396,21 @@
             ] },
           { t: "Training utterances and the out-of-scope intent", m: 8,
             out: "What makes good training data for an intent, and how do you train the None intent",
-            d: "Platform floors differ: Dialogflow CX recommends at least 10 to 20 training phrases per intent; Kore.ai's ML engine at least 8 to 10, balanced across intents; CLU flags under 15 labelled instances per intent and recommends at least 25 for its out-of-domain configuration; Cognigy's analyzer flags under 5. CLU's quality rules: balance the classes, since imbalance biases toward big intents; vary casing and punctuation; avoid accidental patterns such as every example in lowercase or with the same prefix; diversify the wording, do not reorder it. Source utterances from production logs, not only from the design team. Hold out a test set that is never trained on and covers every intent. Out-of-scope: every platform has a built-in. CLU's None intent has a score threshold, and a top intent below it is replaced by None (the threshold is not applied during evaluation); Dialogflow CX has a default negative intent plus no-match; Lex returns AMAZON.FallbackIntent when every intent scores below the threshold. Train the None bucket with near-miss false positives ('I want to buy a book' in a flight bot), greetings, yes and no, and bare numbers.",
+            d: "An intent is only as good as its training phrases, and the out-of-scope bucket needs training too. The hard negatives are the ones that look like a supported intent.",
+            pts: [
+              "Platform floors: Dialogflow CX recommends at least 10 to 20 training phrases per intent; Kore.ai's ML engine at least 8 to 10, balanced across intents; CLU flags under 15 labelled instances per intent and recommends at least 25 for its out-of-domain configuration; Cognigy's analyzer flags under 5",
+              "CLU's quality rules: balance the classes, since imbalance biases toward big intents; vary casing and punctuation; avoid accidental patterns such as every example in lowercase or with the same prefix; diversify the wording, do not reorder it",
+              "Sources: utterances from production logs, not only from the design team",
+              "Test set: held out, never trained on, covering every intent",
+              "Built-in out-of-scope: CLU's None intent has a score threshold and replaces a top intent below it (not applied during evaluation); Dialogflow CX has a default negative intent plus no-match; Lex returns AMAZON.FallbackIntent when every intent scores below the threshold",
+              "Training None: near-miss false positives ('I want to buy a book' in a flight bot), greetings, yes and no, and bare numbers"
+            ],
+            links: [
+              { label: "Baseline, NLP: intents and entities", url: "BASELINE.html#/nlp/intents-entities" },
+              { label: "Guide: enterprise virtual assistant, the whole design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant" },
+              { label: "3 Dots IT prep: training phrases", url: "interviews/threedots.html#/prep/q-how-many-training-phrases-does-an-intent-need-and-where-do-t" },
+              { label: "3 Dots IT prep: out-of-scope queries", url: "interviews/threedots.html#/prep/q-how-do-you-handle-out-of-scope-queries" }
+            ],
             ans: [
               "Real utterances from production logs, not only the design team's",
               "Balanced across intents; varied casing, punctuation and wording; no accidental patterns",
@@ -3044,7 +3423,22 @@
             ] },
           { t: "Entities, slots and dialogue state", m: 9,
             out: "What is your approach to entities and slot filling, and how do you measure it",
-            d: "Entity types across platforms: system or prebuilt (date, number, email); lists with synonyms (a reference value plus its synonyms); regex (IDs, order numbers); composite; and machine-learned, where context decides. CLU lets one entity combine prebuilt, list, regex and learned components with 'required components'. Its example: a Ticket Quantity entity built only on the prebuilt number fires on '3 PM', so add a learned component and require it. Lex custom slot types either expand values with ML (the default) or restrict resolution to the listed values and synonyms. For IDs and account numbers use deterministic extraction plus validation, not ML. Roles (origin against destination city) rely on cues like 'from', so make sure the signal exists in the data. Slots are dialogue state. In Dialogflow CX a page is a state, and its form collects the required parameters, prefilled from the session or the matched intent, prompting only for what is missing; Lex elicits slots through code hooks (ElicitSlot, ConfirmIntent); Rasa uses collect steps. Dialogue state tracking is the formal name: the structured set of slot values at each turn, measured by joint goal accuracy, the share of turns with every slot right.",
+            d: "Entities carry the information an intent needs, and the slots collected so far are the dialogue state. A right intent with a wrong entity still fails the task.",
+            pts: [
+              "Entity types: system or prebuilt (date, number, email); lists with synonyms (a reference value plus its synonyms); regex (IDs, order numbers); composite; and machine-learned, where context decides",
+              "CLU components: one entity can combine prebuilt, list, regex and learned components with 'required components'; a Ticket Quantity entity built only on the prebuilt number fires on '3 PM', so add a learned component and require it",
+              "Lex slot types: custom slot types either expand values with ML (the default) or restrict resolution to the listed values and synonyms",
+              "IDs and account numbers: deterministic extraction plus validation, not ML",
+              "Roles: origin against destination city relies on cues like 'from', so make sure the signal exists in the data",
+              "Slot filling: a Dialogflow CX page is a state whose form collects the required parameters, prefilled from the session or the matched intent, prompting only for what is missing; Lex elicits slots through code hooks (ElicitSlot, ConfirmIntent); Rasa uses collect steps",
+              "Dialogue state tracking: the structured set of slot values at each turn, measured by joint goal accuracy, the share of turns with every slot right"
+            ],
+            links: [
+              { label: "Baseline, NLP: intents and entities", url: "BASELINE.html#/nlp/intents-entities" },
+              { label: "Guide: enterprise virtual assistant, high-level design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/hld" },
+              { label: "3 Dots IT prep: entities and slots", url: "interviews/threedots.html#/prep/q-how-do-you-model-entities-and-slots" },
+              { label: "3 Dots IT prep: dialogue state", url: "interviews/threedots.html#/prep/q-what-is-dialogue-state-and-how-do-you-track-it" }
+            ],
             ans: [
               "System entities for dates and numbers; lists with synonyms for closed sets; regex plus validation for IDs; learned where context decides",
               "Constrain prebuilt extractors so a number entity does not fire on '3 PM'",
@@ -3057,7 +3451,22 @@
             ] },
           { t: "Confidence thresholds and multi-intent", m: 8,
             out: "How do you set confidence thresholds",
-            d: "Lex sets nluIntentConfidenceThreshold per locale and returns the top intent with up to four alternates; its docs say the scores are comparative, not absolute, and may change as the models improve, so absolute cutoffs should not be hard-coded. Cognigy has three tiers (accept above 0.4 by default, reconfirm between 0.2 and 0.4, not found below). That three-band pattern, act, confirm, reject, is a good general design. CLU needs a retrain and a republish after a threshold change, so a threshold change is a release. Set thresholds from evaluation data, not defaults: plot precision, recall and the cost of a wrong action against the threshold per intent family; give high-risk intents a higher bar and an explicit confirmation; watch the margin between the top two scores as well as the top one; recalibrate after every model or training change. Multi-intent ('open an account and send me the details'): classic NLU returns one intent per turn, so you split the utterance, queue the detected intents, or use an LLM planner; Copilot Studio's generative orchestration invokes the relevant topics in turn.",
+            d: "A confidence threshold decides when the assistant acts, confirms or falls back. Set it from evaluation data, never from a default.",
+            pts: [
+              "Lex: sets nluIntentConfidenceThreshold per locale and returns the top intent with up to four alternates; its docs say scores are comparative, not absolute, and may change as the models improve, so do not hard-code absolute cutoffs",
+              "Cognigy: three tiers, accept above 0.4 by default, reconfirm between 0.2 and 0.4, not found below; that act, confirm, reject pattern is a good general design",
+              "CLU: needs a retrain and a republish after a threshold change, so a threshold change is a release",
+              "From data: plot precision, recall and the cost of a wrong action against the threshold, per intent family",
+              "Risk: high-risk intents get a higher bar and an explicit confirmation",
+              "Margin: watch the gap between the top two scores as well as the top one; recalibrate after every model or training change",
+              "Multi-intent: for 'open an account and send me the details', classic NLU returns one intent per turn, so split the utterance, queue the detected intents, or use an LLM planner; Copilot Studio's generative orchestration invokes the relevant topics in turn"
+            ],
+            links: [
+              { label: "Baseline, NLP: out-of-scope detection", url: "BASELINE.html#/nlp/out-of-scope" },
+              { label: "Baseline, NLP: classification metrics", url: "BASELINE.html#/nlp/classification-metrics" },
+              { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
+              { label: "3 Dots IT prep: confidence thresholds", url: "interviews/threedots.html#/prep/q-how-do-you-set-confidence-thresholds" }
+            ],
             ans: [
               "From evaluation data, never defaults: precision, recall and the cost of a wrong action against the threshold",
               "Three bands: act above, confirm or disambiguate in the middle, fall back below",
@@ -3070,7 +3479,24 @@
             ] },
           { t: "How the platforms differ", m: 10,
             out: "Compare Dialogflow CX, Lex, Microsoft CLU and Copilot Studio, Rasa CALM, Kore.ai and Cognigy in one minute",
-            d: "Dialogflow CX (now Conversational Agents): flows (topics) contain pages (states), with routes, event handlers and route groups; intents with training phrases; entity types; test cases and experiments. Its generative layer: generative fallback on no-match handlers (excluded from the CX SLA, with banned-phrase lists) and playbooks, LLM-driven, which call tools and hand off to flows. Google's own split: playbooks for open-ended conversation, flows for deterministic work such as authentication or payment. Amazon Lex V2: intents, slots and slot types, Lambda code hooks, confidence thresholds, FallbackIntent, KendraSearchIntent for FAQ, Test Workbench. Microsoft CLU: intents, entities with components, the None intent, orchestration with question answering. Copilot Studio moved to generative orchestration: an LLM planner picks topics, tools and knowledge by name and description (names weigh more), prompts for missing inputs, and keeps a deterministic layer for irreversible actions, a hybrid layer with approvals, and a generative layer for low-risk Q and A. Rasa CALM uses an LLM only to understand, emitting commands (start flow, set slot, cancel, clarify, correct slot, chitchat, knowledge answer, human handoff), while business logic stays in deterministic flows; it can run hybrid with classic NLU. Kore.ai XO scores several engines (Fundamental Meaning, Machine Learning, Knowledge Graph, Traits, small talk) through a Ranking and Resolver, and its training validation shows a confusion matrix and k-fold results. Cognigy: intents with rules, thresholds per flow, and an Intent Analyzer that flags weak intents (below 0.6 red, 0.6 to 0.8 yellow) and overlaps. IBM watsonx Assistant: not verified; say you would check its current docs.",
+            d: "Every enterprise platform models the same pieces under different names: deterministic flows, language understanding that picks the flow and fills slots, a generative layer, and fallback. Know each one's terms so you can speak the client's language.",
+            pts: [
+              "Dialogflow CX: now Conversational Agents; flows (topics) contain pages (states), with routes, event handlers and route groups; intents with training phrases; entity types; test cases and experiments",
+              "CX generative layer: generative fallback on no-match handlers (excluded from the CX SLA, with banned-phrase lists) and LLM-driven playbooks that call tools and hand off to flows; Google's split is playbooks for open-ended conversation, flows for deterministic work such as authentication or payment",
+              "Amazon Lex V2: intents, slots and slot types, Lambda code hooks, confidence thresholds, FallbackIntent, KendraSearchIntent for FAQ, Test Workbench",
+              "Microsoft CLU: intents, entities with components, the None intent, orchestration with question answering",
+              "Copilot Studio: generative orchestration, where an LLM planner picks topics, tools and knowledge by name and description (names weigh more) and prompts for missing inputs; a deterministic layer for irreversible actions, a hybrid layer with approvals, a generative layer for low-risk Q and A",
+              "Rasa CALM: an LLM only understands, emitting commands (start flow, set slot, cancel, clarify, correct slot, chitchat, knowledge answer, human handoff); business logic stays in deterministic flows; it can run hybrid with classic NLU",
+              "Engines and analyzers: Kore.ai XO scores several engines (Fundamental Meaning, Machine Learning, Knowledge Graph, Traits, small talk) through a Ranking and Resolver, and its training validation shows a confusion matrix and k-fold results; Cognigy has intents with rules, thresholds per flow, and an Intent Analyzer that flags weak intents (below 0.6 red, 0.6 to 0.8 yellow) and overlaps",
+              "IBM watsonx Assistant: not verified; say you would check its current docs"
+            ],
+            links: [
+              { label: "Baseline, NLP: intents and entities", url: "BASELINE.html#/nlp/intents-entities" },
+              { label: "Baseline, NLP: classic NLU and LLMs together", url: "BASELINE.html#/nlp/nlu-llm-hybrid" },
+              { label: "Guide: enterprise virtual assistant, high-level design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/hld" },
+              { label: "3 Dots IT prep: the platforms", url: "interviews/threedots.html#/prep/q-which-conversational-ai-platforms-do-you-know-and-how-do-the" },
+              { label: "3 Dots IT prep: ramping up on their platform", url: "interviews/threedots.html#/prep/q-you-haven-t-used-our-platform-how-would-you-get-productive" }
+            ],
             ans: [
               "Dialogflow CX: flows of pages as a state machine, route groups, numbered error handlers; playbooks and generative fallback on top",
               "Lex V2: intents, slots, Lambda hooks, FallbackIntent, KendraSearchIntent for FAQ",
@@ -3083,7 +3509,23 @@
             ] },
           { t: "The LLM shift: hybrid routing, tools as intents, RAG, guardrails", m: 11,
             out: "Classic NLU or an LLM for intent classification, and how would you add an LLM to an existing bot safely",
-            d: "Zero and few-shot LLM classification removes the training pipeline and works at parity on broad label spaces; it is weaker on narrow in-domain tasks and slower. The 2026 preprint's decision rule: a stable, labelled, latency-critical domain means a fine-tuned encoder; schemas that change per deployment or a need for out-of-scope recall mean an LLM; noisy ASR means hybrid. Hybrid routing (Amazon, EMNLP 2024 industry track): send a turn to the LLM only when a SetFit classifier is uncertain (Monte Carlo dropout); within 2% of the LLM's accuracy with 50% less latency; large label spaces hurt out-of-scope accuracy, and a two-step method gave more than 5% gain on it for Mistral-7B. Function calling as intents: each tool is an intent and its typed arguments are slots; FnCTOD reported 5.6 points of joint goal accuracy gained for ChatGPT and 14 for GPT-4 by using function calling for zero-shot state tracking. Validate the arguments with the same deterministic validators as before (regex, list lookups, database existence). RAG for FAQ: replace dozens of FAQ intents with retrieval over a curated knowledge base, grounded and cited, but keep an intent for 'needs a transaction' so retrieval never answers account-specific questions. Guardrails: NeMo Guardrails defines input, dialog, retrieval, execution and output rails; OWASP's 2025 top 10 for LLM apps names prompt injection, sensitive information disclosure, excessive agency, system prompt leakage, misinformation and unbounded consumption. The rule: the LLM proposes, deterministic code authorizes. To add an LLM to a Dialogflow bot safely, start with generative fallback or retrieval-backed FAQ, keep transactions in flows, build a golden test set and a judge rubric first, and run it in shadow or on a small experiment share. Your own: alfred_ routes through intent classification, a decision layer and tools, and a deterministic three-stage matcher in front of the LLM cut per-user LLM cost ~30%.",
+            d: "LLMs now sit beside or in place of the classic classifier, and the safe pattern is hybrid. The rule: the LLM proposes, deterministic code authorizes.",
+            pts: [
+              "Zero and few-shot: removes the training pipeline and works at parity on broad label spaces; weaker on narrow in-domain tasks, and slower",
+              "Decision rule (2026 preprint): a stable, labelled, latency-critical domain means a fine-tuned encoder; schemas that change per deployment or a need for out-of-scope recall mean an LLM; noisy ASR means hybrid",
+              "Hybrid routing: Amazon, EMNLP 2024 industry track; send a turn to the LLM only when a SetFit classifier is uncertain (Monte Carlo dropout), within 2% of the LLM's accuracy with 50% less latency; large label spaces hurt out-of-scope accuracy, and a two-step method gave more than 5% gain on it for Mistral-7B",
+              "Tools as intents: each tool is an intent and its typed arguments are slots; FnCTOD reported 5.6 points of joint goal accuracy gained for ChatGPT and 14 for GPT-4 by using function calling for zero-shot state tracking; validate the arguments with the same deterministic validators as before (regex, list lookups, database existence)",
+              "RAG for FAQ: retrieval over a curated knowledge base replaces dozens of FAQ intents, grounded and cited; keep an intent for 'needs a transaction' so retrieval never answers account-specific questions",
+              "Guardrails: NeMo Guardrails defines input, dialog, retrieval, execution and output rails; OWASP's 2025 top 10 for LLM apps names prompt injection, sensitive information disclosure, excessive agency, system prompt leakage, misinformation and unbounded consumption",
+              "Adding an LLM safely: to a Dialogflow bot, start with generative fallback or retrieval-backed FAQ, keep transactions in flows, build a golden test set and a judge rubric first, and run it in shadow or on a small experiment share",
+              "Your own: alfred_ routes through intent classification, a decision layer and tools, and a deterministic three-stage matcher in front of the LLM cut per-user LLM cost ~30%"
+            ],
+            links: [
+              { label: "Baseline, AI: RAG", url: "BASELINE.html#/ai/rag" },
+              { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
+              { label: "3 Dots IT prep: classic NLU or an LLM", url: "interviews/threedots.html#/prep/q-classic-nlu-or-an-llm-for-intent-classification" },
+              { label: "3 Dots IT prep: adding an LLM to a Dialogflow bot safely", url: "interviews/threedots.html#/prep/q-how-would-you-add-an-llm-to-an-existing-dialogflow-bot-safel" }
+            ],
             ans: [
               "Stable, labelled, latency-critical: a fine-tuned encoder. Changing schemas, few labels or OOS-critical: an LLM",
               "Usually hybrid: a fast classifier takes confident turns, uncertain ones go to the LLM; one study: within 2% of the LLM's accuracy at half the latency",
@@ -3105,7 +3547,24 @@
         steps: [
           { t: "Per-intent metrics and the confusion matrix", m: 9,
             out: "Two intents keep getting confused. What do you do",
-            d: "Report per-intent precision, recall and F1 (CLU defines them from true and false positives and negatives). Micro, model-level F1 sums the counts across intents and entities; report macro too, so rare intents are not hidden. The confusion matrix shows which intents are mistaken for each other, and its row and column sums give the false negatives and false positives per intent. Evaluate entities separately from intents: CLU's worked example has the right intent with the wrong entity span. For voice, track word error rate and slot error rate on the real audio, not typed text. Overlap shows up in the off-diagonal cells, in Kore.ai's validation and Cognigy's Intent Analyzer, and in a small margin between the top two scores. When two intents collide: read the misclassified utterances, not only the F1. Decide whether they are one intent with different entities (merge) or distinct actions with similar wording (split, and add contrastive examples). Check for data bias, such as one intent with twice the examples or a stray phrase pattern. If the words cannot separate them, keep both and ask a short question when the margin is small. Then re-run the frozen test set to confirm the errors did not move to a neighbour.",
+            d: "Per-intent numbers and the confusion matrix show where the model fails, which an overall F1 hides. When two intents collide, read the utterances before changing anything.",
+            pts: [
+              "Per-intent: precision, recall and F1, which CLU defines from true and false positives and negatives",
+              "Micro and macro: micro, model-level F1 sums the counts across intents and entities; report macro too, so rare intents are not hidden",
+              "Confusion matrix: shows which intents are mistaken for each other; its row and column sums give the false negatives and false positives per intent",
+              "Entities separately: CLU's worked example has the right intent with the wrong entity span",
+              "Voice: track word error rate and slot error rate on the real audio, not typed text",
+              "Overlap signals: the off-diagonal cells, Kore.ai's validation, Cognigy's Intent Analyzer, and a small margin between the top two scores",
+              "When two collide: read the misclassified utterances, not only the F1; merge if they are one intent with different entities, split with contrastive examples if they are distinct actions with similar wording; check for data bias, such as one intent with twice the examples or a stray phrase pattern",
+              "If the words cannot separate them: keep both and ask a short question when the margin is small; then re-run the frozen test set to confirm the errors did not move to a neighbour"
+            ],
+            links: [
+              { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
+              { label: "Baseline, audio: speech recognition", url: "BASELINE.html#/audio/asr" },
+              { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
+              { label: "3 Dots IT prep: two intents keep getting confused", url: "interviews/threedots.html#/prep/q-two-intents" },
+              { label: "3 Dots IT prep: evaluating an NLU model beyond accuracy", url: "interviews/threedots.html#/prep/q-how-do-you-evaluate-an-nlu-model-beyond-accuracy" }
+            ],
             ans: [
               "Read the confusion matrix and the misclassified utterances themselves, not only F1",
               "Same action, different objects: merge and use an entity. Different actions, similar words: split with contrastive examples",
@@ -3118,7 +3577,23 @@
             ] },
           { t: "Mining misses and reviewing transcripts", m: 10,
             out: "How do you find the intents you are missing, and how do you structure transcript review",
-            d: "Mining misses: take fallback and low-confidence utterances plus escalated conversations, embed them, cluster them (HDBSCAN or k-means), have an LLM name each cluster, and rank the clusters by volume times business cost. For each, decide: a new intent, more examples for an existing intent, the None bucket, or a content gap for retrieval. Check proposals against the existing taxonomy so you do not create overlap, and validate on a held-out sample. Rasa's conversation-driven development frames the same loop: review real conversations, tag them, find patterns, fix in batches. Transcript review: sample by stratum, not only at random: every escalation, abandoned sessions, low-confidence turns, sessions with negative feedback, and a random slice. Review whole conversations, because many failures are dialog failures a per-utterance metric never shows. Put two labellers on a subset and measure agreement, write a labelling guide with edge-case rulings, keep a gold set. Label each failed conversation with one primary cause: ASR error (voice), NLU miss, entity or slot error, dialog logic or design, backend or API failure or timeout, knowledge or content gap, policy (it legitimately cannot do it), or abandonment with no failure signal. The split tells you whether to fix training data, flows, integrations or the product; report it as a share of lost containment.",
+            d: "The intents you are missing are in the fallback and escalation logs. Transcript review finds the failures a per-utterance metric never shows, and gives each one cause.",
+            pts: [
+              "Mining misses: take fallback and low-confidence utterances plus escalated conversations, embed them, cluster them (HDBSCAN or k-means), and have an LLM name each cluster",
+              "Rank and decide: rank clusters by volume times business cost; each becomes a new intent, more examples for an existing intent, the None bucket, or a content gap for retrieval",
+              "Check proposals: against the existing taxonomy so you do not create overlap, and on a held-out sample",
+              "Conversation-driven development: Rasa's frame for the same loop; review real conversations, tag them, find patterns, fix in batches",
+              "Sampling: by stratum, not only at random; every escalation, abandoned sessions, low-confidence turns, sessions with negative feedback, and a random slice; review whole conversations, because many failures are dialog failures",
+              "Labelling: two labellers on a subset with agreement measured, a labelling guide with edge-case rulings, a gold set",
+              "One primary cause: ASR error (voice), NLU miss, entity or slot error, dialog logic or design, backend or API failure or timeout, knowledge or content gap, policy (it legitimately cannot do it), or abandonment with no failure signal",
+              "Report: the split tells you whether to fix training data, flows, integrations or the product; report it as a share of lost containment"
+            ],
+            links: [
+              { label: "Baseline, NLP: sentence embeddings", url: "BASELINE.html#/nlp/sentence-embeddings" },
+              { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
+              { label: "3 Dots IT prep: finding the intents you are missing", url: "interviews/threedots.html#/prep/q-how-do-you-find-the-intents-you-re-missing" },
+              { label: "3 Dots IT prep: transcript review", url: "interviews/threedots.html#/prep/q-how-do-you-structure-transcript-review" }
+            ],
             ans: [
               "Collect fallback, low-confidence and escalated turns; embed, cluster, have an LLM name each cluster",
               "Rank by volume times business cost; decide: new intent, existing intent, None, or content for retrieval",
@@ -3131,7 +3606,23 @@
             ] },
           { t: "Testing: golden conversations, simulation, judges", m: 10,
             out: "How do you test a conversational system before release",
-            d: "Keep three layers: an NLU test set (utterance to intent and entities), scripted dialog tests for happy and failure paths, and a never-break suite of high-value or high-risk scenarios. Dialogflow CX test cases are golden conversations with turn-level expectations (response, flow, intent, page) and conversation-level ones (tool and flow invocations), run against environments or versions with coverage of transitions, intents and route groups; Lex Test Workbench builds test sets from existing transcripts. Simulation: tau-bench has an LLM play the user against domain tools and policy documents and scores the final database state. It introduced pass^k, the chance that all k trials succeed: GPT-4o function-calling agents solved under half the retail tasks and had pass^8 under 25%. One success overstates reliability, so run each scenario several times. A simulated user is more cooperative than a real one, so real transcript replay stays the anchor. LLM-as-judge: the MT-bench study found strong judges agreed with humans over 80% of the time, about the human-to-human rate, with position, verbosity and self-enhancement biases. For an assistant: a rubric per criterion (task success, policy adherence, groundedness, tone, unnecessary escalation), binary or small scales, randomized order for pairwise comparisons, calibration against a human-labelled set, judge-human agreement tracked, and never the only gate for compliance. Judge whole conversations with their tool traces.",
+            d: "Test in three layers before release, and run each scenario more than once, because one success overstates reliability. Real transcripts stay the anchor.",
+            pts: [
+              "Three layers: an NLU test set (utterance to intent and entities), scripted dialog tests for happy and failure paths, and a never-break suite of high-value or high-risk scenarios",
+              "Dialogflow CX test cases: golden conversations with turn-level expectations (response, flow, intent, page) and conversation-level ones (tool and flow invocations), run against environments or versions with coverage of transitions, intents and route groups",
+              "Lex Test Workbench: builds test sets from existing transcripts",
+              "Simulation: tau-bench has an LLM play the user against domain tools and policy documents and scores the final database state",
+              "pass^k: the chance that all k trials succeed; GPT-4o function-calling agents solved under half the retail tasks and had pass^8 under 25%",
+              "Simulated users: more cooperative than real ones, so real transcript replay stays the anchor",
+              "LLM-as-judge: the MT-bench study found strong judges agreed with humans over 80% of the time, about the human-to-human rate, with position, verbosity and self-enhancement biases",
+              "Judge rubric: a rubric per criterion (task success, policy adherence, groundedness, tone, unnecessary escalation), binary or small scales, randomized order for pairwise comparisons, calibration against a human-labelled set, judge-human agreement tracked, never the only gate for compliance; judge whole conversations with their tool traces"
+            ],
+            links: [
+              { label: "Baseline, NLP: error analysis", url: "BASELINE.html#/nlp/error-analysis" },
+              { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
+              { label: "3 Dots IT prep: testing before release", url: "interviews/threedots.html#/prep/q-how-do-you-test-a-conversational-system-before-release" },
+              { label: "3 Dots IT prep: LLM-as-judge on conversations", url: "interviews/threedots.html#/prep/q-how-do-you-use-an-llm-as-a-judge-on-conversations-and-where-" }
+            ],
             ans: [
               "An NLU test set with per-intent metrics",
               "Golden conversations with turn-level expectations: response, intent, page, tool calls",
@@ -3145,7 +3636,22 @@
             ] },
           { t: "KPIs that tell the truth", m: 8,
             out: "Which KPIs do you report for a virtual assistant, and which ones mislead",
-            d: "Containment, conversations that never reached a human, misleads on its own: a bot can contain by being a wall. Rasa separates deflection (AI-only conversations), containment (the customer did not come back through another channel for the same issue, hard to measure without identity), automation rate (workflows completed), solution rate (the customer confirms it is resolved) and CSAT. Dialogflow CX defines the no-match rate as the share of conversations, or turns in its troubleshooting view, that hit no-match, shown per page, with escalation and exit rates per page and per intent. Pair containment with task completion and repeat contact within 24 to 72 hours. Track CSAT, drop-off by turn, and handle time on escalated contacts, which should fall when the handoff carries context. Build per-intent funnels: intent recognized, required slots filled, authenticated, backend call succeeded, confirmation shown, completed. Filter to business conversations (no greetings, tests or spam) before computing any rate, and compute resolution from outcomes (explicit confirmation, no repeat contact), never as one minus escalation.",
+            d: "Containment, conversations that never reached a human, misleads on its own: a bot can contain by being a wall. Pair it with outcome metrics and break everything down per intent.",
+            pts: [
+              "Rasa's terms: deflection (AI-only conversations), containment (the customer did not come back through another channel for the same issue, hard to measure without identity), automation rate (workflows completed), solution rate (the customer confirms it is resolved), and CSAT",
+              "No-match rate: Dialogflow CX defines it as the share of conversations, or turns in its troubleshooting view, that hit no-match, shown per page, with escalation and exit rates per page and per intent",
+              "Pairing: containment with task completion and repeat contact within 24 to 72 hours",
+              "Also track: CSAT, drop-off by turn, and handle time on escalated contacts, which should fall when the handoff carries context",
+              "Per-intent funnel: intent recognized, required slots filled, authenticated, backend call succeeded, confirmation shown, completed",
+              "Clean first: filter to business conversations (no greetings, tests or spam) before computing any rate",
+              "Resolution: computed from outcomes (explicit confirmation, no repeat contact), never as one minus escalation"
+            ],
+            links: [
+              { label: "Baseline, NLP: error analysis", url: "BASELINE.html#/nlp/error-analysis" },
+              { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
+              { label: "3 Dots IT prep: KPIs and which mislead", url: "interviews/threedots.html#/prep/q-which-kpis-do-you-report-and-which-ones-mislead" },
+              { label: "3 Dots IT prep: containment dropped 10%", url: "interviews/threedots.html#/prep/q-containment-dropped-10-after-a-release-walk-me-through-it" }
+            ],
             ans: [
               "Containment misleads alone: a wall contains",
               "Pair it with solution rate (the customer confirms) and repeat contact within 24 to 72 hours",
@@ -3158,7 +3664,23 @@
             ] },
           { t: "Experiments, drift, release and rollback", m: 8,
             out: "How do you run an A/B test on a flow, and how do you ship and roll back safely",
-            d: "Dialogflow CX experiments split live traffic between a control flow version and up to four variants, compare live-agent handoff rate, session end rate, no-match count and average turn count, and support auto rollout in steps with stop conditions. The practice: one change at a time, assignment by user or session (never by turn), full weekly cycles, a pre-registered primary metric such as task completion, and guardrail metrics (escalation, CSAT, repeat contact). The improvement loop: log low-confidence and fallback turns, cluster, label, add to training or knowledge, retrain, check against the frozen test set, ship; prioritize by volume times business cost and watch the test set does not drift into training. Drift: track intent mix (a launch or an outage changes it), confidence distribution, fallback rate, webhook errors and latency, escalation by intent, and for LLM paths groundedness, refusal rate, tool error rate, cost and latency. Alert against a rolling baseline, and annotate dashboards with releases, campaigns and outages. Release: version the agent, run regression and golden tests before deploy, promote through environments, canary to a small share, keep the previous version live for rollback. A prompt or knowledge-base change goes through the same pipeline as code, and so does a threshold: CLU needs a retrain and republish after one.",
+            d: "A prompt, knowledge, threshold or flow change is a release and ships like code. Experiments show whether a change helped; drift monitoring shows when the world moved.",
+            pts: [
+              "CX experiments: Dialogflow CX splits live traffic between a control flow version and up to four variants, compares live-agent handoff rate, session end rate, no-match count and average turn count, and supports auto rollout in steps with stop conditions",
+              "Practice: one change at a time, assignment by user or session (never by turn), full weekly cycles, a pre-registered primary metric such as task completion, and guardrail metrics (escalation, CSAT, repeat contact)",
+              "Improvement loop: log low-confidence and fallback turns, cluster, label, add to training or knowledge, retrain, check against the frozen test set, ship; prioritize by volume times business cost and watch that the test set does not drift into training",
+              "Drift signals: intent mix (a launch or an outage changes it), confidence distribution, fallback rate, webhook errors and latency, escalation by intent; for LLM paths, groundedness, refusal rate, tool error rate, cost and latency",
+              "Alerts: against a rolling baseline, with dashboards annotated with releases, campaigns and outages",
+              "Release: version the agent, run regression and golden tests before deploy, promote through environments, canary to a small share, keep the previous version live for rollback",
+              "Same pipeline: a prompt or knowledge-base change goes through it like code, and so does a threshold; CLU needs a retrain and republish after one"
+            ],
+            links: [
+              { label: "Baseline, NLP: assistant metrics", url: "BASELINE.html#/nlp/assistant-metrics" },
+              { label: "Baseline, NLP: error analysis", url: "BASELINE.html#/nlp/error-analysis" },
+              { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
+              { label: "3 Dots IT prep: A/B testing a flow", url: "interviews/threedots.html#/prep/q-how-would-you-a-b-test-a-change-to-a-flow" },
+              { label: "3 Dots IT prep: monitoring for drift", url: "interviews/threedots.html#/prep/q-how-do-you-monitor-a-live-assistant-for-drift" }
+            ],
             ans: [
               "Split by user or session, one change at a time, through full weekly cycles",
               "One primary metric, task completion; guardrails: escalation, CSAT, repeat contact",
@@ -3171,7 +3693,24 @@
             ] },
           { t: "Your own work, and where you have not worked", m: 10,
             out: "Tell me about error analysis and production improvement you have done on a conversational system",
-            d: "Say your work in their words. alfred_: 'Inbound message (SMS/web) routed through intent classification → decision layer → callable tools', for 5,000+ active users. Its automated production-failure scanner scans real production conversations, classifies genuine failures against expected behaviour, and auto-promotes real bugs for triage: that is transcript review and the failure taxonomy, automated. Its decision layer: 'every candidate action classified into five verdicts (SILENT / NOTIFY / CONFIRM / CLARIFY / REFUSE) via deterministic risk scoring, not LLM-as-judge': the confirmation policy of a virtual assistant, in code. A deterministic three-stage matcher in front of the LLM 'cut per-user LLM cost ~30%': the hybrid routing pattern. The voice agent's eval harness runs 34 scenarios and names a winning configuration only if it passes every gate (session wc23). MockFlow-AI: 'FSM-driven stage progression' where the 'LLM must call transition_stage()': deterministic flow, LLM understanding, the same split as Rasa CALM. Then say plainly where you have not worked: you have not built on Dialogflow CX, Lex, CLU, Kore.ai or Cognigy, and you have no per-intent F1 figure of your own, so do not offer one. Bridge once: the loop is the same, and in the first week you would read their confusion matrix, their no-match rate by page and a stratified transcript sample. Say the whole answer in two minutes.",
+            d: "Say your work in their words, then say plainly where you have not worked. Bridge once, and keep the whole answer to two minutes.",
+            pts: [
+              "alfred_ pipeline: 'Inbound message (SMS/web) routed through intent classification → decision layer → callable tools', for 5,000+ active users",
+              "Failure scanner: scans real production conversations, classifies genuine failures against expected behaviour, and auto-promotes real bugs for triage; transcript review and the failure taxonomy, automated",
+              "Decision layer: 'every candidate action classified into five verdicts (SILENT / NOTIFY / CONFIRM / CLARIFY / REFUSE) via deterministic risk scoring, not LLM-as-judge', the confirmation policy of a virtual assistant, in code",
+              "Three-stage matcher: deterministic, in front of the LLM, it 'cut per-user LLM cost ~30%', the hybrid routing pattern",
+              "Voice eval harness: runs 34 scenarios and names a winning configuration only if it passes every gate (session wc23)",
+              "MockFlow-AI: 'FSM-driven stage progression' where the 'LLM must call transition_stage()'; deterministic flow, LLM understanding, the same split as Rasa CALM",
+              "Where you have not worked: you have not built on Dialogflow CX, Lex, CLU, Kore.ai or Cognigy, and you have no per-intent F1 figure of your own, so do not offer one",
+              "The bridge: the loop is the same, and in the first week you would read their confusion matrix, their no-match rate by page and a stratified transcript sample"
+            ],
+            links: [
+              { label: "Baseline, NLP: error analysis", url: "BASELINE.html#/nlp/error-analysis" },
+              { label: "Baseline, NLP: classic NLU and LLMs together", url: "BASELINE.html#/nlp/nlu-llm-hybrid" },
+              { label: "Guide: enterprise virtual assistant, the whole design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant" },
+              { label: "3 Dots IT prep: the production failure scanner", url: "interviews/threedots.html#/prep/q-tell-me-about-the-production-failure-scanner" },
+              { label: "3 Dots IT prep: improving an assistant from production data", url: "interviews/threedots.html#/prep/q-tell-me-about-a-time-you-improved-an-assistant-from-producti" }
+            ],
             ans: [
               "alfred_: 'intent classification → decision layer → callable tools', for 5,000+ active users",
               "A production-failure scanner reads real conversations, separates genuine failures from expected behaviour, and promotes real bugs to triage",
@@ -7915,7 +8454,8 @@
   /* The question the answer box answers: the step's done-when, else its title, explained. */
   function promptOf(it) {
     var p = String(it.out || "Explain in your own words. " + it.t).replace(/[.\s]+$/, "");
-    return (/^[a-z]+\b/.test(p) ? p.charAt(0).toUpperCase() + p.slice(1) : p) + ".";   // leaves p50 as p50
+    return (/^[a-z]+\b/.test(p) ? p.charAt(0).toUpperCase() + p.slice(1) : p) +
+      (/[?!]$/.test(p) ? "" : /^(how|what|why|when|which|who|where|do|does|did|can|could|is|are|should|would|will)\b/i.test(p) ? "?" : ".");   // leaves p50 as p50
   }
   /* Read is marked once any of the step's own links has been opened from here. */
   function stepVisited(s, it, key) {
@@ -7992,6 +8532,7 @@
     var x = extraOf(key), model = isStudy ? it.say : modelOf(s, it), says = !!model || SAYS.test(it.t || "");
     var mat = el("div", "sdmat"), work = el("div", "sdwork");
     if (!isStudy && it.d && !s.study) { mat.appendChild(el("p", "sxd", it.d)); }
+    if (it.pts && it.pts.length) { var pul = el("ul", "sxpts"); it.pts.forEach(function (q) { pul.appendChild(sayPoint(q)); }); mat.appendChild(pul); }
     (x.figs || []).forEach(function (k, n) { var f = plate(k, n + 1); if (f) { mat.appendChild(f); } });
     if (isStudy) { section(mat, "Do", doRows(s, it, i)); }
     else { section(mat, null, metaRows(s, it, says)); }

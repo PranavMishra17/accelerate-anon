@@ -449,5 +449,248 @@ window.FIG_NOTES = Object.assign(window.FIG_NOTES || {}, {
       "nokey>twice": { "t": "Books again", "d": "With nothing to match on, the server runs the booking a second time." }
     },
     "walk": ["client", "server", "db", "client>server", "server>tx", "tx", "tx>ledger", "ledger", "server>lost", "lost", "client>server#2", "server>ledger", "ledger>server", "server>client", "nokey", "nokey>twice", "twice"]
+  },
+  "nlpMap": {
+    "nodes": {
+      "convai": { "t": "Conversational AI", "d": "Conversational AI is a stack over the map, not a field of its own. Intent classification and NER sit in front as routers and guards, retrieval brings knowledge, an LLM generates and calls tools, and dialogue state, safety and evaluation hold it together.\n\nIn an interview, placing a virtual assistant on this map is the quickest way to show you know where each part comes from." },
+      "classification": { "t": "Text classification", "d": "Text classification gives a text one or more labels: intent, sentiment, topic, spam. Intent detection in a virtual assistant is this task, and it is usually the cheapest model in the stack." },
+      "ner": { "t": "Sequence labelling and NER", "d": "Sequence labelling gives every token a label, and named entity recognition is the best known case. It is how an assistant finds the amount, the date or the account in a sentence: a fine-tuned encoder, or LLM extraction." },
+      "qa": { "t": "Question answering", "d": "Question answering returns an answer to a question: a span from a passage (extractive), a written answer (abstractive), or an open-domain answer with retrieval first. Exact match and token F1 score the extractive kind." },
+      "summarization": { "t": "Summarization", "d": "Summarization shortens a text, by picking sentences (extractive) or writing new ones (abstractive). Faithfulness is the main failure: a fluent summary that says something the source does not." },
+      "translation": { "t": "Machine translation", "d": "Machine translation is the task that produced seq2seq, attention and the Transformer. BLEU, an n-gram overlap score, came from it; it is cheap and only weakly tracks quality." },
+      "retrieval": { "t": "Retrieval and ranking", "d": "Retrieval finds the relevant documents: sparse (BM25), dense (embeddings), and rerankers on top. It is the front half of RAG, and in an assistant it answers the FAQ turns." },
+      "dialogue": { "t": "Dialogue", "d": "Dialogue is multi-turn interaction, either task-oriented (intents and slots) or open-domain chat. An enterprise virtual assistant is task-oriented dialogue with an open-ended layer for FAQ and fallback." },
+      "extraction": { "t": "Information extraction", "d": "Information extraction turns text into structured records: entities, relations, events and times. Coreference and entity linking belong here too: deciding that \"she\" and \"the CEO\" are one entity, and which one." },
+      "repr": { "t": "Representations", "d": "Representations turn units into numbers, from one-hot and counts to contextual and sentence embeddings. Every task above reads one of these; the representation ladder figure walks the rungs." },
+      "eval": { "t": "Evaluation", "d": "Evaluation scores each task with a metric that fits it, and each metric hides something. Accuracy misleads on imbalanced classes, macro F1 lets rare classes count, BLEU and ROUGE only count n-gram overlap, perplexity measures a language model rather than a task, and LLM judges need rubrics and calibration against people." },
+      "foundations": { "t": "Foundations", "d": "Foundations turn raw text into units. Tokenization splits it into words, subwords or bytes; morphology reduces word forms to a base; part-of-speech tagging labels each word; parsing finds the sentence structure.\n\nTokenization still matters most today: LLM cost and odd behaviour on numbers, code and other languages start there." },
+      "eras": { "t": "Model eras", "d": "Model eras are the ways each layer has been learned, oldest on the left. Rules are precise and brittle; statistical models (Naive Bayes, HMMs, CRFs, n-gram LMs) learn from hand-built features; neural models (RNN, LSTM, seq2seq with attention) learn the features; Transformers (BERT, GPT, T5) made pretrain then fine-tune the standard; LLMs do many tasks from a prompt.\n\nRules are still the right answer for narrow, high-precision cases." }
+    },
+    "edges": {
+      "classification>convai": { "t": "Built from the tasks", "d": "A virtual assistant is assembled from these tasks: classification for intents, NER for entities, retrieval for knowledge, dialogue for state." },
+      "repr>retrieval": { "t": "Numbers feed the tasks", "d": "Every task reads a representation; dense retrieval, for one, is only as good as its sentence embeddings." },
+      "eval>dialogue": { "t": "Each task is scored", "d": "Evaluation sits beside the tasks rather than under them: each one needs its own metric, and a conversation needs metrics a single utterance never shows." },
+      "foundations>repr": { "t": "Units become numbers", "d": "Representations are built on the units the foundations produce, so a tokenizer change ripples up through everything." }
+    },
+    "walk": ["foundations", "foundations>repr", "repr", "repr>retrieval", "classification", "ner", "qa", "summarization", "translation", "retrieval", "dialogue", "extraction", "eval", "eval>dialogue", "classification>convai", "convai", "eras"]
+  },
+  "reprLadder": {
+    "nodes": {
+      "onehot": { "t": "One-hot", "d": "One-hot gives every word its own dimension. It is huge and sparse, and every pair of words is equally far apart, so \"cat\" is no closer to \"dog\" than to \"invoice\"." },
+      "bow": { "t": "Bag of words", "d": "Bag of words counts the words in a text and ignores their order. It is simple and strong for topic-like classification." },
+      "tfidf": { "t": "TF-IDF", "d": "TF-IDF weights each count by how rare the term is across documents, so common words count less. It is the default sparse baseline: cheap, interpretable and strong when vocabulary is the signal and data is small. It fails on synonyms and word order, which is what dense embeddings fix." },
+      "ngrams": { "t": "N-grams", "d": "N-grams count sequences of words, which adds local order: \"not good\" becomes its own feature. They are also the basis of classic language models." },
+      "static": { "t": "Static word embeddings", "d": "Static embeddings learn one dense vector per word from the contexts it appears in: word2vec, GloVe, fastText. Words used in similar contexts get similar vectors (the distributional hypothesis).\n\nfastText builds a word from character n-grams, so it handles rare words and typos. The limit: \"bank\" has one vector whatever the sentence." },
+      "contextual": { "t": "Contextual embeddings", "d": "Contextual embeddings give each token occurrence its own vector, computed from the whole sentence: ELMo with a bidirectional LSTM, BERT with a Transformer encoder. \"Bank\" by a river and \"bank\" with money now differ.\n\nMean-pooling raw BERT tokens still makes a poor sentence vector, which is what the next rung fixes." },
+      "sentence": { "t": "Sentence embeddings", "d": "Sentence embeddings give a whole text one vector, trained so that cosine similarity means similar meaning. Sentence-BERT trained a siamese BERT on sentence pairs and cut a 10,000-sentence pair search from about 65 hours to about 5 seconds; modern models use contrastive training.\n\nThey drive semantic search, clustering, intent kNN and RAG." }
+    },
+    "edges": {
+      "onehot>bow": { "t": "Count the words", "d": "Summing one-hot vectors over a text gives its bag of words." },
+      "bow>tfidf": { "t": "Weight by rarity", "d": "Multiply each count by the inverse of how many documents contain the term." },
+      "tfidf>ngrams": { "t": "Add local order", "d": "Count short word sequences as well as single words." },
+      "ngrams>static": { "t": "From counts to learned vectors", "d": "The jump from sparse to dense: instead of counting, learn a vector per word by predicting its context." },
+      "static>contextual": { "t": "Depend on the sentence", "d": "Compute the vector from the whole sentence, so the same word gets different vectors in different contexts." },
+      "contextual>sentence": { "t": "Train for comparison", "d": "Train the pooled vector with a siamese or contrastive objective so that cosine similarity becomes meaningful." }
+    },
+    "walk": ["onehot", "onehot>bow", "bow", "bow>tfidf", "tfidf", "tfidf>ngrams", "ngrams", "ngrams>static", "static", "static>contextual", "contextual", "contextual>sentence", "sentence"]
+  },
+  "clfLadder": {
+    "nodes": {
+      "tfidf": { "t": "TF-IDF + logistic regression", "d": "TF-IDF with logistic regression (or a linear SVM, or Naive Bayes) is the first rung: seconds to train on a CPU, interpretable, and a strong baseline. Always run it first, because it tells you how hard the problem really is." },
+      "encoder": { "t": "Fine-tuned encoder", "d": "A fine-tuned encoder (BERT, RoBERTa, DeBERTa) gives the best accuracy for supervised classification once you have hundreds to thousands of labelled examples. With a small model it fits a latency budget under 20 ms; one preprint measured about 2.4 ms p50 for fine-tuned RoBERTa.\n\nDistilBERT or a smaller model when latency matters." },
+      "embhead": { "t": "Embeddings + a small head", "d": "Embeddings with a head encode each text once with a frozen sentence-embedding model and train a tiny classifier (logistic regression or kNN) on top. Strong with little data, cheap to retrain, and easy to add a class; a good fit at 50 to 500 examples per class with stable labels and tight latency." },
+      "setfit": { "t": "SetFit", "d": "SetFit fine-tunes a sentence transformer contrastively on pairs built from a few labelled examples (same class close, different class apart), then fits a logistic head. It is competitive with much larger models at 8 to 64 examples per class, with no prompts.\n\nMany pairs come from few examples, and the encoder starts with good semantics." },
+      "nli": { "t": "Zero-shot NLI", "d": "Zero-shot NLI poses each label as a hypothesis (\"This text is about X\") and scores entailment. It needs no labelled data, but it is slow, one forward pass per label, and mediocre on fine-grained labels." },
+      "llm": { "t": "LLM prompting", "d": "LLM prompting classifies with zero or few examples in the prompt and structured output. It needs no training, copes with label sets that change, and is the best cold start; it costs latency and money on every call (about 981 ms p50 and about $0.25 per 1,000 calls in one preprint) and needs calibration and eval.\n\nThat preprint also found the LLM far better at out-of-scope recall (85.6 against 58.1)." }
+    },
+    "edges": {
+      "setfit>llm": { "t": "Hybrid routing", "d": "The production pattern: a fast classifier answers the confident turns and only uncertain ones go to the LLM. Amazon's study routed on SetFit uncertainty and came within 2% of the LLM's accuracy with 50% less latency." }
+    },
+    "walk": ["tfidf", "encoder", "embhead", "setfit", "nli", "llm", "setfit>llm"]
+  },
+  "contrastive": {
+    "nodes": {
+      "query": { "t": "Query", "d": "The query is the text being embedded, the anchor of one training example. Its loss depends only on how it sits relative to its positive and its negatives." },
+      "positive": { "t": "Positive", "d": "The positive is the text that should land close to the query: a paraphrase, an NLI entailment, or a document that answers it. In SetFit it is another example of the same class." },
+      "hardneg": { "t": "Hard negative", "d": "A hard negative is close to the query but wrong, such as a near-duplicate intent. It produces the largest gradient, so mining hard negatives improves quality more than adding easy ones." },
+      "neg1": { "t": "In-batch negative", "d": "An in-batch negative is another example's positive, reused as a negative for this query at no extra compute. A batch of n pairs gives every query n - 1 negatives for free." },
+      "neg2": { "t": "In-batch negative", "d": "Another free negative from the same batch. Most are easy, already far away, which is why larger batches help: more chances of a hard one." },
+      "neg3": { "t": "In-batch negative", "d": "Another free negative from the same batch. Contrastive training also spreads vectors out across the space (SimCSE), fixing the narrow cone that off-the-shelf encoders produce." },
+      "infonce": { "t": "InfoNCE", "d": "InfoNCE is a softmax over the query's similarities, with the positive as the correct class. Minimising it raises the positive's similarity relative to every negative at once." },
+      "inbatch": { "t": "In-batch negatives", "d": "In-batch negatives make every other example's positive a negative for this query. That is why batch size matters so much for embedding training." },
+      "temperature": { "t": "Temperature", "d": "The temperature T divides every similarity before the softmax. A small T sharpens the distribution, so the closest negatives dominate the loss; that controls how sharply hard negatives are penalised." }
+    },
+    "edges": {
+      "query>positive": { "t": "Pull", "d": "The loss pulls the query and its positive together, raising their cosine similarity." },
+      "query>hardneg": { "t": "Push, hardest", "d": "The hard negative is pushed away with the most force, because it is the most similar." },
+      "query>neg1": { "t": "Push", "d": "Each negative is pushed away in proportion to how close it is." },
+      "query>neg2": { "t": "Push", "d": "A far negative contributes almost nothing to the loss." },
+      "query>neg3": { "t": "Push", "d": "Every negative shares the softmax with the positive, so they compete with it." }
+    },
+    "walk": ["query", "positive", "query>positive", "hardneg", "query>hardneg", "neg1", "neg2", "neg3", "infonce", "inbatch", "temperature"]
+  },
+  "annIndex": {
+    "nodes": {
+      "flat": { "t": "Flat (exact)", "d": "A flat index compares the query with every stored vector. It is exact, needs no training, and is fine up to roughly a million vectors; past that the full scan costs too much." },
+      "hnsw": { "t": "HNSW", "d": "HNSW is a layered proximity graph: the sparse top layers make long jumps, the dense bottom layer holds every vector, and search descends greedily from top to bottom. Very good recall and speed, at high memory for the graph.\n\nKnobs: M (links per node), efConstruction (build effort), efSearch (search effort, the recall against latency dial)." },
+      "ivf": { "t": "IVF", "d": "IVF runs k-means to split the space into nlist cells, then searches only the nprobe cells nearest the query. Lower memory than HNSW; recall is tuned with nprobe, and a neighbour across a cell boundary is what it can miss." },
+      "pq": { "t": "Product quantization", "d": "Product quantization cuts each vector into sub-vectors and stores a short code for each, the id of its nearest centroid. It uses 10x to 50x less memory at some recall cost, and combined with IVF (IVF-PQ) it reaches billions of vectors." },
+      "choose": { "t": "Choosing", "d": "Under about a million vectors use flat or HNSW; for billions use IVF-PQ; then tune recall against latency on your own queries. Hybrid search (BM25 plus dense, with rank fusion) often beats dense alone." }
+    },
+    "edges": {},
+    "walk": ["flat", "hnsw", "ivf", "pq", "choose"]
+  },
+  "llmLifecycle": {
+    "nodes": {
+      "pre": { "t": "Pretraining", "d": "Pretraining teaches the model to predict the next token over a huge corpus of raw text. It is where knowledge and fluency come from; the model is a text continuer, not yet an assistant.\n\nTraining compute is about 6 x parameters x tokens FLOPs." },
+      "sft": { "t": "Supervised fine-tuning", "d": "Supervised fine-tuning trains on instruction and response pairs, which turns a next-token predictor into an assistant. It teaches format and following more than new knowledge." },
+      "pref": { "t": "Preference tuning", "d": "Preference tuning trains on human judgements of which of two answers is better. It shapes quality and safety; InstructGPT showed a 1.3B model tuned this way was preferred over the 175B GPT-3." },
+      "rlhf": { "t": "RLHF", "d": "RLHF trains a reward model on human preference rankings, then optimises the language model with PPO against that reward, plus a KL penalty that keeps it near the SFT model so it does not drift into reward hacking." },
+      "dpo": { "t": "DPO", "d": "DPO skips the reward model and the RL loop: a classification-style loss on preferred against rejected pairs, measured relative to a frozen reference model. It is simpler, more stable and widely used." },
+      "inf": { "t": "Inference", "d": "Inference runs the finished model one token at a time. Each step costs about 2 x parameters FLOPs, and past keys and values are cached so only the new token is computed." },
+      "decoding": { "t": "Decoding", "d": "Decoding picks the next token from the model's distribution. Greedy takes the top token; temperature divides the logits (below 1 sharpens, above 1 flattens); top-k samples from the k best; top-p samples from the smallest set whose probability reaches p.\n\nFor classification and extraction use temperature 0 or constrained decoding." },
+      "lora": { "t": "LoRA", "d": "LoRA freezes the base weights and trains two small low-rank matrices beside them (W + BA). It cuts trainable parameters by up to 10,000x against full GPT-3 fine-tuning and adds no inference latency once merged.\n\nUse it when the problem is behaviour, format, tone or cost at scale, not missing knowledge." },
+      "prompting": { "t": "Prompting", "d": "Prompting changes only the input: instructions and, for in-context learning, examples. It is the first resort, fast and with no training, limited by context length and consistency." },
+      "rag": { "t": "RAG", "d": "RAG retrieves documents at call time and puts them in the prompt. Use it when the problem is knowledge that is private, large or changing: it is updatable, citable, and reduces hallucination." }
+    },
+    "edges": {
+      "pre>sft": { "t": "Then instructions", "d": "The pretrained model is fine-tuned on demonstrations of the behaviour wanted." },
+      "sft>pref": { "t": "Then preferences", "d": "The SFT model is the starting point, and the reference, for preference tuning." },
+      "pref>rlhf": { "t": "One route", "d": "Reward model, then reinforcement learning." },
+      "pref>dpo": { "t": "The other route", "d": "A direct loss on preference pairs." },
+      "pref>inf": { "t": "Ship it", "d": "The tuned model is deployed and used for inference." },
+      "inf>decoding": { "t": "Every token", "d": "Each step of inference ends with a decoding choice." },
+      "lora>sft": { "t": "Your own tuning", "d": "LoRA is how you fine-tune for your task without retraining the whole model." },
+      "prompting>inf": { "t": "No weights change", "d": "Prompting acts only at call time; the model is untouched." },
+      "rag>inf": { "t": "Context at call time", "d": "Retrieved text joins the prompt for this call only. Knowledge goes in retrieval, behaviour goes in tuning." }
+    },
+    "walk": ["pre", "pre>sft", "sft", "sft>pref", "pref", "pref>rlhf", "rlhf", "pref>dpo", "dpo", "pref>inf", "inf", "inf>decoding", "decoding", "prompting", "prompting>inf", "rag", "rag>inf", "lora", "lora>sft"]
+  },
+  "vaTurn": {
+    "nodes": {
+      "user": { "t": "User", "d": "The user sends one turn: a typed message or a spoken utterance. The design goal is that they never have to repeat themselves, even when the turn ends with a human." },
+      "channel": { "t": "Channel", "d": "The channel delivers the turn: chat as text, or voice through speech recognition (ASR). On voice, ASR errors dominate failures, so N-best transcripts and their confidence matter as much as the NLU score." },
+      "nlu": { "t": "NLU classifier", "d": "The NLU classifier returns the top intent and a confidence, often with alternates (Lex returns up to four). Its confidence picks one of three bands: act, confirm, or fall back.\n\nIt is fast and cheap, so it handles most turns; scores are model-specific and must be calibrated." },
+      "llm": { "t": "LLM fallback", "d": "The LLM fallback takes the turns the classifier is unsure of, with the top candidate intents in the prompt. It either resolves the intent and its slots or hands off; generative fallback on no-match handlers is how Dialogflow CX adds an LLM safely." },
+      "entities": { "t": "Entities", "d": "Entities are extracted from the turn, then validated in code: a regex and a lookup for an account number, a list with synonyms for an account type. The LLM may propose values; deterministic code checks them against the system of record." },
+      "state": { "t": "Dialogue state", "d": "Dialogue state is the structured record at each turn: filled slots, authentication, the current step. It is measured by joint goal accuracy, all slots right; what must be remembered for sure (account, order id, auth state) belongs here, not in the model's memory of the transcript." },
+      "fulfilment": { "t": "Fulfilment", "d": "Fulfilment does the work: a backend API call for a transaction, or retrieval over the knowledge base for an FAQ. Keep account-specific answers off the RAG path so a generic document never answers a question about one account." },
+      "response": { "t": "Response", "d": "The response goes back as text, or as speech on voice. Voice prompts are short and put the question last; an action with a cost is confirmed before it runs." },
+      "handoff": { "t": "Human handoff", "d": "Handoff passes the conversation to a person with a payload: a summary, the intent, identifiers and what was already tried. Triggers: an explicit request (at once), a second failure, a high-stakes topic, or frustration; when no agent is free, offer a callback or a ticket." },
+      "log": { "t": "Logging", "d": "Every stage logs what it saw and decided: text, intent, confidence, band, entities and outcome. Without these logs there is no error analysis, and sensitive fields must be redacted at ingest." }
+    },
+    "edges": {
+      "user>channel": { "t": "The turn arrives", "d": "The user's message enters through chat or voice." },
+      "channel>nlu": { "t": "Text to the classifier", "d": "The transcript or message text goes to the NLU classifier." },
+      "nlu>entities": { "t": "High: act", "d": "Above the high threshold the intent is accepted and its entities are extracted." },
+      "nlu>user": { "t": "Middle: confirm", "d": "Between the thresholds the assistant asks: \"did you mean X?\", or which of the top two." },
+      "nlu>llm": { "t": "Low: fall back", "d": "Below the low threshold, or when the top two are too close, the turn goes to the LLM fallback." },
+      "llm>entities": { "t": "Resolved", "d": "The LLM names the intent and its slots, and the same validators check them." },
+      "llm>handoff": { "t": "Still unsure", "d": "If the LLM cannot resolve the turn either, a human takes over." },
+      "entities>state": { "t": "Fill the slots", "d": "Validated values update the dialogue state." },
+      "state>fulfilment": { "t": "Ready to act", "d": "When the required slots are filled, fulfilment runs." },
+      "fulfilment>response": { "t": "Result", "d": "The backend result or the retrieved answer becomes the response." },
+      "response>user": { "t": "Reply", "d": "The reply goes back on the same channel." },
+      "fulfilment>log": { "t": "Logged", "d": "The outcome, success or failure, is logged with the rest of the turn." }
+    },
+    "walk": ["user", "user>channel", "channel", "channel>nlu", "nlu", "nlu>entities", "nlu>user", "nlu>llm", "llm", "llm>entities", "llm>handoff", "handoff", "entities", "entities>state", "state", "state>fulfilment", "fulfilment", "fulfilment>response", "response", "response>user", "log"]
+  },
+  "thresholdBands": {
+    "nodes": {
+      "fallback": { "t": "Fall back", "d": "Below the low threshold the top intent is rejected: the turn becomes None, gets a rephrase, or goes to an LLM fallback. Cognigy's default for this line, its reconfirmation threshold, is 0.2." },
+      "confirm": { "t": "Confirm", "d": "In the middle band the assistant asks before acting: \"did you mean X?\", or a closed choice between the top two. Cognigy places this band between 0.2 and 0.4 by default." },
+      "act": { "t": "Act", "d": "Above the high threshold the assistant accepts the intent and runs its flow. Cognigy's default for this confidence threshold is 0.4; Lex lets you set one per locale." },
+      "perintent": { "t": "Per-intent bar", "d": "A high-risk intent, such as moving money, gets a higher bar and an explicit confirmation. Set thresholds per intent family from evaluation data, by plotting precision, recall and the cost of a wrong action against the threshold." },
+      "close": { "t": "Too close to call", "d": "When the top two scores are close, as 0.75 against 0.72 in the Lex docs, the request is ambiguous whatever the top score. Ask a short closed question; a low margin is also a sign two intents overlap." },
+      "clear": { "t": "A clear winner", "d": "0.95 against 0.65 is not ambiguous, so the assistant acts on the top intent." },
+      "calibration": { "t": "Calibration", "d": "Thresholds only work if the scores are calibrated, so that 80% confident is right about 80% of the time; modern networks are overconfident. Fit temperature scaling on validation data: one scalar, accuracy unchanged.\n\nScores are comparative and shift with model updates (Lex says so), so re-tune after every model or training change." }
+    },
+    "edges": {},
+    "walk": ["act", "confirm", "fallback", "perintent", "close", "clear", "calibration"]
+  },
+  "repairLadder": {
+    "nodes": {
+      "event": { "t": "No-match or no-input", "d": "The two everyday errors: the assistant did not understand (no-match) or heard nothing (no-input); system errors are the third type. Count them per state, so each state can escalate its own help, as Dialogflow CX does with numbered handlers." },
+      "a1": { "t": "First reprompt", "d": "The first reprompt is a short rephrase with a brief apology, not a verbatim repeat. For no-input, do not say \"I didn't hear you\"; rephrase and offer options." },
+      "a2": { "t": "Second reprompt", "d": "The second reprompt adds help: the options available, or an example of what to say. Alexa's guidance runs the same way: first repeat, second explain." },
+      "exit": { "t": "Exit with a way out", "d": "After about two failed attempts the assistant exits gracefully to an alternative: a human, or another channel. Never a dead end: when agents are closed, offer a callback or a ticket.\n\nAn explicit request for a human skips the ladder and transfers at once." },
+      "explicit-cost": { "t": "Explicit, high cost", "d": "Irreversible or expensive actions get an explicit yes or no before they run: payments, deletions, messages to share, names and addresses." },
+      "explicit-both": { "t": "Explicit, high cost and unsure", "d": "When the action is costly and recognition is shaky, confirm explicitly and make the value hard to mishear: read it back, or collect digits by DTMF or spelling on voice." },
+      "implicit": { "t": "Implicit", "d": "Implicit confirmation is the default: the assistant restates as it moves on (\"So, a table for two\"), keeping the flow and letting the user correct it if wrong." },
+      "explicit-unsure": { "t": "Explicit, low confidence", "d": "Even an ordinary slot gets explicit confirmation when the ASR or NLU confidence is low. Lex suggests comparing similar-scoring candidates, such as John and Juan, against a database." }
+    },
+    "edges": {
+      "event>a1": { "t": "First miss", "d": "The first failure in this state gets a rephrase." },
+      "a1>a2": { "t": "Second miss", "d": "Still no match: offer options or examples." },
+      "a2>exit": { "t": "Stop asking", "d": "After about two failed attempts, stop and hand over a way out." }
+    },
+    "walk": ["event", "event>a1", "a1", "a1>a2", "a2", "a2>exit", "exit", "implicit", "explicit-cost", "explicit-unsure", "explicit-both"]
+  },
+  "intentTaxonomy": {
+    "nodes": {
+      "root": { "t": "Route by domain first", "d": "A flat taxonomy breaks down past a few hundred intents, so route by domain first, then classify within it. Each domain classifier then has a manageable label space; Dialogflow CX flows or Microsoft orchestration do this." },
+      "accounts": { "t": "Accounts", "d": "The accounts domain: intents such as check balance and open an account. \"Open an account and send me the details\" is two intents in one turn, which classic NLU does not handle without splitting." },
+      "cards": { "t": "Cards", "d": "The cards domain shows when to split: \"card lost\" and \"card declined\" use similar words but need different handling, so they are two intents." },
+      "payments": { "t": "Payments", "d": "The payments domain: transfer money, dispute a charge. A transfer moves money, so it stays in a deterministic flow with explicit confirmation and server-side authorisation." },
+      "fraud": { "t": "Fraud", "d": "Fraud, like \"I want a human\", gets a top-priority route: these turns go to a person quickly rather than through a long flow." },
+      "knowledge": { "t": "Knowledge", "d": "The knowledge branch replaces dozens of FAQ intents with retrieval over a curated knowledge base, grounded and cited. Keep a separate intent for anything needing a transaction, so retrieval never answers an account-specific question." },
+      "none": { "t": "None, out of scope", "d": "None is where out-of-scope turns go. Train it with near-miss false positives, greetings, yes or no and bare numbers; every platform has one (CLU None, the Dialogflow CX default negative intent, Lex FallbackIntent)." },
+      "accounttype": { "t": "Account type", "d": "A list entity: reference values (checking, savings) with synonyms, resolved to one canonical value." },
+      "amount": { "t": "Amount", "d": "A prebuilt number entity. Prebuilt extractors fire everywhere (\"3 PM\" contains a number), so CLU suggests adding a learned component and making it required." },
+      "date": { "t": "Date", "d": "A prebuilt date entity, normalised to a real date. Users over-answer (\"tomorrow at 9 from savings\"), and the flow should accept it and skip those questions." },
+      "accountno": { "t": "Account number", "d": "Identifiers are extracted deterministically, by regex, and validated against the system of record, never guessed by a model." },
+      "rules": { "t": "Granularity rules", "d": "Actions are intents and the things they act on are entities: Cancel is one intent and the product an entity (Microsoft's CLU guidance). Same flow and same API call means merge; same words needing different handling means split." }
+    },
+    "edges": {
+      "root>accounts": { "t": "Domain", "d": "The router sends account turns here." },
+      "root>cards": { "t": "Domain", "d": "The router sends card turns here." },
+      "root>payments": { "t": "Domain", "d": "The router sends payment turns here." },
+      "root>fraud": { "t": "Priority domain", "d": "Fraud is routed first and fast." },
+      "root>knowledge": { "t": "Knowledge", "d": "Informational questions go to retrieval." },
+      "root>none": { "t": "Out of scope", "d": "Turns that match nothing well land in None." },
+      "payments>amount": { "t": "A slot", "d": "A transfer needs an amount." },
+      "payments>date": { "t": "A slot", "d": "And a date; the same date entity serves every intent that needs one." }
+    },
+    "walk": ["root", "accounts", "cards", "payments", "fraud", "knowledge", "none", "payments>amount", "amount", "payments>date", "date", "accounttype", "accountno", "rules"]
+  },
+  "confusionMatrix": {
+    "nodes": {
+      "diagonal": { "t": "The diagonal", "d": "The diagonal counts the turns the model got right: true intent and predicted intent agree. The counts here are illustrative, 50 test utterances per intent." },
+      "hot1": { "t": "Lost card read as declined", "d": "Nine lost-card turns were predicted as card declined. The two share words but need different handling, so they stay split; the fix is contrastive examples that show the difference, or a disambiguation question when the scores are close." },
+      "hot2": { "t": "Dispute read as transfer", "d": "Seven dispute turns were predicted as transfer. Read the actual utterances before fixing: a training bias, such as one intent having twice the examples, can produce this." },
+      "recall": { "t": "Recall per intent", "d": "Recall is the diagonal over the row sum: of the turns that truly were this intent, how many the model found. Lost card is at 76% here, because its row leaks into card declined." },
+      "precision": { "t": "Precision per intent", "d": "Precision is the diagonal over the column sum: of the turns predicted as this intent, how many were right. Card declined drops to 81% here, because the lost-card turns land in its column." },
+      "merge": { "t": "Merge", "d": "Merge when the two are one action with different objects: one intent and an entity, the same flow and the same API call." },
+      "examples": { "t": "Add contrastive examples", "d": "When the actions are distinct but the wording is ambiguous, add examples that show exactly where they differ, and check the classes are balanced." },
+      "disambiguate": { "t": "Disambiguate", "d": "When the user's words cannot separate them, keep both intents and ask a short closed question when the top two scores are within a small margin. Then re-run the frozen test set so the error has not moved to a neighbour." }
+    },
+    "edges": {},
+    "walk": ["diagonal", "recall", "precision", "hot1", "hot2", "merge", "examples", "disambiguate"]
+  },
+  "errorLoop": {
+    "nodes": {
+      "logs": { "t": "Transcripts and logs", "d": "The loop starts from what production recorded: every turn's text, intent, confidence, band, entities and outcome. Filter out greetings, tests and spam before computing any rate." },
+      "sample": { "t": "Stratified sample", "d": "Sample by stratum, not only at random: all escalations, abandoned sessions, low-confidence turns, sessions with negative feedback, and a random slice. Review whole conversations, because many failures are dialog failures a per-utterance metric never shows." },
+      "label": { "t": "Label the cause", "d": "Each failed conversation gets one primary cause from the failure taxonomy, plus the correct intent and entities. Use a labelling guide, and double-label a subset to measure agreement." },
+      "taxonomy": { "t": "Failure taxonomy", "d": "The eight causes: ASR (voice only), NLU miss, entity or slot error, dialog logic, backend or API failure, content gap, policy (it legitimately cannot do it), and abandonment with no failure signal. The split tells you whether to fix training data, flows, integrations or the product; report it as a share of lost containment." },
+      "cluster": { "t": "Cluster the misses", "d": "Take fallback and low-confidence utterances, embed them, cluster (HDBSCAN or k-means), and have an LLM name each cluster. Rank by volume times business cost, then decide: a new intent, an existing one, None, or a content gap for RAG." },
+      "fix": { "t": "Fix at the right layer", "d": "The fix goes where the cause is: training data, the flow, the integration, or the content. A knowledge base or prompt change goes through the same pipeline as code." },
+      "tests": { "t": "Regression and golden tests", "d": "Every label becomes a test case or a training example. Three layers: an NLU test set, scripted golden conversations for happy and failure paths, and a never-break suite; Dialogflow CX test cases and Lex Test Workbench do this." },
+      "canary": { "t": "Canary and A/B", "d": "Ship to a small share of traffic first, with the previous version kept for rollback. Dialogflow CX experiments split live traffic across up to four variants with auto rollout; pick one primary metric, such as task completion, and assign by user." },
+      "monitor": { "t": "Monitor KPIs", "d": "Watch fallback rate, escalation by intent, intent mix and confidence distribution, and webhook errors, against a rolling baseline. A sudden fallback rise is either a new topic (needs an intent or content) or a regression (needs rollback)." },
+      "kpis": { "t": "KPIs that tell the truth", "d": "Containment alone can be gamed: a bot that is a wall contains everything. Report it beside resolution (the customer confirms, no repeat contact within 24 to 72 hours), CSAT and escalation rate by intent." }
+    },
+    "edges": {
+      "logs>sample": { "t": "Pick what to read", "d": "Draw the week's sample from the logs, by stratum." },
+      "sample>label": { "t": "Read and tag", "d": "Reviewers read each sampled conversation and tag it." },
+      "label>taxonomy": { "t": "One primary cause", "d": "Each failure gets exactly one cause from the taxonomy." },
+      "label>cluster": { "t": "Group the misses", "d": "NLU misses are grouped to find intents you do not have." },
+      "cluster>fix": { "t": "Decide the fix", "d": "Each cluster or cause turns into a concrete change." },
+      "fix>tests": { "t": "Prove it", "d": "The failing case joins the regression set before the fix ships." },
+      "tests>canary": { "t": "Release carefully", "d": "Passing tests earns a canary, not a full release." },
+      "canary>monitor": { "t": "Watch it", "d": "The new version is watched on the same KPIs as the old one." },
+      "monitor>logs": { "t": "Back to logs", "d": "Next week's logs show whether it worked, and the loop runs again." }
+    },
+    "walk": ["logs", "logs>sample", "sample", "sample>label", "label", "label>taxonomy", "taxonomy", "label>cluster", "cluster", "cluster>fix", "fix", "fix>tests", "tests", "tests>canary", "canary", "canary>monitor", "monitor", "kpis", "monitor>logs"]
   }
 });
