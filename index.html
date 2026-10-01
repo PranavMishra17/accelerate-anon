@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="site/tokens.css?v=0e3b75d2">
 <link rel="stylesheet" href="site/nav.css?v=2ebfb65e">
 <script src="private/site.js"></script>
-<script src="site/nav.js?v=e31cdab1" defer></script>
+<script src="site/nav.js?v=a8689a71" defer></script>
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
 <link rel="stylesheet" href="figures/viewer.css?v=d06369af">
 <link rel="alternate icon" type="image/png" href="brand/accelerate-32.png">
@@ -185,9 +185,14 @@
   .tally a { margin-left: auto; font-size: var(--fs-sm); }
 
   /* overview: the pages beside the plan, as a grid (site/nav.js draws the badges) */
-  .site-nav.sn-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); flex: none; margin: var(--s5) 0 0; }
-  .site-nav.sn-grid .sn-b { height: 40px; padding: 0 var(--s3); gap: var(--s2); font-size: var(--fs-md); }
-  .site-nav.sn-grid svg, .site-nav.sn-grid img { width: 16px; height: 16px; }
+  /* the pages beside the plan: a slim 3 by 2 grid at the top right of the overview */
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--s6); align-items: start; }
+  .hero > * { grid-column: 1; }
+  .site-nav.sn-grid { grid-column: 2; grid-row: 1 / span 6; display: grid; grid-template-columns: repeat(3, 132px); gap: 6px; margin: 2px 0 0; }
+  .site-nav.sn-grid .sn-b { height: 30px; padding: 0 10px; gap: 7px; font-size: var(--fs-sm); font-weight: 600; color: var(--ink);
+    background: var(--surface); border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent); border-radius: var(--radius-sm); }
+  .site-nav.sn-grid a.sn-b:hover { border-color: var(--accent); color: var(--accent); }
+  .site-nav.sn-grid svg, .site-nav.sn-grid img { width: 15px; height: 15px; color: var(--accent); }
 
   /* three for today */
   .cold3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3) var(--s5); align-items: start; }
@@ -539,7 +544,8 @@
     .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 720px) {
-    .site-nav.sn-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hero { grid-template-columns: minmax(0, 1fr); }
+    .site-nav.sn-grid { grid-column: 1; grid-row: auto; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: var(--s4) 0 0; }
     .crumb .pn { display: none; }
     .sxb { padding: 0 0 var(--s4); }
     .sxfin .wb-phase { grid-template-columns: minmax(0, 1fr); }
@@ -6863,15 +6869,15 @@
   function viewHome() {
     var v = document.getElementById("view");
     heroHome(v, nextSession());
-    v.appendChild(milestoneBlock());
-
-    /* the references; site/nav.js draws the badges into it */
+    /* the references, top right beside the next session; site/nav.js draws the badges into it */
     var nv = document.createElement("nav");
     nv.className = "sn-grid";
     nv.setAttribute("data-site-nav", "");
     nv.setAttribute("data-here", "tracker");
     nv.setAttribute("aria-label", "Pages beside the plan");
-    v.appendChild(nv);
+    var hero = v.querySelector(".hero");
+    (hero || v).appendChild(nv);
+    v.appendChild(milestoneBlock());
 
     var qs = coldThree(), cold = mostCold();
     if (qs.length || cold) {

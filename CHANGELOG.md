@@ -780,3 +780,9 @@ voice agents, Postgres-backed backends) and the interviews it leads to, glow in 
 in every outline, contents list, search result and map (`baseline/core.js`). Week 1's twelve
 reading links were all checked and load; eight of its steps now also link to the Baseline topic
 that explains the same idea in a minute (`data/reading.js`). No charter deviation.
+
+**2026-10-01 — The page grid moves top right; the cheat sheet's titles grow.**
+On the tracker's overview the site's pages are a slim 3 by 2 grid at the top right beside the
+next session, with visible borders and accent icons. The cheat sheet leaves the shared page list
+(`site/nav.js`): it lives inside Coding, which links to it. Its cards' titles are about a quarter
+larger than their text, and the sheet still fits one screen. No charter deviation.
