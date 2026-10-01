@@ -11,7 +11,7 @@
     document.documentElement.setAttribute("data-theme", t === "dark" ? "dark" : "light"); }());
 </script>
 <link rel="stylesheet" href="fonts/fonts.css">
-<link rel="stylesheet" href="baseline/map.css?v=fa4b1509">
+<link rel="stylesheet" href="baseline/map.css?v=69fc8392">
 <link rel="stylesheet" href="site/tokens.css?v=0e3b75d2">
 <link rel="stylesheet" href="site/nav.css?v=2ebfb65e">
 <script src="private/site.js"></script>
@@ -8026,10 +8026,6 @@
       if (qs.length) { v.appendChild(coldBlock(qs)); }
     }
 
-    v.appendChild(rubric("The work ahead", "every milestone through 2027"));
-    v.appendChild(el("p", "sm dim", "Time runs downward, one band per milestone; each column is a track, and a line means the lower thing needs the upper thing first."));
-    v.appendChild(mapLegend());
-    v.appendChild(mapPanel(""));
     v.appendChild(rubric("The field map", "every field and how they connect, from Baseline"));
     var fm = el("div", "bmap-host");
     v.appendChild(fm);
@@ -8037,6 +8033,10 @@
       var B = window.BASELINE, ov = B && B.byId.overview;
       if (fm.isConnected && ov && B.ui) { fm.appendChild(B.ui.fieldBrowser(ov, "BASELINE.html")); }
     });
+    v.appendChild(rubric("The work ahead", "every milestone through 2027"));
+    v.appendChild(el("p", "sm dim", "Time runs downward, one band per milestone; each column is a track, and a line means the lower thing needs the upper thing first."));
+    v.appendChild(mapLegend());
+    v.appendChild(mapPanel(""));
   }
   /* Baseline's field map on the home page, drawn by baseline/map.js from the same field files
      Baseline reads. They load once, the first time the home page is drawn. */

@@ -40,5 +40,6 @@ figure.map svg.focus .e.hl { color: var(--ink-1) !important; }
 .browse figure.map p.links { margin: var(--s2) 0 0; min-height: 7.5em; font-size: var(--fs-sm); line-height: 1.5; color: var(--ink-2); }
 .browse figure.map p.links i { font-style: normal; color: var(--ink-3); }
 @media (prefers-reduced-motion: reduce) { figure.map .n, figure.map .e { transition: none; } }
+.bmap-host { min-height: 560px; }   /* the map loads after the page: hold its room so nothing below jumps */
 .bmap-host { --ink-1: var(--ink); --ink-2: var(--soft); --ink-3: var(--muted); --line: var(--rule); --leaf: var(--surface);
   --mark: var(--accent-soft); --field: var(--accent); --serif: inherit; }
