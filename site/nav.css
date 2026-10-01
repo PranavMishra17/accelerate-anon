@@ -4,7 +4,7 @@
    hairline; the current page takes the accent. Two placements:
    - in the header (class sn-top): one compact row at the right end of the page's top bar, or in
      a strip of its own above it (sn-strip) when the bar is full. On a phone the row scrolls sideways.
-   - beside a title or a button (no sn-top): the tracker's home. */
+   - in the page (no sn-top): the tracker's overview draws it as a grid (sn-grid, styled in index.html). */
 :root { --sn-ink: #1D1B17; --sn-soft: #45413A; --sn-muted: #736D62; --sn-face: #FFFDF8; --sn-line: #E5DDCD;
   --sn-accent: #2447E0; --sn-accent-soft: #E8EDFC; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {

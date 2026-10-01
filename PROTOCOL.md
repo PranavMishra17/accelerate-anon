@@ -148,8 +148,8 @@ the one page that holds it.
 **One screen, in every orientation.** Where a page promises one screen, it holds on a
 wide display, on a phone upright and on a phone on its side, unless said otherwise.
 
-**Small rewards, never debt.** Closing a session launches the craft; closing a week binds
-it into the book, lights its constellation and unlocks a livery. None of it adds work.
+**Small rewards, never debt.** Closing a session launches the craft. The book, the sky and the liveries
+still exist at `#/book` and `#/sky`, off the plan's navigation since 1 October. None of it adds work.
 
 **Choose, do not specify.** Big changes start as a short list of options with a
 recommended one, answered in a line (`1b 2a`). Surprises are offered as a menu and only

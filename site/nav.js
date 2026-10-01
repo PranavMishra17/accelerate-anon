@@ -4,7 +4,7 @@
    of its top bar, or in a strip of its own above a full bar:
      <div class="top-in"><b>Page</b> ... <nav class="sn-top" data-site-nav data-here="coding" data-base=""></nav></div>
      <div class="sn-strip"><nav class="sn-top" data-site-nav data-here="alaap"></nav></div>
-   (The tracker's home puts it beside its Start button instead, without sn-top.)
+   (The tracker's overview puts it in the page instead, as a grid: class sn-grid, styled in index.html.)
    data-here   this page's key (or its href), marked and not a link
    data-base   the path back to the site root: "" at the root, "../" from interviews/
    Every other page opens in a new tab. A page that renders its header with script can add the

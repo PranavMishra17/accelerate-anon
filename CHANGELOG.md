@@ -750,3 +750,16 @@ parts: what it is (40 to 150 words), where it is used (2 to 4 named bullets), an
 worked scenario or number), the catch, and reading; `baseline/check.js` enforces the shape. On
 the overview, hovering a field previews its own map in a fixed pane beside the overview map,
 and a click keeps it there; nothing on the page moves. No charter deviation.
+
+**2026-10-01 — The tracker, re-polished: a rail and one page at a time.**
+Pranav found the home hard to move around. Measured at 1536x864 it was three screens with fifteen
+font sizes; a session put its steps two screens down; Progress was 2,600px with the book, sky and
+liveries mixed into the numbers. Now: a rail that is only the plan (Overview, the five weeks and
+their sessions, Wildcard, Practice, Reference), one page at a time with a breadcrumb and previous
+and next, a drawer on phones. The overview fits one screen before the map: the next session, the
+milestone bar and projected gate, week and wildcard cards with a coloured dot per session, four
+numbers, and the site's pages as a grid. Weeks open to what they cover and a card per session;
+sessions open to their steps first. It follows the system theme, uses the six token sizes, and
+colours each track consistently as a small mark. The book, sky and liveries left the navigation
+(routes kept, lift-off kept). Raydar moved to the past loops. No mechanics changed; no charter
+deviation.

@@ -1,342 +1,507 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Accelerate</title>
 <link rel="icon" type="image/svg+xml" href="brand/accelerate.svg">
 <link rel="stylesheet" href="fonts/fonts.css">
-<link rel="stylesheet" href="site/nav.css?v=5222bb0d">
+<link rel="stylesheet" href="site/tokens.css?v=0e3b75d2">
+<link rel="stylesheet" href="site/nav.css?v=2ebfb65e">
 <script src="private/site.js"></script>
-<script src="site/nav.js?v=d1ce52f5" defer></script>
+<script src="site/nav.js?v=e31cdab1" defer></script>
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
 <link rel="stylesheet" href="figures/viewer.css?v=d06369af">
 <link rel="alternate icon" type="image/png" href="brand/accelerate-32.png">
 <style>
+  /* The tracker's colour names, read from the shared tokens (site/tokens.css), so the page
+     follows the system's light or dark like every other page. Sizes, families, space and
+     radius come straight from the tokens. Track colours are the categorical tokens:
+     one colour per track, used as a dot or a 3px rule, never as a fill. */
   :root {
-    --board: #e8e5dd;
-    --sheet: #f4f2ec;
-    --live: #fffdf5;
-    --ink: #1a1a19;
-    --mid: #55544f;
-    --dim: #6b6a65;
-    --faint: #a2a09a;
-    --line: #c3c0b7;
-    --hair: #d9d6cd;
-    --sys: #3f6ea8;
-    --math: #3f7a55;
-    --alaap: #a85f3f;
-    --req: #8a6f2f;
-    --sys-p: #dbe4ef;
-    --math-p: #dde9e1;
-    --alaap-p: #f0e0d8;
-    --req-p: #ece4cf;
-    --iv: #7a3b5c;
-    --iv-p: #efdfe7;
-    --mark: #8a2f24;
-    --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --board: var(--bg); --sheet: var(--sunken); --live: var(--surface);
+    --mid: var(--soft); --dim: var(--muted); --faint: var(--muted); --line: var(--rule);
+    --sys: var(--cat-1); --math: var(--cat-2); --alaap: var(--cat-3); --iv: var(--cat-4);
+    --req: var(--cat-5); --wild: var(--cat-6); --flat: var(--muted);
+    --sys-p: #dbe4ef; --math-p: #dde9e1; --alaap-p: #f0e0d8; --req-p: #ece4cf; --iv-p: #efdfe7;
+    --mark: var(--warn); --sans: var(--font);
+    --bar-h: 52px; --rail-w: 264px;
   }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --sys-p: #2a3443; --math-p: #26352c; --alaap-p: #3a2b24; --req-p: #353023; --iv-p: #362631; }
+  }
+  :root[data-theme="dark"] { --sys-p: #2a3443; --math-p: #26352c; --alaap-p: #3a2b24; --req-p: #353023; --iv-p: #362631; }
+
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--board); color: var(--ink); font-family: var(--sans);
-    font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
-  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 20px 90px; }
-  .layout { display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 36px; align-items: start; }
-  main { min-width: 0; }
-  .railtoggle { display: none; background: none; border: 1px solid var(--line); padding: 6px 12px;
-    font-size: 13px; color: var(--ink); cursor: pointer; }
+  html { scroll-padding-top: calc(var(--bar-h) + 16px); }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: var(--fs-md);
+    line-height: var(--lh-body); -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  button:focus-visible, a:focus-visible, summary:focus-visible, textarea:focus-visible, input:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; }
+  h1 { font-size: var(--fs-2xl); font-weight: 600; line-height: var(--lh-tight); letter-spacing: -0.01em; margin: 0 0 var(--s2); }
+  h2 { font-size: var(--fs-xl); font-weight: 600; line-height: var(--lh-tight); margin: 0 0 var(--s2); }
+  h3 { font-size: var(--fs-lg); font-weight: 600; line-height: var(--lh-tight); margin: var(--s4) 0 var(--s2); }
+  p { margin: 0 0 var(--s3); max-width: var(--measure); }
+  .lede { font-size: var(--fs-lg); color: var(--soft); }
+  .dim { color: var(--muted); }
+  .sm { font-size: var(--fs-sm); }
+  .hide { display: none; }
+  .warn { color: var(--warn); font-size: var(--fs-sm); }
 
-  .side { position: sticky; top: 0; max-height: 100vh; overflow-y: auto; padding: 18px 0 40px;
-    font-size: 13.5px; }
-  .side .home { display: block; width: 100%; text-align: left; background: none; border: none;
-    padding: 6px 0; font-weight: 700; cursor: pointer; color: var(--ink); }
-  .side .grp { border-top: 1px solid var(--line); padding: 8px 0 6px; margin-top: 8px; }
-  .side .gh { display: grid; grid-template-columns: 22px 1fr auto; gap: 6px; align-items: baseline;
-    width: 100%; text-align: left; background: none; border: none; padding: 5px 0; cursor: pointer;
-    color: var(--ink); }
-  .side .gh .num { font-weight: 700; font-size: 15px; letter-spacing: -0.02em; }
-  .side .gh .nm { line-height: 1.3; }
-  .side .gh .ct { font-size: 11.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
-  .side .gh.on .nm { font-weight: 700; }
-  .side .gh.live .num { box-shadow: inset 0 -2px 0 var(--ink); }
-  .side .it { display: grid; grid-template-columns: 22px 1fr; gap: 6px; align-items: baseline;
-    width: 100%; text-align: left; background: none; border: none; padding: 5px 0 5px 0; cursor: pointer;
-    color: var(--mid); line-height: 1.35; }
-  .side .it:hover, .side .gh:hover { color: var(--ink); }
-  .side .it.on { color: var(--ink); font-weight: 600; background: var(--sheet); box-shadow: inset 3px 0 0 var(--ink); }
-  .side .it .sq { width: 8px; height: 8px; margin: 0 0 0 6px; display: inline-block; box-shadow: inset 0 0 0 1.5px var(--line); }
-  .side .it .sq.done { box-shadow: none; }
-  .side .sub { font-size: 11.5px; color: var(--faint); padding: 6px 0 2px 28px; }
-  .side .foot { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 8px;
-    display: flex; flex-direction: column; gap: 0; }
-  .side .foot .fh { font-size: 11px; color: var(--faint); padding: 2px 0 3px; }
-  .side .foot + .foot { border-top: 0; margin-top: 6px; padding-top: 0; }
-  .side .foot button { background: none; border: none; text-align: left; padding: 4px 0; cursor: pointer;
-    color: var(--dim); font-size: 13px; }
-  .side .foot button:hover { color: var(--ink); }
-  .side .foot button.on { color: var(--ink); font-weight: 600; }
-  .side .keys { font-size: 11.5px; color: var(--faint); margin-top: 16px; line-height: 1.6; }
+  /* the top bar: the brand, and the site's pages (drawn by site/nav.js) at the right */
+  .bar { position: sticky; top: 0; z-index: 20; height: var(--bar-h); display: flex; align-items: center; gap: var(--s4);
+    padding: 0 var(--s5); background: var(--bg); border-bottom: 1px solid var(--rule); }
+  .bar .brand { display: flex; align-items: center; gap: var(--s2); color: var(--ink); text-decoration: none; min-width: 0; }
+  .bar .brand img { width: 24px; height: 24px; border-radius: var(--radius); flex: none; }
+  .bar .brand .word { font-weight: 600; font-size: var(--fs-lg); }
+  .bar .brand .mission { font-size: var(--fs-sm); color: var(--muted); margin-left: var(--s2); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; }
+  .bar .grow { flex: 1; }
+  .bar .site-nav { justify-content: flex-end; }
+  .site-nav .sn-tracker { display: none; }
+  .railtoggle { display: none; flex: none; border: 1px solid var(--rule); background: var(--surface); border-radius: var(--radius-sm);
+    padding: 4px 10px; font-size: var(--fs-sm); cursor: pointer; }
 
-  .stepper { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center;
-    border-bottom: 1px solid var(--line); padding: 12px 0 10px; position: sticky; top: 0;
-    background: var(--board); z-index: 3; }
-  .stepper button { background: none; border: none; cursor: pointer; font-size: 13px; color: var(--dim);
-    padding: 4px 0; text-align: left; line-height: 1.3; }
-  .stepper button:hover { color: var(--ink); }
-  .stepper button[disabled] { visibility: hidden; }
-  .stepper .nx { text-align: right; }
-  .stepper .mid { font-size: 12.5px; color: var(--dim); text-align: center; }
-  .stepper .mid button { text-align: center; color: var(--ink); font-weight: 600; }
-  .stepper small { display: block; color: var(--faint); font-size: 11px; }
-  a { color: var(--sys); }
-  button { font: inherit; }
-  button:focus-visible, a:focus-visible, textarea:focus, input:focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+  /* two panes: the rail is the plan, the page shows one thing at a time */
+  .layout { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); max-width: 1480px; margin: 0 auto; }
+  main { min-width: 0; padding: var(--s5) var(--s7) var(--s7); }
+  #view { max-width: 1080px; }
 
-  /* top bar */
-  .bar { display: flex; align-items: baseline; justify-content: space-between; gap: 22px;
-    padding: 20px 0 12px; border-bottom: 2px solid var(--ink); flex-wrap: wrap; }
-  .bar .id { display: flex; align-items: baseline; gap: 14px; }
-  .bar .id b { font-size: 17px; font-weight: 700; letter-spacing: 0.01em; }
-  .bar .id span { font-size: 13px; color: var(--dim); }
-  .bar nav { display: flex; gap: 18px; }
-  .bar nav button { background: none; border: none; padding: 0 0 2px; color: var(--dim);
-    font-size: 13.5px; cursor: pointer; border-bottom: 2px solid transparent; }
-  .bar nav button:hover { color: var(--ink); }
-  .bar nav button.on { color: var(--ink); border-bottom-color: var(--ink); }
+  .side { position: sticky; top: var(--bar-h); align-self: start; height: calc(100vh - var(--bar-h)); overflow-y: auto;
+    padding: var(--s4) var(--s4) var(--s6) var(--s5); border-right: 1px solid var(--rule); font-size: var(--fs-md); }
+  .side .rh { font-size: var(--fs-xs); color: var(--muted); margin: var(--s5) 0 var(--s1); }
+  .side .ri { display: flex; align-items: center; gap: var(--s2); width: calc(100% + 8px); margin-left: -8px; padding: 4px 8px;
+    border-radius: var(--radius-sm); color: var(--soft); line-height: 1.35; text-decoration: none; }
+  .side .ri:hover { color: var(--ink); background: var(--sunken); }
+  .side .ri.on { color: var(--ink); font-weight: 600; background: var(--accent-soft); box-shadow: inset 2px 0 0 var(--accent); }
+  .side .ri .nm { flex: 1; min-width: 0; }
+  .side .ri .ct { flex: none; font-size: var(--fs-xs); color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+  .side .ri .num { flex: none; width: 12px; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .side .ri.now .num { color: var(--accent); font-weight: 600; }
+  .side .rrow { display: flex; align-items: center; margin-left: -24px; }
+  .side .rrow .ri { margin-left: 0; width: auto; flex: 1; min-width: 0; }
+  .side .chev { flex: none; width: 24px; height: 28px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--muted);
+    display: grid; place-items: center; border-radius: var(--radius-sm); }
+  .side .chev::before { content: ""; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+    transform: rotate(-45deg); }
+  .side .chev.open::before { transform: rotate(45deg); margin-top: -3px; }
+  .side .chev:hover { color: var(--ink); }
+  .side .rkids { padding: 2px 0 var(--s2) 20px; }
+  .side .rkids .ri { font-size: var(--fs-md); }
+  .side .sub { font-size: var(--fs-xs); color: var(--muted); padding: var(--s2) 0 2px; }
+  .side a.looplink { display: block; color: var(--soft); text-decoration: underline; text-decoration-color: var(--rule); }
+  .side a.looplink:hover { color: var(--ink); }
+  .side .rail-keys { font-size: var(--fs-xs); color: var(--muted); margin-top: var(--s5); line-height: 1.5; }
 
-  .back { background: none; border: none; padding: 14px 0 0; color: var(--dim);
-    font-size: 13px; cursor: pointer; }
-  .back:hover { color: var(--ink); }
+  /* a track's mark: a ring while open, filled once closed */
+  .dot { flex: none; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px var(--tone, var(--muted)); }
+  .dot.done { background: var(--tone, var(--muted)); box-shadow: none; }
 
-  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.12; margin: 16px 0 6px; }
-  h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 6px; }
-  .rubric { font-size: 12px; color: var(--dim); border-bottom: 1px solid var(--line);
-    padding-bottom: 6px; margin: 34px 0 14px; display: flex; justify-content: space-between; gap: 16px; }
-  p { margin: 0 0 12px; max-width: 68ch; }
-  .lede { font-size: 16px; color: var(--mid); }
-  .dim { color: var(--dim); }
-  .sm { font-size: 13px; }
+  /* where you are, and the neighbours */
+  .crumb { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s1) var(--s4); font-size: var(--fs-sm); color: var(--muted);
+    margin: 0 0 var(--s4); }
+  .crumb ol { list-style: none; display: flex; flex-wrap: wrap; gap: 2px var(--s2); padding: 0; margin: 0; flex: 1 1 auto; min-width: 0; }
+  .crumb li + li::before { content: "\203A"; margin-right: var(--s2); color: var(--muted); }
+  .crumb a { color: var(--soft); text-decoration: none; }
+  .crumb a:hover { color: var(--ink); text-decoration: underline; }
+  .crumb [aria-current] { color: var(--ink); }
+  .crumb .pn { display: flex; gap: var(--s4); flex: none; }
+  .pager { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); margin: var(--s6) 0 0; padding-top: var(--s3);
+    border-top: 1px solid var(--rule); max-width: 860px; }
+  .pager a { display: block; text-decoration: none; color: var(--ink); font-weight: 600; padding: var(--s1) 0; }
+  .pager a:hover { color: var(--accent); }
+  .pager a small { display: block; font-weight: 400; font-size: var(--fs-xs); color: var(--muted); }
+  .pager a.next { grid-column: 2; text-align: right; }
 
-  /* planner grid */
-  .planner { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px;
-    background: var(--line); border: 1px solid var(--line); }
-  .colm.wild { background: repeating-linear-gradient(135deg, #f4f2ec, #f4f2ec 9px, #efece4 9px, #efece4 18px); }
-  .colm.wild:hover { background: repeating-linear-gradient(135deg, #f8f7f1, #f8f7f1 9px, #f2efe7 9px, #f2efe7 18px); }
-  .colm .wn.tiny { font-size: 21px; letter-spacing: -0.02em; line-height: 1.1; }
-  .mk.wc::before { background: var(--mark); }
-  .mk.folded { color: var(--faint); }
-  .mk.folded::before { background: none; box-shadow: inset 0 0 0 1.5px var(--faint); }
-  .folded-note { color: var(--faint); font-style: italic; }
-  .credit { border: 1px solid var(--mark); padding: 13px 16px; margin: 14px 0 0; font-size: 13.5px;
-    color: var(--mid); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
-  .credit b { color: var(--mark); }
-  .empty { border: 1px dashed var(--line); padding: 22px 24px; color: var(--dim); font-size: 14px; }
-  .colm { background: var(--sheet); padding: 13px 13px 15px; text-align: left; border: none;
-    cursor: pointer; min-height: 188px; display: block; position: relative; }
-  .colm:hover { background: #f8f7f1; }
-  .colm.live { background: var(--live); box-shadow: inset 0 0 0 2px var(--ink); }
-  .colm .wn { font-size: 42px; font-weight: 700; line-height: 0.88; letter-spacing: -0.045em; }
-  .colm .wd { font-size: 11.5px; color: var(--dim); margin: 3px 0 11px; }
-  .colm .wt { font-size: 13px; font-weight: 600; margin-bottom: 9px; line-height: 1.3; }
-  .mk { display: block; font-size: 12.5px; color: var(--mid); padding: 4px 0 4px 15px;
-    position: relative; line-height: 1.35; }
-  .mk::before { content: ""; position: absolute; left: 0; top: 9px; width: 9px; height: 9px;
-    background: var(--hair); }
-  .mk.sys::before { background: var(--sys); }
-  .mk.math::before { background: var(--math); }
-  .mk.alaap::before { background: var(--alaap); }
-  .mk.req::before { background: var(--req); }
-  .mk.iv::before { background: var(--iv); }
-  .mk.shut { color: var(--faint); text-decoration: line-through; text-decoration-thickness: 1px; }
-  .mk em { font-style: normal; color: var(--faint); font-size: 11px; display: block; padding-top: 1px; }
-  .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 12px; font-size: 12.5px; color: var(--dim); }
-  .legend i { display: inline-block; width: 9px; height: 9px; margin-right: 7px; }
+  /* a section label: the name in ink, a note in grey, a hairline */
+  .rubric { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--s1) var(--s4);
+    font-size: var(--fs-sm); color: var(--muted); border-bottom: 1px solid var(--rule); padding-bottom: var(--s1); margin: var(--s6) 0 var(--s3); }
+  #view:not(.pg-home) .rubric { max-width: 860px; }
+  .rubric > span:first-child { font-size: var(--fs-md); font-weight: 600; color: var(--ink); }
+  .rubric a { color: var(--accent); }
 
-  /* figures band */
-  .figs { display: flex; gap: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
-    flex-wrap: wrap; }
-  .fig { flex: 1 1 170px; padding: 14px 18px 15px; border-right: 1px solid var(--hair); }
-  .fig:last-child { border-right: none; }
-  .fig .n { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; }
-  .fig .n small { font-size: 15px; font-weight: 400; color: var(--faint); letter-spacing: 0; }
-  .fig .k { font-size: 12.5px; color: var(--dim); margin-top: 3px; }
+  /* buttons and fields */
+  .act, .go-big { background: var(--accent); color: var(--bg); border: 1px solid var(--accent); border-radius: var(--radius);
+    padding: 8px 16px; cursor: pointer; font-size: var(--fs-md); font-weight: 600; }
+  .act:hover, .go-big:hover { background: var(--ink); border-color: var(--ink); }
+  .sec { background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: var(--radius);
+    padding: 8px 14px; cursor: pointer; font-size: var(--fs-md); }
+  .sec:hover { border-color: var(--muted); }
+  .sec.on { border-color: var(--accent); color: var(--accent); }
+  .row-act { display: flex; gap: var(--s2); flex-wrap: wrap; margin-top: var(--s4); }
+  .linkish { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; }
+  textarea { width: 100%; min-height: 110px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius);
+    padding: var(--s3); font-size: var(--fs-md); line-height: 1.6; resize: vertical; }
+  input[type=text], input[type=number] { border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface);
+    padding: 6px 10px; font-size: var(--fs-md); }
+  .linkform { display: flex; gap: var(--s2); flex-wrap: wrap; margin-top: var(--s2); }
+  .linkform input { flex: 1 1 200px; }
+  #view.pg-search > input[type=text] { display: block; max-width: 860px; }
 
-  /* day board */
-  .board { border: 1px solid var(--line); background: var(--sheet); }
-  .board .hd, .board .rw { display: grid; grid-template-columns: 96px repeat(7, 1fr); }
-  .board .hd div { font-size: 11.5px; color: var(--dim); padding: 8px 6px; text-align: center;
-    border-bottom: 1px solid var(--line); }
-  .board .hd div:first-child { text-align: left; padding-left: 12px; }
-  .board .rw { border-bottom: 1px solid var(--hair); }
+  /* overview: the next session */
+  .hero { margin: 0 0 var(--s5); }
+  .hero .hdate { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s1); }
+  .hero h1.next { margin: 0; max-width: 48ch; text-wrap: balance; }
+  .hero .hsub { color: var(--soft); margin: var(--s2) 0 var(--s3); }
+  .hero .hacts { display: flex; gap: var(--s3); flex-wrap: wrap; align-items: center; }
+  .hero .hmeta { font-size: var(--fs-sm); color: var(--muted); }
+
+  /* overview: the milestone, its five weeks and the wildcard */
+  .mhead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--s1) var(--s4); margin: 0 0 var(--s2); }
+  .mhead b { font-weight: 600; }
+  .mhead span { font-size: var(--fs-sm); color: var(--muted); }
+  .mbar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s2); margin: 0 0 var(--s3);
+    width: calc((100% - 5 * var(--s2)) * 5 / 6 + 4 * var(--s2)); }
+  .mbar i { display: block; height: 6px; border-radius: 3px; background: var(--sunken); box-shadow: inset 0 0 0 1px var(--rule); overflow: hidden; }
+  .mbar i.now { box-shadow: inset 0 0 0 1px var(--accent); }
+  .mbar i b { display: block; height: 100%; background: var(--ink); }
+  .weeks { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--s2); }
+  .wcard { display: flex; flex-direction: column; gap: var(--s1); min-width: 0; padding: var(--s3); background: var(--surface);
+    border: 1px solid var(--rule); border-radius: var(--radius); color: var(--ink); text-decoration: none; }
+  .wcard:hover { border-color: var(--muted); }
+  .wcard.now { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .wcard .wh { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s2); font-size: var(--fs-xs); color: var(--muted); }
+  .wcard .wh b { font-size: var(--fs-sm); font-weight: 600; color: var(--ink); white-space: nowrap; }
+  .wcard .wh span { white-space: nowrap; }
+  .wcard .wt { font-size: var(--fs-sm); line-height: 1.35; color: var(--soft); }
+  .wcard .marks { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: auto; padding-top: var(--s1); }
+  .wcard .marks span { margin-left: auto; font-size: var(--fs-xs); color: var(--muted); }
+  .wcard.wild { box-shadow: inset 0 3px 0 var(--wild); }
+  .tally { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s2) var(--s6); margin: var(--s4) 0 0; }
+  .tally div { font-size: var(--fs-xs); color: var(--muted); }
+  .tally b { display: block; font-size: var(--fs-xl); font-weight: 600; color: var(--ink); line-height: var(--lh-tight); font-variant-numeric: tabular-nums; }
+  .tally b small { font-size: var(--fs-sm); font-weight: 400; color: var(--muted); }
+  .tally a { margin-left: auto; font-size: var(--fs-sm); }
+
+  /* overview: the pages beside the plan, as a grid (site/nav.js draws the badges) */
+  .site-nav.sn-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); flex: none; margin: var(--s5) 0 0; }
+  .site-nav.sn-grid .sn-b { height: 40px; padding: 0 var(--s3); gap: var(--s2); font-size: var(--fs-md); }
+  .site-nav.sn-grid svg, .site-nav.sn-grid img { width: 16px; height: 16px; }
+
+  /* three for today */
+  .cold3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3) var(--s5); align-items: start; }
+  .coldq { padding: var(--s1) 0 0; }
+  .coldsrc { font-size: var(--fs-xs); color: var(--muted); }
+  .coldt { font-weight: 600; margin: 2px 0 var(--s1); max-width: var(--measure); }
+  .coldq .wb-model { margin: var(--s2) 0 0; }
+
+  /* the map: every milestone through 2027 */
+  .maplg { display: flex; gap: var(--s2) var(--s4); flex-wrap: wrap; align-items: center; font-size: var(--fs-xs); color: var(--soft); margin: var(--s2) 0; }
+  .maplg span { display: inline-flex; align-items: center; gap: 6px; }
+  .maplg i.sw { width: 15px; height: 10px; display: inline-block; border: 1.25px solid var(--muted); }
+  .maplg i.sw.done { background: var(--muted); }
+  .maplg i.sw.part { background: var(--surface); box-shadow: inset 4px 0 0 var(--muted); }
+  .maplg i.sw.open { background: var(--surface); }
+  .maplg i.sw.future { background: var(--surface); border-style: dashed; }
+  .mapwrap { border: 1px solid var(--rule); border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; }
+  .mapscroll { overflow-x: auto; overflow-y: hidden; padding: var(--s3) var(--s3) var(--s1); }
+  .mapwrap.tall .mapscroll { overflow-y: visible; }
+  .mapsvg { display: block; width: 100%; min-width: 620px; height: auto; margin: 0 auto; }
+  /* text inside the drawing, scaled with it */
+  .m-col { fill: var(--ink); font-family: var(--font); font-size: 12.5px; font-weight: 600; }
+  .m-when { fill: var(--muted); font-family: var(--font); font-size: 10px; font-weight: 400; }
+  .m-lane { fill: var(--muted); font-family: var(--font); font-size: 10.5px; }
+  .m-lbl { fill: var(--ink); font-family: var(--font); font-size: 9.5px; pointer-events: none; }
+  .m-edge { fill: none; stroke: var(--rule); stroke-width: 1; }
+  .m-node { cursor: pointer; }
+  .m-node.future .m-lbl { fill: var(--muted); }
+  .mapsvg.focused .m-node { opacity: 0.16 !important; }
+  .mapsvg.focused .m-node.lit { opacity: 1 !important; }
+  .mapsvg.focused .m-node.self rect { stroke-width: 2.25; }
+  .mapsvg.focused .m-edge { opacity: 0.25; }
+  .mapsvg.focused .m-edge.lit { stroke: var(--accent); opacity: 1; stroke-width: 1.4; }
+  .mapcap { border-top: 1px solid var(--rule); padding: var(--s3) var(--s4); min-height: 78px; font-size: var(--fs-sm); }
+  .mapcap .mc-h { display: flex; gap: var(--s3); align-items: baseline; flex-wrap: wrap; }
+  .mapcap .mc-h b { font-size: var(--fs-md); }
+  .mapcap .mc-st { font-size: var(--fs-xs); }
+  .mapcap .mc-st.done { color: var(--ok); }
+  .mapcap .mc-st.part { color: var(--req); }
+  .mapcap .mc-st.open { color: var(--warn); }
+  .mapcap .mc-st.future { color: var(--muted); }
+  .mapcap p { margin: var(--s1) 0 var(--s2); color: var(--soft); }
+  .mapcap .mc-m { display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-xs); color: var(--muted); }
+
+  /* a page's head: the title over a hairline, a 3px rule in the track's colour on a session */
+  .shead { max-width: 860px; padding-bottom: var(--s3); margin-bottom: var(--s4); border-bottom: 1px solid var(--rule); }
+  .shead.toned { border-bottom: 3px solid var(--tone, var(--rule)); }
+  .shead h1 { margin: 0 0 var(--s2); }
+  .shead .lede, .shead .intro { margin: 0 0 var(--s2); }
+  .shead .intro { color: var(--soft); }
+  .shead .kicker { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s3); font-size: var(--fs-sm); color: var(--muted); margin-bottom: var(--s2); }
+  .shead .kicker .trk { display: inline-flex; align-items: center; gap: 6px; color: var(--soft); font-weight: 600; }
+  .shead .wmeta { font-size: var(--fs-sm); color: var(--muted); margin: 0; }
+  .posted { color: var(--ok); }
+  .folded-note { color: var(--muted); font-style: italic; }
+
+  /* the session clock, one line in the session's head */
+  .clockbox { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); font-size: var(--fs-sm); color: var(--soft); margin: var(--s3) 0 0; }
+  .clockbox b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .clockbox .sec { padding: 4px 12px; font-size: var(--fs-sm); }
+  .clockcorr { width: 64px; padding: 4px 8px !important; font-size: var(--fs-sm) !important; }
+
+  /* a week's sessions: a card per session, its track as a 3px rule */
+  .srows { display: flex; flex-direction: column; gap: var(--s2); max-width: 860px; }
+  .srow { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; gap: var(--s3); align-items: start; padding: var(--s3) var(--s4);
+    background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--tone, var(--rule)); border-radius: var(--radius);
+    color: var(--ink); text-decoration: none; }
+  .srow:hover { border-color: var(--muted); border-left-color: var(--tone, var(--muted)); }
+  .srow .dot { margin-top: 8px; }
+  .srn { font-size: var(--fs-lg); font-weight: 600; line-height: 1.35; }
+  .srw { color: var(--soft); margin-top: 2px; }
+  .srm { font-size: var(--fs-sm); color: var(--muted); margin-top: var(--s1); }
+  .sro { align-self: center; font-size: var(--fs-sm); font-weight: 600; color: var(--accent); white-space: nowrap; }
+  .srow.closed .srn { color: var(--soft); }
+
+  /* a fold: shut by default, opens to its contents */
+  details.fold { border-top: 1px solid var(--rule); margin-top: var(--s5); max-width: 860px; }
+  details.fold > summary { list-style: none; cursor: pointer; display: flex; align-items: baseline; gap: var(--s3); padding: var(--s3) 0; font-weight: 600; }
+  details.fold > summary::-webkit-details-marker { display: none; }
+  details.fold > summary::before { content: ""; width: 6px; height: 6px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted);
+    transform: rotate(-45deg); align-self: center; }
+  details.fold[open] > summary::before { transform: rotate(45deg); }
+  details.fold > summary small { font-weight: 400; font-size: var(--fs-sm); color: var(--muted); }
+  details.fold > :not(summary) { margin-bottom: var(--s4); }
+
+  /* figures: always drawn on white with the light figure colours, as on every page */
+  .plate { margin: var(--s3) 0; }
+  .plate .pn { font-size: var(--fs-sm); font-weight: 600; color: var(--soft); margin-bottom: var(--s2); }
+  .fig-svg, .xsvg, .diasvg { background: #fff; color: #1a1a19; border: 1px solid var(--rule); border-radius: var(--radius-lg); padding: var(--s3); overflow-x: auto;
+    --ink: #1a1a19; --dim: #6b6a65; --faint: #a2a09a; --line: #c3c0b7; --live: #fffdf5;
+    --sys: #3f6ea8; --math: #3f7a55; --alaap: #a85f3f; --req: #8a6f2f; --iv: #7a3b5c;
+    --sys-p: #dbe4ef; --math-p: #dde9e1; --alaap-p: #f0e0d8; --req-p: #ece4cf; --iv-p: #efdfe7; }
+  .fig-svg svg, .xsvg svg, .diasvg svg { width: 100%; height: auto; display: block; }
+  .xsvg svg { max-height: 300px; }
+  .plate .cap { font-size: var(--fs-sm); color: var(--soft); line-height: 1.55; margin-top: var(--s2); max-width: var(--measure); }
+  .plate .cap b { font-weight: 600; color: var(--ink); }
+
+  /* a session, as a list of steps: every step shut until opened */
+  .sxlist { max-width: 860px; }
+  .sxbulk { display: flex; gap: var(--s4); margin: 0 0 var(--s2); }
+  .sxg { font-size: var(--fs-lg); font-weight: 600; margin: var(--s5) 0 var(--s2); }
+  .sxlist > .sxg:first-of-type { margin-top: var(--s2); }
+  .sx { border-top: 1px solid var(--rule); }
+  .sx:last-of-type { border-bottom: 1px solid var(--rule); }
+  .sx > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 22px minmax(0, 1fr) auto 12px; gap: var(--s3);
+    align-items: start; padding: var(--s3) 0; }
+  .sx > summary::-webkit-details-marker { display: none; }
+  .sx > summary::after { content: ""; width: 7px; height: 7px; margin-top: 7px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg); }
+  .sx[open] > summary::after { transform: rotate(-135deg); margin-top: 11px; }
+  .sxh { font-weight: 600; line-height: 1.45; }
+  .sx > summary:hover .sxh { color: var(--accent); }
+  .sx.done .sxh { color: var(--muted); }
+  .sxm { color: var(--muted); font-size: var(--fs-sm); padding-top: 2px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .sxt { width: 18px; height: 18px; border: 1.5px solid var(--tone, var(--muted)); border-radius: var(--radius-sm); background: var(--surface);
+    padding: 0; margin-top: 3px; cursor: pointer; display: grid; place-items: center; font-size: var(--fs-xs); line-height: 1; color: var(--bg); }
+  .sxt.sm { width: 16px; height: 16px; margin-top: 4px; }
+  .sxt.on { background: var(--tone, var(--ink)); border-color: var(--tone, var(--ink)); }
+  .sxb { padding: 0 var(--s5) var(--s5) 34px; line-height: 1.6; }
+  .sxd { margin: 0 0 var(--s2); }
+  .sxl { font-size: var(--fs-sm); font-weight: 600; color: var(--muted); margin: var(--s4) 0 var(--s1); }
+  .sxb a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+  .sxb a:hover { text-decoration-color: var(--accent); }
+  .sxmeta { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: var(--s1) var(--s4); margin: var(--s3) 0 0; font-size: var(--fs-sm); line-height: 1.55; }
+  .sxk { color: var(--muted); }
+  .sxv { color: var(--soft); }
+  .rlist, .sxdo { margin: 0; padding: 0; list-style: none; }
+  .rlist li { margin: 0 0 var(--s2); padding-left: 14px; position: relative; }
+  .rlist li::before { content: ""; position: absolute; left: 0; top: .75em; width: 5px; height: 1.5px; background: var(--muted); }
+  .rm { color: var(--muted); font-size: var(--fs-sm); margin-left: var(--s2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .rwhy { color: var(--soft); font-size: var(--fs-sm); line-height: 1.5; margin-top: 2px; }
+  .sxdo li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: var(--s2); margin: 0 0 var(--s2); }
+  .sxdo li.done .sxdt { color: var(--muted); }
+  .sxs { margin-top: var(--s4); }
+  .sxs > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); font-weight: 600;
+    color: var(--soft); padding: 6px 12px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface); }
+  .sxs > summary::-webkit-details-marker { display: none; }
+  .sxs > summary::after { content: ""; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); margin-top: -3px; }
+  .sxs[open] > summary::after { transform: rotate(-135deg); margin-top: 3px; }
+  .sxs > summary:hover { border-color: var(--muted); color: var(--ink); }
+  .sxs .wb-model { margin-top: var(--s3); }
+  .sxs .wb-rate { margin-top: var(--s3); }
+  .sxafter { max-width: 860px; }
+  .sxafter .related { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; font-size: var(--fs-sm); color: var(--muted); margin: var(--s4) 0 0; }
+  .sxafter .related .sec { padding: 4px 12px; font-size: var(--fs-sm); }
+  .sxfin { margin-top: var(--s6); max-width: 860px; }
+  .sxfin .wb-phase { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--s1) var(--s4); padding: var(--s3) 0; border-top: 1px solid var(--rule); }
+  .sxfin .wb-phase > * { grid-column: 2; }
+  .sxfin .wb-phase > .wb-pl { grid-column: 1; grid-row: 1 / span 20; font-size: var(--fs-sm); font-weight: 600; color: var(--muted); }
+  .wb-model { border-left: 2px solid var(--tone, var(--muted)); padding: 2px 0 2px var(--s4); }
+  .wb-model ul { margin: 0; padding-left: 18px; }
+  .wb-model li { margin: 4px 0; }
+  .wb-model p { margin: 0; }
+  .wb-quiet { color: var(--muted); font-size: var(--fs-sm); }
+  .wb-rate { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; margin-top: var(--s3); }
+  .wb-btn { border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface); color: var(--ink); padding: 6px 12px; font-size: var(--fs-sm); cursor: pointer; }
+  .wb-btn:hover { border-color: var(--muted); }
+  .wb-btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+  .wb-btn.primary:hover { background: var(--ink); border-color: var(--ink); }
+  .wb-btn.on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .wb-link { background: none; border: 0; padding: 0; font-size: var(--fs-sm); color: var(--accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+
+  /* the closing quiz, one question at a time */
+  dialog.wbq { width: min(640px, 94vw); border: 1px solid var(--rule); border-radius: var(--radius-lg); padding: 0; background: var(--surface); color: var(--ink);
+    box-shadow: var(--shadow-float); }
+  dialog.wbq::backdrop { background: rgba(20, 18, 14, .5); }
+  .wbq-in { padding: var(--s5) var(--s6); line-height: 1.6; }
+  .wbq-dots { display: flex; gap: 4px; margin-bottom: var(--s4); }
+  .wbq-dots i { width: 22px; height: 4px; border-radius: 2px; background: var(--rule); }
+  .wbq-dots i.on { background: var(--accent); }
+  .wbq-dots i.got { background: var(--ok); }
+  .wbq-q { font-size: var(--fs-xl); font-weight: 600; line-height: 1.35; }
+  .wbq-in textarea { margin-top: var(--s3); }
+  .wbq-in .wb-model { margin-top: var(--s3); }
+  .wbq-row { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); align-items: center; }
+
+  /* tables, lists, notes */
+  table.t { width: 100%; max-width: 860px; border-collapse: collapse; }
+  table.t th { font-size: var(--fs-xs); font-weight: 600; color: var(--muted); text-align: left; padding: var(--s2) var(--s3); border-bottom: 1px solid var(--rule); }
+  table.t th.r, table.t td.r { text-align: right; }
+  table.t td { padding: var(--s2) var(--s3); border-bottom: 1px solid var(--rule); vertical-align: top; }
+  table.t tr.clickable { cursor: pointer; }
+  table.t tr.clickable:hover td { background: var(--sunken); }
+  table.t tr.shut td { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+  table.t td .sub { display: block; font-size: var(--fs-sm); color: var(--muted); margin-top: 2px; }
+  table.t td.r { font-size: var(--fs-sm); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .swatch { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: var(--s2); vertical-align: 1px; }
+  .inplay { margin: var(--s1) 0 var(--s4); }
+  .inplay a, .pastloop a { color: var(--ink); font-weight: 600; }
+  .pastloop { font-size: var(--fs-sm); color: var(--soft); margin: var(--s4) 0 0; }
+  .credit { border-left: 3px solid var(--warn); padding: var(--s2) var(--s4); margin: var(--s3) 0 0; font-size: var(--fs-sm); color: var(--soft);
+    display: flex; justify-content: space-between; gap: var(--s4); flex-wrap: wrap; align-items: center; max-width: 860px; }
+  .credit b { color: var(--ink); }
+  .credit .sec { padding: 4px 12px; font-size: var(--fs-sm); }
+  .visits { list-style: none; padding: 0; margin: var(--s2) 0 0; }
+  .visits li { display: flex; justify-content: space-between; gap: var(--s3); font-size: var(--fs-sm); padding: 6px 0; border-bottom: 1px solid var(--rule); }
+  .visits li span.w { color: var(--muted); font-size: var(--fs-xs); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .visits li a { text-decoration: none; }
+  .visits li a:hover { text-decoration: underline; }
+  ul.list { list-style: none; padding: 0; margin: 0; max-width: 860px; }
+  ul.list li { display: grid; grid-template-columns: 62px 1fr; gap: var(--s3); padding: var(--s3) 0; border-bottom: 1px solid var(--rule); }
+  ul.list li .wh { font-size: var(--fs-xs); color: var(--muted); padding-top: 2px; }
+  ul.list li .wh.m2 { color: var(--req); }
+  .xp { background: none; border: 0; padding: 2px 0 0; margin-right: var(--s3); color: var(--accent); font-size: var(--fs-sm); cursor: pointer; }
+  ol.rules { padding-left: 20px; max-width: var(--measure); }
+  ol.rules li { margin-bottom: var(--s3); }
+  .panel { border-left: 3px solid var(--rule); padding-left: var(--s4); max-width: var(--measure); }
+  .panel h3 { margin-top: var(--s3); }
+  .step { border-bottom: 1px solid var(--rule); }
+  .morelinks { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); }
+  .originwarn { border-left: 3px solid var(--warn); background: var(--surface); padding: var(--s2) var(--s4); margin: 0 0 var(--s4);
+    font-size: var(--fs-sm); line-height: 1.5; color: var(--soft); max-width: 860px; }
+  .originwarn b { color: var(--warn); }
+
+  /* progress: the numbers, the day board */
+  .figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s4) var(--s5); max-width: 860px; }
+  .fig .n { font-size: var(--fs-xl); font-weight: 600; line-height: var(--lh-tight); font-variant-numeric: tabular-nums; }
+  .fig .n small { font-size: var(--fs-sm); font-weight: 400; color: var(--muted); }
+  .fig .k { font-size: var(--fs-xs); color: var(--muted); margin-top: 2px; }
+  .fig-wild { border-left: 3px solid var(--wild); padding-left: var(--s2); }
+  .board { border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface); overflow: hidden; max-width: 860px; }
+  .board .hd, .board .rw { display: grid; grid-template-columns: 88px repeat(7, minmax(0, 1fr)); }
+  .board .hd div { font-size: var(--fs-xs); color: var(--muted); padding: var(--s2) 6px; text-align: center; border-bottom: 1px solid var(--rule); }
+  .board .hd div:first-child { text-align: left; padding-left: var(--s3); }
+  .board .rw { border-bottom: 1px solid var(--rule); }
   .board .rw:last-child { border-bottom: none; }
-  .board .rw .wk { font-size: 12px; color: var(--dim); padding: 9px 12px; }
-  .board .cell { border-left: 1px solid var(--hair); padding: 7px 5px; min-height: 52px;
-    display: flex; flex-direction: column; gap: 3px; align-items: center; justify-content: flex-start; }
-  .board .cell .dn { font-size: 10.5px; color: var(--faint); }
-  .board .cell.today { background: var(--live); box-shadow: inset 0 0 0 2px var(--ink); }
+  .board .rw .wk { font-size: var(--fs-xs); color: var(--muted); padding: var(--s2) var(--s3); }
+  .board .cell { border-left: 1px solid var(--rule); padding: 6px 4px; min-height: 48px; display: flex; flex-direction: column; gap: 3px; align-items: center; }
+  .board .cell .dn { font-size: var(--fs-xs); color: var(--muted); }
+  .board .cell.today { box-shadow: inset 0 0 0 2px var(--accent); }
   .board .cell .row2 { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; }
-  .board .cell i { width: 8px; height: 8px; display: block; }
-  .board .cell .lifedot { width: 7px; height: 7px; border: 1px solid var(--line); background: none;
-    padding: 0; cursor: pointer; }
+  .board .cell i { width: 8px; height: 8px; border-radius: 50%; display: block; }
+  .board .cell .lifedot { width: 9px; height: 9px; border: 1px solid var(--muted); border-radius: 50%; background: none; padding: 0; cursor: pointer; }
   .board .cell .lifedot.on { background: var(--ink); border-color: var(--ink); }
 
-  /* tables */
-  table.t { width: 100%; border-collapse: collapse; }
-  table.t th { font-size: 11.5px; font-weight: 600; color: var(--dim); text-align: left;
-    padding: 7px 10px; border-bottom: 1px solid var(--ink); }
-  table.t th.r, table.t td.r { text-align: right; }
-  table.t td { padding: 11px 10px; border-bottom: 1px solid var(--hair); vertical-align: top; font-size: 14.5px; }
-  table.t tr.clickable { cursor: pointer; }
-  table.t tr.shut td { color: var(--faint); text-decoration: line-through; text-decoration-thickness: 1px; }
-  .inplay { font-size: 15px; margin: 4px 0 18px; }
-  .inplay a, .pastloop a { color: var(--ink); font-weight: 700; text-underline-offset: 2px; }
-  .pastloop { font-size: 14px; color: var(--mid); margin: 16px 0 0; }
-  table.t tr.clickable:hover td { background: var(--sheet); }
-  table.t td .sub { display: block; font-size: 12.5px; color: var(--dim); margin-top: 2px; }
-  table.t td.r { font-size: 12.5px; color: var(--dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .posted { color: var(--mark); }
-  .swatch { display: inline-block; width: 9px; height: 9px; margin-right: 8px; vertical-align: 1px; }
+  /* recall: the bar, the shaky list, the drill card, the sheet */
+  .rbar { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2) var(--s3); margin: var(--s3) 0 0; }
+  .rbar .track { display: flex; flex: 0 1 420px; min-width: 120px; gap: 2px; }
+  .rbar .seg { height: 8px; border-radius: 2px; }
+  .rbar .seg.got { background: var(--ok); }
+  .rbar .seg.shaky { background: var(--req); }
+  .rbar .seg.no { background: var(--warn); }
+  .rbar .seg.none { background: var(--rule); }
+  .rbar .lg { font-size: var(--fs-xs); color: var(--muted); }
+  .rbar .go { background: none; border: 0; padding: 0; font-size: var(--fs-sm); color: var(--accent); cursor: pointer; text-decoration: underline; }
+  .cold { border-left: 3px solid var(--warn); padding: var(--s2) var(--s4); margin: var(--s4) 0 0; max-width: 860px; }
+  .cold .ch { font-size: var(--fs-sm); font-weight: 600; color: var(--warn); margin-bottom: var(--s1); }
+  .cold ul { margin: 0; padding-left: var(--s4); font-size: var(--fs-sm); color: var(--soft); }
+  .cold li { padding: 2px 0; }
+  .cold li b { color: var(--ink); font-weight: 600; }
+  .cold li em { font-style: normal; font-size: var(--fs-xs); color: var(--warn); margin-left: var(--s2); }
+  .card { border: 1px solid var(--rule); border-radius: var(--radius-lg); background: var(--surface); padding: var(--s5); margin: var(--s4) 0;
+    min-height: 280px; display: flex; flex-direction: column; max-width: 860px; }
+  .card .src { font-size: var(--fs-xs); color: var(--muted); }
+  .card .front { font-size: var(--fs-xl); font-weight: 600; line-height: 1.35; margin: var(--s3) 0 0; max-width: 40ch; }
+  .card .back { line-height: 1.6; color: var(--soft); margin: var(--s4) 0 0; max-width: var(--measure); border-top: 1px solid var(--rule); padding-top: var(--s4); }
+  .card .grow { flex: 1 1 auto; }
+  .card .turn { align-self: flex-start; margin-top: var(--s5); padding: 8px 18px; border: 1px solid var(--accent); border-radius: var(--radius);
+    background: var(--accent); color: var(--bg); cursor: pointer; font-weight: 600; }
+  .card .turn:hover { background: var(--ink); border-color: var(--ink); }
+  .card .rate { display: flex; gap: var(--s2); flex-wrap: wrap; margin-top: var(--s5); }
+  .card .rate button { font-size: var(--fs-sm); padding: 8px 16px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface); cursor: pointer; }
+  .card .rate button:hover { border-color: var(--muted); }
+  .card .rate button.g { box-shadow: inset 3px 0 0 var(--ok); }
+  .card .rate button.s { box-shadow: inset 3px 0 0 var(--req); }
+  .card .rate button.n { box-shadow: inset 3px 0 0 var(--warn); }
+  .card .was { font-size: var(--fs-xs); color: var(--muted); margin-top: var(--s3); }
+  .card .diasvg { margin: var(--s2) 0; }
+  .drillkeys { font-size: var(--fs-xs); color: var(--muted); margin-top: var(--s1); }
+  .res { display: flex; gap: var(--s2); flex-wrap: wrap; margin-top: var(--s3); }
+  .res a, .res span.bk { font-size: var(--fs-sm); border: 1px solid var(--rule); border-radius: var(--radius); padding: 4px 10px; text-decoration: none; color: var(--accent); }
+  .res span.bk { color: var(--muted); }
+  .res a:hover { border-color: var(--accent); }
+  .sheetblk { margin: 0 0 var(--s5); }
+  .sheetblk h3 { font-size: var(--fs-sm); margin: 0 0 var(--s2); border-bottom: 1px solid var(--rule); padding-bottom: var(--s1); }
+  .sheetblk .cols { column-count: 2; column-gap: var(--s5); }
+  .sheetblk .it { break-inside: avoid; margin: 0 0 var(--s3); }
+  .sheetblk .it b { font-size: var(--fs-sm); display: block; line-height: 1.35; }
+  .sheetblk .it span { font-size: var(--fs-xs); color: var(--soft); line-height: 1.45; display: block; }
+  .sheetdo { margin-top: 3px; padding-left: var(--s2); border-left: 1px solid var(--rule); }
+  .sheetdo div { font-size: var(--fs-xs); color: var(--muted); line-height: 1.4; }
+  .opts { display: flex; flex-direction: column; gap: 6px; max-width: 860px; }
+  .opt { text-align: left; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: var(--s2) var(--s3); cursor: pointer; font-size: var(--fs-sm); }
+  .opt:hover { border-color: var(--muted); }
+  .opt.sel { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+  .opt b { font-size: var(--fs-md); font-weight: 600; }
 
-  /* session page */
-  .shead { border-bottom: 2px solid var(--ink); padding-bottom: 16px; }
-  .shead .kicker { font-size: 12.5px; color: var(--dim); display: flex; gap: 16px; flex-wrap: wrap; }
-  .plate { border: 1px solid var(--line); background: var(--sheet); padding: 16px 18px 14px; margin: 20px 0; }
-  .plate .pn { font-size: 11.5px; color: var(--dim); margin-bottom: 10px; }
-  .plate svg { width: 100%; height: auto; display: block; }
-  .plate .cap { font-size: 13.5px; color: var(--mid); line-height: 1.55; margin-top: 12px;
-    padding-top: 11px; border-top: 1px solid var(--hair); max-width: 76ch; }
-  .plate .cap b { font-weight: 600; color: var(--ink); }
-  .plate .diafirst-btn { margin-top: 14px; }
+  /* explain a figure, against a minute */
+  .xfig { margin: var(--s2) 0 var(--s5); max-width: 860px; }
+  .xclock { font-variant-numeric: tabular-nums; color: var(--soft); }
+  .xcap { margin-top: var(--s3); line-height: 1.6; border-left: 3px solid var(--rule); padding-left: var(--s3); max-width: var(--measure); }
 
-  .step { border-bottom: 1px solid var(--hair); }
-  .step:first-child { border-top: 1px solid var(--line); }
-  .bx { width: 14px; height: 14px; border: 1.5px solid var(--ink); background: none; margin-top: 4px;
-    cursor: pointer; padding: 0; position: relative; }
-  .bx.on { background: var(--ink); }
-  .bx.on::after { content: ""; position: absolute; left: 3px; top: 0px; width: 4px; height: 8px;
-    border: solid var(--sheet); border-width: 0 1.5px 1.5px 0; transform: rotate(42deg); }
-  .srow .tx.off { color: var(--faint); }
-  .srow .xp { background: none; border: none; color: var(--dim); font-size: 12px; cursor: pointer; padding: 2px 0 0; }
-  .srow .xp:hover { color: var(--ink); }
-  .answer { padding: 0 2px 16px 34px; }
-  .answer textarea { min-height: 150px; background: var(--live); }
-  .answer .meta { display: flex; justify-content: space-between; gap: 14px; font-size: 11.5px;
-    color: var(--faint); padding-top: 6px; font-variant-numeric: tabular-nums; }
-  .srow .xp.has { color: var(--mark); }
-  .res { display: flex; gap: 8px; flex-wrap: wrap; }
-  .res a, .res span.bk { font-size: 12.5px; border: 1px solid var(--line); padding: 4px 10px;
-    text-decoration: none; color: var(--sys); background: var(--sheet); }
-  .res span.bk { color: var(--dim); }
-  .res a:hover { border-color: var(--sys); }
+  /* the Alaap and TrenTorch stages under each milestone */
+  .sdrow { margin: var(--s2) 0 var(--s1); padding: 2px 0 2px var(--s3); border-left: 3px solid var(--alaap); max-width: var(--measure); }
+  .sdrow .sdh { font-size: var(--fs-xs); color: var(--muted); margin-bottom: 2px; }
+  .sdrow .sdp { font-size: var(--fs-sm); line-height: 1.45; margin: 2px 0; }
+  .sdrow .sdp a { display: inline-block; color: var(--alaap); font-weight: 600; text-decoration: none; margin: 2px var(--s3) 2px 0; }
+  .sdrow .sdp a:hover { text-decoration: underline; }
 
-  /* a session as a list: every step collapses. One face, three sizes (17 / 16 / 14),
-     three greys (ink, mid, dim), one label style, one list style. */
-  .sxlist { max-width: 820px; margin-top: 18px; font-family: "Atkinson Hyperlegible", var(--sans); color: var(--ink); }
-  .sxlist * { font-family: inherit; }
-  .sxbulk { display: flex; gap: 18px; margin: 10px 0 8px; }
-  .sxg { font-size: 19px; font-weight: 700; margin: 28px 0 6px; }
-  .sx { border-top: 1px solid var(--line); }
-  .sx:last-of-type { border-bottom: 1px solid var(--line); }
-  .sx > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto 14px; gap: 12px; align-items: start; padding: 15px 0; }
-  .sx > summary::-webkit-details-marker { display: none; }
-  .sx > summary::after { content: ""; width: 8px; height: 8px; margin-top: 7px; border-right: 1.5px solid var(--dim); border-bottom: 1.5px solid var(--dim); transform: rotate(45deg); }
-  .sx[open] > summary::after { transform: rotate(-135deg); margin-top: 11px; }
-  .sxh { font-weight: 700; font-size: 17px; line-height: 1.45; }
-  .sx > summary:hover .sxh { color: var(--mid); }
-  .sx.done .sxh { color: var(--dim); }
-  .sxm { color: var(--dim); font-size: 14px; padding-top: 3px; white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .sxt { width: 20px; height: 20px; border: 1.5px solid var(--dim); background: var(--live); padding: 0; margin-top: 3px; cursor: pointer; display: grid; place-items: center; font-size: 12px; color: var(--live); }
-  .sxt.sm { width: 16px; height: 16px; font-size: 10px; margin-top: 4px; }
-  .sxt.on { background: var(--ink); border-color: var(--ink); }
-  .sxb { padding: 0 26px 22px 40px; font-size: 16px; line-height: 1.65; }
-  .sxd { margin: 0 0 4px; }
-  .sxl { font-size: 14px; font-weight: 700; color: var(--dim); margin: 18px 0 6px; }
-  .sxb a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
-  .sxb a:hover { text-decoration-color: var(--ink); }
-  .sxmeta { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 6px 16px; margin: 16px 0 0; font-size: 14px; line-height: 1.55; }
-  .sxk { color: var(--dim); }
-  .sxv { color: var(--mid); }
-  .rlist, .sxdo { margin: 0; padding: 0; list-style: none; font-size: 16px; line-height: 1.5; }
-  .rlist li { margin: 0 0 10px; padding-left: 14px; position: relative; }
-  .rlist li::before { content: ""; position: absolute; left: 0; top: .7em; width: 5px; height: 1.5px; background: var(--dim); }
-  .rm { color: var(--dim); font-size: 14px; margin-left: 8px; white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .rwhy { color: var(--mid); font-size: 14px; line-height: 1.5; margin-top: 2px; }
-  .sxdo li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; margin: 0 0 10px; }
-  .sxdo li.done .sxdt { color: var(--dim); }
-  .sxb .plate { margin: 14px 0 6px; background: var(--live); border: 1px solid var(--hair); padding: 14px 16px; }
-  .sxb .plate .pn { font-size: 14px; font-weight: 700; color: var(--mid); margin-bottom: 8px; }
-  .sxb .plate .cap { font-size: 14px; line-height: 1.55; color: var(--mid); margin-top: 10px; }
-  .sxs { margin-top: 20px; }
-  .sxs > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: var(--mid); padding: 7px 14px; border: 1px solid var(--line); background: var(--live); }
-  .sxs > summary::-webkit-details-marker { display: none; }
-  .sxs > summary::after { content: ""; width: 6px; height: 6px; border-right: 1.5px solid var(--mid); border-bottom: 1.5px solid var(--mid); transform: rotate(45deg); margin-top: -3px; }
-  .sxs[open] > summary::after { transform: rotate(-135deg); margin-top: 3px; }
-  .sxs > summary:hover { border-color: var(--ink); color: var(--ink); }
-  .sxs .wb-model { margin-top: 12px; font-size: 16px; line-height: 1.65; border-left: 2px solid var(--ink); background: none; padding: 2px 0 2px 16px; }
-  .sxs .wb-model ul { padding-left: 18px; }
-  .sxs .wb-rate { margin-top: 12px; }
-  .sxs .wb-quiet { font-size: 14px; }
-  .sxfin { margin-top: 30px; padding-top: 4px; }
-  .sxfin .wb-phase { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 4px 18px; padding: 14px 0; border-top: 1px solid var(--line); font-size: 16px; line-height: 1.6; }
-  .sxfin .wb-phase > * { grid-column: 2; }
-  .sxfin .wb-phase > .wb-pl { grid-column: 1; grid-row: 1 / span 20; font-size: 13.5px; font-weight: 700; color: var(--dim); }
-  .wb-quiet { color: var(--dim); font-size: 14.5px; }
-  .wb-rate { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
-  .wb-btn { border: 1px solid var(--line); background: var(--live); color: var(--ink); padding: 6px 13px; font: inherit; font-size: 14.5px; cursor: pointer; }
-  .wb-btn:hover { border-color: var(--ink); }
-  .wb-btn.primary { background: var(--ink); color: var(--live); border-color: var(--ink); }
-  .wb-btn.on { border-color: var(--ink); font-weight: 700; }
-  .wb-link { background: none; border: 0; padding: 0; font: inherit; font-size: 14.5px; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
-  @media (max-width: 700px) { .sxb { padding: 0 0 18px; } .sxfin .wb-phase { grid-template-columns: minmax(0, 1fr); } .sxfin .wb-phase > .wb-pl { grid-row: auto; } }
-  .wb-model { background: var(--live); border-left: 3px solid var(--math); padding: 12px 16px; font-size: 17px; }
-  .wb-model ul { margin: 0; padding-left: 20px; } .wb-model li { margin: 4px 0; } .wb-model p { margin: 0; }
-  dialog.wbq { width: min(640px, 94vw); border: 1px solid var(--line); padding: 0; background: var(--sheet); color: var(--ink); box-shadow: 0 24px 60px rgba(0,0,0,.3); font-family: "Atkinson Hyperlegible", var(--sans); }
-  dialog.wbq::backdrop { background: rgba(20, 18, 14, .5); }
-  .wbq-in { padding: 26px 30px 22px; font-size: 17px; line-height: 1.65; }
-  .wbq-dots { display: flex; gap: 5px; margin-bottom: 16px; }
-  .wbq-dots i { width: 22px; height: 4px; background: var(--line); }
-  .wbq-dots i.on { background: var(--ink); } .wbq-dots i.got { background: var(--math); }
-  .wbq-q { font-size: 21px; font-weight: 700; line-height: 1.35; }
-  .wbq-in textarea { width: 100%; min-height: 110px; margin-top: 12px; font: inherit; padding: 10px 12px; border: 1px solid var(--line); background: var(--live); color: var(--ink); }
-  .wbq-in .wb-model { margin-top: 12px; }
-  .wbq-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; }
-  /* three for today, explain the figure */
-  .cold { display: grid; gap: 10px; margin: 8px 0 22px; }
-  .coldq, .xfig { background: var(--sheet); border: 1px solid var(--hair); padding: 16px 20px; font-family: "Atkinson Hyperlegible", var(--sans); }
-  .coldsrc { font-size: 13px; color: var(--dim); margin-bottom: 4px; }
-  .coldt { font-size: 17px; font-weight: 700; line-height: 1.4; margin-bottom: 8px; }
-  .coldq .wb-model { font-size: 15.5px; margin: 8px 0 0; }
-  .xfig { margin: 8px 0 22px; }
-  .xsvg svg { width: 100%; height: auto; display: block; max-height: 300px; }
-  .xclock { font-variant-numeric: tabular-nums; font-size: 15px; color: var(--mid); }
-  .xcap { margin-top: 12px; font-size: 15px; line-height: 1.6; border-left: 3px solid var(--math); padding-left: 12px; }
-  /* the shelf: the book and the sky */
-  .shelf { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0 22px; }
-  .shelfc { text-align: left; background: var(--live); border: 1px solid var(--hair); padding: 16px 18px; cursor: pointer; font: inherit; color: var(--ink); }
-  .shelfc:hover { border-color: var(--ink); }
-  .shelfc.dark { background: radial-gradient(circle at 70% 20%, #1A2450, #090B16 65%); color: #E6ECFF; border-color: #1A2450; }
-  .shn { font-size: 20px; font-weight: 700; }
-  .shk { font-size: 14px; opacity: .8; margin-top: 4px; }
-  /* the craft's liveries */
-  .livery { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 22px; }
-  .liv { display: grid; justify-items: center; gap: 6px; background: none; border: 1px solid transparent; padding: 8px; cursor: pointer; font: inherit; color: var(--ink); }
-  .liv.on { border-color: var(--ink); }
+  /* the shelf: the book, the sky and the liveries keep their own pages (#/book, #/sky) */
+  .shelf { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); margin: var(--s2) 0 var(--s5); }
+  .shelfc { text-align: left; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: var(--s4); cursor: pointer; }
+  .shelfc:hover { border-color: var(--muted); }
+  .shelfc.dark { background: #090B16; color: #E6ECFF; border-color: #1A2450; }
+  .shn { font-size: var(--fs-xl); font-weight: 600; }
+  .shk { font-size: var(--fs-sm); opacity: .8; margin-top: 4px; }
+  .livery { display: flex; flex-wrap: wrap; gap: var(--s2); margin: var(--s2) 0 var(--s5); }
+  .liv { display: grid; justify-items: center; gap: 6px; background: none; border: 1px solid transparent; border-radius: var(--radius); padding: var(--s2); cursor: pointer; }
+  .liv.on { border-color: var(--accent); }
   .liv.locked { opacity: .35; cursor: default; filter: grayscale(1); }
   .livi svg { width: 48px; height: 48px; display: block; }
-  .livn { font-size: 12.5px; }
-  /* the book */
-  .bookwk { background: var(--live); border: 1px solid var(--hair); padding: 26px 30px; margin: 16px 0; max-width: 860px; font-family: "Atkinson Hyperlegible", var(--sans); }
-  .bookk { font-size: 13px; color: var(--dim); }
-  .bookwk h2 { font-size: 24px; margin: 4px 0 12px; }
-  .books h3 { font-size: 16px; margin: 14px 0 4px; display: flex; align-items: center; gap: 8px; }
-  .bookl { margin: 0; padding-left: 18px; columns: 2; column-gap: 28px; font-size: 13.5px; line-height: 1.5; }
+  .livn { font-size: var(--fs-xs); }
+  .bookwk { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius-lg); padding: var(--s5) var(--s6); margin: var(--s4) 0; max-width: 860px; }
+  .bookk { font-size: var(--fs-sm); color: var(--muted); }
+  .bookwk h2 { font-size: var(--fs-xl); margin: 4px 0 var(--s3); }
+  .books h3 { font-size: var(--fs-md); margin: var(--s3) 0 4px; display: flex; align-items: center; gap: var(--s2); }
+  .bookl { margin: 0; padding-left: 18px; columns: 2; column-gap: var(--s5); font-size: var(--fs-sm); line-height: 1.5; }
   .bookl li { break-inside: avoid; margin: 0 0 5px; }
-  .bookl li.miss b::after { content: " (missed)"; color: var(--mark); font-weight: 400; }
-  .bookf { font-size: 12.5px; color: var(--dim); margin-top: 4px; }
-  @media print { .bookwk { border: 0; padding: 0; margin: 0; page-break-after: always; } .bookl { font-size: 10px; } }
-  @media (max-width: 700px) { .bookl { columns: 1; } .shelf { grid-template-columns: 1fr; } }
-  /* the sky */
-  .sky svg { width: 100%; height: auto; display: block; margin-top: 14px; }
+  .bookl li.miss b::after { content: " (missed)"; color: var(--warn); font-weight: 400; }
+  .bookf { font-size: var(--fs-xs); color: var(--muted); margin-top: 4px; }
+  .sky svg { width: 100%; height: auto; display: block; margin-top: var(--s3); border-radius: var(--radius-lg); }
   .sky a:hover circle { stroke-width: 2.4; }
+
   /* lift-off: once, when a session closes */
   #liftoff { position: fixed; inset: 0; pointer-events: none; z-index: 60; overflow: hidden; }
   #liftoff .lo { position: absolute; left: -90px; bottom: -90px; width: 72px; height: 72px; animation: lift 1.6s cubic-bezier(.35, 0, .2, 1) forwards; }
@@ -345,327 +510,78 @@
   #liftoff .g2 { opacity: .25; animation-delay: .14s; }
   @keyframes lift { to { transform: translate(calc(100vw + 180px), calc(-100vh - 180px)) rotate(0deg); } }
   @media (prefers-reduced-motion: reduce) { #liftoff { display: none; } }
-  .linkform { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-  input[type=text] { flex: 1 1 200px; border: 1px solid var(--line); background: var(--sheet);
-    padding: 8px 11px; font: inherit; font-size: 13.5px; color: inherit; }
-  .visits { list-style: none; padding: 0; margin: 10px 0 0; }
-  .visits li { display: flex; justify-content: space-between; gap: 14px; font-size: 13px;
-    padding: 7px 0; border-bottom: 1px solid var(--hair); }
-  .visits li span.w { color: var(--faint); font-size: 11.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .visits li a { text-decoration: none; }
-  .visits li a:hover { text-decoration: underline; }
 
-  /* quiz */
-  .qq { margin-bottom: 20px; }
-  .qq .qt { font-size: 15.5px; font-weight: 600; margin-bottom: 10px; }
-  .opts { display: flex; flex-direction: column; gap: 6px; }
-  .opt { text-align: left; background: var(--live); border: 1px solid var(--line); padding: 10px 13px;
-    cursor: pointer; font-size: 14px; color: inherit; }
-  .opt:hover { border-color: var(--dim); }
-  .opt.sel { border-color: var(--ink); box-shadow: inset 3px 0 0 var(--ink); }
-  .opt.dunno { border-style: dashed; }
-  .opt.yes { border-color: var(--math); box-shadow: inset 3px 0 0 var(--math); }
-  .opt.no { border-color: var(--mark); box-shadow: inset 3px 0 0 var(--mark); }
-  .why { font-size: 13.5px; color: var(--mid); margin-top: 10px; padding-left: 13px;
-    border-left: 2px solid var(--line); }
-  .score { font-size: 17px; font-weight: 700; }
-  .score.ok { color: var(--math); }
-  .score.no { color: var(--mark); }
-
-  .act { background: var(--ink); color: var(--sheet); border: 1px solid var(--ink); padding: 10px 18px;
-    cursor: pointer; font-size: 14px; }
-  .act:hover { background: #000; }
-  .sec { background: var(--sheet); color: var(--ink); border: 1px solid var(--line); padding: 10px 16px;
-    cursor: pointer; font-size: 14px; }
-  .sec:hover { border-color: var(--ink); }
-  .row-act { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
-  textarea { width: 100%; min-height: 110px; background: var(--sheet); border: 1px solid var(--line);
-    padding: 13px 15px; font: inherit; font-size: 14px; line-height: 1.6; color: inherit; resize: vertical; }
-  ul.list { list-style: none; padding: 0; margin: 0; }
-  ul.list li { display: grid; grid-template-columns: 62px 1fr; gap: 14px; padding: 11px 0;
-    border-bottom: 1px solid var(--hair); }
-  ul.list li .wh { font-size: 12px; color: var(--dim); padding-top: 2px; }
-  ul.list li .wh.m2 { color: var(--req); }
-  ol.rules { padding-left: 20px; max-width: 70ch; }
-  ol.rules li { margin-bottom: 11px; }
-  .panel { border-left: 3px solid var(--ink); padding-left: 16px; max-width: 70ch; }
-  .warn { color: var(--mark); font-size: 13px; }
-  .hide { display: none; }
-
-  /* svg tokens */
-
-  @media (max-width: 980px) {
-    .layout { grid-template-columns: 1fr; gap: 0; }
+  @media (max-width: 1180px) {
+    main { padding: var(--s5) var(--s5) var(--s7); }
+    .weeks { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .mbar { width: 100%; }
+  }
+  /* the rail becomes a drawer behind Contents */
+  @media (max-width: 900px) {
+    .cold3 { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .coldq { padding: var(--s3) 0; border-bottom: 1px solid var(--rule); }
+    .layout { grid-template-columns: minmax(0, 1fr); }
     .railtoggle { display: inline-block; }
-    .side { position: static; max-height: none; display: none; border-bottom: 2px solid var(--ink); }
-    .side.open { display: block; }
+    .bar { padding: 0 var(--s4); gap: var(--s3); }
+    .bar .brand .mission, .bar .site-nav { display: none; }
+    .side { position: fixed; top: var(--bar-h); left: 0; bottom: 0; width: min(320px, 88vw); height: auto; z-index: 15; background: var(--bg);
+      transform: translateX(-100%); visibility: hidden; transition: transform 150ms, visibility 150ms; box-shadow: var(--shadow-float); }
+    .side.open { transform: none; visibility: visible; }
+    main { padding: var(--s4) var(--s4) var(--s7); }
+    .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
-  @media (max-width: 860px) {
-    .planner { grid-template-columns: repeat(2, 1fr); }
-    .credit { display: block; }
-    .board .hd, .board .rw { grid-template-columns: 64px repeat(7, 1fr); }
-    .answer { padding-left: 2px; }
+  @media (max-width: 720px) {
+    .site-nav.sn-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .crumb .pn { display: none; }
+    .sxb { padding: 0 0 var(--s4); }
+    .sxfin .wb-phase { grid-template-columns: minmax(0, 1fr); }
+    .sxfin .wb-phase > .wb-pl { grid-row: auto; }
+    .sxmeta { grid-template-columns: minmax(0, 1fr); }
+    .board .hd, .board .rw { grid-template-columns: 56px repeat(7, minmax(0, 1fr)); }
+    .bookl { columns: 1; }
+    .shelf { grid-template-columns: 1fr; }
+    .tally { gap: var(--s2) var(--s5); }
+    .tally a { margin-left: 0; }
+    .sheetblk .cols { column-count: 1; }
+    table.t th, table.t td { padding: var(--s2) var(--s1); }
   }
-  /* -------- recall: cold band, drill card, print sheet -------- */
-  .rbar { display: flex; align-items: center; margin: 14px 0 0; }
-  .rbar .track { display: flex; flex: 0 1 420px; gap: 2px; }
-  .rbar .seg { height: 9px; }
-  .rbar .seg.got { background: var(--math); }
-  .rbar .seg.shaky { background: var(--req); }
-  .rbar .seg.no { background: var(--mark); }
-  .rbar .seg.none { background: var(--hair); }
-  .rbar .lg { flex: 0 0 auto; font-size: 11.5px; color: var(--dim); margin-left: 12px; }
-  .rbar .go { flex: 0 0 auto; margin-left: 14px; background: none; border: none; padding: 0;
-    font-size: 12.5px; color: var(--mark); cursor: pointer; text-decoration: underline; }
-  .rbar .go:hover { color: var(--ink); }
-
-  .cold { border-left: 3px solid var(--mark); background: var(--sheet); padding: 12px 16px; margin: 14px 0 0; }
-  .cold .ch { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mark);
-    margin-bottom: 7px; }
-  .cold ul { margin: 0; padding-left: 16px; font-size: 13.5px; color: var(--mid); }
-  .cold li { padding: 2px 0; }
-  .cold li b { color: var(--ink); font-weight: 600; }
-  .cold li em { font-style: normal; font-size: 11px; color: var(--mark); text-transform: uppercase;
-    letter-spacing: 0.06em; margin-left: 6px; }
-
-  .card { border: 1px solid var(--line); background: var(--live); padding: 30px 28px 26px; margin: 18px 0;
-    min-height: 300px; display: flex; flex-direction: column; }
-  .card .src { font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--faint); }
-  .card .front { font-size: 22px; font-weight: 700; line-height: 1.32; margin: 12px 0 0; max-width: 36ch; }
-  .card .back { font-size: 15px; line-height: 1.6; color: var(--mid); margin: 18px 0 0; max-width: 72ch;
-    border-top: 1px solid var(--hair); padding-top: 16px; }
-  .card .grow { flex: 1 1 auto; }
-  .card .turn { align-self: flex-start; margin-top: 22px; font-size: 14px; padding: 10px 22px;
-    border: 1px solid var(--ink); background: var(--ink); color: var(--live); cursor: pointer; }
-  .card .rate { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
-  .card .rate button { font-size: 13.5px; padding: 9px 18px; border: 1px solid var(--line);
-    background: var(--sheet); cursor: pointer; color: var(--ink); }
-  .card .rate button:hover { border-color: var(--ink); }
-  .card .rate button.g { box-shadow: inset 3px 0 0 var(--math); }
-  .card .rate button.s { box-shadow: inset 3px 0 0 var(--req); }
-  .card .rate button.n { box-shadow: inset 3px 0 0 var(--mark); }
-  .card .was { font-size: 11.5px; color: var(--faint); margin-top: 12px; }
-  .drillkeys { font-size: 11.5px; color: var(--faint); margin-top: 4px; }
-
-  .sheetblk { break-inside: auto; margin: 0 0 22px; }
-  .sheetblk h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mark);
-    margin: 0 0 9px; border-bottom: 1px solid var(--hair); padding-bottom: 5px; }
-  .sheetblk .cols { column-count: 2; column-gap: 26px; }
-  .sheetblk .it { break-inside: avoid; margin: 0 0 11px; }
-  .sheetblk .it b { font-size: 12.5px; display: block; line-height: 1.35; }
-  .sheetblk .it span { font-size: 11.5px; color: var(--mid); line-height: 1.45; display: block; }
+  @media (max-width: 420px) { .weeks { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (prefers-reduced-motion: reduce) { .side { transition: none; } }
 
   @media print {
     body { background: #fff; color: #000; font-size: 10px; }
-    .side, .stepper, .railtoggle, .row-act, .noprint, .res, .rbar .go, .bar, .crumb { display: none !important; }
+    .side, .crumb, .pager, .railtoggle, .row-act, .noprint, .res, .rbar .go, .bar { display: none !important; }
     .layout { display: block; }
-    .wrap { max-width: none; padding: 0; }
+    main { padding: 0; }
     .sheetblk { page-break-inside: auto; }
     .sheetblk .cols { column-count: 2; }
     .sheetblk .it span { color: #333; }
     a { text-decoration: none; color: #000; }
     h1 { font-size: 17px; }
     .lede { font-size: 11px; }
+    .mapwrap, .maplg { display: none !important; }
+    .bookwk { border: 0; padding: 0; margin: 0; page-break-after: always; }
+    .bookl { font-size: 10px; }
   }
-  .card .diasvg svg { width: 100%; height: auto; display: block; margin: 4px 0 6px; }
-  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 2px 16px 34px; align-items: start; }
-  .compare .half { min-width: 0; }
-  .compare .answer, .compare .expand { padding: 0; max-width: none; }
-  @media (max-width: 860px) {
-    .compare { grid-template-columns: 1fr; padding-left: 2px; gap: 16px; }
-  }
-  /* session clock */
-  .clockbox { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-  .clockcorr { width: 68px; border: 1px solid var(--line); background: var(--sheet);
-    padding: 8px 9px; font: inherit; font-size: 13.5px; color: inherit; }
-  .fig-wild { border-left: 2px solid var(--iv); }
-  /* -------- the map: every milestone through 2027 -------- */
-  .maplg { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; font-size: 11.5px;
-    color: var(--mid); margin: 12px 0 8px; }
-  .maplg span { display: inline-flex; align-items: center; gap: 6px; }
-  .maplg i.sw { width: 15px; height: 10px; display: inline-block; border: 1.25px solid var(--dim); }
-  .maplg i.sw.done { background: var(--dim); }
-  .maplg i.sw.part { background: linear-gradient(to right, var(--dim) 4px, var(--live) 4px); }
-  .maplg i.sw.open { background: var(--live); }
-  .maplg i.sw.future { background: var(--live); border-style: dashed; }
-
-  .mapwrap { border: 1px solid var(--line); background: var(--sheet); }
-  .mapscroll { overflow-x: auto; overflow-y: hidden; padding: 12px 14px 6px; }
-  .mapwrap.tall .mapscroll { overflow-y: visible; }
-  .mapsvg { display: block; width: 100%; min-width: 620px; height: auto; margin: 0 auto; }
-  .m-col { fill: var(--ink); font-family: var(--sans); font-size: 12.5px; font-weight: 700; }
-  .m-when { fill: var(--faint); font-family: var(--sans); font-size: 10px; }
-  .m-lane { fill: var(--dim); font-family: var(--sans); font-size: 10px;
-    letter-spacing: 0.05em; text-transform: uppercase; }
-  .m-lbl { fill: var(--ink); font-family: var(--sans); font-size: 9.5px; pointer-events: none; }
-  .m-edge { fill: none; stroke: var(--hair); stroke-width: 1; }
-  .m-node { cursor: pointer; }
-  .m-node.future .m-lbl { fill: var(--dim); }
-  .mapsvg.focused .m-node { opacity: 0.16 !important; }
-  .mapsvg.focused .m-node.lit { opacity: 1 !important; }
-  .mapsvg.focused .m-node.self rect { stroke-width: 2.25; }
-  .mapsvg.focused .m-edge { stroke: var(--hair); opacity: 0.25; }
-  .mapsvg.focused .m-edge.lit { stroke: var(--mark); opacity: 1; stroke-width: 1.4; }
-
-  .mapcap { border-top: 1px solid var(--line); padding: 11px 14px 13px; min-height: 78px;
-    font-size: 13px; background: var(--live); }
-  .mapcap .mc-h { display: flex; gap: 10px; align-items: baseline; }
-  .mapcap .mc-h b { font-size: 14.5px; }
-  .mapcap .mc-st { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; }
-  .mapcap .mc-st.done { color: var(--math); }
-  .mapcap .mc-st.part { color: var(--req); }
-  .mapcap .mc-st.open { color: var(--mark); }
-  .mapcap .mc-st.future { color: var(--faint); }
-  .mapcap p { margin: 5px 0 7px; color: var(--mid); max-width: 88ch; }
-  .mapcap .mc-m { display: flex; flex-direction: column; gap: 2px; font-size: 11.5px; color: var(--faint); }
-
-  @media print { .mapwrap, .maplg { display: none !important; } }  .clockbox { border: 1px solid var(--hair); background: var(--sheet); padding: 10px 14px;
-    margin: 14px 0 0; font-size: 13px; display: flex; align-items: center; gap: 10px;
-    flex-wrap: wrap; }
-  .clockbox b { font-variant-numeric: tabular-nums; }
-  .doitem.off .dbody { opacity: 0.45; }
-  .dbx.on { background: var(--dim); border-color: var(--dim); }
-  .da { font-size: 13px; color: var(--ink); line-height: 1.4; }
-  .sheetdo { margin-top: 3px; padding-left: 9px; border-left: 1px solid var(--hair); }
-  .sheetdo div { font-size: 10.5px; color: var(--dim); line-height: 1.4; }
-  .srow .tx .dhead { gap: 14px; }
-  .abox .meta { display: flex; justify-content: space-between; gap: 12px;
-    font-size: 11px; color: var(--faint); margin-top: 3px; }
-  .abox > button.sec { margin-top: 7px; font-size: 12px; padding: 5px 12px; }
-  .doitem .xp { background: none; border: none; color: var(--dim); font-size: 11.5px;
-    cursor: pointer; padding: 3px 0 0; display: block; }
-  .doitem .xp:hover { color: var(--ink); }
-  .doitem .xp.has { color: var(--mark); }
-  .stepdo .xp { background: none; border: none; color: var(--dim); font-size: 11.5px;
-    cursor: pointer; padding: 3px 0 0; display: block; }
-  .stepdo .xp:hover { color: var(--ink); }
-  .stepdo .xp.has { color: var(--mark); }
-  .closerbtn.full { border-color: var(--math); color: var(--math); }
-  .closer { border: 1px solid var(--mark); background: var(--live); padding: 12px 15px 14px;
-    max-width: 78ch; }
-  .closerh .xp { margin-left: auto; background: none; border: none; color: var(--dim);
-    font-size: 11.5px; cursor: pointer; }
-  .cchip.on { border-color: var(--ink); background: var(--board); font-weight: 600; }
-  .copt.sel { box-shadow: inset 3px 0 0 var(--ink); }
-  .copt.yes { border-color: var(--math); box-shadow: inset 3px 0 0 var(--math); }
-  .copt.no { border-color: var(--mark); box-shadow: inset 3px 0 0 var(--mark); }
-  .cq .xp { background: none; border: none; color: var(--dim); font-size: 11.5px;
-    cursor: pointer; padding: 3px 0 0; }
-  .cq .xp:hover { color: var(--ink); }
-  .crb.got.on { border-color: var(--math); color: var(--math); font-weight: 600; }
-  .crb.no.on { border-color: var(--mark); color: var(--mark); font-weight: 600; }
-  .carry { border: 1px solid var(--mark); background: var(--sheet); padding: 11px 14px; margin-bottom: 14px; }
-  .carry .ch { font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase;
-    color: var(--mark); margin-bottom: 6px; }  .originwarn { border: 2px solid var(--mark); background: var(--live); padding: 12px 16px;
-    margin: 0 0 18px; font-size: 13.5px; line-height: 1.5; color: var(--ink); }
-  .originwarn b { color: var(--mark); }
-  /* -------- Accelerate: header lockup -------- */
-  :root {
-    --flight: #2447E0; --flight-deep: #1733B8;
-    --plan: #B3AFA4; --grid: #D8D4C9;
-    --display: "Bahnschrift", "DIN Alternate", "DIN 2014", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
-  }
-  .bar .brand { display: flex; align-items: center; gap: 11px; color: var(--ink); text-decoration: none; min-width: 0; }
-  .bar .brand img { width: 30px; height: 30px; border-radius: 7px; flex: none; }
-  .bar .brand .word { font-family: var(--display); font-weight: 600; font-size: 16px; letter-spacing: 0.16em; }
-  .bar .brand .mission { font-family: var(--display); font-stretch: 87.5%; font-size: 13px; color: var(--dim);
-    padding-left: 12px; margin-left: 2px; border-left: 1px solid var(--line); white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis; }
-  .bar .brand:focus-visible { outline: 2px solid var(--flight); outline-offset: 4px; }
-
-  .hero { margin: 4px 0 30px; }
-  .hero .hdate { font-family: var(--display); font-stretch: 87.5%; font-size: 14px; color: var(--dim); margin: 0 0 8px; }
-  .hero h1.next { font-family: var(--display); font-weight: 600; font-size: 38px; line-height: 1.06;
-    letter-spacing: -0.012em; margin: 0; max-width: 24ch; color: var(--ink); text-wrap: balance; }
-  .hero .hsub { font-size: 15.5px; color: var(--mid); margin: 10px 0 18px; max-width: 62ch; line-height: 1.55; }
-  .hero .hacts { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .hero .go-big { font-family: var(--display); font-weight: 600; font-size: 15px; letter-spacing: 0.01em;
-    background: var(--flight); color: #FFFFFF; border: 1px solid var(--flight); padding: 11px 22px; cursor: pointer; }
-  .hero .go-big:hover { background: var(--flight-deep); border-color: var(--flight-deep); }
-  .hero .go-soft { font-family: var(--display); font-size: 15px; background: transparent; color: var(--flight);
-    border: 1px solid var(--flight); padding: 11px 18px; cursor: pointer; }
-  .hero .go-soft:hover { background: rgba(36, 71, 224, 0.07); }
-  .hero .go-link { font-family: var(--display); font-size: 14px; background: none; border: none; color: var(--mid);
-    padding: 11px 6px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-  .hero .go-link:hover { color: var(--ink); }
-  .hero button:focus-visible { outline: 2px solid var(--flight); outline-offset: 3px; }
-
-  .hero .hstatus { font-size: 14.5px; color: var(--mid); line-height: 1.6; max-width: 72ch; margin: 16px 0 0; }
-  .hero .hstatus b { color: var(--ink); font-weight: 600; }
-  .hero .go-inline { font-family: var(--display); font-size: 14px; background: none; border: none; padding: 0;
-    color: var(--flight); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-
-  /* the site badges (site/nav.js): in the home hero right of the start button, in the bar elsewhere.
-     The brand already leads home, so the tracker's own badge is not repeated. */
-  .bar { align-items: center; }
-  .bar .site-nav { justify-content: flex-end; }
-  .site-nav .sn-tracker { display: none; }
-  .hero .hacts .site-nav { flex: 1 1 300px; }
-  .hero { margin-bottom: 20px; }
-  .hero h1.next { max-width: 40ch; }
-  .hero .hsub { margin-bottom: 16px; }
-  .hero .hstatus { max-width: none; margin-top: 12px; }
-
-  /* home: three small numbers that move when a session closes or time is banked */
-  .tally { display: grid; grid-template-columns: repeat(3, max-content); gap: 6px 34px; margin: 18px 0 0; }
-  @media (max-width: 720px) { .tally { grid-template-columns: repeat(3, 1fr); gap: 6px 14px; } .tally b { font-size: 19px; } }
-  .tally div { font-size: 12.5px; color: var(--dim); }
-  .tally b { display: block; font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
-  .tally b small { font-size: 14px; font-weight: 400; color: var(--faint); }
-
-  /* the wildcard column: open sessions, what is left, the interviews hub */
-  .colm.wild { cursor: pointer; }
-  .colm.wild .wn { background: none; border: 0; padding: 0; color: inherit; cursor: pointer; text-align: left; }
-  .colm.wild .ivbtn { display: inline-block; margin-top: 12px; padding: 6px 12px; border: 1px solid var(--ink); background: var(--sheet);
-    color: var(--ink); font-size: 13px; font-weight: 600; text-decoration: none; }
-  .colm.wild .ivbtn:hover { background: var(--ink); color: var(--sheet); }
-  @media (max-width: 720px) {
-    .bar .brand .mission { display: none; }
-    .hero h1.next { font-size: 28px; }
-  }
-  .side a.looplink { display: block; color: var(--ink); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
-  .loops { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin: 6px 0 22px; }
-  .loopcard { display: block; padding: 18px 20px; border: 1px solid var(--line); background: var(--sheet); color: var(--ink); text-decoration: none; }
-  .loopcard:hover { border-color: var(--ink); }
-  .loopcard .ln { font-family: var(--display); font-size: 22px; font-weight: 700; }
-  .loopcard .lw { font-size: 14px; color: var(--dim); margin-top: 2px; }
-  .loopcard .lt { font-size: 15px; margin-top: 10px; }
-  .loopcard .lm { font-size: 14px; color: var(--dim); margin-top: 8px; }
-  .loopcard .lo { font-size: 14px; font-weight: 700; margin-top: 12px; text-decoration: underline; text-underline-offset: 3px; }
-  .linkish { background: none; border: 0; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
-  .sdrow { margin: 9px 0 3px; padding: 3px 0 3px 11px; border-left: 2px solid var(--flight); max-width: 78ch; }
-  .sdrow .sdh { font-family: var(--display); font-stretch: 87.5%; font-size: 12px; color: var(--dim); margin-bottom: 3px; }
-  .sdrow .sdp { font-size: 12.5px; line-height: 1.45; margin: 3px 0; }
-  .sdrow .sdp a { color: var(--flight); font-weight: 600; text-decoration: none; margin-right: 6px; }
-  .sdrow .sdp a:hover, .sdrow .sdp a:focus-visible { text-decoration: underline; text-underline-offset: 2px; }
-  .sdrow .sdp .why { color: var(--mid); }
-  .sdrow.alrow { border-left-color: var(--alaap); }
-  .sdrow.alrow .sdp a { color: var(--alaap); }
-  #view > .sdrow.alrow .sdp a { display: inline-block; margin: 2px 14px 2px 0; }
-  .side .foot a.sdnav { display: block; padding: 4px 0; color: var(--dim); font-size: 13px; text-decoration: none; }
-  .side .foot a.sdnav::after { content: " \2197"; color: var(--faint); }
-  .side .foot a.sdnav:hover { text-decoration: underline; }
-  .hero a.go-link { display: inline-block; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="bar">
-    <a class="brand" href="#/" aria-label="Accelerate, home">
-      <img src="brand/accelerate.svg" width="30" height="30" alt="">
-      <span class="word">ACCELERATE</span>
-      <span class="mission">Milestone 1, Primitives. 21 September to 25 October 2026.</span>
-    </a>
-    <nav data-site-nav data-here="tracker" id="barnav"></nav>
-    <button class="railtoggle" id="railtoggle" aria-expanded="false">Contents</button>
-  </div>
-  <div class="layout">
-    <aside id="side" class="side"></aside>
-    <main>
-      <div id="crumb"></div>
-      <div id="view"></div>
-    </main>
-  </div>
+<header class="bar">
+  <button class="railtoggle" id="railtoggle" aria-expanded="false" aria-controls="side">Contents</button>
+  <a class="brand" href="#/" aria-label="Accelerate, overview">
+    <img src="brand/accelerate.svg" width="24" height="24" alt="">
+    <span class="word">Accelerate</span>
+    <span class="mission">Milestone 1, Primitives. 21 September to 25 October 2026.</span>
+  </a>
+  <span class="grow"></span>
+  <nav class="sn-top" data-site-nav data-here="tracker" id="barnav"></nav>
+</header>
+<div class="layout">
+  <aside id="side" class="side" aria-label="The plan"></aside>
+  <main>
+    <nav id="crumb" aria-label="Where you are"></nav>
+    <div id="view"></div>
+  </main>
 </div>
 <script src="figures/icons.js?v=f5a48822"></script>
 <script src="figures/figures.js?v=46349820"></script>
@@ -2207,8 +2123,6 @@
      The wildcard page lists them; a loop's sessions are the wildcard sessions whose
      forWhat starts with the loop's forWhat. */
   var LOOPS = [
-    { id: "raydar", name: "Raydar, Founding FDE", when: "Wed 30 Sep, morning", forWhat: "Raydar",
-      file: "interviews/raydar.html", note: "Founding Forward Deployed Engineer. Fifteen minutes with an AI interviewer: background, what you want next, base pay." },
     { id: "coframe", name: "Coframe, Agent Platform Engineer", when: "Thu 1 Oct, 2:20 PM Eastern", forWhat: "Coframe",
       file: "interviews/coframe.html", note: "Agent Platform Engineer. Fifteen minutes with Founding Talent: your story in outcomes, then her pitch." },
     { id: "vanguard", name: "Vanguard, technical", when: "date to be set", forWhat: "Vanguard",
@@ -2217,6 +2131,8 @@
       file: "interviews/commure.html", note: "Software Engineer, Voice Agents. Recruiter screen: healthcare voice, real-time, production agents." },
     { id: "river", name: "River, founder call", when: "date to be set", forWhat: "River",
       file: "interviews/river.html", note: "Founding Engineer, likely. Tarek Abillama, CEO: real-time voice and a live sales agent." },
+    { id: "raydar", name: "Raydar, Founding FDE", when: "Wed 30 Sep, morning", forWhat: "Raydar",
+      file: "interviews/raydar.html", note: "Happened. Founding Forward Deployed Engineer: a fifteen-minute AI screen." },
     { id: "mphasis", name: "Mphasis, technical", when: "Mon 28 Sep", forWhat: "Mphasis",
       file: "interviews/mphasis.html", note: "Happened. Agentic skills and AI fundamentals, a short coding exercise." },
     { id: "zenml-r3", name: "ZenML round 3", when: "Mon 28 Sep, 9 AM Eastern", forWhat: "ZenML round 3",
@@ -5802,7 +5718,7 @@
     }
     if (s.quiz) {
       s.quiz.forEach(function (q, i) {
-        out.push({ k: s.id + ":q" + i, front: q.q, back: q.o[q.a] + " \u2014 " + q.why,
+        out.push({ k: s.id + ":q" + i, front: q.q, back: q.o[q.a] + ". " + q.why,
           kind: "Quiz", name: s.name, sid: s.id });
       });
     }
@@ -6073,11 +5989,11 @@
       "architecture/mint": "Architecture 3, The mint pipeline, in full",
       "architecture/render": "Architecture 4, The render pipeline",
       "architecture/gates": "Architecture 5, The gate stack",
-      "architecture/rev": "Architecture 6, Reversibility — the property that makes captions checkable",
+      "architecture/rev": "Architecture 6, Reversibility: the property that makes captions checkable",
       "architecture/geom": "Architecture 7, Speaker-space geometry",
       "architecture/axes": "Architecture 8, The attribute taxonomy",
       "architecture/backend": "Architecture 9, Two backends, one interface",
-      "architecture/codec": "Architecture 10, Inside MioCodec — the content / identity split",
+      "architecture/codec": "Architecture 10, Inside MioCodec: the content / identity split",
       "architecture/dir": "Architecture 11, The Direction channel",
       "architecture/mods": "Architecture 12, Module map",
       "architecture/exp": "Architecture 13, Experiment lineage",
@@ -6224,23 +6140,40 @@
     var f = el("div", "plate");
     f.setAttribute("data-fig", key);
     f.appendChild(el("div", "pn", "Figure " + n + ". " + d.title));
-    f.appendChild(htm("div", "", d.svg()));
+    f.appendChild(htm("div", "fig-svg", d.svg()));
     f.appendChild(htm("div", "cap", d.cap));
     return f;
   }
 
   /* ------------------------------------------------------------------- chrome */
 
+  /* A track's mark: a ring while the session is open, filled once it closes. */
+  function dotFor(s, tn) {
+    var d = el("i", "dot" + (sessionClosed(s) ? " done" : ""));
+    d.style.setProperty("--tone", "var(--" + (tn || tone(s.track)) + ")");
+    d.setAttribute("aria-hidden", "true");
+    return d;
+  }
+  /* Where a session sits: its week (or "wc") and its place there. */
+  function placeOf(s) {
+    var hit = null;
+    eachSession(function (x, wi, si) { if (!hit && x.id === s.id) { hit = { w: wi, i: si }; } });
+    eachWild(function (x, wi, si) { if (!hit && x.id === s.id) { hit = { w: "wc", i: si }; } });
+    return hit;
+  }
+  function railLink(href, label, on, cls) {
+    var a = el("a", "ri" + (cls ? " " + cls : "") + (on ? " on" : ""));
+    a.href = href;
+    if (on) { a.setAttribute("aria-current", "page"); }
+    a.appendChild(el("span", "nm", label));
+    return a;
+  }
   function sessionItem(s, w, i) {
     var on = view.page === "session" && view.week === w && view.session === i;
-    var b = el("button", "it" + (on ? " on" : ""));
-    var sq = el("span", "sq" + (sessionClosed(s) ? " done" : ""));
-    if (sessionClosed(s)) { sq.style.background = "var(--" + tone(s.track) + ")"; }
-    else { sq.style.boxShadow = "inset 0 0 0 1.5px var(--" + tone(s.track) + ")"; }
-    b.appendChild(sq);
-    b.appendChild(el("span", "", (SHORT[s.id] || s.name).replace(/^(Oxus|ZenML): /, "")));
-    b.addEventListener("click", function () { go("session", w, i); closeRail(); });
-    return b;
+    var a = railLink(hashFor("session", w, i), (SHORT[s.id] || s.name).replace(/^(Oxus|ZenML): /, ""), on, "ss");
+    a.insertBefore(dotFor(s), a.firstChild);
+    a.title = s.name + (sessionClosed(s) ? ", closed" : "");
+    return a;
   }
   function closeRail() {
     var side = document.getElementById("side");
@@ -6248,137 +6181,185 @@
     if (side) { side.classList.remove("open"); }
     if (tg) { tg.setAttribute("aria-expanded", "false"); }
   }
+  /* The rail is the plan and nothing else: the overview, milestone 1's weeks (the one in view
+     open to its sessions), the wildcard, then a short practice list and the reference pages.
+     The other pages are a link away from the overview and Progress. */
+  var railOpen = {};   /* weeks opened or shut by hand, until the page reloads */
+  function railGroup(side, key, label, head, fill, openByDefault) {
+    var isOpen = railOpen[key] === undefined ? openByDefault : railOpen[key];
+    var row = el("div", "rrow");
+    var chev = el("button", "chev" + (isOpen ? " open" : ""));
+    chev.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    chev.setAttribute("aria-label", (isOpen ? "Hide" : "Show") + " the sessions of " + label);
+    chev.setAttribute("data-k", key);
+    chev.addEventListener("click", function () {
+      railOpen[key] = !isOpen;
+      drawNav();
+      var again = document.querySelector('#side [data-k="' + key + '"]');
+      if (again) { again.focus(); }
+    });
+    row.appendChild(chev);
+    row.appendChild(head);
+    side.appendChild(row);
+    if (isOpen) {
+      var kids = el("div", "rkids");
+      fill(kids);
+      side.appendChild(kids);
+    }
+  }
   function drawNav() {
     var side = document.getElementById("side");
+    var top = side.scrollTop;
     side.innerHTML = "";
-    var home = el("button", "home", "Planner");
-    home.addEventListener("click", function () { go("home"); closeRail(); });
-    side.appendChild(home);
+    side.appendChild(railLink("#/", "Overview", view.page === "home"));
 
-    var focusWeek = view.page === "week" || (view.page === "session" && view.week !== "wc")
-      ? view.week : (view.page === "home" ? currentWeek() : -1);
-
+    side.appendChild(el("div", "rh", "Milestone 1, Primitives"));
+    var inWild = view.page === "wild" || (view.page === "session" && view.week === "wc");
+    var focusWeek = view.page === "week" || (view.page === "session" && view.week !== "wc") ? view.week
+      : (inWild ? -1 : currentWeek());
     PLAN.forEach(function (w, wi) {
-      var g = el("div", "grp");
-      var closed = w.sessions.filter(function (s) { return sessionClosed(s); }).length;
-      var gh = el("button", "gh" + (view.page === "week" && view.week === wi ? " on" : "") +
-        (wi === currentWeek() ? " live" : ""));
-      gh.appendChild(el("span", "num", String(wi + 1)));
-      gh.appendChild(el("span", "nm", w.title));
-      gh.appendChild(el("span", "ct", closed + "/" + w.sessions.length));
-      gh.addEventListener("click", function () { go("week", wi); closeRail(); });
-      g.appendChild(gh);
-      if (wi === focusWeek) {
-        w.sessions.forEach(function (s, si) { g.appendChild(sessionItem(s, wi, si)); });
-      }
-      side.appendChild(g);
+      var closed = w.sessions.filter(sessionClosed).length;
+      var head = railLink(hashFor("week", wi), w.title, view.page === "week" && view.week === wi,
+        wi === currentWeek() ? "now" : "");
+      head.insertBefore(el("span", "num", String(wi + 1)), head.firstChild);
+      head.appendChild(el("span", "ct", closed + "/" + w.sessions.length));
+      head.title = "Week " + (wi + 1) + ", " + range(wi);
+      railGroup(side, "w" + wi, "week " + (wi + 1), head, function (box) {
+        w.sessions.forEach(function (s, si) { box.appendChild(sessionItem(s, wi, si)); });
+      }, wi === focusWeek);
     });
 
-    var wg = el("div", "grp");
-    var wOpen = view.page === "wild" || (view.page === "session" && view.week === "wc");
-    var wh = el("button", "gh" + (view.page === "wild" ? " on" : ""));
-    wh.appendChild(el("span", "num", "W"));
-    wh.appendChild(el("span", "nm", "Wildcard"));
-    wh.appendChild(el("span", "ct", wildOpen().length + " open"));
-    wh.addEventListener("click", function () { go("wild"); closeRail(); });
-    wg.appendChild(wh);
-    if (wOpen) {
+    var open = wildOpen();
+    var wh = railLink("#/wild", "Wildcard", view.page === "wild");
+    var wd = el("span", "num");
+    var wdot = el("i", "dot done");
+    wdot.style.setProperty("--tone", "var(--wild)");
+    wd.appendChild(wdot);
+    wh.insertBefore(wd, wh.firstChild);
+    wh.appendChild(el("span", "ct", open.length + " open"));
+    railGroup(side, "wc", "the wildcard", wh, function (box) {
       var lastFor = null;
-      if (LOOPS[0]) { wg.appendChild(loopLink(LOOPS[0])); }
-      WILDCARD.sessions.forEach(function (s, si) {
-        if (s.parked || sessionDone(s)) { return; }
-        var f = s.forWhat || "";
+      if (LOOPS[0]) { box.appendChild(loopLink(LOOPS[0])); }
+      open.forEach(function (x) {
+        var f = x.s.forWhat || "";
         if (f !== lastFor) {
-          var lp = loopOf(s);
-          if (lp) {
-            if (lp !== LOOPS[0]) { wg.appendChild(loopLink(lp)); }
-          } else {
-            wg.appendChild(el("div", "sub", f));
-          }
+          var lp = loopOf(x.s);
+          if (lp) { if (lp !== LOOPS[0]) { box.appendChild(loopLink(lp)); } }
+          else { box.appendChild(el("div", "sub", f)); }
           lastFor = f;
         }
-        wg.appendChild(sessionItem(s, "wc", si));
+        box.appendChild(sessionItem(x.s, "wc", x.i));
       });
-    }
-    side.appendChild(wg);
+    }, inWild);
 
-    /* everything that is not a session, grouped by what it is for */
-    [["Practise", [["requeue", "Requeue"], ["figure", "Explain a figure"], ["written", "Written work"], ["search", "Search"]]],
-     ["Look ahead", [["progress", "Progress"], ["book", "The book"], ["sky", "The sky"], ["map", "The work ahead"], ["ahead", "What comes after"]]],
-     ["Reference", [["resources", "Resources"], ["sd", "System design guide"], ["code", "Algorithms and coding"], ["cheat", "Coding cheat sheet"], ["al", "Alaap and TrenTorch plan"], ["alfred", "alfred_"]]],
-     ["Rules and data", [["charter", "Charter"], ["protocol", "Protocol"], ["data", "Data and export"]]]
-    ].forEach(function (grp) {
-      var foot = el("div", "foot");
-      foot.appendChild(el("div", "fh", grp[0]));
-      grp[1].forEach(function (t) {
-        if (t[0] === "sd" || t[0] === "al" || t[0] === "code" || t[0] === "cheat" || t[0] === "alfred") {
-          var sdLink = document.createElement("a");
-          sdLink.href = t[0] === "sd" ? SD.file : t[0] === "code" ? "CODING.html" : t[0] === "cheat" ? "CHEATSHEET.html" :
-            t[0] === "alfred" ? "ALFRED.html" : AL.file;
-          sdLink.target = "_blank";
-          sdLink.rel = "noopener";
-          sdLink.className = "sdnav";
-          sdLink.textContent = t[1];
-          foot.appendChild(sdLink);
-          return;
-        }
-        var b = el("button", view.page === t[0] ? "on" : "", t[1]);
-        b.addEventListener("click", function () { go(t[0]); closeRail(); });
-        foot.appendChild(b);
-      });
-      side.appendChild(foot);
-    });
-    side.appendChild(htm("div", "keys", "Left and right arrows move between sessions.<br>Escape goes up a level."));
+    side.appendChild(el("div", "rh", "Practice"));
+    var cold = mostCold();
+    side.appendChild(railLink("#/drill/" + (cold ? cold.scope : "week" + (currentWeek() + 1)), "Drill",
+      view.page === "drill" || view.page === "sheet" || view.page === "dia"));
+    side.appendChild(railLink("#/requeue", "Requeue", view.page === "requeue"));
+    side.appendChild(railLink("#/search", "Search", view.page === "search"));
+
+    side.appendChild(el("div", "rh", "Reference"));
+    side.appendChild(railLink("#/charter", "Charter", view.page === "charter"));
+    side.appendChild(railLink("#/protocol", "Protocol", view.page === "protocol"));
+    side.appendChild(railLink("#/map", "The work ahead", view.page === "map" || view.page === "ahead"));
+    side.appendChild(htm("div", "rail-keys", "Left and right arrows move between sessions. Escape goes up a level. Slash searches."));
+    side.scrollTop = top;
+  }
+
+  /* The breadcrumb, and the page's neighbours: sessions in order, weeks in order. */
+  var PAGE_NAME = { drill: "Drill", sheet: "Sheet", dia: "Diagram first", requeue: "Requeue", protocol: "Protocol",
+    charter: "Charter", written: "Written work", resources: "Resources", search: "Search", map: "The work ahead",
+    ahead: "What comes after", data: "Data and export", book: "The book", sky: "The sky", progress: "Progress",
+    figure: "Explain a figure" };
+  function scopeCrumb(scope) {
+    var one = sessionById(scope), at = one ? placeOf(one) : null;
+    if (at) {
+      var t = [at.w === "wc" ? ["#/wild", "Wildcard"] : [hashFor("week", at.w), "Week " + (at.w + 1)]];
+      t.push([hashFor("session", at.w, at.i), SHORT[one.id] || one.name]);
+      return t;
+    }
+    if (scope === "wc") { return [["#/wild", "Wildcard"]]; }
+    if (scope && scope.indexOf("week") === 0) {
+      var wi = parseInt(scope.slice(4), 10) - 1;
+      if (PLAN[wi]) { return [[hashFor("week", wi), "Week " + (wi + 1)]]; }
+    }
+    return [];
+  }
+  function neighbours() {
+    if (view.page === "session") {
+      var pv = neighbour(-1), nx = neighbour(1);
+      var at = function (x) { return x ? { href: hashFor("session", x.w, x.i), label: x.s.name, short: SHORT[x.s.id] || x.s.name } : null; };
+      return { prev: at(pv), next: at(nx), kind: "session" };
+    }
+    if (view.page === "week") {
+      var wk = function (i) { return PLAN[i] ? { href: hashFor("week", i), label: "Week " + (i + 1) + ". " + PLAN[i].title, short: "Week " + (i + 1) } : null; };
+      return { prev: wk(view.week - 1), next: wk(view.week + 1), kind: "week" };
+    }
+    return null;
   }
   function drawCrumb() {
     var host = document.getElementById("crumb");
     host.innerHTML = "";
-    if (view.page === "session") {
-      var st = el("div", "stepper");
-      var pv = neighbour(-1), nx = neighbour(1);
-      function lab(x, dir) {
-        var b = el("button", dir > 0 ? "nx" : "");
-        if (!x) { b.disabled = true; b.textContent = "."; return b; }
-        b.appendChild(el("small", "", dir > 0 ? "Next" : "Previous"));
-        b.appendChild(document.createTextNode(SHORT[x.s.id] || x.s.name));
-        b.addEventListener("click", function () { go("session", x.w, x.i); });
-        return b;
-      }
-      st.appendChild(lab(pv, -1));
-      var mid = el("div", "mid");
-      var up = el("button", "", view.week === "wc" ? "Wildcard" : "Week " + (view.week + 1));
-      up.addEventListener("click", function () { go(view.week === "wc" ? "wild" : "week", view.week); });
-      mid.appendChild(up);
-      var list = sessionsOf(view.week);
-      mid.appendChild(el("small", "", "session " + (view.session + 1) + " of " + list.length));
-      st.appendChild(mid);
-      st.appendChild(lab(nx, 1));
-      host.appendChild(st);
-      return;
+    host.className = view.page === "home" ? "" : "crumb";
+    if (view.page === "home") { return; }
+    var t = [["#/", "Overview"]];
+    if (view.page === "week") { t.push([null, "Week " + (view.week + 1)]); }
+    else if (view.page === "session") {
+      var s = sessionsOf(view.week)[view.session];
+      t.push(view.week === "wc" ? ["#/wild", "Wildcard"] : [hashFor("week", view.week), "Week " + (view.week + 1)]);
+      t.push([null, s ? (SHORT[s.id] || s.name) : "Session"]);
+    } else if (view.page === "wild") { t.push([null, "Wildcard"]); }
+    else if (view.page === "drill" || view.page === "sheet" || view.page === "dia") {
+      t = t.concat(scopeCrumb(view.scope));
+      t.push([null, PAGE_NAME[view.page]]);
+    } else if (view.page === "ahead") { t.push(["#/map", "The work ahead"]); t.push([null, PAGE_NAME.ahead]); }
+    else if (["data", "written", "resources", "figure", "book", "sky"].indexOf(view.page) >= 0) {
+      t.push(["#/progress", "Progress"]);
+      t.push([null, PAGE_NAME[view.page]]);
+    } else { t.push([null, PAGE_NAME[view.page] || view.page]); }
+    var ol = document.createElement("ol");
+    t.forEach(function (c) {
+      var li = document.createElement("li");
+      if (c[0]) { var a = el("a", "", c[1]); a.href = c[0]; li.appendChild(a); }
+      else { var here = el("span", "", c[1]); here.setAttribute("aria-current", "page"); li.appendChild(here); }
+      ol.appendChild(li);
+    });
+    host.appendChild(ol);
+    var nb = neighbours();
+    if (nb && (nb.prev || nb.next)) {
+      var pn = el("span", "pn");
+      if (nb.prev) { var p = el("a", "", "‹ " + nb.prev.short); p.href = nb.prev.href; p.title = "Previous " + nb.kind; pn.appendChild(p); }
+      if (nb.next) { var n = el("a", "", nb.next.short + " ›"); n.href = nb.next.href; n.title = "Next " + nb.kind; pn.appendChild(n); }
+      host.appendChild(pn);
     }
-
+  }
+  /* Previous and next at the foot of a session or a week. */
+  function pagerFor() {
+    var nb = neighbours();
+    if (!nb || (!nb.prev && !nb.next)) { return null; }
+    var box = el("nav", "pager");
+    box.setAttribute("aria-label", "Previous and next " + nb.kind);
+    if (nb.prev) {
+      var p = el("a", "prev"); p.href = nb.prev.href;
+      p.appendChild(el("small", "", "Previous " + nb.kind)); p.appendChild(document.createTextNode(nb.prev.label));
+      box.appendChild(p);
+    }
+    if (nb.next) {
+      var n = el("a", "next"); n.href = nb.next.href;
+      n.appendChild(el("small", "", "Next " + nb.kind)); n.appendChild(document.createTextNode(nb.next.label));
+      box.appendChild(n);
+    }
+    return box;
   }
 
   /* ---------------------------------------------------------------- home view */
 
-  var heroDrawn = false;
   var DAYNAME = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   var MONTHNAME = ["January", "February", "March", "April", "May", "June", "July",
     "August", "September", "October", "November", "December"];
 
-  function statusLine(wk) {
-    var parts = [], pr = weekProgress(wk);
-    parts.push("Week " + (wk + 1) + ": " + pr.charAt(0).toLowerCase() + pr.slice(1) + ".");
-    if (todayMid() > dayOf(wk, 6)) { parts.push("Its planned dates were " + range(wk) + "."); }
-    parts.push("At a week a week from here, the gate lands " + gateWord() + ".");
-    var st = mathStreak();
-    parts.push(st > 0
-      ? "Maths touched <b>" + st + (st === 1 ? " week" : " weeks") + "</b> running."
-      : "Close a maths session this week and the streak begins.");
-    return parts.join(" ");
-  }
-
-  /* Three numbers that move every time a session closes or the clock banks time.
+  /* The numbers that move every time a session closes or the clock banks time.
      Wildcard work counts here, labelled so; it never counts in the plan figure on Progress. */
   function tallyBlock() {
     var banked = 0, done = 0, total = 0;
@@ -6389,16 +6370,21 @@
       if (d) { done += 1; }
       if (d || !s.parked) { total += 1; }
     });
+    var st = mathStreak();
     var box = el("div", "tally");
-    [[fmtMinutes(banked), "", "hours in, wildcard included"],
+    [[fmtMinutes(banked), "", "in, wildcard included"],
      [String(done), " of " + total, "sessions closed, wildcard included"],
-     [fmtMinutes(weekMinutesFor(currentWeek())), " of 4–6h", "on the clock this week"]].forEach(function (t) {
+     [fmtMinutes(weekMinutesFor(currentWeek())), " of 4–6h", "on the clock this week"],
+     [String(st), st === 1 ? " week" : " weeks", "running with maths touched"]].forEach(function (t) {
       var d = el("div"), b = el("b", "", t[0]);
       if (t[1]) { b.appendChild(el("small", "", t[1])); }
       d.appendChild(b);
       d.appendChild(document.createTextNode(t[2]));
       box.appendChild(d);
     });
+    var all = el("a", "", "All progress");
+    all.href = "#/progress";
+    box.appendChild(all);
     return box;
   }
 
@@ -6411,13 +6397,12 @@
     return best;
   }
 
+  /* The next session and its Start button, short. */
   function heroHome(v, nx) {
-    var hero = el("section", "hero" + (heroDrawn ? "" : " arrive"));
-    heroDrawn = true;
+    var hero = el("section", "hero");
     var wk = currentWeek(), today = todayMid();
-
-    hero.appendChild(el("p", "hdate", "Accelerate. " + DAYNAME[today.getDay()] + " " + today.getDate() + " " +
-      MONTHNAME[today.getMonth()] + ". Week " + (wk + 1) + " of " + PLAN.length + "."));
+    hero.appendChild(el("p", "hdate", DAYNAME[today.getDay()] + " " + today.getDate() + " " +
+      MONTHNAME[today.getMonth()] + ". Week " + (wk + 1) + " of " + PLAN.length + ". Next up:"));
 
     if (nx) {
       hero.appendChild(el("h1", "next", nx.s.name));
@@ -6437,8 +6422,8 @@
       hero.appendChild(el("p", "hsub", "The gate is next: a timed quiz and the five-minute spoken answer, recorded."));
     }
 
-    var acts = el("div", "hacts");
     if (nx) {
+      var acts = el("div", "hacts");
       var nxLoop = nx.wild ? loopOf(nx.s) : null;
       var start = el("button", "go-big", nxLoop ? "Open the " + nxLoop.name + " page" : "Start this session");
       start.addEventListener("click", function () {
@@ -6446,26 +6431,80 @@
         go("session", nx.wild ? "wc" : nx.wi, nx.si);
       });
       acts.appendChild(start);
+      var total = nx.s.steps.length + studyLen(nx.s), dn = stepsDone(nx.s) + studyDone(nx.s);
+      acts.appendChild(el("span", "hmeta", nx.s.len + " planned, " + dn + " of " + total + " steps done"));
+      hero.appendChild(acts);
     }
-    /* the references, right of the start button; site/nav.js draws them */
-    var nv = document.createElement("nav");
-    nv.setAttribute("data-site-nav", "");
-    nv.setAttribute("data-here", "tracker");
-    acts.appendChild(nv);
-    hero.appendChild(acts);
-    hero.appendChild(tallyBlock());
-
-    var status = el("p", "hstatus");
-    status.innerHTML = statusLine(wk);
-    var cold = mostCold();
-    if (cold) {
-      var dr = el("button", "go-inline", "Drill the " + cold.n + " you could not say");
-      dr.addEventListener("click", function () { drill.scope = null; go("drill", cold.scope); });
-      status.appendChild(document.createTextNode(" "));
-      status.appendChild(dr);
-    }
-    hero.appendChild(status);
     v.appendChild(hero);
+  }
+
+  /* Milestone 1 as a bar over its five weeks, the weeks and the wildcard as cards with a mark
+     per session (filled once closed), and the numbers. */
+  function milestoneBlock() {
+    var box = el("section", "mstone");
+    var closed = 0, total = 0;
+    eachSession(function (s) { total += 1; if (sessionClosed(s)) { closed += 1; } });
+    var head = el("div", "mhead");
+    head.appendChild(el("b", "", "Milestone 1, Primitives"));
+    head.appendChild(el("span", "", closed + " of " + total + " sessions closed. At a week a week from here, the gate lands " + gateWord() + "."));
+    box.appendChild(head);
+
+    var bar = el("div", "mbar");
+    bar.setAttribute("role", "img");
+    bar.setAttribute("aria-label", closed + " of " + total + " sessions closed across the five weeks");
+    PLAN.forEach(function (w, wi) {
+      var n = w.sessions.filter(sessionClosed).length;
+      var seg = el("i", wi === currentWeek() ? "now" : "");
+      var f = el("b");
+      f.style.width = Math.round(100 * n / w.sessions.length) + "%";
+      seg.appendChild(f);
+      seg.title = "Week " + (wi + 1) + ": " + n + " of " + w.sessions.length + " closed";
+      bar.appendChild(seg);
+    });
+    box.appendChild(bar);
+
+    var grid = el("div", "weeks");
+    PLAN.forEach(function (w, wi) {
+      var c = el("a", "wcard" + (wi === currentWeek() ? " now" : ""));
+      c.href = hashFor("week", wi);
+      if (wi === currentWeek()) { c.setAttribute("aria-current", "step"); }
+      var h = el("div", "wh");
+      h.appendChild(el("b", "", "Week " + (wi + 1)));
+      h.appendChild(el("span", "", range(wi)));
+      c.appendChild(h);
+      c.appendChild(el("div", "wt", w.title));
+      var mk = el("div", "marks"), n = 0;
+      w.sessions.forEach(function (s) {
+        var d = dotFor(s);
+        d.title = (SHORT[s.id] || s.name) + ", " + s.track.toLowerCase() + (sessionClosed(s) ? ", closed" : "");
+        mk.appendChild(d);
+        if (sessionClosed(s)) { n += 1; }
+      });
+      mk.appendChild(el("span", "", n === w.sessions.length ? "done" : n + " of " + w.sessions.length));
+      c.appendChild(mk);
+      grid.appendChild(c);
+    });
+    var open = wildOpen(), left = 0;
+    open.forEach(function (x) { left += Math.max(0, (x.s.est || 0) - clockBanked(x.s.id)); });
+    var wc = el("a", "wcard wild");
+    wc.href = "#/wild";
+    var wh = el("div", "wh");
+    wh.appendChild(el("b", "", "Wildcard"));
+    wh.appendChild(el("span", "", open.length ? (Math.round(left / 6) / 10) + "h left" : ""));
+    wc.appendChild(wh);
+    wc.appendChild(el("div", "wt", LOOPS[0] ? "Interviews: " + LOOPS[0].name.split(",")[0] + " next" : "Interview work"));
+    var wm = el("div", "marks");
+    open.forEach(function (x) {
+      var d = dotFor(x.s);
+      d.title = SHORT[x.s.id] || x.s.name;
+      wm.appendChild(d);
+    });
+    wm.appendChild(el("span", "", open.length ? open.length + " open" : "nothing open"));
+    wc.appendChild(wm);
+    grid.appendChild(wc);
+    box.appendChild(grid);
+    box.appendChild(tallyBlock());
+    return box;
   }
 
   /* ------------------------------------------------------ small pleasures
@@ -6508,16 +6547,11 @@
     pool.forEach(function (p) { if (pick.length < 3 && pick.indexOf(p) < 0) { pick.push(p); } });
     return pick;
   }
-  function coldBlock() {
-    var box = el("div", "cold");
-    var qs = coldThree();
-    if (!qs.length) {
-      box.appendChild(el("p", "sm dim", "Questions come from sessions you have started. Tick a step in any session and three appear here each day."));
-      return box;
-    }
-    qs.forEach(function (q, n) {
+  function coldBlock(qs) {
+    var box = el("div", "cold3");
+    qs.forEach(function (q) {
       var c = el("div", "coldq");
-      c.appendChild(el("div", "coldsrc", (n + 1) + ". From " + (SHORT[q.s.id] || q.s.name)));
+      c.appendChild(el("div", "coldsrc", "From " + (SHORT[q.s.id] || q.s.name)));
       c.appendChild(el("div", "coldt", q.q));
       if (!open["cold:" + q.k]) {
         var b = el("button", "wb-link", "Said it. Show the answer");
@@ -6787,75 +6821,37 @@
     setTimeout(function () { if (f.parentNode) { f.remove(); } }, 2200);
   }
 
-  /* Home: the next session and the numbers, the five weeks and the wildcard in one row,
-     three for today, the work ahead. Everything else is one step away in the rail. */
-  function wildColumn() {
-    var wc = el("div", "colm wild");
-    var head = el("button", "wn tiny", "Wild\u00adcard");
-    head.setAttribute("aria-label", "Open the wildcard");
-    wc.appendChild(head);
-    var open = wildOpen(), left = 0;
-    open.forEach(function (x) { left += Math.max(0, (x.s.est || 0) - clockBanked(x.s.id)); });
-    wc.appendChild(el("div", "wd", open.length
-      ? open.length + " open \u00b7 " + (Math.round(left / 6) / 10) + "h left" : "Nothing open"));
-    open.forEach(function (x) {
-      wc.appendChild(el("span", "mk " + tone(x.s.track), SHORT[x.s.id] || x.s.name));
-    });
-    var iv = el("a", "ivbtn", "Interviews");
-    iv.href = "INTERVIEWS.html";
-    wc.appendChild(iv);
-    wc.addEventListener("click", function (e) { if (!e.target.closest("a")) { go("wild"); } });
-    return wc;
-  }
-  /* The five weeks in a row, done sessions struck through, then the wildcard. */
-  function plannerGrid() {
-    var grid = el("div", "planner");
-    PLAN.forEach(function (w, wi) {
-      var c = el("button", "colm" + (wi === currentWeek() ? " live" : ""));
-      c.appendChild(el("div", "wn", String(wi + 1)));
-      c.appendChild(el("div", "wd", range(wi)));
-      c.appendChild(el("div", "wt", w.title));
-      c.appendChild(el("div", "sm dim", weekProgress(wi)));
-      w.sessions.forEach(function (s) {
-        var shut = sessionDone(s);
-        var m = el("span", "mk " + tone(s.track) + (shut ? " shut" : ""));
-        m.appendChild(document.createTextNode(SHORT[s.id] || s.name));
-        if (shut && state.done[s.id]) { m.appendChild(el("em", "", "closed " + stampShort(state.done[s.id]))); }
-        c.appendChild(m);
-      });
-      c.addEventListener("click", function () { go("week", wi); });
-      grid.appendChild(c);
-    });
-    grid.appendChild(wildColumn());
-    return grid;
-  }
+  /* The overview: the next session, the milestone and its weeks with the numbers, the pages
+     beside the plan, three for today, then the map. One screen holds everything above the map. */
   function viewHome() {
     var v = document.getElementById("view");
     heroHome(v, nextSession());
+    v.appendChild(milestoneBlock());
 
-    v.appendChild(rubric("Five weeks", "open a week to see its sessions"));
-    v.appendChild(plannerGrid());
-    var lg = el("div", "legend");
-    [["Systems", "sys"], ["Mathematics", "math"], ["Alaap", "alaap"], ["Requeue", "req"], ["Interview", "iv"]].forEach(function (t) {
-      var s = el("span");
-      s.appendChild(htm("i", "", "")).style.background = "var(--" + t[1] + ")";
-      s.appendChild(document.createTextNode(t[0]));
-      lg.appendChild(s);
-    });
-    v.appendChild(lg);
+    /* the references; site/nav.js draws the badges into it */
+    var nv = document.createElement("nav");
+    nv.className = "sn-grid";
+    nv.setAttribute("data-site-nav", "");
+    nv.setAttribute("data-here", "tracker");
+    nv.setAttribute("aria-label", "Pages beside the plan");
+    v.appendChild(nv);
 
-    v.appendChild(rubric("Three for today", "open questions from what you have started"));
-    v.appendChild(coldBlock());
+    var qs = coldThree(), cold = mostCold();
+    if (qs.length || cold) {
+      var rb = rubric("Three for today");
+      if (cold) {
+        var dr = el("a", "", "Drill the " + cold.n + " you could not say");
+        dr.href = "#/drill/" + cold.scope;
+        rb.appendChild(dr);
+      }
+      v.appendChild(rb);
+      if (qs.length) { v.appendChild(coldBlock(qs)); }
+    }
 
     v.appendChild(rubric("The work ahead", "every milestone through 2027"));
     v.appendChild(el("p", "sm dim", "Time runs downward, one band per milestone; each column is a track, and a line means the lower thing needs the upper thing first."));
     v.appendChild(mapLegend());
     v.appendChild(mapPanel(""));
-    var mapActs = el("div", "row-act");
-    var mapOpen = el("button", "sec", "Open the map on its own page");
-    mapOpen.addEventListener("click", function () { go("map"); });
-    mapActs.appendChild(mapOpen);
-    v.appendChild(mapActs);
   }
 
   function viewFigure() {
@@ -6869,22 +6865,6 @@
     var v = document.getElementById("view");
     v.appendChild(el("h1", "", "Progress"));
     v.appendChild(el("p", "sm dim", exportStaleNote()));
-
-    var nb = PLAN.filter(function (w, wi) { return weekBound(wi); }).length;
-    var shelf = el("div", "shelf");
-    var bk = el("button", "shelfc");
-    bk.appendChild(el("div", "shn", nb + (nb === 1 ? " week" : " weeks") + " bound"));
-    bk.appendChild(el("div", "shk", nb ? "Open the book: a page per closed week, ready to print." : "The book: week " + (currentWeek() + 1) + " binds when its sessions close."));
-    bk.addEventListener("click", function () { go("book"); });
-    var skyb = el("button", "shelfc dark");
-    var litn = allSessions().filter(function (x) { return sessionClosed(x.s); }).length;
-    skyb.appendChild(el("div", "shn", litn + " of " + allSessions().length + " stars lit"));
-    skyb.appendChild(el("div", "shk", "See the sky: every session as a star."));
-    skyb.addEventListener("click", function () { go("sky"); });
-    shelf.appendChild(bk); shelf.appendChild(skyb);
-    v.appendChild(shelf);
-    v.appendChild(rubric("The craft", "a livery for every week closed"));
-    v.appendChild(liveryBlock());
 
     /* figures */
     var closed = 0, estTotal = 0, estDone = 0, quizzes = [], i;
@@ -7004,7 +6984,10 @@
     v.appendChild(el("p", "sm dim", "Small squares are sessions closed that day, coloured by track. The four dots below are gym, read, make, Alaap. Nothing is derived from them."));
 
     /* ledger of sessions */
-    v.appendChild(rubric("Every session", "estimated time, and when it was posted"));
+    var ledger = el("details", "fold");
+    ledger.open = !!open["ledger"];
+    ledger.addEventListener("toggle", function () { open["ledger"] = ledger.open; });
+    ledger.appendChild(htm("summary", "", "Every session <small>estimated time, and when it closed</small>"));
     var t = el("table", "t");
     var hr = el("tr");
     ["Wk", "Session", "Track", "Est.", "Posted"].forEach(function (h, i2) {
@@ -7028,53 +7011,71 @@
         tr.appendChild(el("td", "r", s.len.replace("h ", ":").replace("m", "")));
         tr.appendChild(el("td", "r" + (state.done[s.id] ? " posted" : (isFolded(s) ? " folded-note" : "")),
           state.done[s.id] || (isFolded(s) ? "folded in" :
-            (stepsDone(s) ? stepsDone(s) + "/" + s.steps.length : "\u2014"))));
+            (stepsDone(s) ? stepsDone(s) + "/" + s.steps.length : ""))));
         tr.addEventListener("click", function () { go("session", wi, si); });
         t.appendChild(tr);
       });
     });
-    v.appendChild(t);
+    ledger.appendChild(t);
+    v.appendChild(ledger);
 
+    /* the pages that hang off the numbers */
+    v.appendChild(rubric("More"));
+    var more = el("p", "morelinks");
+    [["#/data", "Data and export"], ["#/written", "Written work"], ["#/resources", "Resources"], ["#/figure", "Explain a figure"]]
+      .forEach(function (m) { var a = el("a", "", m[1]); a.href = m[0]; more.appendChild(a); });
+    v.appendChild(more);
   }
 
   /* ---------------------------------------------------------------- week view */
 
+  /* A week: what it entails, then its sessions as cards (what you commit to), then the
+     rest-of-life board and the notes, folded. */
+  function sessionRow(s, w, i) {
+    var a = el("a", "srow" + (sessionClosed(s) ? " closed" : ""));
+    a.href = hashFor("session", w, i);
+    a.style.setProperty("--tone", "var(--" + tone(s.track) + ")");
+    var total = s.steps.length + studyLen(s), dn = stepsDone(s) + studyDone(s);
+    a.appendChild(dotFor(s));
+    var body = el("div", "");
+    body.appendChild(el("div", "srn", s.name));
+    if (s.blurb) { body.appendChild(el("div", "srw", s.blurb)); }
+    var meta = [s.track, s.len, dn + " of " + total + " steps done"];
+    if (state.done[s.id]) { meta.push("closed " + state.done[s.id]); }
+    else if (isFolded(s)) { meta.push("folded into wildcard work"); }
+    body.appendChild(el("div", "srm", meta.join(" · ")));
+    a.appendChild(body);
+    a.appendChild(el("span", "sro", sessionClosed(s) ? "Review" : dn ? "Continue" : "Open"));
+    return a;
+  }
   function viewWeek() {
     var v = document.getElementById("view");
     var w = PLAN[view.week];
-    v.appendChild(el("h1", "", "Week " + (view.week + 1) + ". " + w.title));
-    v.appendChild(el("p", "lede", w.focus));
-    v.appendChild(el("p", "sm dim", "Planned " + range(view.week) + ". " + weekProgress(view.week) + "."));
+    var head = el("header", "shead");
+    head.appendChild(el("h1", "", "Week " + (view.week + 1) + ". " + w.title));
+    head.appendChild(el("p", "lede", w.focus));
+    var est = w.sessions.reduce(function (a, s) { return a + (s.est || 0); }, 0);
+    head.appendChild(el("p", "wmeta", "Planned " + range(view.week) + ", " + mins(est) + " across " + w.sessions.length +
+      " sessions. " + weekProgress(view.week) + "."));
+    v.appendChild(head);
 
-    v.appendChild(rubric("Sessions"));
-    var t = el("table", "t");
-    var hr = el("tr");
-    ["Session", "Track", "Est.", "Steps", "Posted"].forEach(function (h, i) {
-      hr.appendChild(el("th", i >= 2 ? "r" : "", h));
-    });
-    t.appendChild(hr);
-    w.sessions.forEach(function (s, si) {
-      var tr = el("tr", "clickable");
-      var td = el("td");
-      td.appendChild(document.createTextNode(s.name));
-      td.appendChild(el("span", "sub", s.blurb || ""));
-      tr.appendChild(td);
-      var tt = el("td");
-      var sw = el("span", "swatch");
-      sw.style.background = "var(--" + tone(s.track) + ")";
-      tt.appendChild(sw);
-      tt.appendChild(document.createTextNode(s.track));
-      tr.appendChild(tt);
-      tr.appendChild(el("td", "r", s.len));
-      tr.appendChild(el("td", "r", stepsDone(s) + " of " + s.steps.length));
-      tr.appendChild(el("td", "r" + (state.done[s.id] ? " posted" : (isFolded(s) ? " folded-note" : "")),
-        state.done[s.id] || (isFolded(s) ? "folded into wildcard" : "\u2014")));
-      tr.addEventListener("click", function () { go("session", view.week, si); });
-      t.appendChild(tr);
-    });
-    v.appendChild(t);
+    var list = el("div", "srows");
+    w.sessions.forEach(function (s, si) { list.appendChild(sessionRow(s, view.week, si)); });
+    v.appendChild(list);
 
-    v.appendChild(rubric("The rest of life", "toggles only"));
+    if (view.week === PLAN.length - 1) {
+      v.appendChild(rubric("Then the gate", gateWord()));
+      var p = el("div", "panel");
+      p.appendChild(el("p", "", "A timed quiz in the same format as September, built when you reach it so it can be calibrated to what actually happened rather than what was planned."));
+      p.appendChild(el("p", "", "The bar: every milestone-1 requeue item answered, the five-minute recording made in primitives, and seventy percent on systems."));
+      p.appendChild(el("p", "sm dim", "Failing extends the milestone by a week. The dates are soft; the capabilities are not."));
+      v.appendChild(p);
+    }
+
+    var life = el("details", "fold");
+    life.open = !!open["life:" + view.week];
+    life.addEventListener("toggle", function () { open["life:" + view.week] = life.open; });
+    life.appendChild(htm("summary", "", "The rest of life <small>gym, read, make, Alaap; toggles only</small>"));
     var board = el("div", "board");
     var hd = el("div", "hd");
     hd.appendChild(el("div", "", ""));
@@ -7101,23 +7102,24 @@
       }
       board.appendChild(rw);
     });
-    v.appendChild(board);
+    life.appendChild(board);
+    v.appendChild(life);
 
-    v.appendChild(rubric("Notes"));
+    var notes = el("details", "fold");
+    var had = state.notes[view.week] || "";
+    notes.open = open["notes:" + view.week] === undefined ? !!had : open["notes:" + view.week];
+    notes.addEventListener("toggle", function () { open["notes:" + view.week] = notes.open; });
+    notes.appendChild(htm("summary", "", "Notes <small>" + (had ? "written" : "empty") + "</small>"));
     var ta = document.createElement("textarea");
-    ta.value = state.notes[view.week] || "";
+    ta.value = had;
     ta.placeholder = "What actually happened. What you set aside. Anything to raise at the re-plan.";
+    ta.setAttribute("aria-label", "Notes for week " + (view.week + 1));
     ta.addEventListener("input", function () { state.notes[view.week] = ta.value; save(); });
-    v.appendChild(ta);
+    notes.appendChild(ta);
+    v.appendChild(notes);
 
-    if (view.week === PLAN.length - 1) {
-      v.appendChild(rubric("Then the gate", gateWord()));
-      var p = el("div", "panel");
-      p.appendChild(el("p", "", "A timed quiz in the same format as September, built when you reach it so it can be calibrated to what actually happened rather than what was planned."));
-      p.appendChild(el("p", "", "The bar: every milestone-1 requeue item answered, the five-minute recording made in primitives, and seventy percent on systems."));
-      p.appendChild(el("p", "sm dim", "Failing extends the milestone by a week. The dates are soft; the capabilities are not."));
-      v.appendChild(p);
-    }
+    var pg = pagerFor();
+    if (pg) { v.appendChild(pg); }
   }
 
   /* ------------------------------------------------------------- session view */
@@ -7191,7 +7193,7 @@
     it.do.forEach(function (d, j) {
       var k = doKey(s.id, i, j);
       var li = el("li", state.steps[k] ? "done" : "");
-      var bx = el("button", "sxt sm" + (state.steps[k] ? " on" : ""), state.steps[k] ? "&#10003;" : "");
+      var bx = el("button", "sxt sm" + (state.steps[k] ? " on" : ""), state.steps[k] ? "\u2713" : "");
       bx.setAttribute("aria-label", "Mark done: " + d.a);
       bx.addEventListener("click", function () {
         if (state.steps[k]) { delete state.steps[k]; delete state.steps[k + ":at"]; }
@@ -7231,7 +7233,7 @@
     d.open = !!open[key + ":o"];
     d.addEventListener("toggle", function () { open[key + ":o"] = d.open; });
     var sm = el("summary");
-    var tick = el("button", "sxt" + (state.steps[key] ? " on" : ""), state.steps[key] ? "&#10003;" : "");
+    var tick = el("button", "sxt" + (state.steps[key] ? " on" : ""), state.steps[key] ? "\u2713" : "");
     tick.setAttribute("aria-label", (state.steps[key] ? "Mark not done: " : "Mark done: ") + it.t);
     tick.addEventListener("click", function (e) {
       e.preventDefault(); e.stopPropagation();
@@ -7282,15 +7284,11 @@
     d.appendChild(body);
     return d;
   }
+  /* The steps come first. After them: the figures no step carries, what else the idea
+     touches, anything shaky in the drill, then closing it off. */
   function sessionList(s, list, wild) {
     var box = el("div", "sxlist");
-    /* figures a step does not already carry are drawn once, above the steps */
-    var placed = {};
-    s.steps.forEach(function (st, i) { (extraOf(sKey(s.id, i)).figs || []).forEach(function (k) { placed[k] = true; }); });
-    (s.study || []).forEach(function (it, i) { (extraOf(s.id + ":s" + i).figs || []).forEach(function (k) { placed[k] = true; }); });
-    (s.diagrams || []).filter(function (k) { return !placed[k]; }).forEach(function (k, n) {
-      var f = plate(k, n + 1); if (f) { box.appendChild(f); }
-    });
+    box.style.setProperty("--tone", "var(--" + tone(s.track) + ")");
     var bulk = el("div", "sxbulk");
     var oa = el("button", "wb-link", "Open all"), ca = el("button", "wb-link", "Close all");
     function setAll(v) {
@@ -7308,6 +7306,34 @@
       box.appendChild(el("h2", "sxg", "Then the steps"));
     }
     s.steps.forEach(function (st, i) { box.appendChild(stepItem(s, sKey(s.id, i), st, false, i)); });
+
+    var after = el("div", "sxafter");
+    /* figures a step does not already carry */
+    var placed = {};
+    s.steps.forEach(function (st, i) { (extraOf(sKey(s.id, i)).figs || []).forEach(function (k) { placed[k] = true; }); });
+    (s.study || []).forEach(function (it, i) { (extraOf(s.id + ":s" + i).figs || []).forEach(function (k) { placed[k] = true; }); });
+    var loose = (s.diagrams || []).filter(function (k) { return !placed[k] && DIA[k]; });
+    if (loose.length) {
+      after.appendChild(rubric(loose.length === 1 ? "The figure for this session" : "Figures for this session", "select one to take it apart"));
+      loose.forEach(function (k, n) { var f = plate(k, n + 1); if (f) { after.appendChild(f); } });
+    }
+    if (RELATED[s.id] && RELATED[s.id].length) {
+      var rel = el("div", "related");
+      rel.appendChild(el("span", "", "This idea also appears in"));
+      RELATED[s.id].forEach(function (r) {
+        var target = sessionById(r.id);
+        if (!target) { return; }
+        var rb = el("button", "sec", SHORT[target.id] || target.name);
+        rb.title = r.why;
+        rb.addEventListener("click", function () { goSession(target); });
+        rel.appendChild(rb);
+      });
+      after.appendChild(rel);
+    }
+    var myCards = cardsOf(s);
+    if (myCards.length) { var band = coldBand(myCards); if (band) { after.appendChild(band); } }
+    box.appendChild(after);
+
     var fin = el("section", "sxfin");
     finishCard(fin, s, list, wild);
     box.appendChild(fin);
@@ -7491,53 +7517,27 @@
     if (!s) { go("home"); return; }
     var wild = view.week === "wc";
 
-    var head = el("div", "shead");
+    var head = el("header", "shead toned");
+    head.style.setProperty("--tone", "var(--" + tone(s.track) + ")");
     var kick = el("div", "kicker");
-    var sw = el("span", "");
-    var b1 = el("span", "swatch");
-    b1.style.background = "var(--" + tone(s.track) + ")";
-    sw.appendChild(b1);
-    sw.appendChild(document.createTextNode(s.track));
-    kick.appendChild(sw);
+    var trk = el("span", "trk");
+    trk.appendChild(dotFor(s));
+    trk.appendChild(document.createTextNode(s.track));
+    kick.appendChild(trk);
     kick.appendChild(el("span", "", wild ? (s.forWhat || "Wildcard") : "Week " + (view.week + 1) + ", " + range(view.week)));
     var xm = extraMinutes(s);
     kick.appendChild(el("span", "", s.len + " planned" + (xm ? ", plus " + mins(xm) + " of optional reading" : "")));
-    if (state.done[s.id]) { kick.appendChild(el("span", "posted", "Posted " + state.done[s.id])); }
+    if (state.done[s.id]) { kick.appendChild(el("span", "posted", "Closed " + state.done[s.id])); }
     if (isFolded(s)) { kick.appendChild(el("span", "folded-note", "Folded into wildcard work on " + state.folded[s.id].at)); }
     head.appendChild(kick);
     head.appendChild(el("h1", "", s.name));
-    if (s.intro) { head.appendChild(el("p", "lede", s.intro)); }
+    if (s.intro || s.blurb) { head.appendChild(el("p", "intro", s.intro || s.blurb)); }
+    head.appendChild(sessionClock(s));
     v.appendChild(head);
-    v.appendChild(sessionClock(s));
 
-    if (RELATED[s.id] && RELATED[s.id].length) {
-      v.appendChild(el("p", "sm dim", "This idea also appears in"));
-      var relRow = el("div", "row-act");
-      RELATED[s.id].forEach(function (r) {
-        var target = sessionById(r.id);
-        if (!target) { return; }
-        var rb = el("button", "sec", SHORT[target.id] || target.name);
-        rb.title = r.why;
-        rb.addEventListener("click", function () { goSession(target); });
-        relRow.appendChild(rb);
-      });
-      v.appendChild(relRow);
-    }
-
-    var myCards = cardsOf(s);
-    if (myCards.length) { var band = coldBand(myCards); if (band) { v.appendChild(band); } }
     v.appendChild(sessionList(s, list, wild));
-
-    var acts = el("div", "row-act");
-    var back = el("button", "sec", wild ? "Back to the wildcard" : "Back to week " + (view.week + 1));
-    back.addEventListener("click", function () { go(wild ? "wild" : "week", view.week); });
-    acts.appendChild(back);
-    if (view.session < list.length - 1) {
-      var nxt = el("button", "sec", "Next session");
-      nxt.addEventListener("click", function () { go("session", view.week, view.session + 1); });
-      acts.appendChild(nxt);
-    }
-    v.appendChild(acts);
+    var pg = pagerFor();
+    if (pg) { v.appendChild(pg); }
   }
 
 
@@ -7545,8 +7545,11 @@
   var wildShowDone = false;
   function viewWild() {
     var v = document.getElementById("view");
-    v.appendChild(el("h1", "", "Wildcard"));
-    v.appendChild(el("p", "lede", "What a scheduled interview demands. It is not week six and it does not move the gate."));
+    var head = el("header", "shead toned");
+    head.style.setProperty("--tone", "var(--wild)");
+    head.appendChild(el("h1", "", "Wildcard"));
+    head.appendChild(el("p", "lede", "What a scheduled interview demands. It is not week six and it does not move the gate."));
+    v.appendChild(head);
 
     /* The loop in play, first and on one line. */
     var cur = LOOPS[0];
@@ -7583,7 +7586,7 @@
         td.appendChild(document.createTextNode(s.name));
         td.appendChild(el("span", "sub", s.blurb || ""));
         tr.appendChild(td);
-        tr.appendChild(el("td", "", s.forWhat || "\u2014"));
+        tr.appendChild(el("td", "", s.forWhat || ""));
         tr.appendChild(el("td", "r", s.len));
         tr.appendChild(el("td", "r", stepsDone(s) + " of " + s.steps.length));
         tr.addEventListener("click", function () { go("session", "wc", x.i); });
@@ -7690,7 +7693,7 @@
       var src = q.session ? "Set aside from " + (sessionById(q.session) ? sessionById(q.session).name : q.session) : "";
       d.appendChild(el("div", "sm dim", q.w || src));
       if (ans) {
-        d.appendChild(el("div", "sm dim", "Answered " + ans.date + (ans.note ? " \u2014 " + ans.note : "")));
+        d.appendChild(el("div", "sm dim", "Answered " + ans.date + (ans.note ? ": " + ans.note : "")));
         var reopen = el("button", "xp", "Reopen");
         reopen.addEventListener("click", function () { delete state.requeue.answered[q.id]; save(); draw(); });
         d.appendChild(reopen);
@@ -7911,7 +7914,7 @@
       var copy = el("button", "sec", "Copy all answers for review");
       copy.addEventListener("click", function () {
         var out = written.map(function (x) {
-          return "Week " + (x.wi + 1) + " \u2014 " + x.s.name + "\n" + x.st.t + "\n" +
+          return "Week " + (x.wi + 1) + ", " + x.s.name + "\n" + x.st.t + "\n" +
             x.a.text.trim() + "\n(written " + x.a.at + ")";
         }).join("\n\n---\n\n");
         function fallback() {
@@ -8151,7 +8154,7 @@
       var cards = cardsOf(s);
       if (!cards.length) { return; }
       var blk = el("div", "sheetblk");
-      blk.appendChild(el("h3", "", s.name + "  \u2014  " + s.len));
+      blk.appendChild(el("h3", "", s.name + ", " + s.len));
       var cols = el("div", "cols");
       cards.forEach(function (c) {
         var it = el("div", "it");
@@ -8163,7 +8166,7 @@
           var ul = el("div", "sheetdo");
           c.src.do.forEach(function (d) {
             var line = d.a + (d.m ? " (" + mins(d.m) + ")" : "");
-            if (d.where) { line += " \u2014 " + d.where; }
+            if (d.where) { line += ". " + d.where; }
             if (d.out) { line += "  Done when: " + d.out; }
             ul.appendChild(el("div", "", line));
           });
@@ -8324,7 +8327,7 @@
       return;
     }
     v.appendChild(rubric(total + (total === 1 ? " answer" : " answers"),
-      words + " words   \u2014   most recent " + last));
+      words + " words, most recent " + last));
 
     groups.forEach(function (g) {
       v.appendChild(rubric(g.label));
@@ -8338,7 +8341,7 @@
           block.appendChild(el("div", "", e.a.text));
           var w2 = e.a.text.trim().split(/\s+/).length;
           block.appendChild(el("div", "sm dim",
-            w2 + " words   \u2014   written " + e.a.at + (e.a.via === "spoken" ? "   \u2014   spoken" : "")));
+            w2 + " words, written " + e.a.at + (e.a.via === "spoken" ? ", spoken" : "")));
           panel.appendChild(block);
         });
         v.appendChild(panel);
@@ -8494,19 +8497,19 @@
         if (top[i] && top[i].toLowerCase().indexOf(q) >= 0) { add("Sessions", lbl, top[i], go1); break; }
       }
       if (s.study) {
-        s.study.forEach(function (it) { add("Study", lbl, it.t + " \u2014 " + it.say, go1); });
+        s.study.forEach(function (it) { add("Study", lbl, it.t + ": " + it.say, go1); });
       }
       if (s.steps) {
-        s.steps.forEach(function (st) { add("Steps", lbl, st.t + (st.d ? " \u2014 " + st.d : ""), go1); });
+        s.steps.forEach(function (st) { add("Steps", lbl, st.t + (st.d ? ": " + st.d : ""), go1); });
       }
       if (s.quiz) {
-        s.quiz.forEach(function (qq) { add("Quiz", lbl, qq.q + (qq.why ? " \u2014 " + qq.why : ""), go1); });
+        s.quiz.forEach(function (qq) { add("Quiz", lbl, qq.q + (qq.why ? ": " + qq.why : ""), go1); });
       }
     }
     eachSession(function (s) { scan(s); });
     eachWild(function (s) { scan(s); });
     REQUEUE.forEach(function (r) {
-      add("Requeue", r.id, r.t + (r.w ? " \u2014 " + r.w : ""), function () { go("requeue"); });
+      add("Requeue", r.id, r.t + (r.w ? ": " + r.w : ""), function () { go("requeue"); });
     });
     Object.keys(state.answers).forEach(function (key) {
       var rec = state.answers[key];
@@ -8655,10 +8658,10 @@
     var label = el("span", "", "Clock: ");
     var num = document.createElement("b");
     num.id = "clockElapsed_" + s.id;
-    num.textContent = fmtMinutes(c.minutes + live) + (c.running ? " \u2014 running" : " logged");
+    num.textContent = fmtMinutes(c.minutes + live) + (c.running ? ", running" : " logged");
     label.appendChild(num);
     if (c.capped) {
-      label.appendChild(document.createTextNode(" \u2014 auto-stopped after " + fmtMinutes(CLOCK_CEILING_MIN) +
+      label.appendChild(document.createTextNode(". Auto-stopped after " + fmtMinutes(CLOCK_CEILING_MIN) +
         ", correct below if that is wrong"));
     }
     box.appendChild(label);
@@ -9125,11 +9128,12 @@
     v.appendChild(el("p", "lede", "Every milestone through 2027 in one picture. Time runs downward, one band per milestone; each column is a track, and a line means the lower thing needs the upper thing first."));
     v.appendChild(mapLegend());
     v.appendChild(mapPanel("tall"));
-    var acts = el("div", "row-act");
-    var back = el("button", "sec", "Back to the planner");
-    back.addEventListener("click", function () { go("home"); });
-    acts.appendChild(back);
-    v.appendChild(acts);
+    var more = el("p", "morelinks");
+    more.style.marginTop = "var(--s4)";
+    var ah = el("a", "", "What comes after, in words");
+    ah.href = "#/ahead";
+    more.appendChild(ah);
+    v.appendChild(more);
   }
 
   /* A loop page writes the same progress store; pick its ticks up live. */
@@ -9144,6 +9148,7 @@
       drawCrumb();
       var v = document.getElementById("view");
       v.innerHTML = "";
+      v.className = "pg-" + view.page;
       var barNav = document.getElementById("barnav");
       if (barNav) { barNav.style.display = view.page === "home" ? "none" : ""; }
       if (view.page === "home") { viewHome(); }
@@ -9190,7 +9195,7 @@
           var c = state.clock[id];
           if (!c.running) { return; }
           var elText = document.getElementById("clockElapsed_" + id);
-          if (elText) { elText.textContent = fmtMinutes(c.minutes + clockLiveMinutes(id)) + " \u2014 running"; }
+          if (elText) { elText.textContent = fmtMinutes(c.minutes + clockLiveMinutes(id)) + ", running"; }
         });
       } catch (err) { console.error("Clock tick failed", err); }
     }, 30000);
@@ -9198,6 +9203,7 @@
 
   window.addEventListener("hashchange", function () {
     view = parseHash();
+    closeRail();
     draw();
     window.scrollTo(0, 0);
   });
@@ -9224,6 +9230,8 @@
         var x = neighbour(e.key === "ArrowRight" ? 1 : -1);
         if (x) { e.preventDefault(); go("session", x.w, x.i); }
       } else if (e.key === "Escape") {
+        var side0 = document.getElementById("side");
+        if (side0 && side0.classList.contains("open")) { closeRail(); tg.focus(); return; }
         if (view.page === "session") { go(view.week === "wc" ? "wild" : "week", view.week); }
         else if (view.page !== "home") { go("home"); }
       }
@@ -9236,8 +9244,14 @@
       var side = document.getElementById("side");
       var openNow = side.classList.toggle("open");
       tg.setAttribute("aria-expanded", openNow ? "true" : "false");
+      if (openNow) { var first = side.querySelector("a, button"); if (first) { first.focus(); } }
     });
   }
+  /* On a phone the rail is a drawer: a tap on the page shuts it. */
+  document.querySelector("main").addEventListener("click", function () {
+    var side = document.getElementById("side");
+    if (side.classList.contains("open")) { closeRail(); }
+  });
 })();
 </script>
 </body>
