@@ -79,7 +79,8 @@ BASELINE.fields.forEach(F => {
   /* the map: a grid of boxes, no arrow through a box, at most 3 columns */
   const d = F.diagram;
   if (!d || !(d.nodes || []).length) { bad(id, "no map"); return; }
-  if (d.nodes.length < 5 || d.nodes.length > 14) { bad(id, d.nodes.length + " map nodes (want 5 to 14)"); }
+  const most = id === "overview" ? 16 : 14;   /* the overview holds a node per field */
+  if (d.nodes.length < 5 || d.nodes.length > most) { bad(id, d.nodes.length + " map nodes (want 5 to " + most + ")"); }
   text(id, "map caption", d.cap);
   if (!/^\*\*/.test(d.cap || "")) { bad(id, "map caption must lead with a **bold sentence**"); }
   const at = {}, cell = {};

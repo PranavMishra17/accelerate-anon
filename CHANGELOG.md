@@ -867,3 +867,13 @@ and the Prep questions they prepare for (and every Prep question back to its ste
 session steps open one at a time in two panes like the tracker, the answer box asks the step's
 question, Prep sections are a coloured spine with plain rows, and Baseline's sizes are back on
 the shared scale (body 15, title 24). No charter deviation.
+
+**2026-10-01 — Baseline's main map: NLP on it, more connections, and on the tracker's home.**
+The field map now has fifteen fields with NLP and conversational AI between ML and AI
+engineering, laid out as foundations, then what is built and learned on them, then the model and
+real-time fields, and nineteen labelled arrows instead of nine. Hovering or focusing a field (on
+any Baseline map) lights it, its neighbours and the arrows between them and dims the rest; on the
+overview the lit arrows are spelled out under the map, since their labels would cover boxes. The
+map code moved from baseline/atlas.js into baseline/map.js and map.css, so the tracker's home page
+draws the same interactive map, with the hover preview, below The work ahead; its links open
+Baseline. Pranav asked for all three. No charter deviation.

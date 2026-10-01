@@ -1,0 +1,44 @@
+/* Baseline's maps, shared by BASELINE.html and the tracker's home page (with .bmap-host,
+   which maps the atlas's colour names onto the tracker's). */
+figure.map { margin: var(--s5) 0 var(--s2); max-width: 100%; overflow-x: auto; }
+figure.map svg { display: block; max-width: none; }
+figure.map .n rect { fill: var(--leaf); stroke: var(--line); }
+figure.map .n.t { cursor: pointer; }
+figure.map .n.t rect { stroke: var(--field); }
+figure.map .n.t:hover rect, figure.map .n.t:focus rect { fill: var(--mark); }
+figure.map .n text { font-family: var(--serif); font-size: 14px; fill: var(--ink-1); }
+figure.map .n text.s { font-family: var(--mono); font-size: 11px; fill: var(--ink-3); }
+figure.map .e path { fill: none; stroke: var(--ink-3); stroke-width: 1; }
+figure.map .e text { font-family: var(--mono); font-size: 10.5px; fill: var(--ink-3); }
+figure.map figcaption { font-size: var(--fs-sm); color: var(--ink-3); margin-top: var(--s2); }
+.browse { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s5); align-items: start; margin: var(--s5) 0 var(--s2); }
+.browse figure.map { margin: 0; }
+figure.map.compact .n text { font-size: 13px; }
+figure.map.compact .n text.s { font-size: 10px; }
+figure.map .n.on rect { fill: var(--mark); stroke: var(--field); stroke-width: 2; }
+.preview {
+  height: 560px; overflow: hidden; display: flex; flex-direction: column; gap: var(--s2);
+  padding: var(--s4); background: var(--leaf); border: 1px solid var(--line); border-top: 3px solid var(--pv, var(--field));
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.pv-head { display: flex; align-items: baseline; gap: var(--s3); }
+.pv-head h3 { margin: 0; font-size: var(--fs-xl); font-weight: 600; }
+.pv-open { margin-left: auto; font-family: var(--mono); font-size: var(--fs-xs); white-space: nowrap; }
+.pv-lede { margin: 0; font-size: var(--fs-md); color: var(--ink-2); line-height: 1.45;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.9em; }
+.preview figure.map { margin: var(--s2) 0 0; overflow: hidden; flex: 1; min-height: 0; display: flex; align-items: flex-start; justify-content: center; }
+.preview figure.map svg { width: 100%; height: auto; max-height: 100%; }
+@media (max-width: 1150px) { .browse { grid-template-columns: minmax(0, 1fr); } .preview { height: 520px; } }
+
+/* focus: a node, its neighbours and the arrows between them; the rest dims */
+figure.map .n, figure.map .e { transition: opacity .15s; }
+figure.map svg.focus .n:not(.hl) { opacity: .35; }
+figure.map svg.focus .e:not(.hl) { opacity: .12; }
+figure.map svg.focus .e.hl path { stroke: var(--ink-1); stroke-width: 1.5; }
+figure.map svg.focus .e.hl { color: var(--ink-1) !important; }
+.browse figure.map .e text { opacity: 0; }
+.browse figure.map p.links { margin: var(--s2) 0 0; min-height: 7.5em; font-size: var(--fs-sm); line-height: 1.5; color: var(--ink-2); }
+.browse figure.map p.links i { font-style: normal; color: var(--ink-3); }
+@media (prefers-reduced-motion: reduce) { figure.map .n, figure.map .e { transition: none; } }
+.bmap-host { --ink-1: var(--ink); --ink-2: var(--soft); --ink-3: var(--muted); --line: var(--rule); --leaf: var(--surface);
+  --mark: var(--accent-soft); --field: var(--accent); --serif: inherit; }

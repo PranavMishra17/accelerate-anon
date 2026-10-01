@@ -12,23 +12,32 @@ BASELINE.field({
       { id: "systems", label: "Systems", sub: "how computers run code", col: 0, row: 0 },
       { id: "distributed", label: "Distributed systems", sub: "many machines, one answer", col: 0, row: 1 },
       { id: "data", label: "Data", sub: "storing and moving it", col: 0, row: 2 },
+      { id: "cloud", label: "Cloud", sub: "renting the machines", col: 0, row: 3 },
+      { id: "devops", label: "DevOps, security", sub: "shipping and running", col: 0, row: 4 },
       { id: "backend", label: "Backend", sub: "state, logic, APIs", col: 1, row: 0 },
       { id: "frontend", label: "Frontend", sub: "the web people touch", col: 1, row: 1 },
       { id: "mobile", label: "Mobile", sub: "apps in a pocket", col: 1, row: 2 },
-      { id: "cloud", label: "Cloud", sub: "renting the machines", col: 1, row: 3 },
-      { id: "devops", label: "DevOps, security", sub: "shipping and running", col: 1, row: 4 },
-      { id: "ml", label: "ML and deep learning", sub: "how models learn", col: 2, row: 0 },
-      { id: "ai", label: "AI engineering", sub: "models in products", col: 2, row: 1 },
-      { id: "inference", label: "Inference", sub: "serving them fast", col: 2, row: 2 },
-      { id: "audio", label: "Audio and speech", sub: "sound as data", col: 2, row: 3 },
+      { id: "ml", label: "ML and deep learning", sub: "how models learn", col: 1, row: 3 },
+      { id: "inference", label: "Inference", sub: "serving them fast", col: 1, row: 4 },
+      { id: "ai", label: "AI engineering", sub: "models in products", col: 2, row: 0 },
+      { id: "nlp", label: "NLP, conversational AI", sub: "language and assistants", col: 2, row: 1 },
+      { id: "audio", label: "Audio and speech", sub: "sound as data", col: 2, row: 2 },
       { id: "graphics", label: "Graphics", sub: "pictures on the GPU", col: 2, row: 4 },
       { id: "games", label: "Game development", sub: "loops, engines, play", col: 2, row: 5 }
     ],
     edges: [
-      ["systems", "backend"], ["data", "backend"], ["distributed", "cloud"], ["backend", "frontend"],
-      ["backend", "ai"], ["cloud", "inference"], ["ml", "ai"], ["inference", "ai"], ["graphics", "games"]
+      ["systems", "distributed", "many machines"], ["distributed", "data", "replication"],
+      ["systems", "backend", "processes, sockets"], ["data", "backend", "queries"],
+      ["devops", "backend", "ships it"], ["cloud", "devops", "pipelines"],
+      ["backend", "frontend", "APIs"], ["data", "mobile", "sync, offline"],
+      ["data", "ml", "datasets"], ["cloud", "inference", "GPUs"],
+      ["ml", "inference", "models to serve"], ["backend", "ai", "products"],
+      ["inference", "ai", "serving"], ["ml", "nlp", "text models"],
+      ["ml", "audio", "speech models"], ["nlp", "ai", "understanding"],
+      ["audio", "nlp", "transcripts"], ["frontend", "graphics", "WebGL, canvas"],
+      ["graphics", "games", "rendering"]
     ],
-    cap: "**Read it left to right: foundations, then what gets built on them, then the model and real-time fields.** An arrow points from a field to one that builds on it; these are a few of the strongest, not all. Hover a field to preview its own map beside this one; click to keep it there, and open the field from the preview."
+    cap: "**Read it left to right: foundations, then what gets built and learned on them, then the model and real-time fields.** An arrow points from a field to one that builds on it. Hover a field to light what it connects to and see its own map beside this one; click to keep it there, and open the field from the preview."
   },
   sections: [
     { title: "The bar worth aiming at",

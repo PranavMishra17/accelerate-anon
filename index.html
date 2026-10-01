@@ -11,6 +11,7 @@
     document.documentElement.setAttribute("data-theme", t === "dark" ? "dark" : "light"); }());
 </script>
 <link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="baseline/map.css?v=fa4b1509">
 <link rel="stylesheet" href="site/tokens.css?v=0e3b75d2">
 <link rel="stylesheet" href="site/nav.css?v=2ebfb65e">
 <script src="private/site.js"></script>
@@ -8029,6 +8030,50 @@
     v.appendChild(el("p", "sm dim", "Time runs downward, one band per milestone; each column is a track, and a line means the lower thing needs the upper thing first."));
     v.appendChild(mapLegend());
     v.appendChild(mapPanel(""));
+    v.appendChild(rubric("The field map", "every field and how they connect, from Baseline"));
+    var fm = el("div", "bmap-host");
+    v.appendChild(fm);
+    loadBaseline(function () {
+      var B = window.BASELINE, ov = B && B.byId.overview;
+      if (fm.isConnected && ov && B.ui) { fm.appendChild(B.ui.fieldBrowser(ov, "BASELINE.html")); }
+    });
+  }
+  /* Baseline's field map on the home page, drawn by baseline/map.js from the same field files
+     Baseline reads. They load once, the first time the home page is drawn. */
+  var BASELINE_JS = [
+    "baseline/base.js?v=d9d934a4",
+    "baseline/fields/overview.js?v=f1bda7c4",
+    "baseline/fields/systems.js?v=8accf5b1",
+    "baseline/fields/distributed.js?v=81966cf8",
+    "baseline/fields/data.js?v=c917139c",
+    "baseline/fields/backend.js?v=b763a645",
+    "baseline/fields/frontend.js?v=ed752c07",
+    "baseline/fields/mobile.js?v=6a917f9c",
+    "baseline/fields/cloud.js?v=8c535bf8",
+    "baseline/fields/devops.js?v=0716507d",
+    "baseline/fields/ml.js?v=6fe036c9",
+    "baseline/fields/ai.js?v=5d438f37",
+    "baseline/fields/inference.js?v=97ec20b6",
+    "baseline/fields/audio.js?v=7f1844fb",
+    "baseline/fields/nlp.js?v=e3d91622",
+    "baseline/fields/graphics.js?v=2966e0fd",
+    "baseline/fields/games.js?v=581d1e9b",
+    "baseline/core.js?v=9aa13616",
+    "baseline/map.js?v=a6e647bb"
+  ];
+  var baselineWait = null;
+  function loadBaseline(done) {
+    if (window.BASELINE && window.BASELINE.ui) { done(); return; }
+    if (baselineWait) { baselineWait.push(done); return; }
+    baselineWait = [done];
+    var i = 0;
+    (function next() {
+      if (i >= BASELINE_JS.length) { var q = baselineWait; baselineWait = null; q.forEach(function (f) { f(); }); return; }
+      var sc = document.createElement("script");
+      sc.src = BASELINE_JS[i++];
+      sc.onload = next; sc.onerror = next;
+      document.head.appendChild(sc);
+    }());
   }
 
   function viewFigure() {
