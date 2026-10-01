@@ -5,41 +5,27 @@ it survives contact with a normal month.
 
 ---
 
-## Week states
+## Weeks are a sequence
 
-Every week gets one, declared at the start when you can see what the week looks
-like, and corrected at the end if reality disagreed.
+Changed 30 September 2026, after ten days of interviews and work left week 1 untouched.
+Declaring Green, Amber or Red at the start of a week never happened in practice, and the
+colours made a late week read as a failure instead of a week still to do.
 
-**Green — the full five hours.** Sessions A, B and C all happen.
+So a week is its content, not its dates. The weeks are done in order and none is skipped.
+A week finishes when its three sessions close, whenever that is, and shows the day it
+finished and how far after its planned dates. The dates are the target, not a deadline.
+The tracker shows each week as plain progress ("2 of 3 sessions closed, maths done") and
+projects the gate from the real pace: no earlier than planned, otherwise a week for every
+week still to do, counted from today. Nothing is declared or marked by hand.
 
-**Amber — two to three hours.** Sessions A and B only. Session C is dropped without
-guilt or replacement. This is the normal state of a busy week and it is not failure.
+**The one streak** is weeks running in which a maths session closed. Mathematics is the
+track with no outside forcing function and the first to disappear, so it is the one thing
+the streak protects. Session A still has its rule: nothing else open.
 
-**Red — sixty to ninety minutes.** Session B only, the mathematics, because it is
-the track that decays fastest and is cheapest to keep alive. Nothing else. A Red
-week counts as an unbroken week. This matters more than it sounds: the streak is
-what you are protecting, not the hours.
-
-**Interview sprint.** A live loop means Red weeks for as long as it takes. Not a
-suspension of the plan, a state of it. Declare it, sprint, come back on the ramp.
-This is the exact situation that ended the last attempt, and the only difference
-this time is that a Red week has a definition and a way out.
-
-## Re-entry ramp
-
-After two or more consecutive Red weeks, the next non-Red week **repeats the last
-session A you actually completed** rather than advancing to a new one. It will feel
-like a waste of a week. It is not. Re-entering at the wrong depth is why people
-bounce off a plan permanently rather than temporarily.
-
-After four or more consecutive Red weeks, re-take the last gate quiz before
-advancing. If it fails, the milestone extends. No shame attaches to this.
-
-## No back-filling
-
-Missed hours are never owed. There is no catching up, no double session, no debt.
-A missed week is simply gone. Accumulated debt is the most common reason long plans
-get dropped, so this one does not create any.
+**An interview sprint** pauses the sequence; it does not break it. The week you were in is
+still the week you are in when the sprint ends, and it picks up where it stopped. Interview
+sessions with a date come first on the home page until their day; undated ones (a later
+round, a date not set) wait behind the plan.
 
 ---
 

@@ -322,15 +322,15 @@ scheduled loop are written there instead of being crammed into the weeks, the lo
 gets its own page in `interviews/`, and closing its sessions earns credit toward
 folding up to four planned sessions in as covered.
 See `WILDCARD.md` for the mechanics. The relevant line for this milestone: a loop
-arriving in October does not push the gate, and does not mean the five weeks
-stopped existing.
+arriving in October pauses the sequence, and does not mean the five weeks stopped
+existing; the gate moves with the pace.
 
 ## What is deliberately not here
 
 **DSA is at zero for five weeks.** When a coding round appears — and it will — the
 instinct will be to drop everything, like September of last year with Amazon. That
-is what the interruption protocol is for. Declare a Red week, sprint for the
-interview, come back on the ramp. The sprint is not a betrayal of the plan. Dropping
+is what the interruption protocol is for. Sprint for the interview, then pick the week
+up where it stopped. The sprint is not a betrayal of the plan. Dropping
 the plan afterwards is.
 
 `CODING.html` exists as a reference, built for the Mphasis round on 28 September. It is

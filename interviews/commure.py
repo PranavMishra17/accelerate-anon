@@ -14,7 +14,7 @@ assumptions, said as 'we sized it for', never as traffic. Logistics answers (loc
 LOOP = {
     "id": "commure",
     "title": "Commure, Voice Agents",
-    "subtitle": "Recruiter screen",
+    "subtitle": "Recruiter screen, 15 minutes",
     # Brand colour for the hub's wordmark. Commure's accent is a light cyan, --velocity #A8F4FF,
     # on its buttons and links: kept for the dark surface (brand_dark). On the light surface the
     # same hue darkened to teal, #00707F, 5.8:1, so it reads apart from River's blue.
@@ -22,13 +22,13 @@ LOOP = {
     "when_iso": "2026-10-05T09:00:00-05:00",   # the day is set; the time is a placeholder until the invite lands
     "when": "Monday 5 October (time to be confirmed)",
     "who": "Audrey Huynh, Commure talent team.",
-    "format": ("An initial recruiter interview, about 30 minutes by candidate reports (unconfirmed). Your background, "
-               "why Commure and why voice agents, and logistics. Reported loop after it: two technical rounds that "
-               "build something practical in Python, a system design round, then leadership."),
+    "format": ("Fifteen minutes with the recruiter: your story, why Commure and voice agents, and logistics. The six "
+               "sessions are groundwork for the round after it, reported as practical Python builds, a system design "
+               "round, then leadership."),
     "bar": ("Speed, ownership and plain communication are their stated values. Show you have shipped real-time "
             "voice and production agents, in Python, and that you care about the patient on the call."),
     "plan_kicker": "Before the call",
-    "extra": ("<b>Work in this order.</b> 1. Understand: six sessions, Thursday to Sunday, on the Plan tab, each teaching what a thing is "
+    "extra": ("<b>Work in this order.</b> For Monday's fifteen minutes, the Prep tab's story is enough. For the round after: 1. Understand: six sessions on the Plan tab, each teaching what a thing is "
               "and why before anything to say. 2. Design: the guide's "
               "<a href=\"../SYSTEM%20DESIGN.html#/designs/voice-agent\" target=\"_blank\" rel=\"noopener\">voice agent for patient calls</a>, "
               "in six steps, and your own voice agent on the "
@@ -37,9 +37,10 @@ LOOP = {
 }
 
 # Tracker sessions for this loop, in order, with the day each belongs to.
+# Groundwork for the round after the screen, whenever it lands; in this order.
 SESSION_IDS = [
-    ("wc19", "Thu"), ("wc20", "Thu or Fri"), ("wc21", "Fri"),
-    ("wc22", "Sat"), ("wc23", "Sat or Sun"), ("wc24", "Sun"),
+    ("wc19", "1"), ("wc20", "2"), ("wc21", "3"),
+    ("wc22", "4"), ("wc23", "5"), ("wc24", "6"),
 ]
 
 PREP_LEAD = ("Say comes last. Start with the <b>Understand first</b> bank: four questions that everything else rests on, each with its "

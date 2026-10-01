@@ -2252,9 +2252,9 @@
     note: "Commure, Software Engineer, Voice Agents: Monday 5 October.",
     sessions: [
       {
-        id: "wc19", track: "Systems", forWhat: "Commure, 5 Oct", len: "2h", est: 120,
+        id: "wc19", track: "Systems", forWhat: "Commure, second round", len: "2h", est: 120,
         name: "How a voice call reaches an agent",
-        blurb: "Thursday. From a phone on the street to a Python process holding the call: SIP, RTP, WebRTC, the media server, and dispatch.",
+        blurb: "From a phone on the street to a Python process holding the call: SIP, RTP, WebRTC, the media server, and dispatch.",
         intro: "You can name every piece of alfred_'s phone path; this session is about why each piece exists. A call is two things travelling separately: signalling, which sets the call up, and media, the audio itself, 50 packets a second in each direction. Everything in a voice stack follows from keeping that audio moving with no gaps, which is also why a call gets a process of its own instead of a row in a queue.",
         steps: [
           { t: "Signalling and media: SIP and RTP", m: 20,
@@ -2319,9 +2319,9 @@
       },
 
       {
-        id: "wc20", track: "Systems", forWhat: "Commure, 5 Oct", len: "2h", est: 120,
+        id: "wc20", track: "Systems", forWhat: "Commure, second round", len: "2h", est: 120,
         name: "The conversation loop: hearing, thinking, speaking",
-        blurb: "Thursday or Friday. Audio as numbers, knowing when someone has finished, streaming every stage, interruptions, and realtime against a cascade.",
+        blurb: "Audio as numbers, knowing when someone has finished, streaming every stage, interruptions, and realtime against a cascade.",
         intro: "The model is the easy part of a voice agent. What makes it feel like a conversation is deciding when the caller has finished, speaking before the whole answer exists, and stopping the instant they talk over you. This session builds that loop stage by stage, with the number each stage costs, so you can reason about latency instead of reciting it.",
         steps: [
           { t: "Audio as numbers", m: 15,
@@ -2397,9 +2397,9 @@
       },
 
       {
-        id: "wc21", track: "Systems", forWhat: "Commure, 5 Oct", len: "2h 15m", est: 135,
+        id: "wc21", track: "Systems", forWhat: "Commure, second round", len: "2h 15m", est: 135,
         name: "The backend under a live agent",
-        blurb: "Friday. Processes and edge functions, push and pull, idempotency, timeouts and retries, and scaling a service that holds live calls. Taught through your own system.",
+        blurb: "Processes and edge functions, push and pull, idempotency, timeouts and retries, and scaling a service that holds live calls. Taught through your own system.",
         intro: "This is the gap you named after ZenML: knowing what the pieces are without knowing how they work. Every idea here is one you already use in alfred_; the session makes you able to explain why it is built that way and what breaks if it isn't. By the end you should be able to draw where every piece of your voice agent runs, and defend each choice.",
         steps: [
           { t: "Processes, and edge functions against long-running workers", m: 25,
@@ -2464,9 +2464,9 @@
       },
 
       {
-        id: "wc22", track: "Systems", forWhat: "Commure, 5 Oct", len: "2h 15m", est: 135,
+        id: "wc22", track: "Systems", forWhat: "Commure, second round", len: "2h 15m", est: 135,
         name: "Python async for real-time backends",
-        blurb: "Saturday. The event loop, tasks, timeouts and cancellation, not blocking the loop, and a small call orchestrator you build yourself.",
+        blurb: "The event loop, tasks, timeouts and cancellation, not blocking the loop, and a small call orchestrator you build yourself.",
         intro: "Commure's role is Python first, and its technical rounds reportedly have you build a small backend. A voice worker is an async program: one event loop juggling audio frames, a model stream and tool calls for each call. This session makes asyncio concrete, then you build the part of a call that matters most: a tool call with a filler and a timeout that a barge-in can cancel.",
         steps: [
           { t: "The event loop", m: 20,
@@ -2530,9 +2530,9 @@
       },
 
       {
-        id: "wc23", track: "Interview", forWhat: "Commure, 5 Oct", len: "2h", est: 120,
+        id: "wc23", track: "Interview", forWhat: "Commure, second round", len: "2h", est: 120,
         name: "Your voice agent at depth, drawn cold",
-        blurb: "Saturday or Sunday. Draw alfred_'s voice design from memory, walk one call with every number, the parallel heavy agent, traffic, and what went wrong.",
+        blurb: "Draw alfred_'s voice design from memory, walk one call with every number, the parallel heavy agent, traffic, and what went wrong.",
         intro: "Everything this week so far has been the ground under your own system. Now you stand on it. The alfred_ page has the full design in two sections, Voice 1 and Voice 2, with its high-level figure and a one-call flow chart. The rule for this session: draw or say it first, then open the page and check. Every gap you find is a question you would otherwise have met for the first time in the room.",
         steps: [
           { t: "Draw the high-level design from memory", m: 25,
@@ -2594,9 +2594,9 @@
       },
 
       {
-        id: "wc24", track: "Interview", forWhat: "Commure, 5 Oct", len: "2h", est: 120,
+        id: "wc24", track: "Interview", forWhat: "Commure, second round", len: "2h", est: 120,
         name: "Design a patient-call voice agent, then pitch yourself",
-        blurb: "Sunday. The guide's voice agent design once, then from scratch against the clock, then your story for the recruiter.",
+        blurb: "The guide's voice agent design once, then from scratch against the clock, then your story for the recruiter.",
         intro: "Two jobs today. First, the system design you are most likely to meet if you go past the recruiter: an AI agent answering a health system's phone line. The guide works it in six steps, built from the same patterns as your own agent. Second, the Commure call itself: what to say, in your words, after you understand everything underneath it.",
         steps: [
           { t: "Read the design once, all six steps", m: 25,
@@ -2772,7 +2772,7 @@
       {
         id: "wc13", parked: true, track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h 30m", est: 90,
         name: "Your story: the alfred_ eval bench",
-        blurb: "Friday. Round two graded the substance a B and the delivery a C. This is the delivery.",
+        blurb: "Round two graded the substance a B and the delivery a C. This is the delivery.",
         intro: "This is your story as you tell it, from the round-two critique. The numbers are yours to say as approximations: roughly, on the order of. Two rules carry the whole session: the headline comes first every time, and every architecture noun gets a number attached.",
         steps: [
           { t: "Say the headline in one breath", m: 10,
@@ -2882,7 +2882,7 @@
       {
         id: "wc14", parked: true, track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h", est: 60,
         name: "The round-two critique, fixed",
-        blurb: "Friday. Seven graded blocks, each with its best version. Drill the D and C grades first.",
+        blurb: "Seven graded blocks, each with its best version. Drill the D and C grades first.",
         intro: "The mock graded the Kitaru critique a D, your questions a D-plus, the false-signal story a C-minus. Those are the fastest points to win back. The running fixes: never mention alfred_'s funding, lead with the bench, attach a number to every noun, name artifacts instead of gesturing at them, drop filler openers, and say Lennart correctly.",
         steps: [
           { t: "Name three things in Kitaru that are wrong or oversold, without a compliment", m: 15,
@@ -2964,7 +2964,7 @@
       {
         id: "wc15", parked: true, track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "2h", est: 120,
         name: "Kitaru at mechanism depth",
-        blurb: "Friday. The teardown, until you can say every mechanism without the page.",
+        blurb: "The teardown, until you can say every mechanism without the page.",
         intro: "A technical round goes down, not sideways. This is Kitaru read from source: what executes where, what is stored, how a call is matched, and where the implementation and the pages disagree. Your teardown and KITARU.md are the references; the Kitaru design in your system design guide draws it. Ask about the gaps; never call them bugs.",
         steps: [
           { t: "Control plane and data plane", m: 15,
@@ -3087,7 +3087,7 @@
       {
         id: "wc16", parked: true, track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "1h 30m", est: 90,
         name: "Design: replay-based evals, from scratch, timed",
-        blurb: "Saturday. The whole product as a thirty-five-minute design, with your bench as the other answer.",
+        blurb: "The whole product as a thirty-five-minute design, with your bench as the other answer.",
         intro: "A technical round of ninety minutes is likely to include 'how would you build this'. Do not recite Kitaru back. Reason from first principles with the six steps, then use what you know about both designs in the deep dives. The worked version is the Kitaru design in your system design guide; try it cold first, then compare.",
         steps: [
           { t: "Requirements in five minutes", m: 10,
@@ -3169,7 +3169,7 @@
       {
         id: "wc8", parked: true, track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "2h", est: 120,
         name: "Side effects inside replay, in depth",
-        blurb: "Saturday. Michael went here, which means round three goes further.",
+        blurb: "Michael went here, which means round three goes further.",
         intro: "Michael dug into side effects and idempotency, so expect Hamza to push past where he stopped. This session also genuinely covers week four's material on retries and idempotency, so it is an honest fold candidate once closed.",
         diagrams: ["zenEffects"],
         steps: [
@@ -3248,7 +3248,7 @@
       {
         id: "wc9", parked: true, track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "2h", est: 120,
         name: "Design: multi-turn replay when the conversation changes",
-        blurb: "Saturday. The hardest open problem in replay evals, and a live one for them.",
+        blurb: "The hardest open problem in replay evals, and a live one for them.",
         intro: "Conversational replay and adaptive multi-turn evaluation are on Kitaru's public roadmap right now. Your bench handles multi-turn because the world is stateful within a case. Turn that into a design you could defend to the people working on it. Ask about it as a genuine question; do not cite their issues or commits to them.",
         diagrams: ["passk", "multiturn"],
         steps: [
@@ -3311,7 +3311,7 @@
       {
         id: "wc17", parked: true, track: "Systems", forWhat: "ZenML round 3, 28 Sep", len: "1h 30m", est: 90,
         name: "Backend depth: where a technical round goes down",
-        blurb: "Sunday. Storage, failure and concurrency in your own systems, with a number each.",
+        blurb: "Storage, failure and concurrency in your own systems, with a number each.",
         intro: "The bar from round two still holds: every claim survives one 'how exactly?' and one 'how big?'. When pushed, go down, not sideways; volunteer the limit before they find it; reach for a number unprompted. These are the questions most likely when they go down into your work.",
         steps: [
           { t: "Why SQLite when production is Postgres", m: 12,
@@ -3491,7 +3491,7 @@
       {
         id: "wc12", parked: true, track: "Interview", forWhat: "ZenML round 3, 28 Sep", len: "1h 30m", est: 90,
         name: "The full ninety-minute mock",
-        blurb: "Sunday. Hamza and Alex in one sitting, then one retake of the weakest block.",
+        blurb: "Hamza and Alex in one sitting, then one retake of the weakest block.",
         intro: "Sunday afternoon, not Monday morning. It should feel slightly harder than the real thing: ninety minutes of technical depth.",
         steps: [
           { t: "Run the live mock in chat: say run the ZenML round-three mock",
@@ -5646,13 +5646,58 @@
       String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
   }
   function stampShort(s) { return s ? s.split(" ").slice(0, 2).join(" ") : ""; }
+  /* Weeks are a sequence, not calendar slots (decided 30 September 2026): the week you
+     are in is the first one with a session still open, and its dates are the plan's
+     target, not a deadline. Nothing is skipped and nothing is declared. */
   function currentWeek() {
-    var d = Math.floor((Date.now() - START.getTime()) / (7 * 864e5));
-    return d < 0 ? 0 : (d > PLAN.length - 1 ? PLAN.length - 1 : d);
+    for (var i = 0; i < PLAN.length; i++) {
+      if (!PLAN[i].sessions.every(sessionClosed)) { return i; }
+    }
+    return PLAN.length - 1;
   }
-  function weeksElapsed() {
-    var d = Math.floor((Date.now() - START.getTime()) / (7 * 864e5)) + 1;
-    return d < 0 ? 0 : (d > PLAN.length ? PLAN.length : d);
+  /* "29 Sep 07:30", as the done stamps are written, back to a day. ponytail: assumes the
+     plan's year; a plan that crosses New Year needs the year in the stamp. */
+  function stampDate(st) {
+    var p = String(st || "").split(" "), m = MON.indexOf(p[1]);
+    return m < 0 ? null : new Date(START.getFullYear(), m, parseInt(p[0], 10));
+  }
+  /* What a week shows instead of a colour: what closed, and when it finished. */
+  function weekProgress(i) {
+    var ss = PLAN[i].sessions, n = ss.filter(sessionClosed).length;
+    if (n === ss.length) {
+      var last = null;
+      ss.forEach(function (s) { var d = stampDate(state.done[s.id]); if (d && (!last || d > last)) { last = d; } });
+      if (!last) { return "Done"; }
+      var late = Math.round((last - dayOf(i, 6)) / 864e5);
+      return "Done " + last.getDate() + " " + MON[last.getMonth()] + (late > 0 ? ", " + late + (late === 1 ? " day" : " days") + " after its planned dates" : "");
+    }
+    if (!n) { return "Not started"; }
+    return n + " of " + ss.length + " sessions closed, maths " + (sessionClosed(ss[1]) ? "done" : "not yet");
+  }
+  /* The gate moves with the pace: no earlier than planned, and otherwise a week for each
+     week still to do, counted from today. */
+  function gateProjected() {
+    var planned = dayOf(PLAN.length, 0);
+    var d = todayMid();
+    d.setDate(d.getDate() + (PLAN.length - currentWeek()) * 7);
+    d.setDate(d.getDate() - (d.getDay() + 6) % 7);   /* the Monday of that week */
+    return d > planned ? d : planned;
+  }
+  function gateWord() {
+    var d = gateProjected();
+    return "the week of " + d.getDate() + " " + MONTHNAME[d.getMonth()];
+  }
+  /* The one streak the charter protects: calendar weeks in which a maths session closed.
+     A calendar week still under way does not break it. */
+  function mathStreak() {
+    var weeks = {};
+    PLAN.forEach(function (w) {
+      var d = stampDate(state.done[w.sessions[1].id]);
+      if (d) { weeks[Math.floor((d - START) / (7 * 864e5))] = true; }
+    });
+    var cal = Math.floor((todayMid() - START) / (7 * 864e5)), n = 0, k = weeks[cal] ? cal : cal - 1;
+    for (; k >= 0 && weeks[k]; k--) { n += 1; }
+    return n;
   }
 
   /* --------------------------------------------------------- progress logic */
@@ -5700,10 +5745,6 @@
     if (!a && !b && !c) { return null; }
     return "gap";
   }
-  function stateWord(st) {
-    return st === "green" ? "Green" : st === "amber" ? "Amber" : st === "red" ? "Red" :
-      st === "gap" ? "Off-plan" : "Not started";
-  }
   function eachSession(fn) {
     PLAN.forEach(function (w, wi) { w.sessions.forEach(function (s, si) { fn(s, wi, si); }); });
   }
@@ -5725,12 +5766,17 @@
       /* A loop whose day has passed is over. Its unfinished sessions are not
          what to do next, however many of them were left unticked. */
       var when = loopDate(s);
-      if (s.parked || (when && when < today)) { return; }
+      /* An undated loop session (a later round, a date not set) waits behind the plan. */
+      if (s.parked || !when || when < today) { return; }
       if (!found && !sessionDone(s)) { found = { s: s, wi: wi, si: si, wild: true }; }
     });
     if (found) { return found; }
     eachSession(function (s, wi, si) {
       if (!found && !sessionClosed(s)) { found = { s: s, wi: wi, si: si }; }
+    });
+    if (found) { return found; }
+    eachWild(function (s, wi, si) {
+      if (!found && !s.parked && !loopDate(s) && !sessionDone(s)) { found = { s: s, wi: wi, si: si, wild: true }; }
     });
     return found;
   }
@@ -6321,21 +6367,14 @@
     "August", "September", "October", "November", "December"];
 
   function statusLine(wk) {
-    var parts = [], decl = declaredFor(wk), act = weekState(wk);
-    if (!decl) {
-      parts.push("You have not declared this week yet.");
-    } else if (act === null) {
-      parts.push("You declared <b>" + stateWord(decl.state) + "</b> for this week. Nothing has closed yet.");
-    } else if (act === decl.state) {
-      parts.push("You declared <b>" + stateWord(decl.state) + "</b> for this week, and that is how it reads.");
-    } else {
-      parts.push("You declared <b>" + stateWord(decl.state) + "</b> for this week. So far it reads <b>" +
-        stateWord(act) + "</b>" + (act === "red" || act === "gap" ? ", which still counts as unbroken." : "."));
-    }
-    var st = currentStreak();
+    var parts = [], pr = weekProgress(wk);
+    parts.push("Week " + (wk + 1) + ": " + pr.charAt(0).toLowerCase() + pr.slice(1) + ".");
+    if (todayMid() > dayOf(wk, 6)) { parts.push("Its planned dates were " + range(wk) + "."); }
+    parts.push("At a week a week from here, the gate lands " + gateWord() + ".");
+    var st = mathStreak();
     parts.push(st > 0
-      ? "The streak is <b>" + st + (st === 1 ? " week" : " weeks") + "</b>."
-      : "Close any session this week and the streak begins.");
+      ? "Maths touched <b>" + st + (st === 1 ? " week" : " weeks") + "</b> running."
+      : "Close a maths session this week and the streak begins.");
     return parts.join(" ");
   }
 
@@ -6376,11 +6415,9 @@
     var hero = el("section", "hero" + (heroDrawn ? "" : " arrive"));
     heroDrawn = true;
     var wk = currentWeek(), today = todayMid();
-    var dayN = Math.floor((today - START) / 864e5);
-    var dayInWeek = Math.max(1, Math.min(7, dayN - wk * 7 + 1));
 
     hero.appendChild(el("p", "hdate", "Accelerate. " + DAYNAME[today.getDay()] + " " + today.getDate() + " " +
-      MONTHNAME[today.getMonth()] + ". Week " + (wk + 1) + " of " + PLAN.length + ", day " + dayInWeek + "."));
+      MONTHNAME[today.getMonth()] + ". Week " + (wk + 1) + " of " + PLAN.length + "."));
 
     if (nx) {
       hero.appendChild(el("h1", "next", nx.s.name));
@@ -6420,12 +6457,6 @@
 
     var status = el("p", "hstatus");
     status.innerHTML = statusLine(wk);
-    if (!declaredFor(wk)) {
-      var dec = el("button", "go-inline", "Declare it");
-      dec.addEventListener("click", function () { go("week", wk); });
-      status.appendChild(document.createTextNode(" "));
-      status.appendChild(dec);
-    }
     var cold = mostCold();
     if (cold) {
       var dr = el("button", "go-inline", "Drill the " + cold.n + " you could not say");
@@ -6784,13 +6815,7 @@
       c.appendChild(el("div", "wn", String(wi + 1)));
       c.appendChild(el("div", "wd", range(wi)));
       c.appendChild(el("div", "wt", w.title));
-      var decl = declaredFor(wi);
-      if (decl) {
-        var actual = weekState(wi);
-        var declLine = "Declared " + stateWord(decl.state);
-        if (actual !== decl.state) { declLine += ", actual " + stateWord(actual) + " so far"; }
-        c.appendChild(el("div", "sm dim", declLine));
-      }
+      c.appendChild(el("div", "sm dim", weekProgress(wi)));
       w.sessions.forEach(function (s) {
         var shut = sessionDone(s);
         var m = el("span", "mk " + tone(s.track) + (shut ? " shut" : ""));
@@ -6883,7 +6908,7 @@
     eachWild(function (s) { wildElapsed += clockBanked(s.id); });
     var weekMin = weekMinutesFor(currentWeek());
 
-    v.appendChild(rubric("Where it stands", "week " + weeksElapsed() + " of 5"));
+    v.appendChild(rubric("Where it stands", "week " + (currentWeek() + 1) + " of 5, the gate " + gateWord()));
     var figs = el("div", "figs");
     function fig(n, small, k, cls) {
       var f = el("div", "fig" + (cls ? " " + cls : ""));
@@ -6893,18 +6918,16 @@
       f.appendChild(el("div", "k", k));
       figs.appendChild(f);
     }
-    fig(String(closed), "of 5", "weeks closed green");
+    fig(String(closed), "of 5", "weeks done");
     fig(Math.round(planElapsed / 60) + "h", "of " + Math.round(estTotal / 60) + "h", "elapsed against planned, plan track");
     fig(String(taken.length), "of " + quizzes.length, qmax ? correct + " of " + qmax + " answers correct" : "quizzes taken");
     fig(String(reqOpen - reqClear), "of " + reqOpen, "requeue items still open");
     fig(String(visitCount), "", "resources opened and logged");
-    fig(String(currentStreak()), "", "unbroken weeks, a Red week still counts");
+    fig(String(mathStreak()), "", "weeks running with maths touched");
     fig(Math.round(wildElapsed / 60) + "h", "", "wildcard hours, not counted in the plan figure", "fig-wild");
     fig((Math.round(weekMin / 6) / 10) + "h", "of 4\u20136h", "this week against the charter floor");
     v.appendChild(figs);
 
-    var rpHome = rampPanel();
-    if (rpHome) { v.appendChild(rpHome); }
 
     var reqReadAt = state.requeue.read;
     if (!reqReadAt || (Date.now() - reqReadAt) >= 7 * 864e5) {
@@ -7021,27 +7044,7 @@
     var w = PLAN[view.week];
     v.appendChild(el("h1", "", "Week " + (view.week + 1) + ". " + w.title));
     v.appendChild(el("p", "lede", w.focus));
-    v.appendChild(el("p", "sm dim", range(view.week) + "   \u2014   " + stateWord(weekState(view.week)) + " so far"));
-
-    var declWeek = declaredFor(view.week);
-    var declPanel = el("div", "panel");
-    declPanel.appendChild(el("p", "sm dim", declWeek
-      ? "Declared " + stateWord(declWeek.state) + " at the start of the week, " + declWeek.at + "."
-      : "Not declared yet. Choose what this week looks like before it starts, and correct it later if reality disagreed."));
-    var declRow = el("div", "row-act");
-    ["green", "amber", "red"].forEach(function (st) {
-      var declBtn = el("button", (declWeek && declWeek.state === st) ? "act" : "sec", stateWord(st));
-      declBtn.addEventListener("click", function () { declareWeek(view.week, st); });
-      declRow.appendChild(declBtn);
-    });
-    declPanel.appendChild(declRow);
-    var actualWeek = weekState(view.week);
-    if (declWeek && actualWeek !== declWeek.state) {
-      declPanel.appendChild(el("p", "sm", "Actual so far is " + stateWord(actualWeek) + ". Declared and actual are allowed to differ; the gap is what is worth noticing, not an error."));
-    }
-    v.appendChild(declPanel);
-    var rpWeek = rampPanel();
-    if (rpWeek) { v.appendChild(rpWeek); }
+    v.appendChild(el("p", "sm dim", "Planned " + range(view.week) + ". " + weekProgress(view.week) + "."));
 
     v.appendChild(rubric("Sessions"));
     var t = el("table", "t");
@@ -7108,7 +7111,7 @@
     v.appendChild(ta);
 
     if (view.week === PLAN.length - 1) {
-      v.appendChild(rubric("Then the gate", "week of 26 October"));
+      v.appendChild(rubric("Then the gate", gateWord()));
       var p = el("div", "panel");
       p.appendChild(el("p", "", "A timed quiz in the same format as September, built when you reach it so it can be calibrated to what actually happened rather than what was planned."));
       p.appendChild(el("p", "", "The bar: every milestone-1 requeue item answered, the five-minute recording made in primitives, and seventy percent on systems."));
@@ -8797,58 +8800,6 @@
     });
     return out;
   }
-
-  /* --------------------------------------------------- declared week state */
-
-  function declaredFor(wi) { return state.declared[String(wi)] || null; }
-  function declareWeek(wi, st) {
-    state.declared[String(wi)] = { state: st, at: stampNow() };
-    save(); draw();
-  }
-  function consecutiveRedDeclared() {
-    var n = 0, wi;
-    for (wi = currentWeek(); wi >= 0; wi--) {
-      var d = declaredFor(wi);
-      if (!d || d.state !== "red") { break; }
-      n += 1;
-    }
-    return n;
-  }
-  function currentStreak() {
-    var n = 0, wi;
-    for (wi = currentWeek(); wi >= 0; wi--) {
-      if (weekState(wi) === null) {
-        /* A week still under way has not broken anything yet. Only a week that
-           ended with nothing in it does. */
-        if (wi === currentWeek()) { continue; }
-        break;
-      }
-      n += 1;
-    }
-    return n;
-  }
-  function lastSessionACompleted() {
-    var wi;
-    for (wi = currentWeek(); wi >= 0; wi--) {
-      if (sessionDone(PLAN[wi].sessions[0])) { return { wi: wi, s: PLAN[wi].sessions[0] }; }
-    }
-    return null;
-  }
-  function rampPanel() {
-    var n = consecutiveRedDeclared();
-    if (n < 2) { return null; }
-    var last = lastSessionACompleted();
-    var p = el("div", "panel");
-    p.appendChild(el("p", "sm", n + " Red weeks declared in a row. An interview sprint reads exactly like this, not a shortfall."));
-    p.appendChild(el("p", "sm", last
-      ? "Re-entry ramp: the next non-Red week repeats " + last.s.name.toLowerCase() + ", week " + (last.wi + 1) + ", rather than moving to a new session."
-      : "Re-entry ramp: the next non-Red week repeats the last session A completed, but none has closed yet to repeat."));
-    if (n >= 4) {
-      p.appendChild(el("p", "sm", "Four or more now. Retake the last gate quiz before advancing — a fail simply extends the milestone, no shame attaches to it."));
-    }
-    return p;
-  }
-
 
   /* ------------------------------------------------------------- the map */
 

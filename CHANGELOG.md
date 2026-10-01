@@ -710,3 +710,18 @@ checked reading in `data/reading.js`. Four shared figures: `callPath`, `turnTaki
 `idempotencyKey`. The Commure page opens with the order of work and an "Understand first" bank;
 its answers link to the sessions behind them. Why: the page had become answers to say without
 the understanding under them. No charter deviation: interview-driven wildcard sessions.
+
+**2026-09-30 — Weeks become a sequence; no week states, no declaring.**
+Decided with Pranav after ten days of interviews and work left week 1 untouched. A week is its
+content, not its dates: weeks are done in order, none skipped, and a week finishes when its
+sessions close, showing the day it finished and how far after its planned dates. The tracker
+shows plain progress instead of Green, Amber or Red, projects the gate from the real pace (a
+week for every week still to do, never earlier than planned), and keeps one streak: weeks
+running with a maths session closed. The declare panel, the Red-week ramp and their code are
+gone. Undated wildcard sessions now wait behind the plan; Commure's six sessions are groundwork
+for the round after Monday's fifteen-minute screen. `PROTOCOL.md` "Week states" and "No
+back-filling" are rewritten as "Weeks are a sequence".
+**Charter deviation.** Commitment 3's Red weeks and commitment 4, "no back-filling", are
+replaced: missed weeks are now done late, in order, rather than dropped. Reason: he will not
+skip material, and declaring states never happened in practice. The guard against debt is now
+the projected gate, which moves instead of compressing the work.
