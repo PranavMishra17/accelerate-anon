@@ -810,3 +810,14 @@ at the first unanswered question. Inside a run: Previous, Next, Skip, click any 
 arrow keys, and See the result at any time; answered questions show their answer and why when
 revisited. A step gets a level only once all its questions are answered; until then it shows how
 many are. Runs saved before the fix are recovered from their scope. No charter deviation.
+
+**2026-10-01 — A session's steps are a table; the answer box has its question.**
+Pranav found a "Your answer" box with no question above it, and the open step hard to read: no
+visible order of work, the model answer the loudest thing on it, boxes in boxes, the level a
+small mark beside the minutes. A critique named four directions; he saw them side by side on his
+real week 1 session and picked the session table. Steps now run down a table with Judge, Read,
+Say, Rate and Done across, each a dot, a level or a rating, so a session's state reads at a glance.
+One row is open at a time (the first step not done, until you pick another) as a drawer: the
+material on the left; on the right the judge line, the answer box headed by the step's done-when
+as its question, then What you would say and the rating. Open all and Close all are gone. Saved
+progress is untouched. No charter deviation.

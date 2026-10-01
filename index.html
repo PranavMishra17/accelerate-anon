@@ -291,30 +291,44 @@
   .plate .cap b { font-weight: 600; color: var(--ink); }
 
   /* a session, as a list of steps: every step shut until opened */
-  .sxlist { max-width: 860px; }
-  .sxbulk { display: flex; gap: var(--s4); margin: 0 0 var(--s2); }
+  .sxlist { max-width: 1000px; }
   .sxg { font-size: var(--fs-lg); font-weight: 600; margin: var(--s5) 0 var(--s2); }
-  .sxlist > .sxg:first-of-type { margin-top: var(--s2); }
-  .sx { border-top: 1px solid var(--rule); }
-  .sx:last-of-type { border-bottom: 1px solid var(--rule); }
-  .sx > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 22px minmax(0, 1fr) auto 12px; gap: var(--s3);
-    align-items: start; padding: var(--s3) 0; }
-  .sx > summary::-webkit-details-marker { display: none; }
-  .sx > summary::after { content: ""; width: 7px; height: 7px; margin-top: 7px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg); }
-  .sx[open] > summary::after { transform: rotate(-135deg); margin-top: 11px; }
-  .sxh { font-weight: 600; line-height: 1.45; }
-  .sx > summary:hover .sxh { color: var(--accent); }
-  .sx.done .sxh { color: var(--muted); }
-  .sxm { color: var(--muted); font-size: var(--fs-sm); padding-top: 2px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  /* the session table: steps down, beats across; the open row's drawer below it */
+  .stable { width: 100%; border-collapse: collapse; }
+  .stable th { font-family: var(--sans); font-size: var(--fs-xs); font-weight: 600; color: var(--muted); text-align: left;
+    padding: var(--s2); border-bottom: 1px solid var(--rule); }
+  .stable th.c, .stable td.c { text-align: center; width: 72px; }
+  .stable td { padding: var(--s3) var(--s2); border-bottom: 1px solid var(--rule); vertical-align: middle; }
+  .stable .sgrp td { font-size: var(--fs-sm); font-weight: 600; color: var(--soft); padding-top: var(--s4); }
+  .steprow { cursor: pointer; }
+  .steprow:hover > td { background: var(--sunken); }
+  .steprow.cur > td { background: color-mix(in srgb, var(--tone, var(--accent)) 10%, transparent); border-bottom-color: transparent; }
+  .steprow-b { all: unset; display: block; cursor: pointer; }
+  .steprow-b:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .sxh { display: block; font-weight: 600; line-height: 1.45; }
+  .steprow:hover .sxh { color: var(--accent); }
+  .steprow.done .sxh { color: var(--muted); }
+  .sxm { color: var(--muted); font-size: var(--fs-sm); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .stable td.c .sxt { margin: 0 auto; }
+  .stable .lv { margin: 0; font-size: var(--fs-sm); font-weight: 600; color: var(--ink); }
+  .bdot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--muted); vertical-align: middle; }
+  .bdot.on { background: var(--tone, var(--ink)); box-shadow: none; }
+  .bq { font-size: var(--fs-sm); color: var(--soft); white-space: nowrap; }
+  .brate { font-size: var(--fs-sm); font-weight: 600; color: var(--ink); white-space: nowrap; }
+  .sdrawer > td { padding: var(--s2) var(--s2) var(--s6); border-bottom: 1px solid var(--rule);
+    background: color-mix(in srgb, var(--tone, var(--accent)) 10%, transparent); }
+  .sdgrid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: var(--s6); align-items: start; line-height: 1.6; }
+  .sdgrid.one { grid-template-columns: minmax(0, 1fr); max-width: 72ch; }
+  .sdwork { background: var(--surface); border-radius: var(--radius); padding: var(--s4); }
+  .sdwork > :first-child { margin-top: 0; }
   .sxt { width: 18px; height: 18px; border: 1.5px solid var(--tone, var(--muted)); border-radius: var(--radius-sm); background: var(--surface);
     padding: 0; margin-top: 3px; cursor: pointer; display: grid; place-items: center; font-size: var(--fs-xs); line-height: 1; color: var(--bg); }
   .sxt.sm { width: 16px; height: 16px; margin-top: 4px; }
   .sxt.on { background: var(--tone, var(--ink)); border-color: var(--tone, var(--ink)); }
-  .sxb { padding: 0 var(--s5) var(--s5) 34px; line-height: 1.6; }
   .sxd { margin: 0 0 var(--s2); }
   .sxl { font-size: var(--fs-sm); font-weight: 600; color: var(--muted); margin: var(--s4) 0 var(--s1); }
-  .sxb a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
-  .sxb a:hover { text-decoration-color: var(--accent); }
+  .sdmat a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+  .sdmat a:hover { text-decoration-color: var(--accent); }
   .sxmeta { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: var(--s1) var(--s4); margin: var(--s3) 0 0; font-size: var(--fs-sm); line-height: 1.55; }
   .sxk { color: var(--muted); }
   .sxv { color: var(--soft); }
@@ -600,7 +614,9 @@
     .hero { grid-template-columns: minmax(0, 1fr); }
     .site-nav.sn-grid { grid-column: 1; grid-row: auto; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: var(--s4) 0 0; }
     .crumb .pn { display: none; }
-    .sxb { padding: 0 0 var(--s4); }
+    .sdgrid { grid-template-columns: minmax(0, 1fr); gap: var(--s4); }
+    .stable .hide-sm { display: none; }
+    .stable th.c, .stable td.c { width: 52px; }
     .sxfin .wb-phase { grid-template-columns: minmax(0, 1fr); }
     .sxfin .wb-phase > .wb-pl { grid-row: auto; }
     .sxmeta { grid-template-columns: minmax(0, 1fr); }
@@ -634,7 +650,7 @@
   /* The fonts it had (asked for back on 1 October): display face for headings, numbers and
      the bar; Helvetica Neue for the page; Atkinson for the steps you read and answer. */
   h1, h2, h3, .bar .word, .hero h1, .hero h1.next, .tally b { font-family: var(--display); }
-  .sxlist, .sxb, .wbq-in, .coldq { font-family: var(--step); }
+  .sxlist, .wbq-in, .coldq { font-family: var(--step); }
   .themebtn { margin-left: var(--s3); border: 1px solid var(--rule); background: var(--surface); color: var(--soft);
     border-radius: var(--radius-sm); padding: 3px 10px; font-size: var(--fs-xs); cursor: pointer; }
   .themebtn:hover { color: var(--ink); border-color: var(--muted); }
@@ -655,7 +671,7 @@
 
   /* Your answer: a box under any step that asks you to say something. Optional, saved as you go. */
   .mine { margin-top: var(--s4); }
-  .mine label { display: block; font-size: var(--fs-sm); font-weight: 600; color: var(--soft); margin-bottom: var(--s1); }
+  .mine label { display: block; font-size: var(--fs-md); font-weight: 700; color: var(--ink); line-height: 1.4; margin-bottom: var(--s2); }
   .mine textarea { min-height: 72px; resize: vertical; font-family: var(--step); }
   .mine .mine-st { font-size: var(--fs-xs); color: var(--muted); margin-top: 2px; min-height: 1em; }
 </style>
@@ -7288,7 +7304,7 @@
     return a;
   }
   /* where to find it, when it is done, what to skip: one quiet grid */
-  function metaRows(s, st) {
+  function metaRows(s, st, noOut) {
     var rows = [];
     if (st.where || st.url) {
       var v = el("span", "");
@@ -7296,7 +7312,7 @@
       if (st.url) { v.appendChild(linkTo(s, st.url, st.where ? "Open" : st.url)); }
       rows.push(["Where", v]);
     }
-    if (st.out) { rows.push(["Done when", document.createTextNode(st.out)]); }
+    if (st.out && !noOut) { rows.push(["Done when", document.createTextNode(st.out)]); }
     if (st.skip) { rows.push(["Skip", document.createTextNode(st.skip)]); }
     if (st.nlm) { rows.push(["Ask NotebookLM", document.createTextNode(st.nlm)]); }
     if (!rows.length) { return null; }
@@ -7356,14 +7372,14 @@
   }
   /* Your own answer for a step, typed or dictated (Win+H), kept in state.answers like the quiz's.
      Optional: an empty box saves nothing. */
-  function mineBox(key) {
+  function mineBox(key, prompt) {
     var box = el("div", "mine");
     var id = "mine-" + key.replace(/[^a-z0-9]/gi, "-");
-    var lb = el("label", "", "Your answer");
+    var lb = el("label", "", prompt);
     lb.setAttribute("for", id);
     var ta = document.createElement("textarea");
     ta.id = id;
-    ta.placeholder = "Say it, then type or dictate it here (Win+H). Optional; saved as you go.";
+    ta.placeholder = "Your answer. Say it, then type or dictate it here (Win+H). Optional; saved as you go.";
     var rec = state.answers[key];
     ta.value = rec && rec.text ? rec.text : "";
     var st = el("div", "mine-st", rec && rec.at ? "Saved " + rec.at : "");
@@ -7380,41 +7396,87 @@
     box.appendChild(lb); box.appendChild(ta); box.appendChild(st);
     return box;
   }
-  function stepItem(s, key, it, isStudy, i) {
-    var x = extraOf(key);
-    var d = el("details", "sx" + (state.steps[key] ? " done" : ""));
-    d.open = !!open[key + ":o"];
-    d.addEventListener("toggle", function () { open[key + ":o"] = d.open; });
-    var sm = el("summary");
-    var tick = el("button", "sxt" + (state.steps[key] ? " on" : ""), state.steps[key] ? "\u2713" : "");
-    tick.setAttribute("aria-label", (state.steps[key] ? "Mark not done: " : "Mark done: ") + it.t);
+  /* The question the answer box answers: the step's done-when, else its title, explained. */
+  function promptOf(it) {
+    var p = String(it.out || "Explain in your own words. " + it.t).replace(/[.\s]+$/, "");
+    return (/^[a-z]+\b/.test(p) ? p.charAt(0).toUpperCase() + p.slice(1) : p) + ".";   // leaves p50 as p50
+  }
+  /* Read is marked once any of the step's own links has been opened from here. */
+  function stepVisited(s, it, key) {
+    var x = extraOf(key), urls = {};
+    [].concat(it.url ? [{ url: it.url }] : [], it.links || [], it.res || [], x.read || [], x.aieng || [])
+      .forEach(function (r) { if (r.url) { urls[r.url] = true; } });
+    return (state.visits[s.id] || []).some(function (v) { return urls[v.url]; });
+  }
+  function beatDot(on, what) {
+    var d = el("span", "bdot" + (on ? " on" : ""));
+    d.setAttribute("role", "img");
+    d.setAttribute("aria-label", what + (on ? ", done" : ", not yet"));
+    return d;
+  }
+  /* The open row: the one you opened, else the first step not done. */
+  function openRow(s) {
+    var k = open[s.id + ":row"];
+    if (k != null) { return k; }
+    var keys = (s.study || []).map(function (it, i) { return s.id + ":s" + i; })
+      .concat(s.steps.map(function (st, i) { return sKey(s.id, i); }));
+    return keys.filter(function (q) { return !state.steps[q]; })[0] || "";
+  }
+  var RATED = { got: "Had it", shaky: "Partly", no: "Missed it" };
+  /* One step as a table row: where it stands on each beat (judge, read, say, rate, done).
+     The open row gets a drawer below it: the material on the left, your work on the right. */
+  function stepRows(tb, s, key, it, isStudy, i) {
+    var isOpen = openRow(s) === key, done = !!state.steps[key];
+    var tr = el("tr", "steprow" + (isOpen ? " cur" : "") + (done ? " done" : ""));
+    var td = el("td"), b = el("button", "steprow-b");
+    b.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    b.appendChild(el("span", "sxh", (i + 1) + ". " + it.t));
+    var m = isStudy ? (it.do || []).reduce(function (a, q) { return a + (q.m || 0); }, 0) : (it.m || 0);
+    if (m) { b.appendChild(el("span", "sxm", mins(m))); }
+    td.appendChild(b);
+    tr.appendChild(td);
+
+    var nq = bankOf(key).length, lv = stepLevel(key), jt = el("td", "c");
+    if (lv) { jt.appendChild(levelMark(lv)); }
+    else if (nq && stepAnswered(key)) { jt.appendChild(el("span", "bq", stepAnswered(key) + " of " + nq)); }
+    else if (nq) { jt.appendChild(beatDot(false, "Judged")); }
+    tr.appendChild(jt);
+    var rd = el("td", "c hide-sm");
+    rd.appendChild(beatDot(stepVisited(s, it, key), "Read"));
+    tr.appendChild(rd);
+    var sy = el("td", "c");
+    sy.appendChild(beatDot(!!state.answers[key], "Said"));
+    tr.appendChild(sy);
+    var was = state.recall[key], rt = el("td", "c hide-sm");
+    rt.appendChild(was && RATED[was.r] ? el("span", "brate " + was.r, RATED[was.r]) : beatDot(false, "Rated"));
+    tr.appendChild(rt);
+    var tc = el("td", "c");
+    var tick = el("button", "sxt" + (done ? " on" : ""), done ? "\u2713" : "");
+    tick.setAttribute("aria-label", (done ? "Mark not done: " : "Mark done: ") + it.t);
     tick.addEventListener("click", function (e) {
-      e.preventDefault(); e.stopPropagation();
+      e.stopPropagation();
       if (state.steps[key]) { delete state.steps[key]; delete state.steps[key + ":at"]; }
       else { state.steps[key] = true; state.steps[key + ":at"] = stampNow(); }
       markSession(s); save(); draw();
     });
-    sm.appendChild(tick);
-    sm.appendChild(el("span", "sxh", it.t));
-    var m = isStudy ? (it.do || []).reduce(function (a, q) { return a + (q.m || 0); }, 0) : (it.m || 0);
-    var sxm = el("span", "sxm", m ? mins(m) : "");
-    var lv = stepLevel(key);
-    if (lv) { sxm.insertBefore(levelMark(lv), sxm.firstChild); }
-    sm.appendChild(sxm);
-    d.appendChild(sm);
+    tc.appendChild(tick);
+    tr.appendChild(tc);
+    tr.addEventListener("click", function () { open[s.id + ":row"] = isOpen ? "" : key; draw(); });
+    tb.appendChild(tr);
+    if (!isOpen) { return; }
 
-    var body = el("div", "sxb");
-    if (bankOf(key).length) { body.appendChild(judgeRow(key)); }
-    if (!isStudy && it.d && !s.study) { body.appendChild(el("p", "sxd", it.d)); }
-    (x.figs || []).forEach(function (k, n) { var f = plate(k, n + 1); if (f) { body.appendChild(f); } });
-    if (isStudy) { section(body, "Do", doRows(s, it, i)); }
-    else { section(body, null, metaRows(s, it)); }
-    section(body, "Read", readList(s, [].concat(isStudy ? (it.res || []) : (it.links || []), x.read || [], x.aieng || [])));
-    section(body, "In your system design guide", guideList(s, [].concat(it.sd || [], x.sd || []), sdHref, sdLabel, "System design: "));
-    section(body, "In your Alaap and TrenTorch plan", guideList(s, it.al, function (q) { return alHref(q.p); }, function (q) { return alLabel(q.p); }, "Alaap plan: "));
+    var x = extraOf(key), model = isStudy ? it.say : modelOf(s, it), says = !!model || SAYS.test(it.t || "");
+    var mat = el("div", "sdmat"), work = el("div", "sdwork");
+    if (!isStudy && it.d && !s.study) { mat.appendChild(el("p", "sxd", it.d)); }
+    (x.figs || []).forEach(function (k, n) { var f = plate(k, n + 1); if (f) { mat.appendChild(f); } });
+    if (isStudy) { section(mat, "Do", doRows(s, it, i)); }
+    else { section(mat, null, metaRows(s, it, says)); }
+    section(mat, "Read", readList(s, [].concat(isStudy ? (it.res || []) : (it.links || []), x.read || [], x.aieng || [])));
+    section(mat, "In your system design guide", guideList(s, [].concat(it.sd || [], x.sd || []), sdHref, sdLabel, "System design: "));
+    section(mat, "In your Alaap and TrenTorch plan", guideList(s, it.al, function (q) { return alHref(q.p); }, function (q) { return alLabel(q.p); }, "Alaap plan: "));
 
-    var model = isStudy ? it.say : modelOf(s, it);
-    if (model || SAYS.test(it.t || "")) { body.appendChild(mineBox(isStudy ? s.id + ":s" + i : key)); }
+    if (nq) { work.appendChild(judgeRow(key)); }
+    if (says) { work.appendChild(mineBox(key, promptOf(it))); }
     if (model) {
       var say = el("details", "sxs");
       say.open = !!open[key + ":say"];
@@ -7427,43 +7489,41 @@
         mb.appendChild(ol);
       } else { mb.appendChild(el("p", "", model)); }
       say.appendChild(mb);
-      var rkey = isStudy ? s.id + ":s" + i : key;
       var rate = el("div", "wb-rate");
       rate.appendChild(el("span", "wb-quiet", "How close were you?"));
-      var was = state.recall[rkey];
       [["got", "Had it"], ["shaky", "Partly"], ["no", "Missed it"]].forEach(function (r) {
         var rb = el("button", "wb-btn" + (was && was.r === r[0] ? " on" : ""), r[1]);
-        rb.addEventListener("click", function () { rateCard(rkey, r[0]); draw(); });
+        rb.addEventListener("click", function () { rateCard(key, r[0]); draw(); });
         rate.appendChild(rb);
       });
       say.appendChild(rate);
-      body.appendChild(say);
+      work.appendChild(say);
     }
-    d.appendChild(body);
-    return d;
+    var dr = el("tr", "sdrawer"), dc = el("td"), grid = el("div", "sdgrid" + (work.children.length ? "" : " one"));
+    dc.colSpan = 6;
+    grid.appendChild(mat);
+    if (work.children.length) { grid.appendChild(work); }
+    dc.appendChild(grid);
+    dr.appendChild(dc);
+    tb.appendChild(dr);
   }
   /* The steps come first. After them: the figures no step carries, what else the idea
      touches, anything shaky in the drill, then closing it off. */
   function sessionList(s, list, wild) {
     var box = el("div", "sxlist");
     box.style.setProperty("--tone", "var(--" + tone(s.track) + ")");
-    var bulk = el("div", "sxbulk");
-    var oa = el("button", "wb-link", "Open all"), ca = el("button", "wb-link", "Close all");
-    function setAll(v) {
-      s.steps.forEach(function (st, i) { open[sKey(s.id, i) + ":o"] = v; });
-      (s.study || []).forEach(function (it, i) { open[s.id + ":s" + i + ":o"] = v; });
-      draw();
-    }
-    oa.addEventListener("click", function () { setAll(true); });
-    ca.addEventListener("click", function () { setAll(false); });
-    bulk.appendChild(oa); bulk.appendChild(ca);
-    box.appendChild(bulk);
+    var t = el("table", "stable"), hd = el("thead"), hr = el("tr"), tb = el("tbody");
+    [["Step", ""], ["Judge", "c"], ["Read", "c hide-sm"], ["Say", "c"], ["Rate", "c hide-sm"], ["Done", "c"]]
+      .forEach(function (h) { hr.appendChild(el("th", h[1], h[0])); });
+    hd.appendChild(hr); t.appendChild(hd); t.appendChild(tb);
+    function group(label) { var g = el("tr", "sgrp"), c = el("td", "", label); c.colSpan = 6; g.appendChild(c); tb.appendChild(g); }
     if (s.study && s.study.length) {
-      box.appendChild(el("h2", "sxg", "What to know first"));
-      s.study.forEach(function (it, i) { box.appendChild(stepItem(s, s.id + ":s" + i, it, true, i)); });
-      box.appendChild(el("h2", "sxg", "Then the steps"));
+      group("What to know first");
+      s.study.forEach(function (it, i) { stepRows(tb, s, s.id + ":s" + i, it, true, i); });
+      group("Then the steps");
     }
-    s.steps.forEach(function (st, i) { box.appendChild(stepItem(s, sKey(s.id, i), st, false, i)); });
+    s.steps.forEach(function (st, i) { stepRows(tb, s, sKey(s.id, i), st, false, i); });
+    box.appendChild(t);
 
     var after = el("div", "sxafter");
     /* figures a step does not already carry */
