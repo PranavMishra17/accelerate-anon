@@ -368,6 +368,53 @@
   .wbq-in .wb-model { margin-top: var(--s3); }
   .wbq-row { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); align-items: center; }
 
+  /* multiple choice: a step's level as a small mark in its track's colour, the judge and
+     review lines, and the question dialog */
+  .lv { display: inline-flex; align-items: center; gap: 5px; margin-right: var(--s3); font-size: var(--fs-xs); color: var(--soft); }
+  .lv::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--tone, var(--muted)); }
+  .lv.know::before { background: var(--tone, var(--muted)); box-shadow: none; }
+  .lv.part::before { background: color-mix(in srgb, var(--tone, var(--muted)) 40%, transparent); }
+  .judge { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); font-size: var(--fs-sm); color: var(--soft); margin: var(--s2) 0 var(--s3); }
+  .judge b { color: var(--ink); font-weight: 600; }
+  .shead .judge { margin: var(--s2) 0 0; }
+  .hero .revline { margin: var(--s3) 0 0; }
+  dialog.mcq { max-height: calc(100dvh - 24px); overflow: auto; }
+  .mcq .wbq-dots { flex-wrap: wrap; }
+  .mcq .wbq-dots i { width: 14px; }
+  .wbq-dots i.half { background: var(--req); }
+  .wbq-dots i.miss { background: var(--warn); }
+  .mcq-top { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s2); }
+  .mcq-os { display: flex; flex-direction: column; gap: var(--s2); margin-top: var(--s4); }
+  .mcq-o { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: var(--s3); align-items: start; width: 100%; min-height: 48px;
+    text-align: left; padding: var(--s3) var(--s4); background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius);
+    cursor: pointer; line-height: 1.45; font-size: var(--fs-md); }
+  .mcq-o:hover:not(:disabled) { border-color: var(--muted); }
+  .mcq-o .n { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--rule); display: grid; place-items: center;
+    font-size: var(--fs-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .mcq-o:disabled { cursor: default; color: var(--soft); }
+  .mcq-o.ok { border-color: var(--ok); box-shadow: inset 3px 0 0 var(--ok); color: var(--ink); }
+  .mcq-o.bad { border-color: var(--warn); box-shadow: inset 3px 0 0 var(--warn); color: var(--ink); }
+  .mcq-o .tag { display: block; font-size: var(--fs-sm); font-weight: 600; margin-top: 2px; }
+  .mcq-o.ok .tag { color: var(--ok); }
+  .mcq-o.bad .tag { color: var(--warn); }
+  .mcq-res { font-weight: 600; margin: var(--s4) 0 0; }
+  .mcq-why { background: var(--sunken); border-radius: var(--radius); padding: var(--s3) var(--s4); margin: var(--s2) 0 0; }
+  .mcq-g[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .mcq-keys { font-size: var(--fs-sm); color: var(--muted); margin: var(--s3) 0 0; }
+  @media (hover: none) { .mcq-keys { display: none; } }
+  .mcq-list { list-style: none; padding: 0; margin: var(--s2) 0 0; }
+  .mcq-list li { display: flex; flex-direction: column; gap: 2px; padding: var(--s3) 0; border-top: 1px solid var(--rule); }
+  .mcq-list.mcq-lv li { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: var(--s2); padding: var(--s2) 0; }
+  .mcq-list .lv { font-size: var(--fs-sm); margin-right: 0; }
+  .mcq-list .tag { font-size: var(--fs-sm); color: var(--warn); font-weight: 600; }
+  .mcq-list .ans { color: var(--ink); }
+  .mcq-list .why { font-size: var(--fs-sm); color: var(--soft); }
+  @media (max-width: 720px), (max-height: 520px) {
+    .mcq .wbq-in { padding: var(--s4); }
+    .mcq-o { min-height: 44px; padding: var(--s2) var(--s3); }
+    .mcq-os { margin-top: var(--s3); }
+  }
+
   /* tables, lists, notes */
   table.t { width: 100%; max-width: 860px; border-collapse: collapse; }
   table.t th { font-size: var(--fs-xs); font-weight: 600; color: var(--muted); text-align: left; padding: var(--s2) var(--s3); border-bottom: 1px solid var(--rule); }
@@ -633,6 +680,12 @@
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
 <script src="data/reading.js"></script>
+<script src="data/mcq/base.js?v=5fc7e7ac"></script>
+<script src="data/mcq/week1.js?v=6e94184a"></script>
+<script src="data/mcq/week2.js?v=df055e0e"></script>
+<script src="data/mcq/week3.js?v=d3cee43a"></script>
+<script src="data/mcq/week4.js?v=a737e00a"></script>
+<script src="data/mcq/week5.js?v=8c6018b7"></script>
 <script>
 (function () {
   "use strict";
@@ -1474,10 +1527,10 @@
               ans: "A waveform is a very long list of air-pressure readings taken at a fixed rate. The sample rate is how many of those readings are taken per second, and Nyquist's result is that a sample rate of N can only represent frequencies up to N over 2 — anything higher folds down and corrupts what is measured, so a signal has to be sampled at more than twice its highest frequency of interest to be represented correctly. Bit depth is the separate question of how finely each individual reading is quantised, which sets the noise floor rather than the frequency ceiling." },
             { t: "Understand why this project juggles four sample rates, and what it cost", al: [{ p: "plan/s2-1", why: "The four sample rates, and the S21 result that analysing at the wrong one reversed." }],
               close: [
-                { k: "num", q: "If 24 kHz corpus audio is mistakenly analysed as if it were 16 kHz, by what ratio is every measured frequency off?", a: "By 24/16, i.e. 1.5 times too high" },
+                { k: "num", q: "If 24 kHz corpus audio is mistakenly analysed as if it were 16 kHz, by what ratio is every measured frequency off?", a: "By 16/24: every frequency reads at two-thirds of its true value, so a 1 kHz tone reads as about 667 Hz" },
                 { k: "pick", q: "You load a 22.05 kHz Sarvam clip but your analysis script assumes 44.1 kHz. What happens to every frequency you measure?",
-                  o: ["Nothing — sample rate assumptions do not affect frequency measurement", "Every measured frequency comes out at roughly half its true value", "The script crashes with an error"], a: 1,
-                  why: "Assuming double the true rate stretches the time axis by that factor, so every true frequency reads as about half its actual value — silently, since nothing errors when the file still loads and plays." },
+                  o: ["Nothing — sample rate assumptions do not affect frequency measurement", "Every measured frequency comes out at double its true value", "The script crashes with an error"], a: 1,
+                  why: "Assuming double the true rate squeezes the time axis to half, so each cycle seems to last half as long and every frequency reads at double its true value. Nothing errors: the file still loads and plays." },
                 { k: "why", q: "Why does analysing audio at the wrong assumed sample rate fail silently rather than throwing an error?", a: "The file still loads and produces a valid-looking waveform either way — nothing in the loading step checks the true rate against what the analysis assumes, so the mistake only shows up as every measured frequency being off by the ratio between the true and assumed rates." },
                 { k: "word", q: "Which of this project's four sample rates does the raw corpus live at?", a: "24 kHz" },
                 { k: "short", q: "One sentence: what did the wrong-rate assumption actually do to the S21 phase B result, beyond adding noise?", a: "It reversed the result outright, rather than merely making it noisier." }
@@ -5527,7 +5580,8 @@
       steps: {}, done: {}, quiz: {}, quizHistory: {}, life: {}, notes: {},
       visits: {}, answers: {}, folded: {}, recall: {}, declared: {},
       clock: {}, floor: {}, exports: {}, closer: {}, origin: null,
-      requeue: { read: null, answered: {}, added: [] }, livery: "base"
+      requeue: { read: null, answered: {}, added: [] }, livery: "base",
+      mcq: {}   /* multiple-choice runs, keyed by run id: see the MCQ block below */
     };
   }
   var state = freshState();
@@ -5563,6 +5617,7 @@
           state.origin = p.origin || null;
           state.quizHistory = p.quizHistory || {};
           state.livery = p.livery || "base";
+          state.mcq = (p.mcq && typeof p.mcq === "object" && !(p.mcq instanceof Array)) ? p.mcq : {};
           Object.keys(state.quiz).forEach(function (qid) {
             if (!state.quizHistory[qid] && state.quiz[qid]) { state.quizHistory[qid] = [state.quiz[qid]]; }
           });
@@ -6478,6 +6533,8 @@
       acts.appendChild(el("span", "hmeta", nx.s.len + " planned, " + dn + " of " + total + " steps done"));
       hero.appendChild(acts);
     }
+    var rv = reviewLine(wk, true);
+    if (rv) { hero.appendChild(rv); }
     v.appendChild(hero);
   }
 
@@ -6951,6 +7008,11 @@
     fig((Math.round(weekMin / 6) / 10) + "h", "of 4\u20136h", "this week against the charter floor");
     v.appendChild(figs);
 
+    var kb = knowBlock();
+    if (kb) {
+      v.appendChild(rubric("What you know", "judged with multiple choice; the latest answer to each question counts"));
+      v.appendChild(kb);
+    }
 
     var reqReadAt = state.requeue.read;
     if (!reqReadAt || (Date.now() - reqReadAt) >= 7 * 864e5) {
@@ -7100,6 +7162,13 @@
     var est = w.sessions.reduce(function (a, s) { return a + (s.est || 0); }, 0);
     head.appendChild(el("p", "wmeta", "Planned " + range(view.week) + ", " + mins(est) + " across " + w.sessions.length +
       " sessions. " + weekProgress(view.week) + "."));
+    var wj = levelCounts(flat(w.sessions.map(stepKeysOf)));
+    if (wj.steps) {
+      head.appendChild(el("p", "wmeta", wj.none === wj.steps ? "Not judged yet: " + wj.qs + " multiple-choice questions across " + wj.steps + " steps."
+        : "Judged: " + countsText(wj) + "."));
+    }
+    var wr = reviewLine(view.week, false);
+    if (wr) { head.appendChild(wr); }
     v.appendChild(head);
 
     var list = el("div", "srows");
@@ -7322,10 +7391,14 @@
     sm.appendChild(tick);
     sm.appendChild(el("span", "sxh", it.t));
     var m = isStudy ? (it.do || []).reduce(function (a, q) { return a + (q.m || 0); }, 0) : (it.m || 0);
-    sm.appendChild(el("span", "sxm", m ? mins(m) : ""));
+    var sxm = el("span", "sxm", m ? mins(m) : "");
+    var lv = stepLevel(key);
+    if (lv) { sxm.insertBefore(levelMark(lv), sxm.firstChild); }
+    sm.appendChild(sxm);
     d.appendChild(sm);
 
     var body = el("div", "sxb");
+    if (bankOf(key).length) { body.appendChild(judgeRow(key)); }
     if (!isStudy && it.d && !s.study) { body.appendChild(el("p", "sxd", it.d)); }
     (x.figs || []).forEach(function (k, n) { var f = plate(k, n + 1); if (f) { body.appendChild(f); } });
     if (isStudy) { section(body, "Do", doRows(s, it, i)); }
@@ -7589,6 +7662,452 @@
     try { dlg.showModal(); } catch (err) { dlg.setAttribute("open", ""); }
   }
 
+  /* ------------------------------------------- multiple choice: judge first, weekly review
+
+     Decided with Pranav on 1 October 2026. A step (a pointer group) has 0 to 6 questions in
+     MCQ.bank[stepKey], from data/mcq/. Judging is offered, never required: one step or a whole
+     session, before the material, to see what he already knows. Each question has five options,
+     I don't know, and a guess flag, so a guess never counts as knowing. Weeks already done come
+     back as an interleaved review on a widening gap.
+
+     Runs live in state.mcq[runId] = { at, mode: "judge" | "review", wk, scope, due, fin,
+     items: [{ id, k, p, g, ok }] }: wk is the week he was in, p the option picked (-1 for I
+     don't know), g the guess flag. A question's standing is its latest attempt. */
+  var LVL = { know: "Know", part: "Partly", not: "Not yet" };
+  var REVIEW_PER_WEEK = 8;
+  var mcqMemo = null;
+  function bankOf(key) { return (window.MCQ && window.MCQ.bank && window.MCQ.bank[key]) || []; }
+  function qHash(t) {
+    var h = 5381;
+    for (var i = 0; i < t.length; i++) { h = ((h << 5) + h + t.charCodeAt(i)) | 0; }
+    return (h >>> 0).toString(36);
+  }
+  /* A question's id is its step key and a hash of its text, so reordering the bank keeps history. */
+  function qItems(key) {
+    return bankOf(key).map(function (x) { return { id: key + "#" + qHash(String(x.q)), k: key, x: x }; });
+  }
+  function stepKeysOf(s) {
+    var out = [];
+    (s.study || []).forEach(function (it, i) { out.push(s.id + ":s" + i); });
+    s.steps.forEach(function (st, i) { out.push(sKey(s.id, i)); });
+    return out;
+  }
+  function flat(lists) { return [].concat.apply([], lists); }
+  function sessionQs(s) { return flat(stepKeysOf(s).map(qItems)); }
+  function weekQs(wi) { return flat(PLAN[wi].sessions.map(sessionQs)); }
+  function mcqRuns() {
+    var m = state.mcq || {};
+    return Object.keys(m).map(function (id) { return m[id]; })
+      .filter(function (r) { return r && r.items && r.items.length; })
+      .sort(function (a, b) { return a.at - b.at; });
+  }
+  function mcqLatest() {
+    if (mcqMemo) { return mcqMemo; }
+    var out = {};
+    mcqRuns().forEach(function (r) {
+      r.items.forEach(function (it) { out[it.id] = { ok: !!it.ok, g: !!it.g, at: r.at }; });
+    });
+    mcqMemo = out;
+    return out;
+  }
+  /* Know: every answer right and none a guess. Not yet: fewer than half right (I don't know
+     counts as wrong). Partly: anything between, right guesses included. */
+  function levelOf(recs) {
+    if (!recs.length) { return null; }
+    var know = 0, right = 0;
+    recs.forEach(function (r) { if (r.ok) { right += 1; if (!r.g) { know += 1; } } });
+    if (know === recs.length) { return "know"; }
+    return right * 2 < recs.length ? "not" : "part";
+  }
+  function latestFor(key) {
+    var latest = mcqLatest();
+    return qItems(key).map(function (q) { return latest[q.id]; }).filter(Boolean);
+  }
+  function stepLevel(key) { return levelOf(latestFor(key)); }
+  function stepJudgedAt(key) {
+    return latestFor(key).reduce(function (a, r) { return Math.max(a, r.at); }, 0);
+  }
+  /* Steps that have questions, by level; none is not judged yet. */
+  function levelCounts(keys) {
+    var c = { know: 0, part: 0, not: 0, none: 0, steps: 0, qs: 0 };
+    keys.forEach(function (k) {
+      var n = bankOf(k).length;
+      if (!n) { return; }
+      c.steps += 1; c.qs += n;
+      c[stepLevel(k) || "none"] += 1;
+    });
+    return c;
+  }
+  function countsText(c) {
+    var bits = [];
+    if (c.know) { bits.push(c.know + " know"); }
+    if (c.part) { bits.push(c.part + " partly"); }
+    if (c.not) { bits.push(c.not + " not yet"); }
+    if (c.none) { bits.push(c.none + " not judged"); }
+    return bits.join(", ");
+  }
+  function levelMark(lv) {
+    var m = el("span", "lv " + lv, LVL[lv]);
+    m.title = "Judged with multiple choice";
+    return m;
+  }
+  function dayShort(ms) { var d = new Date(ms); return d.getDate() + " " + MON[d.getMonth()]; }
+  function weekOfKey(key) {
+    var id = key.split(":")[0], hit = -1;
+    PLAN.forEach(function (w, wi) { w.sessions.forEach(function (s) { if (s.id === id) { hit = wi; } }); });
+    return hit;
+  }
+  function stepTitle(key) {
+    var m = /^([a-z0-9]+):(s?)(\d+)$/.exec(key), s = m && sessionById(m[1]);
+    var it = s ? (m[2] ? (s.study || [])[+m[3]] : s.steps[+m[3]]) : null;
+    return it ? it.t : key;
+  }
+  function runScore(items) {
+    var sc = { n: items.length, right: 0, guessed: 0 };
+    items.forEach(function (it) { if (it.ok) { sc.right += 1; if (it.g) { sc.guessed += 1; } } });
+    return sc;
+  }
+  function shuffled(a) {
+    var b = a.slice();
+    for (var i = b.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = b[i]; b[i] = b[j]; b[j] = t; }
+    return b;
+  }
+
+  /* The weekly review. Week w is due while you are in week c when c - w is 1, 3, 7, 11, 15
+     and so on: the week after, two weeks later, then every four weeks from the seventh. */
+  function reviewGap(d) { return d === 1 || d === 3 || (d >= 7 && (d - 7) % 4 === 0); }
+  function dueWeeks(c) {
+    var out = [];
+    for (var w = 0; w < c && w < PLAN.length; w++) { if (reviewGap(c - w) && weekQs(w).length) { out.push(w); } }
+    return out;
+  }
+  function reviewSize(due) {
+    return due.reduce(function (a, w) { return a + Math.min(REVIEW_PER_WEEK, weekQs(w).length); }, 0);
+  }
+  /* The finished review taken while in week c; one review per due set. */
+  function reviewDoneIn(c) {
+    var hit = null;
+    mcqRuns().forEach(function (r) { if (r.mode === "review" && r.fin && r.wk === c) { hit = r; } });
+    return hit;
+  }
+  /* The latest finished review that covered week w, and its score on that week's questions. */
+  function lastReviewOf(w) {
+    var hit = null;
+    mcqRuns().forEach(function (r) { if (r.mode === "review" && r.fin && (r.due || []).indexOf(w) >= 0) { hit = r; } });
+    if (!hit) { return null; }
+    var mine = hit.items.filter(function (it) { return weekOfKey(it.k) === w; });
+    return { at: hit.at, sc: runScore(mine) };
+  }
+  function weeksText(ws) {
+    var n = ws.map(function (w) { return w + 1; });
+    return n.length > 1 ? "weeks " + n.slice(0, -1).join(", ") + " and " + n[n.length - 1] : "week " + n[0];
+  }
+  /* Up to about eight from each due week: the ones last answered wrong, guessed or I don't
+     know first, then the never seen, then the rest. A question with a pair tag brings one
+     confusable partner with it. Then shuffled across weeks, each pair kept side by side. */
+  function pickReview(due) {
+    var latest = mcqLatest(), chosen = [], seen = {};
+    function rank(q) { var r = latest[q.id]; return !r ? 1 : (r.ok && !r.g ? 2 : 0); }
+    function take(q) { seen[q.id] = true; chosen.push(q); }
+    due.forEach(function (w) {
+      var pool = shuffled(weekQs(w)).sort(function (a, b) { return rank(a) - rank(b); });
+      var n = 0;
+      pool.forEach(function (q) {
+        if (n >= REVIEW_PER_WEEK || seen[q.id]) { return; }
+        take(q); n += 1;
+        var mate = q.x.pair && pool.filter(function (p) { return !seen[p.id] && p.x.pair === q.x.pair; })[0];
+        if (mate && n <= REVIEW_PER_WEEK) { take(mate); n += 1; }
+      });
+    });
+    var units = [], byPair = {};
+    chosen.forEach(function (q) {
+      var p = q.x.pair;
+      if (!p) { units.push([q]); return; }
+      if (!byPair[p]) { byPair[p] = []; units.push(byPair[p]); }
+      byPair[p].push(q);
+    });
+    return flat(shuffled(units).map(shuffled));
+  }
+  /* One line for the review in week c: due (with Start), done, ahead, or missed.
+     onlyDue: the overview shows it only while it is due. */
+  function reviewLine(c, onlyDue) {
+    var due = dueWeeks(c);
+    if (!due.length) { return null; }
+    var cur = currentWeek(), done = reviewDoneIn(c);
+    if (onlyDue && (done || c !== cur)) { return null; }
+    var row = el("div", "judge revline"), txt;
+    if (done) {
+      var sc = runScore(done.items);
+      txt = "Review of " + weeksText(due) + " done " + dayShort(done.at) + ": " + sc.right + " of " + sc.n + " right.";
+    } else if (c === cur) {
+      txt = "Review due: " + weeksText(due) + ", about " + reviewSize(due) + " questions.";
+    } else if (c > cur) {
+      txt = "In this week, a review of " + weeksText(due) + ", about " + reviewSize(due) + " questions.";
+    } else {
+      txt = "The review of " + weeksText(due) + " was not taken in this week.";
+    }
+    row.appendChild(el("span", "", txt));
+    if (!done && c === cur) {
+      var b = el("button", "wb-btn", "Start review");
+      b.addEventListener("click", function () {
+        runMcq({ mode: "review", scope: "review", due: due, title: "Review of " + weeksText(due) }, pickReview(due));
+      });
+      row.appendChild(b);
+    }
+    return row;
+  }
+  /* The control at the top of an open step that has questions. */
+  function judgeRow(key) {
+    var nq = bankOf(key).length, lv = stepLevel(key);
+    var row = el("div", "judge");
+    var t = el("span");
+    if (lv) {
+      t.appendChild(document.createTextNode("Judged " + dayShort(stepJudgedAt(key)) + ": "));
+      t.appendChild(el("b", "", LVL[lv]));
+      t.appendChild(document.createTextNode("."));
+    } else {
+      t.textContent = "See what you already know: " + nq + (nq === 1 ? " question" : " questions") + ", before the material. Optional.";
+    }
+    row.appendChild(t);
+    var b = el("button", "wb-btn", lv ? "Judge again" : "Judge first");
+    b.addEventListener("click", function () { runMcq({ mode: "judge", scope: key, title: stepTitle(key) }, qItems(key)); });
+    row.appendChild(b);
+    return row;
+  }
+  /* The line in a session's head: what is judged, and judging every step in order. */
+  function sessionJudge(s) {
+    var c = levelCounts(stepKeysOf(s));
+    if (!c.steps) { return null; }
+    var row = el("div", "judge");
+    row.appendChild(el("span", "", c.none === c.steps
+      ? "Not judged yet: " + c.qs + " questions across " + c.steps + (c.steps === 1 ? " step." : " steps.")
+      : "Judged: " + countsText(c) + "."));
+    var b = el("button", "wb-btn", "Judge this session");
+    b.addEventListener("click", function () { runMcq({ mode: "judge", scope: s.id, title: s.name }, sessionQs(s)); });
+    row.appendChild(b);
+    return row;
+  }
+  /* Progress: per week, steps by level and the last review. */
+  function knowBlock() {
+    var rows = [];
+    PLAN.forEach(function (w, wi) {
+      var c = levelCounts(flat(w.sessions.map(stepKeysOf)));
+      if (c.steps) { rows.push({ label: "Week " + (wi + 1), wi: wi, c: c, rev: lastReviewOf(wi) }); }
+    });
+    var wc = levelCounts(flat(WILDCARD.sessions.map(stepKeysOf)));
+    if (wc.steps) { rows.push({ label: "Wildcard", wi: "wc", c: wc, rev: null }); }
+    if (!rows.length) { return null; }
+    var t = el("table", "t");
+    var hr = el("tr");
+    ["", "Know", "Partly", "Not yet", "Not judged", "Last review"].forEach(function (h, i) { hr.appendChild(el("th", i ? "r" : "", h)); });
+    t.appendChild(hr);
+    rows.forEach(function (r) {
+      var tr = el("tr", "clickable");
+      tr.appendChild(el("td", "", r.label));
+      [r.c.know, r.c.part, r.c.not, r.c.none].forEach(function (n) { tr.appendChild(el("td", "r", String(n))); });
+      tr.appendChild(el("td", "r", r.wi === "wc" ? "not reviewed" : r.rev ? dayShort(r.rev.at) + ", " + r.rev.sc.right + " of " + r.rev.sc.n : "none yet"));
+      tr.addEventListener("click", function () { if (r.wi === "wc") { go("wild"); } else { go("week", r.wi); } });
+      t.appendChild(tr);
+    });
+    return t;
+  }
+
+  /* One question at a time in the page's dialog: five options as rows, I don't know, a
+     guess flag, then the answer marked and why. Keys: 1 to 5, D, G, Enter. Each answer is
+     saved as it is given, so stopping part way keeps what was answered. */
+  var mcqKeys = null;
+  function runMcq(meta, qs) {
+    if (!qs.length) { return; }
+    var dlg = document.getElementById("mcqdlg");
+    if (!dlg) {
+      dlg = document.createElement("dialog");
+      dlg.id = "mcqdlg"; dlg.className = "wbq mcq";
+      dlg.setAttribute("aria-label", "Multiple choice");
+      document.body.appendChild(dlg);
+      dlg.addEventListener("close", function () { if (mcqKeys) { mcqKeys = null; mcqMemo = null; draw(); } });
+      /* captured first, so the page's own keys (arrows, Escape to the week) stay out of it */
+      document.addEventListener("keydown", function (e) {
+        if (!dlg.open || !mcqKeys) { return; }
+        e.stopPropagation();
+        try { mcqKeys(e); } catch (err) { console.error("Multiple choice keys failed", err); }
+      }, true);
+    }
+    var run = { at: Date.now(), mode: meta.mode, wk: currentWeek(), scope: meta.scope, fin: false, items: [] };
+    if (meta.due) { run.due = meta.due; }
+    var rid = "r" + run.at, byId = {};
+    qs.forEach(function (q) { byId[q.id] = q; });
+    var i = 0, guess = false, item = null, order = null, ended = false;
+
+    /* closed here rather than on the close event, which a hidden tab can hold back */
+    function shut() {
+      mcqKeys = null;
+      try { dlg.close(); } catch (err) { dlg.removeAttribute("open"); }
+      mcqMemo = null;
+      draw();
+    }
+
+    function keep() { state.mcq[rid] = run; mcqMemo = null; save(); }
+    function choose(p) {
+      if (item) { return; }
+      var q = qs[i];
+      item = { id: q.id, k: q.k, p: p, g: guess, ok: p === q.x.a };
+      run.items.push(item);
+      keep();
+      render();
+    }
+    function toggleGuess() {
+      guess = !guess;
+      if (item) { item.g = guess; keep(); }
+      render("guess");
+    }
+    function next() {
+      i += 1;
+      if (i < qs.length) { guess = false; item = null; order = shuffled([0, 1, 2, 3, 4]); render(); }
+      else { finish(); }
+    }
+    function dotClass(it) { return it.ok ? (it.g ? "half" : "got") : "miss"; }
+    function render(focus) {
+      var q = qs[i], x = q.x;
+      dlg.innerHTML = "";
+      var box = el("div", "wbq-in");
+      var dots = el("div", "wbq-dots");
+      qs.forEach(function (_, k) { dots.appendChild(el("i", k < run.items.length ? dotClass(run.items[k]) : (k === i ? "on" : ""))); });
+      box.appendChild(dots);
+      box.appendChild(el("p", "mcq-top", meta.title.replace(/\.$/, "") + ". Question " + (i + 1) + " of " + qs.length +
+        (meta.mode === "review" && item ? ". From week " + (weekOfKey(q.k) + 1) + ": " + stepTitle(q.k) : "")));
+      box.appendChild(el("div", "wbq-q", x.q));
+      var os = el("div", "mcq-os");
+      var first = null;
+      order.forEach(function (oi, pos) {
+        var b = el("button", "mcq-o");
+        b.type = "button";
+        b.appendChild(el("span", "n", String(pos + 1)));
+        var tx = el("span", "", x.o[oi]);
+        if (item) {
+          b.disabled = true;
+          if (oi === x.a) { b.className += " ok"; tx.appendChild(el("span", "tag", item.p === oi ? "Your pick, right" : "The answer")); }
+          else if (oi === item.p) { b.className += " bad"; tx.appendChild(el("span", "tag", "Your pick")); }
+        } else {
+          b.addEventListener("click", function () { choose(oi); });
+        }
+        b.appendChild(tx);
+        if (!first) { first = b; }
+        os.appendChild(b);
+      });
+      box.appendChild(os);
+
+      var nextBtn = null;
+      var res = null;
+      if (item) {
+        res = el("p", "mcq-res", item.p < 0 ? "You did not know. The answer is marked." :
+          item.ok ? (item.g ? "Right, as a guess, so it counts as partly." : "Right.") : "Not this one. The answer is marked.");
+        res.setAttribute("aria-live", "polite");
+        box.appendChild(res);
+        if (x.why) { box.appendChild(el("p", "mcq-why", x.why)); }
+      }
+      var row = el("div", "wbq-row");
+      if (item) {
+        nextBtn = el("button", "wb-btn primary", i + 1 < qs.length ? "Next" : "See the result");
+        nextBtn.addEventListener("click", next);
+        row.appendChild(nextBtn);
+      } else {
+        var idk = el("button", "wb-btn", "I don't know");
+        idk.addEventListener("click", function () { choose(-1); });
+        row.appendChild(idk);
+      }
+      var gb = el("button", "wb-btn mcq-g", guess ? "This is a guess" : "Mark as a guess");
+      gb.setAttribute("aria-pressed", guess ? "true" : "false");
+      gb.addEventListener("click", toggleGuess);
+      if (!item || item.ok) { row.appendChild(gb); }
+      var stop = el("button", "wb-link", "Stop");
+      stop.addEventListener("click", shut);
+      row.appendChild(stop);
+      box.appendChild(row);
+      box.appendChild(el("p", "mcq-keys", "Keys: 1 to 5 to pick, D for I don't know, G for a guess, Enter for next, Esc to stop."));
+      dlg.appendChild(box);
+      var f = focus === "guess" && gb.parentNode ? gb : (nextBtn || first);
+      if (f) { f.focus({ preventScroll: true }); }
+      /* a new question starts at the top; an answer brings its result and why into view */
+      if (!item) { dlg.scrollTop = 0; }
+      else if (row.scrollIntoView) { row.scrollIntoView({ block: "nearest" }); }
+    }
+    function finish() {
+      ended = true;
+      run.fin = true;
+      keep();
+      dlg.innerHTML = "";
+      var box = el("div", "wbq-in");
+      var sc = runScore(run.items);
+      box.appendChild(el("p", "mcq-top", meta.title));
+      box.appendChild(el("div", "wbq-q", sc.right + " of " + sc.n + " right" +
+        (sc.guessed ? ", " + sc.guessed + (sc.guessed === 1 ? " of them a guess" : " of them guesses") : "") + "."));
+      /* the level: of the step, of each step in the session, or each week reviewed */
+      var groups = [], byKey = {};
+      run.items.forEach(function (it) {
+        var g = meta.mode === "review" ? "w" + weekOfKey(it.k) : it.k;
+        if (!byKey[g]) { byKey[g] = []; groups.push(g); }
+        byKey[g].push(it);
+      });
+      var ul = el("ul", "mcq-list mcq-lv");
+      groups.forEach(function (g) {
+        var li = el("li"), its = byKey[g];
+        if (meta.mode === "review") {
+          var gs = runScore(its);
+          li.appendChild(el("span", "", "Week " + (parseInt(g.slice(1), 10) + 1) + ": " + gs.right + " of " + gs.n + " right"));
+        } else {
+          if (groups.length === 1 && meta.scope === g) { li.appendChild(el("span", "", "This step:")); li.appendChild(levelMark(levelOf(its))); }
+          else { li.appendChild(levelMark(levelOf(its))); li.appendChild(el("span", "", stepTitle(g))); }
+        }
+        ul.appendChild(li);
+      });
+      box.appendChild(ul);
+      var again = run.items.filter(function (it) { return !it.ok || it.g; });
+      if (again.length) {
+        box.appendChild(el("p", "mcq-res", "To look at again"));
+        var ml = el("ul", "mcq-list");
+        again.forEach(function (it) {
+          var x = byId[it.id].x, li = el("li");
+          li.appendChild(el("span", "tag", it.p < 0 ? "I don't know" : it.ok ? "Right, but a guess" : "Wrong"));
+          li.appendChild(el("b", "", x.q));
+          li.appendChild(el("span", "ans", "The answer: " + x.o[x.a]));
+          if (x.why) { li.appendChild(el("span", "why", x.why)); }
+          ml.appendChild(li);
+        });
+        box.appendChild(ml);
+      } else {
+        box.appendChild(el("p", "mcq-res", "Nothing to look at again."));
+      }
+      var row = el("div", "wbq-row");
+      var close = el("button", "wb-btn primary", "Close");
+      close.addEventListener("click", shut);
+      row.appendChild(close);
+      box.appendChild(row);
+      dlg.appendChild(box);
+      close.focus({ preventScroll: true });
+      dlg.scrollTop = 0;
+    }
+    mcqKeys = function (e) {
+      var k = e.key;
+      if (k === "Escape") { e.preventDefault(); shut(); return; }
+      if (e.metaKey || e.ctrlKey || e.altKey) { return; }
+      if (k === "Enter") {
+        e.preventDefault();
+        var a = document.activeElement;
+        if (a && a.tagName === "BUTTON" && dlg.contains(a)) { a.click(); }
+        else if (ended) { shut(); }
+        else if (item) { next(); }
+        return;
+      }
+      if (ended) { return; }
+      if (/^[1-5]$/.test(k) && !item) { e.preventDefault(); choose(order[parseInt(k, 10) - 1]); }
+      else if ((k === "d" || k === "D") && !item) { e.preventDefault(); choose(-1); }
+      else if ((k === "g" || k === "G") && (!item || item.ok)) { e.preventDefault(); toggleGuess(); }
+    };
+    order = shuffled([0, 1, 2, 3, 4]);
+    try { if (!dlg.open) { dlg.showModal(); } } catch (err) { dlg.setAttribute("open", ""); }
+    render();
+  }
+
   function viewSession() {
     var v = document.getElementById("view");
     var list = sessionsOf(view.week);
@@ -7611,6 +8130,8 @@
     head.appendChild(kick);
     head.appendChild(el("h1", "", s.name));
     if (s.intro || s.blurb) { head.appendChild(el("p", "intro", s.intro || s.blurb)); }
+    var sj = sessionJudge(s);
+    if (sj) { head.appendChild(sj); }
     head.appendChild(sessionClock(s));
     v.appendChild(head);
 

@@ -130,8 +130,24 @@ needs scrolling past. One card at a time was tried too, and lost to this.
 box styles reads worse, not richer.
 
 **Open questions, one at a time.** A quiz is five to eight open questions in a pop-up,
-answered aloud or dictated, compared with a model answer and self-rated. No blanks, no
-multiple choice, no one-word answers: those test recognition, and the room tests recall.
+answered aloud or dictated, compared with a model answer and self-rated. No blanks and no
+one-word answers: those test recognition, and the room tests recall. Changed by Pranav's
+decision of 1 October: open questions for the closing quiz; multiple choice for judging a
+step and for weekly spaced reviews, with I don't know and a guess flag so a guess never
+counts as knowing.
+
+**Judge first, never forced.** Trying first does not make sense for many pointers;
+judging first does. A step with questions (`data/mcq/`) offers Judge first at its top, and
+a session offers Judge this session, before the material. Five options each, I don't know,
+and a guess flag; the answer and why show after each. A step's level comes from the latest
+answer to each of its questions: Know (all right, none guessed), Partly (some right, or
+right by guessing), Not yet (fewer than half right). Judging is never required to open or
+tick a step.
+
+**Reviewed on a widening gap.** Week N comes back in weeks N+1, N+3, N+7, N+11 and every
+four weeks after. One review per due set, from the overview and the week page: up to about
+eight questions from each due week, the ones last missed, guessed or not known first, then
+the never seen; shuffled across weeks, with confusable pairs placed side by side.
 
 **Rate honestly, come back to what was missed.** Had it, Partly or Missed it feeds the
 drill deck and the three open questions on the home page each morning.

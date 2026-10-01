@@ -786,3 +786,17 @@ On the tracker's overview the site's pages are a slim 3 by 2 grid at the top rig
 next session, with visible borders and accent icons. The cheat sheet leaves the shared page list
 (`site/nav.js`): it lives inside Coding, which links to it. Its cards' titles are about a quarter
 larger than their text, and the sheet still fits one screen. No charter deviation.
+
+**2026-10-01 — Judge first with multiple choice; weekly spaced reviews.**
+From a learning-science summary Pranav shared (retrieval and spacing rated highest; interleaving,
+why-questions and self-explanation next; rereading lowest) and his choices. Every step of Milestone
+1 now has 3 to 5 multiple-choice questions (0 to 2 for pure actions): 317 questions over 80 steps,
+in `data/mcq/week1.js` to `week5.js`, checked by `data/mcq/check.js`. Each has five options, plus
+"I don't know" and a guess flag, so a right guess counts as Partly, never Know. Steps and whole
+sessions can be judged first, never forced; each step shows Know, Partly or Not yet. Finished weeks
+come back as an interleaved review on a widening gap: week N in weeks N+1, N+3, N+7, N+11, then
+every four, with confusable questions placed together. The open end-of-session quiz stays.
+`PROTOCOL.md`'s "no multiple choice" line changes by his decision; `IMPROVEMENTS.md` 15 and 16
+noted. Also fixed: two week-3 closing answers had the sample-rate error backwards (24 kHz read as
+16 kHz gives two-thirds, not 1.5 times; 22.05 kHz read as 44.1 kHz gives double, not half), found
+by the question writer. **Charter deviation:** none to the charter; a protocol rule changed, recorded.

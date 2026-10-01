@@ -98,8 +98,12 @@ answer. Prior research is in `archive/handoffs/dictation-and-shell.md`.
 Multiple choice can be passed by elimination, which is a close cousin of knowing
 *what* works without knowing *why* — the failure this whole plan was built against.
 One open question per quiz, self-rated the way the drill is.
+*1 October 2026:* multiple choice came back by Pranav's decision, for judging steps and the weekly
+reviews only, with "I don't know" and a guess flag so elimination or a lucky guess never counts as
+knowing. The open end-of-session quiz stays, which keeps this item's point.
 
 **16. Spaced return on the landing page.**
+*Built differently, 1 October 2026:* weekly reviews at +1, +3, +7 and +11 weeks (see PROTOCOL).
 One card from two or more weeks ago, surfaced without being asked for. It is the
 only thing on this list that would catch decay between milestones.
 
