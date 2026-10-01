@@ -1,0 +1,151 @@
+[
+  {
+    "id": "m1",
+    "title": "Mock 1: Audrey, recruiter screen",
+    "when": "Thursday 1 October 2026, 13:46 to 14:00, 14 minutes",
+    "read": [
+      "The material is there: a live voice agent you built and own, a lean agent on the call with the heavy agent running in parallel, MockFlow-AI, real healthcare work at UIC, and a clear reason for the move. A recruiter would pass you on the strength of that.",
+      "The delivery is what costs you. Almost every answer opened with mechanism before outcome, wandered through a list, and trailed off instead of landing. The voice answer, the one that matters most for this role, went into Supabase functions and Railway workers before it said whether the agent is live or yours. Fix the order and the endings, and the same facts sound twice as strong."
+    ],
+    "landed": [
+      "'Me building it from scratch': plain and believable.",
+      "The parallel heavy agent came through as a real design choice, even to a non-engineer.",
+      "Why Commure: the UIC clinical work and the 30 percent of unanswered calls, said as 'from what I can read'.",
+      "TypeScript for the web app, Python for the workers: honest and precise."
+    ],
+    "fix": [
+      {"t": "Outcome first, one detail, then stop. A recruiter asks what, whether it is live, and whether it is yours; answer those before any mechanism.", "ref": "x2"},
+      {"t": "One set of facts for the voice agent: live for whom, and how many use it daily. The mock said a cohort and about 50 a day; the page says live for everyone and over a thousand.", "ref": "x3"},
+      {"t": "Open the intro on voice and healthcare, not WheelPrice's SEO blog.", "ref": "x1"},
+      {"t": "Answer every part of a two-part question, a sentence each. Skipping one reads as dodging.", "ref": "x6"},
+      {"t": "End every answer with a closing sentence instead of trailing off: 'So that's the work I want to do more of.'", "ref": "x4"}
+    ],
+    "exchanges": [
+      {
+        "id": "x1",
+        "label": "Background and why now",
+        "who": "Audrey",
+        "q": "Why don't you walk me through your background, and what's got you looking right now?",
+        "tests": "Can you tell your story in a minute, and does it point at this role?",
+        "said": ["Founding engineer at alfred_, an executive assistant over work apps, 5,000-plus subscribers. Making agents reliable in production; owned many verticals: memory, the eval harness, orchestration, delegation, and voice. Before that WheelPrice, a two-person engineering team: full stack, an SEO blog, a computer vision feature, a fitment assistant. Wanted a founding seat to get into agentic systems. Now wants a larger engineering surface and an established product with traction."],
+        "verdict": "partly",
+        "why": "The arc and the why-now were right, but voice, the whole reason for this role, came as the last item in a list, and the WheelPrice detail took the space healthcare should have had.",
+        "good": ["A real number early: 5,000-plus subscribers.", "A clean why-now at the end: a larger surface, a product with traction."],
+        "bad": ["Voice buried in a list of five verticals.", "UIC and healthcare missing from the intro of a healthcare role.", "SEO blog and fitment assistant: true, irrelevant here.", "Restarts and filler: 'roughly about', 'largely', 'as well as well as'."],
+        "approach": ["Four sentences: who you are now, the voice agent you own, the healthcare thread, why this move. Stop and let her pick."],
+        "say": [
+          "I'm a founding engineer at alfred_, an AI assistant over email, calendar and work apps, with 5,000-plus subscribers. I own making the agent reliable in production, and for the last few months that's meant voice: I built and own our voice agent, which people call from their phones.",
+          "Before that I was at WheelPrice, a two-person engineering team, shipping across the stack, and before that at UIC, where I built ML systems with clinicians in the health sciences.",
+          "What I want next is that same work on a product that already has real traction, and a patient on the other end of the call is about as real as it gets."
+        ],
+        "ref": "#say-intro",
+        "land": "Founding engineer, voice agent I own, healthcare at UIC, why this move. Then stop."
+      },
+      {
+        "id": "x2",
+        "label": "The voice agent",
+        "who": "Audrey",
+        "q": "What have you actually built on the voice side at alfred_? Is it live, are people using it? And what part of it is yours?",
+        "tests": "Three plain questions: what, is it live, is it yours.",
+        "said": ["It runs as a function in the Supabase backend with wrapped tools; a heavy agent behind web and SMS. The voice agent is still in development, rolled out to a cohort of paying users. Python workers on Railway claim the call; a cascaded pipeline plus GPT realtime. The voice agent has core tools; the heavy agent reads the same request and runs without waiting for delegation, and when the voice agent can't do it, it answers from the heavy agent's result."],
+        "verdict": "missed",
+        "why": "None of her three questions was answered first. She got the architecture, which she said went over her head, and the status came out as 'still in development', which undersells a thing people use daily.",
+        "good": ["The parallel heavy agent is the distinctive idea, and it was in there."],
+        "bad": ["Mechanism before outcome: Supabase, wrappers, Railway, cascaded pipeline.", "'Still in development' as the status line.", "'Mine' never said in this answer."],
+        "approach": ["Answer her three questions in order: what it does, that it's live and who uses it, that you built it. Then one design choice in a sentence. Offer depth for the engineers."],
+        "say": [
+          "Yes. You can call alfred_ from your phone, or tap the mic in the web app, and talk to the same assistant that knows your email and calendar. I built it and I own it end to end, and paying users call it every day.",
+          "The one design choice I'd point to: the agent on the call stays lean so it answers fast, and every request also goes to our main agent in parallel, so when something needs real work there's no extra wait. Happy to go deeper with the engineers."
+        ],
+        "ref": "#say-voice",
+        "land": "What it does, live and used daily, I built it; one design choice; offer depth."
+      },
+      {
+        "id": "x3",
+        "label": "Ownership and usage",
+        "who": "Audrey",
+        "q": "Was that you building it from scratch, or one of several people? And roughly how many people use it today?",
+        "tests": "A straight answer with a number.",
+        "said": ["Built from scratch; a team of four but the engineering is largely end to end. A web voice mode that works the same way over a live WebSocket. About 50 daily active users, scaled gradually since last month, soon released to the whole cohort."],
+        "verdict": "partly",
+        "why": "Direct and honest, with a number. But the number contradicts the prep page, and 'I own it end to end' came last instead of first.",
+        "good": ["'Me building it from scratch' as the first words.", "A number and a trajectory: 50 a day, growing, wider release soon."],
+        "bad": ["The web socket detail is for engineers.", "Inconsistent with the page: live for everyone and over a thousand daily. Pick the true one and say it every time."],
+        "approach": ["First words answer the question; second sentence is the number and the direction; stop."],
+        "say": ["Me, from scratch. We're four people and I own voice end to end, phone and web. It's with a cohort of paying users now, about 50 a day, growing since last month, and we're opening it to everyone soon."],
+        "land": "Me, from scratch; the number; where it's heading."
+      },
+      {
+        "id": "x4",
+        "label": "Why Commure and healthcare",
+        "who": "Audrey",
+        "q": "What is it about Commure, and about doing this in healthcare, that made you apply?",
+        "tests": "Have you read about us, and is the interest real?",
+        "said": ["Worked as a research software engineer at UIC with the health sciences department, alongside medical professionals. From the website, 30 percent of patient calls never get answered. Real-time voice is the hardest version of the work you like: latency, interruptions, now capable agents and realtime models. Comfortable shipping it to production reliably, the larger part of this year. Wants to spend the next few years going deeper."],
+        "verdict": "landed",
+        "why": "Your best answer: a personal link to healthcare, one fact from their site said carefully, and why the work suits you. It only lost points for the ending.",
+        "good": ["UIC with clinicians: real, and she noticed.", "'From what I can read': their number, not yours.", "Reliability in production as your angle."],
+        "bad": ["Didn't say what their agents do (book, reschedule, write back to the EHR), which shows you read past the headline.", "Trailed off: 'getting more in depth nuances, correct'."],
+        "approach": ["Their problem in a line, your link to it, the work you like, then a closing sentence."],
+        "say": [
+          "From what I read, about 30 percent of patient calls never get answered, and your agents pick up and actually finish the job: they book, reschedule, and write it back to the EHR. That's a real person on the other end.",
+          "I've worked with clinicians at UIC, so the domain isn't new, and real-time voice that takes actions safely is exactly what I do at alfred_. So it's the work I want to go deeper on, in a place where it matters."
+        ],
+        "ref": "#say-why-commure",
+        "land": "Their problem, your link to it, a closing sentence."
+      },
+      {
+        "id": "x5",
+        "label": "Python and a side project",
+        "who": "Audrey",
+        "q": "How much of your day-to-day is Python? And is there a voice side project you'd point the engineers to?",
+        "tests": "Python for a Python-first role, and one thing they can look at.",
+        "said": ["The web app is TypeScript; the Railway workers are Python: workflow workers, long-running agents and the voice agents. A hands-on approach, end to end then the nuances. MockFlow-AI, a real-time voice assistant: streaming models, STT, interruption handling, which helped reach an MVP fast at alfred_. FastAPI and Django back ends and ML research too."],
+        "verdict": "partly",
+        "why": "The Python split was honest and clear. MockFlow-AI was named without what it is, a number, or that it's live, which is what makes it worth looking up.",
+        "good": ["TypeScript web, Python workers: precise.", "MockFlow-AI tied to how you shipped alfred_'s MVP fast."],
+        "bad": ["'Hands-on approach with the current coding setup' said nothing.", "No number for MockFlow-AI: under 400 ms, live.", "'Pretty handy' undersold it."],
+        "approach": ["One line on where your Python is; one line on MockFlow-AI with its number."],
+        "say": [
+          "Our web app is TypeScript, but everything that runs agents is Python: the voice workers, the workflow workers, the long-running agents. Before that, FastAPI backends and ML research in Python.",
+          "And MockFlow-AI: a real-time voice interview platform I built from scratch on LiveKit, under 400 milliseconds end to end, and live. Most of what I knew on day one of alfred_'s voice agent came from it."
+        ],
+        "land": "Where your Python is; MockFlow-AI with its number."
+      },
+      {
+        "id": "x6",
+        "label": "Logistics",
+        "who": "Audrey",
+        "q": "On site in Mountain View, work authorization, compensation.",
+        "tests": "Short, complete answers so the process can move.",
+        "said": ["Answers kept in chat, not on this page."],
+        "verdict": "partly",
+        "why": "On site was a clear yes, but it came wrapped in a paragraph, and the second half of a two-part question was skipped twice. On a real call, a skipped work authorization question stops the process until it's answered.",
+        "good": ["The first answer was clear and immediate."],
+        "bad": ["Two-part question, one part answered.", "A paragraph where one sentence was asked for."],
+        "approach": ["One sentence per item, in the order asked, then hand it back. The answers themselves stay in chat."],
+        "say": ["[On site and relocation: one sentence.] [Work authorization: one sentence.] [Pay: one sentence, anchored to the posting's range, asking about the full package.] Then: 'Happy to answer anything else on that by email.'"],
+        "land": "A sentence each, in the order asked."
+      },
+      {
+        "id": "x7",
+        "label": "Your questions",
+        "who": "Audrey",
+        "q": "What questions do you have for me?",
+        "tests": "Curiosity, and whether you're thinking about the job itself.",
+        "said": ["Where this role sits after the recent acquisitions and how it works with the product. Then next steps and the team."],
+        "verdict": "partly",
+        "why": "Good instincts, but the first question came out tangled, and the strongest closer was missing: asking whether anything in your background needs making clearer.",
+        "good": ["Asking about the team and the next steps."],
+        "bad": ["'Especially with the recent acquisitions where this particular role is in the team' was hard to follow.", "No closing question that invites her concerns."],
+        "approach": ["Two short questions, then the closer."],
+        "say": [
+          "Commure has a few product lines now. Where does the voice agents team sit, and who would I work with most day to day?",
+          "What do the technical rounds look like, and roughly what's the timeline?",
+          "And is there anything in my background you'd want me to make clearer for the team?"
+        ],
+        "land": "Team, process, then invite her concerns."
+      }
+    ]
+  }
+]
