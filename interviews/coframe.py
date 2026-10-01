@@ -76,6 +76,87 @@ SOURCES = [
      "why": "Josh Payne previously co-founded Autograph. Expanding into e-commerce, retail, travel and financial services."},
 ]
 
+# The Overview: the company and the role, from the posting (Ashby's public feed, read 2026-10-01).
+COMPANY = [
+    "Coframe builds agents that optimize websites: they come up with ideas, then design, code, test and ship A/B tests, landing pages and personalization, without the customer's engineers building each one. Customers include Dropbox, Replit and Intuit; they report $221.4M in incremental revenue for customers over six months, and 120% growth a quarter.",
+    "Small and talent-dense, primarily in person in San Francisco, before its Series A. Backed by Khosla Ventures, Nat Friedman and Rich Miner. They co-train a model with OpenAI for UI code. The CEO, Josh Payne, co-founded a unicorn before.",
+]
+
+POSTING = {
+    "url": "https://jobs.ashbyhq.com/Coframe/9edc35b8-e381-4c93-b9d9-ed6ac5c578de",
+    "label": "Agent Platform Engineer, on Ashby",
+    "checked": "1 October 2026",
+    "lead": "Build the infrastructure, tooling and workflows that let AI agents run safely, reliably and at scale: agents that build customer interfaces, agents that work on Coframe's own codebase, and agents that automate engineering, go-to-market and operations.",
+    "facts": [["Where", "SF Bay Area, on site; primarily in person"], ["Pay", "$180K to $300K, plus equity (the posting)"], ["Stage", "Before Series A; Khosla Ventures, Nat Friedman, Rich Miner"]],
+    "does": [
+        "Infrastructure for long-running agent execution, memory, planning, and stop-and-resume workflows.",
+        "Platforms where agents implement features, run tests in isolated environments, read their execution traces and improve their own output.",
+        "Secure, isolated execution environments.",
+        "Tracing, observability, evaluation and monitoring for autonomous agents.",
+        "Durable workers, serverless compute and remote browsers.",
+        "Developer tooling for engineers working with agents; CI/CD, testing, deployment and dev environments.",
+        "Internal AI platforms so non-engineering teams build their own agents.",
+        "Production incidents: the immediate fix and the long-term one.",
+    ],
+    "wants": [
+        "A strong platform or infrastructure background and solid fundamentals.",
+        "Distributed systems, developer platforms, internal tooling or compute infrastructure.",
+        "Cloud, serverless, CI/CD, end-to-end testing and production deployment.",
+        "Deploying, scaling, profiling and operating agents or LLM systems in production.",
+        "Long-running execution, durable workers, isolated environments, remote browsers, stateful workflows.",
+        "Judgement across security, reliability, performance, cost and iteration speed.",
+        "High ownership in ambiguous, fast-moving work. Infrastructure for AI agents is a major plus.",
+    ],
+}
+
+# What each round asked, as he reported it. A record, not a mock.
+ROUNDS = [
+    {"title": "Round 1: recruiter screen",
+     "when": "Thursday 1 October 2026, 2:20 PM Eastern",
+     "who": "Neesha Malik, Founding Talent",
+     "format": "Fifteen minutes on Google Meet, quick-fire: six questions, most of them technical for a recruiter screen.",
+     "outcome": "You think it landed and expect to be put forward.",
+     "notes": ["She opened on why you're looking, which took you aback; you handled it. Expect the same opener from the team, so the answer below is worth having cold."],
+     "asked": [
+         {"q": "Why are you looking for a new opportunity?", "short": "The opener",
+          "said": ["Handled, after a moment's surprise that it came first."],
+          "land": "Not away from alfred_; toward the platform under agents as the whole job.",
+          "keep": ["There's nothing particularly wrong with alfred_. I've learned a lot there and I still enjoy the work.",
+                   "What I'm increasingly interested in is the platform underneath agents: execution, isolation, evaluation and reliability that many agents depend on, not one. That's this role. So it's less getting away from alfred_ and more a direction I want to go deeper into."],
+          "prep": "say-leave"},
+         {"q": "What have you personally shipped in orchestration, delegation, and isolation or sandboxing?", "short": "Shipped, by name",
+          "said": ["Orchestration and delegation at alfred_, the workers, and isolation."],
+          "land": "One shipped thing for each word she used, then the gap.",
+          "keep": ["Orchestration: the agent loop and its multi-turn rewrite, which I signed off with the eval bench.",
+                   "Delegation: the voice agent, where a lean agent answers on the call while our main agent works the same request in parallel; and lean Python workers on Railway, each with one job, claiming work from a queue.",
+                   "Isolation: each worker job runs in its own environment, and the eval harness runs the real agent against an isolated copy of a user's world with no path to live systems. Sandboxed code execution and remote browsers I haven't built yet."],
+          "prep": "q-what-platform-and-agent-engineering-experience-do-you-have-a"},
+         {"q": "What evaluation harness have you worked on?", "short": "The eval harness",
+          "said": ["The alfred_ eval harness."],
+          "land": "Real failures become cases; the real agent runs on a frozen copy of the user's world; it signed off a rewrite.",
+          "keep": ["At alfred_ I built a harness that replays real user tasks against a new version of the agent before it ships: a little over a hundred cases, each from a real production failure, each running the real agent against a frozen copy of that user's email and calendar.",
+                   "That's how we signed off the multi-turn rewrite: we could see which cases got better and which got worse, and tool calls per task went from about 2.5 to 2.2. A scanner reads real conversations every day, so the set grows with what users actually hit."],
+          "prep": "say-now"},
+         {"q": "What have you personally owned in these projects?", "short": "Ownership",
+          "said": ["What you owned across them."],
+          "land": "Name the things that are yours, plainly, and say the team is four.",
+          "keep": ["We're four engineers, so ownership is real. Mine: the eval harness and the production failure scanner, working memory, the voice agent end to end, and a lot of the worker infrastructure underneath. I decided what to build in each, built it, and run it in production."]},
+         {"q": "How do you think about latency and cost, and how do you design for them?", "short": "Latency and cost",
+          "said": ["Workflows: creating one is the expensive part; running it is cheaper because the steps are known and mostly deterministic. Start from the most expensive setup to make it as good as possible, harden the workflow, then scale back and decide where you need what."],
+          "land": "Spend where the thinking is, make the repeat cheap, step down only where evals say quality holds.",
+          "keep": ["I start from where the thinking actually happens. In our workflows, creating one is the expensive part, so it gets the strongest model. Running it is cheap, because the steps are known and mostly deterministic.",
+                   "So I start with the best model everywhere to get it right, harden the workflow, then step down stage by stage where the evals say quality holds. Latency works the same way: keep the critical path small and stream it, and push slow work off it. On voice, a lean agent answers on the call while the heavy one works in parallel."],
+          "notes": ["Name the check that makes stepping down safe: the evals. Without it, 'scale back' sounds like a guess."]},
+         {"q": "How do you make agent runs retryable and durable?", "short": "Retries and durability",
+          "said": ["A policy matrix of what a run does: native or third-party integrations, delivering somewhere else, research such as web search, read-only or writing, and if writing, whether a rewrite is OK. The retry design follows from that."],
+          "land": "Classify what the run touches; the class decides the retry; writes carry a key; the queue makes it durable.",
+          "keep": ["I start by classifying what the run touches: only our own system, third-party integrations, or delivering somewhere outside; and whether it reads, does research like web search, or writes, and if it writes, whether doing it twice is harmless.",
+                   "That decides the retry. Reads and research retry freely with backoff. A write carries an idempotency key, so a retry returns the stored result instead of acting twice. Anything that can't safely repeat waits for the person to confirm.",
+                   "Durability is the queue: jobs sit in Postgres, a worker claims one with SKIP LOCKED, a job that dies becomes claimable again, and a scheduled sweep catches anything missed."],
+          "notes": ["Check before the next round: how alfred_ marks a job claimable again after a crash (pgmq's visibility timeout or your own sweep), so you say it exactly."]},
+     ]},
+]
+
 # Your story, in your words. Items marked "verbatim" are Pranav's own text: never polish them.
 SCRIPTS = [
     {"id": "intro", "title": "Tell me about yourself", "length": "about 90 seconds",

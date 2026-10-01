@@ -821,3 +821,16 @@ One row is open at a time (the first step not done, until you pick another) as a
 material on the left; on the right the judge line, the answer box headed by the step's done-when
 as its question, then What you would say and the rating. Open all and Close all are gone. Saved
 progress is untouched. No charter deviation.
+
+**2026-10-01 — Loop pages: an Overview that briefs, a Prep that is the question bank, and Rounds.**
+After the Coframe screen, Pranav found the loop pages upside down: Prep was the biggest page, the
+question banks opened in a pop-up that showed what to say but hid the detail, and the Overview did
+not say what the company or the role is. Now the Overview is the call, the company, the role from
+its posting (what you would do, what they look for, a link to the full posting), how to show up and
+how to prepare. Prep is one question bank in sections: your intro and story, each bank, logistics,
+practising aloud, and the questions to ask; a question opens in place, one at a time, with what
+they test, the probes, the nuances and reading on the left and what to say on the dark sheet. Traps
+and the sources list are gone from the page. A new Rounds tab records what a round asked: Coframe
+round 1 with Neesha Malik (six questions, what he said, what to keep for the team rounds). Coframe
+and Commure carry their company and posting; the other loops have happened and keep the new layout
+without them. No charter deviation.

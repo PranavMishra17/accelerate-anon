@@ -52,7 +52,7 @@ nav.side a:hover { color: var(--ink); text-decoration: none; }
 nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
 nav.side .sub { padding-left: var(--s3); }
 nav.side .ok { color: var(--ok); }
-main { min-width: 0; max-width: 760px; padding-top: var(--s6); }
+main { min-width: 0; padding-top: var(--s6); }
 main p, main ul, main ol, main dl { max-width: var(--measure); }
 
 section.block { margin-bottom: var(--s7); }
@@ -175,6 +175,18 @@ details.fold .ft { font-weight: var(--w-strong); font-size: var(--fs-lg); }
 details.fold .fs { font-size: var(--fs-sm); color: var(--muted); }
 details.fold > summary:hover .ft { color: var(--accent); }
 .fold-body { padding: 0 0 var(--s5); }
+.facts.wide { grid-template-columns: 112px minmax(0, 1fr); }
+.role-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s6); margin-top: var(--s4); }
+.role-cols h3 { font-size: var(--fs-md); margin: 0 0 var(--s2); }
+details.pq > .pq-cols { margin: 0 0 var(--s5); }
+.pq-cols { flex: none; padding: 0; }
+.pq-cols .cv-col { overflow: visible; }
+.pq-cols .cv-say { margin-top: 0; }
+.pq-cols.one { grid-template-columns: minmax(0, 1fr); max-width: var(--measure); }
+.pq-tests { font-size: var(--fs-sm); color: var(--soft); margin: 0 0 var(--s2); }
+.pq-tests b { color: var(--ink); font-weight: var(--w-strong); }
+details.pq.rev > summary .qt::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-right: var(--s2); vertical-align: middle; }
+@media (max-width: 760px) { .pq-cols, .pq-cols.has-code, .role-cols { grid-template-columns: minmax(0, 1fr); } .pq-cols .cv-col { padding: var(--s3); } }
 .c3 { margin: var(--s1) 0 var(--s6); }
 .c3-t { font-size: var(--fs-lg); margin: var(--s4) 0 var(--s1); }
 .c3-w { display: block; font-size: var(--fs-sm); font-weight: var(--w-regular); color: var(--muted); margin-top: 2px; }
@@ -373,7 +385,7 @@ details.item > .sbody { padding-left: 0; }
 <script src="../figures/notes.js?v=d1690023"></script>
 <script src="../private/notes.js?v=64ed8baa"></script>
 <script src="../figures/viewer.js?v=ecb99aae"></script>
-<script type="application/json" id="loop-data">{"id": "vanguard", "title": "Vanguard, technical", "subtitle": "Details to be filled", "when": "Date to be set", "when_iso": "", "who": "To be filled.", "format": "To be filled: the length, who is on the call, and whether there is coding on a shared screen.", "bar": "", "sessions": [], "scripts": [], "drills": [], "qa": [], "ask": [], "ask3": [], "traps": [], "tables": [], "admire": "", "kitaruLead": "", "figures": [], "mockHow": "", "mocks": [], "planKicker": "", "mechTitle": "", "designLink": null, "extra": "Nothing is prepared yet. When the details arrive, this page gets a Prep tab with your story and the question banks, and the tracker gets sessions for it.", "emphasis": [], "own": null, "showUp": [], "prepLead": "", "storyBlurb": "", "sources": [{"label": "Vanguard: company site", "url": "https://corporate.vanguard.com/", "why": "Company information and investment research."}]}</script>
+<script type="application/json" id="loop-data">{"id": "vanguard", "title": "Vanguard, technical", "subtitle": "Details to be filled", "when": "Date to be set", "when_iso": "", "who": "To be filled.", "format": "To be filled: the length, who is on the call, and whether there is coding on a shared screen.", "bar": "", "sessions": [], "scripts": [], "drills": [], "qa": [], "ask": [], "ask3": [], "traps": [], "tables": [], "admire": "", "kitaruLead": "", "figures": [], "mockHow": "", "mocks": [], "planKicker": "", "mechTitle": "", "designLink": null, "extra": "Nothing is prepared yet. When the details arrive, this page gets a Prep tab with your story and the question banks, and the tracker gets sessions for it.", "emphasis": [], "own": null, "showUp": [], "prepLead": "", "storyBlurb": "", "sources": [{"label": "Vanguard: company site", "url": "https://corporate.vanguard.com/", "why": "Company information and investment research."}], "company": [], "posting": null, "rounds": []}</script>
 <script>
 "use strict";
 (function () {
@@ -470,6 +482,7 @@ details.item > .sbody { padding-left: 0; }
   var TABS = [
     { id: "overview", label: "Overview", show: function () { return true; } },
     { id: "prep", label: "Prep", show: function () { return LOOP.scripts.length || LOOP.drills.length || LOOP.qa.length || LOOP.ask.length || (LOOP.ask3 || []).length; } },
+    { id: "rounds", label: "Rounds", show: function () { return (LOOP.rounds || []).length; } },
     { id: "design", label: "Design", show: function () { return LOOP.tables.length || LOOP.figures.length; } },
     { id: "own", label: (LOOP.own && LOOP.own.tab) || "Yours", show: function () { return !!LOOP.own; } },
     { id: "sessions", label: "Sessions", show: function () { return LOOP.sessions.length; } },
@@ -488,42 +501,74 @@ details.item > .sbody { padding-left: 0; }
     return s;
   }
 
-  /* ---------------------------------------------------------------- overview */
+  /* ---------------------------------------------------------------- overview
+     The call, the company, the role from its posting, how to show up, how to prepare. */
   function tabOverview(host) {
     var s = el("section", "block"); s.id = "brief";
     s.appendChild(el("h1", "", esc(LOOP.title)));
     s.appendChild(el("p", "hsub", esc(LOOP.subtitle)));
     s.appendChild(el("p", "lead", esc(LOOP.format)));
+    var P = LOOP.posting;
     var dl = el("dl", "facts");
-    dl.innerHTML = "<dt>When</dt><dd>" + esc(LOOP.when) + "</dd><dt>Who</dt><dd>" + esc(LOOP.who) + "</dd>";
+    dl.innerHTML = "<dt>When</dt><dd>" + esc(LOOP.when) + "</dd><dt>Who</dt><dd>" + esc(LOOP.who) + "</dd>" +
+      (P && P.url ? '<dt>Posting</dt><dd><a href="' + esc(P.url) + '" target="_blank" rel="noopener">' + esc(P.label || "The job description") + "</a></dd>" : "");
     s.appendChild(dl);
-    if (LOOP.bar) { s.appendChild(el("p", "bar", "<b>The bar.</b> " + inl(LOOP.bar))); }
-    if (LOOP.extra) { s.appendChild(el("div", "lead", LOOP.extra)); }
     host.appendChild(s);
-    nav.push(["brief", "The brief"]);
-    if (!LOOP.sessions.length) { return; }
+    nav.push(["brief", "The call"]);
 
-    var p = heading(host, "plan", LOOP.planKicker || "", "The plan");
-    var t = tracker();
-    var days = {}, order = [];
-    LOOP.sessions.forEach(function (x) {
-      if (!days[x.day]) { days[x.day] = []; order.push(x.day); }
-      days[x.day].push(x);
-    });
-    var wrap = el("div", "days");
-    order.forEach(function (d) {
-      var box = el("div", "day");
-      box.appendChild(el("h3", "", esc(d)));
-      days[d].forEach(function (x) {
-        var a = el("a", "srow" + (isDone(t, x) ? " done" : ""));
-        a.href = link("sessions", x.id);
-        a.innerHTML = '<span class="dot"></span><span><span class="nm">' + esc(x.name) +
-          '</span><span class="bl">' + esc(x.blurb.replace(/^(Friday|Saturday|Sunday)[^.]*\.\s*/, "")) + '</span></span><span class="hrs">' + esc(x.len) + "</span>";
-        box.appendChild(a);
+    if (LOOP.company && LOOP.company.length) {
+      var c = heading(host, "company", "", "The company");
+      LOOP.company.forEach(function (p) { c.appendChild(el("p", "lead", inl(p))); });
+    }
+    if (P) {
+      var r = heading(host, "role", "", "The role");
+      if (P.lead) { r.appendChild(el("p", "lead", inl(P.lead))); }
+      if (P.facts && P.facts.length) {
+        var fd = el("dl", "facts wide");
+        P.facts.forEach(function (f) { fd.appendChild(el("dt", "", esc(f[0]))); fd.appendChild(el("dd", "", inl(f[1]))); });
+        r.appendChild(fd);
+      }
+      var cols = el("div", "role-cols");
+      [["What you would do", P.does], ["What they look for", P.wants]].forEach(function (k) {
+        if (!k[1] || !k[1].length) { return; }
+        var box = el("div");
+        box.appendChild(el("h3", "", esc(k[0])));
+        panelList(k[1]).forEach(function (u) { box.appendChild(u); });
+        cols.appendChild(box);
       });
-      wrap.appendChild(box);
-    });
-    p.appendChild(wrap);
+      r.appendChild(cols);
+      if (P.url) { r.appendChild(el("p", "lead", '<a href="' + esc(P.url) + '" target="_blank" rel="noopener">Read the full posting</a>' + (P.checked ? ", checked " + esc(P.checked) + "." : "."))); }
+    }
+    if (LOOP.showUp && LOOP.showUp.length) {
+      var u = heading(host, "show-up", "", "How to show up");
+      var ol = el("ol", "showup");
+      LOOP.showUp.forEach(function (x) { ol.appendChild(el("li", "", "<b>" + inl(x[0]) + "</b> " + inl(x[1]))); });
+      u.appendChild(ol);
+    }
+    var p = heading(host, "plan", "", "How to prepare");
+    if (LOOP.bar) { p.appendChild(el("p", "bar", "<b>The bar.</b> " + inl(LOOP.bar))); }
+    if (LOOP.extra) { p.appendChild(el("div", "lead", LOOP.extra)); }
+    if (LOOP.sessions.length) {
+      var t = tracker(), days = {}, order = [];
+      LOOP.sessions.forEach(function (x) {
+        if (!days[x.day]) { days[x.day] = []; order.push(x.day); }
+        days[x.day].push(x);
+      });
+      var wrap = el("div", "days");
+      order.forEach(function (d) {
+        var box = el("div", "day");
+        box.appendChild(el("h3", "", esc(d)));
+        days[d].forEach(function (x) {
+          var a = el("a", "srow" + (isDone(t, x) ? " done" : ""));
+          a.href = link("sessions", x.id);
+          a.innerHTML = '<span class="dot"></span><span><span class="nm">' + esc(x.name) +
+            '</span><span class="bl">' + esc(x.blurb.replace(/^(Friday|Saturday|Sunday)[^.]*\.\s*/, "")) + '</span></span><span class="hrs">' + esc(x.len) + "</span>";
+          box.appendChild(a);
+        });
+        wrap.appendChild(box);
+      });
+      p.appendChild(wrap);
+    }
     var go = el("div", "acts");
     TABS.filter(function (x) { return x.id !== "overview"; }).forEach(function (x) {
       var a = el("a", "btn", esc(x.label)); a.href = link(x.id); go.appendChild(a);
@@ -531,101 +576,99 @@ details.item > .sbody { padding-left: 0; }
     p.appendChild(go);
   }
 
-  /* ---------------------------------------------------------------- prep: a hub
-     The tab is short: how to show up, then the banks as rows, then drills, questions to
-     ask, traps and sources. A bank opens in the one-screen panel. */
+  /* ---------------------------------------------------------------- prep: the question bank
+     Sections in order: your intro and story, each bank of questions, logistics, practising
+     aloud, and the questions you ask. A question opens in place, one at a time: how to
+     understand it on the left, what to say on the dark sheet. */
+  function scriptItem(x) {
+    return { id: "say-" + x.id, q: x.title, short: x.short || x.title, tests: x.when, a: x.say, land: x.land, never: x.never, notes: x.notes,
+      probes: x.probes, swaps: x.swaps, learn: x.figs ? { figs: x.figs } : null,
+      meta: x.length ? x.length.charAt(0).toUpperCase() + x.length.slice(1) + "." : "",
+      drill: LOOP.drills.some(function (d) { return d.id === x.id; }) ? x.id : null };
+  }
   function prepBanks() {
-    var banks = [];
-    if (LOOP.scripts.length) {
-      banks.push({ id: "say", title: "Your story, in the words to say it", blurb: LOOP.storyBlurb || "", items: LOOP.scripts.map(function (x) {
-        return { id: "say-" + x.id, q: x.title, short: x.short || x.title, tests: x.when, a: x.say, land: x.land, never: x.never, notes: x.notes,
-          probes: x.probes, swaps: x.swaps, learn: x.figs ? { figs: x.figs } : null,
-          meta: x.length ? x.length.charAt(0).toUpperCase() + x.length.slice(1) + "." : "",
-          drill: LOOP.drills.some(function (d) { return d.id === x.id; }) ? x.id : null };
-      }) });
-    }
-    LOOP.qa.forEach(function (g, gi) {
-      banks.push({ id: "qa-" + gi, title: g.group, blurb: g.blurb || "", items: g.items });
-    });
+    var banks = [], story = LOOP.scripts.filter(function (x) { return x.id !== "logistics"; });
+    if (story.length) { banks.push({ id: "story", title: "Your intro and story", blurb: LOOP.storyBlurb || "", items: story.map(scriptItem) }); }
+    LOOP.qa.forEach(function (g, gi) { banks.push({ id: "qa-" + gi, title: g.group, blurb: g.blurb || "", items: g.items }); });
+    var lg = LOOP.scripts.filter(function (x) { return x.id === "logistics"; });
+    if (lg.length) { banks.push({ id: "logistics", title: "Logistics", blurb: "Your answers stay in chat; how to handle each is here.", items: lg.map(scriptItem) }); }
     return banks;
   }
-  function findPrep(banks, id) {
-    for (var b = 0; b < banks.length; b++) {
-      for (var i = 0; i < banks[b].items.length; i++) { if (banks[b].items[i].id === id) { return { bank: banks[b], i: i }; } }
-    }
-    return null;
-  }
-  var hubCounts = [];
-  function drawHubCounts() {
-    hubCounts.forEach(function (h) {
-      var n = h.bank.items.filter(function (x) { return isRevised(x.id); }).length;
-      h.node.innerHTML = h.bank.items.length + " questions" + (n ? '<span class="sep"></span><span class="rv">' + n + " revised</span>" : "");
+  function prepBody(x) {
+    var c = el("div", "cv-cols pq-cols");
+    var left = el("div", "cv-col cv-said"), right = el("div", "cv-col cv-say");
+    c.appendChild(left); c.appendChild(right);
+    if (x.tests) { left.appendChild(el("p", "pq-tests", "<b>They are testing:</b> " + inl(x.tests))); }
+    panelSection(left, "What they may probe", panelList(x.probes));
+    (x.parts || []).forEach(function (p) {
+      left.appendChild(el("h4", "cv-part", inl(p.title)));
+      if (p.lead) { left.appendChild(el("p", "cv-part-lead", inl(p.lead))); }
+      panelList(p.items).forEach(function (u) { left.appendChild(u); });
+      if (p.code) { var pre = el("pre", "cv-code"); pre.appendChild(el("code", "", esc(p.code))); left.appendChild(pre); }
+      if (p.after) { panelList(p.after).forEach(function (u) { left.appendChild(u); }); }
     });
+    panelSection(left, "The nuance", panelList(x.notes));
+    panelSection(left, "Avoid", panelList(x.never, "mk-bad"));
+    learn(left, x.learn || {});
+    var acts = el("p", "ex-links");
+    var rv = el("button", "linkish");
+    function label() { rv.innerHTML = isRevised(x.id) ? "Revised. Undo" : "Mark as revised"; }
+    label();
+    rv.addEventListener("click", function () {
+      setRevised(x.id, !isRevised(x.id)); label();
+      var d = document.getElementById(x.id);
+      if (d) { d.classList.toggle("rev", isRevised(x.id)); }
+    });
+    acts.appendChild(rv);
+    if (x.drill) { acts.appendChild(el("span", "sep")); acts.appendChild(el("a", "", "Practise it aloud, timed")).href = link("prep", "drill-" + x.drill); }
+    left.appendChild(acts);
+    if (x.land) { right.appendChild(el("p", "cv-land", "<b>Land on this.</b> " + inl(x.land))); }
+    if (x.a && x.a.length) { right.appendChild(transcript(x.a, "You", "")); }
+    if (x.swaps && x.swaps.length) {
+      right.appendChild(el("div", "lab", "Lines you can swap in"));
+      x.swaps.forEach(function (w) {
+        right.appendChild(el("div", "swap", '<span class="sw-when">' + inl(w.when) + '</span><span class="sw-line">' + emph(inl(w.line)) + "</span>"));
+      });
+    }
+    if (x.meta) { right.appendChild(el("p", "cv-meta", esc(x.meta))); }
+    if (!right.children.length) { right.remove(); c.classList.add("one"); }
+    if (left.querySelector(".cv-code")) { c.classList.add("has-code"); }
+    return c;
+  }
+  function prepItem(x) {
+    var d = el("details", "item pq" + (isRevised(x.id) ? " rev" : "")); d.id = x.id;
+    d.setAttribute("name", "prep");   /* native: opening one closes the others */
+    d.appendChild(el("summary", "", '<span class="qt">' + inl(x.q) + "</span>" + (x.tests || x.meta ? '<span class="qm">' + inl(x.meta || x.tests) + "</span>" : "")));
+    var drawn = false;
+    d.addEventListener("toggle", function () { if (d.open && !drawn) { drawn = true; d.appendChild(prepBody(x)); } });
+    return d;
   }
   function tabPrep(host) {
     var banks = prepBanks();
-    hubCounts = [];
-    var s = heading(host, "prep", LOOP.prepKicker || "The day before", "Prep");
+    var s = heading(host, "prep", "", "Prep");
     if (LOOP.prepLead) { s.appendChild(el("p", "lead", inl(LOOP.prepLead))); }
-
-    if (LOOP.showUp && LOOP.showUp.length) {
-      var u = heading(host, "show-up", "Before the first question", "How to show up");
-      var ol = el("ol", "showup");
-      LOOP.showUp.forEach(function (x) { ol.appendChild(el("li", "", "<b>" + inl(x[0]) + "</b> " + inl(x[1]))); });
-      u.appendChild(ol);
-    }
-
-    var h = heading(host, "banks", "Open one, study it in one screen", "Question banks");
-    var f = el("input", "filter"); f.type = "search"; f.placeholder = "Search every bank, for example YouTube, lease, SQLite, first post";
-    h.appendChild(f);
-    var found = el("div", "found"); h.appendChild(found);
-    var rows = el("div", "banks");
+    var f = el("input", "filter"); f.type = "search"; f.placeholder = "Search every question and answer";
+    s.appendChild(f);
+    var all = [];
     banks.forEach(function (b) {
-      var r = el("button", "bank");
-      r.innerHTML = '<span class="bt">' + esc(b.title) + "</span>" + (b.blurb ? '<span class="bb">' + inl(b.blurb) + "</span>" : "");
-      var cnt = el("span", "bc"); r.appendChild(cnt);
-      hubCounts.push({ bank: b, node: cnt });
-      r.addEventListener("click", function () { openBank(b, 0); });
-      rows.appendChild(r);
-    });
-    h.appendChild(rows);
-    drawHubCounts();
-    f.addEventListener("input", function () {
-      var v = f.value.trim().toLowerCase();
-      found.innerHTML = "";
-      rows.hidden = !!v;
-      if (!v) { return; }
-      var hits = 0;
-      banks.forEach(function (b) {
-        b.items.forEach(function (x, i) {
-          var text = (x.q + " " + (x.a || []).join(" ") + " " + (x.notes || []).join(" ") + " " + (x.probes || []).join(" ") + " " +
-            (x.swaps || []).map(function (w) { return w.when + " " + w.line; }).join(" ")).toLowerCase();
-          if (text.indexOf(v) < 0 || hits >= 14) { return; }
-          hits++;
-          var r = el("button", "hit", '<span class="hb">' + esc(b.title) + "</span>" + inl(x.q));
-          r.addEventListener("click", function () { openBank(b, i); });
-          found.appendChild(r);
-        });
+      var sec = heading(host, b.id, b.blurb ? b.blurb.replace(/<[^>]+>/g, "") : "", b.title);
+      b.items.forEach(function (x) {
+        var d = prepItem(x);
+        all.push({ d: d, sec: sec, text: (x.q + " " + (x.a || []).join(" ") + " " + (x.notes || []).join(" ") + " " + (x.probes || []).join(" ") + " " +
+          (x.swaps || []).map(function (w) { return w.when + " " + w.line; }).join(" ") + " " +
+          (x.parts || []).map(function (p) { return p.title + " " + (p.items || []).join(" "); }).join(" ")).toLowerCase() });
+        sec.appendChild(d);
       });
-      if (!hits) { found.appendChild(el("p", "when", "Nothing matches.")); }
     });
-
-    /* The rest folds shut, one line each, so the page is how to show up and the banks. */
-    function fold(id, title, sub) {
-      var d = el("details", "fold"); d.id = id;
-      d.appendChild(el("summary", "", '<span class="ft">' + esc(title) + '</span><span class="fs">' + esc(sub) + "</span>"));
-      var body = el("div", "fold-body"); d.appendChild(body);
-      host.appendChild(d);
-      nav.push([id, title]);
-      return body;
-    }
-    if (LOOP.drills.length) { drills(fold("practise", "Practise aloud", LOOP.drills.length + " timed questions, out loud")); }
+    f.addEventListener("input", function () {
+      var v = f.value.trim().toLowerCase(), shown = {};
+      all.forEach(function (r) { var hit = !v || r.text.indexOf(v) >= 0; r.d.hidden = !hit; if (hit) { shown[r.sec.id] = true; } });
+      all.forEach(function (r) { r.sec.hidden = !shown[r.sec.id]; });
+    });
+    if (LOOP.drills.length) { drills(heading(host, "practise", LOOP.drills.length + " timed questions, out loud", "Practise aloud")); }
     var three = LOOP.ask3 || [];
-    if (three.length) {
-      /* Questions you ask, as three Cs: when, why and how for each kind, then each question
-         with who to ask, how to loop it in, and what it shows. */
-      var n3 = three.reduce(function (n, k) { return n + k.items.length; }, 0);
-      var a3 = fold("ask", "Questions to ask", n3 + " questions, in three kinds");
+    if (three.length || LOOP.ask.length) {
+      var a3 = heading(host, "ask", "", "Questions to ask");
       three.forEach(function (k) {
         var sec = el("div", "c3"); sec.id = "ask-" + k.id;
         sec.appendChild(el("h3", "c3-t", esc(k.title) + '<span class="c3-w">' + inl(k.when) + "</span>"));
@@ -641,26 +684,37 @@ details.item > .sbody { padding-left: 0; }
         });
         a3.appendChild(sec);
       });
-    } else if (LOOP.ask.length) {
-      var a = fold("ask", "Questions to ask", LOOP.ask.length + " questions, one at a time, then wait");
-      LOOP.ask.forEach(function (x) { a.appendChild(el("div", "ask", '<span class="to">' + esc(x.to) + "</span><span>" + inl(x.q) + "</span>")); });
+      if (!three.length) { LOOP.ask.forEach(function (x) { a3.appendChild(el("div", "ask", '<span class="to">' + esc(x.to) + "</span><span>" + inl(x.q) + "</span>")); }); }
     }
-    if (LOOP.traps.length) {
-      var t = fold("traps", "Traps", LOOP.traps.length + " things to avoid");
-      LOOP.traps.forEach(function (x) { t.appendChild(el("div", "trap", "<b>" + esc(x[0]) + "</b><span>" + inl(x[1]) + "</span>")); });
-    }
-    if (LOOP.sources && LOOP.sources.length) {
-      var so = fold("sources", "What this rests on", LOOP.sources.length + " checked links");
-      var ul = el("ul", "reading");
-      LOOP.sources.forEach(function (x) {
-        var lab = x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + inl(x.label) + "</a>" : inl(x.label);
-        ul.appendChild(el("li", "", lab + (x.why ? '<span class="why">' + inl(x.why) + "</span>" : "")));
+  }
+
+  /* ---------------------------------------------------------------- rounds: what each round asked
+     A record, not a mock: the questions as they came, what you said, what to keep for next time. */
+  function tabRounds(host) {
+    LOOP.rounds.forEach(function (rd, ri) {
+      var s = heading(host, "round-" + (ri + 1), rd.when, rd.title);
+      var dl = el("dl", "facts wide");
+      [["Who", rd.who], ["Format", rd.format], ["Outcome", rd.outcome]].forEach(function (k) {
+        if (k[1]) { dl.appendChild(el("dt", "", k[0])); dl.appendChild(el("dd", "", inl(k[1]))); }
       });
-      so.appendChild(ul);
-    }
-    /* A link to one question (#/prep/<id>) opens its bank at that question. */
-    var want = parse().anchor, hit = want && findPrep(banks, want);
-    if (hit) { setTimeout(function () { openBank(hit.bank, hit.i); }, 0); }
+      s.appendChild(dl);
+      (rd.notes || []).forEach(function (p) { s.appendChild(el("p", "lead", inl(p))); });
+      rd.asked.forEach(function (x, i) {
+        var body = el("div", "cv-cols pq-cols");
+        var left = el("div", "cv-col cv-said"), right = el("div", "cv-col cv-say");
+        panelSection(left, "What you said", (x.said || []).map(function (p) { return el("p", "", inl(p)); }));
+        panelSection(left, "Worth knowing", panelList(x.notes));
+        if (x.land) { right.appendChild(el("p", "cv-land", "<b>Land on this.</b> " + inl(x.land))); }
+        if (x.keep && x.keep.length) { right.appendChild(transcript(x.keep, "For next time", "")); }
+        if (x.prep) { left.appendChild(el("p", "ex-links", '<a href="' + link("prep", x.prep) + '">The prepared answer on Prep</a>')); }
+        body.appendChild(left);
+        if (right.children.length) { body.appendChild(right); } else { body.classList.add("one"); }
+        var d = el("details", "item pq"); d.id = "r" + (ri + 1) + "-" + (i + 1);
+        d.appendChild(el("summary", "", '<span class="qt">' + (i + 1) + ". " + inl(x.q) + "</span>" + (x.short ? '<span class="qm">' + inl(x.short) + "</span>" : "")));
+        d.appendChild(body);
+        s.appendChild(d);
+      });
+    });
   }
 
   function drills(s) {
@@ -1113,62 +1167,13 @@ details.item > .sbody { padding-left: 0; }
     });
   }
 
-  /* A Prep bank: what it is and what sits under it on the light side; what to say on the
-     dark sheet. Each item can be marked revised; the mark is kept in this page's storage. */
+  /* A Prep question can be marked revised; the mark is kept in this page's storage. */
   function isRevised(id) { return !!own().rev[id]; }
   function setRevised(id, on) {
     var o = own();
     if (on) { o.rev[id] = stamp(); } else { delete o.rev[id]; }
     writeJSON(OWN, o);
   }
-  function openBank(bank, start) {
-    var its = bank.items;
-    openPanel({
-      title: bank.title, sub: its.length + " questions", label: bank.title, count: its.length, start: start,
-      row: function (i) {
-        return '<span class="n">' + (i + 1) + '</span><span class="vd ' + (isRevised(its[i].id) ? "vd-landed" : "vd-open") + '"></span><span class="tl">' + esc(its[i].short || its[i].q) + "</span>";
-      },
-      draw: function (i, pane, redrawRow) {
-        var x = its[i];
-        var head = el("header", "cv-head");
-        head.appendChild(el("div", "ex-q", '<span class="ex-who">' + esc(bank.title) + ", " + (i + 1) + " of " + its.length + "</span>" + inl(x.q)));
-        if (x.tests) { head.appendChild(el("p", "cv-verdict", "<b>They are testing:</b> " + inl(x.tests))); }
-        var rv = el("button", "linkish cv-rev");
-        function label() { rv.innerHTML = isRevised(x.id) ? '<span class="vd vd-landed"></span>Revised. Undo' : "Mark as revised"; }
-        label();
-        rv.addEventListener("click", function () { setRevised(x.id, !isRevised(x.id)); label(); redrawRow(); drawHubCounts(); });
-        head.appendChild(el("p", "cv-tests")).appendChild(rv);
-        pane.appendChild(head);
-        var c = panelCols(pane, "Understand it", "What to say");
-        panelSection(c.left, "What they may probe", panelList(x.probes));
-        /* A big design question carries its own board: titled sections, read in order. */
-        (x.parts || []).forEach(function (p) {
-          c.left.appendChild(el("h4", "cv-part", inl(p.title)));
-          if (p.lead) { c.left.appendChild(el("p", "cv-part-lead", inl(p.lead))); }
-          panelList(p.items).forEach(function (u) { c.left.appendChild(u); });
-          /* A worked example: code, shown as written. */
-          if (p.code) { var pre = el("pre", "cv-code"); pre.appendChild(el("code", "", esc(p.code))); c.left.appendChild(pre); }
-          if (p.after) { panelList(p.after).forEach(function (u) { c.left.appendChild(u); }); }
-        });
-        panelSection(c.left, "The nuance", panelList(x.notes));
-        panelSection(c.left, "Avoid", panelList(x.never, "mk-bad"));
-        learn(c.left, x.learn || {});
-        if (x.drill) { c.left.appendChild(el("p", "ex-links", '<a href="' + link("prep", "drill-" + x.drill) + '">Practise it aloud, timed</a>')); }
-        if (x.land) { c.right.appendChild(el("p", "cv-land", "<b>Land on this.</b> " + inl(x.land))); }
-        if (x.a && x.a.length) { c.right.appendChild(transcript(x.a, "You", "")); }
-        /* Lines to swap in: a short answer for each probe, said the same way. */
-        if (x.swaps && x.swaps.length) {
-          c.right.appendChild(el("div", "lab", "Lines you can swap in"));
-          x.swaps.forEach(function (w) {
-            c.right.appendChild(el("div", "swap", '<span class="sw-when">' + inl(w.when) + '</span><span class="sw-line">' + emph(inl(w.line)) + "</span>"));
-          });
-        }
-        if (x.meta) { c.right.appendChild(el("p", "cv-meta", esc(x.meta))); }
-        if (c.left.querySelector(".cv-code")) { c.cols.classList.add("has-code"); }
-      }
-    });
-  }
-
   /* ---------------------------------------------------------------- quiz, one question at a time */
   var dlg = document.getElementById("quiz");
   function openQuiz(x) {
@@ -1276,6 +1281,7 @@ details.item > .sbody { padding-left: 0; }
       main.innerHTML = ""; nav = [];
       if (r.tab === "overview") { tabOverview(main); }
       else if (r.tab === "prep") { tabPrep(main); }
+      else if (r.tab === "rounds") { tabRounds(main); }
       else if (r.tab === "design") { tabDesign(main); }
       else if (r.tab === "own") { tabOwn(main); }
       else if (r.tab === "sessions") { tabSessions(main, r.anchor); }

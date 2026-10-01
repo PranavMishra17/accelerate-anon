@@ -37,6 +37,36 @@ LOOP = {
               " Refresh the basics on Baseline: <a href=\"../BASELINE.html#/audio\" target=\"_blank\" rel=\"noopener\">Audio and speech</a>, <a href=\"../BASELINE.html#/backend\" target=\"_blank\" rel=\"noopener\">Backend</a>, <a href=\"../BASELINE.html#/systems\" target=\"_blank\" rel=\"noopener\">Systems</a>, <a href=\"../BASELINE.html#/distributed\" target=\"_blank\" rel=\"noopener\">Distributed systems</a>."),
 }
 
+# The Overview: the company and the role, from the posting (Ashby's public feed, read 2026-10-01).
+COMPANY = [
+    "Commure builds what they call the AI operating system for healthcare: Ambient AI and Dictation for documentation, Agents for patient and revenue workflows, and revenue cycle automation, on one platform integrated with 60+ EHRs. They report 500,000+ clinicians across 500+ organizations and over 200 million patient interactions.",
+    "They raised $70M at a $7B valuation in May 2026, merged with Athelas in 2023 and bought Augmedix in 2024. The team works directly alongside clinicians, deploys daily, and values speed and ownership.",
+]
+
+POSTING = {
+    "url": "https://jobs.ashbyhq.com/commure/0e3440aa-4ddc-4a43-b4c3-804e60a1b2ff",
+    "label": "Software Engineer, Voice Agents, on Ashby",
+    "checked": "1 October 2026",
+    "lead": "Health system call centers can't keep up: they report that 85% of patients who can't get through never call back. The voice agents pick up every call and handle it end to end: scheduling, rescheduling, cancellations, confirmations, FAQs and intake, integrated with the EHR and telephony in real time. This role builds the systems they run on. Mid-level, on a small team that ships every day.",
+    "facts": [["Where", "Mountain View, CA, on site five days a week"], ["Pay", "$130K to $180K, plus equity (the posting)"], ["Level", "Mid-level; 2 to 4 years of backend experience"]],
+    "does": [
+        "Python backend services for real-time voice agents: call orchestration, conversation state, tool execution and EHR write-back.",
+        "Low-latency pipelines joining telephony, ASR, LLMs and TTS into one conversational loop.",
+        "Integrations with Epic, Cerner, athena and others for scheduling, eligibility and intake.",
+        "APIs, data models and event-driven workflows, designed with senior engineers.",
+        "Features patient access teams actually use, with AI, product and operations.",
+        "Own the quality of what you ship: latency, reliability, observability, release readiness.",
+    ],
+    "wants": [
+        "2 to 4 years of backend work, mostly in Python.",
+        "Production services, APIs and data models shipped.",
+        "An intuition for how people talk to voice and text assistants.",
+        "Async, event-driven or real-time systems, or the wish to grow into them.",
+        "Testing, LLM evaluation, observability and reliability.",
+        "A patient-centered mindset, a bias for action and ownership.",
+    ],
+}
+
 # Tracker sessions for this loop, in order, with the day each belongs to.
 # Groundwork for the round after the screen, whenever it lands; in this order.
 SESSION_IDS = [

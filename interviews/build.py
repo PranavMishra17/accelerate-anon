@@ -145,6 +145,8 @@ def build(module_name):
         # Prep hub: how to show up, a line under each bank, and the links it rests on.
         "showUp": getattr(m, "SHOW_UP", []), "prepLead": getattr(m, "PREP_LEAD", ""), "storyBlurb": getattr(m, "STORY_BLURB", ""),
         "sources": getattr(m, "SOURCES", []),
+        # Overview: the company and the role from its posting; Rounds: what each round asked.
+        "company": getattr(m, "COMPANY", []), "posting": getattr(m, "POSTING", None), "rounds": getattr(m, "ROUNDS", []),
     }
     tpl = io.open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
     # Shared figure files carry a hash of their contents, so a changed figure is never
