@@ -842,3 +842,15 @@ just under the header (instant when reduced motion is asked for). On the loop pa
 section (intro and story, each bank, logistics, practising aloud, questions to ask) and each round
 is a card in its own track colour, with a count, so the sections no longer run into one another.
 No charter deviation.
+
+**2026-10-01 — 3 Dots IT: a conversational AI and NLP client interview, Friday 2 October.**
+A new loop: a 30-minute client interview arranged by 3 Dots IT, a staffing vendor (end client and
+platform not yet named), on two areas: building and improving enterprise virtual assistants
+(conversation design, intent and entity modelling, error analysis, production improvements) and
+deep NLP and LLM theory (text classification, embeddings, LLM fundamentals, the Transformer,
+lightly). Pranav asked for it built strongly, with industry practice and the theory he has not
+revised this year. Built from four research passes: a loop page (interviews/threedots.html, 64
+questions in seven groups); six teach-first wildcard sessions, wc25 to wc30, about 55 minutes each
+for his 5 to 6 hours; a new Baseline field, NLP and conversational AI (18 topics, the sixteenth
+field); and a guide design, Enterprise virtual assistant. Each links the others instead of copying.
+Charter deviation: none; a wildcard loop, its sessions count toward wildcard credit as usual.

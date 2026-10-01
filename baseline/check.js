@@ -12,7 +12,7 @@ const problems = [];
 const bad = (id, msg) => problems.push(id + ": " + msg);
 const BANNED = /—|\bsimply\b|\bjust\b|\bseamless(ly)?\b|\brobust\b|\bpowerful\b|\bcomprehensive\b|\bunlock\b|\bleverage(s|d)?\b|\bdelve\b|\bgame-?changer\b|Pranav/i;
 const FIELD_IDS = ["overview", "systems", "distributed", "data", "backend", "frontend", "mobile", "cloud", "devops",
-  "ml", "ai", "inference", "audio", "graphics", "games"];
+  "ml", "ai", "inference", "audio", "nlp", "graphics", "games"];
 
 function text(id, where, s) {
   if (typeof s !== "string" || !s.trim()) { bad(id, where + " is empty"); return; }

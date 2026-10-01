@@ -72,8 +72,9 @@ stage has its goal, what to build, and an exit check with its answer.
 
 ### Baseline
 
-A map of fifteen fields of software engineering: systems, distributed systems and data; backend,
-frontend, mobile, cloud and DevOps; ML, AI engineering, inference, and audio and speech; graphics
+A map of sixteen fields of software engineering: systems, distributed systems and data; backend,
+frontend, mobile, cloud and DevOps; ML, AI engineering, inference, NLP and conversational AI, and
+audio and speech; graphics
 and game development. Each field opens to an overview, a diagram of how its parts connect, and
 its topics, each a short explainer: what it is, where you meet it in industry, the catch, and
 what to read for depth. Read a field's outline in five minutes before a call; open what you

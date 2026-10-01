@@ -14,7 +14,7 @@
   var B = window.BASELINE;
   var LAYERS = ["Start", "Foundations", "Building", "Intelligence", "Worlds"];
   var ORDER = ["overview", "systems", "distributed", "data", "backend", "frontend", "mobile", "cloud", "devops",
-    "ml", "ai", "inference", "audio", "graphics", "games"];
+    "ml", "ai", "inference", "audio", "nlp", "graphics", "games"];
   var fields = ORDER.map(function (id) { return B.byId[id]; }).filter(Boolean);
   B.fields.forEach(function (f) { if (fields.indexOf(f) < 0) { fields.push(f); } });
 
