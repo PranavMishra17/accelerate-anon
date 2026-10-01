@@ -18,12 +18,13 @@ def icon(name):
         raise SystemExit("no icon " + name)
     return json.loads(m.group(1))
 
-# The four pages: file, label, icon, and a bold pair of the page's colour (the --cat-* hue): lighter and deeper.
+# The five pages: file, label, icon, and a bold pair of the page's colour (the --cat-* hue): lighter and deeper.
 PAGES = [
     ("system-design", ["System", "design"], "network", "#5B8FDB", "#28508F"),
     ("coding", ["Coding", "primer"], "code", "#52A572", "#27623F"),
     ("cheatsheet", ["Cheat", "sheet"], "layout-grid", "#DC7E54", "#94441F"),
     ("deep-learning", ["Deep", "learning"], "audio-waveform", "#B25B92", "#632A4F"),
+    ("baseline", ["Base", "line"], "map", "#C49A45", "#7A5A1E"),
 ]
 
 def button(name, label, ic, colour, deep):

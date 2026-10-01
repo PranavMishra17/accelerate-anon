@@ -13,7 +13,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOOPS = [f[:-3] for f in sorted(os.listdir(os.path.join(ROOT, "interviews")))
          if f.endswith(".py") and f not in ("build.py", "hub.py") and not f.startswith("_")]
 
-steps = [["node", "figures/check.js"], ["python", "coding/test_data.py"], ["python", "figures/stamp.py"]]
+steps = [["node", "figures/check.js"], ["node", "baseline/check.js"], ["python", "coding/test_data.py"], ["python", "figures/stamp.py"]]
 steps += [["python", "interviews/build.py", m] for m in LOOPS]
 steps.append(["python", "interviews/hub.py"])   # INTERVIEWS.html, after the loop pages
 PRIVATE = os.path.join(ROOT, "private")   # gitignored, local only: each private/<page>/build.py

@@ -31,7 +31,8 @@ LOOP = {
     "plan_kicker": "Before the call",
     "extra": ("The posting and everything Coframe publishes are under <b>What this rests on</b> on the Prep tab. "
               "Your own system at depth is on the "
-              "<a href=\"../ALFRED.html\" target=\"_blank\" rel=\"noopener\">alfred_ page</a>."),
+              "<a href=\"../ALFRED.html\" target=\"_blank\" rel=\"noopener\">alfred_ page</a>."
+              " Refresh the basics on Baseline: <a href=\"../BASELINE.html#/ai\" target=\"_blank\" rel=\"noopener\">AI engineering</a>, <a href=\"../BASELINE.html#/devops\" target=\"_blank\" rel=\"noopener\">DevOps</a>, <a href=\"../BASELINE.html#/distributed\" target=\"_blank\" rel=\"noopener\">Distributed systems</a>, <a href=\"../BASELINE.html#/backend\" target=\"_blank\" rel=\"noopener\">Backend</a>."),
 }
 
 SESSION_IDS = []

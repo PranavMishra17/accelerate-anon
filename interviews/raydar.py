@@ -27,7 +27,8 @@ LOOP = {
     "bar": ("The transcript is scored against a rubric and read by a person. Clear structure, a number in every "
             "story, the posting's own words used naturally. One or two minutes an answer, then stop."),
     "plan_kicker": "Before the call",
-    "extra": ("The posting and what Raydar publishes are under <b>What this rests on</b> on the Prep tab."),
+    "extra": ("The posting and what Raydar publishes are under <b>What this rests on</b> on the Prep tab."
+              " Refresh the basics on Baseline: <a href=\"../BASELINE.html#/ai\" target=\"_blank\" rel=\"noopener\">AI engineering</a>, <a href=\"../BASELINE.html#/backend\" target=\"_blank\" rel=\"noopener\">Backend</a>, <a href=\"../BASELINE.html#/data\" target=\"_blank\" rel=\"noopener\">Data</a>, <a href=\"../BASELINE.html#/cloud\" target=\"_blank\" rel=\"noopener\">Cloud</a>."),
 }
 
 SESSION_IDS = []

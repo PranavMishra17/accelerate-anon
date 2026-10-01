@@ -26,7 +26,8 @@ LOOP = {
     "bar": ("A founder hiring engineer three or four. He wants range, speed and ownership, and someone who has "
             "shipped real-time voice. Talk like a builder: what you shipped, how fast, what broke."),
     "plan_kicker": "Before the call",
-    "extra": ("River's site, the postings and the founder's writing are under <b>What this rests on</b> on the Prep tab."),
+    "extra": ("River's site, the postings and the founder's writing are under <b>What this rests on</b> on the Prep tab."
+              " Refresh the basics on Baseline: <a href=\"../BASELINE.html#/audio\" target=\"_blank\" rel=\"noopener\">Audio and speech</a>, <a href=\"../BASELINE.html#/ai\" target=\"_blank\" rel=\"noopener\">AI engineering</a>, <a href=\"../BASELINE.html#/inference\" target=\"_blank\" rel=\"noopener\">Inference</a>, <a href=\"../BASELINE.html#/backend\" target=\"_blank\" rel=\"noopener\">Backend</a>."),
 }
 
 SESSION_IDS = []

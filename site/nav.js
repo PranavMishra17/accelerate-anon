@@ -19,7 +19,8 @@
     code: '<polyline points="16 18 22 12 16 6"/> <polyline points="8 6 2 12 8 18"/>',
     "layout-grid": '<rect width="7" height="7" x="3" y="3" rx="1"/> <rect width="7" height="7" x="14" y="3" rx="1"/> <rect width="7" height="7" x="14" y="14" rx="1"/> <rect width="7" height="7" x="3" y="14" rx="1"/>',
     "audio-waveform": '<path d="M2 13a2 2 0 0 0 2-2V7a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0V4a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0v-4a2 2 0 0 1 2-2"/>',
-    "message-square": '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'
+    "message-square": '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    map: '<path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/> <path d="M15 5.764v15"/> <path d="M9 3.236v15"/>'
   };
 
   /* label: the page's name (its title, and the hover text); short: the word on the badge */
@@ -29,6 +30,7 @@
   var HOME = PUBLIC ? { key: "home", href: "index.html", label: "Accelerate, the toolkit's home", short: "Home" }
     : { key: "tracker", href: "index.html", label: "Accelerate tracker", short: "Accelerate" };
   var PAGES = [
+    { key: "baseline", href: "BASELINE.html", label: "Baseline, a map of the fields", short: "Baseline", icon: ICON.map },
     { key: "guide", href: "SYSTEM%20DESIGN.html", label: "System design guide", short: "System design", icon: ICON.network },
     { key: "coding", href: "CODING.html", label: "Algorithms and coding", short: "Coding", icon: ICON.code },
     { key: "cheatsheet", href: "CHEATSHEET.html", label: "Coding cheat sheet", short: "Cheat sheet", icon: ICON["layout-grid"] }

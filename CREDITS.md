@@ -65,6 +65,17 @@ Links in the diagram notes:
 - [scipy.signal.resample](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.resample.html), the SciPy documentation. Resampling in code.
 - [The source-filter model](https://www.phon.ox.ac.uk/source_filter_model), Oxford University Phonetics Laboratory. Formants and vocal tract length.
 
+### Baseline
+
+Each of Baseline's fifteen fields lists its own reading, every link checked when it was added
+(`baseline/fields/*.js`). The works it leans on most: Philip Kiely, [Inference Engineering](https://www.baseten.co/inference-engineering/)
+(Baseten) and its companion [learn-inference.com](https://learn-inference.com/); Elizabeth Thompson's
+[100 days of inference](https://github.com/elizabetht/100-days-of-inference); Chip Huyen's
+[AI Engineering](https://huyenchip.com/books/); [Learn to Cloud](https://learntocloud.guide);
+[OSTEP](https://pages.cs.wisc.edu/~remzi/OSTEP/); [WebRTC for the Curious](https://webrtcforthecurious.com/);
+the [Voice AI and Voice Agents primer](https://voiceaiandvoiceagents.com/); [Game Programming Patterns](https://gameprogrammingpatterns.com/);
+and Paul Graham's [How to Do Great Work](https://paulgraham.com/greatwork.html).
+
 ## Code and assets
 
 The icons and typefaces are bundled, so the pages load nothing from another site; the one outside request is the landing page's star count from the GitHub API.
@@ -72,6 +83,7 @@ The icons and typefaces are bundled, so the pages load nothing from another site
 - [Lucide](https://lucide.dev/), Lucide Contributors, with portions from Feather by Cole Bemis (ISC licence; Feather portions MIT). 75 icons from lucide-static 0.469.0, fetched from [jsDelivr](https://www.jsdelivr.com/package/npm/lucide-static) and bundled with the licence in `figures/icons.js`. Used in the diagrams and the README art.
 - [Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/), Braille Institute of America (SIL Open Font License 1.1). The text typeface, bundled in `fonts/`.
 - [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono), the JetBrains Mono Project Authors (SIL Open Font License 1.1). The code typeface, bundled in `fonts/`.
+- [Source Serif 4](https://github.com/adobe-fonts/source-serif), Adobe (SIL Open Font License 1.1). Baseline's reading face, served from `fonts/`.
 - [Kalam](https://github.com/itfoundry/kalam), Indian Type Foundry (SIL Open Font License 1.1). A handwritten face bundled in `fonts/fonts.css`; no public page sets it today.
 - [Google Fonts](https://fonts.google.com/), Google. Where `fonts/fetch.py` downloads the three typefaces from; licences confirmed in the [google/fonts](https://github.com/google/fonts/blob/main/ofl/atkinsonhyperlegible/OFL.txt) repository.
 

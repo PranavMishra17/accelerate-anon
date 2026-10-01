@@ -38,6 +38,16 @@ pages with no way around them. The fix is fewer decisions, made on purpose.
     One deliberate exception, requested by Pranav: the landing page's hidden name before the title, revealed every 7 s by a soft band of light (a gradient clipped to the text); with reduced motion it is shown static at a faint contrast.
 11. **States are designed.** Empty, loading and error states say what happened and what to do.
 
+## The one exception: Baseline
+
+`BASELINE.html` is a reference book, and Pranav asked for it to look unlike the tracker and the
+loop pages. It keeps the spacing scale, the hairlines, the anti-slop rules (no em dashes, no
+eyebrow labels, no boxes in boxes, an index on the left) and reads its spacing from
+`site/tokens.css`. What it changes, in `baseline/atlas.css` only: two different families
+(Source Serif 4 for reading, JetBrains Mono for labels), reading text at 17 px with a 34 px
+field title and 22 px cluster heads, a warm paper palette, and one ink colour per field used
+only as a rule, a dot and the open-topic marker. Nothing else may borrow these.
+
 ## Words
 
 - Plain, specific, short. Say what the thing is and does; name the concrete number.

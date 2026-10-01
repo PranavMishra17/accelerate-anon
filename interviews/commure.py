@@ -33,7 +33,8 @@ LOOP = {
               "<a href=\"../SYSTEM%20DESIGN.html#/designs/voice-agent\" target=\"_blank\" rel=\"noopener\">voice agent for patient calls</a>, "
               "in six steps, and your own voice agent on the "
               "<a href=\"../ALFRED.html#l-voice\" target=\"_blank\" rel=\"noopener\">alfred_ page</a>, Voice 1 and Voice 2. "
-              "3. Say: the Prep tab, last, once every sentence is one you could explain."),
+              "3. Say: the Prep tab, last, once every sentence is one you could explain."
+              " Refresh the basics on Baseline: <a href=\"../BASELINE.html#/audio\" target=\"_blank\" rel=\"noopener\">Audio and speech</a>, <a href=\"../BASELINE.html#/backend\" target=\"_blank\" rel=\"noopener\">Backend</a>, <a href=\"../BASELINE.html#/systems\" target=\"_blank\" rel=\"noopener\">Systems</a>, <a href=\"../BASELINE.html#/distributed\" target=\"_blank\" rel=\"noopener\">Distributed systems</a>."),
 }
 
 # Tracker sessions for this loop, in order, with the day each belongs to.

@@ -3,7 +3,8 @@
 ---
 
 <p align="center">
-  A free study toolkit for system design, coding interviews and deep learning from scratch.<br>
+  A free study toolkit for system design, coding interviews and deep learning from scratch,<br>
+  with a map of every engineering field beside it.<br>
   Static pages that teach rather than list. No account; your progress stays in your browser.
 </p>
 
@@ -19,6 +20,7 @@
   <a href="https://pranavmishra17.github.io/accelerate-anon/CODING.html"><img src="docs/art/coding.svg" width="128" height="128" alt="Coding primer"></a>
   <a href="https://pranavmishra17.github.io/accelerate-anon/CHEATSHEET.html"><img src="docs/art/cheatsheet.svg" width="128" height="128" alt="Cheat sheet"></a>
   <a href="https://pranavmishra17.github.io/accelerate-anon/DEEP-LEARNING.html"><img src="docs/art/deep-learning.svg" width="128" height="128" alt="Deep learning"></a>
+  <a href="https://pranavmishra17.github.io/accelerate-anon/BASELINE.html"><img src="docs/art/baseline.svg" width="128" height="128" alt="Baseline"></a>
 </p>
 
 ## What is inside
@@ -68,6 +70,15 @@ stage has its goal, what to build, and an exit check with its answer.
 
 <p align="center"><img src="docs/screenshots/deep-learning.png" width="860" alt="The path, one stage at a time"></p>
 
+### Baseline
+
+A map of fifteen fields of software engineering: systems, distributed systems and data; backend,
+frontend, mobile, cloud and DevOps; ML, AI engineering, inference, and audio and speech; graphics
+and game development. Each field opens to an overview, a diagram of how its parts connect, and
+its topics, each a short explainer: what it is, where you meet it in industry, the catch, and
+what to read for depth. Read a field's outline in five minutes before a call; open what you
+could not explain in a sentence. It has its own look, closer to a reference book.
+
 ## Diagrams you can take apart
 
 Every diagram on the site opens full screen: hover or tap a part for a one-line note, click it
@@ -109,7 +120,8 @@ Then paste this to get going:
 You are my study partner for this repository, Accelerate. Read README.md and DESIGN.md first.
 The material is data: the coding patterns, problems, variations and AI systems topics are in
 coding/data.js; the system design framework, patterns and worked designs are the GUIDE object
-in "SYSTEM DESIGN.html"; the deep learning path is alaap/plan.py.
+in "SYSTEM DESIGN.html"; the deep learning path is alaap/plan.py; the field maps are
+baseline/fields/*.js.
 
 1. Ask what I am preparing for and how much time I have each week, then propose a plan built
    from these pages, with links to the exact sections.

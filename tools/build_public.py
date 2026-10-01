@@ -22,14 +22,14 @@ a local path like E:/, or a local link or asset that is not in _site/.
 DEEP-LEARNING.html is built by `python alaap/build.py --public`, which needs local checkouts,
 so the built file is committed and this script only copies it.
 """
-import hashlib, html, io, json, os, re, shutil, sys, urllib.parse
+import subprocess, hashlib, html, io, json, os, re, shutil, sys, urllib.parse
 
 REPO = "PranavMishra17/accelerate-anon"         # the repo the landing page's star link points at; a rename is this one edit
 OWNER, NAME = REPO.split("/")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "_site")
-PAGES = ["SYSTEM DESIGN.html", "CODING.html", "CHEATSHEET.html", "DEEP-LEARNING.html"]
+PAGES = ["SYSTEM DESIGN.html", "CODING.html", "CHEATSHEET.html", "DEEP-LEARNING.html", "BASELINE.html"]
 EXTRA = ["brand/accelerate.svg"]           # drawn by site/nav.js, so no page names it in an attribute
 TEXT = (".html", ".js", ".css", ".json", ".svg", ".txt", ".md")
 
@@ -114,6 +114,11 @@ def counts():
         "stages": len(set(re.findall(r'id="stage-(\d+)"', dl))),
     }
     c["marks"], c["n_designs"] = c["probs"] + c["vars"], len(c["designs"])
+    # Baseline's fields and topics, read the way the page reads them
+    js = "global.window=global;require('./baseline/base.js');require('fs').readdirSync('baseline/fields').forEach(f=>require('./baseline/fields/'+f));" \
+         "const F=BASELINE.fields.filter(f=>f.id!=='overview');console.log(JSON.stringify({f:F.length,t:F.reduce((a,f)=>a+f.clusters.reduce((b,c)=>b+c.topics.length,0),0)}))"
+    bl = json.loads(subprocess.run(["node", "-e", js], cwd=ROOT, capture_output=True, text=True, check=True).stdout)
+    c["fields"], c["btopics"] = bl["f"], bl["t"]
     c["num"] = json.loads(re.search(r"var num = (\{[^}]*\})", dl).group(1))
     assert c["designs"] and c["patterns"] and c["techniques"] and c["algo"] and c["topics"] and c["stages"], c
     return c
@@ -305,7 +310,7 @@ footer { border-top: var(--hair); padding: var(--s4) 0 var(--s6); font-size: var
   </header>
   <main>
     <p class="lead"><b>A free study toolkit for system design, coding interviews and deep learning from scratch.</b>
-      Four static pages that teach rather than list: every idea opens to what it is, a diagram, and an answer kept shut until you have tried.</p>
+      Five static pages that teach rather than list: every idea opens to what it is, a diagram, and an answer kept shut until you have tried.</p>
     <ul class="grid" id="cards"></ul>
     <p class="note">Your progress is read from this browser's own storage and shown on the cards. Nothing is sent anywhere, and there is no account. Clearing this site's data resets it.</p>
 
@@ -326,6 +331,10 @@ footer { border-top: var(--hair); padding: var(--s4) 0 var(--s6); font-size: var
           <h3 style="--b: var(--cat-3)"><i></i><a href="CHEATSHEET.html">Cheat sheet</a></h3>
           <p>The coding page on one screen: a card per pattern and topic. Click a card for its examples and variations; F goes full screen. It fits one screen on a laptop and scrolls on a phone.
             It is also one self-contained file, with its fonts and figures inside: <a href="CHEATSHEET.html" download="coding-cheat-sheet.html">download it</a> and it works offline.</p>
+          <h3 style="--b: var(--cat-5)"><i></i><a href="BASELINE.html">Baseline</a></h3>
+          <p>A map of {{fields}} fields of software engineering, from systems and distributed systems to inference, audio and speech, graphics and games.
+            Each field opens to an overview, a diagram of how its parts connect, and {{btopics}} topics in all, each a short explainer: what it is, where you meet it in industry, the catch, and what to read for depth.
+            Read a field's outline in five minutes before a call; open what you could not explain in a sentence.</p>
           <h3 style="--b: var(--cat-4)"><i></i><a href="DEEP-LEARNING.html">Deep learning from scratch</a></h3>
           <p>{{stages}} stages in three parts. Foundations covers the maths and how audio becomes numbers. In the second part you build a small PyTorch-like framework on NumPy, module by module: tensors, autograd, optimisers, convolutions, attention and a transformer.
             The third reads a real speech system, from speaker identity to how a text-to-speech model turns a written description into a voice. Each stage has a goal, a diagram, what to build and an exit check with its answer. Python and NumPy; no GPU.</p>
@@ -406,7 +415,11 @@ footer { border-top: var(--hair); padding: var(--s4) 0 var(--s6); font-size: var
     { key: "dl", name: "Deep learning", href: "DEEP-LEARNING.html", cat: 4,
       rd: C.stages + " stages, from the maths to a speech model",
       ctx: "Build a PyTorch-like framework, then read a speech system.",
-      links: [["The path", "DEEP-LEARNING.html#/plan"], ["Architecture", "DEEP-LEARNING.html#/architecture"]] }
+      links: [["The path", "DEEP-LEARNING.html#/plan"], ["Architecture", "DEEP-LEARNING.html#/architecture"]] },
+    { key: "baseline", name: "Baseline", href: "BASELINE.html", cat: 5,
+      rd: C.fields + " fields, " + C.btopics + " topics",
+      ctx: "A map of every field, to refresh the basics before a call.",
+      links: [["Overview", "BASELINE.html#/overview"], ["Inference", "BASELINE.html#/inference"], ["Backend", "BASELINE.html#/backend"]] }
   ];
 
   function draw() {

@@ -725,3 +725,18 @@ back-filling" are rewritten as "Weeks are a sequence".
 replaced: missed weeks are now done late, in order, rather than dropped. Reason: he will not
 skip material, and declaring states never happened in practice. The guard against debt is now
 the projected gate, which moves instead of compressing the work.
+
+**2026-09-30 — Baseline: a map of fifteen fields.**
+`BASELINE.html`, decided in a grilling session with Pranav: a public reference, not a track,
+nothing to mark. Fifteen fields (overview; systems, distributed systems, data; backend, frontend,
+mobile, cloud, DevOps and security; ML, AI engineering, inference, audio and speech; graphics,
+game development), 266 topics. Each field opens to an overview, a map of how its parts connect,
+a Start here list, and topics shut to a line, each a short explainer: what it is, where you meet
+it in industry, the nuance, and checked reading. Its own look by request, the one exception
+recorded in `DESIGN.md`: Source Serif 4 and JetBrains Mono, a paper palette, an ink per field.
+Data in `baseline/fields/*.js`, drawn by `baseline/atlas.js`, checked by `baseline/check.js`
+(shape, counts, banned words, links, map geometry), which `tools/rebuild.py` now runs. On the
+public site with a landing card, in every page's badges, and linked from the live loop pages as
+"Refresh the basics". Sources from Pranav's links: Kiely's Inference Engineering and its
+companion, 100 days of inference, Learn to Cloud, the Sarvam AI interview write-up as the bar,
+Paul Graham's How to Do Great Work. No charter deviation: a reference beside the plan.
