@@ -104,11 +104,20 @@ details.item > summary:hover .qt { color: var(--accent); }
 .qt { display: block; font-weight: var(--w-strong); color: var(--ink); }
 .qm { display: block; font-size: var(--fs-sm); color: var(--muted); margin-top: 2px; }
 
-/* what you would say: on a sunken tint, in the text face */
-.transcript { background: var(--sunken); color: var(--ink); border-radius: var(--radius-lg); padding: var(--s4) var(--s5); margin: var(--s2) 0 var(--s4); max-width: var(--measure); }
-.transcript .who { font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); margin-bottom: var(--s2); }
-.transcript .beat { margin: 0 0 var(--s3); }
-.transcript .beat:last-of-type { margin-bottom: 0; }
+/* what you would say: the opposite of the page (light on dark in the light theme, dark on light in
+   the dark theme), so it reads as the answer sheet. Each beat's lead sentence in bold, the rest under it. */
+.transcript { background: var(--ink); color: var(--bg); border-radius: var(--radius-lg); padding: var(--s4) var(--s5); margin: var(--s2) 0 var(--s4); max-width: var(--measure); }
+.transcript .who { font-size: var(--fs-sm); font-weight: var(--w-strong); color: color-mix(in srgb, var(--bg) 70%, transparent); margin-bottom: var(--s2); }
+.transcript .beat { margin: 0; padding: var(--s2) 0; }
+.transcript .beat + .beat { border-top: 1px solid color-mix(in srgb, var(--bg) 18%, transparent); }
+.transcript .beat .line:first-child { font-weight: var(--w-strong); }
+.transcript strong { color: inherit; }
+.transcript .note { color: color-mix(in srgb, var(--bg) 70%, transparent); }
+/* your answer: optional, saved as you go, beside the tracker's own */
+.mine { margin: var(--s3) 0 0; }
+.mine label { display: block; font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--soft); margin-bottom: var(--s1); }
+.mine textarea { min-height: 72px; }
+.mine .mine-st { font-size: var(--fs-xs); color: var(--muted); min-height: 1em; margin-top: 2px; }
 .transcript .line { display: block; }
 .transcript .line + .line { padding-left: var(--s4); }
 .transcript code { background: var(--surface); }
@@ -850,6 +859,31 @@ details.item > .sbody { padding-left: 0; }
       body.appendChild(sd);
     }
   }
+  /* A step that asks you to say, explain or answer something gets a box: typed or dictated
+     (Win+H), saved in the tracker's own answers so the tracker shows it too. Optional. */
+  var SAYS = /out loud|say|saying|record yourself|explain|in your own words|answer the|talk through|walk through/i;
+  function mineBox(key) {
+    var box = el("div", "mine"), id = "mine-" + key.replace(/[^a-z0-9]/gi, "-");
+    var lb = el("label", "", "Your answer"); lb.setAttribute("for", id);
+    var ta = el("textarea"); ta.id = id;
+    ta.placeholder = "Say it, then type or dictate it here (Win+H). Optional; saved as you go.";
+    var t0 = tracker(), rec = (t0.answers || {})[key];
+    ta.value = rec && rec.text ? rec.text : "";
+    var st = el("div", "mine-st", rec && rec.at ? "Saved " + esc(rec.at) : "");
+    var timer = null;
+    ta.addEventListener("input", function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        var t = tracker(), v = ta.value.trim();
+        t.answers = t.answers || {};
+        if (v) { t.answers[key] = { text: v, at: stamp() }; st.textContent = "Saved " + t.answers[key].at; }
+        else { delete t.answers[key]; st.textContent = ""; }
+        writeJSON(TRACKER, t);
+      }, 500);
+    });
+    box.appendChild(lb); box.appendChild(ta); box.appendChild(st);
+    return box;
+  }
   function sayToggle(label, node) {
     var d = el("details", "say");
     d.appendChild(el("summary", "", esc(label)));
@@ -893,6 +927,7 @@ details.item > .sbody { padding-left: 0; }
     if (!isStudy && (it.where || it.url)) { pre.push(it.url ? { url: it.url, label: it.where || it.url } : { book: it.where }); }
     learn(body, { figs: [], read: pre.concat(isStudy ? (it.res || []) : (it.links || []), it.read || []), sdLinks: it.sdLinks });
     var say = isStudy ? it.say : it.ans;
+    if (say || SAYS.test(it.t || "")) { body.appendChild(mineBox(key)); }
     if (say) { body.appendChild(sayToggle(isStudy ? "The idea, in the words you would use" : "What you would say", transcript(Array.isArray(say) ? say : [say], "", ""))); }
     row.appendChild(body);
     return row;

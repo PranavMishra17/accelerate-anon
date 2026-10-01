@@ -38,7 +38,15 @@ pages with no way around them. The fix is fewer decisions, made on purpose.
     One deliberate exception, requested by Pranav: the landing page's hidden name before the title, revealed every 7 s by a soft band of light (a gradient clipped to the text); with reduced motion it is shown static at a faint contrast.
 11. **States are designed.** Empty, loading and error states say what happened and what to do.
 
-## The one exception: Baseline
+## Two exceptions: the tracker's faces, and Baseline
+
+**The tracker** (`index.html`), at Pranav's request on 1 October: Bahnschrift (with DIN and
+Helvetica fallbacks) for headings, numbers and the bar, Helvetica Neue for the page, and
+Atkinson Hyperlegible for the steps you read and answer. Sizes stay the six tokens. It opens
+light and has a light/dark switch in its bar. Everywhere, "What you would say" is the one
+inverse sheet: light on dark in the light theme, dark on light in the dark theme.
+
+### Baseline
 
 `BASELINE.html` is a reference book, and Pranav asked for it to look unlike the tracker and the
 loop pages. It keeps the spacing scale, the hairlines, the anti-slop rules (no em dashes, no

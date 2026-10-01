@@ -763,3 +763,13 @@ sessions open to their steps first. It follows the system theme, uses the six to
 colours each track consistently as a small mark. The book, sky and liveries left the navigation
 (routes kept, lift-off kept). Raydar moved to the past loops. No mechanics changed; no charter
 deviation.
+
+**2026-10-01 — The tracker opens light, with a switch; your answers get a box.**
+Pranav preferred the light look and the earlier faces: the tracker opens light (dark from a switch
+in the bar, remembered in this browser) and uses Bahnschrift for headings, Helvetica Neue for the
+page and Atkinson for steps again; recorded in `DESIGN.md`. Every step with a model answer, or that
+asks you to say, explain or record something, now has an optional "Your answer" box (type or
+dictate with Win+H), saved as you go into the tracker's own `answers`, so the loop pages and the
+tracker show the same text and Written work lists it. "What you would say" is an inverse sheet on
+both the tracker and the loop pages, its points numbered with the lead phrase in bold. No charter
+deviation.

@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Accelerate</title>
 <link rel="icon" type="image/svg+xml" href="brand/accelerate.svg">
+<script>
+  /* Light unless dark was chosen with the switch in the bar (kept in this browser). */
+  (function () { var t = null; try { t = localStorage.getItem("accelerate.theme"); } catch (e) {}
+    document.documentElement.setAttribute("data-theme", t === "dark" ? "dark" : "light"); }());
+</script>
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="site/tokens.css?v=0e3b75d2">
 <link rel="stylesheet" href="site/nav.css?v=2ebfb65e">
@@ -24,7 +29,10 @@
     --sys: var(--cat-1); --math: var(--cat-2); --alaap: var(--cat-3); --iv: var(--cat-4);
     --req: var(--cat-5); --wild: var(--cat-6); --flat: var(--muted);
     --sys-p: #dbe4ef; --math-p: #dde9e1; --alaap-p: #f0e0d8; --req-p: #ece4cf; --iv-p: #efdfe7;
-    --mark: var(--warn); --sans: var(--font);
+    --mark: var(--warn);
+    --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --display: "Bahnschrift", "DIN Alternate", "DIN 2014", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --step: "Atkinson Hyperlegible", var(--sans);
     --bar-h: 52px; --rail-w: 264px;
   }
   @media (prefers-color-scheme: dark) {
@@ -34,7 +42,7 @@
 
   * { box-sizing: border-box; }
   html { scroll-padding-top: calc(var(--bar-h) + 16px); }
-  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: var(--fs-md);
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: var(--fs-md);
     line-height: var(--lh-body); -webkit-font-smoothing: antialiased; }
   a { color: var(--accent); text-underline-offset: 2px; }
   button, input, textarea, select { font: inherit; color: inherit; }
@@ -563,6 +571,34 @@
     .bookwk { border: 0; padding: 0; margin: 0; page-break-after: always; }
     .bookl { font-size: 10px; }
   }
+
+  /* The fonts it had (asked for back on 1 October): display face for headings, numbers and
+     the bar; Helvetica Neue for the page; Atkinson for the steps you read and answer. */
+  h1, h2, h3, .bar .word, .hero h1, .hero h1.next, .tally b { font-family: var(--display); }
+  .sxlist, .sxb, .wbq-in, .coldq { font-family: var(--step); }
+  .themebtn { margin-left: var(--s3); border: 1px solid var(--rule); background: var(--surface); color: var(--soft);
+    border-radius: var(--radius-sm); padding: 3px 10px; font-size: var(--fs-xs); cursor: pointer; }
+  .themebtn:hover { color: var(--ink); border-color: var(--muted); }
+
+  /* What you would say: the opposite of the page, so it reads as the answer sheet. Light on
+     dark in the light theme, dark on light in the dark theme. Numbered, the lead phrase bold. */
+  .wb-model { background: var(--ink); color: var(--bg); border-radius: var(--radius); padding: var(--s4) var(--s5);
+    margin-top: var(--s3); font-family: var(--step); }
+  .wb-model a { color: inherit; }
+  .wb-model ol, .wb-model ul { list-style: none; margin: 0; padding: 0; counter-reset: say; }
+  .wb-model li { counter-increment: say; position: relative; padding: var(--s2) 0 var(--s2) 30px; line-height: 1.5; }
+  .wb-model li + li { border-top: 1px solid color-mix(in srgb, var(--bg) 18%, transparent); }
+  .wb-model li::before { content: counter(say); position: absolute; left: 0; top: var(--s2); width: 20px; height: 20px;
+    border-radius: 50%; background: color-mix(in srgb, var(--bg) 16%, transparent); font-size: var(--fs-xs); font-weight: 700;
+    display: flex; align-items: center; justify-content: center; }
+  .wb-model li b { font-weight: 700; }
+  .wb-model p { margin: 0; line-height: 1.55; }
+
+  /* Your answer: a box under any step that asks you to say something. Optional, saved as you go. */
+  .mine { margin-top: var(--s4); }
+  .mine label { display: block; font-size: var(--fs-sm); font-weight: 600; color: var(--soft); margin-bottom: var(--s1); }
+  .mine textarea { min-height: 72px; resize: vertical; font-family: var(--step); }
+  .mine .mine-st { font-size: var(--fs-xs); color: var(--muted); margin-top: 2px; min-height: 1em; }
 </style>
 </head>
 <body>
@@ -575,6 +611,7 @@
   </a>
   <span class="grow"></span>
   <nav class="sn-top" data-site-nav data-here="tracker" id="barnav"></nav>
+  <button type="button" class="themebtn" id="themebtn">Dark</button>
 </header>
 <div class="layout">
   <aside id="side" class="side" aria-label="The plan"></aside>
@@ -7227,6 +7264,41 @@
     });
     return ul;
   }
+  /* A step that asks you to say, explain, record or answer something gets a box for it. */
+  var SAYS = /out loud|\bsay\b|\bsaying\b|record yourself|explain|in your own words|answer the|talk through|walk through/i;
+  /* One point of a model answer: the lead phrase before a colon, if short, in bold. */
+  function sayPoint(q) {
+    var li = el("li"), m = /^([^:.]{2,60}):\s+(.+)$/.exec(String(q));
+    if (m) { li.appendChild(el("b", "", m[1] + ": ")); li.appendChild(document.createTextNode(m[2])); }
+    else { li.textContent = q; }
+    return li;
+  }
+  /* Your own answer for a step, typed or dictated (Win+H), kept in state.answers like the quiz's.
+     Optional: an empty box saves nothing. */
+  function mineBox(key) {
+    var box = el("div", "mine");
+    var id = "mine-" + key.replace(/[^a-z0-9]/gi, "-");
+    var lb = el("label", "", "Your answer");
+    lb.setAttribute("for", id);
+    var ta = document.createElement("textarea");
+    ta.id = id;
+    ta.placeholder = "Say it, then type or dictate it here (Win+H). Optional; saved as you go.";
+    var rec = state.answers[key];
+    ta.value = rec && rec.text ? rec.text : "";
+    var st = el("div", "mine-st", rec && rec.at ? "Saved " + rec.at : "");
+    var timer = null;
+    ta.addEventListener("input", function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        var v = ta.value.trim();
+        if (v) { state.answers[key] = { text: v, at: stampNow() }; st.textContent = "Saved " + state.answers[key].at; }
+        else { delete state.answers[key]; st.textContent = ""; }
+        save();
+      }, 500);
+    });
+    box.appendChild(lb); box.appendChild(ta); box.appendChild(st);
+    return box;
+  }
   function stepItem(s, key, it, isStudy, i) {
     var x = extraOf(key);
     var d = el("details", "sx" + (state.steps[key] ? " done" : ""));
@@ -7257,6 +7329,7 @@
     section(body, "In your Alaap and TrenTorch plan", guideList(s, it.al, function (q) { return alHref(q.p); }, function (q) { return alLabel(q.p); }, "Alaap plan: "));
 
     var model = isStudy ? it.say : modelOf(s, it);
+    if (model || SAYS.test(it.t || "")) { body.appendChild(mineBox(isStudy ? s.id + ":s" + i : key)); }
     if (model) {
       var say = el("details", "sxs");
       say.open = !!open[key + ":say"];
@@ -7264,9 +7337,9 @@
       say.appendChild(el("summary", "", isStudy ? "The idea, in the words you would use" : "What you would say"));
       var mb = el("div", "wb-model");
       if (Array.isArray(model)) {
-        var ul = el("ul");
-        model.forEach(function (q) { ul.appendChild(el("li", "", q)); });
-        mb.appendChild(ul);
+        var ol = el("ol");
+        model.forEach(function (q) { ol.appendChild(sayPoint(q)); });
+        mb.appendChild(ol);
       } else { mb.appendChild(el("p", "", model)); }
       say.appendChild(mb);
       var rkey = isStudy ? s.id + ":s" + i : key;
@@ -9253,6 +9326,20 @@
     if (side.classList.contains("open")) { closeRail(); }
   });
 })();
+</script>
+<script>
+  /* The theme switch in the bar: light by default, dark when chosen, kept in this browser. */
+  (function () {
+    var b = document.getElementById("themebtn"), root = document.documentElement;
+    function label() { var d = root.getAttribute("data-theme") === "dark"; b.textContent = d ? "Light" : "Dark"; b.setAttribute("aria-label", d ? "Switch to light" : "Switch to dark"); }
+    b.addEventListener("click", function () {
+      var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try { localStorage.setItem("accelerate.theme", next); } catch (e) {}
+      label();
+    });
+    label();
+  }());
 </script>
 </body>
 </html>
