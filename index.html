@@ -300,7 +300,7 @@
   .stable th.c, .stable td.c { text-align: center; width: 72px; }
   .stable td { padding: var(--s3) var(--s2); border-bottom: 1px solid var(--rule); vertical-align: middle; }
   .stable .sgrp td { font-size: var(--fs-sm); font-weight: 600; color: var(--soft); padding-top: var(--s4); }
-  .steprow { cursor: pointer; }
+  .steprow { cursor: pointer; scroll-margin-top: calc(var(--bar-h, 56px) + 8px); }
   .steprow:hover > td { background: var(--sunken); }
   .steprow.cur > td { background: color-mix(in srgb, var(--tone, var(--accent)) 10%, transparent); border-bottom-color: transparent; }
   .steprow-b { all: unset; display: block; cursor: pointer; }
@@ -7423,6 +7423,13 @@
     return keys.filter(function (q) { return !state.steps[q]; })[0] || "";
   }
   var RATED = { got: "Had it", shaky: "Partly", no: "Missed it" };
+  /* The row just opened: after the redraw, scroll to it so the reader is not lost when the
+     row above closes. Smooth unless reduced motion is asked for. */
+  var rowJump = null;
+  function glideTo(node) {
+    var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    requestAnimationFrame(function () { node.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" }); });
+  }
   /* One step as a table row: where it stands on each beat (judge, read, say, rate, done).
      The open row gets a drawer below it: the material on the left, your work on the right. */
   function stepRows(tb, s, key, it, isStudy, i) {
@@ -7461,9 +7468,10 @@
     });
     tc.appendChild(tick);
     tr.appendChild(tc);
-    tr.addEventListener("click", function () { open[s.id + ":row"] = isOpen ? "" : key; draw(); });
+    tr.addEventListener("click", function () { open[s.id + ":row"] = isOpen ? "" : key; rowJump = isOpen ? null : key; draw(); });
     tb.appendChild(tr);
     if (!isOpen) { return; }
+    if (rowJump === key) { rowJump = null; glideTo(tr); }
 
     var x = extraOf(key), model = isStudy ? it.say : modelOf(s, it), says = !!model || SAYS.test(it.t || "");
     var mat = el("div", "sdmat"), work = el("div", "sdwork");

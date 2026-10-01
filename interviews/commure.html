@@ -183,6 +183,16 @@ details.pq > .pq-cols { margin: 0 0 var(--s5); }
 .pq-cols .cv-col { overflow: visible; }
 .pq-cols .cv-say { margin-top: 0; }
 .pq-cols.one { grid-template-columns: minmax(0, 1fr); max-width: var(--measure); }
+details.pq { scroll-margin-top: calc(var(--top) + var(--s2)); }
+.bank-sec { background: color-mix(in srgb, var(--sec) 5%, var(--surface)); border: 1px solid color-mix(in srgb, var(--sec) 30%, var(--rule)); border-top: 3px solid var(--sec); border-radius: var(--radius-lg);
+  padding: var(--s4) var(--s5) var(--s2); margin: var(--s5) 0; }
+.bank-sec > h2 { display: flex; align-items: center; gap: var(--s2) var(--s3); flex-wrap: wrap; margin-top: 0; }
+.bank-sec > h2::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--sec); flex: none; }
+.bank-sec .bank-n { font-size: var(--fs-sm); font-weight: var(--w-regular); color: var(--muted); }
+.bank-sec > .hsub { margin-bottom: var(--s2); }
+.bank-sec details.pq:last-of-type { border-bottom: 0; }
+.bank-sec details.pq[open] > summary { box-shadow: inset 3px 0 0 var(--sec); padding-left: var(--s3); }
+.bank-sec details.pq > summary:hover .qt { color: var(--sec); }
 .pq-tests { font-size: var(--fs-sm); color: var(--soft); margin: 0 0 var(--s2); }
 .pq-tests b { color: var(--ink); font-weight: var(--w-strong); }
 details.pq.rev > summary .qt::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-right: var(--s2); vertical-align: middle; }
@@ -635,12 +645,29 @@ details.item > .sbody { padding-left: 0; }
     if (left.querySelector(".cv-code")) { c.classList.add("has-code"); }
     return c;
   }
+  /* After a question opens (and the one above closes), scroll to it so the reader keeps their place. */
+  function glideTo(node) {
+    var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    requestAnimationFrame(function () { node.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" }); });
+  }
+  /* Each Prep section is a card in its own colour, from the six category tokens. */
+  function card(sec, i, n) {
+    sec.classList.add("bank-sec");
+    sec.style.setProperty("--sec", "var(--cat-" + (i % 6 + 1) + ")");
+    var h = sec.querySelector("h2");
+    if (h && n) { h.appendChild(el("span", "bank-n", n + (n === 1 ? " question" : " questions"))); }
+    return sec;
+  }
   function prepItem(x) {
     var d = el("details", "item pq" + (isRevised(x.id) ? " rev" : "")); d.id = x.id;
     d.setAttribute("name", "prep");   /* native: opening one closes the others */
     d.appendChild(el("summary", "", '<span class="qt">' + inl(x.q) + "</span>" + (x.tests || x.meta ? '<span class="qm">' + inl(x.meta || x.tests) + "</span>" : "")));
     var drawn = false;
-    d.addEventListener("toggle", function () { if (d.open && !drawn) { drawn = true; d.appendChild(prepBody(x)); } });
+    d.addEventListener("toggle", function () {
+      if (!d.open) { return; }
+      if (!drawn) { drawn = true; d.appendChild(prepBody(x)); }
+      glideTo(d);
+    });
     return d;
   }
   function tabPrep(host) {
@@ -651,7 +678,7 @@ details.item > .sbody { padding-left: 0; }
     s.appendChild(f);
     var all = [];
     banks.forEach(function (b) {
-      var sec = heading(host, b.id, b.blurb ? b.blurb.replace(/<[^>]+>/g, "") : "", b.title);
+      var sec = card(heading(host, b.id, b.blurb ? b.blurb.replace(/<[^>]+>/g, "") : "", b.title), banks.indexOf(b), b.items.length);
       b.items.forEach(function (x) {
         var d = prepItem(x);
         all.push({ d: d, sec: sec, text: (x.q + " " + (x.a || []).join(" ") + " " + (x.notes || []).join(" ") + " " + (x.probes || []).join(" ") + " " +
@@ -665,10 +692,10 @@ details.item > .sbody { padding-left: 0; }
       all.forEach(function (r) { var hit = !v || r.text.indexOf(v) >= 0; r.d.hidden = !hit; if (hit) { shown[r.sec.id] = true; } });
       all.forEach(function (r) { r.sec.hidden = !shown[r.sec.id]; });
     });
-    if (LOOP.drills.length) { drills(heading(host, "practise", LOOP.drills.length + " timed questions, out loud", "Practise aloud")); }
+    if (LOOP.drills.length) { drills(card(heading(host, "practise", LOOP.drills.length + " timed questions, out loud", "Practise aloud"), banks.length, 0)); }
     var three = LOOP.ask3 || [];
     if (three.length || LOOP.ask.length) {
-      var a3 = heading(host, "ask", "", "Questions to ask");
+      var a3 = card(heading(host, "ask", "", "Questions to ask"), banks.length + 1, 0);
       three.forEach(function (k) {
         var sec = el("div", "c3"); sec.id = "ask-" + k.id;
         sec.appendChild(el("h3", "c3-t", esc(k.title) + '<span class="c3-w">' + inl(k.when) + "</span>"));
@@ -692,7 +719,7 @@ details.item > .sbody { padding-left: 0; }
      A record, not a mock: the questions as they came, what you said, what to keep for next time. */
   function tabRounds(host) {
     LOOP.rounds.forEach(function (rd, ri) {
-      var s = heading(host, "round-" + (ri + 1), rd.when, rd.title);
+      var s = card(heading(host, "round-" + (ri + 1), rd.when, rd.title), ri, rd.asked.length);
       var dl = el("dl", "facts wide");
       [["Who", rd.who], ["Format", rd.format], ["Outcome", rd.outcome]].forEach(function (k) {
         if (k[1]) { dl.appendChild(el("dt", "", k[0])); dl.appendChild(el("dd", "", inl(k[1]))); }
@@ -712,6 +739,8 @@ details.item > .sbody { padding-left: 0; }
         var d = el("details", "item pq"); d.id = "r" + (ri + 1) + "-" + (i + 1);
         d.appendChild(el("summary", "", '<span class="qt">' + (i + 1) + ". " + inl(x.q) + "</span>" + (x.short ? '<span class="qm">' + inl(x.short) + "</span>" : "")));
         d.appendChild(body);
+        d.setAttribute("name", "round-" + ri);
+        d.addEventListener("toggle", function () { if (d.open) { glideTo(d); } });
         s.appendChild(d);
       });
     });

@@ -834,3 +834,11 @@ and the sources list are gone from the page. A new Rounds tab records what a rou
 round 1 with Neesha Malik (six questions, what he said, what to keep for the team rounds). Coframe
 and Commure carry their company and posting; the other loops have happened and keep the new layout
 without them. No charter deviation.
+
+**2026-10-01 — Opening a step or question keeps your place; Prep sections are coloured cards.**
+Opening a row closed the one above it, and the page jumped, so Pranav lost his place mid-read.
+Now the tracker's session table and every loop page glide to whatever was just opened, its title
+just under the header (instant when reduced motion is asked for). On the loop pages, each Prep
+section (intro and story, each bank, logistics, practising aloud, questions to ask) and each round
+is a card in its own track colour, with a count, so the sections no longer run into one another.
+No charter deviation.
