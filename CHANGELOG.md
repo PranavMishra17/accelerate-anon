@@ -773,3 +773,10 @@ dictate with Win+H), saved as you go into the tracker's own `answers`, so the lo
 tracker show the same text and Written work lists it. "What you would say" is an inverse sheet on
 both the tracker and the loop pages, its points numbered with the lead phrase in bold. No charter
 deviation.
+
+**2026-10-01 — Baseline's know-now topics glow; week 1 links to them.**
+41 of Baseline's 266 topics, picked from Pranav's resume and current work (agents and evals,
+voice agents, Postgres-backed backends) and the interviews it leads to, glow in their field's ink
+in every outline, contents list, search result and map (`baseline/core.js`). Week 1's twelve
+reading links were all checked and load; eight of its steps now also link to the Baseline topic
+that explains the same idea in a minute (`data/reading.js`). No charter deviation.

@@ -176,6 +176,13 @@ figure.map .n.on rect { fill: var(--mark); stroke: var(--field); stroke-width: 2
 .pager a.next { text-align: right; }
 .pager .pos { font-family: var(--mono); font-size: var(--fs-xs); color: var(--ink-3); padding-bottom: 2px; }
 
+/* know now: a soft glow in the field's ink, wherever the topic is listed */
+.outline a.core, .results a.core, .corekey .core { color: var(--ink-1); font-weight: 600; text-shadow: 0 0 12px color-mix(in srgb, var(--field) 95%, transparent), 0 0 4px color-mix(in srgb, var(--field) 60%, transparent); }
+.contents a.core b, .page h1.core { text-shadow: 0 0 12px color-mix(in srgb, var(--field) 65%, transparent); }
+.contents a.core { border-top-color: color-mix(in srgb, var(--field) 55%, var(--line)); }
+figure.map .n.core rect { stroke: var(--field); stroke-width: 1.5; filter: drop-shadow(0 0 5px color-mix(in srgb, var(--field) 75%, transparent)); }
+.corekey { margin: var(--s2) 0 0; font-family: var(--mono); font-size: var(--fs-xs); color: var(--ink-3); }
+
 @media (max-width: 900px) {
   .atlas { grid-template-columns: 1fr; }
   .contents-btn { display: inline-block; }

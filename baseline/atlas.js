@@ -45,6 +45,8 @@
   /* The walk through a field: its About, then every topic in order. */
   function walk(f) { return [null].concat(topicsOf(f)); }
   function href(f, t) { return "#/" + f.id + (t ? "/" + t.id : ""); }
+  /* Know now (baseline/core.js): these topics glow wherever they are listed. */
+  function core(f, t) { var c = (B.core || {})[f.id]; return !!(c && t && c.indexOf(t.id) >= 0); }
 
   var cur = { f: null, t: null };
 
@@ -71,12 +73,13 @@
     var about = el("a", "about" + (cur.t ? "" : " here"), f.id === "overview" ? "How the fields fit" : "About this field");
     about.href = href(f);
     box.appendChild(about);
+    if ((B.core || {})[f.id]) { box.appendChild(el("p", "corekey", '<span class="core">Glowing</span> topics: know these now.')); }
     (f.clusters || []).forEach(function (c) {
       box.appendChild(el("h4", "", md(c.name)));
       c.topics.forEach(function (t) {
-        var a = el("a", t === cur.t ? "here" : "", md(t.name));
+        var a = el("a", (t === cur.t ? "here" : "") + (core(f, t) ? " core" : ""), md(t.name));
         a.href = href(f, t);
-        a.title = t.line || "";
+        a.title = (core(f, t) ? "Know now. " : "") + (t.line || "");
         box.appendChild(a);
       });
     });
@@ -106,7 +109,7 @@
     hits.sort(function (a, b) { return a.s - b.s; });
     res.innerHTML = hits.length ? "" : "<p>Nothing by that name yet.</p>";
     hits.slice(0, 40).forEach(function (h) {
-      var a = el("a", "", md(h.t.name) + "<span>" + esc(h.f.name) + "</span>");
+      var a = el("a", core(h.f, h.t) ? "core" : "", md(h.t.name) + "<span>" + esc(h.f.name) + "</span>");
       a.href = href(h.f, h.t);
       res.appendChild(a);
     });
@@ -141,7 +144,8 @@
     });
     d.nodes.forEach(function (n) {
       var p = pos[n.id], go = ids[n.id] ? f.id + "/" + n.id : (B.byId[n.id] && n.id !== f.id ? n.id : null);
-      s += '<g class="n' + (go ? " t" : "") + '"' + (go ? ' data-t="' + go + '" tabindex="0" role="link"' : "") + ">";
+      var glow = ids[n.id] && ((B.core || {})[f.id] || []).indexOf(n.id) >= 0;
+      s += '<g class="n' + (go ? " t" : "") + (glow ? " core" : "") + '"' + (go ? ' data-t="' + go + '" tabindex="0" role="link"' : "") + ">";
       s += '<rect x="' + p.x + '" y="' + p.y + '" width="' + BW + '" height="' + BH + '" rx="4"/>';
       s += '<text x="' + (p.x + BW / 2) + '" y="' + (p.y + (n.sub ? BH / 2 - 4 : BH / 2 + 5)) + '" text-anchor="middle">' + esc(n.label) + "</text>";
       if (n.sub) { s += '<text class="s" x="' + (p.x + BW / 2) + '" y="' + (p.y + BH / 2 + 13) + '" text-anchor="middle">' + esc(n.sub) + "</text>"; }
@@ -198,7 +202,7 @@
         col.appendChild(el("h3", "", md(c.name)));
         if (c.line) { col.appendChild(el("p", "cline", md(c.line))); }
         c.topics.forEach(function (t) {
-          var a = el("a", "", "<b>" + md(t.name) + "</b><span>" + md(t.line || "") + "</span>");
+          var a = el("a", core(f, t) ? "core" : "", "<b>" + md(t.name) + "</b><span>" + md(t.line || "") + "</span>");
           a.href = href(f, t);
           col.appendChild(a);
         });
@@ -258,7 +262,7 @@
   function drawTopic(v, f, t) {
     var c = clusterOf(f, t);
     v.appendChild(el("p", "crumb", '<a href="' + href(f) + '">' + esc(f.name) + "</a>" + (c ? " &rsaquo; " + md(c.name) : "")));
-    v.appendChild(el("h1", "", md(t.name)));
+    v.appendChild(el("h1", core(f, t) ? "core" : "", md(t.name)));
     if (t.line) { v.appendChild(el("p", "lede", md(t.line))); }
     var what = el("div", "prose");
     (t.body || []).forEach(function (p) { what.appendChild(el("p", "", md(p))); });
