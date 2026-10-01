@@ -56,13 +56,23 @@ BASELINE.fields.forEach(F => {
     const tid = id + "/" + t.id;
     if (!/^[a-z0-9-]+$/.test(t.id || "")) { bad(tid, "topic id must be kebab-case"); }
     if (seen[t.id]) { bad(tid, "duplicate topic id"); } seen[t.id] = true;
-    text(tid, "name", t.name); text(tid, "line", t.line); text(tid, "where", t.where); text(tid, "nuance", t.nuance);
-    if ((t.line || "").split(/\s+/).length > 16) { bad(tid, "line over 16 words"); }
+    const wc = s => String(s || "").split(/\s+/).filter(Boolean).length;
+    text(tid, "name", t.name); text(tid, "line", t.line); text(tid, "example", t.example); text(tid, "nuance", t.nuance);
+    if (t.where) { bad(tid, "where is replaced by uses"); }
+    if (wc(t.line) > 16) { bad(tid, "line over 16 words"); }
     const body = (t.body || []);
-    if (body.length < 1 || body.length > 3) { bad(tid, "body wants 1 to 3 paragraphs"); }
+    if (body.length < 1 || body.length > 2) { bad(tid, "body wants 1 or 2 paragraphs"); }
     body.forEach((p, i) => text(tid, "body " + i, p));
-    const words = body.join(" ").split(/\s+/).length;
-    if (words < 50 || words > 220) { bad(tid, "body is " + words + " words (want 50 to 220)"); }
+    if (wc(body.join(" ")) < 40 || wc(body.join(" ")) > 150) { bad(tid, "body is " + wc(body.join(" ")) + " words (want 40 to 150)"); }
+    const uses = t.uses || [];
+    if (uses.length < 2 || uses.length > 4) { bad(tid, uses.length + " uses (want 2 to 4)"); }
+    uses.forEach((u, i) => {
+      text(tid, "use " + i, u);
+      if (!/^\*\*[^*]+\*\*: /.test(u || "")) { bad(tid, "use " + i + " must start **Name**: "); }
+      if (wc(u) > 35) { bad(tid, "use " + i + " is " + wc(u) + " words (at most 35)"); }
+    });
+    if (wc(t.example) < 20 || wc(t.example) > 90) { bad(tid, "example is " + wc(t.example) + " words (want 20 to 90)"); }
+    if (wc(t.nuance) > 60) { bad(tid, "nuance is " + wc(t.nuance) + " words (at most 60)"); }
     readList(tid, "topic", t.read);
     see(tid, "see", t.see);
   });

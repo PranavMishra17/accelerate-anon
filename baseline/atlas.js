@@ -1,12 +1,14 @@
 /* Baseline, the field atlas. Each field is one data file in baseline/fields/ that calls
-   BASELINE.field({...}); this file draws the index, the map and the topics from them.
+   BASELINE.field({...}); this file draws it in two panes: the field's outline on the left,
+   one thing at a time on the right (the field's About, or one topic).
 
-   A field:  { id, name, layer, ink, inkDark, lede, overview: [para], diagram, start: [read],
-               clusters: [{ name, line, topics: [topic] }], see: [{ label, href }] }
-   A topic:  { id, name, line, body: [para], where, nuance, read: [{ label, url, m }], see: [{ label, href }] }
-   A read:   { label, url, m } where m is minutes for the part worth reading.
+   A field:  { id, name, short, layer, ink, inkDark, lede, overview: [para], diagram, start: [read],
+               sections: [{ title, body: [para], read }], clusters: [{ name, line, topics }], see }
+   A topic:  { id, name, line, body: [para], uses: [string], example, nuance,
+               read: [{ label, url, m }], see: [{ label, href }], tags }
    diagram:  { nodes: [{ id, label, sub, col, row }], edges: [[from, to, label]], cap }
-             A node whose id is a topic id opens that topic. Routes: #/<field>, #/<field>/<topic>. */
+             A node named after a topic opens it; one named after a field opens that field.
+   Routes:   #/<field> (its About), #/<field>/<topic>. Arrow keys walk the field. */
 (function () {
   "use strict";
   var B = window.BASELINE;
@@ -38,48 +40,62 @@
     return t ? t === "dark" : window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
   }
   function ink(f) { return dark() ? (f.inkDark || f.ink) : f.ink; }
-  function topicsOf(f) { var t = []; (f.clusters || []).forEach(function (c) { t = t.concat(c.topics); }); return t; }
+  function topicsOf(f) { var t = []; (f.clusters || []).forEach(function (c) { c.topics.forEach(function (x) { t.push(x); }); }); return t; }
+  function clusterOf(f, t) { return (f.clusters || []).filter(function (c) { return c.topics.indexOf(t) >= 0; })[0]; }
+  /* The walk through a field: its About, then every topic in order. */
+  function walk(f) { return [null].concat(topicsOf(f)); }
+  function href(f, t) { return "#/" + f.id + (t ? "/" + t.id : ""); }
 
-  /* ------------------------------------------------------------------ index */
-  function drawIndex(cur) {
-    var ix = $(".index"), strip = $(".strip");
-    var list = el("div", "fields");
+  var cur = { f: null, t: null };
+
+  /* ------------------------------------------------------------ the rail */
+  function drawPicker() {
+    var sel = $(".pick select");
+    sel.innerHTML = "";
     LAYERS.forEach(function (L) {
       var fs = fields.filter(function (f) { return f.layer === L; });
       if (!fs.length) { return; }
-      if (L !== "Start") { list.appendChild(el("h4", "", L)); }
+      var g = document.createElement("optgroup");
+      g.label = L === "Start" ? "Baseline" : L;
       fs.forEach(function (f) {
-        var a = el("a", f.id === cur ? "here" : "", '<i style="--dot:' + ink(f) + '"></i>' + esc(f.name) +
-          (f.id === "overview" ? "" : "<small>" + topicsOf(f).length + "</small>"));
-        a.href = "#/" + f.id;
-        list.appendChild(a);
+        var o = document.createElement("option");
+        o.value = f.id; o.textContent = f.name;
+        g.appendChild(o);
+      });
+      sel.appendChild(g);
+    });
+  }
+  function drawOutline() {
+    var f = cur.f, box = $(".outline");
+    box.innerHTML = "";
+    var about = el("a", "about" + (cur.t ? "" : " here"), f.id === "overview" ? "How the fields fit" : "About this field");
+    about.href = href(f);
+    box.appendChild(about);
+    (f.clusters || []).forEach(function (c) {
+      box.appendChild(el("h4", "", md(c.name)));
+      c.topics.forEach(function (t) {
+        var a = el("a", t === cur.t ? "here" : "", md(t.name));
+        a.href = href(f, t);
+        a.title = t.line || "";
+        box.appendChild(a);
       });
     });
-    var keep = ix.querySelector("input");
-    ix.innerHTML = "";
-    ix.appendChild(keep || searchBox());
-    var res = el("div", "results");
-    res.hidden = true;
-    ix.appendChild(res);
-    ix.appendChild(list);
-    strip.innerHTML = "";
-    fields.forEach(function (f) {
-      var a = el("a", f.id === cur ? "here" : "", '<i style="--dot:' + ink(f) + '"></i>' + esc(f.short || f.name));
-      a.href = "#/" + f.id;
-      strip.appendChild(a);
-      if (f.id === cur) { setTimeout(function () { a.scrollIntoView({ inline: "center", block: "nearest" }); }, 0); }
-    });
-  }
-  function searchBox() {
-    var i = el("input");
-    i.type = "search"; i.placeholder = "Find a topic  /"; i.setAttribute("aria-label", "Find a topic");
-    i.addEventListener("input", function () { search(i.value); });
-    return i;
+    if (f.id === "overview") {
+      box.appendChild(el("h4", "", "The fields"));
+      fields.forEach(function (g) {
+        if (g.id === "overview") { return; }
+        var a = el("a", "", '<i style="--dot:' + ink(g) + '"></i>' + esc(g.name));
+        a.href = href(g);
+        box.appendChild(a);
+      });
+    }
+    var here = box.querySelector(".here");
+    if (here) { here.scrollIntoView({ block: "nearest" }); }
   }
   function search(q) {
-    var res = $(".results"), list = $(".fields");
+    var res = $(".results"), out = $(".outline");
     q = q.trim().toLowerCase();
-    if (!q) { res.hidden = true; list.hidden = false; return; }
+    if (!q) { res.hidden = true; out.hidden = false; return; }
     var hits = [];
     fields.forEach(function (f) {
       topicsOf(f).forEach(function (t) {
@@ -89,22 +105,18 @@
     });
     hits.sort(function (a, b) { return a.s - b.s; });
     res.innerHTML = hits.length ? "" : "<p>Nothing by that name yet.</p>";
-    hits.slice(0, 30).forEach(function (h) {
-      var a = el("a", "", esc(h.t.name) + "<span>" + esc(h.f.name) + "</span>");
-      a.href = "#/" + h.f.id + "/" + h.t.id;
+    hits.slice(0, 40).forEach(function (h) {
+      var a = el("a", "", md(h.t.name) + "<span>" + esc(h.f.name) + "</span>");
+      a.href = href(h.f, h.t);
       res.appendChild(a);
     });
-    res.hidden = false; list.hidden = true;
+    res.hidden = false; out.hidden = true;
   }
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "/" && !/input|textarea/i.test(document.activeElement.tagName)) {
-      var i = $(".index input"); if (i && i.offsetParent) { e.preventDefault(); i.focus(); }
-    }
-  });
 
-  /* ---------------------------------------------------------------- the map */
-  var BW = 168, BH = 48, XG = 52, YG = 26;
-  function drawMap(f) {
+  /* ------------------------------------------------------------- the map */
+  var FULL = { bw: 168, bh: 48, xg: 52, yg: 26 }, COMPACT = { bw: 138, bh: 44, xg: 30, yg: 16, compact: true };
+  function drawMap(f, size) {
+    var z = size || FULL, BW = z.bw, BH = z.bh, XG = z.xg, YG = z.yg;
     var d = f.diagram;
     if (!d || !d.nodes || !d.nodes.length) { return null; }
     var ids = {};
@@ -131,23 +143,20 @@
       var p = pos[n.id], go = ids[n.id] ? f.id + "/" + n.id : (B.byId[n.id] && n.id !== f.id ? n.id : null);
       s += '<g class="n' + (go ? " t" : "") + '"' + (go ? ' data-t="' + go + '" tabindex="0" role="link"' : "") + ">";
       s += '<rect x="' + p.x + '" y="' + p.y + '" width="' + BW + '" height="' + BH + '" rx="4"/>';
-      s += '<text x="' + (p.x + BW / 2) + '" y="' + (p.y + (n.sub ? 20 : 29)) + '" text-anchor="middle">' + esc(n.label) + "</text>";
-      if (n.sub) { s += '<text class="s" x="' + (p.x + BW / 2) + '" y="' + (p.y + 37) + '" text-anchor="middle">' + esc(n.sub) + "</text>"; }
+      s += '<text x="' + (p.x + BW / 2) + '" y="' + (p.y + (n.sub ? BH / 2 - 4 : BH / 2 + 5)) + '" text-anchor="middle">' + esc(n.label) + "</text>";
+      if (n.sub) { s += '<text class="s" x="' + (p.x + BW / 2) + '" y="' + (p.y + BH / 2 + 13) + '" text-anchor="middle">' + esc(n.sub) + "</text>"; }
       s += "</g>";
     });
     s += "</svg>";
-    var fig = el("figure", "map", s);
+    var fig = el("figure", "map" + (z.compact ? " compact" : ""), s);
     if (d.cap) { fig.appendChild(el("figcaption", "", md(d.cap))); }
-    fig.addEventListener("click", function (e) {
-      var g = e.target.closest("[data-t]"); if (g) { location.hash = "#/" + g.getAttribute("data-t"); }
-    });
-    fig.addEventListener("keydown", function (e) {
-      var g = e.target.closest("[data-t]"); if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); location.hash = "#/" + g.getAttribute("data-t"); }
-    });
+    function open(e) { var g = e.target.closest("[data-t]"); if (g) { location.hash = "#/" + g.getAttribute("data-t"); } }
+    fig.addEventListener("click", open);
+    fig.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(e); } });
     return fig;
   }
 
-  /* ------------------------------------------------------------- the leaf */
+  /* ----------------------------------------------------------- the reader */
   function reads(list) {
     var ul = el("ul", "reads");
     (list || []).forEach(function (r) {
@@ -159,79 +168,173 @@
     if (!list || !list.length) { return null; }
     return el("p", "seealso", "On this site: " + list.map(function (s) { return '<a href="' + esc(s.href) + '">' + esc(s.label) + "</a>"; }).join(" · "));
   }
-  function topic(f, t) {
-    var d = el("details", "topic");
-    d.id = "t-" + t.id;
-    d.appendChild(el("summary", "", "<b>" + md(t.name) + "</b><span>" + md(t.line || "") + "</span>"));
-    var body = el("div", "body prose");
-    (t.body || []).forEach(function (p) { body.appendChild(el("p", "", md(p))); });
-    if (t.where) { body.appendChild(el("p", "lead", "<b>Where you meet it.</b> " + md(t.where))); }
-    if (t.nuance) { body.appendChild(el("p", "lead", "<b>The nuance.</b> " + md(t.nuance))); }
-    if (t.read && t.read.length) { body.appendChild(reads(t.read)); }
-    var sa = seeAlso(t.see); if (sa) { body.appendChild(sa); }
-    d.appendChild(body);
-    d.addEventListener("toggle", function () {
-      if (d.open && location.hash !== "#/" + f.id + "/" + t.id) { history.replaceState(null, "", "#/" + f.id + "/" + t.id); }
-    });
-    return d;
-  }
-  function drawField(f, tid) {
-    var leaf = $(".leaf");
-    leaf.innerHTML = "";
-    document.documentElement.style.setProperty("--field", ink(f));
-    document.title = f.name + " · Baseline";
-    leaf.appendChild(el("h1", "", esc(f.name)));
-    if (f.lede) { leaf.appendChild(el("p", "lede", md(f.lede))); }
-    (f.overview || []).forEach(function (p) { leaf.appendChild(el("p", "", md(p))); });
-    var map = drawMap(f); if (map) { leaf.appendChild(map); }
+  function block(title, node) { var s = el("section", "part"); s.appendChild(el("h3", "", title)); s.appendChild(node); return s; }
+
+  function drawAbout(v, f) {
+    v.appendChild(el("h1", "", esc(f.name)));
+    if (f.lede) { v.appendChild(el("p", "lede", md(f.lede))); }
+    (f.overview || []).forEach(function (p) { v.appendChild(el("p", "", md(p))); });
+    if (f.id === "overview") { v.appendChild(fieldBrowser(f)); }
+    else { var map = drawMap(f); if (map) { v.appendChild(map); } }
     if (f.start && f.start.length) {
-      leaf.appendChild(el("h2", "", "Start here"));
+      v.appendChild(el("h2", "", "Start here"));
       var ul = el("ul", "start");
       f.start.forEach(function (r) {
         ul.appendChild(el("li", "", '<a href="' + esc(r.url) + '" target="_blank" rel="noopener">' + md(r.label) + "</a>" +
           (r.m ? "<em>" + r.m + " min</em>" : "") + (r.why ? "<span>" + md(r.why) + "</span>" : "")));
       });
-      leaf.appendChild(ul);
+      v.appendChild(ul);
     }
     (f.sections || []).forEach(function (sec) {
-      leaf.appendChild(el("h2", "", md(sec.title)));
-      (sec.body || []).forEach(function (p) { leaf.appendChild(el("p", "", md(p))); });
-      if (sec.read) { leaf.appendChild(reads(sec.read)); }
+      v.appendChild(el("h2", "", md(sec.title)));
+      (sec.body || []).forEach(function (p) { v.appendChild(el("p", "", md(p))); });
+      if (sec.read) { v.appendChild(reads(sec.read)); }
     });
     if (f.clusters && f.clusters.length) {
-      var tools = el("div", "tools", "<button type=\"button\" data-a=\"open\">Open all</button><button type=\"button\" data-a=\"shut\">Close all</button>");
-      tools.addEventListener("click", function (e) {
-        var a = e.target.getAttribute("data-a"); if (!a) { return; }
-        leaf.querySelectorAll("details.topic").forEach(function (d) { d.open = a === "open"; });
+      v.appendChild(el("h2", "", "In this field"));
+      var grid = el("div", "contents");
+      f.clusters.forEach(function (c) {
+        var col = el("div", "");
+        col.appendChild(el("h3", "", md(c.name)));
+        if (c.line) { col.appendChild(el("p", "cline", md(c.line))); }
+        c.topics.forEach(function (t) {
+          var a = el("a", "", "<b>" + md(t.name) + "</b><span>" + md(t.line || "") + "</span>");
+          a.href = href(f, t);
+          col.appendChild(a);
+        });
+        grid.appendChild(col);
       });
-      f.clusters.forEach(function (c, ci) {
-        var sec = el("section", "cluster");
-        sec.appendChild(el("h2", "", md(c.name) + "<small>" + c.topics.length + "</small>"));
-        if (c.line) { sec.appendChild(el("p", "cline", md(c.line))); }
-        if (ci === 0) { sec.appendChild(tools); }
-        c.topics.forEach(function (t) { sec.appendChild(topic(f, t)); });
-        leaf.appendChild(sec);
-      });
+      v.appendChild(grid);
     }
-    var sa = seeAlso(f.see); if (sa) { leaf.appendChild(sa); }
-    leaf.appendChild(el("p", "foot", "Baseline is a map, not a course: what each part of a field is, where it shows up, and what to read when you want depth. Every outside link was opened and checked when it was added."));
-    if (tid) {
-      var d = document.getElementById("t-" + tid);
-      if (d) {
-        d.open = true; d.classList.add("flash");
-        setTimeout(function () { d.scrollIntoView({ block: "start" }); }, 0);
-        setTimeout(function () { d.classList.remove("flash"); }, 1400);
-      }
-    } else { window.scrollTo(0, 0); }
+    var sa = seeAlso(f.see); if (sa) { v.appendChild(sa); }
+  }
+  /* The overview's map, with a preview beside it: hover a field to see its own map, click to
+     keep it there. The preview's box is a fixed size, so nothing on the page moves. */
+  function fieldBrowser(f) {
+    var wrap = el("div", "browse");
+    var fig = drawMap(f, COMPACT);
+    fig.style.width = fig.querySelector("svg").getAttribute("width") + "px";   /* the caption wraps to the map, never widens it */
+    var pane = el("aside", "preview");
+    pane.setAttribute("aria-live", "polite");
+    var pinned = null;
+    function show(id) {
+      var g = B.byId[id];
+      if (!g || g === f) { return; }
+      pane.innerHTML = "";
+      pane.style.setProperty("--pv", ink(g));
+      var head = el("div", "pv-head");
+      head.appendChild(el("h3", "", esc(g.name)));
+      var open = el("a", "pv-open", "Open the field &rarr;");
+      open.href = href(g);
+      head.appendChild(open);
+      pane.appendChild(head);
+      if (g.lede) { pane.appendChild(el("p", "pv-lede", md(g.lede))); }
+      var m = drawMap(g);
+      if (m) { var cap = m.querySelector("figcaption"); if (cap) { cap.remove(); } pane.appendChild(m); }
+      fig.querySelectorAll(".n").forEach(function (n) { n.classList.toggle("on", n.getAttribute("data-t") === id); });
+    }
+    fig.querySelectorAll(".n.t").forEach(function (n) {
+      var id = n.getAttribute("data-t");
+      n.addEventListener("mouseenter", function () { show(id); });
+      n.addEventListener("focus", function () { show(id); });
+    });
+    fig.addEventListener("mouseleave", function () { if (pinned) { show(pinned); } });
+    /* a click keeps the preview instead of leaving the overview */
+    fig.addEventListener("click", function (e) {
+      var g = e.target.closest("[data-t]");
+      if (g) { e.stopImmediatePropagation(); pinned = g.getAttribute("data-t"); show(pinned); }
+    }, true);
+    fig.addEventListener("keydown", function (e) {
+      var g = e.target.closest("[data-t]");
+      if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); e.stopImmediatePropagation(); pinned = g.getAttribute("data-t"); show(pinned); }
+    }, true);
+    wrap.appendChild(fig);
+    wrap.appendChild(pane);
+    pinned = "systems";
+    show(pinned);
+    return wrap;
+  }
+
+  function drawTopic(v, f, t) {
+    var c = clusterOf(f, t);
+    v.appendChild(el("p", "crumb", '<a href="' + href(f) + '">' + esc(f.name) + "</a>" + (c ? " &rsaquo; " + md(c.name) : "")));
+    v.appendChild(el("h1", "", md(t.name)));
+    if (t.line) { v.appendChild(el("p", "lede", md(t.line))); }
+    var what = el("div", "prose");
+    (t.body || []).forEach(function (p) { what.appendChild(el("p", "", md(p))); });
+    v.appendChild(what);
+    if (t.uses && t.uses.length) {
+      var ul = el("ul", "uses");
+      t.uses.forEach(function (u) { ul.appendChild(el("li", "", md(u))); });
+      v.appendChild(block("Where it is used", ul));
+    } else if (t.where) {
+      v.appendChild(block("Where it is used", el("p", "", md(t.where))));
+    }
+    if (t.example) { v.appendChild(block("An example", el("p", "example", md(t.example)))); }
+    if (t.nuance) { v.appendChild(block("The catch", el("p", "", md(t.nuance)))); }
+    if (t.read && t.read.length) { v.appendChild(block("Read more", reads(t.read))); }
+    var sa = seeAlso(t.see); if (sa) { v.appendChild(sa); }
+  }
+  function drawPager(v) {
+    var w = walk(cur.f), i = w.indexOf(cur.t), prev = w[i - 1], next = w[i + 1];
+    var nav = el("nav", "pager");
+    function link(t, dir) {
+      if (t === undefined) { return el("span", ""); }
+      var a = el("a", dir, "<small>" + (dir === "prev" ? "Previous" : "Next") + "</small>" + (t ? md(t.name) : "About this field"));
+      a.href = href(cur.f, t);
+      return a;
+    }
+    nav.appendChild(link(prev, "prev"));
+    nav.appendChild(el("span", "pos", (i === 0 ? "About" : i + " of " + (w.length - 1))));
+    nav.appendChild(link(next, "next"));
+    v.appendChild(nav);
+  }
+  function drawReader() {
+    var v = $(".reader");
+    v.innerHTML = "";
+    var page = el("article", "page" + (cur.t || cur.f.id !== "overview" ? "" : " wide"));
+    if (cur.t) { drawTopic(page, cur.f, cur.t); } else { drawAbout(page, cur.f); }
+    v.appendChild(page);
+    if (cur.f.clusters && cur.f.clusters.length) { drawPager(v); }
+    v.scrollTop = 0;
+    window.scrollTo(0, 0);
   }
 
   function route() {
     var h = location.hash.replace(/^#\/?/, "").split("/");
-    var f = B.byId[h[0]] || fields[0];
-    drawIndex(f.id);
-    drawField(f, h[1] || null);
-    var i = $(".index input"); if (i && i.value) { i.value = ""; search(""); }
+    var f = B.byId[h[0]] || fields[0], t = null;
+    if (h[1]) { t = topicsOf(f).filter(function (x) { return x.id === h[1]; })[0] || null; }
+    cur.f = f; cur.t = t;
+    document.documentElement.style.setProperty("--field", ink(f));
+    document.title = (t ? t.name.replace(/[*`]/g, "") + " · " : "") + f.name + " · Baseline";
+    $(".pick select").value = f.id;
+    var i = $(".find"); if (i.value) { i.value = ""; search(""); }
+    drawOutline();
+    drawReader();
+    document.body.classList.remove("rail-open");
   }
-  window.addEventListener("hashchange", route);
-  route();
+
+  /* --------------------------------------------------------------- wiring */
+  function init() {
+    var rail = $(".rail");
+    rail.innerHTML = '<div class="pick"><select aria-label="Field"></select></div>' +
+      '<input class="find" type="search" placeholder="Find a topic  /" aria-label="Find a topic">' +
+      '<div class="results" hidden></div><nav class="outline" aria-label="This field"></nav>';
+    drawPicker();
+    $(".pick select").addEventListener("change", function (e) { location.hash = "#/" + e.target.value; });
+    $(".find").addEventListener("input", function (e) { search(e.target.value); });
+    $(".contents-btn").addEventListener("click", function () { document.body.classList.toggle("rail-open"); });
+    document.addEventListener("keydown", function (e) {
+      if (/input|textarea|select/i.test(document.activeElement.tagName) || e.metaKey || e.ctrlKey || e.altKey) { return; }
+      if (e.key === "/") { e.preventDefault(); document.body.classList.add("rail-open"); $(".find").focus(); return; }
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        var w = walk(cur.f), i = w.indexOf(cur.t), n = w[i + (e.key === "ArrowRight" ? 1 : -1)];
+        if (n !== undefined && cur.f.clusters && cur.f.clusters.length) { e.preventDefault(); location.hash = href(cur.f, n); }
+      }
+      if (e.key === "Escape") { document.body.classList.remove("rail-open"); }
+    });
+    window.addEventListener("hashchange", route);
+    route();
+  }
+  init();
 }());

@@ -45,20 +45,30 @@ BASELINE.field({
         { id: "rendering-pipeline", name: "The rendering pipeline",
           line: "Vertices in, pixels out: the fixed sequence of stages every rasterised frame goes through.",
           body: [
-            "The application hands the GPU **vertices** (positions plus attributes such as normals and texture coordinates) grouped into triangles. A **vertex shader** moves each one into clip space. Fixed hardware then clips triangles to the view, divides by depth for perspective, and maps them to the screen. The **rasteriser** finds which pixels each triangle covers, using edge functions, and interpolates the vertex attributes across it with barycentric weights.",
-            "Each covered pixel sample becomes a **fragment**, which a fragment shader colours. A **depth test** against the z-buffer discards fragments behind what is already drawn, and **blending** combines transparent ones. The result lands in a frame buffer that is shown on screen. Mobile GPUs (Apple, Arm Mali, Qualcomm Adreno) do the same work in screen tiles held on chip to save memory bandwidth."
+            "The application hands the GPU **vertices** (positions plus attributes such as normals and texture coordinates) grouped into triangles. A **vertex shader** moves each one into clip space; fixed hardware clips triangles to the view, divides by depth for perspective and maps them to the screen. The **rasteriser** finds which pixels each triangle covers and interpolates the vertex attributes across it with barycentric weights.",
+            "Each covered sample becomes a **fragment**, coloured by a fragment shader. A **depth test** against the z-buffer discards what is hidden, and **blending** combines transparent layers into the frame buffer shown on screen."
           ],
-          where: "Every game, map, CAD tool and browser that draws 3D runs this pipeline, through D3D12 on Xbox and Windows, Metal on Apple devices, Vulkan on Android and Linux.",
+          uses: [
+            "**Every game and 3D app**: runs this pipeline through Direct3D 12 on Windows and Xbox, Metal on Apple devices, Vulkan on Android and Linux.",
+            "**Google Maps and Figma in the browser**: draw through WebGL, the same pipeline exposed to JavaScript.",
+            "**Apple, Arm Mali and Qualcomm Adreno GPUs**: run it tile by tile, keeping colour and depth in on-chip memory to save bandwidth."
+          ],
+          example: "One triangle covering 1,000 pixels: the vertex shader runs 3 times, the rasteriser emits 1,000 fragments, and the fragment shader would run 1,000 times. If a nearer wall has already been drawn over 600 of those pixels, an early depth test skips them and only 400 are shaded. That ratio of per-pixel to per-vertex work is why fragment shading dominates most frames.",
           nuance: "Rasterisation is fast because it never asks where light comes from; every pixel is shaded alone. Shadows, reflections and indirect light have to be faked or computed by extra passes, which is most of what real-time rendering techniques are.",
           read: [{ label: "Scratchapixel: the rasterization stage (edge functions, barycentric coordinates)", url: "https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage.html", m: 30 }],
           tags: ["rasterization", "vertex", "fragment", "z-buffer", "depth test", "tile-based"] },
         { id: "gpu", name: "The GPU and why it is parallel",
           line: "Thousands of simple lanes running the same program on different data at once.",
           body: [
-            "A CPU has a few large cores tuned to finish one thread fast. A GPU has many small ones that run the **same instruction across a group of threads** (32 on NVIDIA, called a warp; 32 or 64 on AMD). Shading is a perfect fit: a 1080p frame is about two million pixels, each running the same fragment shader with different inputs.",
-            "GPUs hide slow memory by keeping many groups in flight and switching to another whenever one waits for data, so they need a lot of independent work to be fast. Threads in a group that take different branches run both paths one after the other (**divergence**). Most real workloads are limited by memory bandwidth, not arithmetic, which is why data layout and texture compression matter so much."
+            "A CPU has a few large cores tuned to finish one thread fast. A GPU has many small ones that run the **same instruction across a group of threads** (32 on NVIDIA, called a warp; 32 or 64 on AMD). Shading fits perfectly: a 1080p frame is about two million pixels, each running the same fragment shader on different inputs.",
+            "GPUs hide slow memory by keeping many groups in flight and switching whenever one waits for data, so they need lots of independent work. Threads in a group that take different branches run both paths in turn (**divergence**). Most workloads are limited by memory bandwidth, not arithmetic."
           ],
-          where: "The same hardware renders games and trains models: CUDA, ROCm and compute shaders all program it; NVIDIA's RTX cards add dedicated ray tracing and tensor units.",
+          uses: [
+            "**Games**: shade millions of pixels a frame on the same SIMT hardware that trains models.",
+            "**CUDA and ROCm**: program NVIDIA and AMD GPUs directly for machine learning, simulation and video.",
+            "**NVIDIA RTX cards**: add dedicated ray tracing cores and tensor cores beside the shader cores."
+          ],
+          example: "A shader does `if (inShadow) cheapPath(); else fullLighting();`. Along a shadow edge, one warp of 32 pixels holds both kinds, so all 32 lanes step through both branches and the warp pays cheap plus full. Warps entirely in light or entirely in shadow pay for one branch. Divergence costs only where branches disagree inside a group.",
           nuance: "A GPU is slow at anything that is not wide. A loop over 100 items, or work that needs a round trip to the CPU each frame, will often run faster on the CPU.",
           read: [
             { label: "Modal, GPU glossary: device hardware and the performance section", url: "https://modal.com/gpu-glossary", m: 30 },
@@ -68,10 +78,15 @@ BASELINE.field({
         { id: "shaders", name: "Shaders and shading languages",
           line: "Small programs the GPU runs per vertex, per pixel, or per workgroup of threads.",
           body: [
-            "A **vertex shader** runs once per vertex and outputs a clip-space position plus values to interpolate. A **fragment** (pixel) shader runs once per covered sample and outputs a colour, reading textures and lighting inputs. A **compute shader** is not tied to the pipeline at all: it runs a grid of threads over buffers, and engines use it for culling, particles, skinning and post-processing.",
-            "Shaders are written in **GLSL** (OpenGL, Vulkan), **HLSL** (Direct3D, and Vulkan through compilers), **MSL** (Metal) or **WGSL** (WebGPU), and compiled to an intermediate form such as SPIR-V or DXIL that the driver turns into machine code. Inputs that are the same for a whole draw (matrices, light positions) are passed as uniforms or constant buffers."
+            "A **vertex shader** runs once per vertex and outputs a clip-space position plus values to interpolate. A **fragment** shader runs once per covered sample and outputs a colour, reading textures and lighting inputs. A **compute shader** runs a grid of threads over buffers, outside the pipeline; engines use it for culling, particles, skinning and post-processing.",
+            "Shaders are written in **GLSL**, **HLSL**, **MSL** (Metal) or **WGSL** (WebGPU) and compiled to an intermediate form such as SPIR-V or DXIL, which the driver turns into machine code. Values shared by a whole draw (matrices, light positions) arrive as uniforms or constant buffers."
           ],
-          where: "Unreal's material graph and Unity's Shader Graph generate shaders for artists; Shadertoy is where people share fragment shader experiments.",
+          uses: [
+            "**Unreal's material editor and Unity's Shader Graph**: let artists build node graphs that the engine compiles into shader code.",
+            "**Shadertoy**: hosts fragment shaders that draw whole scenes from one function of the pixel coordinate.",
+            "**Unreal's Nanite and Niagara**: cull and rasterise triangles and simulate particles in compute shaders."
+          ],
+          example: "A minimal GLSL fragment shader, lit by the angle to one light: `float d = max(dot(normalize(normal), lightDir), 0.0); colour = vec4(vec3(d), 1.0);`. It runs once per fragment. A surface facing the light gets 1.0 and comes out white; one seen edge-on gets 0 and comes out black. That cosine is Lambert's law in two lines.",
           nuance: "On PC, shaders are compiled for the user's exact GPU, often the first time an effect appears, which causes the 'shader compilation stutter' many recent PC games ship with. Precompiling during loading is the fix and it is easy to skip.",
           read: [
             { label: "Gonzalez Vivo and Lowe, The Book of Shaders: chapters 1 to 5", url: "https://thebookofshaders.com/", m: 45 },
@@ -81,10 +96,15 @@ BASELINE.field({
         { id: "graphics-apis", name: "Graphics APIs",
           line: "OpenGL, Vulkan, Direct3D 12, Metal and WebGPU: how a program talks to the GPU.",
           body: [
-            "**OpenGL** (1992) is a state machine: you set state and issue draws, and the driver works out memory, synchronisation and ordering for you. That convenience cost CPU time and predictability, so the **explicit** generation (Direct3D 12 in 2015, Vulkan in 2016, Metal in 2014) hands those jobs to the application: you record **command buffers**, build **pipeline state objects** up front, manage memory and insert barriers yourself. The reward is lower driver overhead and recording commands on many threads.",
-            "**WebGPU** brings that model to browsers in a safer, smaller form, with WGSL shaders and compute; it is a W3C Candidate Recommendation and ships in Chrome, Edge, Safari and Firefox. **WebGL 2** (OpenGL ES 3.0 in the browser) is still the most widely deployed."
+            "**OpenGL** (1992) is a state machine: you set state and issue draws, and the driver works out memory, synchronisation and ordering. That convenience cost CPU time and predictability, so the **explicit** generation (Metal in 2014, Direct3D 12 in 2015, Vulkan in 2016) hands those jobs to the application: record **command buffers**, build **pipeline state objects** up front, manage memory and insert barriers yourself. The reward is lower driver overhead and recording commands on many threads.",
+            "**WebGPU** brings that model to browsers in a safer, smaller form, with WGSL and compute. **WebGL 2** is still the most widely deployed."
           ],
-          where: "Unreal, Unity and Godot hide all of them behind one rendering interface; Apple platforms are Metal only; Android and Linux use Vulkan; Windows and Xbox use Direct3D 12.",
+          uses: [
+            "**Unreal, Unity and Godot**: hide all of them behind one rendering interface and pick a backend per platform.",
+            "**Apple platforms**: support Metal for new work; OpenGL has been deprecated there since 2018.",
+            "**Valve's Proton**: translates Direct3D calls to Vulkan so Windows games run on Linux and the Steam Deck."
+          ],
+          example: "Drawing 5,000 objects. In OpenGL each draw makes the driver validate state and track resources, on one thread. In Vulkan the engine builds pipeline objects at load time, splits the 5,000 draws across 8 threads that each record a command buffer, and submits them together. The draws are identical; the CPU cost per draw falls and spreads across cores.",
           nuance: "Explicit APIs are faster only if you do the driver's old job well. Drawing a first triangle in Vulkan takes many hundreds of lines, and a naive Vulkan renderer can be slower than OpenGL.",
           read: [
             { label: "Vulkan tutorial: overview and drawing a triangle", url: "https://vulkan-tutorial.com/", m: 60 },
@@ -97,30 +117,45 @@ BASELINE.field({
         { id: "transforms", name: "Coordinate spaces and transforms",
           line: "Matrices that move points from a model's own space to a pixel on screen.",
           body: [
-            "A vertex passes through a chain of spaces: **local** (as modelled), **world** (placed in the scene), **view** (relative to the camera), **clip** (after projection), then normalised device coordinates and screen pixels. Each step is a 4x4 matrix, so the whole chain is one multiplication: projection times view times model.",
-            "4x4 matrices on **homogeneous coordinates** (x, y, z, w) let one matrix express rotation, scale and translation together. The perspective matrix puts depth into w; dividing by w afterwards makes far things small. Rotations are often stored as **quaternions**, which interpolate smoothly and avoid gimbal lock. Normals need the inverse transpose of the model matrix, or non-uniform scaling bends lighting."
+            "A vertex passes through a chain of spaces: **local** (as modelled), **world** (placed in the scene), **view** (relative to the camera), **clip** (after projection), then normalised device coordinates and screen pixels. Each step is a 4x4 matrix, so the whole chain is one product: projection times view times model.",
+            "**Homogeneous coordinates** (x, y, z, w) let one matrix hold rotation, scale and translation together. The projection puts depth into w; dividing by w afterwards makes far things small. Rotations are often stored as **quaternions**, which interpolate smoothly and avoid gimbal lock. Normals need the inverse transpose of the model matrix, or non-uniform scaling bends lighting."
           ],
-          where: "Every engine and 3D library (glm, DirectXMath, three.js, Unity's Transform) exposes exactly this chain; AR frameworks such as ARKit hand you the camera's view and projection matrices.",
+          uses: [
+            "**glm, DirectXMath and three.js**: provide these matrices and the model, view and projection chain ready-made.",
+            "**Unity's Transform and Unreal's FTransform**: store position, quaternion rotation and scale per object and build the matrix when needed.",
+            "**ARKit and ARCore**: hand you the camera's view and projection matrices each frame so virtual objects line up with the room."
+          ],
+          example: "A point 1 m right of a model's centre, with the model placed 5 m in front of the camera. The model and view matrices put it at (1, 0, -5) in view space. The projection copies the distance, 5, into w. Dividing by w gives x = 0.2 times the lens scale. Move the model to 10 m and the same point lands at 0.1: half as far from the centre, so it looks half as big.",
           nuance: "Most 'my object is invisible' bugs are a convention mismatch: row against column vectors, left against right-handed axes, or depth ranging 0 to 1 against -1 to 1. Matrix order matters and is not commutative.",
           read: [{ label: "LearnOpenGL: Coordinate Systems", url: "https://learnopengl.com/Getting-started/Coordinate-Systems", m: 30 }],
           tags: ["matrix", "mvp", "projection", "homogeneous", "quaternion", "clip space"] },
         { id: "lighting-pbr", name: "Lighting and physically based materials",
           line: "Modelling how surfaces reflect light, with rules that conserve energy.",
           body: [
-            "Light at a surface splits into **diffuse** (scattered evenly; Lambert's law, brightness follows the cosine of the angle to the light) and **specular** (mirror-like, concentrated around the reflection direction). Older models such as Blinn-Phong tuned these by eye. **Physically based rendering** treats a surface as tiny mirrors (microfacets) and uses a BRDF, usually Cook-Torrance, built from a distribution of microfacet normals, a Fresnel term (more reflection at grazing angles) and a geometry term for self-shadowing.",
-            "Materials are described by a few measurable inputs: base colour, **metallic**, **roughness** and normal maps. Because the model conserves energy, one material looks right under any lighting, which is what lets artists share assets across scenes. Image-based lighting adds light from an environment map."
+            "Light at a surface splits into **diffuse** (scattered evenly; brightness follows the cosine of the angle to the light) and **specular** (concentrated around the mirror direction). **Physically based rendering** treats a surface as tiny mirrors (microfacets) and uses a BRDF, usually Cook-Torrance: a distribution of microfacet normals, a Fresnel term (more reflection at grazing angles) and a geometry term for self-shadowing.",
+            "Materials are a few measurable inputs: base colour, **metallic**, **roughness** and normal maps. Because the model conserves energy, one material looks right under any lighting, so artists can share assets across scenes."
           ],
-          where: "Disney's principled BRDF (2012) and Epic's Unreal Engine 4 (2013) set the standard; glTF, Unity, Unreal, Blender and Substance all use the metallic-roughness workflow.",
+          uses: [
+            "**Unreal Engine 4 (2013)**: brought Disney's 2012 principled BRDF to real time, and the industry followed.",
+            "**glTF, Unity, Blender and Substance**: share the metallic-roughness workflow, so one material moves between tools intact.",
+            "**Image-based lighting**: lights objects in most engines from an environment map captured or rendered around them."
+          ],
+          example: "Two balls with the same base colour. Roughness 0.1: a small, sharp highlight with the room visibly reflected. Roughness 0.8: a broad, dim highlight spread across the surface. Set metallic to 1 and the reflection takes the base colour, like gold; at 0 the highlight stays white, like plastic. Move them into a darker room and both still look right.",
           nuance: "Lighting maths must run in linear colour, while textures and screens store sRGB (gamma-encoded) values. Forgetting the conversion gives washed-out or harsh lighting that no material tweak will fix.",
           read: [{ label: "LearnOpenGL: PBR theory", url: "https://learnopengl.com/PBR/Theory", m: 35 }],
           tags: ["pbr", "brdf", "cook-torrance", "fresnel", "metallic", "roughness", "gamma", "srgb"] },
         { id: "textures", name: "Textures and sampling",
           line: "Images wrapped onto surfaces, read with filtering so they do not shimmer or blur.",
           body: [
-            "A texture is an image the shader reads at **UV coordinates** interpolated across a triangle. Since a pixel rarely lands exactly on a texel, the sampler **filters**: nearest picks one texel, bilinear blends four. When a texture is shown smaller than its resolution, many texels fall in one pixel and it shimmers, so GPUs keep **mipmaps**, a chain of half-size copies costing a third more memory, and pick the level that matches. Trilinear blends between levels; anisotropic filtering takes extra samples along slanted surfaces such as a floor seen from a low angle.",
-            "Textures also hold data that is not colour: normals, roughness, depth, shadow maps. GPUs read them in **block-compressed** formats (BC on desktop, ASTC on mobile) that decode in hardware."
+            "A texture is an image the shader reads at **UV coordinates** interpolated across a triangle. A pixel rarely lands exactly on a texel, so the sampler **filters**: nearest takes one texel, bilinear blends four. Shown smaller than its resolution, a texture shimmers, so GPUs keep **mipmaps**, a chain of half-size copies costing a third more memory, and pick the level that fits. Anisotropic filtering adds samples along slanted surfaces such as a floor.",
+            "Textures also hold normals, roughness, depth and shadow maps, in **block-compressed** formats (BC on desktop, ASTC on mobile) decoded in hardware."
           ],
-          where: "Textures are usually the largest share of a game's video memory and download size; engines stream mip levels in and out as the camera moves.",
+          uses: [
+            "**Game installs**: textures are usually the largest share of a game's download size and video memory.",
+            "**Unreal's texture streaming**: loads only the mip levels the camera needs and evicts the rest as it moves.",
+            "**Phones**: sample ASTC-compressed textures, cutting memory and bandwidth several times over against raw images."
+          ],
+          example: "A 2048 by 2048 RGBA texture is 16 MB raw; its mip chain adds a third, about 21 MB. As BC7, one byte per texel, it is about 5.3 MB with mips. Drawn on a distant wall 128 pixels wide, the GPU samples the 128 by 128 mip level, reading kilobytes rather than the whole image.",
           nuance: "Normal and roughness maps must be stored as linear data, not sRGB, and compressed with formats meant for them. Treating every texture like a photo is a quiet, common source of wrong shading.",
           read: [{ label: "LearnOpenGL: Textures (wrapping, filtering, mipmaps)", url: "https://learnopengl.com/Getting-started/Textures", m: 30 }],
           tags: ["texture", "uv", "mipmap", "filtering", "anisotropic", "bc7", "astc"] }
@@ -130,10 +165,15 @@ BASELINE.field({
         { id: "ray-tracing", name: "Ray tracing and path tracing",
           line: "Following rays of light through the scene instead of projecting triangles onto the screen.",
           body: [
-            "A ray tracer shoots a ray through each pixel, finds the nearest surface it hits, and shades that point by casting more rays: to lights for shadows, along the mirror direction for reflections. Finding hits fast needs an **acceleration structure**, usually a bounding volume hierarchy, so each ray tests a few boxes instead of every triangle.",
-            "**Path tracing** solves the full lighting equation by Monte Carlo: at each hit, bounce in a random direction and average many such paths per pixel. It captures soft shadows, colour bleeding and caustics with one algorithm, but converges slowly and looks noisy with few samples. Real-time games use one or two rays per pixel plus a **denoiser**, often a neural one, and dedicated RT hardware (NVIDIA since 2018, AMD, Apple and Intel since)."
+            "A ray tracer shoots a ray through each pixel, finds the nearest surface it hits, and shades that point by casting more rays: to lights for shadows, along the mirror direction for reflections. An **acceleration structure**, usually a bounding volume hierarchy, lets each ray test a few boxes instead of every triangle.",
+            "**Path tracing** solves the full lighting equation by Monte Carlo: at each hit, bounce in a random direction and average many paths per pixel. One algorithm captures soft shadows, colour bleeding and caustics, but few samples look noisy. Real-time games use one or two rays per pixel, a **denoiser** and dedicated RT hardware."
           ],
-          where: "Film rendering (Pixar's RenderMan, Blender Cycles, Arnold) is path traced; games mix rasterised visibility with traced reflections, shadows and global illumination, and Cyberpunk 2077 ships a full path-traced mode.",
+          uses: [
+            "**Pixar's RenderMan, Blender Cycles and Arnold**: path trace film and animation frames, spending minutes to hours on each.",
+            "**Cyberpunk 2077**: ships a full path-traced mode on NVIDIA RTX cards, with DLSS ray reconstruction as its denoiser.",
+            "**Most current games**: rasterise visibility and trace only reflections, shadows or global illumination."
+          ],
+          example: "A 1080p frame at one sample per pixel is about two million primary rays, plus a shadow ray and one bounce each: some six million rays. A BVH over a million triangles is about 20 levels deep, so each ray tests a few dozen boxes, not a million triangles. The raw image is grainy; the denoiser fills in the rest.",
           nuance: "Noise and bias are the real trade-off: a few samples per pixel are noisy, and denoising or caching trades that noise for blur and lag. Most 'ray traced' games are hybrids, not pure ray tracers.",
           read: [
             { label: "Ray Tracing in One Weekend: chapters 1 to 9", url: "https://raytracing.github.io/books/RayTracingInOneWeekend.html", m: 120 },
@@ -144,38 +184,58 @@ BASELINE.field({
           line: "Working out, per pixel, whether the light can see this point.",
           body: [
             "The standard real-time method is **shadow mapping**: render the scene's depth from the light's point of view into a texture, then, when shading a pixel, transform it into the light's view and compare its depth with the stored one. If something nearer was recorded, the pixel is in shadow.",
-            "The artefacts are the subject: **shadow acne** (surfaces shadowing themselves from limited depth precision), fixed by a small bias, which in excess causes **peter-panning** (shadows detaching from objects). Edges are softened by percentage-closer filtering, sampling the map several times. A sun over a large world uses **cascaded shadow maps**: several maps covering nearer and farther slices of the view, so detail goes where the camera is."
+            "The artefacts are the subject. **Shadow acne** (surfaces shadowing themselves through limited depth precision) is fixed with a small bias, which in excess causes **peter-panning** (shadows detaching from objects). Percentage-closer filtering softens edges. A sun over a large world uses **cascaded shadow maps**, several maps for nearer and farther slices of the view."
           ],
-          where: "Every rasterised game engine ships cascaded shadow maps for the sun; Unreal's virtual shadow maps and ray-traced shadows are the current high end.",
+          uses: [
+            "**Rasterised game engines**: ship cascaded shadow maps for the sun, typically three or four cascades.",
+            "**Unreal Engine 5**: uses virtual shadow maps, one very large map paged in tiles only where the camera needs detail.",
+            "**RTX titles**: trace one ray per pixel toward the light and denoise, giving soft edges that harden near contact."
+          ],
+          example: "One 2048-texel shadow map stretched over a 1 km world gives each texel half a metre: a character's shadow is a blob. Cascades fix it. The first covers the nearest 20 m at about 1 cm per texel; the last reaches out to 1 km at half a metre per texel, where the coarse shadows are too far away to notice.",
           nuance: "Shadow maps are a resolution budget: a texel covers more ground the farther it is from the camera's focus. Almost every shadow technique is a scheme for spending those texels where the viewer will notice.",
           read: [{ label: "LearnOpenGL: Shadow mapping (acne, bias, peter-panning, PCF)", url: "https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping", m: 30 }],
           tags: ["shadow mapping", "shadow acne", "pcf", "cascaded shadow maps", "csm"] },
         { id: "deferred-rendering", name: "Forward and deferred rendering",
           line: "Lighting each object as it is drawn, or storing surfaces first and lighting the screen after.",
           body: [
-            "**Forward** rendering shades each object as it is drawn, looping over the lights that touch it; cost grows with objects times lights, and hidden surfaces are shaded for nothing. **Deferred** rendering first draws every surface's properties (colour, normal, roughness, depth) into a set of screen-sized textures, the **G-buffer**, then runs lighting once per pixel per light. Hundreds of lights become affordable.",
-            "Deferred has costs: the G-buffer eats memory and bandwidth, transparency does not fit (only the nearest surface is stored), and hardware MSAA no longer works directly. **Forward+** (tiled or clustered forward) bins lights into screen tiles or 3D clusters first and keeps forward's flexibility."
+            "**Forward** rendering shades each object as it is drawn, looping over the lights that touch it; cost grows with objects times lights, and hidden surfaces are shaded for nothing. **Deferred** rendering first writes every surface's properties (colour, normal, roughness, depth) into screen-sized textures, the **G-buffer**, then lights once per pixel per light. Hundreds of lights become affordable.",
+            "Deferred has costs: the G-buffer eats memory and bandwidth, transparency does not fit, and hardware MSAA no longer works directly. **Forward+** bins lights into screen tiles or 3D clusters first and keeps forward's flexibility."
           ],
-          where: "Unreal Engine renders deferred by default; Doom (2016) used clustered forward; mobile engines lean forward because G-buffers cost too much bandwidth on tile-based GPUs.",
+          uses: [
+            "**Unreal Engine**: renders deferred by default and offers a forward path for VR, where MSAA matters.",
+            "**Doom (2016)**: used clustered forward rendering, with lights binned into a 3D grid over the view.",
+            "**Mobile engines**: lean forward, because writing a large G-buffer out of on-chip tile memory costs too much bandwidth."
+          ],
+          example: "A scene with 200 objects and 100 small lights at 1080p. Forward, naively: 200 x 100 object-light pairs, and overdraw shades hidden pixels too. Deferred: draw the 200 objects once into four 1080p targets (about 33 MB), then for each light shade only the pixels inside its radius. Glass and smoke still need a forward pass afterwards.",
           nuance: "Every deferred engine still needs a forward pass for glass, particles and hair. The real choice is which path most of the scene takes, not one or the other.",
           read: [{ label: "LearnOpenGL: Deferred shading", url: "https://learnopengl.com/Advanced-Lighting/Deferred-Shading", m: 30 }],
           tags: ["deferred", "g-buffer", "forward+", "clustered", "tiled"] },
         { id: "anti-aliasing", name: "Anti-aliasing and upscaling",
           line: "Removing jagged edges and shimmer, and rendering fewer pixels than you display.",
           body: [
-            "A pixel tests coverage at one point, so edges come out as stairs and thin details flicker between frames: **aliasing**. Supersampling renders more samples and averages them (correct, expensive). **MSAA** tests coverage at several points per pixel but shades once, cheap for edges but blind to shader aliasing. **FXAA** and **SMAA** find edges in the final image and blur along them.",
-            "**Temporal anti-aliasing** jitters the camera by a fraction of a pixel each frame and blends with previous frames, reprojected using motion vectors, so samples accumulate over time. **Upscalers** build on the same idea to render at a lower resolution and reconstruct a higher one: DLSS (a neural network on NVIDIA's tensor cores), AMD's FSR and Intel's XeSS. Frame generation goes further and synthesises whole in-between frames."
+            "A pixel tests coverage at one point, so edges come out as stairs and thin details flicker: **aliasing**. Supersampling renders more samples and averages them (correct, expensive). **MSAA** tests coverage at several points per pixel but shades once. **FXAA** and **SMAA** find edges in the final image and blur along them.",
+            "**Temporal anti-aliasing** jitters the camera a fraction of a pixel each frame and blends with earlier frames, reprojected by motion vectors. **Upscalers** extend it: render fewer pixels and reconstruct more. DLSS (a neural network on tensor cores), AMD's FSR and Intel's XeSS do this; frame generation synthesises whole in-between frames."
           ],
-          where: "Most current PC and console games ship TAA with DLSS, FSR or XeSS; the PlayStation 5 Pro adds its own learned upscaler, PSSR.",
+          uses: [
+            "**Most PC and console games**: ship TAA with an upscaler option, usually DLSS, FSR or XeSS.",
+            "**PlayStation 5 Pro**: adds Sony's own learned upscaler, PSSR.",
+            "**Nintendo Switch 2**: supports DLSS on its NVIDIA chip, so games render below the output resolution."
+          ],
+          example: "4K output is 8.3 million pixels. DLSS in Performance mode renders 1080p, 2.1 million pixels, a quarter of the shading work, and reconstructs 4K from that frame plus jittered samples from earlier ones. When a character turns and reveals a wall that was hidden, there is no history for it, and that patch looks soft for a few frames.",
           nuance: "Temporal methods trade aliasing for ghosting and softness when motion vectors are wrong or something new appears. Many players' complaints about blurry modern games are TAA complaints.",
           tags: ["aliasing", "msaa", "fxaa", "taa", "dlss", "fsr", "upscaling", "frame generation"] },
         { id: "post-processing", name: "Post-processing",
           line: "Full-screen passes over the finished image: exposure, bloom, depth of field, colour.",
           body: [
-            "Modern renderers light in **high dynamic range**, storing colour in floating-point buffers where the sun can be thousands of times brighter than a wall. **Tone mapping** compresses that range to what a display shows, the way a camera's exposure does (ACES and AgX are common curves). Around it sit passes that read the frame and write a new one: **bloom** (bright areas glow), depth of field, motion blur, screen-space ambient occlusion (darkening creases from the depth buffer), and **colour grading** through a lookup table.",
-            "Each pass is a fragment or compute shader over every pixel, so its cost scales with resolution, not scene complexity."
+            "Modern renderers light in **high dynamic range**, storing colour in floating-point buffers where the sun can be thousands of times brighter than a wall. **Tone mapping** compresses that range to what a display shows, the way a camera's exposure does (ACES and AgX are common curves). Around it sit passes that read the frame and write a new one: **bloom**, depth of field, motion blur, screen-space ambient occlusion and **colour grading** through a lookup table.",
+            "Each pass is a shader over every pixel, so its cost scales with resolution, not scene complexity."
           ],
-          where: "Unreal's post-process volumes and Unity's URP and HDRP volumes expose these as artist controls; HDR displays now need separate tone mapping paths.",
+          uses: [
+            "**Unreal's post-process volumes and Unity's URP and HDRP volumes**: expose these passes as artist controls that blend as the camera moves between areas.",
+            "**Blender**: uses AgX as its default view transform since version 4.0.",
+            "**HDR displays**: need their own tone mapping path, with the screen's peak brightness as an input."
+          ],
+          example: "A sunlit window measures 50.0 in linear HDR; a shaded wall, 0.2. A display tops out at 1.0. Clamping turns the window into a flat white block and leaves the wall murky. A tone curve rolls 50.0 down to about 0.98 and lifts 0.2 toward the mid-tones, so both stay readable, as a camera exposed for the room would show them.",
           nuance: "Post effects are cheap to add and expensive in total: ten full-screen passes at 4K read and write over 300 MB of pixels a frame. Teams cap them by merging passes into one shader.",
           tags: ["hdr", "tone mapping", "bloom", "ssao", "depth of field", "color grading", "lut"] }
       ] },
@@ -184,30 +244,45 @@ BASELINE.field({
         { id: "performance", name: "Draw calls, overdraw and GPU profiling",
           line: "Finding whether the CPU or the GPU limits a frame, then cutting what costs most.",
           body: [
-            "A frame has a budget: 16.7 ms at 60 fps, 8.3 ms at 120. First find which side is the limit. A frame is **CPU-bound** when the game logic or the cost of issuing **draw calls** (each one validated by the driver) runs long; the fixes are fewer, larger draws through batching and **instancing**, and culling what the camera cannot see. It is **GPU-bound** when shading or memory traffic runs long; the usual culprits are **overdraw** (the same pixel shaded many times, typically by particles and transparent layers), expensive fragment shaders, and too many full-screen passes.",
-            "Measure with a frame capture: **RenderDoc** (free, Vulkan, D3D11, D3D12, OpenGL), PIX on Windows and Xbox, NVIDIA Nsight, Xcode's Metal debugger. They show each pass's time, each draw's state and every texture read."
+            "A frame has a budget: 16.7 ms at 60 fps, 8.3 ms at 120. First find which side is the limit. **CPU-bound** means game logic or issuing **draw calls** (each validated by the driver) runs long; the fixes are batching, **instancing** and culling what the camera cannot see. **GPU-bound** means shading or memory traffic runs long; the usual culprits are **overdraw** (the same pixel shaded many times, typically by particles and transparency), heavy fragment shaders and too many full-screen passes.",
+            "Measure with a frame capture: it shows each pass's time and each draw's state."
           ],
-          where: "Console certification and mobile thermal limits make this daily work for engine teams; Unreal's Nanite and GPU-driven rendering move culling and draw submission onto the GPU itself.",
+          uses: [
+            "**RenderDoc**: free frame capture for Vulkan, D3D11, D3D12 and OpenGL, the first tool most graphics programmers open.",
+            "**PIX, NVIDIA Nsight and Xcode's Metal debugger**: the platform profilers for Xbox and Windows, NVIDIA GPUs and Apple devices.",
+            "**Unreal's Nanite**: moves culling and triangle submission onto the GPU, so draw call counts stop limiting dense scenes."
+          ],
+          example: "A frame takes 22 ms against a 16.7 ms target. The CPU finishes its part in 9 ms; the GPU takes 22. The frame is GPU-bound, so cutting draw calls changes nothing. A capture shows a smoke effect covering the screen 12 layers deep; halving the layers and drawing particles at half resolution brings the frame under budget.",
           nuance: "Optimising the wrong side does nothing: halving shader cost on a CPU-bound frame gains zero milliseconds. Profile, find the bound, then change one thing.",
           read: [{ label: "RenderDoc: the home page and getting started", url: "https://renderdoc.org/", m: 15 }],
           tags: ["draw calls", "instancing", "batching", "overdraw", "cpu-bound", "gpu-bound", "renderdoc", "profiling"] },
         { id: "canvas-2d", name: "2D graphics and the web canvas",
           line: "Paths, fills and text drawn by a 2D library, in the browser or in an app.",
           body: [
-            "2D graphics draws **vectors**: paths made of lines and curves, filled or stroked, plus images and text. A rasteriser turns each path into pixel coverage with anti-aliased edges. On the web there are three routes. **Canvas 2D** is immediate mode: you call drawing commands and get pixels, with nothing remembered. **SVG** is retained: shapes live in the DOM, can be styled and clicked, and get slow in the many thousands. **WebGL and WebGPU** hand you the GPU for large or animated scenes.",
-            "Underneath, browsers use 2D engines such as **Skia** (Chrome, Android, Flutter) and Core Graphics (Safari, iOS), which increasingly rasterise on the GPU."
+            "2D graphics draws **vectors** (paths of lines and curves, filled or stroked) plus images and text, rasterised into anti-aliased pixel coverage. On the web there are three routes. **Canvas 2D** is immediate mode: you issue commands and get pixels, with nothing remembered. **SVG** is retained: shapes live in the DOM, can be styled and clicked, and slow down in the many thousands. **WebGL and WebGPU** hand you the GPU.",
+            "Underneath, browsers use 2D engines such as **Skia** (Chrome, Android) and Core Graphics (Safari), increasingly on the GPU."
           ],
-          where: "Charting libraries pick canvas or SVG by data size; Figma and Google Maps draw through the GPU in the browser; Flutter paints every widget with Skia or its newer Impeller renderer.",
+          uses: [
+            "**Charting libraries**: pick SVG for a few hundred marks and canvas for tens of thousands.",
+            "**Figma and Google Maps**: draw through the GPU in the browser for smooth zoom over very large documents and maps.",
+            "**Flutter**: paints every widget itself, with Skia or its newer Impeller renderer."
+          ],
+          example: "A chart with 50,000 points. As SVG that is 50,000 DOM nodes, and each hover restyle triggers style and layout work that stutters. As canvas it is one element and a loop of `ctx.arc` calls, redrawn whole in a few milliseconds. The cost: the browser no longer knows what a point is, so hit testing and screen-reader labels become your job.",
           nuance: "Canvas is fast but invisible to screen readers and search, since it is only pixels. Anything people must read or click needs an accessible layer alongside it.",
           read: [{ label: "MDN: Canvas API tutorial (basic usage through transformations)", url: "https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial", m: 45 }],
           tags: ["canvas", "svg", "skia", "vector", "2d", "webgl"] },
         { id: "neural-rendering", name: "Gaussian splatting and neural rendering",
           line: "Scenes learned from photographs, and networks that help draw ordinary frames.",
           body: [
-            "**NeRF** (2020) trained a small network to map a 3D position and view direction to colour and density, then rendered by marching rays through it: photoreal, but seconds per frame. **3D Gaussian splatting** (2023) replaced the network with millions of small, coloured, semi-transparent 3D Gaussians fitted to photos, which a rasteriser can sort and blend at 30 fps or more at 1080p. Capture a room with a phone, get a navigable 3D scene.",
+            "**NeRF** (2020) trained a small network to map a 3D position and view direction to colour and density, then rendered by marching rays through it: photoreal, but seconds per frame. **3D Gaussian splatting** (2023) replaced the network with millions of small, coloured, semi-transparent 3D Gaussians fitted to photos, which a rasteriser can sort and blend at 30 fps or more at 1080p.",
             "Neural networks also enter conventional pipelines: denoisers for ray tracing, upscalers such as DLSS, and neural texture compression."
           ],
-          where: "Polycam, Luma and Niantic's Scaniverse capture splats; real estate, heritage scanning and film previsualisation use them; game engines are adding splat renderers.",
+          uses: [
+            "**Polycam, Luma and Niantic's Scaniverse**: capture splats from a phone walk-around.",
+            "**Real estate, heritage scanning and film previsualisation**: use splats as navigable records of real places.",
+            "**Game engines**: are adding splat renderers, so captured scenes can sit beside ordinary geometry."
+          ],
+          example: "Walk around a statue filming with a phone for two minutes and keep about 200 frames. Software estimates each frame's camera position, then optimises a few million Gaussians (position, shape, colour, opacity) until renders match the photos, under an hour on one GPU. The result plays back in real time from any nearby viewpoint, but cannot be relit.",
           nuance: "A splat captures how a scene looked under the light it was photographed in. Relighting it, editing it or making it collide like geometry is still hard, which keeps it out of most game worlds.",
           read: [{ label: "Kerbl et al., 3D Gaussian splatting for real-time radiance field rendering: abstract and section 1", url: "https://arxiv.org/abs/2308.04079", m: 15 }],
           tags: ["gaussian splatting", "nerf", "neural rendering", "radiance field", "3dgs"] }

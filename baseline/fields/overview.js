@@ -5,7 +5,7 @@ BASELINE.field({
   overview: [
     "Every field here rests on the ones below it. **Foundations** is how computers, networks and data actually behave: processes and memory, the network stack, what happens when one machine becomes many, and how data is stored and kept correct. **Building** is how software reaches people: the backend that holds state and logic, the frontend and mobile apps people touch, the cloud it runs on, and the practice of shipping and running it safely. **Intelligence** is models: how they learn, how they are built into products, how they are served fast and cheaply, and the special case of sound and speech. **Worlds** is real-time pictures and play: rendering on the GPU, and the engines and loops that make games.",
     "Most real systems cross three or four fields at once. A voice agent is audio and speech, AI engineering, inference, backend and cloud in one call. A game's online mode is game development, graphics, networking and distributed systems. The map below is drawn that way.",
-    "A field opens to its own map and its topics, each shut to a name and a line. Read the outline in five minutes; open any topic you could not explain in a sentence. Each opened topic is a short explainer, where it shows up in industry, the catch, and one or two things to read."
+    "Each field opens to its About: what the field is, its map, where to start, and every topic as a name and a line. Pick a topic from the outline on the left and it reads on its own: what it is, where it is used, an example, the catch, and what to read. The arrow keys walk a field's topics in order."
   ],
   diagram: {
     nodes: [
@@ -28,7 +28,7 @@ BASELINE.field({
       ["systems", "backend"], ["data", "backend"], ["distributed", "cloud"], ["backend", "frontend"],
       ["backend", "ai"], ["cloud", "inference"], ["ml", "ai"], ["inference", "ai"], ["graphics", "games"]
     ],
-    cap: "**Read it left to right: foundations, then what gets built on them, then the model and real-time fields.** An arrow points from a field to one that builds on it; these are a few of the strongest, not all. Click a field to open it."
+    cap: "**Read it left to right: foundations, then what gets built on them, then the model and real-time fields.** An arrow points from a field to one that builds on it; these are a few of the strongest, not all. Hover a field to preview its own map beside this one; click to keep it there, and open the field from the preview."
   },
   sections: [
     { title: "The bar worth aiming at",

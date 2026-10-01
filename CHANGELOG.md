@@ -740,3 +740,13 @@ public site with a landing card, in every page's badges, and linked from the liv
 "Refresh the basics". Sources from Pranav's links: Kiely's Inference Engineering and its
 companion, 100 days of inference, Learn to Cloud, the Sarvam AI interview write-up as the bar,
 Paul Graham's How to Do Great Work. No charter deviation: a reference beside the plan.
+
+**2026-10-01 — Baseline: two panes, one topic at a time, and a reshaped topic.**
+Pranav found each field one long scroll. The page is now two panes: the rail holds a field
+picker, search and the field's outline; the reader shows one thing at a time, the field's About
+(overview, map, Start here and a contents grid, all up front as he asked) or one topic, with
+Previous and Next and the arrow keys. Every one of the 266 topics was reshaped into five short
+parts: what it is (40 to 150 words), where it is used (2 to 4 named bullets), an example (a
+worked scenario or number), the catch, and reading; `baseline/check.js` enforces the shape. On
+the overview, hovering a field previews its own map in a fixed pane beside the overview map,
+and a click keeps it there; nothing on the page moves. No charter deviation.
