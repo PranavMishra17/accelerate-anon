@@ -800,3 +800,13 @@ every four, with confusable questions placed together. The open end-of-session q
 noted. Also fixed: two week-3 closing answers had the sample-rate error backwards (24 kHz read as
 16 kHz gives two-thirds, not 1.5 times; 22.05 kHz read as 44.1 kHz gives double, not half), found
 by the question writer. **Charter deviation:** none to the charter; a protocol rule changed, recorded.
+
+**2026-10-01 — Judging resumes where you stopped, and moves freely.**
+Pranav stopped a session judgement after about ten questions and found it gone. The answers had
+been saved, but reopening started a new run at question 1 with empty dots, so it read as lost, and
+a step answered part way already showed a level. Now a run keeps its question order; Stop keeps it
+open, and the session or step button reads "Continue judging (10 of 21)" (with Start over), opening
+at the first unanswered question. Inside a run: Previous, Next, Skip, click any dot to jump, the
+arrow keys, and See the result at any time; answered questions show their answer and why when
+revisited. A step gets a level only once all its questions are answered; until then it shows how
+many are. Runs saved before the fix are recovered from their scope. No charter deviation.

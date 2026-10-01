@@ -381,6 +381,12 @@
   dialog.mcq { max-height: calc(100dvh - 24px); overflow: auto; }
   .mcq .wbq-dots { flex-wrap: wrap; }
   .mcq .wbq-dots i { width: 14px; }
+  .mcq-dots button { width: 16px; height: 8px; padding: 0; border: 0; border-radius: 3px; background: var(--rule); cursor: pointer; }
+  .mcq-dots button.on { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .mcq-dots button.got { background: var(--ok); }
+  .mcq-dots button.half { background: var(--req); }
+  .mcq-dots button.miss { background: var(--warn); }
+  .mcq-dots button:hover { background: var(--muted); }
   .wbq-dots i.half { background: var(--req); }
   .wbq-dots i.miss { background: var(--warn); }
   .mcq-top { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s2); }
@@ -7723,11 +7729,34 @@
     var latest = mcqLatest();
     return qItems(key).map(function (q) { return latest[q.id]; }).filter(Boolean);
   }
-  function stepLevel(key) { return levelOf(latestFor(key)); }
+  /* A step has a level only once every one of its questions has an answer; until then it
+     is part judged (answered of total). */
+  function stepLevel(key) { var r = latestFor(key); return r.length && r.length === bankOf(key).length ? levelOf(r) : null; }
+  function stepAnswered(key) { return latestFor(key).length; }
   function stepJudgedAt(key) {
     return latestFor(key).reduce(function (a, r) { return Math.max(a, r.at); }, 0);
   }
   /* Steps that have questions, by level; none is not judged yet. */
+  function openRun(mode, scope) {
+    var m = state.mcq || {}, best = null;
+    Object.keys(m).forEach(function (id) {
+      var r = m[id];
+      /* runs saved before 1 October's fix have no question order: rebuild it from their scope */
+      if (r && !r.fin && !r.qids && r.mode === "judge" && r.scope) {
+        var s0 = r.scope.indexOf(":") > 0 ? null : sessionById(r.scope);
+        var list = s0 ? sessionQs(s0) : (r.scope.indexOf(":") > 0 ? qItems(r.scope) : []);
+        if (list.length) { r.qids = list.map(function (q) { return q.id; }); }
+      }
+      if (r && !r.fin && r.mode === mode && r.scope === scope && r.qids && r.qids.length && (!best || r.at > best.r.at)) { best = { id: id, r: r }; }
+    });
+    return best;
+  }
+  /* every question in the bank by id, to rebuild a run's questions in the order it had */
+  function allQs() {
+    var out = {};
+    Object.keys((window.MCQ && window.MCQ.bank) || {}).forEach(function (k) { qItems(k).forEach(function (q) { out[q.id] = q; }); });
+    return out;
+  }
   function levelCounts(keys) {
     var c = { know: 0, part: 0, not: 0, none: 0, steps: 0, qs: 0 };
     keys.forEach(function (k) {
@@ -7848,9 +7877,10 @@
     }
     row.appendChild(el("span", "", txt));
     if (!done && c === cur) {
-      var b = el("button", "wb-btn", "Start review");
+      var rscope = "review:" + due.join(","), ropen = openRun("review", rscope);
+      var b = el("button", "wb-btn", ropen ? "Continue review (" + ropen.r.items.length + " of " + ropen.r.qids.length + ")" : "Start review");
       b.addEventListener("click", function () {
-        runMcq({ mode: "review", scope: "review", due: due, title: "Review of " + weeksText(due) }, pickReview(due));
+        runMcq({ mode: "review", scope: rscope, due: due, title: "Review of " + weeksText(due) }, pickReview(due));
       });
       row.appendChild(b);
     }
@@ -7869,9 +7899,20 @@
       t.textContent = "See what you already know: " + nq + (nq === 1 ? " question" : " questions") + ", before the material. Optional.";
     }
     row.appendChild(t);
-    var b = el("button", "wb-btn", lv ? "Judge again" : "Judge first");
-    b.addEventListener("click", function () { runMcq({ mode: "judge", scope: key, title: stepTitle(key) }, qItems(key)); });
+    var open1 = openRun("judge", key), meta = { mode: "judge", scope: key, title: stepTitle(key) };
+    if (!lv && open1) {
+      t.textContent = open1.r.items.length + " of " + open1.r.qids.length + " answered, stopped part way.";
+    } else if (!lv && stepAnswered(key)) {
+      t.textContent = stepAnswered(key) + " of " + nq + " answered so far; a level once all are.";
+    }
+    var b = el("button", "wb-btn", open1 ? "Continue" : (lv ? "Judge again" : "Judge first"));
+    b.addEventListener("click", function () { runMcq(meta, qItems(key)); });
     row.appendChild(b);
+    if (open1) {
+      var fresh = el("button", "wb-link", "Start over");
+      fresh.addEventListener("click", function () { delete state.mcq[open1.id]; save(); runMcq(meta, qItems(key)); });
+      row.appendChild(fresh);
+    }
     return row;
   }
   /* The line in a session's head: what is judged, and judging every step in order. */
@@ -7880,11 +7921,17 @@
     if (!c.steps) { return null; }
     var row = el("div", "judge");
     row.appendChild(el("span", "", c.none === c.steps
-      ? "Not judged yet: " + c.qs + " questions across " + c.steps + (c.steps === 1 ? " step." : " steps.")
+      ? (openRun("judge", s.id) ? "Part way through: steps get a level once all their questions are answered." : "Not judged yet: " + c.qs + " questions across " + c.steps + (c.steps === 1 ? " step." : " steps."))
       : "Judged: " + countsText(c) + "."));
-    var b = el("button", "wb-btn", "Judge this session");
-    b.addEventListener("click", function () { runMcq({ mode: "judge", scope: s.id, title: s.name }, sessionQs(s)); });
+    var open1 = openRun("judge", s.id), meta = { mode: "judge", scope: s.id, title: s.name };
+    var b = el("button", "wb-btn", open1 ? "Continue judging (" + open1.r.items.length + " of " + open1.r.qids.length + ")" : "Judge this session");
+    b.addEventListener("click", function () { runMcq(meta, sessionQs(s)); });
     row.appendChild(b);
+    if (open1) {
+      var fresh = el("button", "wb-link", "Start over");
+      fresh.addEventListener("click", function () { delete state.mcq[open1.id]; save(); runMcq(meta, sessionQs(s)); });
+      row.appendChild(fresh);
+    }
     return row;
   }
   /* Progress: per week, steps by level and the last review. */
@@ -7913,11 +7960,13 @@
   }
 
   /* One question at a time in the page's dialog: five options as rows, I don't know, a
-     guess flag, then the answer marked and why. Keys: 1 to 5, D, G, Enter. Each answer is
-     saved as it is given, so stopping part way keeps what was answered. */
+     guess flag, then the answer marked and why. Each answer is saved the moment it is given.
+     Stop keeps the run: the same button continues it later, at the first unanswered question.
+     Move freely: Previous and Next (Next on an unanswered question skips it), or click a dot
+     to jump. See the result any time; it covers what was answered. Keys: 1 to 5, D, G, Enter,
+     the arrow keys, Esc. */
   var mcqKeys = null;
-  function runMcq(meta, qs) {
-    if (!qs.length) { return; }
+  function runMcq(meta, qsIn) {
     var dlg = document.getElementById("mcqdlg");
     if (!dlg) {
       dlg = document.createElement("dialog");
@@ -7932,52 +7981,86 @@
         try { mcqKeys(e); } catch (err) { console.error("Multiple choice keys failed", err); }
       }, true);
     }
-    var run = { at: Date.now(), mode: meta.mode, wk: currentWeek(), scope: meta.scope, fin: false, items: [] };
-    if (meta.due) { run.due = meta.due; }
-    var rid = "r" + run.at, byId = {};
+    /* resume the open run for this scope, with its questions in the order it had */
+    var found = openRun(meta.mode, meta.scope), run, rid, qs;
+    if (found) {
+      rid = found.id; run = found.r;
+      var pool = allQs();
+      qs = run.qids.map(function (id) { return pool[id]; }).filter(Boolean);
+    } else {
+      qs = qsIn;
+      run = { at: Date.now(), mode: meta.mode, wk: currentWeek(), scope: meta.scope, fin: false, items: [], qids: qs.map(function (q) { return q.id; }) };
+      if (meta.due) { run.due = meta.due; }
+      rid = "r" + run.at;
+    }
+    if (!qs.length) { return; }
+    var byId = {}, ans = {};
     qs.forEach(function (q) { byId[q.id] = q; });
-    var i = 0, guess = false, item = null, order = null, ended = false;
+    run.items.forEach(function (it) { ans[it.id] = it; });
+    var i = 0, guess = false, ended = false, orders = {};
+    for (i = 0; i < qs.length && ans[qs[i].id]; i++) { }
+    if (i >= qs.length) { i = 0; }
 
-    /* closed here rather than on the close event, which a hidden tab can hold back */
     function shut() {
       mcqKeys = null;
       try { dlg.close(); } catch (err) { dlg.removeAttribute("open"); }
       mcqMemo = null;
       draw();
     }
-
     function keep() { state.mcq[rid] = run; mcqMemo = null; save(); }
+    function answered() { return run.items.length; }
+    function orderOf(q) { if (!orders[q.id]) { orders[q.id] = shuffled([0, 1, 2, 3, 4]); } return orders[q.id]; }
     function choose(p) {
-      if (item) { return; }
       var q = qs[i];
-      item = { id: q.id, k: q.k, p: p, g: guess, ok: p === q.x.a };
-      run.items.push(item);
+      if (ans[q.id]) { return; }
+      var it = { id: q.id, k: q.k, p: p, g: guess, ok: p === q.x.a };
+      ans[q.id] = it;
+      run.items.push(it);
       keep();
       render();
     }
     function toggleGuess() {
+      var it = ans[qs[i].id];
       guess = !guess;
-      if (item) { item.g = guess; keep(); }
+      if (it) { it.g = guess; keep(); }
       render("guess");
     }
+    function go(n) {
+      if (n < 0 || n >= qs.length) { return; }
+      i = n;
+      var it = ans[qs[i].id];
+      guess = it ? !!it.g : false;
+      render();
+    }
+    function nextUnanswered() {
+      for (var k = 1; k <= qs.length; k++) { var n = (i + k) % qs.length; if (!ans[qs[n].id]) { return n; } }
+      return -1;
+    }
     function next() {
-      i += 1;
-      if (i < qs.length) { guess = false; item = null; order = shuffled([0, 1, 2, 3, 4]); render(); }
-      else { finish(); }
+      if (i + 1 < qs.length) { go(i + 1); return; }
+      var n = nextUnanswered();
+      if (n >= 0) { go(n); } else { finish(); }
     }
     function dotClass(it) { return it.ok ? (it.g ? "half" : "got") : "miss"; }
     function render(focus) {
-      var q = qs[i], x = q.x;
+      var q = qs[i], x = q.x, item = ans[q.id] || null, order = orderOf(q);
       dlg.innerHTML = "";
       var box = el("div", "wbq-in");
-      var dots = el("div", "wbq-dots");
-      qs.forEach(function (_, k) { dots.appendChild(el("i", k < run.items.length ? dotClass(run.items[k]) : (k === i ? "on" : ""))); });
+      var dots = el("div", "wbq-dots mcq-dots");
+      qs.forEach(function (qq, k) {
+        var it = ans[qq.id];
+        var d = el("button", (it ? dotClass(it) : "") + (k === i ? " on" : ""));
+        d.type = "button";
+        d.setAttribute("aria-label", "Question " + (k + 1) + (it ? (it.ok ? ", right" : ", missed") : ", not answered"));
+        d.addEventListener("click", function () { go(k); });
+        dots.appendChild(d);
+      });
       box.appendChild(dots);
       box.appendChild(el("p", "mcq-top", meta.title.replace(/\.$/, "") + ". Question " + (i + 1) + " of " + qs.length +
+        ", " + answered() + " answered" +
         (meta.mode === "review" && item ? ". From week " + (weekOfKey(q.k) + 1) + ": " + stepTitle(q.k) : "")));
       box.appendChild(el("div", "wbq-q", x.q));
-      var os = el("div", "mcq-os");
-      var first = null;
+      var os = el("div", "mcq-os"), first = null;
       order.forEach(function (oi, pos) {
         var b = el("button", "mcq-o");
         b.type = "button";
@@ -7995,22 +8078,19 @@
         os.appendChild(b);
       });
       box.appendChild(os);
-
-      var nextBtn = null;
-      var res = null;
       if (item) {
-        res = el("p", "mcq-res", item.p < 0 ? "You did not know. The answer is marked." :
+        var res = el("p", "mcq-res", item.p < 0 ? "You did not know. The answer is marked." :
           item.ok ? (item.g ? "Right, as a guess, so it counts as partly." : "Right.") : "Not this one. The answer is marked.");
         res.setAttribute("aria-live", "polite");
         box.appendChild(res);
         if (x.why) { box.appendChild(el("p", "mcq-why", x.why)); }
       }
       var row = el("div", "wbq-row");
-      if (item) {
-        nextBtn = el("button", "wb-btn primary", i + 1 < qs.length ? "Next" : "See the result");
-        nextBtn.addEventListener("click", next);
-        row.appendChild(nextBtn);
-      } else {
+      var prev = el("button", "wb-btn", "Previous");
+      prev.disabled = i === 0;
+      prev.addEventListener("click", function () { go(i - 1); });
+      row.appendChild(prev);
+      if (!item) {
         var idk = el("button", "wb-btn", "I don't know");
         idk.addEventListener("click", function () { choose(-1); });
         row.appendChild(idk);
@@ -8019,29 +8099,36 @@
       gb.setAttribute("aria-pressed", guess ? "true" : "false");
       gb.addEventListener("click", toggleGuess);
       if (!item || item.ok) { row.appendChild(gb); }
-      var stop = el("button", "wb-link", "Stop");
+      var nextBtn = el("button", "wb-btn" + (item ? " primary" : ""), item ? (i + 1 < qs.length || nextUnanswered() >= 0 ? "Next" : "See the result") : "Skip");
+      nextBtn.addEventListener("click", next);
+      row.appendChild(nextBtn);
+      if (answered() && answered() < qs.length) {
+        var res2 = el("button", "wb-link", "See the result");
+        res2.addEventListener("click", finish);
+        row.appendChild(res2);
+      }
+      var stop = el("button", "wb-link", "Stop, keep my answers");
       stop.addEventListener("click", shut);
       row.appendChild(stop);
       box.appendChild(row);
-      box.appendChild(el("p", "mcq-keys", "Keys: 1 to 5 to pick, D for I don't know, G for a guess, Enter for next, Esc to stop."));
+      box.appendChild(el("p", "mcq-keys", "Keys: 1 to 5 to pick, D for I don't know, G for a guess, Enter or the right arrow for next, the left arrow for previous, Esc to stop. Click a dot to jump."));
       dlg.appendChild(box);
-      var f = focus === "guess" && gb.parentNode ? gb : (nextBtn || first);
+      var f = focus === "guess" && gb.parentNode ? gb : (item ? nextBtn : first);
       if (f) { f.focus({ preventScroll: true }); }
-      /* a new question starts at the top; an answer brings its result and why into view */
       if (!item) { dlg.scrollTop = 0; }
       else if (row.scrollIntoView) { row.scrollIntoView({ block: "nearest" }); }
     }
     function finish() {
       ended = true;
-      run.fin = true;
-      keep();
+      run.fin = run.items.length >= qs.length;   /* a partial result keeps the run open to continue */
+      if (run.items.length) { keep(); }
       dlg.innerHTML = "";
       var box = el("div", "wbq-in");
       var sc = runScore(run.items);
       box.appendChild(el("p", "mcq-top", meta.title));
       box.appendChild(el("div", "wbq-q", sc.right + " of " + sc.n + " right" +
-        (sc.guessed ? ", " + sc.guessed + (sc.guessed === 1 ? " of them a guess" : " of them guesses") : "") + "."));
-      /* the level: of the step, of each step in the session, or each week reviewed */
+        (sc.guessed ? ", " + sc.guessed + (sc.guessed === 1 ? " of them a guess" : " of them guesses") : "") +
+        (sc.n < qs.length ? ", " + (qs.length - sc.n) + " not answered" : "") + "."));
       var groups = [], byKey = {};
       run.items.forEach(function (it) {
         var g = meta.mode === "review" ? "w" + weekOfKey(it.k) : it.k;
@@ -8055,8 +8142,10 @@
           var gs = runScore(its);
           li.appendChild(el("span", "", "Week " + (parseInt(g.slice(1), 10) + 1) + ": " + gs.right + " of " + gs.n + " right"));
         } else {
-          if (groups.length === 1 && meta.scope === g) { li.appendChild(el("span", "", "This step:")); li.appendChild(levelMark(levelOf(its))); }
-          else { li.appendChild(levelMark(levelOf(its))); li.appendChild(el("span", "", stepTitle(g))); }
+          var lv = stepLevel(g), done = stepAnswered(g), tot = bankOf(g).length;
+          if (lv) { li.appendChild(levelMark(lv)); }
+          li.appendChild(el("span", "", (groups.length === 1 && meta.scope === g ? "This step" : stepTitle(g)) +
+            (lv ? "" : ": " + done + " of " + tot + " answered, no level until all are")));
         }
         ul.appendChild(li);
       });
@@ -8078,6 +8167,11 @@
         box.appendChild(el("p", "mcq-res", "Nothing to look at again."));
       }
       var row = el("div", "wbq-row");
+      if (sc.n < qs.length) {
+        var back = el("button", "wb-btn", "Answer the rest");
+        back.addEventListener("click", function () { ended = false; var n = nextUnanswered(); go(n < 0 ? 0 : n); });
+        row.appendChild(back);
+      }
       var close = el("button", "wb-btn primary", "Close");
       close.addEventListener("click", shut);
       row.appendChild(close);
@@ -8087,7 +8181,7 @@
       dlg.scrollTop = 0;
     }
     mcqKeys = function (e) {
-      var k = e.key;
+      var k = e.key, item = ended ? null : ans[qs[i].id];
       if (k === "Escape") { e.preventDefault(); shut(); return; }
       if (e.metaKey || e.ctrlKey || e.altKey) { return; }
       if (k === "Enter") {
@@ -8095,15 +8189,16 @@
         var a = document.activeElement;
         if (a && a.tagName === "BUTTON" && dlg.contains(a)) { a.click(); }
         else if (ended) { shut(); }
-        else if (item) { next(); }
+        else { next(); }
         return;
       }
       if (ended) { return; }
-      if (/^[1-5]$/.test(k) && !item) { e.preventDefault(); choose(order[parseInt(k, 10) - 1]); }
+      if (k === "ArrowRight") { e.preventDefault(); next(); return; }
+      if (k === "ArrowLeft") { e.preventDefault(); go(i - 1); return; }
+      if (/^[1-5]$/.test(k) && !item) { e.preventDefault(); choose(orderOf(qs[i])[parseInt(k, 10) - 1]); }
       else if ((k === "d" || k === "D") && !item) { e.preventDefault(); choose(-1); }
       else if ((k === "g" || k === "G") && (!item || item.ok)) { e.preventDefault(); toggleGuess(); }
     };
-    order = shuffled([0, 1, 2, 3, 4]);
     try { if (!dlg.open) { dlg.showModal(); } } catch (err) { dlg.setAttribute("open", ""); }
     render();
   }
