@@ -2246,10 +2246,8 @@
      The wildcard page lists them; a loop's sessions are the wildcard sessions whose
      forWhat starts with the loop's forWhat. */
   var LOOPS = [
-    { id: "threedots", name: "3 Dots IT, Conversational AI", when: "Fri 2 Oct, 3:30 PM", forWhat: "3 Dots IT",
-      file: "interviews/threedots.html", note: "Client interview through a staffing vendor, end client unknown. Thirty minutes: conversational AI and deep NLP." },
-    { id: "vanguard", name: "Vanguard, technical", when: "date to be set", forWhat: "Vanguard",
-      file: "interviews/vanguard.html", note: "Details to be filled." },
+    { id: "vanguard", name: "Vanguard, Conversational AI", when: "Fri 2 Oct, 2 PM", forWhat: "Vanguard",
+      file: "interviews/vanguard.html", note: "Client interview with Vanguard's team, via Mphasis: conversational AI and deep NLP." },
     { id: "commure", name: "Commure, Voice Agents", when: "Mon 5 Oct", forWhat: "Commure",
       file: "interviews/commure.html", note: "Software Engineer, Voice Agents. Recruiter screen: healthcare voice, real-time, production agents." },
     { id: "coframe", name: "Coframe, Agent Platform Engineer", when: "Tue 6 Oct, time to book", forWhat: "Coframe",
@@ -2290,7 +2288,7 @@
   var WILDCARD = {
     title: "Wildcard",
     /* One line: the loop in play. Loops that have happened are parked, not described here. */
-    note: "3 Dots IT, conversational AI client interview: Friday 2 October. Then Commure, Monday 5 October, and Coframe round 2, Tuesday 6 October.",
+    note: "Vanguard, conversational AI client interview (via Mphasis): Friday 2 October, 2 PM. Then Commure, Monday 5 October, and Coframe round 2, Tuesday 6 October.",
     sessions: [
       {
         id: "wc19", track: "Systems", forWhat: "Commure, second round", len: "2h", est: 120,
@@ -2678,7 +2676,7 @@
       },
 
       {
-        id: "wc25", track: "Mathematics", forWhat: "3 Dots IT, Fri 2 Oct", len: "55m", est: 55,
+        id: "wc25", track: "Mathematics", forWhat: "Vanguard, Fri 2 Oct", len: "55m", est: 55,
         name: "The map of NLP",
         blurb: "The field as one tree: foundations, representations, tasks, model eras and evaluation, and where conversational AI sits on it.",
         intro: "Friday's second area asks for strong expertise in NLP, and the fastest way an interviewer sorts that is 'walk me through the field'. This session gives you the map, so every later answer has a place to hang. It ends with the metrics, because every error-analysis question on Friday comes back to them.",
@@ -2700,8 +2698,8 @@
               { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
               { label: "Baseline, NLP: tokenization", url: "BASELINE.html#/nlp/tokenization" },
               { label: "Baseline, NLP: sentence embeddings", url: "BASELINE.html#/nlp/sentence-embeddings" },
-              { label: "3 Dots IT prep: TF-IDF, and when it is still the right tool", url: "interviews/threedots.html#/prep/q-tf-idf-what-does-it-do-and-when-is-it-still-the-right-tool" },
-              { label: "3 Dots IT prep: static or contextual embeddings", url: "interviews/threedots.html#/prep/q-static-or-contextual-embeddings-what-s-the-difference" }
+              { label: "Vanguard prep: TF-IDF, and when it is still the right tool", url: "interviews/vanguard.html#/prep/q-tf-idf-what-does-it-do-and-when-is-it-still-the-right-tool" },
+              { label: "Vanguard prep: static or contextual embeddings", url: "interviews/vanguard.html#/prep/q-static-or-contextual-embeddings-what-s-the-difference" }
             ],
             ans: [
               "Foundations turn text into units: normalization, tokenization, morphology, POS tags, parsing",
@@ -2731,7 +2729,7 @@
               { label: "Baseline, NLP: sequence labelling", url: "BASELINE.html#/nlp/sequence-labelling" },
               { label: "Baseline, NLP: LLM training", url: "BASELINE.html#/nlp/llm-training" },
               { label: "Baseline, ML: Transformers and attention", url: "BASELINE.html#/ml/transformers" },
-              { label: "3 Dots IT prep: the map of NLP in two minutes", url: "interviews/threedots.html#/prep/q-give-me-the-map-of-nlp-in-two-minutes" }
+              { label: "Vanguard prep: the map of NLP in two minutes", url: "interviews/vanguard.html#/prep/q-give-me-the-map-of-nlp-in-two-minutes" }
             ],
             ans: [
               "Rules, then statistical models on hand-built features: n-grams, Naive Bayes, HMMs, CRFs",
@@ -2758,8 +2756,8 @@
               { label: "Baseline, NLP: dialogue state", url: "BASELINE.html#/nlp/dialogue-state" },
               { label: "Baseline, NLP: conversation design", url: "BASELINE.html#/nlp/conversation-design" },
               { label: "Baseline, audio: speech recognition", url: "BASELINE.html#/audio/asr" },
-              { label: "3 Dots IT prep: classic NLU or an LLM", url: "interviews/threedots.html#/prep/q-classic-nlu-or-an-llm-for-intent-classification" },
-              { label: "3 Dots IT prep: how your background fits", url: "interviews/threedots.html#/prep/q-how-does-your-background-fit-this-role" }
+              { label: "Vanguard prep: classic NLU or an LLM", url: "interviews/vanguard.html#/prep/q-classic-nlu-or-an-llm-for-intent-classification" },
+              { label: "Vanguard prep: how your background fits", url: "interviews/vanguard.html#/prep/q-how-does-your-background-fit-this-role" }
             ],
             ans: [
               "A stack over the map, not a branch of it",
@@ -2787,8 +2785,8 @@
               { label: "Baseline, AI: evaluation", url: "BASELINE.html#/ai/evaluation" },
               { label: "Baseline, AI: LLM-as-judge", url: "BASELINE.html#/ai/llm-as-judge" },
               { label: "Coding page: evals", url: "CODING.html#evals" },
-              { label: "3 Dots IT prep: macro or micro F1, and when accuracy lies", url: "interviews/threedots.html#/prep/q-macro-or-micro-f1-and-when-does-accuracy-lie" },
-              { label: "3 Dots IT prep: evaluating an NLU model beyond accuracy", url: "interviews/threedots.html#/prep/q-how-do-you-evaluate-an-nlu-model-beyond-accuracy" }
+              { label: "Vanguard prep: macro or micro F1, and when accuracy lies", url: "interviews/vanguard.html#/prep/q-macro-or-micro-f1-and-when-does-accuracy-lie" },
+              { label: "Vanguard prep: evaluating an NLU model beyond accuracy", url: "interviews/vanguard.html#/prep/q-how-do-you-evaluate-an-nlu-model-beyond-accuracy" }
             ],
             ans: [
               "Accuracy lies under imbalance: 95% in one class gives 95% accuracy and near-zero macro-F1",
@@ -2815,8 +2813,8 @@
             ],
             links: [
               { label: "Baseline, AI: RAG", url: "BASELINE.html#/ai/rag" },
-              { label: "3 Dots IT prep: the map of NLP in two minutes", url: "interviews/threedots.html#/prep/q-give-me-the-map-of-nlp-in-two-minutes" },
-              { label: "3 Dots IT prep: MetaRAG", url: "interviews/threedots.html#/prep/q-tell-me-about-metarag" }
+              { label: "Vanguard prep: the map of NLP in two minutes", url: "interviews/vanguard.html#/prep/q-give-me-the-map-of-nlp-in-two-minutes" },
+              { label: "Vanguard prep: MetaRAG", url: "interviews/vanguard.html#/prep/q-tell-me-about-metarag" }
             ],
             ans: [
               "Foundations: tokenization, morphology, POS, parsing",
@@ -2832,7 +2830,7 @@
       },
 
       {
-        id: "wc26", track: "Mathematics", forWhat: "3 Dots IT, Fri 2 Oct", len: "55m", est: 55,
+        id: "wc26", track: "Mathematics", forWhat: "Vanguard, Fri 2 Oct", len: "55m", est: 55,
         name: "Text classification and embeddings",
         blurb: "The classification ladder and how to choose on it, imbalance, calibration and out-of-scope, then embeddings from word2vec to contrastive sentence models and vector search.",
         intro: "The recruiter named text classification and embeddings outright. In a virtual assistant they are the intent model and the router in front of the LLM, so expect them as scenarios: 200 intents and little data, a confident wrong answer, a new phrasing in production. This session is the ladder of methods and the numbers behind each choice.",
@@ -2854,8 +2852,8 @@
               { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
               { label: "Baseline, NLP: bag of words and TF-IDF", url: "BASELINE.html#/nlp/bow-tfidf" },
               { label: "Baseline, NLP: sentence embeddings", url: "BASELINE.html#/nlp/sentence-embeddings" },
-              { label: "3 Dots IT prep: 200 intents, 50 examples each", url: "interviews/threedots.html#/prep/q-classify-200-intents-with-50-examples-each-what-do-you-do" },
-              { label: "3 Dots IT prep: SetFit", url: "interviews/threedots.html#/prep/q-what-is-setfit-and-why-does-it-work-with-so-few-examples" }
+              { label: "Vanguard prep: 200 intents, 50 examples each", url: "interviews/vanguard.html#/prep/q-classify-200-intents-with-50-examples-each-what-do-you-do" },
+              { label: "Vanguard prep: SetFit", url: "interviews/vanguard.html#/prep/q-what-is-setfit-and-why-does-it-work-with-so-few-examples" }
             ],
             ans: [
               "Baseline first: TF-IDF plus logistic regression, to learn how hard it is",
@@ -2884,8 +2882,8 @@
             links: [
               { label: "Baseline, NLP: classification metrics", url: "BASELINE.html#/nlp/classification-metrics" },
               { label: "Baseline, NLP: text classification", url: "BASELINE.html#/nlp/text-classification" },
-              { label: "3 Dots IT prep: out-of-scope queries", url: "interviews/threedots.html#/prep/q-how-do-you-handle-out-of-scope-queries" },
-              { label: "3 Dots IT prep: why calibration matters", url: "interviews/threedots.html#/prep/q-why-does-calibration-matter-and-how-do-you-fix-it" }
+              { label: "Vanguard prep: out-of-scope queries", url: "interviews/vanguard.html#/prep/q-how-do-you-handle-out-of-scope-queries" },
+              { label: "Vanguard prep: why calibration matters", url: "interviews/vanguard.html#/prep/q-why-does-calibration-matter-and-how-do-you-fix-it" }
             ],
             ans: [
               "Out-of-scope is a first-class case: a none class trained on real and synthetic off-topic queries",
@@ -2911,8 +2909,8 @@
             ],
             links: [
               { label: "Baseline, ML: embeddings", url: "BASELINE.html#/ml/embeddings" },
-              { label: "3 Dots IT prep: why embeddings work", url: "interviews/threedots.html#/prep/q-why-do-embeddings-work" },
-              { label: "3 Dots IT prep: static or contextual embeddings", url: "interviews/threedots.html#/prep/q-static-or-contextual-embeddings-what-s-the-difference" }
+              { label: "Vanguard prep: why embeddings work", url: "interviews/vanguard.html#/prep/q-why-do-embeddings-work" },
+              { label: "Vanguard prep: static or contextual embeddings", url: "interviews/vanguard.html#/prep/q-static-or-contextual-embeddings-what-s-the-difference" }
             ],
             ans: [
               "Distributional hypothesis: words in similar contexts get similar vectors",
@@ -2939,8 +2937,8 @@
             links: [
               { label: "Baseline, NLP: encoders and decoders", url: "BASELINE.html#/nlp/encoders-decoders" },
               { label: "Coding page: embeddings and vector search", url: "CODING.html#embed" },
-              { label: "3 Dots IT prep: why not mean-pool BERT", url: "interviews/threedots.html#/prep/q-why-can-t-you-mean-pool-bert-for-sentence-similarity" },
-              { label: "3 Dots IT prep: cosine, dot product or Euclidean", url: "interviews/threedots.html#/prep/q-cosine-dot-product-or-euclidean-distance" }
+              { label: "Vanguard prep: why not mean-pool BERT", url: "interviews/vanguard.html#/prep/q-why-can-t-you-mean-pool-bert-for-sentence-similarity" },
+              { label: "Vanguard prep: cosine, dot product or Euclidean", url: "interviews/vanguard.html#/prep/q-cosine-dot-product-or-euclidean-distance" }
             ],
             ans: [
               "BERT was trained to predict masked tokens, not to compare sentences; pooled vectors sit in a narrow cone",
@@ -2966,7 +2964,7 @@
             links: [
               { label: "Baseline, NLP: sentence embeddings", url: "BASELINE.html#/nlp/sentence-embeddings" },
               { label: "Baseline, AI: RAG", url: "BASELINE.html#/ai/rag" },
-              { label: "3 Dots IT prep: HNSW, IVF and PQ", url: "interviews/threedots.html#/prep/q-hnsw-ivf-and-pq-what-are-they-and-when-do-you-use-each" }
+              { label: "Vanguard prep: HNSW, IVF and PQ", url: "interviews/vanguard.html#/prep/q-hnsw-ivf-and-pq-what-are-they-and-when-do-you-use-each" }
             ],
             ans: [
               "Flat: exact, fine to about a million vectors",
@@ -2995,8 +2993,8 @@
               { label: "Baseline, NLP: sentence embeddings", url: "BASELINE.html#/nlp/sentence-embeddings" },
               { label: "Baseline, AI: hybrid search and reranking", url: "BASELINE.html#/ai/hybrid-search-reranking" },
               { label: "Baseline, AI: RAG", url: "BASELINE.html#/ai/rag" },
-              { label: "3 Dots IT prep: choosing an embedding model", url: "interviews/threedots.html#/prep/q-how-do-you-choose-an-embedding-model" },
-              { label: "3 Dots IT prep: where embeddings fail", url: "interviews/threedots.html#/prep/q-where-do-embeddings-fail-and-how-do-you-use-them-in-an-assis" }
+              { label: "Vanguard prep: choosing an embedding model", url: "interviews/vanguard.html#/prep/q-how-do-you-choose-an-embedding-model" },
+              { label: "Vanguard prep: where embeddings fail", url: "interviews/vanguard.html#/prep/q-where-do-embeddings-fail-and-how-do-you-use-them-in-an-assis" }
             ],
             ans: [
               "Shortlist from MTEB for your task and language; check it live, never quote ranks from memory",
@@ -3012,7 +3010,7 @@
       },
 
       {
-        id: "wc27", track: "Mathematics", forWhat: "3 Dots IT, Fri 2 Oct", len: "55m", est: 55,
+        id: "wc27", track: "Mathematics", forWhat: "Vanguard, Fri 2 Oct", len: "55m", est: 55,
         name: "LLM fundamentals and the Transformer, lightly",
         blurb: "Tokenization, how a pretrained model becomes an assistant, decoding, prompt against RAG against fine-tuning, hallucination; then attention and the block around it, the three shapes, and the KV cache.",
         intro: "The recruiter asked for LLM fundamentals and Transformer architecture, and you want the Transformer lightly. You work with LLMs every day; this session gives you the textbook words for what you know, with the numbers an interviewer checks. Your closed session w4c has attention at mechanism level: use it as the light review.",
@@ -3031,7 +3029,7 @@
             ],
             links: [
               { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
-              { label: "3 Dots IT prep: subword tokenization and BPE", url: "interviews/threedots.html#/prep/q-why-subword-tokenization-and-how-does-bpe-work" }
+              { label: "Vanguard prep: subword tokenization and BPE", url: "interviews/vanguard.html#/prep/q-why-subword-tokenization-and-how-does-bpe-work" }
             ],
             ans: [
               "Words: the vocabulary explodes and unseen words break. Characters: sequences get long",
@@ -3058,8 +3056,8 @@
             ],
             links: [
               { label: "Baseline, NLP: encoders and decoders", url: "BASELINE.html#/nlp/encoders-decoders" },
-              { label: "3 Dots IT prep: pretrained to assistant", url: "interviews/threedots.html#/prep/q-how-does-a-pretrained-model-become-an-assistant" },
-              { label: "3 Dots IT prep: BERT versus GPT", url: "interviews/threedots.html#/prep/q-bert-versus-gpt-what-s-the-difference" }
+              { label: "Vanguard prep: pretrained to assistant", url: "interviews/vanguard.html#/prep/q-how-does-a-pretrained-model-become-an-assistant" },
+              { label: "Vanguard prep: BERT versus GPT", url: "interviews/vanguard.html#/prep/q-bert-versus-gpt-what-s-the-difference" }
             ],
             ans: [
               "Pretraining: next token for decoders, masked tokens for BERT, span corruption for T5",
@@ -3088,8 +3086,8 @@
               { label: "Baseline, AI: RAG", url: "BASELINE.html#/ai/rag" },
               { label: "Baseline, AI: structured output", url: "BASELINE.html#/ai/structured-output" },
               { label: "Coding page: structured output and function calling", url: "CODING.html#structured" },
-              { label: "3 Dots IT prep: temperature, top-k and top-p", url: "interviews/threedots.html#/prep/q-temperature-top-k-and-top-p-what-are-they-and-when-do-you-us" },
-              { label: "3 Dots IT prep: fine-tune, LoRA, prompt or RAG", url: "interviews/threedots.html#/prep/q-fine-tune-lora-prompt-or-rag-how-do-you-choose" }
+              { label: "Vanguard prep: temperature, top-k and top-p", url: "interviews/vanguard.html#/prep/q-temperature-top-k-and-top-p-what-are-they-and-when-do-you-us" },
+              { label: "Vanguard prep: fine-tune, LoRA, prompt or RAG", url: "interviews/vanguard.html#/prep/q-fine-tune-lora-prompt-or-rag-how-do-you-choose" }
             ],
             ans: [
               "Prompt first: no training, fast to change",
@@ -3116,7 +3114,7 @@
             links: [
               { label: "Baseline, AI: RAG", url: "BASELINE.html#/ai/rag" },
               { label: "Baseline, AI: guardrails", url: "BASELINE.html#/ai/guardrails" },
-              { label: "3 Dots IT prep: MetaRAG", url: "interviews/threedots.html#/prep/q-tell-me-about-metarag" }
+              { label: "Vanguard prep: MetaRAG", url: "interviews/vanguard.html#/prep/q-tell-me-about-metarag" }
             ],
             ans: [
               "Cause: plausible text, not verified text; data gaps, fine-tuning on unknown facts, sampling",
@@ -3143,8 +3141,8 @@
             ],
             links: [
               { label: "Baseline, NLP: encoders and decoders", url: "BASELINE.html#/nlp/encoders-decoders" },
-              { label: "3 Dots IT prep: explain attention", url: "interviews/threedots.html#/prep/q-attention" },
-              { label: "3 Dots IT prep: why divide by the square root of d_k", url: "interviews/threedots.html#/prep/q-why-divide-the-attention-scores-by-the-square-root-of-d-k" }
+              { label: "Vanguard prep: explain attention", url: "interviews/vanguard.html#/prep/q-attention" },
+              { label: "Vanguard prep: why divide by the square root of d_k", url: "interviews/vanguard.html#/prep/q-why-divide-the-attention-scores-by-the-square-root-of-d-k" }
             ],
             ans: [
               "Each token makes a query, a key and a value",
@@ -3172,8 +3170,8 @@
             ],
             links: [
               { label: "Baseline, ML: Transformers and attention", url: "BASELINE.html#/ml/transformers" },
-              { label: "3 Dots IT prep: the KV cache", url: "interviews/threedots.html#/prep/q-what-is-the-kv-cache-and-why-does-it-matter" },
-              { label: "3 Dots IT prep: BERT versus GPT", url: "interviews/threedots.html#/prep/q-bert-versus-gpt-what-s-the-difference" }
+              { label: "Vanguard prep: the KV cache", url: "interviews/vanguard.html#/prep/q-what-is-the-kv-cache-and-why-does-it-matter" },
+              { label: "Vanguard prep: BERT versus GPT", url: "interviews/vanguard.html#/prep/q-bert-versus-gpt-what-s-the-difference" }
             ],
             ans: [
               "Encoder-only (BERT): bidirectional; classification, NER, embeddings, reranking",
@@ -3189,7 +3187,7 @@
       },
 
       {
-        id: "wc28", track: "Interview", forWhat: "3 Dots IT, Fri 2 Oct", len: "55m", est: 55,
+        id: "wc28", track: "Interview", forWhat: "Vanguard, Fri 2 Oct", len: "55m", est: 55,
         name: "Conversation design",
         blurb: "Persona and prompts, no-match and no-input, confirmation, repair, handoff, voice against chat, and designing one task end to end.",
         intro: "Conversation design is the first thing named in Friday's conversational AI area. You have built the runtime side of it in alfred_ and MockFlow-AI; this session gives you the designer's vocabulary from Google's and Alexa's guidelines, Rasa's patterns and Dialogflow CX, so you can talk about prompts, errors, confirmation, repair and handoff the way the enterprise platforms do.",
@@ -3211,7 +3209,7 @@
               { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
               { label: "Guide: enterprise virtual assistant, the whole design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant" },
               { label: "Baseline, audio: speech recognition", url: "BASELINE.html#/audio/asr" },
-              { label: "3 Dots IT prep: voice and chat", url: "interviews/threedots.html#/prep/q-what-do-you-design-differently-for-voice-and-for-chat" }
+              { label: "Vanguard prep: voice and chat", url: "interviews/vanguard.html#/prep/q-what-do-you-design-differently-for-voice-and-for-chat" }
             ],
             ans: [
               "Persona is a style guide for prompts and copy: 4 to 6 traits, never pretending to be human",
@@ -3238,7 +3236,7 @@
             links: [
               { label: "Baseline, NLP: conversation design", url: "BASELINE.html#/nlp/conversation-design" },
               { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
-              { label: "3 Dots IT prep: no-match and no-input", url: "interviews/threedots.html#/prep/q-how-do-you-handle-no-match-and-no-input" }
+              { label: "Vanguard prep: no-match and no-input", url: "interviews/vanguard.html#/prep/q-how-do-you-handle-no-match-and-no-input" }
             ],
             ans: [
               "Three error types: no-input, no-match, system error",
@@ -3264,8 +3262,8 @@
             links: [
               { label: "Baseline, NLP: conversation design", url: "BASELINE.html#/nlp/conversation-design" },
               { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
-              { label: "3 Dots IT prep: explicit or implicit confirmation", url: "interviews/threedots.html#/prep/q-explicit-or-implicit-confirmation-when-do-you-use-which" },
-              { label: "3 Dots IT prep: the decision layer at alfred_", url: "interviews/threedots.html#/prep/q-tell-me-about-the-decision-layer-at-alfred" }
+              { label: "Vanguard prep: explicit or implicit confirmation", url: "interviews/vanguard.html#/prep/q-explicit-or-implicit-confirmation-when-do-you-use-which" },
+              { label: "Vanguard prep: the decision layer at alfred_", url: "interviews/vanguard.html#/prep/q-tell-me-about-the-decision-layer-at-alfred" }
             ],
             ans: [
               "Implicit by default: it keeps the flow and lets the user correct",
@@ -3292,7 +3290,7 @@
               { label: "Baseline, NLP: dialogue state", url: "BASELINE.html#/nlp/dialogue-state" },
               { label: "Baseline, NLP: conversation design", url: "BASELINE.html#/nlp/conversation-design" },
               { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
-              { label: "3 Dots IT prep: ambiguity, corrections and digressions", url: "interviews/threedots.html#/prep/q-how-do-you-handle-ambiguity-corrections-and-digressions" }
+              { label: "Vanguard prep: ambiguity, corrections and digressions", url: "interviews/vanguard.html#/prep/q-how-do-you-handle-ambiguity-corrections-and-digressions" }
             ],
             ans: [
               "Correction: spot that an earlier slot is being updated, change it, re-run only what depends on it, reconfirm implicitly",
@@ -3319,7 +3317,7 @@
               { label: "Baseline, NLP: conversation design", url: "BASELINE.html#/nlp/conversation-design" },
               { label: "Baseline, NLP: assistant metrics", url: "BASELINE.html#/nlp/assistant-metrics" },
               { label: "Guide: enterprise virtual assistant, the whole design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant" },
-              { label: "3 Dots IT prep: handoff to a human", url: "interviews/threedots.html#/prep/q-when-should-the-assistant-hand-off-to-a-human-and-how" }
+              { label: "Vanguard prep: handoff to a human", url: "interviews/vanguard.html#/prep/q-when-should-the-assistant-hand-off-to-a-human-and-how" }
             ],
             ans: [
               "Triggers: an explicit request (at once), a second failure, high-stakes or regulated topics, frustration",
@@ -3347,7 +3345,7 @@
             links: [
               { label: "Guide: enterprise virtual assistant, high-level design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/hld" },
               { label: "Baseline, NLP: assistant metrics", url: "BASELINE.html#/nlp/assistant-metrics" },
-              { label: "3 Dots IT prep: designing the conversation for a new use case", url: "interviews/threedots.html#/prep/q-how-do-you-design-the-conversation-for-a-new-use-case" }
+              { label: "Vanguard prep: designing the conversation for a new use case", url: "interviews/vanguard.html#/prep/q-how-do-you-design-the-conversation-for-a-new-use-case" }
             ],
             ans: [
               "Happy path written as a sample dialog and said aloud",
@@ -3363,7 +3361,7 @@
       },
 
       {
-        id: "wc29", track: "Interview", forWhat: "3 Dots IT, Fri 2 Oct", len: "55m", est: 55,
+        id: "wc29", track: "Interview", forWhat: "Vanguard, Fri 2 Oct", len: "55m", est: 55,
         name: "Intents, entities and the NLU model",
         blurb: "The intent taxonomy, training data and out-of-scope, entities and dialogue state, thresholds, how the platforms differ, and where LLMs now fit.",
         intro: "Intent and entity modelling is named in Friday's brief, and the likely client runs an enterprise NLU platform: Dialogflow CX, Cognigy, Lex or Microsoft's stack. You have built intent routing in alfred_, not on those platforms, so this session gives you the modelling rules they share, how they differ, and where LLMs now fit, so you can speak their language and say plainly what you have and have not used.",
@@ -3383,7 +3381,7 @@
               { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
               { label: "Baseline, NLP: text classification", url: "BASELINE.html#/nlp/text-classification" },
               { label: "Guide: enterprise virtual assistant, high-level design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/hld" },
-              { label: "3 Dots IT prep: the intent taxonomy for a bank", url: "interviews/threedots.html#/prep/q-how-would-you-design-the-intent-taxonomy-for-say-a-bank-assi" }
+              { label: "Vanguard prep: the intent taxonomy for a bank", url: "interviews/vanguard.html#/prep/q-how-would-you-design-the-intent-taxonomy-for-say-a-bank-assi" }
             ],
             ans: [
               "Start from call and chat logs; rank tasks by volume and risk, not by the product catalogue",
@@ -3409,8 +3407,8 @@
             links: [
               { label: "Baseline, NLP: intents and entities", url: "BASELINE.html#/nlp/intents-entities" },
               { label: "Guide: enterprise virtual assistant, the whole design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant" },
-              { label: "3 Dots IT prep: training phrases", url: "interviews/threedots.html#/prep/q-how-many-training-phrases-does-an-intent-need-and-where-do-t" },
-              { label: "3 Dots IT prep: out-of-scope queries", url: "interviews/threedots.html#/prep/q-how-do-you-handle-out-of-scope-queries" }
+              { label: "Vanguard prep: training phrases", url: "interviews/vanguard.html#/prep/q-how-many-training-phrases-does-an-intent-need-and-where-do-t" },
+              { label: "Vanguard prep: out-of-scope queries", url: "interviews/vanguard.html#/prep/q-how-do-you-handle-out-of-scope-queries" }
             ],
             ans: [
               "Real utterances from production logs, not only the design team's",
@@ -3437,8 +3435,8 @@
             links: [
               { label: "Baseline, NLP: intents and entities", url: "BASELINE.html#/nlp/intents-entities" },
               { label: "Guide: enterprise virtual assistant, high-level design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/hld" },
-              { label: "3 Dots IT prep: entities and slots", url: "interviews/threedots.html#/prep/q-how-do-you-model-entities-and-slots" },
-              { label: "3 Dots IT prep: dialogue state", url: "interviews/threedots.html#/prep/q-what-is-dialogue-state-and-how-do-you-track-it" }
+              { label: "Vanguard prep: entities and slots", url: "interviews/vanguard.html#/prep/q-how-do-you-model-entities-and-slots" },
+              { label: "Vanguard prep: dialogue state", url: "interviews/vanguard.html#/prep/q-what-is-dialogue-state-and-how-do-you-track-it" }
             ],
             ans: [
               "System entities for dates and numbers; lists with synonyms for closed sets; regex plus validation for IDs; learned where context decides",
@@ -3466,7 +3464,7 @@
               { label: "Baseline, NLP: out-of-scope detection", url: "BASELINE.html#/nlp/out-of-scope" },
               { label: "Baseline, NLP: classification metrics", url: "BASELINE.html#/nlp/classification-metrics" },
               { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
-              { label: "3 Dots IT prep: confidence thresholds", url: "interviews/threedots.html#/prep/q-how-do-you-set-confidence-thresholds" }
+              { label: "Vanguard prep: confidence thresholds", url: "interviews/vanguard.html#/prep/q-how-do-you-set-confidence-thresholds" }
             ],
             ans: [
               "From evaluation data, never defaults: precision, recall and the cost of a wrong action against the threshold",
@@ -3495,8 +3493,8 @@
               { label: "Baseline, NLP: intents and entities", url: "BASELINE.html#/nlp/intents-entities" },
               { label: "Baseline, NLP: classic NLU and LLMs together", url: "BASELINE.html#/nlp/nlu-llm-hybrid" },
               { label: "Guide: enterprise virtual assistant, high-level design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/hld" },
-              { label: "3 Dots IT prep: the platforms", url: "interviews/threedots.html#/prep/q-which-conversational-ai-platforms-do-you-know-and-how-do-the" },
-              { label: "3 Dots IT prep: ramping up on their platform", url: "interviews/threedots.html#/prep/q-you-haven-t-used-our-platform-how-would-you-get-productive" }
+              { label: "Vanguard prep: the platforms", url: "interviews/vanguard.html#/prep/q-which-conversational-ai-platforms-do-you-know-and-how-do-the" },
+              { label: "Vanguard prep: ramping up on their platform", url: "interviews/vanguard.html#/prep/q-you-haven-t-used-our-platform-how-would-you-get-productive" }
             ],
             ans: [
               "Dialogflow CX: flows of pages as a state machine, route groups, numbered error handlers; playbooks and generative fallback on top",
@@ -3524,8 +3522,8 @@
             links: [
               { label: "Baseline, AI: RAG", url: "BASELINE.html#/ai/rag" },
               { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
-              { label: "3 Dots IT prep: classic NLU or an LLM", url: "interviews/threedots.html#/prep/q-classic-nlu-or-an-llm-for-intent-classification" },
-              { label: "3 Dots IT prep: adding an LLM to a Dialogflow bot safely", url: "interviews/threedots.html#/prep/q-how-would-you-add-an-llm-to-an-existing-dialogflow-bot-safel" }
+              { label: "Vanguard prep: classic NLU or an LLM", url: "interviews/vanguard.html#/prep/q-classic-nlu-or-an-llm-for-intent-classification" },
+              { label: "Vanguard prep: adding an LLM to a Dialogflow bot safely", url: "interviews/vanguard.html#/prep/q-how-would-you-add-an-llm-to-an-existing-dialogflow-bot-safel" }
             ],
             ans: [
               "Stable, labelled, latency-critical: a fine-tuned encoder. Changing schemas, few labels or OOS-critical: an LLM",
@@ -3541,7 +3539,7 @@
       },
 
       {
-        id: "wc30", track: "Interview", forWhat: "3 Dots IT, Fri 2 Oct", len: "55m", est: 55,
+        id: "wc30", track: "Interview", forWhat: "Vanguard, Fri 2 Oct", len: "55m", est: 55,
         name: "Error analysis and production improvements",
         blurb: "Per-intent metrics and the confusion matrix, mining misses, transcript review, testing and simulation, KPIs that tell the truth, experiments and release; then your own work and where you have not worked.",
         intro: "Error analysis and production improvement is where you are strongest: alfred_ runs a production-failure scanner over real conversations, and every action passes a deterministic decision layer. This session gives that work the enterprise names (confusion matrix, failure taxonomy, containment, experiments) and ends with the bridge from your system to theirs, including what you have not used.",
@@ -3563,8 +3561,8 @@
               { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
               { label: "Baseline, audio: speech recognition", url: "BASELINE.html#/audio/asr" },
               { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
-              { label: "3 Dots IT prep: two intents keep getting confused", url: "interviews/threedots.html#/prep/q-two-intents" },
-              { label: "3 Dots IT prep: evaluating an NLU model beyond accuracy", url: "interviews/threedots.html#/prep/q-how-do-you-evaluate-an-nlu-model-beyond-accuracy" }
+              { label: "Vanguard prep: two intents keep getting confused", url: "interviews/vanguard.html#/prep/q-two-intents" },
+              { label: "Vanguard prep: evaluating an NLU model beyond accuracy", url: "interviews/vanguard.html#/prep/q-how-do-you-evaluate-an-nlu-model-beyond-accuracy" }
             ],
             ans: [
               "Read the confusion matrix and the misclassified utterances themselves, not only F1",
@@ -3592,8 +3590,8 @@
             links: [
               { label: "Baseline, NLP: sentence embeddings", url: "BASELINE.html#/nlp/sentence-embeddings" },
               { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
-              { label: "3 Dots IT prep: finding the intents you are missing", url: "interviews/threedots.html#/prep/q-how-do-you-find-the-intents-you-re-missing" },
-              { label: "3 Dots IT prep: transcript review", url: "interviews/threedots.html#/prep/q-how-do-you-structure-transcript-review" }
+              { label: "Vanguard prep: finding the intents you are missing", url: "interviews/vanguard.html#/prep/q-how-do-you-find-the-intents-you-re-missing" },
+              { label: "Vanguard prep: transcript review", url: "interviews/vanguard.html#/prep/q-how-do-you-structure-transcript-review" }
             ],
             ans: [
               "Collect fallback, low-confidence and escalated turns; embed, cluster, have an LLM name each cluster",
@@ -3621,8 +3619,8 @@
             links: [
               { label: "Baseline, NLP: error analysis", url: "BASELINE.html#/nlp/error-analysis" },
               { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
-              { label: "3 Dots IT prep: testing before release", url: "interviews/threedots.html#/prep/q-how-do-you-test-a-conversational-system-before-release" },
-              { label: "3 Dots IT prep: LLM-as-judge on conversations", url: "interviews/threedots.html#/prep/q-how-do-you-use-an-llm-as-a-judge-on-conversations-and-where-" }
+              { label: "Vanguard prep: testing before release", url: "interviews/vanguard.html#/prep/q-how-do-you-test-a-conversational-system-before-release" },
+              { label: "Vanguard prep: LLM-as-judge on conversations", url: "interviews/vanguard.html#/prep/q-how-do-you-use-an-llm-as-a-judge-on-conversations-and-where-" }
             ],
             ans: [
               "An NLU test set with per-intent metrics",
@@ -3650,8 +3648,8 @@
             links: [
               { label: "Baseline, NLP: error analysis", url: "BASELINE.html#/nlp/error-analysis" },
               { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
-              { label: "3 Dots IT prep: KPIs and which mislead", url: "interviews/threedots.html#/prep/q-which-kpis-do-you-report-and-which-ones-mislead" },
-              { label: "3 Dots IT prep: containment dropped 10%", url: "interviews/threedots.html#/prep/q-containment-dropped-10-after-a-release-walk-me-through-it" }
+              { label: "Vanguard prep: KPIs and which mislead", url: "interviews/vanguard.html#/prep/q-which-kpis-do-you-report-and-which-ones-mislead" },
+              { label: "Vanguard prep: containment dropped 10%", url: "interviews/vanguard.html#/prep/q-containment-dropped-10-after-a-release-walk-me-through-it" }
             ],
             ans: [
               "Containment misleads alone: a wall contains",
@@ -3679,8 +3677,8 @@
               { label: "Baseline, NLP: assistant metrics", url: "BASELINE.html#/nlp/assistant-metrics" },
               { label: "Baseline, NLP: error analysis", url: "BASELINE.html#/nlp/error-analysis" },
               { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
-              { label: "3 Dots IT prep: A/B testing a flow", url: "interviews/threedots.html#/prep/q-how-would-you-a-b-test-a-change-to-a-flow" },
-              { label: "3 Dots IT prep: monitoring for drift", url: "interviews/threedots.html#/prep/q-how-do-you-monitor-a-live-assistant-for-drift" }
+              { label: "Vanguard prep: A/B testing a flow", url: "interviews/vanguard.html#/prep/q-how-would-you-a-b-test-a-change-to-a-flow" },
+              { label: "Vanguard prep: monitoring for drift", url: "interviews/vanguard.html#/prep/q-how-do-you-monitor-a-live-assistant-for-drift" }
             ],
             ans: [
               "Split by user or session, one change at a time, through full weekly cycles",
@@ -3709,8 +3707,8 @@
               { label: "Baseline, NLP: error analysis", url: "BASELINE.html#/nlp/error-analysis" },
               { label: "Baseline, NLP: classic NLU and LLMs together", url: "BASELINE.html#/nlp/nlu-llm-hybrid" },
               { label: "Guide: enterprise virtual assistant, the whole design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant" },
-              { label: "3 Dots IT prep: the production failure scanner", url: "interviews/threedots.html#/prep/q-tell-me-about-the-production-failure-scanner" },
-              { label: "3 Dots IT prep: improving an assistant from production data", url: "interviews/threedots.html#/prep/q-tell-me-about-a-time-you-improved-an-assistant-from-producti" }
+              { label: "Vanguard prep: the production failure scanner", url: "interviews/vanguard.html#/prep/q-tell-me-about-the-production-failure-scanner" },
+              { label: "Vanguard prep: improving an assistant from production data", url: "interviews/vanguard.html#/prep/q-tell-me-about-a-time-you-improved-an-assistant-from-producti" }
             ],
             ans: [
               "alfred_: 'intent classification → decision layer → callable tools', for 5,000+ active users",
