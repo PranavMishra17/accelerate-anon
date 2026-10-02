@@ -173,20 +173,6 @@
       "LiveKit SIP service: terminates the trunk and publishes the caller as a participant with an audio track",
       "Codecs: G.711 on the phone network, Opus on WebRTC; the media server transcodes between them"
      ],
-     "read": [
-      {
-       "label": "Twilio: Elastic SIP Trunking, origination and termination",
-       "url": "https://www.twilio.com/docs/sip-trunking",
-       "why": "What a SIP trunk is and which way calls flow through it",
-       "m": 10
-      },
-      {
-       "label": "TelcoBridges: VoIP codec guide, the G.711 and Opus parts",
-       "url": "https://telcobridges.com/learning/sip-trunking/voip-codec-guide/",
-       "why": "Where the 64 kbit/s and the 8 kHz come from",
-       "m": 6
-      }
-     ],
      "mcq": [
       {
        "q": "A caller's audio keeps breaking up, but the call never drops. Which flow is most likely in trouble?",
@@ -244,7 +230,49 @@
      "avoid": [
       "Saying SIP carries the audio: it only sets the call up and tears it down"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Introducing SIP and RTP in VoIP",
+       "url": "https://www.youtube.com/watch?v=VlQ3XQiCJGM",
+       "m": 6,
+       "why": "Signalling and media as two separate flows, in one short pass.",
+       "yt": {
+        "id": "VlQ3XQiCJGM",
+        "ch": "Matt Explains Systems"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Twilio: Elastic SIP Trunking, origination and termination",
+       "url": "https://www.twilio.com/docs/sip-trunking",
+       "m": 10,
+       "why": "What a SIP trunk is and which way calls flow through it"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "SIP, SDP, and RTP Work | Introduction to VoIP (Part 3)",
+       "url": "https://www.youtube.com/watch?v=1is1PwQKo8w",
+       "m": 12,
+       "why": "The INVITE, 200 OK, ACK exchange and where the audio addresses are agreed.",
+       "yt": {
+        "id": "1is1PwQKo8w",
+        "ch": "Network Direction"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "TelcoBridges: VoIP codec guide, the G.711 and Opus parts",
+       "url": "https://telcobridges.com/learning/sip-trunking/voip-codec-guide/",
+       "m": 6,
+       "why": "Where the 64 kbit/s and the 8 kHz come from"
+      }
+     ]
     },
     {
      "id": "call-webrtc",
@@ -265,26 +293,6 @@
       "LiveKit client SDK: the browser gets a room token from your backend, then connects to the SFU over WebRTC",
       "Signalling is the application's job: WebRTC defines SDP but not how it travels, so LiveKit carries it over its own WebSocket",
       "Adaptive jitter buffers: grow when the network is uneven and shrink when it settles, trading delay for smoothness"
-     ],
-     "read": [
-      {
-       "label": "WebRTC for the Curious: ch. 2 Signaling",
-       "url": "https://webrtcforthecurious.com/docs/02-signaling/",
-       "why": "SDP, offer and answer, in plain words",
-       "m": 12
-      },
-      {
-       "label": "WebRTC for the Curious: ch. 3 Connecting",
-       "url": "https://webrtcforthecurious.com/docs/03-connecting/",
-       "why": "NAT, STUN, TURN and ICE candidates",
-       "m": 20
-      },
-      {
-       "label": "BlogGeek.me: jitter buffer",
-       "url": "https://bloggeek.me/webrtcglossary/jitter-buffer/",
-       "why": "Delay against smoothness in one page",
-       "m": 4
-      }
      ],
      "mcq": [
       {
@@ -343,7 +351,49 @@
      "avoid": [
       "Calling STUN a relay: STUN reports your address, TURN relays"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "How WebRTC Works, Explained Simply (2026)",
+       "url": "https://www.youtube.com/watch?v=ymANT2RGXeg",
+       "m": 5,
+       "why": "The whole picture for a voice-agent builder: offer, answer, NAT, media.",
+       "yt": {
+        "id": "ymANT2RGXeg",
+        "ch": "Voice AI Space"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "WebRTC for the Curious: ch. 3 Connecting",
+       "url": "https://webrtcforthecurious.com/docs/03-connecting/",
+       "m": 20,
+       "why": "NAT, STUN, TURN and ICE candidates"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "ICE, STUN and TURN (WebRTC Tips by WebRTC.ventures)",
+       "url": "https://www.youtube.com/watch?v=AjLFvHuG0cE",
+       "m": 5,
+       "why": "Why a direct path often fails and what STUN and TURN each do about it.",
+       "yt": {
+        "id": "AjLFvHuG0cE",
+        "ch": "WebRTC.ventures"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "WebRTC for the Curious: ch. 2 Signaling",
+       "url": "https://webrtcforthecurious.com/docs/02-signaling/",
+       "m": 12,
+       "why": "SDP, offer and answer, in plain words"
+      }
+     ]
     },
     {
      "id": "call-room",
@@ -365,26 +415,6 @@
       "LiveKit: rooms, participants and tracks are the whole model; the SIP service and the agent framework both join rooms as participants",
       "SFU over MCU: most real-time platforms forward rather than mix, because forwarding needs no decoding",
       "Stateful routing: a live session is pinned to one server, the pattern behind the guide's stateful servers technique"
-     ],
-     "read": [
-      {
-       "label": "LiveKit: rooms, participants and tracks",
-       "url": "https://docs.livekit.io/intro/basics/rooms-participants-tracks/",
-       "why": "The model the agent lives inside",
-       "m": 5
-      },
-      {
-       "label": "BlogGeek.me: SFU",
-       "url": "https://bloggeek.me/webrtcglossary/sfu/",
-       "why": "The SFU and MCU comparison table",
-       "m": 5
-      },
-      {
-       "label": "WebRTC for the Curious: ch. 8 Applied WebRTC",
-       "url": "https://webrtcforthecurious.com/docs/08-applied-webrtc/",
-       "why": "The topologies section, SFU against MCU",
-       "m": 8
-      }
      ],
      "mcq": [
       {
@@ -443,7 +473,49 @@
      "avoid": [
       "Describing the agent as a side service the media server calls: it is a participant in the room"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Group calling architectures in WebRTC: MCU, SFU and P2P",
+       "url": "https://www.youtube.com/watch?v=d2N0d6CKrbk",
+       "m": 4,
+       "why": "Mesh, MCU and SFU side by side, from a WebRTC authority.",
+       "yt": {
+        "id": "d2N0d6CKrbk",
+        "ch": "Tsahi Levent-Levi"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "LiveKit: rooms, participants and tracks",
+       "url": "https://docs.livekit.io/intro/basics/rooms-participants-tracks/",
+       "m": 5,
+       "why": "The model the agent lives inside"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "SFUs and MCUs (WebRTC Tips from WebRTC.ventures)",
+       "url": "https://www.youtube.com/watch?v=tHHpLraJKpQ",
+       "m": 18,
+       "why": "A slower walk through what an SFU forwards and why it scales better.",
+       "yt": {
+        "id": "tHHpLraJKpQ",
+        "ch": "WebRTC.ventures"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "BlogGeek.me: SFU",
+       "url": "https://bloggeek.me/webrtcglossary/sfu/",
+       "m": 5,
+       "why": "The SFU and MCU comparison table"
+      }
+     ]
     },
     {
      "id": "call-dispatch",
@@ -464,26 +536,6 @@
       "LiveKit agent dispatch: a SIP dispatch rule creates a room per inbound call and dispatches the named agent into it",
       "LiveKit server options: each job runs in its own process; prewarm loads models before the first job; a load threshold stops new jobs when a server is busy",
       "Postgres SKIP LOCKED: the pull side, enough for many job queues without a separate broker"
-     ],
-     "read": [
-      {
-       "label": "LiveKit: agent dispatch",
-       "url": "https://docs.livekit.io/agents/server/agent-dispatch",
-       "why": "Including dispatch from inbound SIP calls",
-       "m": 10
-      },
-      {
-       "label": "LiveKit: server options",
-       "url": "https://docs.livekit.io/agents/server/options",
-       "why": "Prewarm, load and drain; each job in its own process",
-       "m": 10
-      },
-      {
-       "label": "Prisma: you don't need a job queue, Postgres already has SKIP LOCKED",
-       "url": "https://www.prisma.io/blog/you-dont-need-a-job-queue-postgres-already-has-skip-locked",
-       "why": "The pull side, for contrast",
-       "m": 8
-      }
      ],
      "mcq": [
       {
@@ -544,6 +596,24 @@
      ],
      "was": [
       "q-why-does-a-call-get-its-own-process-instead-of-a-row-in-a-jo"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "LiveKit: agent dispatch",
+       "url": "https://docs.livekit.io/agents/server/agent-dispatch",
+       "m": 10,
+       "why": "Including dispatch from inbound SIP calls"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Prisma: you don't need a job queue, Postgres already has SKIP LOCKED",
+       "url": "https://www.prisma.io/blog/you-dont-need-a-job-queue-postgres-already-has-skip-locked",
+       "m": 8,
+       "why": "The pull side, for contrast"
+      }
      ]
     },
     {
@@ -565,20 +635,6 @@
       "LiveKit inbound call workflow: identify the SIP caller from the participant's attributes, then let the agent answer",
       "LiveKit SIP trunk setup: an inbound trunk accepts calls; a dispatch rule decides which room and agent each call gets",
       "Scoped, short-lived tokens: the worker holds only what one call needs, and it expires"
-     ],
-     "read": [
-      {
-       "label": "LiveKit: inbound call workflow",
-       "url": "https://docs.livekit.io/telephony/accepting-calls/workflow-setup",
-       "why": "Identifying SIP callers and agents answering calls",
-       "m": 8
-      },
-      {
-       "label": "LiveKit: SIP trunk setup and dispatch rules",
-       "url": "https://docs.livekit.io/telephony/start/sip-trunk-setup",
-       "why": "The two settings that put a call in a room",
-       "m": 8
-      }
      ],
      "mcq": [
       {
@@ -625,6 +681,36 @@
      ],
      "was": [
       "q-what-happens-between-the-phone-ringing-and-the-agent-speakin"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Add a Phone Number to Your Voice Agent in 60 Seconds",
+       "url": "https://www.youtube.com/watch?v=KJ1CgZ0iZbY",
+       "m": 6,
+       "why": "A trunk, a number and a dispatch rule: the three settings that put a call in a room.",
+       "yt": {
+        "id": "KJ1CgZ0iZbY",
+        "ch": "LiveKit"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "LiveKit: inbound call workflow",
+       "url": "https://docs.livekit.io/telephony/accepting-calls/workflow-setup",
+       "m": 8,
+       "why": "Identifying SIP callers and agents answering calls"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "LiveKit: SIP trunk setup and dispatch rules",
+       "url": "https://docs.livekit.io/telephony/start/sip-trunk-setup",
+       "m": 8,
+       "why": "The two settings that put a call in a room"
+      }
      ]
     }
    ]
@@ -657,26 +743,6 @@
       "Whisper: an encoder-decoder transformer trained on 680,000 hours of weakly supervised audio, reading 80-channel log-mel spectrograms",
       "Phone paths: speech providers offer telephony-tuned models because 8 kHz mu-law audio differs from the wideband audio most models train on",
       "Neural TTS: a front end normalises text, an acoustic model predicts features, a vocoder renders sound (Soniox's overview)"
-     ],
-     "read": [
-      {
-       "label": "Voice AI and Voice Agents: an illustrated primer",
-       "url": "https://voiceaiandvoiceagents.com/#latency",
-       "why": "The whole loop in one place; start at latency",
-       "m": 10
-      },
-      {
-       "label": "arXiv: Whisper paper, abstract and Approach",
-       "url": "https://arxiv.org/abs/2212.04356",
-       "why": "What goes in, what comes out",
-       "m": 20
-      },
-      {
-       "label": "Soniox: how neural TTS works",
-       "url": "https://soniox.com/wiki/how-neural-tts-works",
-       "why": "Front end, acoustic model, vocoder",
-       "m": 6
-      }
      ],
      "mcq": [
       {
@@ -735,7 +801,49 @@
      "avoid": [
       "Going into the maths of the spectrogram: the shape and where latency comes from are enough"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Sampling Rate and Bit Depth Explained: 8k, 16k, 44.1k, 48k",
+       "url": "https://www.youtube.com/watch?v=fM_jMlhfU0Y",
+       "m": 8,
+       "why": "Why 8 kHz phone audio tops out at 4 kHz, and what a rate mismatch does.",
+       "yt": {
+        "id": "fM_jMlhfU0Y",
+        "ch": "Audio Under The Hood"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Voice AI and Voice Agents: an illustrated primer",
+       "url": "https://voiceaiandvoiceagents.com/#latency",
+       "m": 10,
+       "why": "The whole loop in one place; start at latency"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Seeing Voices: 1 - Intro to Spectrograms",
+       "url": "https://www.youtube.com/watch?v=37zCgCdV468",
+       "m": 9,
+       "why": "The picture of sound that speech models actually read.",
+       "yt": {
+        "id": "37zCgCdV468",
+        "ch": "Jay Alammar"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "arXiv: Whisper paper, abstract and Approach",
+       "url": "https://arxiv.org/abs/2212.04356",
+       "m": 20,
+       "why": "What goes in, what comes out"
+      }
+     ]
     },
     {
      "id": "loop-turn",
@@ -757,32 +865,6 @@
       "LiveKit endpointing: a minimum and maximum delay, with the turn detector deciding where in that window to answer",
       "Silero VAD: per its README, about 1 ms per 30 ms chunk on one CPU thread, cheap enough for every frame",
       "Deepgram endpointing: the streaming service marks a final transcript after a set silence, configurable per request"
-     ],
-     "read": [
-      {
-       "label": "LiveKit: turn detection",
-       "url": "https://docs.livekit.io/agents/logic/turns",
-       "why": "The five strategies side by side",
-       "m": 8
-      },
-      {
-       "label": "LiveKit: turn detector",
-       "url": "https://docs.livekit.io/agents/logic/turns/turn-detector",
-       "why": "How the model and endpointing work together",
-       "m": 8
-      },
-      {
-       "label": "Voice AI primer: turn detection",
-       "url": "https://voiceaiandvoiceagents.com/#turn-detection",
-       "why": "Why silence alone fails",
-       "m": 10
-      },
-      {
-       "label": "Silero: VAD README",
-       "url": "https://github.com/snakers4/silero-vad",
-       "why": "What the common VAD costs per chunk",
-       "m": 4
-      }
      ],
      "mcq": [
       {
@@ -841,7 +923,49 @@
      "avoid": [
       "Treating VAD and end-of-turn detection as the same thing"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Turn-Taking in Voice AI: How Agents Know When to Talk (2026)",
+       "url": "https://www.youtube.com/watch?v=Difvy2uosKw",
+       "m": 5,
+       "why": "Why silence alone fails and what a turn detector adds.",
+       "yt": {
+        "id": "Difvy2uosKw",
+        "ch": "Voice AI Space"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "LiveKit: turn detection",
+       "url": "https://docs.livekit.io/agents/logic/turns",
+       "m": 8,
+       "why": "The five strategies side by side"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Voice Activity Detection | The key to realtime voice chat - Silero VAD",
+       "url": "https://www.youtube.com/watch?v=HUbYXGeR8_c",
+       "m": 9,
+       "why": "What a VAD answers per audio chunk, as against end of turn.",
+       "yt": {
+        "id": "HUbYXGeR8_c",
+        "ch": "HelloWrld"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Voice AI primer: turn detection",
+       "url": "https://voiceaiandvoiceagents.com/#turn-detection",
+       "m": 10,
+       "why": "Why silence alone fails"
+      }
+     ]
     },
     {
      "id": "loop-latency",
@@ -864,26 +988,6 @@
       "LiveKit turn tuning: endpointing delay and preemptive generation are the two main levers on time to first audio",
       "Streaming TTS: synthesis starts on the first sentence, so first audio arrives while the rest is generated (Picovoice)",
       "Parallel agents: a fast agent answers while a heavier one works the same request, so the caller hears something quickly"
-     ],
-     "read": [
-      {
-       "label": "LiveKit: turn-taking tuning",
-       "url": "https://docs.livekit.io/agents/logic/turns/tuning",
-       "why": "Endpointing delay and preemptive generation",
-       "m": 10
-      },
-      {
-       "label": "Deepgram: endpointing and interim results",
-       "url": "https://developers.deepgram.com/docs/understand-endpointing-interim-results",
-       "why": "Partial against final transcripts",
-       "m": 8
-      },
-      {
-       "label": "Picovoice: streaming text to speech for AI agents",
-       "url": "https://picovoice.ai/blog/streaming-text-to-speech-for-ai-agents/",
-       "why": "Why first audio is the metric",
-       "m": 6
-      }
      ],
      "mcq": [
       {
@@ -944,6 +1048,36 @@
      "was": [
       "q-walk-me-through-one-turn-of-a-voice-call-and-the-latency-bud",
       "q-what-s-hard-about-latency-in-a-voice-agent"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Voice Agent Pipeline Explained: VAD, STT, LLM and TTS",
+       "url": "https://www.youtube.com/watch?v=SPB2T-eLrOg",
+       "m": 11,
+       "why": "Each stage streams into the next, and where the milliseconds go.",
+       "yt": {
+        "id": "SPB2T-eLrOg",
+        "ch": "LiveKit"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "LiveKit: turn-taking tuning",
+       "url": "https://docs.livekit.io/agents/logic/turns/tuning",
+       "m": 10,
+       "why": "Endpointing delay and preemptive generation"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Deepgram: endpointing and interim results",
+       "url": "https://developers.deepgram.com/docs/understand-endpointing-interim-results",
+       "m": 8,
+       "why": "Partial against final transcripts"
+      }
      ]
     },
     {
@@ -965,26 +1099,6 @@
       "LiveKit adaptive interruption handling: tells real interruptions from backchannels instead of stopping on any sound",
       "OpenAI Realtime: on interruption the server truncates the assistant's audio item so the transcript matches what the caller heard",
       "Cancellation as a pattern: barge-in is a priority cancel of in-flight work, the same idea as the guide's priority and cancellation technique"
-     ],
-     "read": [
-      {
-       "label": "LiveKit: adaptive interruption handling",
-       "url": "https://docs.livekit.io/agents/logic/turns/adaptive-interruption-handling",
-       "why": "Real interruptions against backchannels",
-       "m": 6
-      },
-      {
-       "label": "Voice AI primer: interruption handling",
-       "url": "https://voiceaiandvoiceagents.com/#interruption-handling",
-       "why": "The whole problem in a few pages",
-       "m": 8
-      },
-      {
-       "label": "OpenAI: Realtime conversations",
-       "url": "https://developers.openai.com/api/docs/guides/realtime-conversations",
-       "why": "Interruption and truncation",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -1043,7 +1157,49 @@
      "avoid": [
       "Saying the agent should stop on any sound: that makes it jumpy"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "LiveKit: adaptive interruption handling",
+       "url": "https://docs.livekit.io/agents/logic/turns/adaptive-interruption-handling",
+       "m": 6,
+       "why": "Real interruptions against backchannels"
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "TEN Framework: Voice AI That Can Actually Be Interrupted",
+       "url": "https://www.youtube.com/watch?v=ES3HhoYCtIc",
+       "m": 8,
+       "why": "What stopping mid-sentence takes: cancel audio, drop the plan, keep the context.",
+       "yt": {
+        "id": "ES3HhoYCtIc",
+        "ch": "Better Stack"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Turn-Taking in Voice AI: How Agents Know When to Talk (2026)",
+       "url": "https://www.youtube.com/watch?v=Difvy2uosKw",
+       "m": 5,
+       "why": "Interruption against backchannel, from the agent's side.",
+       "yt": {
+        "id": "Difvy2uosKw",
+        "ch": "Voice AI Space"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "OpenAI: Realtime conversations",
+       "url": "https://developers.openai.com/api/docs/guides/realtime-conversations",
+       "m": 10,
+       "why": "Interruption and truncation"
+      }
+     ]
     },
     {
      "id": "loop-cascade",
@@ -1065,26 +1221,6 @@
       "OpenAI Realtime: speech to speech over WebRTC or WebSocket, with server-side turn detection",
       "Pipecat: a cascade framework where you place your own VAD and turn detection in front of speech-to-text",
       "LiveKit Agents: supports both a realtime model and a speech-to-text, LLM, TTS pipeline behind the same agent session"
-     ],
-     "read": [
-      {
-       "label": "OpenAI: Realtime, getting started",
-       "url": "https://developers.openai.com/api/docs/guides/realtime",
-       "why": "What speech to speech looks like as an API",
-       "m": 5
-      },
-      {
-       "label": "Pipecat: speech input and turn detection",
-       "url": "https://docs.pipecat.ai/pipecat/learn/speech-input",
-       "why": "The cascade side, and where turn detection sits",
-       "m": 10
-      },
-      {
-       "label": "AI Engineering from Scratch: voice agents with Pipecat and LiveKit",
-       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F14-agent-engineering%2F22-voice-agents-pipecat-livekit",
-       "why": "Both frameworks built end to end",
-       "m": 60
-      }
      ],
      "mcq": [
       {
@@ -1143,7 +1279,58 @@
      "avoid": [
       "Implying you have shipped on a particular realtime provider in healthcare: say how you would choose"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Cascaded vs Speech-to-Speech Voice Agents, Explained (2026)",
+       "url": "https://www.youtube.com/watch?v=gPEyGpf-0sM",
+       "m": 4,
+       "why": "The trade: control and transcripts against latency and prosody.",
+       "yt": {
+        "id": "gPEyGpf-0sM",
+        "ch": "Voice AI Space"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Voice AI Architecture: Cascade vs Speech-Native vs Interaction",
+       "url": "https://www.youtube.com/watch?v=XsY_zFmci6k",
+       "m": 10,
+       "why": "A longer look at the three architectures.",
+       "yt": {
+        "id": "XsY_zFmci6k",
+        "ch": "VIDEU"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "OpenAI: Realtime, getting started",
+       "url": "https://developers.openai.com/api/docs/guides/realtime",
+       "m": 5,
+       "why": "What speech to speech looks like as an API"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Pipecat: speech input and turn detection",
+       "url": "https://docs.pipecat.ai/pipecat/learn/speech-input",
+       "m": 10,
+       "why": "The cascade side, and where turn detection sits"
+      },
+      {
+       "kind": "keep",
+       "src": "aieng",
+       "req": false,
+       "label": "AI Engineering from Scratch: voice agents with Pipecat and LiveKit",
+       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F14-agent-engineering%2F22-voice-agents-pipecat-livekit",
+       "m": 60,
+       "why": "Both frameworks built end to end"
+      }
+     ]
     }
    ]
   },
@@ -1173,26 +1360,6 @@
       "Supabase Edge Functions: 2 s of CPU time per request, a 150 to 400 s wall clock, and 256 MB of memory",
       "Railway services: either a long-running container or a scheduled job, the choice this topic is about",
       "LiveKit server lifecycle: a worker advertises its capacity for load balancing and drains live calls on deploy"
-     ],
-     "read": [
-      {
-       "label": "Supabase: Edge Functions limits",
-       "url": "https://supabase.com/docs/guides/functions/limits",
-       "why": "The exact limits that rule out holding a call",
-       "m": 3
-      },
-      {
-       "label": "Railway: services",
-       "url": "https://docs.railway.com/reference/services",
-       "why": "Long-running container against scheduled job",
-       "m": 5
-      },
-      {
-       "label": "LiveKit: server lifecycle",
-       "url": "https://docs.livekit.io/agents/server/lifecycle",
-       "why": "Capacity, load balancing and drain on deploy",
-       "m": 3
-      }
      ],
      "mcq": [
       {
@@ -1251,7 +1418,25 @@
      "avoid": [
       "Saying functions are slow: the limit is lifetime and state, not speed"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Supabase: Edge Functions limits",
+       "url": "https://supabase.com/docs/guides/functions/limits",
+       "m": 3,
+       "why": "The exact limits that rule out holding a call"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "LiveKit: server lifecycle",
+       "url": "https://docs.livekit.io/agents/server/lifecycle",
+       "m": 3,
+       "why": "Capacity, load balancing and drain on deploy"
+      }
+     ]
     },
     {
      "id": "backend-pushpull",
@@ -1273,26 +1458,6 @@
       "AWS SQS standard queues: at-least-once delivery, so consumers must be idempotent",
       "Kleppmann: a lease alone is unsafe after a long pause; fencing tokens stop a stale worker from writing",
       "Crunchy Data: message queuing in native Postgres, without a separate broker"
-     ],
-     "read": [
-      {
-       "label": "Postgres: the locking clause",
-       "url": "https://www.postgresql.org/docs/current/sql-select.html#SQL-FOR-UPDATE-SHARE",
-       "why": "What SKIP LOCKED does, from the source",
-       "m": 3
-      },
-      {
-       "label": "Kleppmann: how to do distributed locking",
-       "url": "https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html",
-       "why": "Leases and fencing tokens",
-       "m": 15
-      },
-      {
-       "label": "AWS: SQS at-least-once delivery",
-       "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues-at-least-once-delivery.html",
-       "why": "Why consumers must be idempotent",
-       "m": 2
-      }
      ],
      "mcq": [
       {
@@ -1351,7 +1516,49 @@
      "avoid": [
       "Claiming a queue gives exactly-once delivery"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "How to implement Work Queues with Relational Databases and SQL SKIP LOCKED",
+       "url": "https://www.youtube.com/watch?v=xzmd6cVoggc",
+       "m": 8,
+       "why": "Many workers claim different rows without waiting on each other.",
+       "yt": {
+        "id": "xzmd6cVoggc",
+        "ch": "Vlad Mihalcea"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Postgres: the locking clause",
+       "url": "https://www.postgresql.org/docs/current/sql-select.html#SQL-FOR-UPDATE-SHARE",
+       "m": 3,
+       "why": "What SKIP LOCKED does, from the source"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Do You Really Need Redis? Building a Postgres-Native Job Queue with SKIP LOCKED",
+       "url": "https://www.youtube.com/watch?v=dZNxn3FOYmw",
+       "m": 6,
+       "why": "A claim, a lease and a retry in a small job table.",
+       "yt": {
+        "id": "dZNxn3FOYmw",
+        "ch": "myDBA"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Kleppmann: how to do distributed locking",
+       "url": "https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html",
+       "m": 15,
+       "why": "Leases and fencing tokens"
+      }
+     ]
     },
     {
      "id": "backend-idempotency",
@@ -1372,20 +1579,6 @@
       "Stripe: clients send an Idempotency-Key header; the first result, success or error, is saved and replayed for repeats, and keys expire after 24 hours",
       "Brandur Leach: Stripe-like keys in Postgres, with recovery points so a request interrupted halfway can resume",
       "Agent tools: an execution layer keys each write so a retried tool call replays the stored result instead of acting twice"
-     ],
-     "read": [
-      {
-       "label": "Brandur Leach: implementing Stripe-like idempotency keys in Postgres",
-       "url": "https://brandur.org/idempotency-keys",
-       "why": "The full design, with the transaction boundaries",
-       "m": 20
-      },
-      {
-       "label": "Stripe: idempotent requests",
-       "url": "https://docs.stripe.com/api/idempotent_requests",
-       "why": "The rules in four minutes",
-       "m": 4
-      }
      ],
      "mcq": [
       {
@@ -1446,6 +1639,48 @@
      ],
      "was": [
       "q-how-does-a-retried-booking-avoid-booking-twice"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Idempotency - What it is and How to Implement it",
+       "url": "https://www.youtube.com/watch?v=XAccGbtl3Z8",
+       "m": 9,
+       "why": "Why a retry can run twice and how a key makes the second a no-op.",
+       "yt": {
+        "id": "XAccGbtl3Z8",
+        "ch": "Alex Hyett"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Stripe: idempotent requests",
+       "url": "https://docs.stripe.com/api/idempotent_requests",
+       "m": 4,
+       "why": "The rules in four minutes"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Build a robust Payments service using Idempotency Keys",
+       "url": "https://www.youtube.com/watch?v=m6DtqSb1BDM",
+       "m": 17,
+       "why": "The key stored with its result, in a payments design.",
+       "yt": {
+        "id": "m6DtqSb1BDM",
+        "ch": "Arpit Bhayani"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Brandur Leach: implementing Stripe-like idempotency keys in Postgres",
+       "url": "https://brandur.org/idempotency-keys",
+       "m": 20,
+       "why": "The full design, with the transaction boundaries"
+      }
      ]
     },
     {
@@ -1467,14 +1702,6 @@
       "AWS Builders' Library: capped exponential backoff with jitter, and retrying at one layer only so retries don't multiply up the stack",
       "Circuit breakers: stop calling a dependency that keeps failing and fail fast until it recovers",
       "Short auth budgets: a voice worker's authorize call gets a few seconds at most, since the caller is waiting on the line"
-     ],
-     "read": [
-      {
-       "label": "AWS Builders' Library: timeouts, retries and backoff with jitter",
-       "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
-       "why": "The standard reference, with the reasoning",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -1533,7 +1760,29 @@
      "avoid": [
       "Saying you'd retry until it works: unbounded retries are how a slow service goes down"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "How API Retries Cause Outages (Backoff and Jitter Explained)",
+       "url": "https://www.youtube.com/watch?v=1fTUlTqm_Vk",
+       "m": 6,
+       "why": "Why naive retries pile onto a struggling service, and the backoff fix.",
+       "yt": {
+        "id": "1fTUlTqm_Vk",
+        "ch": "CodeAnimated"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "AWS Builders' Library: timeouts, retries and backoff with jitter",
+       "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+       "m": 10,
+       "why": "The standard reference, with the reasoning"
+      }
+     ]
     },
     {
      "id": "backend-scaling",
@@ -1555,26 +1804,6 @@
       "Railway scaling: horizontal replicas behind a load balancer with no sticky sessions, so call routing comes from the dispatcher",
       "Prewarm: load voice activity and turn models once per process before the first call, so the greeting isn't late",
       "Load testing: measure calls per container and provider limits before a launch, not after"
-     ],
-     "read": [
-      {
-       "label": "LiveKit: server options",
-       "url": "https://docs.livekit.io/agents/server/options",
-       "why": "load_fnc and load_threshold",
-       "m": 10
-      },
-      {
-       "label": "Railway: scaling",
-       "url": "https://docs.railway.com/reference/scaling",
-       "why": "Replicas and load balancing",
-       "m": 6
-      },
-      {
-       "label": "AI Engineering from Scratch: cold-start mitigation",
-       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F17-infrastructure-and-production%2F10-cold-start-mitigation",
-       "why": "Why the first call is slow and what to do",
-       "m": 30
-      }
      ],
      "mcq": [
       {
@@ -1632,7 +1861,58 @@
      "avoid": [
       "Quoting user numbers or traffic you haven't handled: say what it is sized for"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Little's Law Explained | L = λ × W | Queueing Theory and System Design",
+       "url": "https://www.youtube.com/watch?v=fYjiS2ogcoE",
+       "m": 6,
+       "why": "Calls in progress equal arrival rate times call length.",
+       "yt": {
+        "id": "fYjiS2ogcoE",
+        "ch": "Industry Ready Coder"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "LiveKit: server options",
+       "url": "https://docs.livekit.io/agents/server/options",
+       "m": 10,
+       "why": "load_fnc and load_threshold"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "How to scale WebSockets to millions of connections",
+       "url": "https://www.youtube.com/watch?v=vXJsJ52vwAA",
+       "m": 14,
+       "why": "What changes when every connection is long-lived and stateful.",
+       "yt": {
+        "id": "vXJsJ52vwAA",
+        "ch": "Ably Realtime"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Railway: scaling",
+       "url": "https://docs.railway.com/reference/scaling",
+       "m": 6,
+       "why": "Replicas and load balancing"
+      },
+      {
+       "kind": "keep",
+       "src": "aieng",
+       "req": false,
+       "label": "AI Engineering from Scratch: cold-start mitigation",
+       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F17-infrastructure-and-production%2F10-cold-start-mitigation",
+       "m": 30,
+       "why": "Why the first call is slow and what to do"
+      }
+     ]
     }
    ]
   },
@@ -1662,20 +1942,6 @@
       "livekit-agents, a common framework for Python voice workers, is built on asyncio: a call's audio, model stream and tool calls are tasks on one loop",
       "FastAPI runs async def endpoints on the event loop and plain def endpoints in a threadpool (AnyIO's default limit is 40 threads)",
       "uvicorn can run on uvloop, a faster drop-in event loop built on libuv; the programming model stays the same"
-     ],
-     "read": [
-      {
-       "label": "Python docs: coroutines and tasks, creating tasks",
-       "url": "https://docs.python.org/3/library/asyncio-task.html#creating-tasks",
-       "why": "create_task, and the warning to keep a reference to every task",
-       "m": 10
-      },
-      {
-       "label": "FastAPI: async def against def",
-       "url": "https://fastapi.tiangolo.com/async/",
-       "why": "The plainest explanation of concurrency against parallelism, and why def runs in a threadpool",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -1738,6 +2004,48 @@
      ],
      "was": [
       "q-how-does-one-python-process-hold-several-live-calls"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Asyncio Finally Explained: What the Event Loop Really Does",
+       "url": "https://www.youtube.com/watch?v=RIVcqT2OGPA",
+       "m": 14,
+       "why": "One thread, tasks that yield at await, and what the loop does in between.",
+       "yt": {
+        "id": "RIVcqT2OGPA",
+        "ch": "ArjanCodes"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "FastAPI: async def against def",
+       "url": "https://fastapi.tiangolo.com/async/",
+       "m": 10,
+       "why": "The plainest explanation of concurrency against parallelism, and why def runs in a threadpool"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "AsyncIO, await, and async - Concurrency in Python",
+       "url": "https://www.youtube.com/watch?v=K56nNuBEd0c",
+       "m": 10,
+       "why": "A second, gentler pass over await and cooperative switching.",
+       "yt": {
+        "id": "K56nNuBEd0c",
+        "ch": "Socratica"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Python docs: coroutines and tasks, creating tasks",
+       "url": "https://docs.python.org/3/library/asyncio-task.html#creating-tasks",
+       "m": 10,
+       "why": "create_task, and the warning to keep a reference to every task"
+      }
      ]
     },
     {
@@ -1759,20 +2067,6 @@
       "The Python docs' worker pool: N consumer tasks on one asyncio.Queue, with queue.join() waiting until every item is marked task_done()",
       "Fan-out inside a turn: calendar and contacts lookups under one TaskGroup, so when one fails the sibling is cancelled instead of left running",
       "Live media uses bounded buffers with a drop policy: a WebRTC jitter buffer holds tens of milliseconds of audio and discards late packets rather than growing"
-     ],
-     "read": [
-      {
-       "label": "Python docs: task groups",
-       "url": "https://docs.python.org/3/library/asyncio-task.html#task-groups",
-       "why": "Exactly how TaskGroup cancels siblings and raises ExceptionGroup",
-       "m": 8
-      },
-      {
-       "label": "Python docs: asyncio queues",
-       "url": "https://docs.python.org/3/library/asyncio-queue.html",
-       "why": "maxsize, put and get, and the worker pool example",
-       "m": 6
-      }
      ],
      "mcq": [
       {
@@ -1845,7 +2139,49 @@
      "avoid": [
       "Saying gather cancels the other tasks on failure: that is TaskGroup"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "3 ways asyncio.gather breaks concurrent code, and how TaskGroup fixes it",
+       "url": "https://www.youtube.com/watch?v=44WqX9uqmFA",
+       "m": 5,
+       "why": "The failure case: gather leaves siblings running.",
+       "yt": {
+        "id": "44WqX9uqmFA",
+        "ch": "Maksym Shemet"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Python docs: task groups",
+       "url": "https://docs.python.org/3/library/asyncio-task.html#task-groups",
+       "m": 8,
+       "why": "Exactly how TaskGroup cancels siblings and raises ExceptionGroup"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "How To Use TASK GROUPS In Python 3.11 (NEW FEATURE!)",
+       "url": "https://www.youtube.com/watch?v=8KyIK7srLds",
+       "m": 9,
+       "why": "TaskGroup in use, with a failing child.",
+       "yt": {
+        "id": "8KyIK7srLds",
+        "ch": "Indently"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Python docs: asyncio queues",
+       "url": "https://docs.python.org/3/library/asyncio-queue.html",
+       "m": 6,
+       "why": "maxsize, put and get, and the worker pool example"
+      }
+     ]
     },
     {
      "id": "async-cancel",
@@ -1866,20 +2202,6 @@
       "LiveKit's agent framework treats interruption as a session setting: when the caller talks over the agent, playback stops and the agent listens",
       "A cancelled write may already have reached the server, so a booking cut off by a timeout is retried with the same idempotency key, never assumed to have failed",
       "TaskGroup and asyncio.timeout both depend on CancelledError propagating; Python 3.11 added Task.uncancel() for this bookkeeping, and swallowing the error breaks both"
-     ],
-     "read": [
-      {
-       "label": "Python docs: task cancellation",
-       "url": "https://docs.python.org/3/library/asyncio-task.html#task-cancellation",
-       "why": "Where CancelledError lands, and why it must be re-raised",
-       "m": 8
-      },
-      {
-       "label": "Python docs: timeouts",
-       "url": "https://docs.python.org/3/library/asyncio-task.html#timeouts",
-       "why": "asyncio.timeout and wait_for, and that both cancel on expiry",
-       "m": 6
-      }
      ],
      "mcq": [
       {
@@ -1952,7 +2274,37 @@
      "avoid": [
       "Saying cancel() kills the task immediately: it raises at the next await, and CPU-bound code cannot be interrupted"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Python docs: task cancellation",
+       "url": "https://docs.python.org/3/library/asyncio-task.html#task-cancellation",
+       "m": 8,
+       "why": "Where CancelledError lands, and why it must be re-raised"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "asyncio 6/20: Task Cancellation and Timeouts",
+       "url": "https://www.youtube.com/watch?v=N61G0HM3_6s",
+       "m": 4,
+       "why": "Where CancelledError lands and how timeouts use it.",
+       "yt": {
+        "id": "N61G0HM3_6s",
+        "ch": "DevStoriesEU"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Python docs: timeouts",
+       "url": "https://docs.python.org/3/library/asyncio-task.html#timeouts",
+       "m": 6,
+       "why": "asyncio.timeout and wait_for, and that both cancel on expiry"
+      }
+     ]
     },
     {
      "id": "async-blocking",
@@ -1973,20 +2325,6 @@
       "FastAPI: a sync library is safe in a plain def endpoint (threadpool) and blocks the loop inside async def",
       "Prewarming: load models such as voice activity detection at process start, not on the first call; livekit-agents offers a prewarm hook for this",
       "The default thread pool has min(32, cpu_count + 4) workers since Python 3.8, so a burst of to_thread calls queues behind it"
-     ],
-     "read": [
-      {
-       "label": "Python docs: developing with asyncio, running blocking code",
-       "url": "https://docs.python.org/3/library/asyncio-dev.html#running-blocking-code",
-       "why": "Debug mode, slow callback logging, and the blocking code rule",
-       "m": 10
-      },
-      {
-       "label": "Python docs: running code in thread or process pools",
-       "url": "https://docs.python.org/3/library/asyncio-eventloop.html#executing-code-in-thread-or-process-pools",
-       "why": "run_in_executor with thread and process pools",
-       "m": 5
-      }
      ],
      "mcq": [
       {
@@ -2047,7 +2385,49 @@
      "avoid": [
       "Saying to_thread fixes any CPU work: pure-Python CPU work still fights the GIL"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Why Is Your Python Async Loop Freezing?",
+       "url": "https://www.youtube.com/watch?v=MOYBOOwPKyw",
+       "m": 5,
+       "why": "One blocking call stalls every task on the loop.",
+       "yt": {
+        "id": "MOYBOOwPKyw",
+        "ch": "Alex | Code Sphere Academy"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Python docs: developing with asyncio, running blocking code",
+       "url": "https://docs.python.org/3/library/asyncio-dev.html#running-blocking-code",
+       "m": 10,
+       "why": "Debug mode, slow callback logging, and the blocking code rule"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Advanced AsyncIO in Python | Locks, Semaphores and Executors",
+       "url": "https://www.youtube.com/watch?v=Lo19buebJjM",
+       "m": 12,
+       "why": "Sending blocking work to an executor.",
+       "yt": {
+        "id": "Lo19buebJjM",
+        "ch": "SP Learning Labs"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Python docs: running code in thread or process pools",
+       "url": "https://docs.python.org/3/library/asyncio-eventloop.html#executing-code-in-thread-or-process-pools",
+       "m": 5,
+       "why": "run_in_executor with thread and process pools"
+      }
+     ]
     },
     {
      "id": "async-build",
@@ -2070,26 +2450,6 @@
       "websockets keepalive: the library pings every 20 s by default and closes the connection if no pong arrives within 20 s, which is how a dead peer is noticed",
       "Idempotency keys as payment APIs use them: the server stores the first result under the key and returns it for any retry",
       "time.monotonic() for latency, never time.time(), which can jump when the system clock is adjusted"
-     ],
-     "read": [
-      {
-       "label": "FastAPI: WebSockets",
-       "url": "https://fastapi.tiangolo.com/advanced/websockets/",
-       "why": "The small server they may ask you to put in front of it",
-       "m": 5
-      },
-      {
-       "label": "websockets: keepalive",
-       "url": "https://websockets.readthedocs.io/en/stable/topics/keepalive.html",
-       "why": "Pings, timeouts and detecting a dead connection",
-       "m": 5
-      },
-      {
-       "label": "AI Engineering from Scratch: the voice assistant pipeline",
-       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F06-speech-and-audio%2F12-voice-assistant-pipeline",
-       "why": "A fuller voice pipeline to compare with yours, if time allows",
-       "m": 120
-      }
      ],
      "mcq": [
       {
@@ -2149,7 +2509,58 @@
      "avoid": [
       "Reaching for a framework in a live build: plain asyncio shows you understand the moving parts"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "FastAPI: WebSockets",
+       "url": "https://fastapi.tiangolo.com/advanced/websockets/",
+       "m": 5,
+       "why": "The small server they may ask you to put in front of it"
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Real-Time Agent Applications with WebSockets and FastAPI",
+       "url": "https://www.youtube.com/watch?v=svABzOASrzg",
+       "m": 19,
+       "why": "A streaming agent behind a WebSocket, end to end.",
+       "yt": {
+        "id": "svABzOASrzg",
+        "ch": "The Neural Maze"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "AsyncIO Queues",
+       "url": "https://www.youtube.com/watch?v=ZSmfMr_mXpE",
+       "m": 6,
+       "why": "The bounded queue between a producer and a worker.",
+       "yt": {
+        "id": "ZSmfMr_mXpE",
+        "ch": "Base2"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "websockets: keepalive",
+       "url": "https://websockets.readthedocs.io/en/stable/topics/keepalive.html",
+       "m": 5,
+       "why": "Pings, timeouts and detecting a dead connection"
+      },
+      {
+       "kind": "keep",
+       "src": "aieng",
+       "req": false,
+       "label": "AI Engineering from Scratch: the voice assistant pipeline",
+       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F06-speech-and-audio%2F12-voice-assistant-pipeline",
+       "m": 120,
+       "why": "A fuller voice pipeline to compare with yours, if time allows"
+      }
+     ]
     }
    ]
   },
@@ -2183,7 +2594,6 @@
       "Short-lived, narrowly scoped tokens are the standard way to give a less trusted runtime access: a leak is bounded by scope and minutes",
       "MockFlow-AI, his second voice system, was built from scratch on the same LiveKit base: sub-400ms end to end, Deepgram Nova-2 for speech, Silero for voice activity"
      ],
-     "read": [],
      "mcq": [
       {
        "q": "Why does the worker get a short-lived, scoped token from an authorize function instead of a service key to the backend?",
@@ -2241,7 +2651,8 @@
      "avoid": [
       "Quoting user counts or traffic: describe what it is sized for"
      ],
-     "was": []
+     "was": [],
+     "res": []
     },
     {
      "id": "own-call",
@@ -2265,7 +2676,6 @@
       "MockFlow-AI keeps the flow in code too: the conversation moves through stages in a state machine, and the model can only move it by calling a transition tool",
       "A filler on slow tools and a hard timeout on every tool keep silence short while work runs"
      ],
-     "read": [],
      "mcq": [
       {
        "q": "A caller says 'send it' after a half-heard request. What makes the design safe?",
@@ -2325,7 +2735,8 @@
      "avoid": [
       "Saying the prompt makes it safe: the safety is in code, and they will ask what happens when the model ignores the prompt"
      ],
-     "was": []
+     "was": [],
+     "res": []
     },
     {
      "id": "own-parallel",
@@ -2346,14 +2757,6 @@
       "It is speculative execution: start work before you know it is needed and discard it if not, the same trade as hedged requests",
       "At ten times the traffic: start the main agent only for intents that can need it, or cancel it once the lean agent has answered",
       "Correlation: carry one turn id through both runs, so a late answer lands on the right turn or is dropped"
-     ],
-     "read": [
-      {
-       "label": "LiveKit: tool loop design",
-       "url": "https://docs.livekit.io/agents/logic/tools/design",
-       "why": "Keeping tools fast under voice latency, the constraint behind the parallel design",
-       "m": 8
-      }
      ],
      "mcq": [
       {
@@ -2414,7 +2817,17 @@
      "avoid": [
       "Giving a seconds-saved number as measured: describe the reason, not a figure you cannot back"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "LiveKit: tool loop design",
+       "url": "https://docs.livekit.io/agents/logic/tools/design",
+       "m": 8,
+       "why": "Keeping tools fast under voice latency, the constraint behind the parallel design"
+      }
+     ]
     },
     {
      "id": "own-sizing",
@@ -2435,14 +2848,6 @@
       "Load test one worker with simulated calls until time to first audio or audio quality degrades; that point, not CPU percent, sets calls per container",
       "Model providers limit requests and tokens per minute; a design with two agents per turn doubles requests, so it meets that limit first",
       "Scale on concurrent calls per worker and keep warm spare capacity, since a cold container costs seconds on a live call"
-     ],
-     "read": [
-      {
-       "label": "Session wc21: The backend under a live agent",
-       "url": "../index.html#/w/wc21",
-       "why": "Step 5: scaling a service that holds live calls",
-       "m": 20
-      }
      ],
      "mcq": [
       {
@@ -2503,6 +2908,29 @@
      ],
      "was": [
       "q-how-would-you-size-a-voice-agent-s-infrastructure"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Little's Law Explained | L = λ × W | Queueing Theory and System Design",
+       "url": "https://www.youtube.com/watch?v=fYjiS2ogcoE",
+       "m": 6,
+       "why": "Calls at once equal arrival rate times call length.",
+       "yt": {
+        "id": "fYjiS2ogcoE",
+        "ch": "Industry Ready Coder"
+       }
+      },
+      {
+       "kind": "keep",
+       "src": "site",
+       "req": false,
+       "label": "Session wc21: The backend under a live agent",
+       "url": "../index.html#/w/wc21",
+       "m": 20,
+       "why": "Step 5: scaling a service that holds live calls"
+      }
      ]
     },
     {
@@ -2525,14 +2953,6 @@
       "Repeat each scenario several times: one passing run of a stochastic agent is not evidence",
       "Simulated callers with background noise and network jitter catch failures that clean test audio hides",
       "Behaviour that must happen on time, like a filler or a timeout, belongs in code, where a test can pin it, not in the prompt"
-     ],
-     "read": [
-      {
-       "label": "Session wc23: Your voice agent at depth",
-       "url": "../index.html#/w/wc23",
-       "why": "Step 5: evals and what went wrong",
-       "m": 25
-      }
      ],
      "mcq": [
       {
@@ -2595,6 +3015,17 @@
      ],
      "was": [
       "q-how-do-you-evaluate-a-voice-agent"
+     ],
+     "res": [
+      {
+       "kind": "keep",
+       "src": "site",
+       "req": true,
+       "label": "Session wc23: Your voice agent at depth",
+       "url": "../index.html#/w/wc23",
+       "m": 25,
+       "why": "Step 5: evals and what went wrong"
+      }
      ]
     }
    ]
@@ -2625,14 +3056,6 @@
       "Commure's agents cover scheduling, rescheduling, cancellations, confirmations, FAQs and intake, integrated with the EHR and telephony in real time",
       "A common split for a 45-minute round: about 3 minutes of requirements, 10 for the high-level design, the rest on two deep dives",
       "Phone systems keep a fallback route for every failure (overflow to an agent queue or voicemail), and an AI front door needs the same"
-     ],
-     "read": [
-      {
-       "label": "Commure: voice AI for patient call automation",
-       "url": "https://www.commure.com/blog-agents/voice-ai-systems-patient-call-automation",
-       "why": "What they automate and what they hand to staff, in their own words",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -2691,7 +3114,17 @@
      "avoid": [
       "Jumping to vendor names before scope and numbers"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Commure: voice AI for patient call automation",
+       "url": "https://www.commure.com/blog-agents/voice-ai-systems-patient-call-automation",
+       "m": 10,
+       "why": "What they automate and what they hand to staff, in their own words"
+      }
+     ]
     },
     {
      "id": "design-hld",
@@ -2714,14 +3147,6 @@
       "Warm transfer with a whispered or on-screen summary is standard in contact centres and cuts handle time for staff",
       "An adapter per EHR keeps vendor differences (FHIR APIs, vendor scheduling APIs, HL7 v2 messages) out of the agent",
       "In the agent he owns, the lean and main agents run in parallel so the caller hears something fast and the heavy work still happens"
-     ],
-     "read": [
-      {
-       "label": "Guide: the patient-call design's deep dives",
-       "url": "../SYSTEM%20DESIGN.html#/designs/voice-agent/deepdives",
-       "why": "Parallel agents, turn-taking, write-back and evals for this design",
-       "m": 15
-      }
      ],
      "mcq": [
       {
@@ -2780,7 +3205,30 @@
      "avoid": [
       "Implying you have integrated an EHR: say how you would"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "keep",
+       "src": "site",
+       "req": true,
+       "label": "Guide: the patient-call design's deep dives",
+       "url": "../SYSTEM%20DESIGN.html#/designs/voice-agent/deepdives",
+       "m": 15,
+       "why": "Parallel agents, turn-taking, write-back and evals for this design"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Voice Agent Pipeline Explained: VAD, STT, LLM and TTS",
+       "url": "https://www.youtube.com/watch?v=SPB2T-eLrOg",
+       "m": 11,
+       "why": "The loop the high-level design is built around.",
+       "yt": {
+        "id": "SPB2T-eLrOg",
+        "ch": "LiveKit"
+       }
+      }
+     ]
     },
     {
      "id": "design-writeback",
@@ -2801,14 +3249,6 @@
       "Where FHIR writes are missing, integrations fall back to the vendor's own scheduling APIs or HL7 v2 scheduling messages",
       "Idempotency keys as payment APIs use them: the first result is stored under the key and returned for every retry",
       "In the agent he owns, writes go through an execution layer with idempotency and are confirmed by the person first"
-     ],
-     "read": [
-      {
-       "label": "Session wc23: Your voice agent at depth",
-       "url": "../index.html#/w/wc23",
-       "why": "Step 2: the write path in your own agent, draft, restate, confirm",
-       "m": 25
-      }
      ],
      "mcq": [
       {
@@ -2869,7 +3309,30 @@
      "avoid": [
       "Claiming to know a specific EHR's API in depth"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "keep",
+       "src": "site",
+       "req": true,
+       "label": "Session wc23: Your voice agent at depth",
+       "url": "../index.html#/w/wc23",
+       "m": 25,
+       "why": "Step 2: the write path in your own agent, draft, restate, confirm"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Idempotency - What it is and How to Implement it",
+       "url": "https://www.youtube.com/watch?v=XAccGbtl3Z8",
+       "m": 9,
+       "why": "The retry-safe commit step.",
+       "yt": {
+        "id": "XAccGbtl3Z8",
+        "ch": "Alex Hyett"
+       }
+      }
+     ]
     },
     {
      "id": "design-safety",
@@ -2892,14 +3355,6 @@
       "Many model and speech providers offer business associate agreements and zero data retention terms for healthcare customers; only vendors under one touch call data",
       "An audit trail of every action (who, what, when, from which call) is what a covered entity needs when a patient disputes a booking",
       "Confidence bands: act when sure, confirm when unsure, hand off below the floor"
-     ],
-     "read": [
-      {
-       "label": "Guide: the patient-call design's deep dives",
-       "url": "../SYSTEM%20DESIGN.html#/designs/voice-agent/deepdives",
-       "why": "Write-back without double booking, and evals",
-       "m": 15
-      }
      ],
      "mcq": [
       {
@@ -2963,6 +3418,17 @@
      ],
      "was": [
       "q-how-would-you-keep-a-patient-call-from-going-wrong"
+     ],
+     "res": [
+      {
+       "kind": "keep",
+       "src": "site",
+       "req": true,
+       "label": "Guide: the patient-call design's deep dives",
+       "url": "../SYSTEM%20DESIGN.html#/designs/voice-agent/deepdives",
+       "m": 15,
+       "why": "Write-back without double booking, and evals"
+      }
      ]
     },
     {
@@ -2981,14 +3447,6 @@
       "Commure's agents answer patient calls end to end: scheduling, rescheduling, cancellations, confirmations, FAQs and intake",
       "Commure reports around 30 to 80% of calls resolved without staff (vendor-reported); a good question is how that varies by call type",
       "Their stated values are speed, ownership, plain communication and care for the patient on the call; each story should show one"
-     ],
-     "read": [
-      {
-       "label": "Commure: Commure Agents",
-       "url": "https://www.commure.com/agents",
-       "why": "The product page, in their words, before the call",
-       "m": 5
-      }
      ],
      "mcq": [
       {
@@ -3048,7 +3506,17 @@
       "Quoting alfred_ user numbers or traffic",
       "Saying you have used healthcare data or an EHR"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Commure: Commure Agents",
+       "url": "https://www.commure.com/agents",
+       "m": 5,
+       "why": "The product page, in their words, before the call"
+      }
+     ]
     }
    ]
   }

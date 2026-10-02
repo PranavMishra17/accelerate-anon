@@ -111,14 +111,6 @@
       "A small classifier answers in milliseconds on a CPU, against about a second for an LLM call, so it takes the confident turns and sends only uncertain or open-ended ones to the LLM",
       "Voice adds ASR at the front and TTS at the back, and the user talking again can interrupt any stage"
      ],
-     "read": [
-      {
-       "label": "Hugging Face: LLM course, ch. 1, NLP and large language models",
-       "url": "https://huggingface.co/learn/llm-course/chapter1/2",
-       "why": "What NLP covers and where LLMs changed it, in one page",
-       "m": 10
-      }
-     ],
      "mcq": [
       {
        "q": "A voice bot's ASR is 95% accurate and its NLU is 98% accurate. Roughly what share of turns get through both stages correctly?",
@@ -177,7 +169,29 @@
      "avoid": [
       "Saying alfred_ has a trained intent classifier: intent and slots come from an LLM with typed tool schemas, validated in code"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "What is conversational AI?",
+       "url": "https://www.youtube.com/watch?v=pOUBt-S5dHY",
+       "m": 7,
+       "why": "The stages of an assistant named once each, as a map before the detail.",
+       "yt": {
+        "id": "pOUBt-S5dHY",
+        "ch": "IBM Technology"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Hugging Face: LLM course, ch. 1, NLP and large language models",
+       "url": "https://huggingface.co/learn/llm-course/chapter1/2",
+       "m": 10,
+       "why": "What NLP covers and where LLMs changed it, in one page"
+      }
+     ]
     },
     {
      "id": "map-nlu",
@@ -199,14 +213,6 @@
       "Entities mix extractors: prebuilt dates and numbers, lists with synonyms for closed sets, regex plus validation for IDs",
       "LLM-first stacks get intent and slots from function calling: each tool is an intent and its typed arguments are slots",
       "Microsoft CLU reports per-intent precision, recall and F1 with a confusion matrix, because overall accuracy hides weak intents"
-     ],
-     "read": [
-      {
-       "label": "Microsoft Learn: CLU evaluation metrics",
-       "url": "https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/concepts/evaluation-metrics",
-       "why": "Per-intent precision, recall and F1, and the confusion matrix, on a real platform",
-       "m": 12
-      }
      ],
      "mcq": [
       {
@@ -266,7 +272,17 @@
      "avoid": [
       "Calling softmax scores 'probabilities you can trust' without calibration"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Microsoft Learn: CLU evaluation metrics",
+       "url": "https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/concepts/evaluation-metrics",
+       "m": 12,
+       "why": "Per-intent precision, recall and F1, and the confusion matrix, on a real platform"
+      }
+     ]
     },
     {
      "id": "map-dialogue",
@@ -289,7 +305,6 @@
       "Wells Fargo's Fargo, as reported: the LLM extracts intent and entities, while the APIs for transfers and lookups never pass through it",
       "A balance or order status is fetched and then phrased; the model is never the source of the number"
      ],
-     "read": [],
      "mcq": [
       {
        "q": "Halfway through a transfer the user says 'actually make it 500'. Where should the new amount go so later steps use it?",
@@ -335,7 +350,21 @@
      "avoid": [
       "Saying the model 'remembers' the account or the order: say where the id is held"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Conversational AI assistants with CALM: architecture of an assistant",
+       "url": "https://www.youtube.com/watch?v=zzUY5T9I730",
+       "m": 5,
+       "why": "How the pieces of an assistant fit together: understanding, state, actions, reply.",
+       "yt": {
+        "id": "zzUY5T9I730",
+        "ch": "Rasa"
+       }
+      }
+     ]
     },
     {
      "id": "map-eras",
@@ -357,7 +386,6 @@
       "Rasa CALM and Copilot Studio moved intent matching to an LLM that reads flow or topic descriptions, while flows still own the steps",
       "Dialogflow CX keeps flows for authentication and payment, and adds generative playbooks and generative fallback for open conversation"
      ],
-     "read": [],
      "mcq": [
       {
        "q": "A bank has 40 stable, high-volume intents, plenty of labelled logs, and a voice channel with tight latency. What is the strongest default for intent routing?",
@@ -417,7 +445,21 @@
      "avoid": [
       "Implying hands-on time on a classic platform: say you've read how each one models the problem"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Conversational AI assistants with CALM: introduction to CALM",
+       "url": "https://www.youtube.com/watch?v=SAZROeEQtMg",
+       "m": 7,
+       "why": "Why a language model plus authored flows replaces classic intent-and-rule bots.",
+       "yt": {
+        "id": "SAZROeEQtMg",
+        "ch": "Rasa"
+       }
+      }
+     ]
     },
     {
      "id": "map-field",
@@ -440,26 +482,6 @@
       "Sentence embeddings drive semantic search, clustering and the retrieval half of RAG in front of the LLM",
       "Encoders (BERT, RoBERTa, DeBERTa) for understanding, decoders (GPT, Llama) for generation, encoder-decoders (T5, BART) for input-to-output tasks",
       "Machine translation is the task that produced seq2seq, attention and the Transformer"
-     ],
-     "read": [
-      {
-       "label": "Lilian Weng: Generalized language models",
-       "url": "https://lilianweng.github.io/posts/2019-01-31-lm/",
-       "why": "ELMo to BERT, GPT and T5; read to the end of BERT",
-       "m": 20
-      },
-      {
-       "label": "Hugging Face: LLM course, how do Transformers work",
-       "url": "https://huggingface.co/learn/llm-course/chapter1/4",
-       "why": "The history and the three shapes: encoder, decoder, encoder-decoder",
-       "m": 15
-      },
-      {
-       "label": "Stanford: Speech and Language Processing (SLP3), table of contents",
-       "url": "https://web.stanford.edu/~jurafsky/slp3/",
-       "why": "The chapter list is itself a map of the field",
-       "m": 3
-      }
      ],
      "mcq": [
       {
@@ -518,7 +540,37 @@
      "avoid": [
       "Calling BERT a generative model: it is an encoder, used for understanding"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Large language models explained briefly",
+       "url": "https://www.youtube.com/watch?v=LPZh9BOjkQs",
+       "m": 8,
+       "why": "A short visual tour of how a language model predicts the next token.",
+       "yt": {
+        "id": "LPZh9BOjkQs",
+        "ch": "3Blue1Brown"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Hugging Face: LLM course, how do Transformers work",
+       "url": "https://huggingface.co/learn/llm-course/chapter1/4",
+       "m": 15,
+       "why": "The history and the three shapes: encoder, decoder, encoder-decoder"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Lilian Weng: Generalized language models",
+       "url": "https://lilianweng.github.io/posts/2019-01-31-lm/",
+       "m": 20,
+       "why": "ELMo to BERT, GPT and T5; read to the end of BERT"
+      }
+     ]
     },
     {
      "id": "map-metrics",
@@ -540,26 +592,6 @@
       "Microsoft CLU reports per-intent precision, recall and F1 with a confusion matrix",
       "MT-bench: strong LLM judges agreed with human preferences over 80% of the time, about the human-to-human rate, but showed position, verbosity and self-enhancement biases",
       "Perplexity is exp of the average negative log-likelihood: a language model measure, not an answer-quality one"
-     ],
-     "read": [
-      {
-       "label": "Microsoft Learn: CLU evaluation metrics",
-       "url": "https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/concepts/evaluation-metrics",
-       "why": "Per-intent P, R and F1, and how the confusion matrix is read",
-       "m": 12
-      },
-      {
-       "label": "arXiv: Judging LLM-as-a-judge with MT-bench",
-       "url": "https://arxiv.org/abs/2306.05685",
-       "why": "The abstract and the bias section: when a model judge can be trusted",
-       "m": 10
-      },
-      {
-       "label": "Stanford: SLP3, ch. 4 Logistic regression and text classification",
-       "url": "https://web.stanford.edu/~jurafsky/slp3/4.pdf",
-       "why": "Skim to the evaluation section: precision, recall, F1, micro and macro",
-       "m": 30
-      }
      ],
      "mcq": [
       {
@@ -620,7 +652,49 @@
      "avoid": [
       "Quoting BLEU or ROUGE as the measure of a chatbot's quality"
      ],
-     "was": []
+     "was": [],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Machine learning fundamentals: the confusion matrix",
+       "url": "https://www.youtube.com/watch?v=Kdsp6soqA7o",
+       "m": 8,
+       "why": "True and false positives and negatives, which is where every per-intent metric starts.",
+       "yt": {
+        "id": "Kdsp6soqA7o",
+        "ch": "StatQuest with Josh Starmer"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Word error rate (WER) explained",
+       "url": "https://www.youtube.com/watch?v=hoEWRdHi7dI",
+       "m": 3,
+       "why": "Word error rate in three minutes: substitutions, deletions, insertions.",
+       "yt": {
+        "id": "hoEWRdHi7dI",
+        "ch": "DataMListic"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Microsoft Learn: CLU evaluation metrics",
+       "url": "https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/concepts/evaluation-metrics",
+       "m": 12,
+       "why": "Per-intent P, R and F1, and how the confusion matrix is read"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Stanford: SLP3, ch. 4 Logistic regression and text classification",
+       "url": "https://web.stanford.edu/~jurafsky/slp3/4.pdf",
+       "m": 30,
+       "why": "Skim to the evaluation section: precision, recall, F1, micro and macro"
+      }
+     ]
     }
    ]
   },
@@ -654,26 +728,6 @@
       "Rasa's conversation-driven development is the same loop after launch: review real conversations, tag them, fix in batches",
       "In finance the persona never offers personalised investment recommendations; FINRA Notice 24-09 says existing communications, recordkeeping and supervision rules apply to AI-generated communications",
       "Klarna's CEO later said cost-driven automation had lowered quality: measure resolution on hard cases, not only containment"
-     ],
-     "read": [
-      {
-       "label": "Google: Conversation design, create a persona",
-       "url": "https://developers.google.com/assistant/conversation-design/create-a-persona",
-       "why": "Four to six traits, an archetype, a paragraph",
-       "m": 6
-      },
-      {
-       "label": "Rasa: Conversation-driven development",
-       "url": "https://rasa.com/docs/rasa/conversation-driven-development/",
-       "why": "Review, tag and fix real conversations in batches",
-       "m": 4
-      },
-      {
-       "label": "Quadrant Regulatory: FINRA Regulatory Notice 24-09",
-       "url": "https://www.quadrantregulatory.com/regulatory-notice-24-09-finras-guidance-on-generative-ai-and-large-language-models",
-       "why": "Why a bank treats chat transcripts as supervised records",
-       "m": 5
-      }
      ],
      "mcq": [
       {
@@ -735,6 +789,36 @@
      "was": [
       "q-how-do-you-design-the-conversation-for-a-new-use-case",
       "a-design-principles"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "What is conversation design? Cathy Pearl from Google",
+       "url": "https://www.youtube.com/watch?v=4OZwknur-QE",
+       "m": 17,
+       "why": "What conversation design is and how designers start from real tasks.",
+       "yt": {
+        "id": "4OZwknur-QE",
+        "ch": "Botsociety"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Rasa: Conversation-driven development",
+       "url": "https://rasa.com/docs/rasa/conversation-driven-development/",
+       "m": 4,
+       "why": "Review, tag and fix real conversations in batches"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Google: Conversation design, create a persona",
+       "url": "https://developers.google.com/assistant/conversation-design/create-a-persona",
+       "m": 6,
+       "why": "Four to six traits, an archetype, a paragraph"
+      }
      ]
     },
     {
@@ -756,26 +840,6 @@
       "Alexa's ladder: first repeat, then explain, then suggest leaving the task",
       "AWS guidance for Lex and Connect: a short first prompt, a more detailed retry, then DTMF-only fallback",
       "Review no-match rate per page every week, and how many sessions recover after the first reprompt: it points at design or NLU gaps"
-     ],
-     "read": [
-      {
-       "label": "Google: Conversation design, errors",
-       "url": "https://developers.google.com/assistant/conversation-design/errors",
-       "why": "No-input, no-match, system error, and escalating reprompts",
-       "m": 10
-      },
-      {
-       "label": "Amazon: Alexa, handling errors gracefully",
-       "url": "https://developer.amazon.com/en-US/alexa/alexa-haus/patterns-and-components/patterns-errors",
-       "why": "Repeat, explain, then suggest leaving the task",
-       "m": 8
-      },
-      {
-       "label": "Google Cloud: Dialogflow CX state handlers",
-       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/handler",
-       "why": "The numbered no-match and no-input events and where they attach",
-       "m": 6
-      }
      ],
      "mcq": [
       {
@@ -838,6 +902,24 @@
      ],
      "was": [
       "q-how-do-you-handle-no-match-and-no-input"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Google: Conversation design, errors",
+       "url": "https://developers.google.com/assistant/conversation-design/errors",
+       "m": 10,
+       "why": "No-input, no-match, system error, and escalating reprompts"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Amazon: Alexa, handling errors gracefully",
+       "url": "https://developer.amazon.com/en-US/alexa/alexa-haus/patterns-and-components/patterns-errors",
+       "m": 8,
+       "why": "Repeat, explain, then suggest leaving the task"
+      }
      ]
     },
     {
@@ -860,26 +942,6 @@
       "Lex returns a transcription confidence and up to three alternative transcriptions; its docs suggest reprompting on low confidence and checking close candidates (John against Juan) against a database",
       "Cognigy builds in the middle band: above the confidence threshold (default 0.4) accept, between it and the reconfirmation threshold (default 0.2) ask 'did you mean X?', below it nothing is found",
       "A transfer reads back amount, source, destination and date, and needs a clear yes before it executes"
-     ],
-     "read": [
-      {
-       "label": "Google: Conversation design, confirmations",
-       "url": "https://developers.google.com/assistant/conversation-design/confirmations",
-       "why": "Implicit by default, explicit for costly actions",
-       "m": 6
-      },
-      {
-       "label": "AWS: Lex V2 transcription confidence",
-       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/using-transcript-confidence-scores.html",
-       "why": "N-best transcripts and how to disambiguate with them",
-       "m": 8
-      },
-      {
-       "label": "Cognigy: NLU thresholds",
-       "url": "https://docs.cognigy.com/ai/platform-features/nlu/intents/thresholds",
-       "why": "Accept, reconfirm, not found, with defaults",
-       "m": 3
-      }
      ],
      "mcq": [
       {
@@ -942,6 +1004,24 @@
      ],
      "was": [
       "q-explicit-or-implicit-confirmation-when-do-you-use-which"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Google: Conversation design, confirmations",
+       "url": "https://developers.google.com/assistant/conversation-design/confirmations",
+       "m": 6,
+       "why": "Implicit by default, explicit for costly actions"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "AWS: Lex V2 transcription confidence",
+       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/using-transcript-confidence-scores.html",
+       "m": 8,
+       "why": "N-best transcripts and how to disambiguate with them"
+      }
      ]
     },
     {
@@ -964,26 +1044,6 @@
       "Rasa ships repair as patterns: correction, clarification, cannot handle, continue interrupted, cancel flow, skip question, chitchat, human handoff, repeat, user silence",
       "Copilot Studio's planner reuses recent history to fill inputs, but the history is limited, and Microsoft's docs said its Multiple Topics Matched disambiguation was not yet called under generative orchestration",
       "Conversation-level regression tests: scripted multi-turn transcripts, as Rasa and Dialogflow CX both recommend"
-     ],
-     "read": [
-      {
-       "label": "Rasa: Default conversation patterns",
-       "url": "https://rasa.com/docs/reference/primitives/patterns/",
-       "why": "A checklist of repair any mature assistant handles",
-       "m": 5
-      },
-      {
-       "label": "Rasa: Handling deviations from the happy path",
-       "url": "https://learning.rasa.com/rasa-pro/deviations-from-happypath/",
-       "why": "Digressions, corrections and cancellations, worked through",
-       "m": 6
-      },
-      {
-       "label": "Google Cloud: Dialogflow CX flows",
-       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/flow",
-       "why": "Flows as topics, route groups that match anywhere",
-       "m": 4
-      }
      ],
      "mcq": [
       {
@@ -1047,6 +1107,36 @@
      "was": [
       "q-how-do-you-handle-ambiguity-corrections-and-digressions",
       "a-multiturn-repair"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "CALM: handling deviations from the happy path",
+       "url": "https://www.youtube.com/watch?v=TREEZ-vT90I",
+       "m": 11,
+       "why": "What an assistant does when the user leaves the happy path: corrections, side questions, task switches.",
+       "yt": {
+        "id": "TREEZ-vT90I",
+        "ch": "Rasa"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Rasa: Default conversation patterns",
+       "url": "https://rasa.com/docs/reference/primitives/patterns/",
+       "m": 5,
+       "why": "A checklist of repair any mature assistant handles"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Rasa: Handling deviations from the happy path",
+       "url": "https://learning.rasa.com/rasa-pro/deviations-from-happypath/",
+       "m": 6,
+       "why": "Digressions, corrections and cancellations, worked through"
+      }
      ]
     },
     {
@@ -1070,26 +1160,6 @@
       "The CFPB's 2023 chatbot spotlight describes 'doom loops' with no route to a person, which makes the escalation path a compliance control",
       "Measure handoff quality: repeat contact within 7 days, how often the agent re-asks identification, transfer-to-resolution time, satisfaction split by bot-only and handed-off",
       "Escalated transcripts and agent corrections are the best labelled data: mine them weekly for missing intents and broken flows"
-     ],
-     "read": [
-      {
-       "label": "Twilio: AI-to-human handoff",
-       "url": "https://www.twilio.com/en-us/blog/insights/ai-to-human-handoff-context",
-       "why": "Warm against cold, the payload, summaries",
-       "m": 7
-      },
-      {
-       "label": "Google Cloud: Agent Assist basics",
-       "url": "https://docs.cloud.google.com/gemini-enterprise-cx/agent-assist/basics",
-       "why": "What agent assist gives the human: suggestions, replies, summaries",
-       "m": 5
-      },
-      {
-       "label": "CFPB: Chatbots in consumer finance",
-       "url": "https://files.consumerfinance.gov/f/documents/cfpb_chatbot-issue-spotlight_2023-06.pdf",
-       "why": "The regulator's view on doom loops and escalation",
-       "m": 15
-      }
      ],
      "mcq": [
       {
@@ -1151,6 +1221,24 @@
      "was": [
       "q-when-should-the-assistant-hand-off-to-a-human-and-how",
       "f-handoff-agent-assist"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Twilio: AI-to-human handoff",
+       "url": "https://www.twilio.com/en-us/blog/insights/ai-to-human-handoff-context",
+       "m": 7,
+       "why": "Warm against cold, the payload, summaries"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "CFPB: Chatbots in consumer finance",
+       "url": "https://files.consumerfinance.gov/f/documents/cfpb_chatbot-issue-spotlight_2023-06.pdf",
+       "m": 15,
+       "why": "The regulator's view on doom loops and escalation"
+      }
      ]
     },
     {
@@ -1175,26 +1263,6 @@
       "Endpointing: published tuning guidance puts about 250 ms of silence for purposeful IVR callers and about 400 ms where people think aloud, with a sentence-completeness signal on top",
       "One published budget for a cascaded pipeline: about 80 ms endpointing, 120 ms ASR, 180 ms LLM and 70 ms TTS for under 500 ms perceived; for slow tool calls, a short real acknowledgement, never fake filler",
       "Vanguard's own materials mention a voice bot for address changes among 70 plus bots: a narrow transactional voice task with identity checks"
-     ],
-     "read": [
-      {
-       "label": "AWS ML Blog: DTMF slots and ordered retry prompts with Amazon Lex",
-       "url": "https://aws.amazon.com/blogs/machine-learning/configure-dtmf-slots-and-ordered-retry-prompts-with-amazon-lex",
-       "why": "Short prompt, detailed retry, keypad fallback, per slot",
-       "m": 8
-      },
-      {
-       "label": "Speechmatics: Alphanumeric speech recognition",
-       "url": "https://www.speechmatics.com/company/articles-and-news/alphanumeric-speech-recognition-why-voice-assistants-mangle-skus-and-how-to-fix-it",
-       "why": "Word accuracy against identifier exact match, and read-back fixes",
-       "m": 8
-      },
-      {
-       "label": "Picovoice: Voice agent latency, turn-taking and barge-in",
-       "url": "https://picovoice.ai/guide/voice-agents/voice-ux-latency-turn-taking/",
-       "why": "Two-layer barge-in, endpointing signals, the human turn gap",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -1257,6 +1325,36 @@
       "q-what-do-you-design-differently-for-voice-and-for-chat",
       "a-voice-vs-chat",
       "f-voice-pipeline"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "The current state of voice and chat barge-in, Cathy Pearl",
+       "url": "https://www.youtube.com/watch?v=xGpInoDJAdk",
+       "m": 13,
+       "why": "Why barge-in and interruption are designed, not an afterthought, on a voice channel.",
+       "yt": {
+        "id": "xGpInoDJAdk",
+        "ch": "Conversation Design Institute"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Picovoice: Voice agent latency, turn-taking and barge-in",
+       "url": "https://picovoice.ai/guide/voice-agents/voice-ux-latency-turn-taking/",
+       "m": 10,
+       "why": "Two-layer barge-in, endpointing signals, the human turn gap"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Speechmatics: Alphanumeric speech recognition",
+       "url": "https://www.speechmatics.com/company/articles-and-news/alphanumeric-speech-recognition-why-voice-assistants-mangle-skus-and-how-to-fix-it",
+       "m": 8,
+       "why": "Word accuracy against identifier exact match, and read-back fixes"
+      }
      ]
     },
     {
@@ -1277,32 +1375,6 @@
       "Copilot Studio: generative orchestration, the default for new agents, picks topics, tools and knowledge by description and can chain several in one turn; Microsoft notes selection becomes unpredictable when descriptions overlap",
       "Rasa claims up to 90% less build work with CALM: vendor marketing, not a measured result",
       "OWASP's top risks for LLM apps include prompt injection, sensitive information disclosure and excessive agency"
-     ],
-     "read": [
-      {
-       "label": "Google Cloud: Dialogflow CX playbooks",
-       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/playbook",
-       "why": "Generative playbooks beside deterministic flows",
-       "m": 6
-      },
-      {
-       "label": "Microsoft Learn: Copilot Studio generative orchestration",
-       "url": "https://learn.microsoft.com/en-us/microsoft-copilot-studio/guidance/generative-orchestration",
-       "why": "An LLM planner over topics and tools, with deterministic control layers",
-       "m": 12
-      },
-      {
-       "label": "Rasa: Dialogue understanding",
-       "url": "https://rasa.com/docs/rasa-pro/concepts/dialogue-understanding/",
-       "why": "An LLM emits commands; flows keep the logic",
-       "m": 5
-      },
-      {
-       "label": "OWASP: Top 10 for LLM applications",
-       "url": "https://genai.owasp.org/llm-top-10/",
-       "why": "Prompt injection, excessive agency and the rest",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -1364,6 +1436,36 @@
      "was": [
       "q-flows-or-a-generative-agent-how-do-you-decide",
       "a-platform-flows"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "How CALM works",
+       "url": "https://www.youtube.com/watch?v=Zp0tw-zdEso",
+       "m": 8,
+       "why": "How CALM splits the work: the model reads the user, authored flows own the task.",
+       "yt": {
+        "id": "Zp0tw-zdEso",
+        "ch": "Rasa"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Google Cloud: Dialogflow CX playbooks",
+       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/playbook",
+       "m": 6,
+       "why": "Generative playbooks beside deterministic flows"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Microsoft Learn: Copilot Studio generative orchestration",
+       "url": "https://learn.microsoft.com/en-us/microsoft-copilot-studio/guidance/generative-orchestration",
+       "m": 12,
+       "why": "An LLM planner over topics and tools, with deterministic control layers"
+      }
      ]
     }
    ]
@@ -1398,26 +1500,6 @@
       "Bank of America's Erica, as reported, grew from roughly 200 to 250 intents at launch to more than 700, each a curated answer or workflow",
       "Fraud and 'I want a person' get top-priority routes from the start",
       "With LLM routing, the descriptions of each flow or tool become what the model chooses between, so overlap moves from training phrases into prose"
-     ],
-     "read": [
-      {
-       "label": "Microsoft Learn: CLU best practices",
-       "url": "https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/concepts/best-practices",
-       "why": "Schema design, balance, entity components, overconfidence",
-       "m": 12
-      },
-      {
-       "label": "Google Cloud: Dialogflow CX agent design best practices",
-       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/agent-design",
-       "why": "Phrase counts, balance, hierarchical naming, flow structure",
-       "m": 8
-      },
-      {
-       "label": "American Banker: How Bank of America's Erica does the work of 11,000 people",
-       "url": "https://www.americanbanker.com/news/how-bank-of-americas-erica-does-the-work-of-11-000-people",
-       "why": "A named bank that stayed intent-based, and why",
-       "m": 6
-      }
      ],
      "mcq": [
       {
@@ -1481,6 +1563,24 @@
      "was": [
       "q-how-would-you-design-the-intent-taxonomy-for-say-a-bank-assi",
       "a-intent-taxonomy"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Microsoft Learn: CLU best practices",
+       "url": "https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/concepts/best-practices",
+       "m": 12,
+       "why": "Schema design, balance, entity components, overconfidence"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Google Cloud: Dialogflow CX agent design best practices",
+       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/agent-design",
+       "m": 8,
+       "why": "Phrase counts, balance, hierarchical naming, flow structure"
+      }
      ]
     },
     {
@@ -1503,32 +1603,6 @@
       "CLU's None intent has a score threshold and replaces a top intent below it; Lex returns AMAZON.FallbackIntent when every intent scores below its threshold",
       "The CFPB's 2023 chatbot spotlight flags bots that recognise a dispute only when specific words appear",
       "Uncertainty-driven routing: a cheap classifier answers when confident and defers to an LLM only when uncertain, which improves out-of-scope detection without an LLM call on every turn"
-     ],
-     "read": [
-      {
-       "label": "Google Cloud: Dialogflow CX intents",
-       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/intent",
-       "why": "Training phrases, the threshold, the default negative intent and its limits",
-       "m": 5
-      },
-      {
-       "label": "Cognigy: Intent Analyzer",
-       "url": "https://docs.cognigy.com/ai/empower/nlu/intents/intent-analyzer/",
-       "why": "Weak and overlapping intents, scored",
-       "m": 4
-      },
-      {
-       "label": "arXiv: Efficient out-of-scope detection via uncertainty-driven LLM routing",
-       "url": "https://arxiv.org/pdf/2507.01541",
-       "why": "A classifier that defers to an LLM only when uncertain; read the abstract",
-       "m": 5
-      },
-      {
-       "label": "CFPB: Chatbots in consumer finance",
-       "url": "https://files.consumerfinance.gov/f/documents/cfpb_chatbot-issue-spotlight_2023-06.pdf",
-       "why": "Why missing a dispute is a regulatory failure, not a UX one",
-       "m": 15
-      }
      ],
      "mcq": [
       {
@@ -1590,6 +1664,24 @@
      "was": [
       "q-how-many-training-phrases-does-an-intent-need-and-where-do-t",
       "a-oos-negative"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Google Cloud: Dialogflow CX intents",
+       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/intent",
+       "m": 5,
+       "why": "Training phrases, the threshold, the default negative intent and its limits"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "arXiv: Efficient out-of-scope detection via uncertainty-driven LLM routing",
+       "url": "https://arxiv.org/pdf/2507.01541",
+       "m": 5,
+       "why": "A classifier that defers to an LLM only when uncertain; read the abstract"
+      }
      ]
     },
     {
@@ -1612,26 +1704,6 @@
       "Dialogflow CX extracts parameters only from annotated training-phrase spans, and can auto-generate up to 3 synonyms for list entities",
       "Wells Fargo's Fargo, as reported, tokenizes and scrubs PII before the model sees the text, so the model gets intent and entity type but never raw account data",
       "Copilot Studio's generative orchestration did not yet take custom entities (closed lists, regex) as topic inputs, so a Question node is still used for those"
-     ],
-     "read": [
-      {
-       "label": "Google Cloud: Dialogflow CX entities",
-       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/entity",
-       "why": "Entity types and synonyms",
-       "m": 5
-      },
-      {
-       "label": "AWS: Lex V2 custom slot types",
-       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/custom-slot-types.html",
-       "why": "Expand against restrict, and value resolution",
-       "m": 5
-      },
-      {
-       "label": "AWS: Amazon Lex V2 slots",
-       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/intent-slots.html",
-       "why": "Required slots, retries, code-hook validation",
-       "m": 6
-      }
      ],
      "mcq": [
       {
@@ -1693,6 +1765,24 @@
      "was": [
       "q-how-do-you-model-entities-and-slots",
       "a-entities-slots"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Google Cloud: Dialogflow CX entities",
+       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/entity",
+       "m": 5,
+       "why": "Entity types and synonyms"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "AWS: Lex V2 custom slot types",
+       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/custom-slot-types.html",
+       "m": 5,
+       "why": "Expand against restrict, and value resolution"
+      }
      ]
     },
     {
@@ -1714,20 +1804,6 @@
       "FnCTOD used function calling for zero-shot state tracking: 5.6 points of joint goal accuracy gained for ChatGPT and 14 for GPT-4",
       "A router in front of the state is monitored with a confusion matrix, the top-two margin and calibration error; class drift and calibration decay are its failure modes",
       "LLM planners can behave differently in a fresh session and a long one, so regression tests are scripted multi-turn transcripts"
-     ],
-     "read": [
-      {
-       "label": "Google Cloud: Dialogflow CX pages",
-       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/page",
-       "why": "Pages as states, forms, routes",
-       "m": 5
-      },
-      {
-       "label": "arXiv: FnCTOD, LLMs as zero-shot dialogue state trackers through function calling",
-       "url": "https://arxiv.org/abs/2402.10466",
-       "why": "Tools as intents, arguments as slots, measured by joint goal accuracy",
-       "m": 25
-      }
      ],
      "mcq": [
       {
@@ -1777,6 +1853,24 @@
      "was": [
       "q-what-is-dialogue-state-and-how-do-you-track-it",
       "h-state-routing"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Google Cloud: Dialogflow CX pages",
+       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/page",
+       "m": 5,
+       "why": "Pages as states, forms, routes"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "arXiv: FnCTOD, LLMs as zero-shot dialogue state trackers through function calling",
+       "url": "https://arxiv.org/abs/2402.10466",
+       "m": 25,
+       "why": "Tools as intents, arguments as slots, measured by joint goal accuracy"
+      }
      ]
     },
     {
@@ -1799,26 +1893,6 @@
       "Lex sets nluIntentConfidenceThreshold per locale and returns the top intent with up to four alternates; its docs say scores are comparative and may change as the models improve",
       "CLU needs a retrain and republish after a threshold change, so a threshold change is a release",
       "Keep an explicit 'needs a transaction' intent so retrieval never answers an account-specific question, and test on labelled near-miss pairs"
-     ],
-     "read": [
-      {
-       "label": "AWS: Lex V2 intent confidence scores",
-       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/using-intent-confidence-scores.html",
-       "why": "The threshold, FallbackIntent, up to four alternates",
-       "m": 5
-      },
-      {
-       "label": "Cognigy: NLU thresholds",
-       "url": "https://docs.cognigy.com/ai/platform-features/nlu/intents/thresholds",
-       "why": "Accept, reconfirm, not found, with defaults",
-       "m": 3
-      },
-      {
-       "label": "arXiv: On calibration of modern neural networks",
-       "url": "https://arxiv.org/abs/1706.04599",
-       "why": "Overconfidence, ECE and temperature scaling",
-       "m": 25
-      }
      ],
      "mcq": [
       {
@@ -1880,6 +1954,36 @@
      "was": [
       "q-how-do-you-set-confidence-thresholds",
       "q-an-faq-intent-and-a-transactional-intent-keep-colliding-like"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Probability calibration, data science concepts",
+       "url": "https://www.youtube.com/watch?v=AunotauS5yI",
+       "m": 11,
+       "why": "What it means for a score of 0.9 to be right nine times in ten, and how to check.",
+       "yt": {
+        "id": "AunotauS5yI",
+        "ch": "ritvikmath"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "AWS: Lex V2 intent confidence scores",
+       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/using-intent-confidence-scores.html",
+       "m": 5,
+       "why": "The threshold, FallbackIntent, up to four alternates"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "arXiv: On calibration of modern neural networks",
+       "url": "https://arxiv.org/abs/1706.04599",
+       "m": 25,
+       "why": "Overconfidence, ECE and temperature scaling"
+      }
      ]
     },
     {
@@ -1903,38 +2007,6 @@
       "Bank of America's Erica stays on 700 plus curated intents; its CTO is reported saying a 98% non-hallucination rate is not enough for money movement",
       "Wells Fargo's Fargo, as reported: the LLM only extracts intent and entities from PII-scrubbed text, the orchestration is model-agnostic, and it handled 245.4 million interactions in 2024",
       "Dialogflow CX generative fallback on no-match sits outside the CX SLA, uses banned-phrase lists, and falls back to scripted text if generation fails"
-     ],
-     "read": [
-      {
-       "label": "arXiv: Intent detection in the age of LLMs",
-       "url": "https://arxiv.org/abs/2410.01627",
-       "why": "Route to the LLM only when SetFit is unsure; read the abstract",
-       "m": 2
-      },
-      {
-       "label": "arXiv: A decision framework for intent detection in production",
-       "url": "https://arxiv.org/html/2608.20371",
-       "why": "Encoder against LLM with numbers; one preprint",
-       "m": 20
-      },
-      {
-       "label": "Google Cloud: Dialogflow CX generative fallback",
-       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/generative/generative-fallback",
-       "why": "An LLM on no-match, banned phrases, outside the SLA",
-       "m": 4
-      },
-      {
-       "label": "Google Cloud: Dialogflow CX experiments",
-       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/experiments",
-       "why": "Traffic splits for a careful rollout",
-       "m": 4
-      },
-      {
-       "label": "VentureBeat: Wells Fargo's AI assistant crossed 245 million interactions",
-       "url": "https://venturebeat.com/ai/wells-fargos-ai-assistant-just-crossed-245-million-interactions-with-zero-humans-in-the-loop-and-zero-pii-to-the-llm",
-       "why": "An LLM limited to intent and entities, with APIs outside the model",
-       "m": 6
-      }
      ],
      "mcq": [
       {
@@ -2012,6 +2084,36 @@
       "q-classic-nlu-or-an-llm-for-intent-classification",
       "q-how-would-you-add-an-llm-to-an-existing-dialogflow-bot-safel",
       "a-hybrid-llm-era"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "arXiv: Intent detection in the age of LLMs",
+       "url": "https://arxiv.org/abs/2410.01627",
+       "m": 2,
+       "why": "Route to the LLM only when SetFit is unsure; read the abstract"
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Conversational AI assistants with CALM: introduction to CALM",
+       "url": "https://www.youtube.com/watch?v=SAZROeEQtMg",
+       "m": 7,
+       "why": "Why a language model plus authored flows replaces classic intent-and-rule bots.",
+       "yt": {
+        "id": "SAZROeEQtMg",
+        "ch": "Rasa"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "arXiv: A decision framework for intent detection in production",
+       "url": "https://arxiv.org/html/2608.20371",
+       "m": 20,
+       "why": "Encoder against LLM with numbers; one preprint"
+      }
      ]
     },
     {
@@ -2035,26 +2137,6 @@
       "tau-bench: GPT-4o tool-calling agents solved under half of retail tasks, and passed all eight tries of the same task under 25% of the time",
       "Rasa CALM keeps the LLM to understanding; Dialogflow CX teams mix a playbook for open conversation with a flow for the sensitive path",
       "Vanguard's AI application engineer posting lists agentic architectures on AWS Bedrock with LangGraph, MCP tools, evaluation and monitoring, and a conversational AI orchestration platform"
-     ],
-     "read": [
-      {
-       "label": "arXiv: tau-bench",
-       "url": "https://arxiv.org/abs/2406.12045",
-       "why": "Simulated users, tools and policies, and the pass^k metric",
-       "m": 30
-      },
-      {
-       "label": "Rasa: Dialogue management (CALM)",
-       "url": "https://rasa.com/docs/learn/concepts/dialogue-management/",
-       "why": "The LLM emits commands, flows run the business logic",
-       "m": 6
-      },
-      {
-       "label": "Built In: Vanguard AI Application Engineer posting",
-       "url": "https://builtin.com/job/ai-application-engineer/9212349",
-       "why": "What Vanguard lists: Bedrock, LangGraph, MCP tools, evaluation",
-       "m": 5
-      }
      ],
      "mcq": [
       {
@@ -2116,6 +2198,36 @@
      "was": [
       "q-how-do-function-calling-and-tools-relate-to-intents-and-slot",
       "f-llm-orchestration"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "What is tool calling? Connecting LLMs to your data",
+       "url": "https://www.youtube.com/watch?v=h8gMhXYAv1k",
+       "m": 5,
+       "why": "How a model picks a tool and fills typed arguments, which is slot filling by schema.",
+       "yt": {
+        "id": "h8gMhXYAv1k",
+        "ch": "IBM Technology"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "arXiv: tau-bench",
+       "url": "https://arxiv.org/abs/2406.12045",
+       "m": 30,
+       "why": "Simulated users, tools and policies, and the pass^k metric"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Rasa: Dialogue management (CALM)",
+       "url": "https://rasa.com/docs/learn/concepts/dialogue-management/",
+       "m": 6,
+       "why": "The LLM emits commands, flows run the business logic"
+      }
      ]
     },
     {
@@ -2136,38 +2248,6 @@
       "Google's split in CX: playbooks for open-ended conversation, flows for deterministic work such as authentication or payment",
       "Rasa's own comparison argues the deterministic boundary is less explicit in Copilot Studio than per turn in CALM: a vendor view, read as such",
       "What they agree on: deterministic flows for the irreversible, understanding picks the flow, generation for open help, thresholds and fallback for the rest"
-     ],
-     "read": [
-      {
-       "label": "Google Cloud: Dialogflow CX flows",
-       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/flow",
-       "why": "Flows as topics, route groups",
-       "m": 4
-      },
-      {
-       "label": "Rasa: CALM",
-       "url": "https://rasa.com/docs/rasa-pro/calm/",
-       "why": "The LLM understands, flows hold the logic",
-       "m": 3
-      },
-      {
-       "label": "Kore.ai: NLP engines and the Ranking and Resolver",
-       "url": "https://docs.kore.ai/xo/automation/natural-language/nlp-introduction/",
-       "why": "How several engines are scored and ranked",
-       "m": 6
-      },
-      {
-       "label": "Kore.ai: Training validations",
-       "url": "https://docs.kore.ai/xo/automation/natural-language/training/training-validations/",
-       "why": "Confusion matrix, k-fold, conflict warnings",
-       "m": 5
-      },
-      {
-       "label": "Rasa: Copilot Studio vs Dialogflow vs Rasa",
-       "url": "https://rasa.com/compare/copilot-studio-vs-dialogflow-vs-rasa",
-       "why": "One vendor's view of where each draws the deterministic boundary",
-       "m": 8
-      }
      ],
      "mcq": [
       {
@@ -2228,6 +2308,48 @@
      ],
      "was": [
       "q-which-conversational-ai-platforms-do-you-know-and-how-do-the"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "What is Dialogflow CX?",
+       "url": "https://www.youtube.com/watch?v=6_Gilug2QYw",
+       "m": 6,
+       "why": "Flows, pages and routes in one platform, in six minutes.",
+       "yt": {
+        "id": "6_Gilug2QYw",
+        "ch": "Google Cloud Tech"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "What is CALM?",
+       "url": "https://www.youtube.com/watch?v=GyIsb7PWpXE",
+       "m": 8,
+       "why": "The same router-over-flows idea in Rasa's version.",
+       "yt": {
+        "id": "GyIsb7PWpXE",
+        "ch": "Rasa"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Rasa: CALM",
+       "url": "https://rasa.com/docs/rasa-pro/calm/",
+       "m": 3,
+       "why": "The LLM understands, flows hold the logic"
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Kore.ai: NLP engines and the Ranking and Resolver",
+       "url": "https://docs.kore.ai/xo/automation/natural-language/nlp-introduction/",
+       "m": 6,
+       "why": "How several engines are scored and ranked"
+      }
      ]
     }
    ]
@@ -2261,26 +2383,6 @@
       "Airbnb (company-reported) moved voice support to domain-tuned speech recognition with phrase lists and cut word error rate from about 33% to about 10%, which improved help-article ranking downstream: an ASR fix for what looked like a ranking problem.",
       "Teams keep the ASR transcript and confidence, the top NLU interpretations with scores, the slots and the backend results in one trace and tag from it. A Pareto chart of first causes often shows slot resolution or backend errors costing more than intent accuracy.",
       "Capital One describes multi-agent failure modes: losing the original intent across turns, contradicting earlier decisions, circular repeated questions, and early mistakes compounding in multi-step tasks."
-     ],
-     "read": [
-      {
-       "label": "Amazon Lex V2: Key definitions (analytics)",
-       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/analytics-key-definitions.html",
-       "why": "Exact outcome states for utterances, intents and slots, which map onto a taxonomy.",
-       "m": 6
-      },
-      {
-       "label": "Microsoft Learn: Monitor conversational agents (Copilot Studio)",
-       "url": "https://learn.microsoft.com/en-us/microsoft-copilot-studio/analytics-improve-agent-effectiveness",
-       "why": "The three escalation reasons and why only one is a bug signal.",
-       "m": 8
-      },
-      {
-       "label": "CFPB: Chatbots in consumer finance",
-       "url": "https://www.consumerfinance.gov/data-research/research-reports/chatbots-in-consumer-finance/chatbots-in-consumer-finance/",
-       "why": "The four failure patterns a regulator counts for bank chatbots.",
-       "m": 15
-      }
      ],
      "mcq": [
       {
@@ -2357,6 +2459,36 @@
      "was": [
       "b-error-taxonomy",
       "a-error-analysis"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Error analysis: the highest ROI technique in AI engineering",
+       "url": "https://www.youtube.com/watch?v=e2i6JbU2R-s",
+       "m": 13,
+       "why": "Reading real failures and naming the first thing that went wrong, before building any metric.",
+       "yt": {
+        "id": "e2i6JbU2R-s",
+        "ch": "Hamel Husain"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Microsoft Learn: Monitor conversational agents (Copilot Studio)",
+       "url": "https://learn.microsoft.com/en-us/microsoft-copilot-studio/analytics-improve-agent-effectiveness",
+       "m": 8,
+       "why": "The three escalation reasons and why only one is a bug signal."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Amazon Lex V2: Key definitions (analytics)",
+       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/analytics-key-definitions.html",
+       "m": 6,
+       "why": "Exact outcome states for utterances, intents and slots, which map onto a taxonomy."
+      }
      ]
     },
     {
@@ -2380,26 +2512,6 @@
       "Capital One has human subject-matter experts audit complex financial logic and calibrate its LLM judges: automation for coverage, people for ground truth.",
       "The MT-bench study found strong judges agree with humans over 80% of the time, about the human-to-human rate, but show position, verbosity and self-enhancement biases.",
       "Copilot Studio samples answered questions and rates them Good or Poor on completeness, relevance and groundedness, with a reason for each Poor: a sampled quality metric, not a full audit."
-     ],
-     "read": [
-      {
-       "label": "Rasa: CDD playbook, review and annotate conversations",
-       "url": "https://info.rasa.com/cdd-playbook-review",
-       "why": "The review loop and what to filter on first.",
-       "m": 6
-      },
-      {
-       "label": "Rasa Docs: Conversation Review",
-       "url": "https://rasa.com/docs/studio/analyze/conversation-review",
-       "why": "Filters, tags and reviewed status in a real tool.",
-       "m": 5
-      },
-      {
-       "label": "arXiv: Judging LLM-as-a-judge (MT-bench)",
-       "url": "https://arxiv.org/abs/2306.05685",
-       "why": "Judge agreement with humans, and the three biases.",
-       "m": 30
-      }
      ],
      "mcq": [
       {
@@ -2476,6 +2588,36 @@
       "b-llm-eval-regulated",
       "q-how-do-you-structure-transcript-review",
       "q-how-do-you-use-an-llm-as-a-judge-on-conversations-and-where-"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Error analysis: the highest ROI technique in AI engineering",
+       "url": "https://www.youtube.com/watch?v=e2i6JbU2R-s",
+       "m": 13,
+       "why": "Reading real failures and naming the first thing that went wrong, before building any metric.",
+       "yt": {
+        "id": "e2i6JbU2R-s",
+        "ch": "Hamel Husain"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Rasa Docs: Conversation Review",
+       "url": "https://rasa.com/docs/studio/analyze/conversation-review",
+       "m": 5,
+       "why": "Filters, tags and reviewed status in a real tool."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Rasa: CDD playbook, review and annotate conversations",
+       "url": "https://info.rasa.com/cdd-playbook-review",
+       "m": 6,
+       "why": "The review loop and what to filter on first."
+      }
      ]
     },
     {
@@ -2500,26 +2642,6 @@
       "Microsoft CLU reports per-intent precision, recall and F1 and a confusion matrix whose row and column sums give false negatives and false positives; its worked example has the right intent with a wrong entity span.",
       "Kore.ai's training validations and Cognigy's Intent Analyzer flag overlapping and weak intents, and Cyara Botium reports confusion matrices and intent overlap as a testing product.",
       "Many teams route any utterance with dispute or fraud vocabulary to a dedicated flow or a person, whatever the classifier's top score."
-     ],
-     "read": [
-      {
-       "label": "Amazon Lex V2: Using intent confidence scores",
-       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/using-intent-confidence-scores.html",
-       "why": "Top-five interpretations, the ambiguity example, fallback behaviour.",
-       "m": 6
-      },
-      {
-       "label": "Microsoft Learn: CLU evaluation metrics",
-       "url": "https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/concepts/evaluation-metrics",
-       "why": "Precision, recall, F1, the confusion matrix and its sums.",
-       "m": 12
-      },
-      {
-       "label": "Cognigy: Intent Analyzer",
-       "url": "https://docs.cognigy.com/ai/empower/nlu/intents/intent-analyzer/",
-       "why": "How a platform scores weak and overlapping intents.",
-       "m": 4
-      }
      ],
      "mcq": [
       {
@@ -2597,6 +2719,36 @@
       "b-intent-confusion",
       "q-two-intents",
       "q-how-do-you-evaluate-an-nlu-model-beyond-accuracy"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Machine learning fundamentals: the confusion matrix",
+       "url": "https://www.youtube.com/watch?v=Kdsp6soqA7o",
+       "m": 8,
+       "why": "True and false positives and negatives, which is where every per-intent metric starts.",
+       "yt": {
+        "id": "Kdsp6soqA7o",
+        "ch": "StatQuest with Josh Starmer"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Microsoft Learn: CLU evaluation metrics",
+       "url": "https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/concepts/evaluation-metrics",
+       "m": 12,
+       "why": "Precision, recall, F1, the confusion matrix and its sums."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Cognigy: Intent Analyzer",
+       "url": "https://docs.cognigy.com/ai/empower/nlu/intents/intent-analyzer/",
+       "m": 4,
+       "why": "How a platform scores weak and overlapping intents."
+      }
      ]
     },
     {
@@ -2618,26 +2770,6 @@
       "Google Conversational Insights topic modeling builds a taxonomy of primary and secondary call drivers with an LLM, suggests at least 10,000 conversations, offers five granularity levels, and lets you rename or remove topics before real-time inference.",
       "Copilot Studio Themes cluster user questions and its Unanswered questions view says why the agent could not answer; Intercom Fin's Topics Explorer sorts topics by how often Fin is involved, to show where automation is weakest.",
       "Rasa's NLU inbox surfaces low-confidence messages for labelling, and Kore.ai's Discourse Analyzer proposes intents and flows from historical transcripts."
-     ],
-     "read": [
-      {
-       "label": "AWS Docs: Creating Lex V2 bots using the Automated Chatbot Designer",
-       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/designing.html",
-       "why": "Transcripts in, suggested intents and slot types out, with sources.",
-       "m": 8
-      },
-      {
-       "label": "Google Cloud: Topic modeling basics (Conversational Insights)",
-       "url": "https://docs.cloud.google.com/contact-center/insights/docs/topic-modeling-basics",
-       "why": "Call-driver taxonomy, granularity and fine-tuning.",
-       "m": 8
-      },
-      {
-       "label": "Rasa: conversation-driven development",
-       "url": "https://rasa.com/docs/rasa/conversation-driven-development/",
-       "why": "Review, tag and fix real conversations in batches.",
-       "m": 4
-      }
      ],
      "mcq": [
       {
@@ -2699,6 +2831,24 @@
      "was": [
       "b-intent-discovery",
       "q-how-do-you-find-the-intents-you-re-missing"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "AWS Docs: Creating Lex V2 bots using the Automated Chatbot Designer",
+       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/designing.html",
+       "m": 8,
+       "why": "Transcripts in, suggested intents and slot types out, with sources."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Google Cloud: Topic modeling basics (Conversational Insights)",
+       "url": "https://docs.cloud.google.com/contact-center/insights/docs/topic-modeling-basics",
+       "m": 8,
+       "why": "Call-driver taxonomy, granularity and fine-tuning."
+      }
      ]
     },
     {
@@ -2720,26 +2870,6 @@
       "Salesforce reports (self-reported) its Help site agent resolved about 76% of 1.7 million conversations and escalated about 5%. The two do not sum to 100, so other states such as abandonment exist: ask how the denominator is defined.",
       "Klarna's assistant handled about two-thirds of chats in its first month; the company later said it had focused too much on cost, with quality suffering, and resumed hiring people for complex cases.",
       "Dialogflow CX analytics show no-match, escalation and exit rates per page, plus webhook errors and latency: the first place to look after a drop on that platform."
-     ],
-     "read": [
-      {
-       "label": "Rasa: measuring agent performance (vendor blog)",
-       "url": "https://rasa.com/blog/measure-ai-agent-performance-in-the-contact-center",
-       "why": "Deflection, containment, automation and solution rate kept apart.",
-       "m": 6
-      },
-      {
-       "label": "Google Cloud: Dialogflow CX analytics",
-       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/analytics",
-       "why": "No-match, escalation and webhook errors by page.",
-       "m": 5
-      },
-      {
-       "label": "Voiceflow: What ticket deflection rate actually means",
-       "url": "https://www.voiceflow.com/blog/what-ticket-deflection-rate-actually-means",
-       "why": "What deflection hides (secondary source).",
-       "m": 5
-      }
      ],
      "mcq": [
       {
@@ -2817,6 +2947,24 @@
       "b-metrics-hide",
       "q-which-kpis-do-you-report-and-which-ones-mislead",
       "q-containment-dropped-10-after-a-release-walk-me-through-it"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Voiceflow: What ticket deflection rate actually means",
+       "url": "https://www.voiceflow.com/blog/what-ticket-deflection-rate-actually-means",
+       "m": 5,
+       "why": "What deflection hides (secondary source)."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Google Cloud: Dialogflow CX analytics",
+       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/analytics",
+       "m": 5,
+       "why": "No-match, escalation and webhook errors by page."
+      }
      ]
     },
     {
@@ -2841,26 +2989,6 @@
       "tau-bench found GPT-4o function-calling agents solved under half the retail tasks and had pass^8 under 25%: one success overstates reliability.",
       "Lex's Test Workbench builds test sets from existing transcripts and shows intent and slot performance against a bot.",
       "In finance, keep an auditable record of which suite version passed for each release, because model risk management will ask what was tested before a change went live."
-     ],
-     "read": [
-      {
-       "label": "Google Cloud: Dialogflow CX test cases",
-       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/test-case",
-       "why": "What is asserted per turn, golden baselines, coverage.",
-       "m": 5
-      },
-      {
-       "label": "arXiv: tau-bench",
-       "url": "https://arxiv.org/abs/2406.12045",
-       "why": "Simulated users, state-based grading and pass^k.",
-       "m": 30
-      },
-      {
-       "label": "Amazon Lex V2: Test Workbench",
-       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/test-workbench.html",
-       "why": "Test sets built from real transcripts.",
-       "m": 2
-      }
      ],
      "mcq": [
       {
@@ -2925,6 +3053,24 @@
      "was": [
       "b-regression-testing",
       "q-how-do-you-test-a-conversational-system-before-release"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Google Cloud: Dialogflow CX test cases",
+       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/test-case",
+       "m": 5,
+       "why": "What is asserted per turn, golden baselines, coverage."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Amazon Lex V2: Test Workbench",
+       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/test-workbench.html",
+       "m": 2,
+       "why": "Test sets built from real transcripts."
+      }
      ]
     },
     {
@@ -2948,26 +3094,6 @@
       "Uber's COTA used the agent's chosen resolution as the positive label in a ranking setup, a 25% relative accuracy gain over plain classification; COTA v2 said models decay and retrained on a schedule, lifting one model's top-1 accuracy from 49% to 65%.",
       "Bank of America reports more than 75,000 updates to Erica since launch (self-reported): many small continuous changes rather than big rewrites.",
       "Finance drift has a calendar (tax season, a fee change, a fraud wave), and the answer is often a content or routing change in hours through a separately reviewed fast path, not a retrain in weeks."
-     ],
-     "read": [
-      {
-       "label": "Google Cloud: Dialogflow CX experiments",
-       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/experiments",
-       "why": "Traffic splits, the metrics compared, auto rollout.",
-       "m": 4
-      },
-      {
-       "label": "AWS Docs: Versioning and aliases with your Lex V2 bot",
-       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/versions-aliases.html",
-       "why": "Versions and aliases as blue and green releases.",
-       "m": 4
-      },
-      {
-       "label": "Uber Engineering: Scaling COTA with deep learning",
-       "url": "https://www.uber.com/us/en/blog/cota-v2/",
-       "why": "Model decay and a scheduled retraining pipeline.",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -3045,6 +3171,36 @@
       "b-feedback-drift",
       "q-how-would-you-a-b-test-a-change-to-a-flow",
       "q-how-do-you-monitor-a-live-assistant-for-drift"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Google Cloud: Dialogflow CX experiments",
+       "url": "https://docs.cloud.google.com/dialogflow/cx/docs/concept/experiments",
+       "m": 4,
+       "why": "Traffic splits, the metrics compared, auto rollout."
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Top 5 most-used deployment strategies",
+       "url": "https://www.youtube.com/watch?v=AWVTKBUnoIg",
+       "m": 10,
+       "why": "Canary, blue-green and rolling releases, the vocabulary for shipping a bot change safely.",
+       "yt": {
+        "id": "AWVTKBUnoIg",
+        "ch": "ByteByteGo"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "AWS Docs: Versioning and aliases with your Lex V2 bot",
+       "url": "https://docs.aws.amazon.com/lexv2/latest/dg/versions-aliases.html",
+       "m": 4,
+       "why": "Versions and aliases as blue and green releases."
+      }
      ]
     }
    ]
@@ -3079,26 +3235,6 @@
       "FINRA Regulatory Notice 24-09 (June 2024): existing rules, including Rule 2210 content standards, apply to AI-generated communications the same as to any other",
       "Tools declare a side-effect class (read-only, reversible, consequential), and the class, not the prompt, sets authentication, confirmation and audit",
       "Each mechanic gets its own evaluation set, so a wrong balance is never averaged away by good FAQ scores"
-     ],
-     "read": [
-      {
-       "label": "Rasa: CALM, language models with deterministic business logic",
-       "url": "https://rasa.com/docs/learn/concepts/calm/",
-       "why": "A public description of the split: the LLM understands, coded flows decide.",
-       "m": 8
-      },
-      {
-       "label": "American Bar Association: BC tribunal confirms companies remain liable for chatbot information",
-       "url": "https://www.americanbar.org/groups/business_law/resources/business-law-today/2024-february/bc-tribunal-confirms-companies-remain-liable-information-provided-ai-chatbot/",
-       "why": "Moffatt v. Air Canada: the firm owns what its bot says.",
-       "m": 6
-      },
-      {
-       "label": "FINRA: Regulatory Notice 24-09",
-       "url": "https://www.finra.org/rules-guidance/notices/24-09",
-       "why": "Technology-neutral rules apply to generative AI output.",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -3162,6 +3298,36 @@
       "c-grounding-per-mechanic",
       "h-thesis",
       "h-two-contracts"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Rasa: CALM, language models with deterministic business logic",
+       "url": "https://rasa.com/docs/learn/concepts/calm/",
+       "m": 8,
+       "why": "A public description of the split: the LLM understands, coded flows decide."
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Why large language models hallucinate",
+       "url": "https://www.youtube.com/watch?v=cfqtFvWOfg0",
+       "m": 10,
+       "why": "Why a model states wrong things fluently, and where a source of truth has to step in.",
+       "yt": {
+        "id": "cfqtFvWOfg0",
+        "ch": "IBM Technology"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "FINRA: Regulatory Notice 24-09",
+       "url": "https://www.finra.org/rules-guidance/notices/24-09",
+       "m": 10,
+       "why": "Technology-neutral rules apply to generative AI output."
+      }
      ]
     },
     {
@@ -3185,32 +3351,6 @@
       "RAGAS faithfulness is the offline version: split the answer into claims and score supported claims over total claims",
       "AbstentionBench (20 datasets, 20 frontier models) found abstention is not solved by scale, and reasoning fine-tuning lowered it by about 24% on average",
       "Regulated flows often buffer a streamed answer, check it, then release it, because a relevance verdict can arrive after the text has already streamed"
-     ],
-     "read": [
-      {
-       "label": "Google Cloud: Check grounding with RAG",
-       "url": "https://docs.cloud.google.com/generative-ai-app-builder/docs/check-grounding",
-       "why": "Inputs, per-claim citations, the support score, size limits and the latency target.",
-       "m": 8
-      },
-      {
-       "label": "AWS: Contextual grounding check in Bedrock Guardrails",
-       "url": "https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-contextual-grounding-check.html",
-       "why": "Grounding against relevance, thresholds, limits, and banking fee examples.",
-       "m": 8
-      },
-      {
-       "label": "Ragas: Faithfulness",
-       "url": "https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/faithfulness/",
-       "why": "The claim decomposition formula and its caveats.",
-       "m": 5
-      },
-      {
-       "label": "arXiv: AbstentionBench, reasoning LLMs fail on unanswerable questions",
-       "url": "https://arxiv.org/abs/2506.09038",
-       "why": "Evidence that abstention is unsolved and that reasoning tuning hurts it.",
-       "m": 15
-      }
      ],
      "mcq": [
       {
@@ -3289,6 +3429,36 @@
       "c-faq-retrieval-groundedness",
       "h-hybrid-retrieval",
       "c-abstention-citation-ux"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "What is retrieval-augmented generation (RAG)?",
+       "url": "https://www.youtube.com/watch?v=T-D1OfcDW1M",
+       "m": 7,
+       "why": "Retrieve first, then answer from what was retrieved: the shape of a grounded answer.",
+       "yt": {
+        "id": "T-D1OfcDW1M",
+        "ch": "IBM Technology"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Ragas: Faithfulness",
+       "url": "https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/faithfulness/",
+       "m": 5,
+       "why": "The claim decomposition formula and its caveats."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Google Cloud: Check grounding with RAG",
+       "url": "https://docs.cloud.google.com/generative-ai-app-builder/docs/check-grounding",
+       "m": 8,
+       "why": "Inputs, per-claim citations, the support score, size limits and the latency target."
+      }
      ]
     },
     {
@@ -3312,32 +3482,6 @@
       "NeMo Guardrails execution rails validate tool calls, their parameters and their results",
       "Vanguard's security page describes Voice ID, passkeys and security codes, and says Vanguard never asks for an SSN or a security code you received, so the assistant must not either",
       "A two-source answer ('why was I charged this?') joins a transaction record and approved fee text, each from its own grounded path"
-     ],
-     "read": [
-      {
-       "label": "CIO Dive: How Bank of America's Erica raised the stakes for virtual assistants",
-       "url": "https://www.ciodive.com/news/bank-of-america-erica-virtual-assistants/758901/",
-       "why": "A deterministic account assistant at scale, and why it stays that way.",
-       "m": 6
-      },
-      {
-       "label": "Vanguard: trust and security",
-       "url": "https://investor.vanguard.com/trust-security",
-       "why": "Voice ID, passkeys, security codes, and what Vanguard never asks for.",
-       "m": 4
-      },
-      {
-       "label": "OWASP: Top 10 for LLM applications",
-       "url": "https://genai.owasp.org/llm-top-10/",
-       "why": "Prompt injection, excessive agency and the rest.",
-       "m": 10
-      },
-      {
-       "label": "ABA Banking Journal: Challenges in voice biometrics in the age of deepfakes",
-       "url": "https://bankingjournal.aba.com/2024/02/challenges-in-voice-biometrics-vulnerabilities-in-the-age-of-deepfakes/",
-       "why": "A banking-industry view of cloned-voice risk (found through search).",
-       "m": 6
-      }
      ],
      "mcq": [
       {
@@ -3418,6 +3562,36 @@
       "q-how-do-you-handle-authentication-and-personal-data-before-th",
       "q-design-an-assistant-that-answers-questions-about-a-client-s-",
       "q-design-an-intent-taxonomy-for-a-retirement-account-assistant"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "OWASP: Top 10 for LLM applications",
+       "url": "https://genai.owasp.org/llm-top-10/",
+       "m": 10,
+       "why": "Prompt injection, excessive agency and the rest."
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "What is a prompt injection attack?",
+       "url": "https://www.youtube.com/watch?v=jrHRe9lSqqA",
+       "m": 11,
+       "why": "How text in a message or document can steer a model, and why tool calls need their own checks.",
+       "yt": {
+        "id": "jrHRe9lSqqA",
+        "ch": "IBM Technology"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "CIO Dive: How Bank of America's Erica raised the stakes for virtual assistants",
+       "url": "https://www.ciodive.com/news/bank-of-america-erica-virtual-assistants/758901/",
+       "m": 6,
+       "why": "A deterministic account assistant at scale, and why it stays that way."
+      }
      ]
     },
     {
@@ -3441,26 +3615,6 @@
       "Capital One's Chat Concierge uses planner, evaluator and validator agents that check a plan for hallucinated data and missing parameters, then confirm it with the user before acting",
       "FINRA's 2026 report lists agent risks (autonomy beyond scope, unclear authority, poor auditability); a flow where every state change is a logged event answers all three",
       "Bank of America's Erica completes bill payments and transfers inside a deterministic engine, not through free generation"
-     ],
-     "read": [
-      {
-       "label": "Stripe: Idempotent requests",
-       "url": "https://docs.stripe.com/api/idempotent_requests",
-       "why": "How keys behave: saved results, parameter mismatch, expiry.",
-       "m": 6
-      },
-      {
-       "label": "VentureBeat: How Capital One built production multi-agent AI workflows",
-       "url": "https://venturebeat.com/ai/how-capital-one-built-production-multi-agent-ai-workflows-to-power-enterprise-use-cases",
-       "why": "Planner, evaluator and validator agents with live API checks.",
-       "m": 8
-      },
-      {
-       "label": "Debevoise: FINRA 2026 oversight report on GenAI and agent risks",
-       "url": "https://www.debevoisedatablog.com/2025/12/11/finras-2026-regulatory-oversight-report-continued-focus-on-generative-ai-and-emerging-agent-based-risks/",
-       "why": "Agent risks of scope, authority and auditability, and the controls named.",
-       "m": 6
-      }
      ],
      "mcq": [
       {
@@ -3524,6 +3678,36 @@
      "was": [
       "c-transactions-state-machine",
       "h-durable-intent"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Idempotency: what it is and how to implement it",
+       "url": "https://www.youtube.com/watch?v=XAccGbtl3Z8",
+       "m": 9,
+       "why": "Why a retried payment request must not move money twice, and the key that prevents it.",
+       "yt": {
+        "id": "XAccGbtl3Z8",
+        "ch": "Alex Hyett"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Stripe: Idempotent requests",
+       "url": "https://docs.stripe.com/api/idempotent_requests",
+       "m": 6,
+       "why": "How keys behave: saved results, parameter mismatch, expiry."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "VentureBeat: How Capital One built production multi-agent AI workflows",
+       "url": "https://venturebeat.com/ai/how-capital-one-built-production-multi-agent-ai-workflows-to-power-enterprise-use-cases",
+       "m": 8,
+       "why": "Planner, evaluator and validator agents with live API checks."
+      }
      ]
     },
     {
@@ -3548,32 +3732,6 @@
       "A red-team set of advice paraphrases ('what would you do?', 'is it a good time to get out?', 'my neighbour sold, should I?') with the advice-leak rate as a release gate",
       "The CFPB's 2023 chatbot spotlight warned about doom loops with no route to a human, so the handoff must always work",
       "Vanguard's CIO named the bot 'veering into offering financial advice' as a concern (Fortune, Dec 2025)"
-     ],
-     "read": [
-      {
-       "label": "SEC: Staff bulletin on care obligations",
-       "url": "https://www.sec.gov/about/divisions-offices/division-trading-markets/broker-dealers/staff-bulletin-standards-conduct-broker-dealers-investment-advisers-care-obligations",
-       "why": "What a recommendation requires, and why a bot cannot give one.",
-       "m": 12
-      },
-      {
-       "label": "FINRA: Rule 2210, communications with the public",
-       "url": "https://www.finra.org/rules-guidance/rulebooks/finra-rules/2210",
-       "why": "Fair and balanced; no promissory or misleading statements; no performance predictions.",
-       "m": 15
-      },
-      {
-       "label": "Fortune: Vanguard's CIO on the employee chatbot pilot",
-       "url": "https://fortune.com/2025/12/24/vanguards-cio-niti-tandon-ai-digital-advisor/",
-       "why": "The two named worries: hallucinations and advice.",
-       "m": 6
-      },
-      {
-       "label": "CFPB: Chatbots in consumer finance",
-       "url": "https://files.consumerfinance.gov/f/documents/cfpb_chatbot-issue-spotlight_2023-06.pdf",
-       "why": "Doom loops, wrong answers, and why a human off-ramp matters.",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -3640,6 +3798,24 @@
       "c-compliance-advice-boundary",
       "q-a-client-asks-should-i-sell-in-this-downturn-what-does-the-a",
       "q-how-do-you-keep-an-llm-based-assistant-from-giving-investmen"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "SEC: Staff bulletin on care obligations",
+       "url": "https://www.sec.gov/about/divisions-offices/division-trading-markets/broker-dealers/staff-bulletin-standards-conduct-broker-dealers-investment-advisers-care-obligations",
+       "m": 12,
+       "why": "What a recommendation requires, and why a bot cannot give one."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "FINRA: Rule 2210, communications with the public",
+       "url": "https://www.finra.org/rules-guidance/rulebooks/finra-rules/2210",
+       "m": 15,
+       "why": "Fair and balanced; no promissory or misleading statements; no performance predictions."
+      }
      ]
     },
     {
@@ -3661,32 +3837,6 @@
       "Bedrock Guardrails and Azure AI Content Safety bundle topic denial, content filters, sensitive information and grounding checks; Vanguard's Virtual Analyst write-up names Bedrock Guardrails",
       "Vanguard's Client-Ready Article Summaries generate the necessary disclosures with each summary: disclosures attached by the system",
       "SEC 'AI washing' settlements in March 2024 (Delphia $225,000, Global Predictions $175,000): what a firm says about its own AI is regulated too"
-     ],
-     "read": [
-      {
-       "label": "NVIDIA: NeMo Guardrails, rail types",
-       "url": "https://docs.nvidia.com/nemo/guardrails/latest/about/rail-types.html",
-       "why": "Input, retrieval, dialog, execution and output rails defined.",
-       "m": 6
-      },
-      {
-       "label": "FINRA: Rule 4511, books and records",
-       "url": "https://www.finra.org/rules-guidance/rulebooks/finra-rules/4511",
-       "why": "Six years by default, in a format that meets SEA Rule 17a-4.",
-       "m": 3
-      },
-      {
-       "label": "InvestmentNews: FINRA on AI chatbot communications",
-       "url": "https://www.investmentnews.com/regulation-and-legislation/finra-clarifies-guidelines-around-ai-chatbot-communications/253319",
-       "why": "Chatbot messages are firm communications: supervised, held to content standards, retained.",
-       "m": 4
-      },
-      {
-       "label": "Writer: Vanguard customer story",
-       "url": "https://writer.com/blog/vanguard-customer-story/",
-       "why": "Compliance, Legal and IT as partners in the build from the start.",
-       "m": 5
-      }
      ],
      "mcq": [
       {
@@ -3763,6 +3913,36 @@
       "q-how-do-you-keep-a-generative-answer-compliant",
       "q-what-do-you-log-and-keep-for-supervision",
       "f-chatbot-regulation"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "NeMo Guardrails: input, dialog, retrieval and output rails",
+       "url": "https://www.youtube.com/watch?v=qs7c_kSIkqU",
+       "m": 6,
+       "why": "Input, dialog, retrieval and output rails around a model, each with its own job.",
+       "yt": {
+        "id": "qs7c_kSIkqU",
+        "ch": "Cloudbrewery"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "NVIDIA: NeMo Guardrails, rail types",
+       "url": "https://docs.nvidia.com/nemo/guardrails/latest/about/rail-types.html",
+       "m": 6,
+       "why": "Input, retrieval, dialog, execution and output rails defined."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "FINRA: Rule 4511, books and records",
+       "url": "https://www.finra.org/rules-guidance/rulebooks/finra-rules/4511",
+       "m": 3,
+       "why": "Six years by default, in a format that meets SEA Rule 17a-4."
+      }
      ]
     },
     {
@@ -3787,32 +3967,6 @@
       "Vanguard's Head of AI/ML for Advice posting: no capability reaches production without a quantitative, repeatable evaluation baseline; it also names drift monitoring and Model Risk Management",
       "FINRA's 2026 report asks for prompt and output logging, model version tracking, human review of results, and testing before and after deployment",
       "Vanguard's 2026 letter: trained phone representatives up nearly 20%, and 85% of calls resolved in one conversation; people are part of the design"
-     ],
-     "read": [
-      {
-       "label": "Federal Reserve: SR 26-2, revised model risk guidance",
-       "url": "https://www.federalreserve.gov/supervisionreg/srletters/SR2602.pdf",
-       "why": "Supersedes SR 11-7; keeps validation and effective challenge; footnote 3 puts generative and agentic AI out of scope.",
-       "m": 20
-      },
-      {
-       "label": "arXiv: Judging LLM-as-a-judge with MT-bench",
-       "url": "https://arxiv.org/abs/2306.05685",
-       "why": "Over 80% agreement with humans, and the biases to calibrate for.",
-       "m": 30
-      },
-      {
-       "label": "Vanguard: Head of AI/ML for Advice posting",
-       "url": "https://www.vanguardjobs.com/job/23896184/head-of-ai-ml-for-advice-wealth-and-strategic-enablement-dallas-tx/",
-       "why": "Evaluation baselines before production, human in the loop, Model Risk Management.",
-       "m": 8
-      },
-      {
-       "label": "FINRA: 2026 oversight report, generative AI",
-       "url": "https://www.finra.org/rules-guidance/guidance/reports/2026-finra-annual-regulatory-oversight-report/gen-ai",
-       "why": "Logging, version tracking, human review, and agent risks.",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -3890,6 +4044,24 @@
       "q-how-does-model-risk-management-apply-to-an-llm-assistant",
       "q-how-do-you-evaluate-an-assistant-for-compliance-before-relea",
       "q-containment-dropped-after-a-market-event-how-do-you-investig"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Federal Reserve: SR 26-2, revised model risk guidance",
+       "url": "https://www.federalreserve.gov/supervisionreg/srletters/SR2602.pdf",
+       "m": 20,
+       "why": "Supersedes SR 11-7; keeps validation and effective challenge; footnote 3 puts generative and agentic AI out of scope."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "FINRA: 2026 oversight report, generative AI",
+       "url": "https://www.finra.org/rules-guidance/guidance/reports/2026-finra-annual-regulatory-oversight-report/gen-ai",
+       "m": 10,
+       "why": "Logging, version tracking, human review, and agent risks."
+      }
      ]
     },
     {
@@ -3911,32 +4083,6 @@
       "JPMorgan's LLM Suite: an internal front door to several third-party models with data kept inside the bank, reaching about 200,000 users in eight months",
       "Klarna's assistant was reported to handle two thirds of chats in its first month; press later reported it rehired humans, the cautionary case",
       "Google Agent Assist summaries are edited by the agent before saving and evaluated on accuracy, completeness and format adherence; a near-zero edit rate can mean agents stopped reading"
-     ],
-     "read": [
-      {
-       "label": "MIT Sloan Management Review: Investing in AI payoffs at Vanguard",
-       "url": "https://sloanreview.mit.edu/article/investing-in-ai-payoffs-at-vanguard/",
-       "why": "Crew Assist on Azure OpenAI, and the governance list: performance, bias, drift and usage oversight.",
-       "m": 10
-      },
-      {
-       "label": "Fortune: Vanguard's CIO on AI and the digital advisor",
-       "url": "https://fortune.com/2025/12/24/vanguards-cio-niti-tandon-ai-digital-advisor/",
-       "why": "The employee chatbot pilot and the two named concerns.",
-       "m": 6
-      },
-      {
-       "label": "Vanguard: Letter to investors, 2026",
-       "url": "https://corporate.vanguard.com/content/corporatesite/us/en/corp/articles/salim-letter-to-investors-2026.html",
-       "why": "Chat at over 2 million investors a month, and the Digital Advisor AI timeline.",
-       "m": 8
-      },
-      {
-       "label": "Vanguard careers blog: an AI engineer's work",
-       "url": "https://www.vanguardjobs.com/career-blog/2025/05/14/ai-engineer/",
-       "why": "Call Center Agent Assist in full production.",
-       "m": 4
-      }
      ],
      "mcq": [
       {
@@ -4016,6 +4162,24 @@
       "c-agent-assist-summaries",
       "q-agent-assist-for-crew-or-an-assistant-facing-clients-what-ch",
       "q-why-vanguard-and-what-do-you-know-about-our-assistants"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "MIT Sloan Management Review: Investing in AI payoffs at Vanguard",
+       "url": "https://sloanreview.mit.edu/article/investing-in-ai-payoffs-at-vanguard/",
+       "m": 10,
+       "why": "Crew Assist on Azure OpenAI, and the governance list: performance, bias, drift and usage oversight."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Fortune: Vanguard's CIO on AI and the digital advisor",
+       "url": "https://fortune.com/2025/12/24/vanguards-cio-niti-tandon-ai-digital-advisor/",
+       "m": 6,
+       "why": "The employee chatbot pilot and the two named concerns."
+      }
      ]
     }
    ]
@@ -4047,26 +4211,6 @@
       "DoorDash adds each issue it finds to a unit-test-like suite that runs on every prompt change (secondary summary).",
       "At scale the hard number is tokens times concurrent runs times tool latency, not HTTP requests per second; downstream tool APIs are often the real bottleneck, so timeouts and bounded parallelism belong in the evals too.",
       "Review sampling is ranked by volume times cost times severity: every escalation, abandonment, low-confidence route, negative feedback, failed tool call and long run, plus a random baseline."
-     ],
-     "read": [
-      {
-       "label": "Anthropic: Demystifying evals for AI agents",
-       "url": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
-       "why": "Grader types, capability versus regression evals, starting from real failures.",
-       "m": 15
-      },
-      {
-       "label": "Rasa: testing your assistant (end-to-end tests)",
-       "url": "https://rasa.com/docs/rasa/testing-your-assistant/",
-       "why": "What a flow and slot level conversation test asserts.",
-       "m": 8
-      },
-      {
-       "label": "Anthropic: building evaluations (develop tests)",
-       "url": "https://platform.claude.com/docs/en/docs/test-and-evaluate/develop-tests",
-       "why": "Writing success criteria as measurable numbers, with edge cases.",
-       "m": 8
-      }
      ],
      "mcq": [
       {
@@ -4142,6 +4286,36 @@
      "was": [
       "d-offline-eval-layers",
       "h-eval-scale"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Error analysis: the highest ROI technique in AI engineering",
+       "url": "https://www.youtube.com/watch?v=e2i6JbU2R-s",
+       "m": 13,
+       "why": "Reading real failures and naming the first thing that went wrong, before building any metric.",
+       "yt": {
+        "id": "e2i6JbU2R-s",
+        "ch": "Hamel Husain"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Anthropic: Demystifying evals for AI agents",
+       "url": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
+       "m": 15,
+       "why": "Grader types, capability versus regression evals, starting from real failures."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Rasa: testing your assistant (end-to-end tests)",
+       "url": "https://rasa.com/docs/rasa/testing-your-assistant/",
+       "m": 8,
+       "why": "What a flow and slot level conversation test asserts."
+      }
      ]
     },
     {
@@ -4165,20 +4339,6 @@
       "The paper reports strong function-calling agents of the time passed under half the retail tasks and had pass^8 below 25%.",
       "Anthropic's eval guidance says conversational agents need a second LLM simulating the user, and that pass^k reflects consistency requirements better than pass@k.",
       "For a finance assistant the state check reads: the right transaction, and only that one, staged; a confirmation step present; disclosures given; nothing written that should not have been."
-     ],
-     "read": [
-      {
-       "label": "arXiv: tau-bench, tool-agent-user interaction",
-       "url": "https://arxiv.org/pdf/2406.12045",
-       "why": "Simulated user, state-based grading and the pass^k metric.",
-       "m": 30
-      },
-      {
-       "label": "Sierra: benchmarking AI agents for the real world",
-       "url": "https://sierra.ai/blog/benchmarking-ai-agents",
-       "why": "Plain account of why tau-bench was built and what it shows.",
-       "m": 6
-      }
      ],
      "mcq": [
       {
@@ -4252,6 +4412,36 @@
      ],
      "was": [
       "d-simulated-users"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "tau-bench: evaluating real-world tool-agent-user interaction",
+       "url": "https://www.youtube.com/watch?v=lTwnhgZ0-qQ",
+       "m": 7,
+       "why": "How tau-bench scores an agent talking to a simulated user against a real policy.",
+       "yt": {
+        "id": "lTwnhgZ0-qQ",
+        "ch": "Andriy Batutin"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "arXiv: tau-bench, tool-agent-user interaction",
+       "url": "https://arxiv.org/pdf/2406.12045",
+       "m": 30,
+       "why": "Simulated user, state-based grading and the pass^k metric."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Sierra: benchmarking AI agents for the real world",
+       "url": "https://sierra.ai/blog/benchmarking-ai-agents",
+       "m": 6,
+       "why": "Plain account of why tau-bench was built and what it shows."
+      }
      ]
     },
     {
@@ -4272,26 +4462,6 @@
       "DoorDash's quality judge scores retrieval correctness, response accuracy, language, coherence and relevance, alongside human review of random samples to keep it calibrated.",
       "The MT-Bench paper found strong judges reach over 80% agreement with human preferences, similar to humans with each other; Langfuse's guide cites 80 to 90% on many criteria.",
       "In a control environment teams record the judge prompt version, the model version and human agreement by criterion, and send disagreements to a named reviewer."
-     ],
-     "read": [
-      {
-       "label": "arXiv: Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena",
-       "url": "https://arxiv.org/abs/2306.05685",
-       "why": "Agreement with humans and the three named biases with fixes.",
-       "m": 30
-      },
-      {
-       "label": "Instacart: LLM-based automated evaluation of support chatbots (LACE)",
-       "url": "https://company.instacart.com/tech-innovation/turbocharging-customer-support-chatbot-development-with-llm-based-automated-evaluation",
-       "why": "Binary criteria, debate judging, alignment with human raters.",
-       "m": 10
-      },
-      {
-       "label": "Langfuse: LLM evaluation, offline vs online",
-       "url": "https://langfuse.com/blog/2025-11-12-evals",
-       "why": "Calibrating on a small human-labelled sample.",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -4367,6 +4537,48 @@
      ],
      "was": [
       "d-llm-judge"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "LLM-as-a-judge: evaluating LLMs with LLMs",
+       "url": "https://www.youtube.com/watch?v=Qj3u_kzfJVo",
+       "m": 6,
+       "why": "What a judge model can and cannot score, and why you check it against people.",
+       "yt": {
+        "id": "Qj3u_kzfJVo",
+        "ch": "Evidently AI"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "LLM as a judge: scaling AI evaluation strategies",
+       "url": "https://www.youtube.com/watch?v=trfUBIDeI1Y",
+       "m": 7,
+       "why": "Where a judge model scales evaluation and where it drifts.",
+       "yt": {
+        "id": "trfUBIDeI1Y",
+        "ch": "IBM Technology"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "arXiv: Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena",
+       "url": "https://arxiv.org/abs/2306.05685",
+       "m": 30,
+       "why": "Agreement with humans and the three named biases with fixes."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Instacart: LLM-based automated evaluation of support chatbots (LACE)",
+       "url": "https://company.instacart.com/tech-innovation/turbocharging-customer-support-chatbot-development-with-llm-based-automated-evaluation",
+       "m": 10,
+       "why": "Binary criteria, debate judging, alignment with human raters."
+      }
      ]
     },
     {
@@ -4387,26 +4599,6 @@
       "Langfuse describes the loop as online monitoring catching the edge cases the dataset missed, which are then added to the dataset.",
       "Klarna reported a 25% drop in repeat inquiries, a better signal than raw chat share, though critics note it does not say how that was measured or how case mix was controlled.",
       "The CFPB warns that containment can rise because reaching a human got harder, the doom loop, so containment is paired with repeat contact, complaints and abandonment after fallback."
-     ],
-     "read": [
-      {
-       "label": "Langfuse: LLM evaluation, offline vs online",
-       "url": "https://langfuse.com/blog/2025-11-12-evals",
-       "why": "The offline and online loop, and sampling for judge cost.",
-       "m": 10
-      },
-      {
-       "label": "LinkedIn Engineering: musings on building a generative AI product",
-       "url": "https://www.linkedin.com/blog/engineering/generative-ai/musings-on-building-a-generative-ai-product",
-       "why": "The last 20 percent problem and annotation at scale.",
-       "m": 12
-      },
-      {
-       "label": "Intercom: Fin AI Agent reporting",
-       "url": "https://www.intercom.com/help/en/articles/7837533-fin-ai-agent-reporting",
-       "why": "How a vendor defines involvement, resolution and automation rate.",
-       "m": 6
-      }
      ],
      "mcq": [
       {
@@ -4481,6 +4673,24 @@
      ],
      "was": [
       "d-offline-online-gap"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Langfuse: LLM evaluation, offline vs online",
+       "url": "https://langfuse.com/blog/2025-11-12-evals",
+       "m": 10,
+       "why": "The offline and online loop, and sampling for judge cost."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "LinkedIn Engineering: musings on building a generative AI product",
+       "url": "https://www.linkedin.com/blog/engineering/generative-ai/musings-on-building-a-generative-ai-product",
+       "m": 12,
+       "why": "The last 20 percent problem and annotation at scale."
+      }
      ]
     },
     {
@@ -4503,26 +4713,6 @@
       "Microsoft Presidio detects and anonymises PII with redact, replace, hash and encrypt operators, and states it cannot guarantee finding all PII, so controls are layered.",
       "FINRA Regulatory Notice 24-09 says recordkeeping rules apply to AI-generated and AI-assisted records, and that chatbot responses to specific inquiries may be retail communications.",
       "OTel attribute names include gen_ai.operation.name and gen_ai.usage.input_tokens and output_tokens, with execute_tool and invoke_agent spans in the same trace."
-     ],
-     "read": [
-      {
-       "label": "Dash0: OpenTelemetry GenAI semantic conventions explained",
-       "url": "https://www.dash0.com/knowledge/opentelemetry-genai-semantic-conventions-explained",
-       "why": "Span types, token metrics, opt-in content capture.",
-       "m": 10
-      },
-      {
-       "label": "Microsoft: Presidio",
-       "url": "https://microsoft.github.io/presidio/",
-       "why": "PII detection, anonymisation operators and the no-guarantee caveat.",
-       "m": 6
-      },
-      {
-       "label": "FINRA: artificial intelligence key topic (Regulatory Notice 24-09)",
-       "url": "https://www.finra.org/rules-guidance/key-topics/artificial-intelligence",
-       "why": "Why the stored bot reply is itself a regulated record.",
-       "m": 8
-      }
      ],
      "mcq": [
       {
@@ -4595,6 +4785,36 @@
      ],
      "was": [
       "d-telemetry-per-turn"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Intro to OpenTelemetry and LLM observability",
+       "url": "https://www.youtube.com/watch?v=0I0ZrmyoTpM",
+       "m": 16,
+       "why": "Traces and spans for a model-backed app: what one turn should record.",
+       "yt": {
+        "id": "0I0ZrmyoTpM",
+        "ch": "Arize AI"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Dash0: OpenTelemetry GenAI semantic conventions explained",
+       "url": "https://www.dash0.com/knowledge/opentelemetry-genai-semantic-conventions-explained",
+       "m": 10,
+       "why": "Span types, token metrics, opt-in content capture."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Microsoft: Presidio",
+       "url": "https://microsoft.github.io/presidio/",
+       "m": 6,
+       "why": "PII detection, anonymisation operators and the no-guarantee caveat."
+      }
      ]
     },
     {
@@ -4618,20 +4838,6 @@
       "Safety signals: guardrail trips, blocked outputs, PII found in outputs, prompt-injection detections, and any answer on a regulated topic that did not come from the approved library.",
       "DoorDash runs an online guardrail and an offline judge as two monitoring layers (secondary summary).",
       "Finance incident path: contain (switch the topic off), assess how many customers saw it from per-turn logs, correct, and record."
-     ],
-     "read": [
-      {
-       "label": "Dash0: OpenTelemetry GenAI semantic conventions explained",
-       "url": "https://www.dash0.com/knowledge/opentelemetry-genai-semantic-conventions-explained",
-       "why": "Token usage, duration and time-to-first-token metrics for dashboards.",
-       "m": 10
-      },
-      {
-       "label": "ZenML LLMOps database: DoorDash support system",
-       "url": "https://www.zenml.io/llmops-database/building-a-high-quality-rag-based-support-system-with-llm-guardrails-and-quality-monitoring",
-       "why": "Online guardrail plus offline judge as two layers.",
-       "m": 8
-      }
      ],
      "mcq": [
       {
@@ -4703,6 +4909,36 @@
      ],
      "was": [
       "d-dashboards-alerts"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Dash0: OpenTelemetry GenAI semantic conventions explained",
+       "url": "https://www.dash0.com/knowledge/opentelemetry-genai-semantic-conventions-explained",
+       "m": 10,
+       "why": "Token usage, duration and time-to-first-token metrics for dashboards."
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Intro to OpenTelemetry and LLM observability",
+       "url": "https://www.youtube.com/watch?v=0I0ZrmyoTpM",
+       "m": 16,
+       "why": "Traces and spans for a model-backed app: what one turn should record.",
+       "yt": {
+        "id": "0I0ZrmyoTpM",
+        "ch": "Arize AI"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "ZenML LLMOps database: DoorDash support system",
+       "url": "https://www.zenml.io/llmops-database/building-a-high-quality-rag-based-support-system-with-llm-guardrails-and-quality-monitoring",
+       "m": 8,
+       "why": "Online guardrail plus offline judge as two layers."
+      }
      ]
     },
     {
@@ -4726,26 +4962,6 @@
       "On Anthropic, cached input tokens cost roughly a tenth of normal input while cache writes cost a premium; batch work is discounted, which suits offline judge runs but not the live path.",
       "Klarna reported (company figures) two-thirds of chats handled in the first month and a 25% drop in repeat inquiries; critics note mostly level-one questions and unclear measurement, and in 2025 it began rehiring people for complex cases.",
       "Intercom separates deflection (the AI answered, the customer may have left unhappy) from resolution (confirmed, or no return with the same question), and warns that vendors often count non-escalated chats as resolved."
-     ],
-     "read": [
-      {
-       "label": "arXiv: FrugalGPT",
-       "url": "https://arxiv.org/abs/2305.05176",
-       "why": "Cascades and the cost reduction numbers.",
-       "m": 20
-      },
-      {
-       "label": "LMSYS: RouteLLM",
-       "url": "https://www.lmsys.org/blog/2024-07-01-routellm/",
-       "why": "Learned routing between a strong and a weak model, with measured savings.",
-       "m": 8
-      },
-      {
-       "label": "Fin (Intercom): how to evaluate AI customer service agents",
-       "url": "https://fin.ai/learn/evaluate-enterprise-ai-customer-service-agents",
-       "why": "Resolution versus deflection, and total cost of ownership.",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -4820,6 +5036,36 @@
      "was": [
       "d-cost-latency-levers",
       "d-cost-per-resolution"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "RouteLLM achieves 90% GPT-4o quality and 80% cheaper",
+       "url": "https://www.youtube.com/watch?v=GhXQKz5WKSA",
+       "m": 9,
+       "why": "A cheap router in front of an expensive model, and what it does to cost and quality.",
+       "yt": {
+        "id": "GhXQKz5WKSA",
+        "ch": "Matthew Berman"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "arXiv: FrugalGPT",
+       "url": "https://arxiv.org/abs/2305.05176",
+       "m": 20,
+       "why": "Cascades and the cost reduction numbers."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "LMSYS: RouteLLM",
+       "url": "https://www.lmsys.org/blog/2024-07-01-routellm/",
+       "m": 8,
+       "why": "Learned routing between a strong and a weak model, with measured savings."
+      }
      ]
     },
     {
@@ -4843,26 +5089,6 @@
       "A cascaded ASR, LLM and TTS pipeline keeps a text checkpoint where you can apply guardrails, redact, log and require approved phrasing, which is why many financial deployments stay with it rather than speech-to-speech models.",
       "Voice evals need audio test sets with noise and accents, with error measured on the high-stakes tokens (account numbers, amounts), not only overall word error rate.",
       "Long history inflates time to first token on every turn, so teams summarise earlier turns and keep the stable prefix cached."
-     ],
-     "read": [
-      {
-       "label": "AWS Builder Center: the 800ms rule, budgeting latency for a voice agent",
-       "url": "https://builder.aws.com/content/3JDFAfXBiuwPP5MPzgf4RUWSAIp/the-800ms-rule-budgeting-latency-for-a-real-time-voice-agent-on-aws",
-       "why": "A per-stage latency budget and the p50 versus p95 point.",
-       "m": 8
-      },
-      {
-       "label": "Retell AI: how real-time voice AI works",
-       "url": "https://www.retellai.com/blog/how-real-time-voice-ai-works-stt-llm-tts",
-       "why": "Stage by stage through STT, LLM and TTS.",
-       "m": 8
-      },
-      {
-       "label": "Hamming: voice AI latency, what is fast and slow",
-       "url": "https://hamming.ai/resources/voice-ai-latency-whats-fast-whats-slow-how-to-fix-it",
-       "why": "Where voice latency goes and how to reduce it.",
-       "m": 8
-      }
      ],
      "mcq": [
       {
@@ -4935,6 +5161,36 @@
      ],
      "was": [
       "d-voice-latency-budget"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Reduce the latency of your voice agent",
+       "url": "https://www.youtube.com/watch?v=jnedfk5PL2A",
+       "m": 14,
+       "why": "Where the milliseconds go in a voice agent and what to cut first.",
+       "yt": {
+        "id": "jnedfk5PL2A",
+        "ch": "LiveKit"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "AWS Builder Center: the 800ms rule, budgeting latency for a voice agent",
+       "url": "https://builder.aws.com/content/3JDFAfXBiuwPP5MPzgf4RUWSAIp/the-800ms-rule-budgeting-latency-for-a-real-time-voice-agent-on-aws",
+       "m": 8,
+       "why": "A per-stage latency budget and the p50 versus p95 point."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Hamming: voice AI latency, what is fast and slow",
+       "url": "https://hamming.ai/resources/voice-ai-latency-whats-fast-whats-slow-how-to-fix-it",
+       "m": 8,
+       "why": "Where voice latency goes and how to reduce it."
+      }
      ]
     }
    ]
@@ -4969,38 +5225,6 @@
       "An ACL 2025 industry paper sends only the uncertain turns from a cheap classifier to an LLM for out-of-scope detection on CLINC150 and BANKING77; its stated limit is the first stage's calibration",
       "Encoder latency, in order of effort: truncate, dynamic padding and length bucketing, ONNX or TensorRT export, fp16 or int8, distil to DistilBERT or MiniLM; cache frequent inputs; measure p95 on the target hardware",
       "Multilingual: a multilingual backbone transfers across languages (SetFit reports this), but keep a per-language golden set and thresholds; Dialogflow CX sets its classification threshold per language per flow"
-     ],
-     "read": [
-      {
-       "label": "Hugging Face: SetFit, efficient few-shot learning without prompts",
-       "url": "https://huggingface.co/blog/setfit",
-       "why": "How SetFit works, its 8-per-class results and the multilingual section.",
-       "m": 10
-      },
-      {
-       "label": "Hugging Face: Text classification with the Trainer",
-       "url": "https://huggingface.co/docs/transformers/tasks/sequence_classification",
-       "why": "Fine-tuning DistilBERT end to end.",
-       "m": 15
-      },
-      {
-       "label": "arXiv: A decision framework for intent detection (2026 preprint)",
-       "url": "https://arxiv.org/html/2608.20371",
-       "why": "Fine-tuned encoder against LLM, with latency and out-of-scope numbers.",
-       "m": 20
-      },
-      {
-       "label": "Casanueva et al.: Efficient intent detection with dual sentence encoders",
-       "url": "https://arxiv.org/abs/2003.04807",
-       "why": "BANKING77 and the few-shot encoder result.",
-       "m": 15
-      },
-      {
-       "label": "Alex Jacobs: Beating BERT? Small LLMs vs fine-tuned encoders",
-       "url": "https://alex-jacobs.com/posts/beatingbert/",
-       "why": "Throughput numbers and a plain when-each-wins summary.",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -5077,6 +5301,36 @@
       "q-how-would-you-reduce-the-latency-of-a-bert-classifier",
       "e-approach-choice",
       "e-hierarchy-multilabel-multilingual"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "High quality text classification with few training examples with SetFit",
+       "url": "https://www.youtube.com/watch?v=IHalt4Nbf_Q",
+       "m": 7,
+       "why": "A strong classifier from a handful of examples per label, with sentence embeddings.",
+       "yt": {
+        "id": "IHalt4Nbf_Q",
+        "ch": "Cohere"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Hugging Face: SetFit, efficient few-shot learning without prompts",
+       "url": "https://huggingface.co/blog/setfit",
+       "m": 10,
+       "why": "How SetFit works, its 8-per-class results and the multilingual section."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Alex Jacobs: Beating BERT? Small LLMs vs fine-tuned encoders",
+       "url": "https://alex-jacobs.com/posts/beatingbert/",
+       "m": 10,
+       "why": "Throughput numbers and a plain when-each-wins summary."
+      }
      ]
     },
     {
@@ -5100,32 +5354,6 @@
       "Microsoft's CLU guidance gives per-intent examples of about 0.40 for a greeting and 0.95 for placing a call, and notes a model can predict the wrong intent at 1.00",
       "Rasa's two-stage fallback: ask the user to confirm the likely intent, then to rephrase, then hand off; showing the top two as quick replies turns uncertainty into one tap",
       "Hendrycks and Gimpel: maximum softmax probability is a usable baseline for spotting errors and out-of-distribution inputs, but some of those inputs still score high"
-     ],
-     "read": [
-      {
-       "label": "Guo et al.: On calibration of modern neural networks",
-       "url": "https://arxiv.org/abs/1706.04599",
-       "why": "The overconfidence finding and temperature scaling.",
-       "m": 25
-      },
-      {
-       "label": "Microsoft Learn: CLU best practices",
-       "url": "https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/concepts/best-practices",
-       "why": "Per-intent thresholds and None-intent guidance.",
-       "m": 10
-      },
-      {
-       "label": "Rasa docs: Fallback and human handoff",
-       "url": "https://legacy-docs-oss.rasa.com/docs/rasa/fallback-handoff/",
-       "why": "Threshold, ambiguity check and two-stage fallback.",
-       "m": 10
-      },
-      {
-       "label": "Hendrycks and Gimpel: A baseline for detecting misclassified and out-of-distribution examples",
-       "url": "https://arxiv.org/pdf/1610.02136",
-       "why": "The max-softmax baseline and its limits.",
-       "m": 15
-      }
      ],
      "mcq": [
       {
@@ -5189,6 +5417,36 @@
      "was": [
       "q-why-does-calibration-matter-and-how-do-you-fix-it",
       "e-calibration-thresholds"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Probability calibration, data science concepts",
+       "url": "https://www.youtube.com/watch?v=AunotauS5yI",
+       "m": 11,
+       "why": "What it means for a score of 0.9 to be right nine times in ten, and how to check.",
+       "yt": {
+        "id": "AunotauS5yI",
+        "ch": "ritvikmath"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Guo et al.: On calibration of modern neural networks",
+       "url": "https://arxiv.org/abs/1706.04599",
+       "m": 25,
+       "why": "The overconfidence finding and temperature scaling."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Rasa docs: Fallback and human handoff",
+       "url": "https://legacy-docs-oss.rasa.com/docs/rasa/fallback-handoff/",
+       "m": 10,
+       "why": "Threshold, ambiguity check and two-stage fallback."
+      }
      ]
     },
     {
@@ -5211,32 +5469,6 @@
       "Microsoft's CLU guidance: add near-miss false positives to the None intent",
       "The 2026 preprint: the LLM's out-of-scope recall was 85.6 against 58.1 for a fine-tuned encoder, the main argument for routing uncertain turns to an LLM",
       "Log every rejection and review a sample on a schedule: it shows where the model quietly fails, the unsupported requests are the product backlog, and model-risk reviewers ask for it"
-     ],
-     "read": [
-      {
-       "label": "Larson et al.: An evaluation dataset for intent classification and out-of-scope prediction",
-       "url": "https://aclanthology.org/D19-1131.pdf",
-       "why": "CLINC150 and the in-scope against out-of-scope trade-off.",
-       "m": 15
-      },
-      {
-       "label": "Microsoft Learn: CLU None intent",
-       "url": "https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/concepts/none-intent",
-       "why": "How the None intent and its threshold interact.",
-       "m": 8
-      },
-      {
-       "label": "ACL Industry 2025: Efficient out-of-scope detection via uncertainty-driven LLM routing",
-       "url": "https://aclanthology.org/2025.acl-industry.25.pdf",
-       "why": "A production-minded cascade on CLINC150 and BANKING77.",
-       "m": 20
-      },
-      {
-       "label": "Hugging Face: PolyAI/banking77 dataset",
-       "url": "https://huggingface.co/datasets/PolyAI/banking77",
-       "why": "Browse confusable banking intents.",
-       "m": 5
-      }
      ],
      "mcq": [
       {
@@ -5298,6 +5530,24 @@
      "was": [
       "q-how-do-you-handle-out-of-scope-queries",
       "e-out-of-scope"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Larson et al.: An evaluation dataset for intent classification and out-of-scope prediction",
+       "url": "https://aclanthology.org/D19-1131.pdf",
+       "m": 15,
+       "why": "CLINC150 and the in-scope against out-of-scope trade-off."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Microsoft Learn: CLU None intent",
+       "url": "https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/concepts/none-intent",
+       "m": 8,
+       "why": "How the None intent and its threshold interact."
+      }
      ]
     },
     {
@@ -5321,32 +5571,6 @@
       "Microsoft's CLU evaluation guidance: read the confusion matrix and merge intents that are mistaken for each other, or add distinguishing examples",
       "Long tail: reweighting, logit adjustment or balanced softmax, paraphrase oversampling, and few-shot methods like SetFit for tail intents; track per-intent recall",
       "Spend the labelling budget where it moves the boundary: low-confidence or small-margin production turns first; an LLM pre-labels and people review where it disagrees with the current model"
-     ],
-     "read": [
-      {
-       "label": "ACL Insights 2022: Label errors in BANKING77",
-       "url": "https://aclanthology.org/2022.insights-1.19/",
-       "why": "How many benchmark labels are suspect, and what cleaning buys.",
-       "m": 15
-      },
-      {
-       "label": "Microsoft Learn: CLU evaluation metrics",
-       "url": "https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/concepts/evaluation-metrics",
-       "why": "Precision, recall, F1 and the confusion matrix for intents.",
-       "m": 10
-      },
-      {
-       "label": "Lin et al.: Focal loss for dense object detection",
-       "url": "https://arxiv.org/abs/1708.02002",
-       "why": "Where focal loss comes from and what it down-weights.",
-       "m": 15
-      },
-      {
-       "label": "arXiv: A survey of deep long-tail classification advancements",
-       "url": "https://arxiv.org/html/2404.15593v1",
-       "why": "Reweighting, balanced softmax and logit adjustment in one place.",
-       "m": 20
-      }
      ],
      "mcq": [
       {
@@ -5424,6 +5648,36 @@
       "q-macro-or-micro-f1-and-when-does-accuracy-lie",
       "q-your-model-scores-92-on-the-test-set-but-poorly-in-productio",
       "e-data-quality"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Why you should care about unbalanced data",
+       "url": "https://www.youtube.com/watch?v=JvFrJacbt6U",
+       "m": 11,
+       "why": "Why accuracy flatters a model on skewed classes.",
+       "yt": {
+        "id": "JvFrJacbt6U",
+        "ch": "ritvikmath"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "ACL Insights 2022: Label errors in BANKING77",
+       "url": "https://aclanthology.org/2022.insights-1.19/",
+       "m": 15,
+       "why": "How many benchmark labels are suspect, and what cleaning buys."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Microsoft Learn: CLU evaluation metrics",
+       "url": "https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/concepts/evaluation-metrics",
+       "m": 10,
+       "why": "Precision, recall, F1 and the confusion matrix for intents."
+      }
      ]
     },
     {
@@ -5447,38 +5701,6 @@
       "Rules and regexes still own narrow, high-precision cases such as account and routing number formats",
       "Hybrid lexical plus dense retrieval with rank fusion often beats either alone",
       "Generic embeddings know general similarity; a bank's idea of 'same enough' is taught by fine-tuning on positive pairs and hard negatives, deployed only if held-out retrieval improves"
-     ],
-     "read": [
-      {
-       "label": "Jay Alammar: The Illustrated Word2vec",
-       "url": "https://jalammar.github.io/illustrated-word2vec/",
-       "why": "Skip-gram, negative sampling and window size as pictures.",
-       "m": 35
-      },
-      {
-       "label": "Stanford SLP3: ch. 5 Embeddings",
-       "url": "https://web.stanford.edu/~jurafsky/slp3/5.pdf",
-       "why": "The distributional hypothesis, TF-IDF vectors and word2vec.",
-       "m": 45
-      },
-      {
-       "label": "Stanford SLP3: ch. 4 Logistic Regression and Text Classification",
-       "url": "https://web.stanford.edu/~jurafsky/slp3/4.pdf",
-       "why": "The classic baseline, properly.",
-       "m": 30
-      },
-      {
-       "label": "Jay Alammar: The Illustrated BERT, ELMo and co.",
-       "url": "https://jalammar.github.io/illustrated-bert/",
-       "why": "From static to contextual embeddings.",
-       "m": 25
-      },
-      {
-       "label": "Hugging Face LLM course: Natural language processing and LLMs",
-       "url": "https://huggingface.co/learn/llm-course/chapter1/2",
-       "why": "The field's map in one page.",
-       "m": 8
-      }
      ],
      "mcq": [
       {
@@ -5543,6 +5765,48 @@
       "q-why-do-embeddings-work",
       "q-static-or-contextual-embeddings-what-s-the-difference",
       "h-representations"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "The Illustrated Word2vec: a gentle intro to word embeddings",
+       "url": "https://www.youtube.com/watch?v=ISPId9Lhc1g",
+       "m": 9,
+       "why": "Words as vectors, drawn out step by step, up to king minus man plus woman.",
+       "yt": {
+        "id": "ISPId9Lhc1g",
+        "ch": "Jay Alammar"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Vectoring words (word embeddings)",
+       "url": "https://www.youtube.com/watch?v=gQddtTdmG_8",
+       "m": 17,
+       "why": "Why similar words land close together, with live examples.",
+       "yt": {
+        "id": "gQddtTdmG_8",
+        "ch": "Computerphile"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Stanford SLP3: ch. 5 Embeddings",
+       "url": "https://web.stanford.edu/~jurafsky/slp3/5.pdf",
+       "m": 45,
+       "why": "The distributional hypothesis, TF-IDF vectors and word2vec."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Jay Alammar: The Illustrated BERT, ELMo and co.",
+       "url": "https://jalammar.github.io/illustrated-bert/",
+       "m": 25,
+       "why": "From static to contextual embeddings."
+      }
      ]
     },
     {
@@ -5566,32 +5830,6 @@
       "Cohere Embed v3 requires an input_type (search_document, search_query, classification, clustering) and warns that classification and clustering vectors should not be mixed with retrieval ones",
       "Retrieve then rerank: a bi-encoder fetches the top candidates fast and a cross-encoder reorders them, which is where negation and fine detail get fixed",
       "Normalise at write time and use inner product in the index"
-     ],
-     "read": [
-      {
-       "label": "Reimers and Gurevych: Sentence-BERT",
-       "url": "https://arxiv.org/abs/1908.10084",
-       "why": "The abstract and the model section, including the 65 hours to 5 seconds result.",
-       "m": 25
-      },
-      {
-       "label": "Lilian Weng: Contrastive representation learning",
-       "url": "https://lilianweng.github.io/posts/2021-05-31-contrastive/",
-       "why": "InfoNCE and the sentence-embedding part.",
-       "m": 20
-      },
-      {
-       "label": "Sentence Transformers: Training overview",
-       "url": "https://www.sbert.net/docs/sentence_transformer/training_overview.html",
-       "why": "Losses, including MatryoshkaLoss, in practice.",
-       "m": 20
-      },
-      {
-       "label": "Hugging Face: Training and finetuning embedding models with Sentence Transformers",
-       "url": "https://huggingface.co/blog/train-sentence-transformers",
-       "why": "Contrastive pairs, in-batch and hard negatives, end to end.",
-       "m": 20
-      }
      ],
      "mcq": [
       {
@@ -5665,6 +5903,48 @@
      "was": [
       "q-why-can-t-you-mean-pool-bert-for-sentence-similarity",
       "q-cosine-dot-product-or-euclidean-distance"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Text embeddings and semantic search",
+       "url": "https://www.youtube.com/watch?v=OATCgQtNX2o",
+       "m": 4,
+       "why": "Sentence embeddings and semantic search in four minutes.",
+       "yt": {
+        "id": "OATCgQtNX2o",
+        "ch": "Hugging Face"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Sentence Transformers explained",
+       "url": "https://www.youtube.com/watch?v=O3xbVmpdJwU",
+       "m": 18,
+       "why": "How a sentence encoder is trained so that similar sentences get similar vectors.",
+       "yt": {
+        "id": "O3xbVmpdJwU",
+        "ch": "CodeEmporium"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Reimers and Gurevych: Sentence-BERT",
+       "url": "https://arxiv.org/abs/1908.10084",
+       "m": 25,
+       "why": "The abstract and the model section, including the 65 hours to 5 seconds result."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Hugging Face: Training and finetuning embedding models with Sentence Transformers",
+       "url": "https://huggingface.co/blog/train-sentence-transformers",
+       "m": 20,
+       "why": "Contrastive pairs, in-batch and hard negatives, end to end."
+      }
      ]
     },
     {
@@ -5688,38 +5968,6 @@
       "Storage: OpenAI text-embedding-3 and Voyage models are Matryoshka-trained, so vectors can be truncated; Voyage reports int8 at 1024 dimensions within 0.31% of float at 2048 with 8 times less storage (vendor-reported); re-test your hard queries after truncating",
       "Governance: FINRA Regulatory Notice 24-09 says existing rules apply whether a firm builds a model or uses a third party's; SR 11-7 style model risk treats vendor models as components to inventory and validate",
       "Data handling: redact or tokenise account numbers and personal data before any hosted embedding call; prefer self-hosted or private deployments with no-retention terms, confirmed with security and legal"
-     ],
-     "read": [
-      {
-       "label": "Hugging Face: MTEB leaderboard",
-       "url": "https://huggingface.co/spaces/mteb/leaderboard",
-       "why": "Filter to your task and language; check it live.",
-       "m": 5
-      },
-      {
-       "label": "Muennighoff et al.: MTEB, Massive Text Embedding Benchmark",
-       "url": "https://arxiv.org/abs/2210.07316",
-       "why": "The task types, and why no model wins everywhere.",
-       "m": 25
-      },
-      {
-       "label": "arXiv: FinMTEB, Finance Massive Text Embedding Benchmark",
-       "url": "https://arxiv.org/html/2502.10990v2",
-       "why": "Evidence that general rank does not predict finance results.",
-       "m": 20
-      },
-      {
-       "label": "FINRA: Regulatory Notice 24-09",
-       "url": "https://www.finra.org/rules-guidance/notices/24-09",
-       "why": "How existing rules apply to gen AI, including third-party tools.",
-       "m": 10
-      },
-      {
-       "label": "Hugging Face: ProsusAI/finbert",
-       "url": "https://huggingface.co/ProsusAI/finbert",
-       "why": "What FinBERT actually is and was trained for.",
-       "m": 5
-      }
      ],
      "mcq": [
       {
@@ -5783,6 +6031,24 @@
       "q-where-do-embeddings-fail-and-how-do-you-use-them-in-an-assis",
       "e-embedding-model-choice",
       "e-finance-specifics"
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Hugging Face: MTEB leaderboard",
+       "url": "https://huggingface.co/spaces/mteb/leaderboard",
+       "m": 5,
+       "why": "Filter to your task and language; check it live."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "arXiv: FinMTEB, Finance Massive Text Embedding Benchmark",
+       "url": "https://arxiv.org/html/2502.10990v2",
+       "m": 20,
+       "why": "Evidence that general rank does not predict finance results."
+      }
      ]
     },
     {
@@ -5806,38 +6072,6 @@
       "Intercom's Fin team (vendor-reported): extract the key question with a small LLM, embed with all-MiniLM-L6-v2, UMAP then HDBSCAN, recursive clustering and LLM naming; new conversations below 0.5 similarity to every centroid are flagged as emerging; clustering choices mattered more than the embedding model",
       "Evidently compared five embedding-drift methods and recommends a classifier-based ROC AUC (train a model to tell reference from current embeddings; near 0.5 means no shift) as the default",
       "pgvector is fine to a few million vectors and keeps the data in your database; dedicated engines add scale and filtering; measure recall@k against exact search on your data, then pick the cheapest index that holds it"
-     ],
-     "read": [
-      {
-       "label": "FAISS wiki: Faiss indexes",
-       "url": "https://github.com/facebookresearch/faiss/wiki/Faiss-indexes",
-       "why": "Flat, IVF, HNSW and PQ with their knobs.",
-       "m": 15
-      },
-      {
-       "label": "GitHub: aurelio-labs/semantic-router",
-       "url": "https://github.com/aurelio-labs/semantic-router",
-       "why": "The route and utterance model in a real library.",
-       "m": 10
-      },
-      {
-       "label": "Intercom Fin: Unsupervised learning meets generative AI, topic modelling for real-world dialogue",
-       "url": "https://fin.ai/research/unsupervised-learning-meets-generative-ai-topic-modelling-for-real-world-dialogue/",
-       "why": "A named company's discovery pipeline with thresholds.",
-       "m": 12
-      },
-      {
-       "label": "Evidently AI: 5 methods to detect drift in ML embeddings",
-       "url": "https://www.evidentlyai.com/blog/embedding-drift-detection",
-       "why": "Which drift test to default to, and why.",
-       "m": 12
-      },
-      {
-       "label": "Formation: Re-embedding migration, upgrade RAG indexes safely",
-       "url": "https://formation.dev/blog/embedding-model-upgrade-migration",
-       "why": "The parallel index and cutover pattern.",
-       "m": 10
-      }
      ],
      "mcq": [
       {
@@ -5915,6 +6149,48 @@
       "e-semantic-routing",
       "e-intent-discovery",
       "e-embedding-ops"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Vector search with LLMs",
+       "url": "https://www.youtube.com/watch?v=YDdKiQNw80c",
+       "m": 21,
+       "why": "How nearest-neighbour search over embeddings finds meaning, not keywords.",
+       "yt": {
+        "id": "YDdKiQNw80c",
+        "ch": "Computerphile"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Vector database search: HNSW explained",
+       "url": "https://www.youtube.com/watch?v=77QH0Y2PYKg",
+       "m": 9,
+       "why": "How HNSW finds neighbours without scanning every vector.",
+       "yt": {
+        "id": "77QH0Y2PYKg",
+        "ch": "DataMListic"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "FAISS wiki: Faiss indexes",
+       "url": "https://github.com/facebookresearch/faiss/wiki/Faiss-indexes",
+       "m": 15,
+       "why": "Flat, IVF, HNSW and PQ with their knobs."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "GitHub: aurelio-labs/semantic-router",
+       "url": "https://github.com/aurelio-labs/semantic-router",
+       "m": 10,
+       "why": "The route and utterance model in a real library."
+      }
      ]
     }
    ]
@@ -5947,26 +6223,6 @@
       "The original Transformer: d_model 512 and 8 heads, so d_k = 64 and every score is divided by 8",
       "GPT-3 175B: 96 heads of 128 dimensions, so its scale is 1/√128, about 0.088",
       "Cost: the score matrix is n by n per head and per layer, which is why long context is expensive (see the KV cache topic)"
-     ],
-     "read": [
-      {
-       "label": "Jay Alammar: The Illustrated Transformer",
-       "url": "https://jalammar.github.io/illustrated-transformer/",
-       "why": "Q, K, V, heads, positions and residuals as pictures.",
-       "m": 25
-      },
-      {
-       "label": "3Blue1Brown: Attention in Transformers, step by step",
-       "url": "https://www.3blue1brown.com/lessons/attention",
-       "why": "The geometric picture behind queries, keys and values.",
-       "m": 25
-      },
-      {
-       "label": "Sebastian Raschka: Understanding and coding self-attention",
-       "url": "https://magazine.sebastianraschka.com/p/understanding-and-coding-self-attention",
-       "why": "Self, multi-head, causal and cross-attention in code.",
-       "m": 25
-      }
      ],
      "mcq": [
       {
@@ -6031,6 +6287,36 @@
      "was": [
       "q-attention",
       "q-why-divide-the-attention-scores-by-the-square-root-of-d-k"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Attention in transformers, step-by-step",
+       "url": "https://www.youtube.com/watch?v=eMlx5fFNoYc",
+       "m": 27,
+       "why": "Queries, keys and values drawn out, the best picture of attention there is.",
+       "yt": {
+        "id": "eMlx5fFNoYc",
+        "ch": "3Blue1Brown"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Jay Alammar: The Illustrated Transformer",
+       "url": "https://jalammar.github.io/illustrated-transformer/",
+       "m": 25,
+       "why": "Q, K, V, heads, positions and residuals as pictures."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Sebastian Raschka: Understanding and coding self-attention",
+       "url": "https://magazine.sebastianraschka.com/p/understanding-and-coding-self-attention",
+       "m": 25,
+       "why": "Self, multi-head, causal and cross-attention in code."
+      }
      ]
     },
     {
@@ -6052,26 +6338,6 @@
       "Llama 2 7B: 32 layers, d_model 4096, 32 heads of 128, pre-norm with RMSNorm, RoPE and SwiGLU",
       "Long-context versions of RoPE models (position interpolation, NTK-aware scaling, YaRN) rescale the rotation frequencies and then fine-tune briefly on longer text",
       "Budget arithmetic: training compute is about 6 × parameters × tokens; inference is about 2 × parameters per generated token"
-     ],
-     "read": [
-      {
-       "label": "Su et al.: RoFormer, rotary position embedding",
-       "url": "https://arxiv.org/abs/2104.09864",
-       "why": "Where RoPE comes from and why the score depends on relative position.",
-       "m": 20
-      },
-      {
-       "label": "Xiong et al.: On layer normalization in the Transformer architecture",
-       "url": "https://arxiv.org/abs/2002.04745",
-       "why": "Why pre-LN trains without warmup.",
-       "m": 20
-      },
-      {
-       "label": "3Blue1Brown: How might LLMs store facts",
-       "url": "https://www.3blue1brown.com/lessons/mlp",
-       "why": "The feed-forward block, where most parameters live.",
-       "m": 25
-      }
      ],
      "mcq": [
       {
@@ -6133,6 +6399,48 @@
      "was": [
       "q-why-multiple-heads-and-how-does-position-get-in",
       "q-walk-me-through-one-transformer-block"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "How might LLMs store facts",
+       "url": "https://www.youtube.com/watch?v=9-Jl0dxWQs8",
+       "m": 23,
+       "why": "What the feed-forward half of each block does with the vectors attention mixed.",
+       "yt": {
+        "id": "9-Jl0dxWQs8",
+        "ch": "3Blue1Brown"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Rotary positional embeddings: combining absolute and relative",
+       "url": "https://www.youtube.com/watch?v=o29P0Kpobz0",
+       "m": 12,
+       "why": "How rotary embeddings put position into the query and key dot product.",
+       "yt": {
+        "id": "o29P0Kpobz0",
+        "ch": "Efficient NLP"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Su et al.: RoFormer, rotary position embedding",
+       "url": "https://arxiv.org/abs/2104.09864",
+       "m": 20,
+       "why": "Where RoPE comes from and why the score depends on relative position."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Xiong et al.: On layer normalization in the Transformer architecture",
+       "url": "https://arxiv.org/abs/2002.04745",
+       "m": 20,
+       "why": "Why pre-LN trains without warmup."
+      }
      ]
     },
     {
@@ -6155,26 +6463,6 @@
       "DistilBERT keeps about 97% of BERT's language-understanding performance with 40% fewer parameters and about 60% faster inference",
       "A 2026 preprint found fine-tuned RoBERTa beat Claude Haiku on ATIS and tied on CLINC150, but the LLM caught far more out-of-scope queries, at about 981 ms against 2.4 ms p50",
       "A common pattern: label data with an LLM, have people review it, then distil into a small encoder for serving"
-     ],
-     "read": [
-      {
-       "label": "Jay Alammar: The Illustrated BERT, ELMo and co.",
-       "url": "https://jalammar.github.io/illustrated-bert/",
-       "why": "Masked LM and how BERT is used for classification.",
-       "m": 25
-      },
-      {
-       "label": "Hugging Face LLM course: How do Transformers work?",
-       "url": "https://huggingface.co/learn/llm-course/chapter1/4",
-       "why": "Encoder, decoder and encoder-decoder side by side.",
-       "m": 15
-      },
-      {
-       "label": "Stanford SLP3: ch. 9 Masked Language Models",
-       "url": "https://web.stanford.edu/~jurafsky/slp3/9.pdf",
-       "why": "BERT and fine-tuning, properly.",
-       "m": 25
-      }
      ],
      "mcq": [
       {
@@ -6235,6 +6523,48 @@
      ],
      "was": [
       "q-bert-versus-gpt-what-s-the-difference"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Which transformer architecture is best? Encoder-only vs encoder-decoder vs decoder-only",
+       "url": "https://www.youtube.com/watch?v=wOcbALDw0bU",
+       "m": 8,
+       "why": "What the mask and the objective change between encoder, decoder and both.",
+       "yt": {
+        "id": "wOcbALDw0bU",
+        "ch": "Efficient NLP"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Encoder-only transformers (like BERT) for RAG, clearly explained",
+       "url": "https://www.youtube.com/watch?v=GDN649X_acE",
+       "m": 19,
+       "why": "How a BERT-style encoder turns text into vectors, step by step.",
+       "yt": {
+        "id": "GDN649X_acE",
+        "ch": "StatQuest with Josh Starmer"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Jay Alammar: The Illustrated BERT, ELMo and co.",
+       "url": "https://jalammar.github.io/illustrated-bert/",
+       "m": 25,
+       "why": "Masked LM and how BERT is used for classification."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Hugging Face LLM course: How do Transformers work?",
+       "url": "https://huggingface.co/learn/llm-course/chapter1/4",
+       "m": 15,
+       "why": "Encoder, decoder and encoder-decoder side by side."
+      }
      ]
     },
     {
@@ -6258,20 +6588,6 @@
       "Prefix caching reuses the cache of a shared system prompt across requests; providers price cached input tokens lower",
       "Quantising the cache from fp16 to 8 bits halves its memory, at a small quality cost to be measured",
       "Track time to first token (prefill) and per-token latency (decode) separately; they have different fixes"
-     ],
-     "read": [
-      {
-       "label": "Lilian Weng: Large Transformer model inference optimization",
-       "url": "https://lilianweng.github.io/posts/2023-01-10-inference-optimization/",
-       "why": "The KV cache cost and the main inference levers.",
-       "m": 9
-      },
-      {
-       "label": "Ainslie et al.: GQA, grouped-query attention",
-       "url": "https://arxiv.org/abs/2305.13245",
-       "why": "Sharing keys and values across heads to shrink the cache.",
-       "m": 15
-      }
      ],
      "mcq": [
       {
@@ -6334,6 +6650,48 @@
      ],
      "was": [
       "q-what-is-the-kv-cache-and-why-does-it-matter"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "The KV cache: memory usage in transformers",
+       "url": "https://www.youtube.com/watch?v=80bIUggRJf4",
+       "m": 9,
+       "why": "Why decoding caches keys and values, and how much memory that takes.",
+       "yt": {
+        "id": "80bIUggRJf4",
+        "ch": "Efficient NLP"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Flash Attention: the fastest attention mechanism?",
+       "url": "https://www.youtube.com/watch?v=eJn6zsbrqUM",
+       "m": 9,
+       "why": "How FlashAttention avoids writing the full attention matrix to memory.",
+       "yt": {
+        "id": "eJn6zsbrqUM",
+        "ch": "Tales Of Tensors"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Lilian Weng: Large Transformer model inference optimization",
+       "url": "https://lilianweng.github.io/posts/2023-01-10-inference-optimization/",
+       "m": 9,
+       "why": "The KV cache cost and the main inference levers."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Ainslie et al.: GQA, grouped-query attention",
+       "url": "https://arxiv.org/abs/2305.13245",
+       "m": 15,
+       "why": "Sharing keys and values across heads to shrink the cache."
+      }
      ]
     },
     {
@@ -6355,20 +6713,6 @@
       "Pricing and context limits are in tokens, and the same text can take noticeably more tokens outside English",
       "Llama 3 moved to a 128K-token BPE vocabulary (built on tiktoken) from Llama 2's 32K SentencePiece one, so the same text takes fewer tokens",
       "In an assistant, account numbers, amounts and dates are extracted by a schema-validated tool call or code and checked in code, because the model sees them as token fragments"
-     ],
-     "read": [
-      {
-       "label": "Hugging Face LLM course: Byte-pair encoding tokenization",
-       "url": "https://huggingface.co/learn/llm-course/chapter6/5",
-       "why": "BPE worked step by step, with code.",
-       "m": 20
-      },
-      {
-       "label": "Stanford SLP3: ch. 2 Words and Tokens",
-       "url": "https://web.stanford.edu/~jurafsky/slp3/2.pdf",
-       "why": "The BPE section only.",
-       "m": 20
-      }
      ],
      "mcq": [
       {
@@ -6430,6 +6774,48 @@
      ],
      "was": [
       "q-why-subword-tokenization-and-how-does-bpe-work"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "LLM tokenizers explained: BPE encoding, WordPiece and SentencePiece",
+       "url": "https://www.youtube.com/watch?v=hL4ZnAWSyuU",
+       "m": 6,
+       "why": "BPE, WordPiece and SentencePiece side by side.",
+       "yt": {
+        "id": "hL4ZnAWSyuU",
+        "ch": "DataMListic"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Byte pair encoding tokenization",
+       "url": "https://www.youtube.com/watch?v=HEikzVL-lZU",
+       "m": 6,
+       "why": "The BPE merge loop worked through by hand.",
+       "yt": {
+        "id": "HEikzVL-lZU",
+        "ch": "Hugging Face"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Hugging Face LLM course: Byte-pair encoding tokenization",
+       "url": "https://huggingface.co/learn/llm-course/chapter6/5",
+       "m": 20,
+       "why": "BPE worked step by step, with code."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Stanford SLP3: ch. 2 Words and Tokens",
+       "url": "https://web.stanford.edu/~jurafsky/slp3/2.pdf",
+       "m": 20,
+       "why": "The BPE section only."
+      }
      ]
     },
     {
@@ -6451,14 +6837,6 @@
       "Classification, extraction and tool arguments: temperature 0 or structured outputs against a JSON schema, then validation and one retry with the error message",
       "Open replies: a moderate temperature with top-p is a common starting point, tuned on an evaluation set rather than by feel",
       "Self-consistency: sample several reasoning paths at a moderate temperature and take the majority answer, trading cost for accuracy"
-     ],
-     "read": [
-      {
-       "label": "Holtzman et al.: The curious case of neural text degeneration",
-       "url": "https://arxiv.org/abs/1904.09751",
-       "why": "Why greedy and beam go bland, and how nucleus sampling fixes it.",
-       "m": 25
-      }
      ],
      "mcq": [
       {
@@ -6520,6 +6898,40 @@
      ],
      "was": [
       "q-temperature-top-k-and-top-p-what-are-they-and-when-do-you-us"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "LLM prompt engineering with random sampling: temperature, top-k, top-p",
+       "url": "https://www.youtube.com/watch?v=-BBulGM6xF0",
+       "m": 9,
+       "why": "How temperature, top-k and top-p reshape the next-token distribution.",
+       "yt": {
+        "id": "-BBulGM6xF0",
+        "ch": "DataMListic"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "The secret controls for your LLM: temperature, top-k, top-p and more",
+       "url": "https://www.youtube.com/watch?v=MkaazQttbpc",
+       "m": 15,
+       "why": "The sampling settings in practice and when to change each.",
+       "yt": {
+        "id": "MkaazQttbpc",
+        "ch": "Gary Explains"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Holtzman et al.: The curious case of neural text degeneration",
+       "url": "https://arxiv.org/abs/1904.09751",
+       "m": 25,
+       "why": "Why greedy and beam go bland, and how nucleus sampling fixes it."
+      }
      ]
     },
     {
@@ -6541,26 +6953,6 @@
       "Llama 2-Chat: SFT, then RLHF with rejection-sampling fine-tuning and PPO",
       "DPO and its variants are widely used in open-model post-training because they are simpler and more stable than PPO",
       "Reasoning models add RL with verifiable rewards (checkable maths answers, passing code tests), for example GRPO in DeepSeek's work"
-     ],
-     "read": [
-      {
-       "label": "Stanford SLP3: ch. 8 Post-training",
-       "url": "https://web.stanford.edu/~jurafsky/slp3/8.pdf",
-       "why": "Instruction tuning and preference tuning, clearly.",
-       "m": 25
-      },
-      {
-       "label": "Ouyang et al.: InstructGPT",
-       "url": "https://arxiv.org/abs/2203.02155",
-       "why": "SFT, a reward model and PPO, with the 1.3B result.",
-       "m": 30
-      },
-      {
-       "label": "Rafailov et al.: Direct preference optimization",
-       "url": "https://arxiv.org/abs/2305.18290",
-       "why": "The abstract and the loss.",
-       "m": 25
-      }
      ],
      "mcq": [
       {
@@ -6623,6 +7015,48 @@
      ],
      "was": [
       "q-how-does-a-pretrained-model-become-an-assistant"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Reinforcement learning with human feedback (RLHF), clearly explained",
+       "url": "https://www.youtube.com/watch?v=qPN_XZcJf_s",
+       "m": 19,
+       "why": "Reward model, preference data and the policy update that follows pretraining.",
+       "yt": {
+        "id": "qPN_XZcJf_s",
+        "ch": "StatQuest with Josh Starmer"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Direct preference optimization: your language model is secretly a reward model",
+       "url": "https://www.youtube.com/watch?v=XZLc09hkMwA",
+       "m": 9,
+       "why": "DPO: learning from preference pairs without a separate reward model.",
+       "yt": {
+        "id": "XZLc09hkMwA",
+        "ch": "AI Coffee Break with Letitia"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Stanford SLP3: ch. 8 Post-training",
+       "url": "https://web.stanford.edu/~jurafsky/slp3/8.pdf",
+       "m": 25,
+       "why": "Instruction tuning and preference tuning, clearly."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Ouyang et al.: InstructGPT",
+       "url": "https://arxiv.org/abs/2203.02155",
+       "m": 30,
+       "why": "SFT, a reward model and PPO, with the 1.3B result."
+      }
      ]
     },
     {
@@ -6645,20 +7079,6 @@
       "Bank knowledge (fees, policies, product terms) changes and needs citations, so it lives in retrieval over versioned documents; tone and refusal style live in prompts or a light tune",
       "Multi-LoRA serving: one base model with many small adapters chosen per request (vLLM and LoRAX support this)",
       "QLoRA fine-tuned a 65B model on a single 48 GB GPU by keeping the frozen base in 4-bit"
-     ],
-     "read": [
-      {
-       "label": "Hu et al.: LoRA, low-rank adaptation of large language models",
-       "url": "https://arxiv.org/abs/2106.09685",
-       "why": "The abstract and the method section.",
-       "m": 20
-      },
-      {
-       "label": "Lilian Weng: Extrinsic hallucinations in LLMs",
-       "url": "https://lilianweng.github.io/posts/2024-07-07-hallucination/",
-       "why": "Causes and mitigation, including why tuning new facts hurts.",
-       "m": 29
-      }
      ],
      "mcq": [
       {
@@ -6722,6 +7142,48 @@
      ],
      "was": [
       "q-fine-tune-lora-prompt-or-rag-how-do-you-choose"
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "RAG vs fine-tuning vs prompt engineering: optimizing AI models",
+       "url": "https://www.youtube.com/watch?v=zYGDpG-pTho",
+       "m": 14,
+       "why": "When the gap is knowledge, behaviour or wording, and which tool closes each.",
+       "yt": {
+        "id": "zYGDpG-pTho",
+        "ch": "IBM Technology"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "What is low-rank adaptation (LoRA), explained by the inventor",
+       "url": "https://www.youtube.com/watch?v=DhRoTONcyZE",
+       "m": 8,
+       "why": "LoRA explained by its author: train two small matrices, freeze the rest.",
+       "yt": {
+        "id": "DhRoTONcyZE",
+        "ch": "Edward Hu"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Hu et al.: LoRA, low-rank adaptation of large language models",
+       "url": "https://arxiv.org/abs/2106.09685",
+       "m": 20,
+       "why": "The abstract and the method section."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Lilian Weng: Extrinsic hallucinations in LLMs",
+       "url": "https://lilianweng.github.io/posts/2024-07-07-hallucination/",
+       "m": 29,
+       "why": "Causes and mitigation, including why tuning new facts hurts."
+      }
      ]
     }
    ]

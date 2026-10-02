@@ -966,3 +966,14 @@ fold as an option, and How to get there and What to say are shown by default. Ea
 designs' high-level diagrams opens on its first stage and builds in four (Build it in order, Next
 stage, Show all): the boxes a stage adds are marked, later ones wait in place, and a line says why
 they come next. Deep-dive and pattern diagrams per design are the next pass. No charter deviation.
+
+**2026-10-03 — Resources cut to two articles and two videos per sub-pointer.**
+Asked for by Pranav: pages were buried in article links, with almost no videos. Every tracker step
+in weeks 1 to 5 and the live wildcard sessions, every Learn topic on the Vanguard, Commure and
+Coframe pages, and every Baseline topic now has one curated list (594 in all): at most two outside
+articles and two YouTube videos, split Required and Optional, with his own references kept beyond
+the cap (AI Engineering from Scratch lessons, his books, Alaap, tutorials and roadmaps, links on this
+site). 818 articles kept from about 1,400; 400 distinct conceptual videos added, each checked on
+YouTube for title, channel and length (`tools/yt.py`), and drawn as thumbnail cards by one shared
+renderer (`site/res.js`). 264 sub-pointers have no video yet: the search budget ran out partway,
+so a top-up pass can fill them. Parked loops (ZenML, Oxus) were left as they were. No charter deviation.
