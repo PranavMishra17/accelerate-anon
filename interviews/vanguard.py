@@ -52,7 +52,7 @@ LOOP = {
 
 SESSION_IDS = [
     ("wc25", "1"), ("wc26", "2"), ("wc27", "3"),
-    ("wc28", "4"), ("wc29", "5"), ("wc30", "6"),
+    ("wc28", "4"), ("wc29", "5"), ("wc30", "6"), ("wc31", "7"),
 ]
 
 PREP_LEAD = ("Say comes last. Each area is taught first in its session, and every question here links back to that "
@@ -60,20 +60,72 @@ PREP_LEAD = ("Say comes last. Each area is taught first in its session, and ever
              "intents confused, and attention.")
 
 SHOW_UP = [
-    ("Lead with what you've built that matches.", "At alfred_ every inbound message goes through intent classification, then a decision layer, then callable tools, and every candidate action gets one of five verdicts. A production failure scanner reads real conversations and separates genuine failures from expected behaviour. MetaRAG used TF-IDF weighted embeddings: 82.5% precision against a 73.3% baseline."),
-    ("Say the platforms plainly.", "You haven't shipped on Dialogflow CX, Cognigy, Lex or CLU. Say it once, then what carries over: the NLU underneath, the error analysis and the evals are the same work, and you know how each platform models intents, thresholds and fallbacks."),
+    ("Lead with what you've built that matches.", "At alfred_ every inbound message goes through intent classification, then a decision layer, then callable tools, and every candidate action gets one of five verdicts, refuse and confirm among them, decided in code. A production failure scanner reads real conversations and separates genuine failures from expected behaviour. MetaRAG used TF-IDF weighted embeddings: 82.5% precision against a 73.3% baseline."),
+    ("Ask about the platform early.", "Vanguard's assistant platform isn't public. In the first minutes ask which assistant the role supports (the investor chat, the phone channel, or crew-facing agent assist) and what it runs on: Vanguard's own stack on AWS, or a platform Mphasis brings. Mphasis is a Kore.ai partner, so Kore.ai is possible; that's inference, so ask, don't assume. Then use their words."),
+    ("Hold the financial-services line.", "No investment advice: an advice-seeking question goes to a licensed person or the advice product, and compliance owns where education ends and advice starts. Authenticated before any account data, and the assistant never asks for a password, a full SSN or a security code; Vanguard's own security page says it never asks for a security code."),
+    ("Say the platforms plainly.", "You haven't shipped on Dialogflow CX, Cognigy, Lex, CLU or Kore.ai. Say it once, then what carries over: the NLU underneath, the error analysis and the evals are the same work, and you know how each platform models intents, thresholds and fallbacks."),
     ("Answer a scenario with a method.", "What you'd check first, how you'd split the cause, the fix, and how you'd know it worked. 'Two intents are confused' starts at the confusion matrix and the actual utterances, not at the F1."),
-    ("Numbers, exactly.", "5,000-plus active users at alfred_; per-user LLM cost down about 30%; notifications about 90 seconds to about 3. MetaRAG: 82.5% precision, 0.925 Hit@10, 25% hallucination reduction, p99 under 300 ms at 10K queries a day. MockFlow-AI: sub-400ms end to end."),
+    ("Numbers, exactly.", "5,000-plus active users at alfred_; per-user LLM cost down about 30%; notifications about 90 seconds to about 3. MetaRAG: 82.5% precision, 0.925 Hit@10, 25% hallucination reduction, p99 under 300 ms at 10K queries a day. MockFlow-AI: sub-400ms end to end. Vanguard's numbers are 'from what I read'."),
     ("Have the hybrid answer ready.", "A fast classifier for confident turns, an LLM for the uncertain ones and for out-of-scope, and deterministic code for anything that moves money or data. One Amazon paper measured that routing within 2% of the LLM's accuracy at half the latency."),
-    ("Ask about their platform early.", "Vanguard's stack isn't confirmed. If nobody has said, ask in the first minutes: which platform the assistant runs on, and which channels. Then use their words: flows and pages for Dialogflow CX, topics for Copilot Studio, intents and slots for Lex."),
     ("Theory: the mechanism, then where you used it.", "Attention, embeddings, calibration: two sentences on how it works, one on where it showed up in your work. Then stop and let them go deeper."),
-    ("Logistics: one line each.", "Rate, duration, location and start date: your answers are in chat. They are for the recruiter afterwards, not the client."),
+    ("Logistics: one line each.", "Rate, duration, location and start date: your answers are in chat. They are for Mphasis afterwards, not Vanguard's team."),
 ]
 
 STORY_BLURB = "Your intro, why this role, the work closest to it, and logistics."
 
-# Every outside link, checked 2026-10-01 (r1). The postings are similar roles, not this client's.
-SOURCES = [
+# Vanguard, its regulators and Mphasis: every link opened 2026-10-01 (r5, CONFIRMED only).
+# One home: SOURCES lists them and the Vanguard questions link them by key through _S.
+_V = {
+    "v_letter": {"url": "https://corporate.vanguard.com/content/corporatesite/us/en/corp/articles/salim-letter-to-investors-2026.html", "label": "Vanguard: letter to investors, 2026",
+                 "why": "Chat serves more than 2 million investors a month, AI features being added; an AI capability in Digital Advisor pilots later in 2026 and launches early 2027.", "m": 8},
+    "v_fortune": {"url": "https://fortune.com/2025/12/24/vanguards-cio-niti-tandon-ai-digital-advisor/", "label": "Fortune: Vanguard's CIO on AI (Dec 2025)",
+                  "why": "A chatbot piloted with about 2,000 employees; the CIO's concerns are hallucinations and the bot veering into financial advice.", "m": 6},
+    "v_summaries": {"url": "https://corporate.vanguard.com/content/corporatesite/us/en/corp/articles/vanguards-new-genai-capability-for-advisors.html", "label": "Vanguard: generative AI article summaries for advisers (May 2025)",
+                    "why": "Its first client-facing generative AI, in beta; it generates the disclosures that go with each summary.", "m": 4},
+    "v_insights": {"url": "https://corporate.vanguard.com/content/corporatesite/us/en/corp/who-we-are/pressroom/press-release-vanguard-launches-expert-insights-equipping-advisors-with-ai-powered-portfolio-analysis-expertise-04092026.html", "label": "Vanguard: Expert Insights for advisers (Apr 2026)",
+                   "why": "AI portfolio analysis, piloted with select advisers.", "m": 4},
+    "v_sloan": {"url": "https://sloanreview.mit.edu/article/investing-in-ai-payoffs-at-vanguard/", "label": "MIT Sloan Management Review: AI payoffs at Vanguard",
+                "why": "Crew Assist on Azure OpenAI for contact-center crew; governance that evaluates models, detects bias and drift, and monitors use.", "m": 12},
+    "v_agentassist": {"url": "https://www.vanguardjobs.com/career-blog/2025/05/14/ai-engineer/", "label": "Vanguard careers blog: an AI engineer's work (May 2025)",
+                      "why": "Call Center Agent Assist in full production: generative AI for client service representatives.", "m": 5},
+    "v_responsible": {"url": "https://corporate.vanguard.com/content/corporatesite/us/en/corp/articles/responsibly-scaling-ai-to-better-serve-our-clients.html", "label": "Vanguard: responsibly scaling AI (May 2026)",
+                      "why": "Augment, not replace; trust and accuracy; AI diffused into the system.", "m": 5},
+    "v_cloud": {"url": "https://corporate.vanguard.com/content/corporatesite/us/en/corp/why-vanguard/sets-us-apart/client-centered-technology.html", "label": "Vanguard: client-centered technology",
+                "why": "Enhancing phone and chat support; 85% of systems moved to the cloud in five years.", "m": 3},
+    "v_analyst": {"url": "https://aws.amazon.com/blogs/machine-learning/building-ai-ready-data-vanguards-virtual-analyst-journey/", "label": "AWS blog: Vanguard's Virtual Analyst (Apr 2026)",
+                  "why": "Natural-language questions to SQL on Amazon Bedrock with Guardrails; 50-plus ground-truth pairs used as few-shot examples and as the evaluation set.", "m": 10},
+    "v_frontier": {"url": "https://corporate.vanguard.com/content/dam/corp/research/pdf/the_ai_advice_frontier.pdf", "label": "Vanguard research: The AI advice frontier (Sept 2026)",
+                   "why": "About one in three investors used AI for financial guidance; most trust it little; they want human oversight and embedded disclosures.", "m": 20},
+    "v_security": {"url": "https://investor.vanguard.com/trust-security", "label": "Vanguard: trust and security",
+                   "why": "Voice ID, passkeys, security codes; Vanguard never asks for login details, an SSN or a security code.", "m": 4},
+    "v_job_agentic": {"url": "https://www.vanguardjobs.com/job/23810105/lead-cloud-agentic-ai-engineer-dallas-tx/", "label": "Vanguard posting: Lead Cloud and Agentic AI Engineer",
+                      "why": "Agentic AI on Amazon Bedrock, RAG and agent orchestration; evaluation and responsible AI preferred. Another team, the same stack.", "m": 5},
+    "v_job_head": {"url": "https://www.vanguardjobs.com/job/23896184/head-of-ai-ml-for-advice-wealth-and-strategic-enablement-dallas-tx/", "label": "Vanguard posting: Head of AI/ML for Advice, Wealth and Strategic Enablement",
+                   "why": "Evaluation baselines before production, human-in-the-loop, deterministic fallbacks, escalation to a human advisor, Model Risk Management.", "m": 8},
+    "v_job_ape": {"url": "https://freehire.me/jobs/ai-engineer-vanguard-dpyotss6", "label": "Vanguard posting (aggregator): AI Engineer, AI Powered Experiences",
+                  "why": "Builds the team's conversational AI orchestration platforms and shared AI infrastructure; Python or TypeScript, AWS.", "m": 5},
+    "mph_ai": {"url": "https://www.mphasis.com/home/mphasis-ai-partnership.html", "label": "Mphasis: AI partnerships",
+               "why": "Mphasis calls itself Kore.ai's only distinguished Platinum Partner for conversational and generative AI. Names no client.", "m": 4},
+    "finra_2409": {"url": "https://www.finra.org/rules-guidance/notices/24-09", "label": "FINRA Regulatory Notice 24-09",
+                   "why": "Rules are technology-neutral: Rule 2210 content standards apply whether a person or a tool wrote it; supervision covers model risk.", "m": 10},
+    "finra_chat": {"url": "https://www.investmentnews.com/regulation-and-legislation/finra-clarifies-guidelines-around-ai-chatbot-communications/253319", "label": "InvestmentNews: FINRA on AI chatbot communications (May 2024)",
+                   "why": "Chatbot messages are firm communications: supervised, held to content standards, retained.", "m": 4},
+    "finra_2210": {"url": "https://www.finra.org/rules-guidance/rulebooks/finra-rules/2210", "label": "FINRA Rule 2210: communications with the public",
+                   "why": "Fair and balanced; no promissory or misleading statements; no performance predictions.", "m": 15},
+    "finra_genai": {"url": "https://www.finra.org/rules-guidance/guidance/reports/2026-finra-annual-regulatory-oversight-report/gen-ai", "label": "FINRA 2026 oversight report: generative AI",
+                    "why": "Prompt and output logging, model version tracking, human review; agents acting beyond scope.", "m": 10},
+    "finra_4511": {"url": "https://www.finra.org/rules-guidance/rulebooks/finra-rules/4511", "label": "FINRA Rule 4511: books and records",
+                   "why": "Six years by default, in a format that meets SEA Rule 17a-4.", "m": 3},
+    "sec_care": {"url": "https://www.sec.gov/about/divisions-offices/division-trading-markets/broker-dealers/staff-bulletin-standards-conduct-broker-dealers-investment-advisers-care-obligations", "label": "SEC staff bulletin: care obligations",
+                 "why": "A recommendation needs a reasonable basis in the client's profile, costs and alternatives. Why a bot can't answer 'should I sell?'.", "m": 15},
+    "v_writer": {"url": "https://writer.com/blog/vanguard-customer-story/", "label": "Writer: Vanguard customer story",
+                 "why": "Compliance, Legal and IT as partners in the build from the start; 'practical, risk-minded'.", "m": 5},
+    "sr262": {"url": "https://www.federalreserve.gov/supervisionreg/srletters/SR2602.pdf", "label": "Federal Reserve SR 26-2: revised model risk guidance (17 Apr 2026)",
+              "why": "Supersedes SR 11-7; keeps effective challenge, validation and monitoring; footnote 3 puts generative and agentic AI outside its scope.", "m": 20},
+}
+
+# Every outside link, checked 2026-10-01 (r1 for the similar postings, r5 for Vanguard).
+SOURCES = [dict((k, v) for k, v in s.items() if k != "m") for s in _V.values()] + [
     {"label": "Similar posting: Conversational AI Developer, Galaxy i Technologies (Dice)", "url": "https://www.dice.com/job-detail/6d7bd820-388e-4d39-81e7-ed0e087eda91",
      "why": "Dialogflow CX, CCAI, BigQuery, Node.js, GCP; chatbots and voicebots, multi-turn with error handling, webhooks; creating intents and entities."},
     {"label": "Similar posting: Google Cloud Conversational AI Developer, ASCII Group (Dice)", "url": "https://www.dice.com/job-detail/5e08da59-2148-4749-a3af-2f9ea6de0edd",
@@ -90,10 +142,11 @@ SOURCES = [
      "why": "Cognigy, NLU and intent modelling, production issue analysis; GenAI nice to have."},
 ]
 
-# The Overview: the vendor, and what the client most likely is (inference, said as such).
+# The Overview: Vanguard as the client, Mphasis as the organiser (inference said as such).
 COMPANY = [
-    "3 Dots IT Solutions is a small IT staffing and services vendor, founded in 2016, with an office in Durham, North Carolina. It places contract, contract-to-hire and direct-hire engineers across Java, .NET, Salesforce, DevOps, cloud and AI/ML, and lists TCS, Cognizant, IBM, Fujifilm and Panasonic among its clients and partners. It arranged this call; the interviewer works for the end client.",
-    "The end client isn't named yet. The wording (virtual assistants, intent and entity modelling, error analysis) reads like an enterprise assistant on a classic NLU platform with LLMs added: Dialogflow CX most often in similar postings, or Cognigy, Microsoft's Bot Framework, CLU and Copilot Studio, or Amazon Lex. That is inference from similar postings, not fact. Ask the recruiter for the client and the platform before Friday.",
+    "Vanguard is an investment manager, not a bank, serving investors, advisers and retirement plans. Its assistants today are staged by risk. Crew-facing generative AI is live: Crew Assist, on Azure OpenAI, answers contact-center crew from internal content, and Call Center Agent Assist is in full production. Client-facing work is careful and staged: article summaries for advisers in beta (May 2025) that generate their own disclosures, Expert Insights piloted with advisers (April 2026), and an AI capability inside Digital Advisor piloting later in 2026. Its investor chat already serves more than 2 million people a month. The concerns its CIO named are hallucinations and the bot veering into financial advice.",
+    "Stack clues from Vanguard's own material: AWS (85% of systems moved to the cloud), Amazon Bedrock with Guardrails for its Virtual Analyst, and postings that ask for Bedrock, RAG, agent orchestration, evaluation and Model Risk Management, with Python or TypeScript. Summaries of the chat-assistant team's postings, now closed, also name LangGraph and MCP, but those were seen only in search results. No source names the vendor of the investor chat or the phone channel; don't assume one.",
+    "Mphasis organises the call; no public source links Mphasis and Vanguard, so this is most likely a placement into a Vanguard team (inference). Mphasis calls itself Kore.ai's only distinguished Platinum Partner, so ask early which platform the role supports: Kore.ai through Mphasis, or Vanguard's own stack. That too is inference, not fact.",
 ]
 
 POSTING = {
@@ -137,16 +190,18 @@ SCRIPTS = [
      "never": ["Never say you've used Dialogflow, Lex, CLU, Rasa, Kore.ai or Cognigy.", "Never mention alfred_'s funding, a crunch, or colleagues' names."]},
 
     {"id": "why-role", "title": "Why this role?", "length": "about 60 seconds",
-     "when": "After the intro, or when they ask why conversational AI. The client is unknown, so it's about the work.",
-     "probes": ["What interests you about virtual assistants?", "Why a contract role?", "Why classic NLU when everyone is moving to LLMs?"],
+     "when": "After the intro, or when they ask why Vanguard or why conversational AI.",
+     "probes": ["Why Vanguard?", "What do you know about our assistants?", "Why classic NLU when everyone is moving to LLMs?"],
      "say": [
-         "Honestly, it's the part of my work I like most. An assistant either understands what the person wanted and finishes the job, or it doesn't, and you can see which in the transcripts. I like work where the feedback is that direct.",
-         "The two areas in the role are pretty much the two halves of what I do. One is the assistant: how the conversation is designed, how intents and entities are modelled, and how you find and fix what's going wrong in production. The other is the NLP underneath: classification, embeddings, how the models work.",
-         "I've done both with LLMs on top. What I'd like is more depth on the enterprise side: a large intent taxonomy, thresholds tuned against real traffic, and the hybrid where a classifier and an LLM each do what they're good at.",
-         "So it's the work I already do, at a scale where I'd learn the rest."],
-     "swaps": [{"when": "If they ask why classic NLU at all", "line": "I think the classic layer is the part you can measure and control: a confusion matrix, a threshold, a test set. The LLM is great for the long tail and out-of-scope. Most good assistants I've read about use both, and that's how alfred_ works too."}],
-     "land": "Both halves of the role are what I do; I want the enterprise depth.",
-     "notes": ["New, in your voice. Don't guess the client's industry until you know it."]},
+         "Honestly, it's the way Vanguard is doing it. From what I read, the generative AI went to crew first, Crew Assist and agent assist in the contact center, and the client-facing side is staged: summaries for advisers in beta, then a pilot inside Digital Advisor. I think that's the right order, and it's how I'd do it.",
+         "And the concern your CIO named, keeping the bot from veering into advice and watching for hallucinations, is pretty much the problem I work on. At alfred_ every action goes through a decision layer in code before anything runs, and a scanner reads real conversations every day to find what went wrong.",
+         "The two areas in the role are the two halves of what I do. One is the assistant: how the conversation is designed, how intents and entities are modelled, and how you find and fix what's going wrong in production. The other is the NLP underneath: classification, embeddings, how the models work.",
+         "So it's the work I already do, in a place where being right matters more than being first."],
+     "swaps": [{"when": "If they ask why classic NLU at all", "line": "I think the classic layer is the part you can measure and control: a confusion matrix, a threshold, a test set. The LLM is great for the long tail and out-of-scope. Most good assistants I've read about use both, and that's how alfred_ works too."},
+               {"when": "If they ask what you know about the scale", "line": "From what I read, your chat already serves more than 2 million investors a month, and you're adding AI features to it. At that volume a small error rate is a lot of people, so the evaluation has to come first."}],
+     "land": "Vanguard is doing generative AI in the right order, and keeping an assistant inside its lines is my daily work.",
+     "notes": ["New, in your voice. Vanguard's facts come from SOURCES: say 'from what I read', and don't name a vendor for their chat; none is public.",
+               "Say 'your CIO', not a name. If they ask why a contract role through Mphasis, that's logistics: one line, then back to the work."]},
 
     {"id": "closest", "title": "What have you built that's closest to this?", "length": "about 2 minutes",
      "when": "When they ask about your experience with chatbots, virtual assistants or NLU. Outcome first, one design choice, then stop.",
@@ -166,14 +221,14 @@ SCRIPTS = [
      "never": ["Don't call alfred_'s classifier 'Dialogflow-like' or name a platform you haven't used."]},
 
     {"id": "logistics", "title": "Logistics they may ask", "length": "a line each",
-     "when": "Your answers are in chat, not on this page. A client interviewer rarely asks; the recruiter will.",
+     "when": "Your answers are in chat, not on this page. Vanguard's team rarely asks; Mphasis will.",
      "probes": ["Are you available full time?", "Where are you based? Remote or on site?", "When could you start?", "Work authorization?", "Rate?"],
      "say": [],
      "land": "Say each once, then back to the role.",
-     "notes": ["**Rate and terms:** for the recruiter, never the client. Your number is in chat.",
+     "notes": ["**Rate and terms:** for Mphasis, never Vanguard's team. Your number is in chat.",
                "**Location, start date, work authorization:** your answers from chat, one sentence each.",
-               "**Duration:** ask the recruiter afterwards; similar postings run 6 to 12 months."],
-     "never": ["Don't negotiate with the client's interviewer."]},
+               "**Duration:** ask Mphasis afterwards; similar postings run 6 to 12 months."],
+     "never": ["Don't negotiate with Vanguard's team."]},
 ]
 
 # Reading shared by many questions, as {url, label, why, m}.
@@ -256,7 +311,9 @@ _S = {
     "p_dpo": {"url": "https://arxiv.org/abs/2305.18290", "label": "DPO", "why": "Preference tuning without a reward model.", "m": 25},
     "p_lora": {"url": "https://arxiv.org/abs/2106.09685", "label": "LoRA", "why": "Low-rank adapters on a frozen base.", "m": 20},
     "weng_hal": {"url": "https://lilianweng.github.io/posts/2024-07-07-hallucination/", "label": "Lilian Weng: extrinsic hallucinations in LLMs", "why": "Causes, detection, mitigation.", "m": 29},
+    "w31": {"url": "../index.html#/w/wc31", "label": "Session wc31: Assistants at Vanguard, financial services", "why": "The advice line, authentication, compliance and evaluation, taught first."},
 }
+_S.update(_V)
 
 
 def B(topic, label, why):
@@ -301,7 +358,165 @@ def R(*keys, extra=None):
     return {"read": (extra or []) + [_ref(k) for k in keys], "figs": [], "sdLinks": []}
 
 
+_W31 = _S["w31"]
+_OOS = B("out-of-scope", "out-of-scope", "Where advice-seeking and off-topic requests go.")
+
 QA = [
+    {"group": "Vanguard and financial services", "blurb": "The advice line, authentication, compliance, evaluation and model risk, at Vanguard. Taught in wc31.", "items": [
+        {"q": "A client asks: 'Should I sell in this downturn?' What does the assistant do?", "short": "The no-advice boundary",
+         "tests": "Do you know where education ends and advice starts, and that the bot can't cross it?",
+         "a": ["It doesn't answer the question as asked. 'Should I sell' is asking for a recommendation, and a recommendation needs a reasonable basis in that person's whole picture: goals, holdings, costs, alternatives. The bot doesn't have that, so it can't give one. And where exactly education ends and advice starts is compliance's call, not mine; I build the control.",
+               "So the assistant detects the advice-seeking intent, answers with approved educational content, for example long-term investing principles, says plainly it can't advise on a specific trade, and offers a licensed person or the advice product. The whole exchange is logged for supervision.",
+               "I'd test it with a red-team set of paraphrases, 'what would you do?', 'is it a good time to get out?', 'my neighbour sold, should I?', and track an advice-leak rate as a release gate. At alfred_ refuse is one of the five verdicts the decision layer gives, in code, so the model can't talk itself past it. Same idea here."],
+         "land": "Detect it, educate from approved content, offer a licensed person, log it; the leak rate is a release gate.",
+         "probes": ["How do you catch advice-seeking that's phrased indirectly?", "What if the user insists?", "Who decides what counts as advice?"],
+         "parts": [{"title": "The response, in order",
+                    "items": ["**Detect:** an advice-seeking intent from the classifier, and a check on the final draft too.", "**Educate:** approved content only, no view on this client's trade.",
+                              "**Say the line:** plainly, once, without lecturing.", "**Offer the person:** a licensed representative, or the regulated advice product.",
+                              "**Log:** the turn, the sources and the check results, retained for supervision."]}],
+         "notes": ["The SEC's care-obligation bulletin: a recommendation needs a reasonable basis in the client's profile, the costs and the alternatives. Vanguard's CIO named the bot 'veering into offering financial advice' as the thing to guard against (Fortune).",
+                   "Inference, say it as such: Digital Advisor is Vanguard's advice product, so it's a plausible place to send someone. Ask how they route it today."],
+         "swaps": [{"when": "If they push: what if the user insists?", "line": "Then it's the same answer, said kindly, and the offer of a person gets more prominent. The bot never gets more willing because someone asked twice."}],
+         "learn": R("sec_care", "v_fortune", "finra_2210", extra=[_W31, _OOS])},
+
+        {"q": "How do you keep an LLM-based assistant from giving investment advice?", "short": "Layers against advice",
+         "tests": "Defence in depth, not one clever prompt.",
+         "a": ["Layers, not one prompt. First, scope: the system prompt and an intent gate that routes advice-seeking requests away from the generator before it writes anything.",
+               "Then grounding: answers come from retrieved, approved content with citations, so the model has nothing to invent from. Then an output check before release, a classifier or an LLM judge with a strict rubric, looking for recommendations, performance predictions and promissory language. If any check fails, a safe approved response and a handoff.",
+               "Managed guardrails help too; from what I read, Vanguard's Virtual Analyst uses Bedrock Guardrails. And a regression set of adversarial prompts runs on every change. In MetaRAG, better retrieval came with a 25% hallucination reduction, so I think of grounding as the first layer, not an add-on."],
+         "land": "Gate the input, ground the answer, check the output, fall back safely, test adversarially.",
+         "probes": ["Why not one good system prompt?", "What does the output check cost in latency?", "How do you know the judge is right?"],
+         "parts": [{"title": "Four layers",
+                    "items": ["**Input:** an intent gate; advice-seeking never reaches the generator.", "**Grounding:** retrieval from approved content, with citations.",
+                              "**Output:** a classifier or a judge with a rubric for recommendations, predictions and promissory language.", "**Fallback:** an approved response and a handoff when any check fails."]}],
+         "notes": ["FINRA Rule 2210: fair and balanced, no promissory or misleading statements, no performance predictions. Notice 24-09: the same standards apply whether a person or a tool wrote it."],
+         "swaps": [{"when": "If they ask about latency", "line": "The input gate is a classifier, so it's cheap. The output check adds a step, and here it's worth it. On voice I'd keep the checker small and fast."}],
+         "learn": R("finra_2409", "finra_2210", "v_analyst", "owasp", extra=[_W31, _OOS, _S["vadd"]])},
+
+        {"q": "How do you handle authentication and personal data before the assistant touches account data?", "short": "Authentication and PII",
+         "tests": "Security sense in a channel where a mistake is somebody's money.",
+         "a": ["Authentication happens before the assistant sees any account data, and it happens in the channel's own flow: the logged-in app session, or on the phone voice biometrics or a step-up. The assistant gets a scoped identity, never raw credentials. It never asks for a password, a full SSN or a security code in free text. Vanguard's own security page says it never asks clients for a security code, so the bot mustn't either.",
+               "Then minimum data: account facts come through API tools scoped to the logged-in client, and identifiers are redacted or tokenised before they reach logs or a model. Sensitive actions, like a withdrawal or a beneficiary change, get step-up authentication and an explicit confirmation.",
+               "And I'd treat prompt injection as a threat to account actions, so write actions sit behind confirmations in code. That's how alfred_ works: a send or an irreversible delete can't happen without the person confirming, whatever the model thinks."],
+         "land": "Authenticate in the channel, scope the tools, redact before logs and models, confirm writes in code.",
+         "probes": ["What if a caller fails voice ID?", "Where does redaction happen?", "Can the model see the account number?"],
+         "parts": [{"title": "The rules",
+                    "items": ["Never ask for a password, a full SSN or a security code in the conversation.", "Identity comes from the channel; the bot receives a scoped token.",
+                              "Account facts from systems of record through tools, never from the model's memory.", "Redact or tokenise identifiers before logs and model calls.",
+                              "Step-up and explicit confirmation for sensitive actions."]}],
+         "notes": ["Vanguard's security page: Voice ID using over 100 characteristics that can detect synthetic voices, passkeys, security codes as required MFA."],
+         "learn": R("v_security", "owasp", extra=[_W31, _S["vadd"]])},
+
+        {"q": "Design an intent taxonomy for a retirement-account assistant.", "short": "A retirement-account taxonomy",
+         "tests": "A taxonomy from real data, with the regulated edges built in.",
+         "a": ["I'd start from the chat and call logs, not a whiteboard: cluster real utterances, then group them into two levels. Something like account servicing (balance, statements, contribution change, loan, withdrawal, rollover), plan and product information, tax forms, fraud and security, and a family that always goes to a person.",
+               "Intents split by what the person wants to do; the variation goes into entities like account type, plan, date and amount, not into more intents. Sensitive actions, withdrawals and beneficiary changes, are their own intents with step-up authentication. And there are explicit out-of-scope, advice-seeking and chitchat intents, so 'should I...' questions have somewhere to land.",
+               "Then the confusion matrix on a held-out set, and I merge or split until each intent has enough examples and a clear owner for the answer. Rollover against withdrawal is the pair I'd expect to fight."],
+         "land": "From real logs, two levels, actions as intents, details as entities, advice and out-of-scope as intents of their own.",
+         "probes": ["How many intents is too many?", "Where does 'what happened to my balance today' go?", "Who owns a new intent?"],
+         "parts": [{"title": "An example, two levels",
+                    "items": ["**Account servicing:** balance, statements, contribution change, loan, withdrawal, rollover.", "**Plan and product information:** what the plan offers, fees, fund facts.",
+                              "**Tax forms:** which form, when it arrives.", "**Fraud and security:** a suspicious message, a locked account.",
+                              "**Always a person:** complaints, bereavement, suspected fraud.", "**Edges:** advice-seeking, out-of-scope, chitchat."]}],
+         "notes": ["An example to reason from, not Vanguard's real taxonomy. Say 'I'd expect', not 'you have'."],
+         "learn": R("w29.1", extra=[_W31, B("intents-entities", "intents and entities", "Actions as intents, objects as entities."), _OOS])},
+
+        {"q": "How do you keep a generative answer compliant?", "short": "Compliant generation",
+         "tests": "Approved content, vetted knowledge, disclosures and records: the whole chain.",
+         "a": ["I think of it as a chain, and the model is the smallest part. The knowledge it retrieves from is vetted: approved content with a source, an owner and an effective date, so a stale document doesn't come back. Retrieval is permissions-aware, so a client or a crew member only gets what they may see.",
+               "The wording is generated from that, with citations, and the disclosures come with it. From what I read, Vanguard's article summaries for advisers generate the necessary disclosures with each summary, which is the right pattern. Then an output check against the content rules: fair and balanced, nothing promissory, no performance predictions.",
+               "And every turn is kept: the message, the answer, the sources and their versions, the model and prompt version, the check results. FINRA treats chatbot messages as firm communications, so you have to be able to show what was said and why. Compliance and Legal are in the build loop, not at the end."],
+         "land": "Vetted knowledge, grounded wording with disclosures, an output check, and a record of every turn.",
+         "probes": ["Who approves the knowledge base?", "What happens when a source document changes?", "Does every generated answer need a principal's approval?"],
+         "parts": [{"title": "The chain",
+                    "items": ["**Knowledge:** approved, owned, dated, permissioned.", "**Retrieval:** filtered by plan type and effective date; recall at k measured on its own.",
+                              "**Generation:** from retrieved passages only, with citations and disclosures.", "**Check:** the content rules, before release.",
+                              "**Record:** every turn retained and reproducible."]}],
+         "notes": ["Rule 2210 needs a qualified principal's approval for retail communications before use, with exceptions; how that applies to a chatbot is compliance's call. Say so rather than guess.",
+                   "Writer's story on Vanguard names Compliance, Legal and IT as partners from the start."],
+         "learn": R("v_summaries", "finra_chat", "finra_2210", "v_writer", extra=[_W31, _S["vadd"]])},
+
+        {"q": "What do you log and keep for supervision?", "short": "Recordkeeping",
+         "tests": "Do you build so a generated answer can be defended later?",
+         "a": ["Every client-facing turn: the user's message, the final answer, the retrieved sources and their versions, the model and prompt version, the guardrail results and any handoff. Stored so it can't be changed, for the required period: FINRA Rule 4511 sets six years by default, in a format that meets SEA Rule 17a-4. Write-once storage is the usual way.",
+               "That lets compliance sample conversations, reproduce a bad answer exactly, and answer a regulator. I keep it apart from the analytics copy, which has PII scrubbed. Without the record you can't defend a generated answer after the fact.",
+               "It's the same habit as alfred_'s failure scanner: you can only find and fix what you kept. The scanner reads real production conversations, separates genuine failures from expected behaviour, and promotes the real bugs for triage."],
+         "land": "Every turn with its sources, versions and checks, kept unchangeable for six years, apart from analytics.",
+         "probes": ["What about the PII in the record?", "How would you reproduce a bad answer from six months ago?"],
+         "notes": ["FINRA's 2026 report lists prompt and output logging, model version tracking and human review of results as ongoing monitoring."],
+         "learn": R("finra_4511", "finra_genai", "finra_chat", extra=[_W31])},
+
+        {"q": "Containment dropped after a market event. How do you investigate?", "short": "Containment after a market event",
+         "tests": "Do you separate a mix shift from a real failure, and know containment isn't the goal?",
+         "a": ["First, is it real or a measurement change? I'd segment by intent, channel and day, and compare the mix. A market event pushes traffic toward sensitive intents, balances, 'what happened', withdrawals, that were never meant to be contained. So containment can drop while the assistant is doing exactly the right thing.",
+               "Then I read a sample of the failed conversations, look at fallback and misclassification by intent, and check for vocabulary the model hasn't seen, news phrases or fund names. Then the knowledge sources for stale answers, and the release log for anything that shipped at the same time.",
+               "The fix might be training utterances, a content update, or a rule that deliberately sends market-volatility questions to people, which lowers containment and is the right outcome. I'd report containment and resolution quality separately so nobody optimises the wrong number. Separating real failures from expected behaviour is what the failure scanner at alfred_ does."],
+         "land": "Mix shift first, then the transcripts, then vocabulary, content and releases; containment isn't the goal.",
+         "probes": ["What would you show leadership instead of containment?", "How fast can you ship a routing rule?", "How do you spot new vocabulary?"],
+         "parts": [{"title": "In order",
+                    "items": ["**Real or measured:** segment by intent, channel and day; compare the mix.", "**Read:** a sample of failed conversations.",
+                              "**NLU:** fallback and confusion by intent; new vocabulary.", "**Content:** stale answers in the knowledge sources.",
+                              "**Releases:** anything shipped in the same window.", "**Decide:** retrain, update content, or route to people on purpose."]}],
+         "notes": ["Vanguard's 2026 letter says trained phone representatives are up nearly 20% and 85% of calls resolve in one conversation. People are part of the design, not a failure of it."],
+         "learn": R("w30.4", "v_letter", extra=[_W31, B("assistant-metrics", "assistant metrics", "Containment, resolution and what each hides."), B("error-analysis", "error analysis", "Mining misses.")])},
+
+        {"q": "Agent assist for crew, or an assistant facing clients: what changes?", "short": "Crew assist or client-facing",
+         "tests": "Do you scale the controls to who reads the answer?",
+         "a": ["With agent assist there's a trained person between the model and the client. The crew member reads the answer, judges it and says it in their own words, so a wrong answer costs time more than trust. You can move faster, show sources and confidence, and measure handle time and how often crew use the suggestion.",
+               "Client-facing, the model's words are the firm's words. So the bar goes up: approved content only, the advice line in code, authentication before account data, disclosures, every turn retained, and a handoff that always works. From what I read, that's the order Vanguard went in: Crew Assist and agent assist first, client-facing staged behind pilots.",
+               "I think the crew tool is also where you learn: what crew ask, which answers they ignore, which sources they trust. That's evaluation data for the client-facing side."],
+         "land": "A person in between lowers the stakes; client-facing, the bot's words are the firm's.",
+         "probes": ["What would you measure for agent assist?", "Could the same retrieval serve both?", "What changes in the evaluation?"],
+         "notes": ["Crew Assist runs on Azure OpenAI (MIT SMR); the client-facing postings name AWS Bedrock. Two stacks may sit side by side; ask, don't assume they're one."],
+         "learn": R("v_sloan", "v_agentassist", "v_letter", extra=[_W31])},
+
+        {"q": "How do you evaluate an assistant for compliance before release?", "short": "Evaluating for compliance",
+         "tests": "Safety categories as gates, and a judge you've checked.",
+         "a": ["A golden set from real conversations, labelled for intent, the expected action and whether a handoff was right. Plus a red-team set built for compliance: advice-seeking paraphrases, performance-prediction bait, requests for account data before authentication, prompt injections.",
+               "Scored on accuracy and groundedness, but the compliance categories are gates, not averages: advice-leak rate, unsupported claims, missing disclosures, refusing when it should answer and answering when it should refuse. An LLM judge with a strict rubric does the volume, calibrated against compliance reviewers' labels on a sample. A release can't make any safety category worse.",
+               "From what I read, Vanguard's posting for its head of AI for advice says nothing generative reaches production without a quantitative, repeatable evaluation baseline and drift monitoring. That's how I work at alfred_: real failures from the scanner become test cases in the eval harness, and every change runs against them before it ships."],
+         "land": "A golden set plus a compliance red team; safety categories as gates; the judge calibrated to reviewers.",
+         "probes": ["How many examples per category?", "How do you calibrate the judge?", "Who signs off on a release?"],
+         "parts": [{"title": "Gates, not averages",
+                    "items": ["Advice-leak rate on the red-team set.", "Unsupported or ungrounded claims.", "Missing or wrong disclosures.",
+                              "Over-refusal and under-refusal.", "Account data before authentication: zero."]}],
+         "notes": ["MT-bench: strong judges agree with humans over 80% of the time, with position and verbosity biases. Calibrate on your own labels."],
+         "learn": R("w30.3", "v_job_head", "p_mtbench", extra=[_W31, B("error-analysis", "error analysis", "Failure taxonomy and testing.")])},
+
+        {"q": "How does model risk management apply to an LLM assistant?", "short": "Model risk",
+         "tests": "Do you know the governance frame, and where it has changed?",
+         "a": ["The ideas carry over even where the letter doesn't: an inventory of what's deployed, validation of whether it's conceptually sound, ongoing monitoring, outcomes analysis, and effective challenge from someone independent. For an LLM assistant that means the model, the prompt, the retrieval and the tools are versioned, validated and monitored together.",
+               "One thing worth knowing: SR 11-7 was superseded on 17 April 2026 by SR 26-2, and a footnote puts generative and agentic AI outside its scope and tells institutions to apply their own governance. It's written for banks, and Vanguard isn't one, but from what I read Vanguard's postings still name Model Risk Management and responsible AI governance, so I'd expect an internal framework that plays that role.",
+               "In practice I'd bring a versioned record of every model and prompt change with its evaluation results, drift monitoring, a rollback path, and oversight of the vendor models, since the foundation models come from outside."],
+         "land": "Inventory, validation, monitoring and challenge, applied to model, prompt, retrieval and tools together.",
+         "probes": ["Is a prompt change a model change?", "How do you validate a vendor's model?", "What would you show a validator?"],
+         "notes": ["SR 26-2 is from the Federal Reserve's own PDF, footnote 3. Don't say 'SR 11-7 governs our LLM'. Asking how their model risk team reviews LLM changes is a good question back.",
+                   "Crew Assist governance, per MIT SMR: systems that evaluate model performance, detect bias and drift, and monitor how crew use AI."],
+         "learn": R("sr262", "finra_2409", "v_job_head", "v_sloan", extra=[_W31])},
+
+        {"q": "Design an assistant that answers questions about a client's own accounts and Vanguard's content.", "short": "Accounts and content",
+         "tests": "Facts from systems of record, words from the model, and the advice path designed in.",
+         "a": ["A gateway authenticates the session and passes a scoped identity. An orchestrator, LangGraph for example, classifies the request and picks a path: deterministic API tools for account facts, so balances and transactions come from systems of record; retrieval over approved content for 'how do I' and product questions; and a refusal-and-handoff path for advice.",
+               "The model writes the final wording from tool results and retrieved passages, with citations, and the output and compliance checks run before release. Everything is traced, logged and versioned: prompts, tools and knowledge.",
+               "The rule I'd hold: numbers and dates never come from the model's memory. alfred_'s working memory works that way: the model picks from real items and code attaches the real ids, which made a whole class of hallucination structurally impossible, not probabilistically reduced."],
+         "land": "Authenticate, route, tools for facts, retrieval for content, refuse advice, check, log.",
+         "probes": ["Where does MCP fit?", "What happens when a tool times out?", "How do you stop prompt injection reaching a tool?"],
+         "swaps": [{"when": "If they ask about MCP", "line": "It gives the account and content tools one interface the agent can call. The identity scoping still has to live in the tool, not in the protocol, so a tool only ever returns the logged-in client's data."}],
+         "notes": ["LangGraph and MCP appear in summaries of the chat-assistant team's postings, seen only in search results. Use them as examples, not as facts about their stack."],
+         "learn": R("v_job_agentic", "owasp", extra=[_W31, _S["vadd"], B("dialogue-state", "dialogue state", "What's carried across turns, and what's fetched.")])},
+
+        {"q": "Why Vanguard, and what do you know about our assistants?", "short": "Why Vanguard",
+         "tests": "Did you read about them, and does it connect to your work?",
+         "a": ["From what I read, the generative AI went to crew first: Crew Assist on Azure OpenAI, and agent assist in full production in the contact center. Client-facing is staged: article summaries for advisers that generate their disclosures, Expert Insights piloted with advisers, and an AI capability in Digital Advisor piloting later this year. And the investor chat already serves more than 2 million people a month.",
+               "I like that order, and I like that your CIO named the right risks: hallucination and the bot veering into advice. Those are the two things I've spent the most time on: grounding at MetaRAG, and a decision layer in code at alfred_.",
+               "So honestly, it's the work I do, in a place that takes the hard part seriously."],
+         "land": "Crew first, clients staged, the right risks named; that's my work.",
+         "probes": ["Which of those would you want to work on?", "What would worry you about the Digital Advisor chat?"],
+         "notes": ["The long form is your 'Why this role?' script on the story tab; this is the short form for 'what do you know about us'.",
+                   "Don't name a vendor for the investor chat or the phone channel; none is public."],
+         "learn": R("v_letter", "v_fortune", "v_sloan", "v_responsible", extra=[_W31])},
+    ]},
+
     {"group": "Conversation design", "blurb": "How the conversation itself is built: errors, confirmation, repair, handoff, voice and chat. Taught in wc28.", "items": [
         {"q": "How do you design the conversation for a new use case?", "short": "Designing for task completion",
          "tests": "Do you start from users' real tasks and the failure paths, or from a happy-path script?",
@@ -1014,34 +1229,34 @@ QA = [
     ]},
 ]
 
-QA_ORDER = ["Conversation design", "Intents, entities and the NLU model", "Error analysis and production",
+QA_ORDER = ["Vanguard and financial services", "Conversation design", "Intents, entities and the NLU model", "Error analysis and production",
             "NLP and text classification", "Embeddings", "LLM fundamentals and the Transformer", "Your work, mapped to the role"]
 
-# Questions you ask: the client during the call, the recruiter after it.
+# Questions you ask: Vanguard's team during the call, Mphasis after it.
 ASK_3C = [
-    {"id": "client", "title": "For the client", "when": "The platform early if nobody has said; the rest at the end.",
-     "why": "With the client and the platform unknown, the first answer reframes everything after it. The rest show you think about measurement and failure, not only building.",
+    {"id": "client", "title": "For Vanguard's team", "when": "The platform question early if nobody has said; the rest at the end.",
+     "why": "The platform and the assistant aren't public, so the first answer reframes everything after it. The rest show you think about evaluation, compliance and failure, not only building.",
      "how": ["Ask the platform question in the first minutes, plainly.", "At the end, one or two; listen fully, then one follow-up on what they said."],
      "items": [
-         {"to": "Interviewer", "q": "Which platform is the assistant on today, and what sits around it: the LLMs, the backend, the analytics?",
-          "loop": "Early, if it hasn't come up.", "why": "Lets you answer in their words for the rest of the call."},
-         {"to": "Interviewer", "q": "Which channels does it serve: voice, chat, messaging, or all of them?",
-          "loop": "With the platform question.", "why": "Voice and chat change the design and the error profile."},
-         {"to": "Interviewer", "q": "Roughly how many intents are there, and who owns the taxonomy when a team wants a new one?",
-          "loop": "At the end, first.", "why": "Scale and governance: where confused intents come from."},
-         {"to": "Interviewer", "q": "How do you measure success today: containment, resolution, CSAT?",
-          "loop": "At the end.", "why": "Shows you know containment alone misleads."},
-         {"to": "Interviewer", "q": "What's the hardest failure the assistant has right now?",
-          "loop": "At the end, if there's time.", "why": "You want the real problem; it's also what you'd work on first."},
-         {"to": "Interviewer", "q": "Who's on the team, and who would I work with day to day?",
-          "loop": "Last.", "why": "Plain and useful: designers, NLU engineers, data people, or one person doing all of it."}]},
-    {"id": "recruiter", "title": "For the recruiter, afterwards", "when": "After the call, by message or phone.",
-     "why": "Practical questions for the vendor, never the client.",
-     "how": ["Rate and terms stay in chat; settle them with the recruiter."],
+         {"to": "Vanguard's team", "q": "Which assistant does this role support: the investor chat, the phone channel, or crew-facing agent assist? And what does it run on?",
+          "loop": "Early, if it hasn't come up.", "why": "Tells you which half of your prep to lean on, and lets you use their words."},
+         {"to": "Vanguard's team", "q": "Is there an intent and entity layer beside the LLM and agent layer, or are they being merged?",
+          "loop": "With the platform question.", "why": "The two areas in the invite read like both; this settles it."},
+         {"to": "Vanguard's team", "q": "How do you evaluate a change before it ships, and who approves it?",
+          "loop": "At the end, first.", "why": "Shows evaluation is how you work; their answer tells you how mature the loop is."},
+         {"to": "Vanguard's team", "q": "Where does compliance review sit: on each prompt and content change, or on releases?",
+          "loop": "At the end.", "why": "The real constraint on how fast the assistant can change."},
+         {"to": "Vanguard's team", "q": "What would the first 90 days look like for someone in this role?",
+          "loop": "At the end.", "why": "What they need first, and what success looks like to them."},
+         {"to": "Vanguard's team", "q": "What's the hardest failure the assistant has right now?",
+          "loop": "Last, if there's time.", "why": "You want the real problem; it's also what you'd work on first."}]},
+    {"id": "mphasis", "title": "For Mphasis, afterwards", "when": "After the call, by message or phone.",
+     "why": "Practical questions for Mphasis, never Vanguard's team.",
+     "how": ["Rate and terms stay in chat; settle them with Mphasis."],
      "items": [
-         {"to": "Recruiter", "q": "Who is the client, and which platform are they on?", "loop": "First, ideally before Friday.", "why": "Changes how you prepare."},
-         {"to": "Recruiter", "q": "How long is the engagement, and what are the next steps after this call?", "loop": "After the call.", "why": "Duration and process."},
-         {"to": "Recruiter", "q": "Rate and terms.", "loop": "With the recruiter only.", "why": "Your numbers are in chat."}]},
+         {"to": "Mphasis", "q": "What's the scope of the role: which Vanguard team, which assistant, and who I'd work with day to day?", "loop": "After the call.", "why": "What you'd actually be doing."},
+         {"to": "Mphasis", "q": "How long is the engagement, and what are the next steps after this call?", "loop": "After the call.", "why": "Duration and process."},
+         {"to": "Mphasis", "q": "Rate and terms.", "loop": "With Mphasis only.", "why": "Your numbers are in chat."}]},
 ]
 ASK = []
 

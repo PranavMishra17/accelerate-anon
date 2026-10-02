@@ -3724,6 +3724,188 @@
       },
 
       {
+        id: "wc31", track: "Interview", forWhat: "Vanguard, Fri 2 Oct", len: "1h 10m", est: 70,
+        name: "Assistants at Vanguard: financial services",
+        blurb: "What Vanguard has shipped and staged, the rules a broker-dealer assistant lives under, the no-advice boundary and authentication, compliant generated answers, agent assist before client-facing, and your pitch.",
+        intro: "Tomorrow's interviewers build assistants for a firm whose CIO named two worries: hallucinations and a bot veering into financial advice. This session gives you what Vanguard has shipped, the rules its answers live under, and the designs that answer both worries, so your NLP answers land in their context. It ends with your own work mapped to theirs, and what you have not done.",
+        steps: [
+          { t: "Vanguard's assistants today", m: 12,
+            out: "What do you know about how Vanguard uses conversational AI today, and what would you ask them first",
+            d: "Vanguard moves at two speeds: crew-facing generative AI is live, client-facing generative AI is staged and cautious. Know what is confirmed, say inference as inference, and ask early which assistant and which platform the role supports.",
+            pts: [
+              "Crew-facing, live: Crew Assist, an Azure OpenAI tool where contact-center crew get answers drawn from internal content (MIT Sloan Management Review, Oct 2025); a Call Center Agent Assist in full production (Vanguard careers blog, May 2025)",
+              "Client-facing, staged: chat on site and mobile serves more than 2 million investors a month and is gaining AI-enabled features; an AI capability in Digital Advisor pilots later in 2026 and launches early 2027 (letter to investors, May 2026)",
+              "Employee pilot: an AI chatbot for about 2,000 employees answering questions like 'What's my account balance?'; the CIO named hallucinations and the tool 'veering into offering financial advice' as the concerns (Fortune, Dec 2025)",
+              "Advisers: Client-Ready Article Summaries, the first client-facing generative AI, generates the necessary disclosures with each summary (beta, May 2025); Expert Insights, AI portfolio analysis, has piloted since Apr 2026",
+              "Virtual Analyst: an internal assistant that turns analysts' questions into SQL on Amazon Bedrock with Guardrails; 50+ question-to-SQL ground-truth pairs serve as few-shot examples and as the evaluation benchmark (AWS blog, Apr 2026)",
+              "Stack clues: postings for an agentic AI chat assistant name AWS Bedrock, LangGraph, tools backed by APIs and MCP, and Python and TypeScript; an AI Powered Experiences team builds conversational AI orchestration with WORM retention, Arize and RBAC retrieval (both from search summaries)",
+              "Not known: no public source names the contact-center or NLU platform; Amazon Connect or Lex is plausible on an AWS-heavy stack, but that is inference, so do not assert a vendor",
+              "Mphasis: no public Mphasis and Vanguard link was found; Mphasis is a Kore.ai Platinum Partner, so the intent and entity wording may come from its requisition (inference); ask which platform, and whether the work is classic NLU, LLM, or both"
+            ],
+            links: [
+              { label: "Vanguard prep: Vanguard and financial services", url: "interviews/vanguard.html#/prep" },
+              { label: "Guide: enterprise virtual assistant, the whole design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant" },
+              { label: "Baseline, NLP: classic NLU and LLMs together", url: "BASELINE.html#/nlp/nlu-llm-hybrid" }
+            ],
+            ans: [
+              "Crew-facing generative AI is live: Crew Assist on Azure OpenAI and a call center agent assist in production",
+              "Client-facing is staged: chat for over 2 million investors a month gaining AI features, an AI capability in Digital Advisor piloting later in 2026",
+              "Their leaders named the concerns: hallucinations and the bot veering into financial advice",
+              "The postings point to Bedrock, LangGraph and MCP tools in Python and TypeScript; the phone and NLU platform is not public",
+              "First question: which assistant this role supports, on which platform, and whether it is intents, LLM, or both"
+            ],
+            close: [
+              { k: "short", q: "What can you say about their platform, and what must you not claim?", a: "The postings point to AWS Bedrock, LangGraph and MCP-backed tools for the client chat assistant, and crew tools use Azure OpenAI. No source names the contact-center or NLU vendor, so ask rather than assume." }
+            ] },
+          { t: "The rules an assistant at a broker-dealer lives under", m: 13,
+            out: "A chatbot at a broker-dealer generates an answer. Which rules apply to it, and what do they make you build",
+            d: "FINRA is technology-neutral: an answer a bot generates is held to the same rules as one a person writes. Four ideas carry most questions: content standards, supervision and retention, the line between education and a recommendation, and model risk governance.",
+            pts: [
+              "Rule 2210: communications must be fair and balanced, with no false, exaggerated, promissory or misleading statements and no predictions of performance; retail communications need a qualified principal's approval before use, with exceptions",
+              "Notice 24-09: FINRA said in June 2024 that Rule 2210's content standards apply whether a human or a technology tool generates the communication, and that supervision should cover technology governance, including model risk management",
+              "Chatbot FAQ: chatbot messages can be correspondence, retail or institutional communications depending on the audience, are supervised under Rules 2210 and 3110(b)(4), and chat sessions must be retained (InvestmentNews coverage, May 2024)",
+              "Rule 4511: books and records are kept six years by default, in a format that meets SEA Rule 17a-4; that is why a Vanguard posting mentions WORM-based conversation retention",
+              "Reg BI: a recommendation needs a reasonable basis that it is in the client's best interest, after understanding their profile, costs and alternatives; a bot answering 'should I sell?' without that profile cannot meet it",
+              "Education or advice: whether a given answer is advice is a legal and compliance call; you build the technical control, compliance owns the line",
+              "Model risk: SR 26-2 replaced SR 11-7 on 17 Apr 2026; it keeps effective challenge, validation, inventory and vendor model oversight, but a footnote puts generative and agentic AI models out of its scope, and it targets banks; Vanguard's own postings still name Model Risk Management",
+              "FINRA 2026 report: names hallucination and bias as key risks and asks for prompt and output logging, model version tracking, human review of results, guardrails and human-in-the-loop protocols for agents"
+            ],
+            links: [
+              { label: "Vanguard prep: Vanguard and financial services", url: "interviews/vanguard.html#/prep" },
+              { label: "Baseline: guardrails", url: "BASELINE.html#/ai/guardrails" },
+              { label: "Baseline, NLP: out of scope", url: "BASELINE.html#/nlp/out-of-scope" }
+            ],
+            ans: [
+              "Rule 2210 content standards apply whether a person or a tool wrote it: fair, balanced, nothing promissory, no performance predictions",
+              "Chat is a firm communication: supervised, and retained six years under Rule 4511 in a 17a-4 format, hence WORM",
+              "Reg BI: a recommendation needs a best-interest basis the bot does not have, so advice-seeking turns route away",
+              "Compliance owns where education ends and advice begins; engineering builds the control",
+              "Model risk: SR 26-2 replaced SR 11-7 in April 2026 and puts generative AI out of its scope, so the firm's own governance and FINRA's guidance carry it"
+            ],
+            close: [
+              { k: "short", q: "Does SR 11-7 govern an LLM assistant at Vanguard?", a: "Say it carefully. SR 11-7 was replaced by SR 26-2 on 17 Apr 2026, which targets banks and says generative and agentic AI models are not in its scope. Vanguard's postings still name Model Risk Management, so the firm applies its own governance, and FINRA Notice 24-09 asks for model risk management within technology governance." }
+            ] },
+          { t: "The no-advice boundary and authentication", m: 13,
+            out: "A signed-in client asks 'Should I sell during this downturn?' Walk me through what the assistant does",
+            d: "Advice-seeking is an intent you design for, not a prompt you hope holds. Detect it, answer with approved education, route it by rule to a licensed person or the advice product, and never let the model see account data before the client is authenticated.",
+            pts: [
+              "Advice intent: an explicit advice-seeking intent beside out-of-scope and chitchat, trained on real paraphrases such as 'what would you do?' and 'is it a good time to get out?'",
+              "Two checks: a classifier on the user's turn, and a check on the final draft for recommendations, performance predictions and promissory wording",
+              "The response: approved educational content, a plain note that it cannot advise on individual trades, and an offer of a licensed representative or Digital Advisor, the regulated advice product",
+              "Deterministic routing: the handoff is a rule, not a model choice; it also fires on explicit request, sensitive intents (withdrawals, complaints, bereavement, suspected fraud), repeated fallback and failed authentication, and carries the transcript, intent and entities",
+              "Authentication first: the client signs in through the app or the channel's own flow (Vanguard uses Voice ID, passkeys and security codes); the assistant gets a scoped session token, never raw credentials",
+              "Never ask: Vanguard says it will never ask for your Social Security number or a security code you received, so the assistant must not either",
+              "PII: redact or tokenise identifiers before logs and model calls, give the model only the account context its scoped tools return, and keep write actions behind confirmation",
+              "Red team: a set of advice paraphrases runs in CI, and the advice-leak rate is a release gate"
+            ],
+            links: [
+              { label: "Baseline, NLP: intents and entities", url: "BASELINE.html#/nlp/intents-entities" },
+              { label: "Baseline, NLP: out of scope", url: "BASELINE.html#/nlp/out-of-scope" },
+              { label: "Baseline, NLP: conversation design", url: "BASELINE.html#/nlp/conversation-design" },
+              { label: "Guide: enterprise virtual assistant, the whole design", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant" },
+              { label: "Vanguard prep: Vanguard and financial services", url: "interviews/vanguard.html#/prep" }
+            ],
+            ans: [
+              "The advice-seeking intent fires; a second check on the draft catches a recommendation or prediction that slips through",
+              "It answers with approved education and says plainly it cannot advise on individual trades",
+              "It offers a licensed representative or Digital Advisor; the route is a rule, and the transcript and context go with it",
+              "Account data only after authentication, through tools scoped to that client; PII redacted from logs and prompts",
+              "The turn is logged for supervision, and advice paraphrases sit in a red-team set that gates release"
+            ],
+            close: [
+              { k: "why", q: "Why route advice-seeking by a deterministic rule rather than letting the LLM decide?", a: "A rule behaves the same on every run, and it can be tested and shown to compliance. A model may route correctly once and not the next time, and one leaked recommendation is a firm communication the bot had no basis for." }
+            ] },
+          { t: "Keeping generated answers compliant", m: 12,
+            out: "How do you keep a generated answer compliant, and how would you prove it to compliance before release",
+            d: "Layers, not one prompt: ground the answer in vetted content the user may see, check it before it leaves, log it so it can be defended, and gate every release on an evaluation compliance trusts.",
+            pts: [
+              "Approved content: retrieve only from vetted, versioned sources with an owner, and answer with citations so the model has nothing to invent from",
+              "RBAC retrieval: permissions-aware access, so a client or crew member retrieves only what they may see; Vanguard's Head of AI/ML posting also lists source authority, freshness and lineage",
+              "Numbers from systems: balances and dates come from API tools on systems of record, never from the model's memory",
+              "Disclosures: attached by the system, as Vanguard's article-summary tool generates the necessary disclosures with each summary",
+              "Guardrails: input and output checks, managed ones such as Bedrock Guardrails (named in the Virtual Analyst write-up), and a safe canned answer plus handoff when a check fails",
+              "Retention: each turn's message, answer, retrieved sources and versions, model and prompt version, guardrail results and handoff, kept immutably; analytics get a copy with PII scrubbed",
+              "Human review: compliance samples conversations, and a prompt or content change goes through sign-off like code; Vanguard's Writer story names Compliance and Legal as partners in the build",
+              "Evaluation: a golden set from real conversations scored for accuracy, groundedness, hallucination, tone and refusal behaviour, with judges calibrated against compliance reviewers' labels; the posting says no capability reaches production 'without a quantitative, repeatable evaluation baseline'"
+            ],
+            links: [
+              { label: "Baseline: RAG", url: "BASELINE.html#/ai/rag" },
+              { label: "Baseline: guardrails", url: "BASELINE.html#/ai/guardrails" },
+              { label: "Baseline: evaluation", url: "BASELINE.html#/ai/evaluation" },
+              { label: "Baseline: LLM-as-judge", url: "BASELINE.html#/ai/llm-as-judge" },
+              { label: "Vanguard prep: Vanguard and financial services", url: "interviews/vanguard.html#/prep" }
+            ],
+            ans: [
+              "Retrieve only approved, versioned content the user may see, with citations; numbers come from tools",
+              "Disclosures added by the system, output guardrails, and a safe fallback with handoff on any failed check",
+              "Log every turn with its sources and versions, retained immutably for supervision",
+              "A golden set scored for groundedness, hallucination, tone and refusals; judges calibrated to compliance reviewers' labels",
+              "Every prompt or content change is a release: sign-off, regression set, rollback"
+            ],
+            close: [
+              { k: "why", q: "How do you calibrate an LLM judge for compliance, and why is it never the only gate?", a: "Have compliance reviewers label a set, run the judge on it and track agreement per criterion before trusting it, and re-check when the prompt or model changes. Judges show position and verbosity bias, and a missed recommendation is a regulatory failure, so people keep sampling." }
+            ] },
+          { t: "Agent assist versus client-facing", m: 10,
+            out: "Why would you ship agent assist before a client-facing assistant, and how would you measure success for each",
+            d: "Agent assist puts a trained person between the model and the client, so it can ship first and show you what fails. Client-facing removes that person, which raises the bar for evaluation, guardrails and monitoring.",
+            pts: [
+              "Agent assist: answers go to crew, who read and judge them before the client hears anything; Vanguard's Crew Assist answers from internal content and also speeds up onboarding",
+              "Why first: a person catches the error, the content is internal, and the users can be trained and asked for feedback; this is reasoning, consistent with the order Vanguard shipped in",
+              "Client-facing: each answer is a firm communication with no one in between, so it needs the no-advice boundary, authentication, retention and a stricter release gate",
+              "Evaluation changes: for assist, accuracy and usefulness judged by crew; for clients, also refusal behaviour, advice leaks, groundedness and pass^k over repeated runs",
+              "Risk changes: assist risks a wrong answer a crew member repeats; client-facing risks a recommendation, a hallucinated number, or account data shown to the wrong person",
+              "Assist metrics: handle time, answer accuracy and adoption, how many crew use it and how often they accept or edit a suggestion; Vanguard reports call-handling time down and satisfaction up",
+              "Client metrics: resolution, not containment alone, with escalation reasons, repeat contact and CSAT",
+              "Governance: Vanguard describes systems that evaluate model performance, detect bias and drift, and monitor how crew use AI"
+            ],
+            links: [
+              { label: "Baseline, NLP: assistant metrics", url: "BASELINE.html#/nlp/assistant-metrics" },
+              { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
+              { label: "Vanguard prep: Vanguard and financial services", url: "interviews/vanguard.html#/prep" }
+            ],
+            ans: [
+              "A crew member stands between the model and the client, so errors are caught and fed back",
+              "Client-facing answers are firm communications with no one in between: advice boundary, authentication, retention, stricter gates",
+              "Assist success: handle time, accuracy judged by crew, adoption and acceptance rate",
+              "Client success: resolution and repeat contact, not containment alone, plus advice-leak and groundedness rates",
+              "Crew edits and rejections become test cases for the client-facing version"
+            ],
+            close: [
+              { k: "short", q: "Crew adoption of agent assist is low. What do you look at first?", a: "Whether the answers are right and fast enough to use mid-call: sample the suggestions crew ignored or edited, check retrieval misses and latency, and ask crew directly. Low adoption usually means low trust, and trust follows accuracy." }
+            ] },
+          { t: "Your pitch for Vanguard", m: 10,
+            out: "Why are you a fit for this team, given you have not worked in financial services",
+            d: "Map your own work to their situation in under two minutes, then name plainly what you have not done. Every number and phrase comes from your master reference.",
+            pts: [
+              "alfred_ routing: 'Inbound message (SMS/web) routed through intent classification → decision layer → callable tools', for 5,000+ active users",
+              "Five verdicts: 'every candidate action classified into five verdicts (SILENT / NOTIFY / CONFIRM / CLARIFY / REFUSE) via deterministic risk scoring, not LLM-as-judge'; the same idea as a deterministic no-advice route",
+              "Failure scanner: 'scans real production conversations, classifies genuine failures vs. expected behavior, auto-promotes real bugs for triage'; the review loop a quality or compliance team runs by hand",
+              "Strict IDs: the working-memory pipeline made 'a whole class of hallucination structurally impossible, not probabilistically reduced'",
+              "MetaRAG: IEEE CAI 2026, '82.5% precision' against a 73.3% baseline, '0.925 Hit Rate@10', '25% hallucination reduction'; retrieval measured on its own",
+              "The bridge: their worries are hallucination and advice; your work is deterministic control around an LLM, failure scanning on real conversations, and measured grounding",
+              "Not done: you have not built on an enterprise NLU platform (Lex, Dialogflow CX, Kore.ai) and have not worked in regulated finance; say so, and say you would work inside their compliance process",
+              "Close with a question: which assistant this role supports, and how compliance signs off prompt and content changes"
+            ],
+            links: [
+              { label: "Vanguard prep: Vanguard and financial services", url: "interviews/vanguard.html#/prep" },
+              { label: "Baseline, NLP: classic NLU and LLMs together", url: "BASELINE.html#/nlp/nlu-llm-hybrid" },
+              { label: "Baseline, NLP: error analysis", url: "BASELINE.html#/nlp/error-analysis" },
+              { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" }
+            ],
+            ans: [
+              "alfred_: intent classification, a decision layer and callable tools, for 5,000+ active users",
+              "Every action gets one of five verdicts by deterministic risk scoring, not LLM-as-judge: the shape of a no-advice route",
+              "A production-failure scanner finds genuine failures in real conversations and promotes them to triage",
+              "MetaRAG: 82.5% precision, 0.925 Hit Rate@10, 25% hallucination reduction, with retrieval measured on its own",
+              "Plainly: no enterprise NLU platform and no regulated finance yet; I would learn their controls first and build inside them"
+            ],
+            close: [
+              { k: "short", q: "They ask whether you have worked under financial regulation. What do you say?", a: "No, not in finance. Then the bridge: I have built deterministic controls around an LLM, so the risky decisions do not depend on the model, and I know the frame here: Rule 2210 content standards, retention under Rule 4511, and Reg BI's line on recommendations, with compliance owning that line." }
+            ] }
+        ]
+      },
+
+      {
         id: "wc18", parked: true, track: "Interview", forWhat: "Every interview: your own system", len: "1h 15m", est: 75,
         name: "alfred_ from the outside: draw it cold",
         blurb: "Before any round. In the ZenML call you couldn't draw alfred_ top-down or say where the agent runs. Draw it on paper first, then open the answer.",

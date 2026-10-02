@@ -887,3 +887,12 @@ sessions yet: the next agent asks him. CLAUDE.md (gitignored, now copied to the 
 WILDCARD.md and the auto-memory notes now record how he wants pages laid out, how a loop is built,
 the repo mechanics, the interviews in play and the facts still to confirm with him. No charter
 deviation.
+
+**2026-10-01 — Tomorrow's interview is Vanguard, not 3 Dots IT.**
+The invite shows Vanguard's team, organised by Mphasis, and Mphasis said Vanguard picked Pranav; the
+two areas came from Rama at Mphasis and stand. The 3 Dots IT page moved to the existing Vanguard skeleton
+(interviews/vanguard.html; threedots removed), Friday 2 PM. Research on Vanguard added its company
+picture (crew-facing generative tools live, client-facing staged, AWS and Bedrock), a first Prep group
+of 12 questions on Vanguard and financial services (the no-advice line, authentication, FINRA 2210,
+4511 and Notice 24-09, Reg BI, SR 26-2), questions for Vanguard's team, and a seventh session, wc31,
+about 70 minutes. He set aside 7 to 9 hours. No charter deviation.
