@@ -13,23 +13,26 @@ pay, work authorization, start date) are kept in chat, never on this public page
 LOOP = {
     "id": "coframe",
     "title": "Coframe, Agent Platform Engineer",
-    "subtitle": "Recruiter screen, 15 minutes",
+    "subtitle": "Round 2: a technical exercise with the technical co-founder",
     # Brand colour for the hub's wordmark. Coframe's violet: background:#5A52EC on the buttons
     # and labels of coframe.com (the most used accent in its inline styles; the logo SVG is
     # white and the favicon near-black). 5.4:1 on the light surface. brand_dark: the same hue
     # lightened to 7:1 on the dark surface, a step lighter than Oxus's indigo so the two read apart.
     "brand": "#5A52EC", "brand_dark": "#B79CF7",
-    "when_iso": "2026-10-01T14:20:00-04:00",
-    "when": "Thursday 1 October, 2:20 to 2:35 PM Eastern, Google Meet",
-    "who": ("Neesha Malik, Founding Talent at Coframe. She runs hiring: she screens, then pitches candidates "
-            "to the team herself. Iris Chao (Talent Operations) scheduled the call."),
-    "format": ("Fifteen minutes on Google Meet. A recruiter screen: no coding, no design. She checks the resume "
-               "is real, hears how you talk about your work, tells you about Coframe, and decides whether you go on "
-               "to the technical rounds."),
-    "bar": ("Crisp, and in outcomes: what changed for users and what you owned. Senior means short answers "
-            "with a number in them, then stopping. Talk to her as a recruiter, not as an engineer."),
+    # Round 2 is the next call. The time is booked through Ashby's link; noon Eastern is a placeholder.
+    "when_iso": "2026-10-06T12:00:00-04:00",
+    "when": "Round 2: Tuesday 6 October (time to be booked; hold the full hour)",
+    "who": ("Round 2: Pavlo Razumovskyi, Coframe's technical co-founder. Round 1 (done, 1 October) was Neesha "
+            "Malik, Founding Talent, who moved you forward."),
+    "format": ("Round 2 is a technical exercise, typically 30 to 40 minutes, with 60 reserved: keep the full hour. "
+               "Coding plus technical conversation. AI tools you use daily are encouraged (Claude Code, Codex and so on). "
+               "Have an environment ready to read and run Python and TypeScript scripts (VS Code or Cursor), and a setup "
+               "that shares microphone, camera and screen (allow the browser to screen share)."),
+    "bar": ("Working code, shown running, with your reasoning out loud: how you read an unfamiliar script, how you "
+            "use the AI tool and check what it gives you, and the platform judgement from round 1 (isolation, "
+            "retries and durability, latency and cost) applied to real code."),
     "plan_kicker": "Before the call",
-    "extra": ("The posting and everything Coframe publishes are under <b>What this rests on</b> on the Prep tab. "
+    "extra": ("Round 1's six questions and the stronger answers to keep are on the <b>Rounds</b> tab; they are the likeliest to come back in more depth. "
               "Your own system at depth is on the "
               "<a href=\"../ALFRED.html\" target=\"_blank\" rel=\"noopener\">alfred_ page</a>."
               " Refresh the basics on Baseline: <a href=\"../BASELINE.html#/ai\" target=\"_blank\" rel=\"noopener\">AI engineering</a>, <a href=\"../BASELINE.html#/devops\" target=\"_blank\" rel=\"noopener\">DevOps</a>, <a href=\"../BASELINE.html#/distributed\" target=\"_blank\" rel=\"noopener\">Distributed systems</a>, <a href=\"../BASELINE.html#/backend\" target=\"_blank\" rel=\"noopener\">Backend</a>."),
@@ -155,6 +158,15 @@ ROUNDS = [
                    "Durability is the queue: jobs sit in Postgres, a worker claims one with SKIP LOCKED, a job that dies becomes claimable again, and a scheduled sweep catches anything missed."],
           "notes": ["Check before the next round: how alfred_ marks a job claimable again after a crash (pgmq's visibility timeout or your own sweep), so you say it exactly."]},
      ]},
+    {"title": "Round 2: technical exercise",
+     "when": "Tuesday 6 October 2026 (time to be booked through the Ashby link; keep the full hour)",
+     "who": "Pavlo Razumovskyi, technical co-founder",
+     "format": "A technical exercise, typically 30 to 40 minutes with 60 reserved: coding and technical conversation. AI tools encouraged; read and run Python and TypeScript; share microphone, camera and screen.",
+     "outcome": "Not yet held.",
+     "notes": ["Before the day: an editor (VS Code or Cursor) with Python 3 and Node with TypeScript (tsx or ts-node) that run a script in one command; Claude Code signed in and working in that folder; a screen share tested in the browser with camera and microphone.",
+               "Expect to read, run, fix or extend Python and TypeScript, and to talk through the agent-platform judgement from round 1 on real code: isolated execution, retries and durability, tracing, latency and cost. Round 1's questions below are the ones most likely to come back in more depth.",
+               "Say out loud how you use the AI tool and how you check its output: run it, read the diff, test it. That is part of what they are watching."],
+     "asked": []},
 ]
 
 # Your story, in your words. Items marked "verbatim" are Pranav's own text: never polish them.

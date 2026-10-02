@@ -877,3 +877,13 @@ overview the lit arrows are spelled out under the map, since their labels would 
 map code moved from baseline/atlas.js into baseline/map.js and map.css, so the tracker's home page
 draws the same interactive map, with the hover preview, below The work ahead; its links open
 Baseline. Pranav asked for all three. No charter deviation.
+
+**2026-10-01 — Coframe round 2 booked in; the working notes brought up to date for a new agent.**
+Neesha put Pranav forward: round 2 is a technical exercise with Pavlo Razumovskyi, Coframe's technical
+co-founder, on Tuesday 6 October (30 to 40 minutes, an hour held; coding and technical talk; AI tools
+encouraged; Python and TypeScript; screen share). It is on the Coframe page's Rounds tab with how to
+prepare, the page's call details point at it, and LOOPS lists it after Commure. No teach-first
+sessions yet: the next agent asks him. CLAUDE.md (gitignored, now copied to the main checkout),
+WILDCARD.md and the auto-memory notes now record how he wants pages laid out, how a loop is built,
+the repo mechanics, the interviews in play and the facts still to confirm with him. No charter
+deviation.

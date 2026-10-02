@@ -19,17 +19,19 @@ things:
    planned session. Three sessions or eleven, depending on what the interview actually
    demands.
 2. **Its own page**, `interviews/<loop>.html`, built by `python interviews/build.py
-   <module>` from a content module (`interviews/<module>.py`): the brief, what to say
-   in the words to say it, timed spoken drills, a technical question bank, figures,
-   questions to ask, traps, and every session readable in place. Add a `LOOPS` entry in
+   <module>` from a content module (`interviews/<module>.py`). Its Overview is the call, the
+   company (`COMPANY`), the role from its posting (`POSTING`), how to show up (`SHOW_UP`) and how to
+   prepare. Its Prep tab is the question bank in sections (your intro and story from `SCRIPTS`, each
+   `QA` group in `QA_ORDER`, logistics, practise aloud, questions to ask); a question opens in place,
+   one at a time, with how to understand it on the left and what to say on the right. A Rounds tab
+   (`ROUNDS`) records each round once it has happened: the questions, what you said, what to keep.
+   Sessions read in place in the same two-pane drawer as the tracker. Add a `LOOPS` entry in
    `index.html` so the wildcard page shows it as a card. Optional `OWN` in the module sets
    their system against yours; your own system's facts live on one page of their own,
    and a loop page links there rather than copying them. Code that
-   `CODING.html` already holds is linked (`../CODING.html#<id>`), not pasted. The Prep tab is a hub: `SHOW_UP` (how to
-   present yourself), then each bank (`SCRIPTS`, then each `QA` group in `QA_ORDER`) as one
-   row that opens in the one-screen panel, then drills, questions to ask, traps and
-   `SOURCES` folded shut. A question can carry `short` (its label in the list), `land` (the
-   one point), `notes` (the nuance), `figs`, `probes` (what they may ask next) and `swaps`
+   `CODING.html` already holds is linked (`../CODING.html#<id>`), not pasted. A question can carry
+   `short` (its label in the list), `land` (the one point), `notes` (the nuance), `figs`, `probes`
+   (what they may ask next), `learn` (links to the session step and Baseline topic) and `swaps`
    (lines to swap in); the answer shows on the dark sheet. A big design question also
    carries `parts`: titled sections (why, what I'd change, what breaks, how to scale, how
    to productionize, trade-offs, deep dives) drawn as a board on the light side.
