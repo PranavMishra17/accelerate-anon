@@ -32,10 +32,12 @@ LOOP = {
             "use the AI tool and check what it gives you, and the platform judgement from round 1 (isolation, "
             "retries and durability, latency and cost) applied to real code."),
     "plan_kicker": "Before the call",
-    "extra": ("Round 1's six questions and the stronger answers to keep are on the <b>Rounds</b> tab; they are the likeliest to come back in more depth. "
-              "Your own system at depth is on the "
-              "<a href=\"../ALFRED.html\" target=\"_blank\" rel=\"noopener\">alfred_ page</a>."
-              " Refresh the basics on Baseline: <a href=\"../BASELINE.html#/ai\" target=\"_blank\" rel=\"noopener\">AI engineering</a>, <a href=\"../BASELINE.html#/devops\" target=\"_blank\" rel=\"noopener\">DevOps</a>, <a href=\"../BASELINE.html#/distributed\" target=\"_blank\" rel=\"noopener\">Distributed systems</a>, <a href=\"../BASELINE.html#/backend\" target=\"_blank\" rel=\"noopener\">Backend</a>."),
+    "extra": ("<b>Work in this order.</b> 1. Skim <a href=\"#/overview/onepage\">the one page</a>. "
+              "2. Learn, a module at a time: the round and Coframe, then Python, TypeScript and async, then the live builds "
+              "(each in Python and TypeScript; run the tests in interviews/coframe_builds/), then platform and Coframe-shaped design. "
+              "3. 'Test me' until the weak squares turn. 4. Round 1's questions are on the Rounds tab. "
+              "5. Say 'run the Coframe mock' in chat for a live coding and design rehearsal. "
+              "Your own system at depth is on the <a href=\"../ALFRED.html\" target=\"_blank\" rel=\"noopener\">alfred_ page</a>."),
 }
 
 SESSION_IDS = []
@@ -44,13 +46,13 @@ PREP_LEAD = ("Fifteen minutes. Read how to show up, then say your story out loud
              "in thirty, why Coframe, why leave, and the one story. The banks are for the questions after.")
 
 SHOW_UP = [
-    ("Join two minutes early.", "The Meet link from the invite, camera and sound checked, the job post and this page open in another tab."),
-    ("Fifteen minutes is about eight of you.", "Intro in ninety seconds, why Coframe in sixty, then her questions and her pitch. Around minute eleven, your two questions. She closes."),
-    ("Outcomes and scope, not architecture.", "5,000-plus active users; a rewrite of the agent signed off by the eval harness; texts that arrive in three seconds instead of ninety. Leave LangGraph, pgmq and edge functions out unless she asks."),
-    ("Stop after the pitch.", "After the intro, stop and let her pull the thread she cares about. A short answer invites the next question; a long one uses up her fifteen minutes."),
-    ("Let her sell.", "When she describes Coframe, listen, then ask one follow-up about what she said. Selling the role is half her job, and interest in it counts."),
-    ("Logistics: one line each.", "Location, office days, pay, work authorization, start date: your answers are in chat. Say each once, plainly, then go back to the role."),
-    ("Close with next steps.", "Ask what the rest of the loop looks like, and whether anything in your background needs making clearer for the team."),
+    ("Have the bench ready.", "A clean repo open in VS Code or Cursor, a terminal, Python 3.12 and Node 22 working, Claude Code or Codex logged in, font size up, screen share tested."),
+    ("Clarify before you build.", "Restate the task, ask the one or two questions that change the design (the limit, the input, what 'done' looks like), then say your plan in three steps."),
+    ("Drive the tool, don't follow it.", "Small, testable asks; read every diff; run it yourself; say what you are checking while it works, and what you would never hand it (auth, money, deletes, migrations)."),
+    ("Ship something that runs, then improve it.", "A working thin version early beats a perfect half; keep a fallback for the hard limit (a timeout and a default)."),
+    ("Close with productionization.", "Where the state lives, what breaks first at 100x, timeouts, idempotency, tracing, cost: the question every Coframe take-home ends on."),
+    ("Have opinions, and say the gaps.", "Pick an approach and say why; name what you haven't built (a sandbox fleet, remote browsers, a bandit in production) and how you'd learn it."),
+    ("End with a real question.", "Ask about their stack for durable agent runs and remote browsers, or what the first 90 days of this role would fix."),
 ]
 
 STORY_BLURB = "Your career in ninety seconds and in thirty, why Coframe, why leave alfred_, what you are working on, your days at alfred_, the background, and logistics."
@@ -285,99 +287,10 @@ SCRIPTS = [
 ]
 
 # The questions after the story. Each answer is short and in plain words.
-QA = [
-    {"group": "Coframe and the role", "blurb": "What they do, and how the posting maps to your work.", "items": [
-        {"q": "What do you know about Coframe?", "short": "What Coframe does", "tests": "Did you prepare?",
-         "a": ["Coframe builds agents that optimize websites. They come up with ideas, design and code the variations, test them on real traffic, and personalize what each visitor sees, without the customer's engineers having to build each test. Customers include Dropbox, Replit and Intuit; Replit reported a 410% conversion lift on its enterprise funnel.",
-               "What I found interesting technically is the work with OpenAI on a model fine-tuned for UI code, with your own benchmark for it, and the recent post on predicting experiment winners, which was pretty honest about how much accuracy drops on production data.",
-               "And from the posting, the agents aren't only in the product. They also work on Coframe's own codebase and internal workflows, which is what the platform supports."],
-         "land": "Agents that design, build and test website experiments; the platform serves those and the company's own.",
-         "notes": ["From Coframe's site, blog and posting (Sources). Seed round of $9.3 million in October 2024, led by Khosla Ventures and NFDG; the posting says pre-Series A. The CEO is Josh Payne, who co-founded Autograph before.",
-                   "Their values: Agency, Velocity, Truth-seeking, Growth."]},
-        {"q": "How does your background fit the Agent Platform role?", "short": "The posting, mapped to your work", "tests": "Is the resume real, and does it match what they need?",
-         "a": ["Most of it maps to what I already do. The posting asks for infrastructure for long-running agents, tracing and evaluation, safe execution, and judgement on cost and reliability. At alfred_ I've worked on each of those for one agent in production, used by 5,000-plus people.",
-               "Where I haven't worked yet is remote browsers and sandboxed code execution, and I'd rather say that plainly. The instincts carry over: the eval harness already runs the real agent in an isolated copy of the user's world with no path to live systems."],
-         "land": "Each of the posting's asks, done for one production agent; the gaps named first.",
-         "parts": [
-             {"title": "What the posting asks, and where you've done it",
-              "items": ["**Long-running execution, durable workers, stateful workflows:** quick turns run in Supabase edge functions; long work runs in containers on Railway, fed from one Postgres with pgmq queues and pg_cron schedules.",
-                        "**Deploying and operating agents in production:** the agent loop on LangGraph with its own tools node, 12 steps on SMS and 50 on the web, for 5,000-plus active users.",
-                        "**Tracing, observability, evaluation, monitoring:** the production failure scanner over real conversations; an eval harness on a snapshot of the user's world; a little over a hundred cases.",
-                        "**Isolated environments:** in the harness the real agent runs against its own copy of the world, with no path to a live system, reset between cases.",
-                        "**Memory and planning:** working memory, the user's open loops, which the agent fetches with a tool when it needs them.",
-                        "**Security and reliability judgement:** no risk score; a code floor confirms every send and irreversible delete, whatever the model thinks. Row-level security in Postgres.",
-                        "**Cost:** per-user LLM cost cut about 30% by replacing per-message model calls with a deterministic matcher for email rules.",
-                        "**Testing before deploy:** a change runs against the cases it touches before it ships; the full set runs nightly.",
-                        "**Engineering productivity:** Claude Code every day with project instructions, skills and hooks; an MCP connector that lets Claude use alfred_'s tools.",
-                        "**Platforms for non-engineers:** the closest is the rules engine, where users write email rules in plain language from chat."]},
-             {"title": "Not done yet: say so",
-              "items": ["Remote browsers, sandboxed code execution, and serverless compute at Coframe's scale.",
-                        "A platform used by several teams: yours has been one product."]},
-         ],
-         "notes": ["For a recruiter, say the first paragraph and stop. The list is for when she reads a line of the posting back to you."]},
-        {"q": "Have you built infrastructure for long-running agents?", "short": "Long-running agents", "tests": "The posting's first line, in plain words.",
-         "a": ["Yes, for one product. A quick reply to a text runs in a short serverless function. Anything long, like reading through someone's whole inbox, goes onto a queue and runs on workers in containers, with scheduled jobs as a backstop so nothing gets dropped.",
-               "The lesson that stuck was about timing: our email-to-text notifications waited on a timer, about ninety seconds. Triggering on the event instead took it to about three."],
-         "land": "Short work in functions, long work on queued workers, a schedule as the backstop.",
-         "notes": ["Underneath, if an engineer asks: Supabase edge functions for the turn, containers on Railway, pgmq and pg_cron in one Postgres, claiming with SKIP LOCKED."]},
-        {"q": "Why platform engineering?", "short": "Why platform", "tests": "Is this a real direction, or any job with 'agent' in it?",
-         "a": ["I think it's where my work has been heading anyway. At alfred_ the part I kept ending up on wasn't what the agent says, it was what it runs on: the workers that pick up jobs, the eval harness, the scanner that catches failures in production.",
-               "And that layer decides whether an agent is any good. A smart agent on a flaky platform still fails users. A platform that's reliable, traceable and easy to test makes every agent on it better.",
-               "So I'd rather build the thing every agent depends on than one more agent."],
-         "land": "It's the layer I kept ending up on, and it's what makes every agent on it better.",
-         "swaps": [{"when": "If she asks why not Agent Engineer", "line": "The agent engineers build what the agents do. The platform is what they run on. The second is where I've owned the most, so that's where I'd add the most."}]},
-        {"q": "What do you understand by agent platform engineering at Coframe?", "short": "What the platform is", "tests": "Did you read the posting, and can you say it plainly?",
-         "a": ["From the posting, Coframe's agents do long jobs: they come up with a website experiment, design it, write the code, test it and ship it. The platform is everything those agents run on.",
-               "That means a place for each agent to run safely on its own, isolated from the others, with remote browsers and code execution; workers that can run for a long time and stop and resume without losing work; tracing, so you can see exactly what an agent did; evals, so a change is tested before it ships; and keeping all of it fast and affordable.",
-               "And it serves Coframe's own teams too, since agents also work on your codebase and internal workflows. So in a line: making agents safe, observable and reliable to run, at scale."],
-         "land": "Everything the agents run on: isolated execution, durable long-running workers, tracing, evals, cost.",
-         "notes": ["From the posting (Sources). Say 'from the posting', not 'I know'."]},
-        {"q": "What platform and agent engineering experience do you have at alfred_?", "short": "Your platform and agent work", "tests": "Concrete things you built, not words from the posting.",
-         "a": ["Both, really, for one product. On the platform side, I built a lot of what our agents run on. Quick replies run in serverless functions; anything longer goes onto a queue in Postgres and runs on our own Python workers on Railway.",
-               "Each worker is lean and does one job: a routine worker for scheduled work, a document worker with its own environment that works on files, calls APIs and returns the output, and a voice worker that joins a live call and holds it. They sit in a warm pool, a free worker claims whatever comes in, and it scales with demand.",
-               "On the agent side, I work on the agent itself: working memory, so it knows what's open for each user; the voice agent, where a lean agent answers on the call while our main agent works on the same request in parallel; and reliability, with an eval harness that runs the real agent against an isolated copy of a user's world, and a scanner that catches production failures every day.",
-               "So I've built the run, the isolation and the testing layers, and the agent on top of them. What I haven't done yet is remote browsers or a platform shared by several teams, and that's the part I'd be growing into here."],
-         "land": "Platform: lean Python workers, one job each, a warm pool that claims and scales. Agent: memory, voice, evals. Gaps named.",
-         "swaps": [{"when": "If she wants it in twenty seconds", "line": "At alfred_ I built both the agent and a lot of what it runs on: lean Python workers that claim jobs from a queue and scale with demand, each with one job, like documents or live voice calls. Plus the eval harness and failure scanner that keep the agent reliable."},
-                   {"when": "If she asks what you haven't done", "line": "Remote browsers and sandboxed code execution at Coframe's scale, and a platform shared by several teams. The patterns carry over: isolation, claiming from a queue, tracing every run."},
-                   {"when": "If an engineer asks how jobs are claimed", "line": "Postgres queues with pgmq; a worker takes the next job with SKIP LOCKED, so two workers never get the same one, and a scheduled job catches anything missed."}],
-         "notes": ["From your account on 1 October: routine worker, document worker with its own environment, voice worker joining a room, a warm pool claiming jobs, scaling with demand. Check the scaling details before saying more than 'scales with demand'."]},
-    ]},
-    {"group": "Your work, in plain words", "blurb": "Your strongest work, a hard problem, evals and a failure, each told outcome first.", "items": [
-        {"q": "What's the project you're proudest of?", "short": "Strongest project", "tests": "Can you pick one and say why it mattered?",
-         "a": ["The eval harness at alfred_. When I joined, nobody could say whether a new version of the agent was better than the old one; people tried it and had opinions.",
-               "Now every real failure in production can become a test case, and a big change runs against a little over a hundred of them before it ships. It's how we signed off a full rewrite of how the agent handles conversations."],
-         "land": "It turned 'we think it's better' into evidence."},
-        {"q": "Tell me about a hard problem you solved in production.", "short": "A hard production problem", "tests": "Ownership, and whether you fix the cause or the symptom.",
-         "a": ["Our assistant keeps track of what people owe others, from their inbox. The model kept inventing email threads, or getting who owes whom backwards, which is the worst thing an assistant can do to trust.",
-               "Instead of prompting harder, I changed the design. The model now only picks from a list of real items and writes the sentence; code attaches the real ids. It can't invent a thread anymore, and tests enforce that. A whole class of mistake is gone rather than rarer."],
-         "land": "Make the mistake impossible by design, not less likely by prompting."},
-        {"q": "What's your experience with evaluation and reliability?", "short": "Evals and reliability", "tests": "The role's core, said so a non-engineer follows.",
-         "a": ["It's most of what I do. Three pieces: a scanner that reads real conversations every day and flags the ones that went wrong; a test set built from those real failures; and a way to replay the real agent against a frozen copy of the user's world, so we can compare versions fairly.",
-               "And safety rules in code, not in the model: the agent always asks before it sends an email or deletes something that can't be undone."],
-         "land": "Find real failures, turn them into tests, and gate the risky actions in code."},
-        {"q": "Tell me about a failure you learned from.", "short": "A failure you learned from", "tests": "Honesty, and what changed afterwards.",
-         "a": ["Our test set passed an answer that was actually wrong. A user asked for a ledger of every financial event across their accounts, and the agent produced a clean one that left out two refunds. Every check we had passed, because we checked the shape of the answer, not whether it was complete.",
-               "A user noticed, not us. The fix was to check against what we know is true: our snapshot knows how many events are in that window, so the test now asserts every one appears. I think about 'does it look right' versus 'is it right' a lot more since."],
-         "land": "Check against ground truth you hold, not against how the answer looks."},
-    ]},
-    {"group": "How you work", "blurb": "Small teams, what you want next, and AI tools.", "items": [
-        {"q": "How do you work in a small team?", "short": "Small teams", "tests": "Ownership without a backlog.",
-         "a": ["I'm comfortable with nobody handing me a backlog. On a small team you look at what's breaking and what's being asked, and you decide.",
-               "If I disagree, I make my case once, with evidence, ideally a real example or a quick prototype, and then commit to whatever we decide. Small teams can't afford relitigating."],
-         "land": "Decide from what's breaking; argue once with evidence, then commit."},
-        {"q": "What are you looking for next?", "short": "What you want next", "tests": "Does the role fit where you're headed?",
-         "a": ["Owning the platform layer that a lot of agents run on, rather than one agent. And staying close enough to agents in production that I know what breaks before most teams hit it.",
-               "A small, fast team where the agents are the product is pretty much the quickest way I know to get there."],
-         "land": "The layer many agents run on, close to where they break."},
-        {"q": "How do you use AI tools day to day?", "short": "AI tools, day to day", "tests": "Fluent with them, and careful.",
-         "a": ["Heavily, with scaffolding: Claude Code with project instructions and skills for the jobs I repeat, a review pass, and a check that runs the real thing instead of trusting that it compiled.",
-               "I let it drive on the well-tested, boring parts and take over on permissions, concurrency and database changes. And I don't trust an agent's own report of what it did, which is the same instinct as our product's guard against the agent claiming actions it never took."],
-         "land": "Heavily, with checks; never trust a self-report, from a model or from yourself."},
-    ]},
-]
-
-QA_ORDER = ["Coframe and the role", "Your work, in plain words", "How you work"]
+# The Prep bank now lives in one learning path with the round-2 research: interviews/coframe.learn.json
+# (Learn tab), built 3 October 2026; code in interviews/coframe_builds/. The old bank is in git history.
+QA = []
+TABS = ["overview", "learn", "rounds", "mocks"]
 
 # Questions you ask, three groups: for Neesha and the process, about the Agent Platform team,
 # and about the company. One or two in total on a fifteen-minute call; the rest are spares.
@@ -435,4 +348,4 @@ DRILLS = [
     {"id": "now", "prompt": "What are you working on right now? For someone who isn't an engineer.", "target": "60 seconds", "seconds": 60, "ref": "#say-now"},
 ]
 
-MOCK_HOW = "Say 'run the Coframe mock, 15 minutes' in chat: Neesha screens, sells the role, then asks for your questions."
+MOCK_HOW = "Say 'run the Coframe mock' in chat: Pavlo, technical, about 45 minutes: a small live build in Python or TypeScript with AI tools, then productionization and platform design."

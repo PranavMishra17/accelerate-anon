@@ -948,3 +948,14 @@ voice agent and the design), 35 topics, 91 multiple-choice questions. Old Prep l
 topic that absorbed them. Learn topics can now carry code files, shown folded under Learn. Coframe
 round 2 is now Friday 9 October, one hour with Pavlo: coding, system design, Python and TypeScript.
 No charter deviation.
+
+**2026-10-03 — Coframe round 2 as a learning path, with live builds in Python and TypeScript.**
+For Friday's hour with Pavlo. Four research passes (Coframe and its take-homes, Python and
+TypeScript at senior depth, agent-platform design and how AI-allowed rounds are judged) became a
+Learn tab of eleven modules: the round, Coframe as an engineer sees it, his work through the
+platform lens, Python, TypeScript, async in both, two modules of live builds (a just-in-time UI
+under a 4-second budget, a durable step runner, a rate-limited fan-out, an SSE parser, a bandit
+assignment service, a reconciling two-way sync, a sandboxed runner, a trace summariser), agent
+platform design, Coframe-shaped design, and his story. 75 topics, 205 multiple-choice questions,
+63 code files in `interviews/coframe_builds/`, every test passing. The Overview has a One page view
+and a new way to show up for a technical round; round 1 stays on the Rounds tab. No charter deviation.
