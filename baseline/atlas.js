@@ -288,7 +288,9 @@
     }
     if (t.example) { v.appendChild(block("An example", el("p", "example", md(t.example)))); }
     if (t.nuance) { v.appendChild(block("The catch", el("p", "", md(t.nuance)))); }
-    if (t.read && t.read.length) { v.appendChild(block("Read more", reads(t.read))); }
+    var cur_res = ((B.resources || {})[f.id] || {})[t.id];
+    if (cur_res && window.Res) { var rr = Res.render(cur_res); if (rr) { v.appendChild(block("Read and watch", rr)); } }
+    else if (t.read && t.read.length) { v.appendChild(block("Read more", reads(t.read))); }
     drawCheck(v, f, t);
     var sa = seeAlso(t.see); if (sa) { v.appendChild(sa); }
   }

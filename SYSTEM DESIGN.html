@@ -468,6 +468,16 @@ a.pb-arrow:hover { border-color: var(--accent); color: var(--accent); }
 .board.folded .blk-code pre { max-height: calc(8 * 1.55em + 24px); overflow: hidden; }
 .board.folded .dive { padding: 10px 14px 12px; }
 .board.folded .dive .pick { margin-top: var(--s2); }
+.stage-wrap { margin: var(--s2) 0 var(--s1); }
+.stages { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); }
+.stages-label { font-size: var(--fs-sm); color: var(--muted); }
+.stage-btn, .stage-next { font: inherit; font-size: var(--fs-sm); padding: 3px 10px; border: var(--hair); border-radius: var(--radius-sm); background: var(--surface); color: var(--soft); cursor: pointer; }
+.stage-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: var(--w-strong); }
+.stage-next { border-color: var(--accent); color: var(--accent); }
+.stage-say { margin: var(--s2) 0 0; max-width: var(--measure); font-size: var(--fs-sm); color: var(--soft); }
+.diagram .st-hide { opacity: 0; pointer-events: none; }
+.diagram .st-new .dg-box { stroke: var(--accent); stroke-width: 2.4; }
+@media (prefers-reduced-motion: no-preference) { .diagram [data-n], .diagram [data-from] { transition: opacity .15s ease; } }
 .board.folded .diagram svg { max-height: var(--fold-fig, 46vh); width: 100%; min-width: 0 !important; }
 .board.folded .diagram.shared figcaption { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .blk-more { display: none; color: var(--muted); font-size: var(--fs-sm); margin-top: var(--s1); }
@@ -629,6 +639,7 @@ const GUIDE = {
       stepOf: "{n} of {total}",
       visited: "visited",
       showAll: "Show the whole board",
+      stagesLabel: "Build it in order:", stagesShowAll: "Show all", stagesNext: "Next stage", stagesAll: "The whole design.",
       showLess: "Fold the board",
       alsoOnBoard: "Also on the board: ",
       alsoHere: "Also used here: ",
@@ -1876,7 +1887,7 @@ GET  /v1/artifacts/{artifactId}                     -> { status, url?, error? }
 
     hld: {
       board: [
-        { type: "diagram", title: "NotebookLM high-level design", nodes: [
+        { type: "diagram", title: "NotebookLM high-level design", stagesAll: "Every box above, built in four stages: request path, ingestion, grounded chat, then long artifacts and quality.", stages: [{ title: "The request path", add: ["client", "gw", "nb", "pg"], say: "Start where the user starts: one gateway in front, a service that owns notebooks and sources, and their rows in Postgres." }, { title: "Ingest sources", add: ["blob", "queue", "workers", "index"], say: "Raw files go to blob storage; a queue gives each source its own job; workers parse, chunk and embed into a retrieval index." }, { title: "Grounded chat", add: ["chat", "model"], say: "The chat orchestrator retrieves from the index, prompts through one model gateway, checks citations, and keeps history in Postgres." }, { title: "Long artifacts and quality", add: ["art", "workflow", "trace"], say: "An audio overview takes minutes: answer 202, run a durable workflow with per-step retry, and trace everything into the eval suite." }], nodes: [
           { id: "client", label: "Web client", sub: "notebook UI", col: 0, row: 1, tone: "external" },
           { id: "gw", label: "API gateway", sub: "auth, rate limits", col: 1, row: 1, tone: "service" },
           { id: "pg", label: "Postgres", sub: "notebooks, sources, chat", col: 1, row: 0, tone: "store" },
@@ -2141,7 +2152,7 @@ POST {provider_callback}                   decision + specific reason
 
     hld: {
       board: [
-        { type: "diagram", title: "Prior authorization validator high-level design", nodes: [
+        { type: "diagram", title: "Prior authorization validator high-level design", stagesAll: "The whole validator: intake, a durable case workflow, criterion judgement, then a gated decision with review and audit.", stages: [{ title: "Intake", add: ["provider", "intake", "raw", "casedb"], say: "Requests arrive from provider systems; keep the raw payload before parsing anything, and open a case row that tracks it." }, { title: "The case workflow", add: ["wf", "docs", "rules"], say: "A durable workflow drives each case: extract the documents, then let deterministic rules settle what they can." }, { title: "Judging the criteria", add: ["evaluator", "model", "policy"], say: "Criteria the rules can't settle go to an evaluator that reads the policy text and asks the model for evidence, criterion by criterion." }, { title: "Decide, review, answer", add: ["gate", "review", "notify", "audit"], say: "A decision gate approves only on cited evidence; everything else goes to a clinician; the response goes out and every step lands in the audit log." }], nodes: [
           { id: "provider", label: "Provider systems", sub: "EHR, clearinghouse", col: 0, row: 1, tone: "external" },
           { id: "intake", label: "Intake gateway", sub: "FHIR, EDI 278, fax", col: 1, row: 1, tone: "service" },
           { id: "raw", label: "Raw payload store", sub: "immutable, encrypted", col: 1, row: 0, tone: "store" },
@@ -2408,7 +2419,7 @@ send_email(to, subject, body, thread_id?)   effect: irreversible
 
     hld: {
       board: [
-        { type: "diagram", title: "Email and calendar agent high-level design", nodes: [
+        { type: "diagram", title: "Email and calendar agent high-level design", stagesAll: "The whole agent: the conversation loop, the user's context, acting safely, then notifying and learning.", stages: [{ title: "The conversation", add: ["user", "conv", "orch", "model"], say: "A message comes in through the conversation API; the orchestrator runs the agent loop against one model gateway." }, { title: "The user's world", add: ["mem", "sync", "providers", "cache"], say: "Memory and context ride with each turn; sync workers keep a cache of mail and calendar so the agent rarely waits on Gmail." }, { title: "Acting safely", add: ["tools", "gate", "outbox"], say: "Tools execute behind a gate that decides what needs the user's confirmation; side effects go through an outbox so a retry never sends twice." }, { title: "Telling and learning", add: ["notify", "trace"], say: "A notifier reaches the user when something needs them; traces feed the evals that catch regressions." }], nodes: [
           { id: "user", label: "User", sub: "SMS or app", col: 0, row: 1, tone: "external" },
           { id: "conv", label: "Conversation API", sub: "webhook, SSE, confirm", col: 1, row: 1, tone: "service" },
           { id: "mem", label: "Memory + context", sub: "facts, contacts, prefs", col: 1, row: 0, tone: "store" },
@@ -2659,7 +2670,7 @@ git_commit(message)            open_pr(title, body)         (no merge tool)
 
     hld: {
       board: [
-        { type: "diagram", title: "Cloud coding agent high-level design", nodes: [
+        { type: "diagram", title: "Cloud coding agent high-level design", stagesAll: "The whole platform: accept a task, run the agent, isolate its work, then stream and evaluate.", stages: [{ title: "Accept a task", add: ["client", "api", "queue"], say: "Tasks arrive from the web, Slack or GitHub; the task API records them and a queue hands each to a worker." }, { title: "Run the agent", add: ["worker", "model", "transcript"], say: "A worker runs the agent loop against the model gateway and writes every step to a transcript, so a run can resume." }, { title: "Isolate the work", add: ["sandbox", "snap", "git"], say: "Code runs in a sandbox, never on the worker; snapshots make start-up fast and resumable; changes leave as a branch on the Git provider." }, { title: "Stream and evaluate", add: ["events", "eval"], say: "An event stream shows progress live; an eval suite gates changes to the agent itself." }], nodes: [
           { id: "client", label: "Web, Slack, GitHub", sub: "task sources", col: 0, row: 1, tone: "external" },
           { id: "api", label: "Task API", sub: "tasks in Postgres", col: 1, row: 1, tone: "service" },
           { id: "queue", label: "Task queue", sub: "leases, priorities", col: 1, row: 0, tone: "queue" },
@@ -2915,7 +2926,7 @@ send_sms(patient_ref, template)       effect: external
 
     hld: {
       board: [
-        { type: "diagram", title: "Voice agent high-level design", nodes: [
+        { type: "diagram", title: "Voice agent high-level design", stagesAll: "The whole call: media and the speech loop, a narrow door to data, the parallel back agent, then the human fallbacks.", stages: [{ title: "The call", add: ["patient", "room", "worker", "speech"], say: "The patient's call lands in a media room; an agent worker joins it and runs the speech loop of hearing, thinking and speaking." }, { title: "A narrow door to data", add: ["edge", "record"], say: "The worker reaches the backend only through an authorize function with a short budget, and every call leaves a record." }, { title: "Real work in parallel", add: ["back", "writeback", "ehr"], say: "A back agent does the slow work while the call continues; writes to EHR scheduling go through one write-back path that can be retried safely." }, { title: "When a person is needed", add: ["staff", "sms"], say: "Anything the agent can't finish goes to a staff queue, and an SMS follow-up confirms what was done." }], nodes: [
           { id: "patient", label: "Patient", sub: "phone, or web", col: 0, row: 1, tone: "external" },
           { id: "staff", label: "Staff queue", sub: "clinical, auth, meds", col: 1, row: 0, tone: "human" },
           { id: "room", label: "Media room", sub: "SIP trunk or WebRTC", col: 1, row: 1, tone: "service" },
@@ -3217,7 +3228,7 @@ POST /v1/handoffs  { conversation_id, reason, queue, priority, mode: warm | cold
 
     hld: {
       board: [
-        { type: "diagram", title: "Virtual assistant high-level design", nodes: [
+        { type: "diagram", title: "Virtual assistant high-level design", stagesAll: "The whole assistant: channels in, understanding and dialogue, answering and acting, then people and improvement.", stages: [{ title: "Channels in", add: ["customer", "asr", "channels"], say: "Customers arrive by chat or phone; speech becomes text, and channel adapters turn every channel into one message shape." }, { title: "Understand and manage", add: ["nlu", "dm", "state"], say: "The NLU router finds the intent and entities; the dialogue manager drives the conversation from session state." }, { title: "Answer and act", add: ["kb", "fulfil", "identity", "core"], say: "Questions are answered from approved knowledge; actions pass identity checks and go through a fulfilment gateway to core banking." }, { title: "People and improvement", add: ["agents", "logs"], say: "Hand off to the contact centre with context; transcripts feed error analysis and the next round of fixes." }], nodes: [
           { id: "customer", label: "Customer", sub: "app, web, phone", col: 0, row: 1, tone: "external" },
           { id: "asr", label: "Speech (ASR)", sub: "streaming, n-best", col: 1, row: 0, tone: "model" },
           { id: "channels", label: "Channel adapters", sub: "chat, IVR, messaging", col: 1, row: 1, tone: "service" },
@@ -3475,7 +3486,7 @@ POST /v1/bookings/{bookingId}/confirm       body: { payment_token }
 
     hld: {
       board: [
-        { type: "diagram", title: "Ticketmaster high-level design", nodes: [
+        { type: "diagram", title: "Ticketmaster high-level design", stagesAll: "The whole system: browsing events, search, booking a seat, then the waiting room that survives an on-sale.", stages: [{ title: "Browse events", add: ["client", "cdn", "gw", "evt", "db"], say: "Clients read event pages through a CDN and a gateway; the event service serves them from Postgres." }, { title: "Search", add: ["search", "es"], say: "Search gets its own service over Elasticsearch, kept in sync from the database." }, { title: "Book a seat", add: ["book", "redis", "pay"], say: "The booking service holds a seat with a short-lived lock in Redis while the payment provider charges, then commits the ticket." }, { title: "Survive the on-sale", add: ["queue"], say: "A waiting room in front of booking admits buyers at the rate the system can take." }], nodes: [
           { id: "client", label: "Client", sub: "web and mobile", col: 0, row: 1, tone: "external" },
           { id: "cdn", label: "CDN", sub: "hot event pages", col: 1, row: 0, tone: "store" },
           { id: "gw", label: "API gateway", sub: "auth, routing", col: 1, row: 1, tone: "service" },
@@ -3705,7 +3716,7 @@ sha256(tool_name + "\\0" + json.dumps(args, sort_keys=True,
 
     hld: {
       board: [
-        { type: "diagram", title: "Kitaru high-level design", nodes: [
+        { type: "diagram", title: "Kitaru high-level design", stagesAll: "The whole system: record or import traces, queue the work, replay against a change, then reach live tools carefully.", stages: [{ title: "Record or import", add: ["dev", "src", "api", "pg", "blob"], say: "Developers record sessions or import them from trace sources; the server keeps records in Postgres and large payloads in the blob store." }, { title: "Queue the work", add: ["tasks", "worker"], say: "Replays and evaluations are tasks on a queue, claimed by workers." }, { title: "Replay", add: ["agent", "plug", "model"], say: "A worker runs the agent as a subprocess, answers tool calls from the recording, runs importers and evaluators, and calls the model live." }, { title: "Live tools at the edge", add: ["live"], say: "Calls with real side effects reach live tools only when allowed, and every call is marked by how it was served." }], nodes: [
           { id: "dev", label: "Developer", sub: "CLI, MCP, UI", col: 0, row: 0, tone: "human" },
           { id: "src", label: "Trace sources", sub: "Langfuse, LangSmith", col: 0, row: 1, tone: "external" },
           { id: "api", label: "Kitaru server", sub: "FastAPI, no user code", col: 1, row: 0, tone: "orchestrator" },
@@ -4590,7 +4601,7 @@ function renderDiagram(block, opts) {
       }
       if (edge.async) hasAsync = true;
       const eid = `${edge.from}>${edge.to}` + (slot ? `#${slot + 1}` : "");
-      edgeLayer.append(svgEl("g", { "data-e": eid },
+      edgeLayer.append(svgEl("g", { "data-e": eid, "data-from": edge.from, "data-to": edge.to },
         svgEl("path", { d, class: "fv-hit" }),
         svgEl("path", { d, class: edge.async ? "dg-edge async" : "dg-edge", "marker-end": `url(#${uid}-arrow)` })));
       if (edge.label) {
@@ -4598,7 +4609,7 @@ function renderDiagram(block, opts) {
         /* A label on a level, straight edge sits just above the line rather than across it. */
         const level = !bend && Math.abs(end.y - start.y) < 2;
         const ly = bend ? 0.25 * start.y + 0.5 * control.y + 0.25 * end.y : (start.y + end.y) / 2 - (level ? 9 : 0);
-        labelLayer.append(svgEl("text", { x: lx.toFixed(1), y: ly.toFixed(1), class: "dg-edge-label", "text-anchor": "middle", "dominant-baseline": "middle" }, edge.label));
+        labelLayer.append(svgEl("text", { x: lx.toFixed(1), y: ly.toFixed(1), class: "dg-edge-label", "data-from": edge.from, "data-to": edge.to, "text-anchor": "middle", "dominant-baseline": "middle" }, edge.label));
       }
     });
   }
@@ -4647,10 +4658,52 @@ function renderDiagram(block, opts) {
   const legendItems = [...usedTones].map((tone) => h("li", null, h("span", { class: `swatch tone-${tone}`, "aria-hidden": "true" }), tones[tone]));
   if (hasAsync) legendItems.push(h("li", null, h("span", { class: "swatch edge-async", "aria-hidden": "true" }), LABELS.asyncEdge));
 
+  const figure = h("figure", { class: "diagram", "data-fig": block.figKey || null }, svg);
   return h("div", { class: "blk blk-diagram" },
     blockTitle(block.title),
-    h("figure", { class: "diagram", "data-fig": block.figKey || null }, svg),
+    block.stages ? renderStages(block, svg) : null,
+    figure,
     h("ul", { class: "legend", "aria-label": "Diagram legend" }, legendItems));
+}
+
+/* A diagram built in stages: block.stages = [{ title, say, add: [node ids] }]. It opens on the first
+   stage; each later stage adds its boxes (marked) and the arrows between boxes now shown; Show all
+   draws the whole thing. Boxes not yet added are hidden in place, so the layout never moves. */
+function renderStages(block, svg) {
+  const stages = ensureArray(block.stages, `${block.title} stages`);
+  const known = new Set(ensureArray(block.nodes, "diagram nodes").map((n) => n.id));
+  const placed = new Set();
+  stages.forEach((st) => ensureArray(st.add, "stage nodes").forEach((id) => {
+    if (!known.has(id)) log.warn("Stage names an unknown node", { diagram: block.title, id });
+    placed.add(id);
+  }));
+  known.forEach((id) => { if (!placed.has(id)) log.warn("Node in no stage; it appears with Show all", { diagram: block.title, id }); });
+  const say = h("p", { class: "stage-say" });
+  const buttons = [];
+  const show = (k) => {
+    const all = k < 0;
+    const seen = new Set();
+    stages.forEach((st, i) => { if (all || i <= k) { st.add.forEach((id) => seen.add(id)); } });
+    if (all) { known.forEach((id) => seen.add(id)); }
+    const fresh = all ? new Set() : new Set(stages[k].add);
+    svg.querySelectorAll("[data-n]").forEach((g) => {
+      g.classList.toggle("st-hide", !seen.has(g.dataset.n));
+      g.classList.toggle("st-new", fresh.has(g.dataset.n));
+    });
+    svg.querySelectorAll("[data-from]").forEach((e) => e.classList.toggle("st-hide", !(seen.has(e.dataset.from) && seen.has(e.dataset.to))));
+    buttons.forEach((b, i) => b.setAttribute("aria-pressed", String(all ? i === stages.length : i === k)));
+    say.innerHTML = "";
+    if (all) { say.append(h("strong", null, LABELS.stagesAll + " "), inline(block.stagesAll || "")); }
+    else { say.append(h("strong", null, `${k + 1}. ${stages[k].title}. `), inline(stages[k].say || "")); }
+    next.hidden = all || k === stages.length - 1;
+    next.onclick = () => show(k + 1);
+  };
+  stages.forEach((st, i) => buttons.push(h("button", { type: "button", class: "stage-btn", onclick: () => show(i) }, `${i + 1} ${st.title}`)));
+  buttons.push(h("button", { type: "button", class: "stage-btn", onclick: () => show(-1) }, LABELS.stagesShowAll));
+  const next = h("button", { type: "button", class: "stage-next" }, LABELS.stagesNext);
+  const bar = h("div", { class: "stages" }, h("span", { class: "stages-label" }, LABELS.stagesLabel), buttons, next);
+  show(0);
+  return h("div", { class: "stage-wrap" }, bar, say);
 }
 
 function renderDive(block) {
@@ -5068,7 +5121,7 @@ function renderPatternUsage(example) {
       h("span", { class: "step-time" }, fillTemplate(L.usageCount, { count: uses.length }))),
     usage.intro ? h("p", { class: "step-goal" }, inline(usage.intro)) : null,
     (() => {
-      const fold = h("div", { class: "ufold" },
+      const fold = h("div", { class: "ufold open" },
         h("div", { class: "ugrid" }, uses.map((use) =>
           safeRun(`render pattern usage ${example.id}/${use.group}`, () => renderUsageCard(use), () => errorPanel(LABELS.blockFailed)))),
         notNeeded.length ? safeRun(`render not-needed ${example.id}`, () => renderNotNeeded(notNeeded), () => errorPanel(LABELS.blockFailed)) : null);
@@ -5404,7 +5457,9 @@ function fitBoard(section) {
 
 /* The foot of a foldable part: what is left out, and the toggle that shows it all. */
 function foldFoot(board) {
-  const toggle = h("button", { type: "button", class: "board-toggle", "aria-expanded": "false" }, LABELS.showAll);
+  /* Boards open by default (asked for 3 Oct); the toggle folds one to fit a screen and back. */
+  const startOpen = board.classList.contains("open");
+  const toggle = h("button", { type: "button", class: "board-toggle", "aria-expanded": String(startOpen) }, startOpen ? LABELS.showLess : LABELS.showAll);
   const rest = h("p", { class: "board-rest", hidden: true });
   toggle.addEventListener("click", () => {
     const section = board.closest(".step");
@@ -5437,7 +5492,7 @@ function renderBoard(blocks, context) {
     if (block.type === "math" && block.conclusion) node.classList.add("has-conclusion");
     return node;
   });
-  const board = h("div", { class: "board" }, h("h4", { class: "board-title" }, LABELS.board), body);
+  const board = h("div", { class: "board open" }, h("h4", { class: "board-title" }, LABELS.board), body);
   board.append(foldFoot(board));
   return board;
 }
@@ -5458,10 +5513,10 @@ function renderTray(data, context, uid) {
       h("p", { class: "contrast" }, h("strong", null, `${LABELS.contrast} `), inline(data.contrast))] : null
   ].filter(Boolean);
   const buttons = panels.map(([key, label, panel]) => {
-    panel.hidden = true;
+    panel.hidden = false;   /* open by default (asked for 3 Oct); the buttons still hide a panel */
     panel.id = `${uid}-${key}`;
     return h("button", {
-      type: "button", class: `tray-btn tray-${key}`, "aria-expanded": "false", "aria-controls": panel.id,
+      type: "button", class: `tray-btn tray-${key}`, "aria-expanded": "true", "aria-controls": panel.id,
       onclick: (event) => {
         const open = panel.hidden;
         panel.hidden = !open;

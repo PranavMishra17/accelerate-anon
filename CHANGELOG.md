@@ -959,3 +959,10 @@ assignment service, a reconciling two-way sync, a sandboxed runner, a trace summ
 platform design, Coframe-shaped design, and his story. 75 topics, 205 multiple-choice questions,
 63 code files in `interviews/coframe_builds/`, every test passing. The Overview has a One page view
 and a new way to show up for a technical round; round 1 stays on the Rounds tab. No charter deviation.
+
+**2026-10-03 — System design guide: everything open, and each design's HLD built in stages.**
+Asked for by Pranav: a step took three or four clicks to read. Boards now open whole, with the
+fold as an option, and How to get there and What to say are shown by default. Each of the eight
+designs' high-level diagrams opens on its first stage and builds in four (Build it in order, Next
+stage, Show all): the boxes a stage adds are marked, later ones wait in place, and a line says why
+they come next. Deep-dive and pattern diagrams per design are the next pass. No charter deviation.

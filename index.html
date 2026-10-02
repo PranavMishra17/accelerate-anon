@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="baseline/map.css?v=69fc8392">
 <link rel="stylesheet" href="site/tokens.css?v=0e3b75d2">
 <link rel="stylesheet" href="site/nav.css?v=2ebfb65e">
+<link rel="stylesheet" href="site/res.css?v=06774f99">
 <script src="private/site.js"></script>
 <script src="site/nav.js?v=a8689a71" defer></script>
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
@@ -707,6 +708,7 @@
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
 <script src="data/reading.js"></script>
+<script src="site/res.js?v=1788a96c"></script>
 <script src="data/mcq/base.js?v=5fc7e7ac"></script>
 <script src="data/mcq/week1.js?v=6e94184a"></script>
 <script src="data/mcq/week2.js?v=df055e0e"></script>
@@ -8221,7 +8223,7 @@
   /* Baseline's field map on the home page, drawn by baseline/map.js from the same field files
      Baseline reads. They load once, the first time the home page is drawn. */
   var BASELINE_JS = [
-    "baseline/base.js?v=22229fe2",
+    "baseline/base.js?v=78be2fd4",
     "baseline/fields/overview.js?v=f1bda7c4",
     "baseline/fields/systems.js?v=8accf5b1",
     "baseline/fields/distributed.js?v=81966cf8",
@@ -8685,7 +8687,7 @@
   /* Read is marked once any of the step's own links has been opened from here. */
   function stepVisited(s, it, key) {
     var x = extraOf(key), urls = {};
-    [].concat(it.url ? [{ url: it.url }] : [], it.links || [], it.res || [], x.read || [], x.aieng || [])
+    [].concat(it.url ? [{ url: it.url }] : [], it.links || [], it.res || [], x.read || [], x.aieng || [], x.res || [])
       .forEach(function (r) { if (r.url) { urls[r.url] = true; } });
     return (state.visits[s.id] || []).some(function (v) { return urls[v.url]; });
   }
@@ -8761,7 +8763,9 @@
     (x.figs || []).forEach(function (k, n) { var f = plate(k, n + 1); if (f) { mat.appendChild(f); } });
     if (isStudy) { section(mat, "Do", doRows(s, it, i)); }
     else { section(mat, null, metaRows(s, it, says)); }
-    section(mat, "Read", readList(s, [].concat(isStudy ? (it.res || []) : (it.links || []), x.read || [], x.aieng || [])));
+    /* a curated list (data/reading.js res: Required and Optional, videos as cards) replaces the old links */
+    if (x.res && window.Res) { section(mat, null, Res.render(x.res, { onClick: function (r) { logVisit(s.id, r.label, r.url); } })); }
+    else { section(mat, "Read", readList(s, [].concat(isStudy ? (it.res || []) : (it.links || []), x.read || [], x.aieng || []))); }
     section(mat, "In your system design guide", guideList(s, [].concat(it.sd || [], x.sd || []), sdHref, sdLabel, "System design: "));
     section(mat, "In your Alaap and TrenTorch plan", guideList(s, it.al, function (q) { return alHref(q.p); }, function (q) { return alLabel(q.p); }, "Alaap plan: "));
 

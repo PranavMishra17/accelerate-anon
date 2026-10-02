@@ -1,0 +1,23 @@
+/* Resources for one sub-pointer (site/res.js): Required, then Optional; videos as cards. */
+.res { display: grid; gap: var(--s3, 12px); margin: var(--s2, 8px) 0; }
+.res-label { font-size: var(--fs-sm, 13px); color: var(--muted, #7a7366); margin: 0 0 var(--s1, 4px); }
+.res-videos { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s3, 12px); }
+.res-video { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: var(--s2, 8px); align-items: start; text-decoration: none; color: inherit;
+  border: var(--hair, 1px solid #ddd); border-radius: var(--radius, 6px); padding: var(--s2, 8px); background: var(--surface, transparent); }
+.res-video:hover { border-color: var(--accent, currentColor); }
+.res-video:hover .res-title { color: var(--accent, inherit); }
+.res-thumb { position: relative; display: block; aspect-ratio: 16 / 9; border-radius: 4px; overflow: hidden; background: var(--sunken, #eee); }
+.res-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.res-len { position: absolute; right: 4px; bottom: 4px; font-size: var(--fs-xs, 12px); line-height: 1.3; padding: 0 4px; border-radius: 3px; background: rgba(0, 0, 0, .78); color: #fff; }
+.res-vtext { display: grid; gap: 2px; min-width: 0; }
+.res-title { font-weight: var(--w-strong, 600); font-size: var(--fs-sm, 13px); line-height: 1.35; }
+.res-ch, .res-why { font-size: var(--fs-xs, 12px); color: var(--muted, #7a7366); line-height: 1.35; }
+.res-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s1, 4px); }
+.res-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--s2, 8px); }
+.res-row .res-why { flex-basis: 100%; }
+.res-tag { font-size: var(--fs-xs, 12px); color: var(--muted, #7a7366); border: var(--hair, 1px solid #ddd); border-radius: 3px; padding: 0 4px; }
+.res-m { font-size: var(--fs-xs, 12px); color: var(--muted, #7a7366); }
+@media (max-width: 520px) { .res-video { grid-template-columns: 96px minmax(0, 1fr); } }
+/* host pages style links in their panels as chips; a resource row stays plain text at body size */
+.res a.res-link, .res span.res-link { border: 0; padding: 0; background: none; box-shadow: none; border-radius: 0; font-size: var(--fs-md, 15px); line-height: 1.45; }
+.res a.res-video { box-shadow: none; }
