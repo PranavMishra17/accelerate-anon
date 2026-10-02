@@ -35,7 +35,20 @@
    "topics": [
     "a-hybrid-llm-era",
     "f-llm-orchestration",
-    "a-platform-flows"
+    "a-platform-flows",
+    "h-thesis",
+    "h-state-routing"
+   ]
+  },
+  {
+   "q": "Design an assistant that answers account questions and can move money. Where do you start?",
+   "probe": "The six steps, with the boundary first: what the model may do, what only code may do.",
+   "topics": [
+    "h-thesis",
+    "h-two-contracts",
+    "h-durable-intent",
+    "h-hybrid-retrieval",
+    "h-state-routing"
    ]
   },
   {
@@ -45,7 +58,8 @@
     "c-grounding-per-mechanic",
     "c-faq-retrieval-groundedness",
     "c-account-data-never-generated",
-    "c-guardrails-stack"
+    "c-guardrails-stack",
+    "h-hybrid-retrieval"
    ]
   },
   {
@@ -62,7 +76,9 @@
    "topics": [
     "c-transactions-state-machine",
     "a-entities-slots",
-    "f-llm-orchestration"
+    "f-llm-orchestration",
+    "h-durable-intent",
+    "h-two-contracts"
    ]
   },
   {
@@ -138,7 +154,8 @@
     "d-offline-eval-layers",
     "d-simulated-users",
     "d-llm-judge",
-    "b-llm-eval-regulated"
+    "b-llm-eval-regulated",
+    "h-eval-scale"
    ]
   },
   {
@@ -224,7 +241,8 @@
    "probe": "Domain benchmarks, cost and dimension, contrastive fine-tuning, data constraints at a regulated firm.",
    "topics": [
     "e-embedding-model-choice",
-    "e-finance-specifics"
+    "e-finance-specifics",
+    "h-representations"
    ]
   },
   {
@@ -2532,6 +2550,119 @@
        "why": "Mphasis's stated techniques, metrics and guardrails (marketing, read critically)."
       }
      ]
+    }
+   ]
+  },
+  {
+   "id": "rs-handbook",
+   "title": "From your handbook: the banking copilot design",
+   "blurb": "Your own worked design, folded in: the boundaries, contracts and patterns to draw if they ask you to design one.",
+   "topics": [
+    {
+     "id": "h-thesis",
+     "title": "The thesis: a deterministic core with a language interface",
+     "brief": "Use models where language ambiguity is the hard part, deterministic systems where correctness is. The LLM interprets, retrieves, summarises and proposes; it is never the source of truth for money, positions, identity, permissions, policy or execution state.",
+     "practice": [
+      "Three modes with three risk boundaries: insight is read-only and cites; recommendation is simulation with no action; action needs policy, auth, explicit confirmation and idempotent execution.",
+      "Out of scope on purpose: autonomous trading, open-ended advice, KYC changes, direct database writes, an LLM deciding policy. A tight capability envelope is a safety and a scaling feature.",
+      "The flow tagged by who decides: normalise (code), intent and entity route (model and code), retrieve (code and search), plan or answer (LLM), policy and tool call (code), execute and verify (code and API), grounded response (LLM and code)."
+     ],
+     "say": [
+      "The way I think about it: the model is good at language and bad at being a ledger, so I use it to understand and draft, and deterministic services to decide and act."
+     ],
+     "deep": "The hardest invariant is that generated text never becomes financial truth: model output is a proposal until a deterministic service validates and executes it.\n\nThe hardest correctness problem is partial side effects: 'I submitted the transfer' must mean exactly one transfer, even after a timeout, a disconnect or a retry.",
+     "sources": []
+    },
+    {
+     "id": "h-two-contracts",
+     "title": "Two contracts and three side-effect classes",
+     "brief": "The user talks to a conversation API; the model talks to a bounded tool API. Every tool declares its side-effect class, and the class sets the policy: read-only runs after auth, reversible may run, consequential needs explicit confirmation, a policy check, idempotency and an audit trail.",
+     "practice": [
+      "Conversation API: POST a message, get a run and a stream of events; long work returns 202 and continues asynchronously.",
+      "Tool API: get_accounts, get_transactions, get_positions, search_documents, simulate_trade, create_transfer_intent, confirm_and_execute, get_action_status.",
+      "Keeping them separate lets you change models without changing financial APIs."
+     ],
+     "say": [
+      "I'd make every tool declare whether it reads, changes something reversible, or moves money, and let that class decide what confirmation it needs, rather than the prompt."
+     ],
+     "deep": "Execution nouns are new in agentic systems: Run, Step, ToolCall, Action, Trace, DialogueState. They are what make retries, observability, evaluation and partial progress reasonable to talk about.",
+     "sources": []
+    },
+    {
+     "id": "h-durable-intent",
+     "title": "Durable intent: write the action before the side effect",
+     "brief": "Validate the structured request, write the action with an idempotency key and status READY, commit, then call the provider with that key, store its reference and status, and on a timeout query status before retrying. The final reply reads the stored status, not the model's claim.",
+     "practice": [
+      "Options compared: client idempotency only, a server-side action table plus idempotency, or a distributed transaction. Pick: the server-side action record, idempotency key, provider request id and an explicit status machine.",
+      "Retry read-only calls freely within budget; retry side effects only through the action record.",
+      "Compound requests ('move 500 to brokerage, then buy 200 of VTI') become two actions, the second gated on the first's observed state."
+     ],
+     "say": [
+      "'The request was probably sent' is not an acceptable financial state, so I'd persist the intent first and make every retry check the status before it acts."
+     ],
+     "deep": "The trade-off is more state and recovery logic, which buys safe retries and an auditable record of every action and its policy result.",
+     "sources": []
+    },
+    {
+     "id": "h-hybrid-retrieval",
+     "title": "Hybrid retrieval, rerank, then access and effective date in code",
+     "brief": "BM25 catches exact tickers, codes and policy wording; dense search catches paraphrase. Fuse both, rerank a small candidate set with a cross-encoder, then filter by access control and effective date deterministically: a perfect match to a retired policy is still wrong.",
+     "practice": [
+      "Query rewrite normalises products, ids and dates, and must never widen the customer's authorisation scope.",
+      "Retrieve about 50 candidates cheaply, rerank to about 10: recall and final ranking are different objectives.",
+      "BM25 saturates term frequency and normalises for document length, so twenty mentions are not twenty times as useful as two.",
+      "Measure with Recall@K, MRR or nDCG, plus source validity and ACL and effective-date correctness."
+     ],
+     "say": [
+      "Financial text has two signals, exact terms and meaning, so I'd retrieve with both, rerank a short list, and leave access and version filtering to code."
+     ],
+     "deep": "Why not embeddings only: dense similarity blurs identifiers, account types and regulation codes. Why not BM25 only: customers paraphrase ('my card payment bounced' and 'purchase declined').\n\nCost: another index and some latency, for robustness on mixed financial language.",
+     "sources": []
+    },
+    {
+     "id": "h-state-routing",
+     "title": "Routing and dialogue state: a calibrated fast path, compact state",
+     "brief": "A cheap calibrated classifier takes the high-volume known intents and falls back to an LLM on low confidence or compound requests. Keep compact dialogue state with real ids (active account, pending action, auth state) plus a short transcript window, rather than replaying the whole conversation.",
+     "practice": [
+      "Monitor the router with a confusion matrix, the top-two margin and calibration error; class drift and calibration decay are its failure modes.",
+      "References like 'that one' or 'the ETF I mentioned' resolve to ids held in state, not to model memory.",
+      "Cache stable policy chunks, instrument metadata and prompts; never cache balances or execution status without a freshness contract."
+     ],
+     "say": [
+      "I'd keep the facts that must survive a retry in state with real ids, and only give the model the slice of transcript it needs."
+     ],
+     "deep": "Two routing paths cost monitoring, and buy lower cost and predictable latency. State management becomes engineering work, and it scales better than stuffing the conversation into context.",
+     "sources": []
+    },
+    {
+     "id": "h-representations",
+     "title": "The representation ladder, tokenisers and fine-tuned embeddings",
+     "brief": "Each representation earns its place: bag of words and TF-IDF are cheap and hard to beat on narrow tasks, BM25 for retrieval, static embeddings give one vector per word, contextual ones change with the sentence, sentence embeddings serve retrieval and clustering. Embeddings are indexes, not ledgers.",
+     "practice": [
+      "Tokenisers: BPE merges the most frequent pairs; WordPiece merges by likelihood gain; SentencePiece is a framework that trains BPE or unigram tokenisers on raw text.",
+      "Fine-tune sentence embeddings with positive pairs and hard negatives under a contrastive or ranking loss, and deploy only if held-out retrieval improves.",
+      "Fine-tune only with a stable task, good labels and a measured gap over the generic baseline."
+     ],
+     "say": [
+      "Generic embeddings know general similarity; a bank has its own idea of 'same enough', and hard negatives are how you teach it."
+     ],
+     "deep": "'WordPiece is BPE with likelihood' is too compressed to say aloud: they are related subword methods with different training objectives, and SentencePiece is the tooling layer.",
+     "sources": []
+    },
+    {
+     "id": "h-eval-scale",
+     "title": "Eval per layer, and what actually scales",
+     "brief": "Measure each layer on its own terms: routing, entities (span F1 plus resolution accuracy), retrieval, grounding, agent task success and cost, and for actions the duplicate rate and confirmation compliance. At scale the hard number is tokens times concurrent runs times tool latency, not HTTP requests per second.",
+     "practice": [
+      "Sample every escalation, abandonment, low-confidence route, negative feedback, failed tool call and long run, plus a random baseline; rank review by volume times cost times severity.",
+      "Release loop: trace, label, golden set, experiment, gate on quality, cost and safety, shadow, versioned release or rollback.",
+      "Downstream tool APIs are often the real bottleneck: timeouts, bounded parallelism, async actions, backpressure."
+     ],
+     "say": [
+      "I'd review whole conversations, because a routing miss, a retrieval miss and a policy block can look the same from one utterance."
+     ],
+     "deep": "Transformer whys worth a sentence each: the square root of d_k keeps the softmax out of saturation; heads learn different subspaces; attention is quadratic in length while the KV cache grows linearly; FlashAttention cuts memory movement without changing the result; RoPE rotates Q and K to encode relative position; SFT teaches the behaviour, then preference tuning (DPO, without a separate reward model) refines it.",
+     "sources": []
     }
    ]
   }
