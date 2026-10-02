@@ -124,6 +124,9 @@ def build(module_name):
                 ln["figs"] = ln.get("figs", []) + [f for f in it["figs"] if f not in ln.get("figs", [])]
     mocks_path = os.path.join(HERE, module_name + ".mocks.json")
     mocks = json.load(io.open(mocks_path, encoding="utf-8")) if os.path.exists(mocks_path) else []
+    # Research tab: <module>.research.json, an industry pass: {lead, questions, themes: [{id, title, blurb, topics}]}
+    research_path = os.path.join(HERE, module_name + ".research.json")
+    research = json.load(io.open(research_path, encoding="utf-8")) if os.path.exists(research_path) else None
     for mk in mocks:
         for ex in mk.get("exchanges", []):
             if ex.get("prep"):
@@ -147,6 +150,7 @@ def build(module_name):
         "sources": getattr(m, "SOURCES", []),
         # Overview: the company and the role from its posting; Rounds: what each round asked.
         "company": getattr(m, "COMPANY", []), "posting": getattr(m, "POSTING", None), "rounds": getattr(m, "ROUNDS", []),
+        "research": research,
     }
     tpl = io.open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
     # Shared figure files carry a hash of their contents, so a changed figure is never

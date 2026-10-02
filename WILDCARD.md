@@ -25,6 +25,9 @@ things:
    `QA` group in `QA_ORDER`, logistics, practise aloud, questions to ask); a question opens in place,
    one at a time, with how to understand it on the left and what to say on the right. A Rounds tab
    (`ROUNDS`) records each round once it has happened: the questions, what you said, what to keep.
+   A Research tab (`interviews/<module>.research.json`) holds an industry pass when a loop needs
+   nuance beyond its sessions: likely questions linking into topics, each a short brief that opens
+   to how it is done in production, deeper notes, sources and lines you could say.
    Sessions read in place in the same two-pane drawer as the tracker. Add a `LOOPS` entry in
    `index.html` so the wildcard page shows it as a card. Optional `OWN` in the module sets
    their system against yours; your own system's facts live on one page of their own,

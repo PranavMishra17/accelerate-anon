@@ -184,6 +184,11 @@ details.pq > .pq-cols { margin: 0 0 var(--s5); }
 .pq-cols .cv-say { margin-top: 0; }
 .pq-cols.one { grid-template-columns: minmax(0, 1fr); max-width: var(--measure); }
 details.pq { scroll-margin-top: calc(var(--top) + var(--s2)); }
+.rs-q { padding: var(--s2) 0; border-top: var(--hair); }
+.rs-q .qt { display: block; }
+.rs-to { display: flex; flex-wrap: wrap; gap: 2px var(--s2); margin-top: 4px; font-size: var(--fs-sm); }
+.rs-deep { max-width: var(--measure); margin: 0 0 var(--s2); }
+details.pq > summary .rs-brief { max-width: var(--measure); }
 .bank-sec { border-left: 3px solid var(--sec); padding: 0 0 0 var(--s5); margin: var(--s7) 0; }
 .bank-sec > h2 { display: flex; align-items: baseline; gap: var(--s2) var(--s3); flex-wrap: wrap; margin-top: 0; }
 .bank-sec .bank-n { font-size: var(--fs-sm); font-weight: var(--w-regular); color: var(--muted); }
@@ -506,6 +511,7 @@ details.item > .sbody { padding-left: 0; }
     { id: "overview", label: "Overview", show: function () { return true; } },
     { id: "prep", label: "Prep", show: function () { return LOOP.scripts.length || LOOP.drills.length || LOOP.qa.length || LOOP.ask.length || (LOOP.ask3 || []).length; } },
     { id: "rounds", label: "Rounds", show: function () { return (LOOP.rounds || []).length; } },
+    { id: "research", label: "Research", show: function () { return !!LOOP.research; } },
     { id: "design", label: "Design", show: function () { return LOOP.tables.length || LOOP.figures.length; } },
     { id: "own", label: (LOOP.own && LOOP.own.tab) || "Yours", show: function () { return !!LOOP.own; } },
     { id: "sessions", label: "Sessions", show: function () { return LOOP.sessions.length; } },
@@ -726,6 +732,70 @@ details.item > .sbody { padding-left: 0; }
       });
       if (!three.length) { LOOP.ask.forEach(function (x) { a3.appendChild(el("div", "ask", '<span class="to">' + esc(x.to) + "</span><span>" + inl(x.q) + "</span>")); }); }
     }
+  }
+
+  /* ---------------------------------------------------------------- research: the industry pass
+     Two tiers. A topic's brief shows under its title; opened, how it is done in production and
+     the deeper notes sit left, the lines to say right. The likely questions come first and link
+     into the topics that answer them. */
+  function researchBody(t) {
+    var c = el("div", "cv-cols pq-cols");
+    var left = el("div", "cv-col cv-said"), right = el("div", "pq-work");
+    c.appendChild(left); c.appendChild(right);
+    panelSection(left, "In production", panelList(t.practice));
+    if (t.deep) {
+      left.appendChild(el("div", "lab", "Deeper"));
+      t.deep.split(/\n\n+/).forEach(function (para) { left.appendChild(el("p", "rs-deep", inl(para))); });
+    }
+    learn(left, { read: (t.sources || []).map(function (r) { return { url: r.url, label: r.label, why: r.why }; }) });
+    if (t.say && t.say.length) { right.appendChild(transcript(t.say, "What you could say", "")); }
+    if (!right.children.length) { right.remove(); c.classList.add("one"); }
+    return c;
+  }
+  function researchItem(t) {
+    var d = el("details", "item pq"); d.id = t.id;
+    d.setAttribute("name", "research");
+    d.appendChild(el("summary", "", '<span class="qt">' + inl(t.title) + '</span><span class="qm rs-brief">' + inl(t.brief) + "</span>"));
+    var drawn = false;
+    d.addEventListener("toggle", function () {
+      if (!d.open) { return; }
+      if (!drawn) { drawn = true; d.appendChild(researchBody(t)); }
+      glideTo(d);
+    });
+    return d;
+  }
+  function tabResearch(host) {
+    var R = LOOP.research, titles = {};
+    R.themes.forEach(function (th) { th.topics.forEach(function (t) { titles[t.id] = t.title; }); });
+    var s = heading(host, "research", "", "Research");
+    if (R.lead) { s.appendChild(el("p", "lead", inl(R.lead))); }
+    var f = el("input", "filter"); f.type = "search"; f.placeholder = "Search every topic";
+    s.appendChild(f);
+    if ((R.questions || []).length) {
+      var qs = card(heading(host, "rs-questions", "Each opens the topics that answer it.", "Likely questions"), 0, R.questions.length);
+      R.questions.forEach(function (q) {
+        var links = (q.topics || []).filter(function (id) { return titles[id]; }).map(function (id) {
+          return '<a href="' + link("research", id) + '">' + esc(titles[id]) + "</a>";
+        });
+        qs.appendChild(el("div", "rs-q", '<span class="qt">' + inl(q.q) + "</span>" +
+          (q.probe ? '<span class="qm">' + inl(q.probe) + "</span>" : "") +
+          (links.length ? '<span class="rs-to">' + links.join('<span class="sep"></span>') + "</span>" : "")));
+      });
+    }
+    var all = [];
+    R.themes.forEach(function (th, i) {
+      var sec = card(heading(host, th.id, th.blurb || "", th.title), i + 1, th.topics.length);
+      th.topics.forEach(function (t) {
+        var d = researchItem(t);
+        all.push({ d: d, sec: sec, text: [t.title, t.brief, t.deep].concat(t.practice || [], t.say || []).join(" ").toLowerCase() });
+        sec.appendChild(d);
+      });
+    });
+    f.addEventListener("input", function () {
+      var v = f.value.trim().toLowerCase(), shown = {};
+      all.forEach(function (r) { var hit = !v || r.text.indexOf(v) >= 0; r.d.hidden = !hit; if (hit) { shown[r.sec.id] = true; } });
+      all.forEach(function (r) { r.sec.hidden = !shown[r.sec.id]; });
+    });
   }
 
   /* ---------------------------------------------------------------- rounds: what each round asked
@@ -1343,6 +1413,7 @@ details.item > .sbody { padding-left: 0; }
       if (r.tab === "overview") { tabOverview(main); }
       else if (r.tab === "prep") { tabPrep(main); }
       else if (r.tab === "rounds") { tabRounds(main); }
+      else if (r.tab === "research") { tabResearch(main); }
       else if (r.tab === "design") { tabDesign(main); }
       else if (r.tab === "own") { tabOwn(main); }
       else if (r.tab === "sessions") { tabSessions(main, r.anchor); }

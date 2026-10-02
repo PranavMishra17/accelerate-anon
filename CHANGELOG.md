@@ -896,3 +896,14 @@ picture (crew-facing generative tools live, client-facing staged, AWS and Bedroc
 of 12 questions on Vanguard and financial services (the no-advice line, authentication, FINRA 2210,
 4511 and Notice 24-09, Reg BI, SR 26-2), questions for Vanguard's team, and a seventh session, wc31,
 about 70 minutes. He set aside 7 to 9 hours. No charter deviation.
+
+**2026-10-02 — Vanguard: a Research tab, the industry pass.**
+Asked for by Pranav on the morning of the Vanguard call: the nuance of how conversational AI and
+NLP are run in production, not definitions. Six research agents covered conversation design and
+intent and entity modelling, error analysis and the improvement loop, grounding per mechanic
+(FAQ retrieval, account data, transactions, agent assist, the advice boundary, guardrails),
+evaluation with telemetry and cost, classification and embeddings in production, and the ground
+around it (voice, handoff, authentication, LLM orchestration, model risk, Vanguard's public AI
+work). 54 topics with 238 sources, and 27 likely questions that link to the topics answering them.
+Claims were not independently validated, at his request, and the agents flagged vendor-reported
+numbers in place. Loop pages now take an optional `<module>.research.json`. No charter deviation.
