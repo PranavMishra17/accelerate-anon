@@ -923,3 +923,12 @@ and its guards, entity resolution in chat, the confirm flow and code floors, the
 the failure scanner); the code-level detail sits in a private, gitignored module with its own
 quiz. `vanguard.py` went from 1,270 lines to 273. The interview moved to Wednesday 7 October,
 3 PM. No charter deviation.
+
+**2026-10-03 — Learn tab: calmer layout and real navigation.**
+Asked for by Pranav: the switch between Learn, Check, Explain and Say was hard to reach, and the
+coloured stripes beside each module were unwanted. The list still opens in place, without module
+colours; topics are set apart by a hairline, the level square beside the title and their place in
+the module, and the open topic sits on a tint. Its step bar stays pinned under the top bar with
+previous and next topic. Left and Right move between steps, J and K between topics; Check moves on
+after its last question, and after Say, Next opens the next topic. Opening a topic or changing step
+jumps to its top, and the tab reopens on the last topic and step. No charter deviation.

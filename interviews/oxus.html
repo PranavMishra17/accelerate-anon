@@ -187,25 +187,48 @@ details.pq { scroll-margin-top: calc(var(--top) + var(--s2)); }
 /* learn: levels, the map, the four steps, multiple choice, the test pop-up, the one page */
 .lv { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--rule); vertical-align: 0; margin-right: var(--s2); flex: none; }
 .lv-know { background: var(--ok); } .lv-partly { background: var(--warn); } .lv-notyet { background: var(--ink); } .lv-none { background: var(--rule); }
-.ln-item > summary { position: relative; }
 .lmap { display: grid; gap: 6px; margin: var(--s2) 0; }
 .lmap-row { display: grid; grid-template-columns: minmax(0, 260px) 1fr; gap: var(--s3); align-items: center; font-size: var(--fs-sm); }
 .lmap-m { color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lmap-cells { display: flex; flex-wrap: wrap; gap: 4px; }
 .lmap-cells .lv { width: 16px; height: 16px; margin: 0; }
 .lmap-key { font-size: var(--fs-sm); color: var(--muted); }
+/* a topic row: level square, title and line, its place in the module; the open one sits on a tint */
+.ln-sec { margin-top: var(--s6); }
+.ln-list { border-top: var(--hair); }
+details.ln-item { scroll-margin-top: calc(var(--top) + var(--s2)); }
+details.ln-item > summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--s3); align-items: start; padding: var(--s3) var(--s6) var(--s3) var(--s2); cursor: pointer; list-style: none; }
+details.ln-item > summary::-webkit-details-marker { display: none; }
+details.ln-item > summary .lv { margin: 5px 0 0; }
+details.ln-item > summary .qt { display: block; font-weight: var(--w-strong); }
+details.ln-item > summary .qm { max-width: var(--measure); }
+details.ln-item > summary:hover .qt { color: var(--accent); }
+.ln-n { font-size: var(--fs-xs); color: var(--muted); padding-top: 3px; }
+details.ln-item[open] { background: var(--sunken); }
+details.ln-item[open] > summary .qm, details.ln-item[open] > summary .ln-n { display: none; }
+.ln { padding: 0 var(--s4) var(--s5) calc(var(--s2) + 10px + var(--s3)); }
+.ln-bar { position: sticky; top: var(--top); z-index: 3; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2);
+  background: var(--sunken); border-bottom: var(--hair); margin: 0 0 var(--s4); padding: var(--s1) 0; }
+.ln-steps { display: flex; gap: var(--s1); }
+.ln-step { background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--s2) var(--s2) 6px; color: var(--muted); font: inherit; cursor: pointer; }
+.ln-step:hover { color: var(--ink); }
+.ln-step[aria-current="step"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: var(--w-strong); }
+.ln-nav { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); color: var(--muted); }
+.ln-arrow { font: inherit; font-size: var(--fs-sm); background: none; border: var(--hair); border-radius: var(--radius-sm); color: var(--soft); padding: 2px var(--s2); cursor: pointer; }
+.ln-arrow:disabled { opacity: .4; cursor: default; }
+.ln-qn { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s1); }
+.ln-next { margin-top: var(--s4); }
+.ln-rate { display: flex; gap: var(--s2); flex-wrap: wrap; margin-top: var(--s2); }
+.ln-rate .btn.on { border-color: var(--accent); color: var(--accent); }
+@media (max-width: 640px) { .ln { padding: 0 var(--s2) var(--s4); } .ln-nav .ln-pos { display: none; } }
 @media (max-width: 640px) { .lmap-row { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
 .ln-mod { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s2); }
-.ln-steps { display: flex; gap: var(--s1); border-bottom: var(--hair); margin: var(--s2) 0 var(--s3); }
-.ln-step { background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--s1) var(--s2); color: var(--muted); font: inherit; cursor: pointer; }
-.ln-step[aria-current="step"] { color: var(--ink); border-bottom-color: var(--accent); }
 .ln-pane { max-width: var(--measure); padding-bottom: var(--s4); }
 .ln-brief { margin: 0 0 var(--s3); }
 .ln-note { color: var(--muted); font-size: var(--fs-sm); }
 .ln-oq { font-weight: var(--w-strong); }
 .ln-ta { width: 100%; min-height: 120px; font: inherit; padding: var(--s2); border: var(--hair); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); margin: var(--s2) 0; }
 .ln-beats { padding-left: var(--s5); } .ln-beats li { margin: 0 0 var(--s1); }
-.ln-rate, .ln-next { margin-top: var(--s3); } .ln-rate { display: flex; gap: var(--s2); flex-wrap: wrap; }
 .ln-done { font-weight: var(--w-strong); }
 .ln-more { font-size: var(--fs-sm); color: var(--muted); }
 .ln-table { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); margin: 0 0 var(--s3); }
@@ -935,19 +958,49 @@ details.item > .sbody { padding-left: 0; }
     return box;
   }
 
-  function learnBody(t, refresh) {
+  /* Jump the reader to a node's top, just under the sticky bar; no animation. */
+  function jumpTo(node, onlyIfAbove) {
+    var top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--top")) || 56;
+    var y = node.getBoundingClientRect().top;
+    if (onlyIfAbove && y >= top) { return; }
+    window.scrollTo({ top: window.scrollY + y - top - 4, behavior: "instant" });
+  }
+  /* ctx: { refresh, index, total, prev, next, open(topic, step), startStep } */
+  function learnBody(t, ctx) {
     var wrap = el("div", "ln");
     var steps = [["learn", "Learn"], ["check", "Check"], ["explain", "Explain"], ["say", "Say"]].filter(function (s) {
-      return s[0] !== "check" || (t.mcq && t.mcq.length);
-    }).filter(function (s) { return s[0] !== "explain" || t.open; }).filter(function (s) { return s[0] !== "say" || (t.say && t.say.length); });
-    var bar = el("div", "ln-steps"), pane = el("div", "ln-pane");
+      if (s[0] === "check") { return t.mcq && t.mcq.length; }
+      if (s[0] === "explain") { return !!t.open; }
+      if (s[0] === "say") { return t.say && t.say.length; }
+      return true;
+    });
+    var bar = el("div", "ln-bar"), tabs = el("div", "ln-steps"), side = el("div", "ln-nav"), pane = el("div", "ln-pane");
+    bar.appendChild(tabs); bar.appendChild(side);
     wrap.appendChild(bar); wrap.appendChild(pane);
-    var cur = 0;
+    side.appendChild(el("span", "ln-pos", (ctx.index + 1) + " of " + ctx.total));
+    var pv = el("button", "ln-arrow", "Previous topic"), nv = el("button", "ln-arrow", "Next topic");
+    pv.disabled = !ctx.prev; nv.disabled = !ctx.next;
+    pv.addEventListener("click", function () { ctx.open(ctx.prev, 0); });
+    nv.addEventListener("click", function () { ctx.open(ctx.next, 0); });
+    side.appendChild(pv); side.appendChild(nv);
+    var ids = steps.map(function (s) { return s[0]; });
+    function nextButton(i) {
+      var b;
+      if (i < steps.length - 1) {
+        b = el("button", "btn primary ln-next", "Next: " + steps[i + 1][1]);
+        b.addEventListener("click", function () { show(i + 1); });
+      } else if (ctx.next) {
+        b = el("button", "btn primary ln-next", "Next topic: " + esc(ctx.next.title));
+        b.addEventListener("click", function () { ctx.open(ctx.next, 0); });
+      }
+      return b;
+    }
     function show(i) {
-      cur = i;
-      bar.querySelectorAll("button").forEach(function (b, bi) { b.setAttribute("aria-current", bi === i ? "step" : "false"); });
+      wrap.dataset.step = i;
+      tabs.querySelectorAll("button").forEach(function (b, bi) { b.setAttribute("aria-current", bi === i ? "step" : "false"); });
       pane.innerHTML = "";
       var id = steps[i][0], st = learnStore();
+      st.pos = { t: t.id, s: i }; learnSave(st);
       if (id === "learn") {
         if (t.brief) { pane.appendChild(el("p", "ln-brief", inl(t.brief))); }
         if (t.points && t.points.length) {
@@ -958,27 +1011,30 @@ details.item > .sbody { padding-left: 0; }
         (t.figs || []).forEach(function (k) { var f = figNode(k, 0); if (f) { pane.appendChild(f); } });
         panelSection(pane, "In production", panelList(t.production));
         learn(pane, { read: t.read || [] });
-        if (t.sessions && t.sessions.length) { pane.appendChild(el("p", "ln-more", "Deeper: " + t.sessions.map(function (s) { return '<a href="../index.html#/w/' + esc(s) + '" target="_blank" rel="noopener">tracker session ' + esc(s) + "</a>"; }).join(", "))); }
       }
       if (id === "check") {
-        var qi = 0;
-        var host = el("div");
+        var qi = 0, host = el("div");
         pane.appendChild(el("p", "ln-note", t.mcq.length + " questions. Choose, or say you don't know; tick 'I'm guessing' if you are."));
         pane.appendChild(host);
         (function next() {
-          if (qi >= t.mcq.length) {
-            var lv = levelOf(t);
-            host.appendChild(el("p", "ln-done", "Done. " + (lv ? "Your level for this topic: <b>" + LEVELS[lv] + "</b>." : "")));
-            refresh();
-            return;
-          }
           var i2 = qi; qi += 1;
+          host.innerHTML = "";
+          host.appendChild(el("p", "ln-qn", "Question " + (i2 + 1) + " of " + t.mcq.length));
           mcqCard(host, t, i2, function () {
-            var nb = el("button", "btn", qi < t.mcq.length ? "Next question" : "Finish");
-            nb.addEventListener("click", function () { nb.remove(); next(); });
-            host.appendChild(nb);
+            ctx.refresh();
+            var last = qi >= t.mcq.length, nb;
+            if (!last) {
+              nb = el("button", "btn primary", "Next question");
+              nb.addEventListener("click", function () { next(); jumpTo(wrap, true); });
+            } else {
+              var lv = levelOf(t);
+              host.appendChild(el("p", "ln-done", "Done." + (lv ? " Your level for this topic: <b>" + LEVELS[lv] + "</b>." : "")));
+              nb = nextButton(i);
+            }
+            if (nb) { host.appendChild(nb); nb.focus({ preventScroll: true }); }
           });
         }());
+        return;
       }
       if (id === "explain") {
         pane.appendChild(el("p", "ln-oq", inl(t.open.q)));
@@ -986,11 +1042,11 @@ details.item > .sbody { padding-left: 0; }
         var ta = el("textarea", "ln-ta");
         ta.placeholder = "Say it out loud first, then type or dictate it here (Win+H). Saved on this device.";
         ta.value = (st.tried[t.id] && st.tried[t.id].text) || "";
-        ta.addEventListener("input", function () { var s2 = learnStore(); s2.tried[t.id] = { text: ta.value, at: Date.now() }; learnSave(s2); });
+        ta.addEventListener("input", function () { var s2 = learnStore(); s2.tried[t.id] = s2.tried[t.id] || {}; s2.tried[t.id].text = ta.value; s2.tried[t.id].at = Date.now(); learnSave(s2); });
         pane.appendChild(ta);
         var reveal = el("button", "btn", "I've tried it: show the model answer");
         var ans = el("div", "ln-ans");
-        function open() {
+        var open = function () {
           reveal.remove();
           var s2 = learnStore(); s2.tried[t.id] = s2.tried[t.id] || { text: "", at: Date.now() }; s2.tried[t.id].shown = true; learnSave(s2);
           ans.appendChild(el("div", "lab", "Model answer"));
@@ -1000,58 +1056,62 @@ details.item > .sbody { padding-left: 0; }
           ans.appendChild(el("div", "lab", "How well did you know it?"));
           var rr = el("div", "ln-rate");
           [["know", "Know it"], ["partly", "Partly"], ["notyet", "Not yet"]].forEach(function (r) {
-            var b = el("button", "btn" + (learnStore().rate[t.id] === r[0] ? " primary" : ""), r[1]);
+            var b = el("button", "btn" + (learnStore().rate[t.id] === r[0] ? " on" : ""), r[1]);
             b.addEventListener("click", function () {
               var s3 = learnStore(); s3.rate[t.id] = r[0]; learnSave(s3);
-              rr.querySelectorAll("button").forEach(function (x) { x.classList.remove("primary"); });
-              b.classList.add("primary"); refresh();
+              rr.querySelectorAll("button").forEach(function (x) { x.classList.remove("on"); });
+              b.classList.add("on"); ctx.refresh();
             });
             rr.appendChild(b);
           });
           ans.appendChild(rr);
-        }
+          var nb = nextButton(i); if (nb) { ans.appendChild(nb); }
+        };
         reveal.addEventListener("click", open);
         pane.appendChild(reveal); pane.appendChild(ans);
         if (st.tried[t.id] && st.tried[t.id].shown) { open(); }
+        return;
       }
       if (id === "say") {
-        var s4 = learnStore();
-        if (t.open && !(s4.tried[t.id] && s4.tried[t.id].shown)) {
+        if (t.open && !(st.tried[t.id] && st.tried[t.id].shown)) {
           pane.appendChild(el("p", "ln-note", "Shut until you've tried the open question in Explain."));
           var go = el("button", "btn", "Go to Explain");
-          go.addEventListener("click", function () { show(steps.map(function (s) { return s[0]; }).indexOf("explain")); });
+          go.addEventListener("click", function () { show(ids.indexOf("explain")); });
           pane.appendChild(go);
-        } else {
-          pane.appendChild(transcript(t.say, "What you would say", ""));
-          panelSection(pane, "Avoid", panelList(t.avoid, "mk-bad"));
+          return;
         }
+        pane.appendChild(transcript(t.say, "What you would say", ""));
+        panelSection(pane, "Avoid", panelList(t.avoid, "mk-bad"));
       }
-      if (i < steps.length - 1 && id !== "check") {
-        var nx = el("button", "btn ln-next", "Next: " + steps[i + 1][1]);
-        nx.addEventListener("click", function () { show(i + 1); });
-        pane.appendChild(nx);
-      }
+      var nb2 = nextButton(i); if (nb2) { pane.appendChild(nb2); }
     }
     steps.forEach(function (s, i) {
       var b = el("button", "ln-step", esc(s[1]));
-      b.addEventListener("click", function () { show(i); });
-      bar.appendChild(b);
+      b.addEventListener("click", function () { show(i); jumpTo(wrap, true); });
+      tabs.appendChild(b);
     });
-    show(0);
+    wrap.step = function (d) { var i = (+wrap.dataset.step || 0) + d; if (i >= 0 && i < steps.length) { show(i); jumpTo(wrap, true); } };
+    show(Math.min(ctx.startStep || 0, steps.length - 1));
     return wrap;
   }
-  function learnItem(t, m) {
-    var d = el("details", "item pq ln-item"); d.id = t.id;
+  function learnItem(t, ctx) {
+    var d = el("details", "item ln-item"); d.id = t.id;
     d.setAttribute("name", "learn");
     var sum = el("summary", "");
-    function paint() { sum.innerHTML = levelDot(levelOf(t)) + '<span class="qt">' + inl(t.title) + '</span><span class="qm">' + inl(t.brief || "") + "</span>"; }
+    function paint() {
+      sum.innerHTML = levelDot(levelOf(t)) + '<span class="ln-head"><span class="qt">' + inl(t.title) + '</span><span class="qm">' + inl(t.brief || "") +
+        '</span></span><span class="ln-n">' + (ctx.index + 1) + "/" + ctx.total + "</span>";
+    }
     paint();
     d.appendChild(sum);
-    var drawn = false;
+    d.paint = paint;
     d.addEventListener("toggle", function () {
-      if (!d.open) { return; }
-      if (!drawn) { drawn = true; d.appendChild(learnBody(t, function () { paint(); drawMap(); })); }
-      glideTo(d);
+      if (!d.open) { var b = d.querySelector(".ln"); if (b) { b.remove(); } return; }
+      d.appendChild(learnBody(t, {
+        refresh: function () { paint(); drawMap(); }, index: ctx.index, total: ctx.total, prev: ctx.prev, next: ctx.next,
+        open: ctx.open, startStep: d.startStep || 0 }));
+      d.startStep = 0;
+      setTimeout(function () { jumpTo(d); }, 0);
     });
     return d;
   }
@@ -1121,7 +1181,8 @@ details.item > .sbody { padding-left: 0; }
     step();
     try { dlg.showModal(); } catch (err) { dlg.setAttribute("open", ""); }
   }
-  function tabLearn(host) {
+  var learnKeys = null;
+  function tabLearn(host, anchor) {
     var L = LOOP.learn || {};
     var s = heading(host, "learn", "", "Learn");
     if (L.lead) { s.appendChild(el("p", "lead", inl(L.lead))); }
@@ -1133,13 +1194,31 @@ details.item > .sbody { padding-left: 0; }
     acts.appendChild(all);
     var f = el("input", "filter"); f.type = "search"; f.placeholder = "Search every topic";
     s.appendChild(acts); s.appendChild(f);
+    var flat = [];
+    learnModules().forEach(function (m) { m.topics.forEach(function (t, i) { flat.push({ m: m, t: t, i: i }); }); });
+    var items = {};
+    function openTopic(t, step) {
+      var d = items[t.id];
+      if (!d) { return; }
+      if (d.open) {
+        var b = d.querySelector(".ln");
+        if (b) { b.remove(); }
+        d.startStep = step || 0;
+        d.open = false; d.open = true;
+        return;
+      }
+      d.startStep = step || 0;
+      d.open = true;
+      history.replaceState(null, "", link("learn", t.id));
+    }
     var rows = [];
-    learnModules().forEach(function (m, mi) {
-      var sec = card(heading(host, "m-" + m.id, m.blurb || "", m.title), mi, 0);
-      var top = el("p", "ln-mod");
+    learnModules().forEach(function (m) {
+      var sec = heading(host, "m-" + m.id, m.blurb || "", m.title);
+      sec.classList.add("ln-sec");
+      var top = el("p", "ln-mod", m.topics.length + " topics");
       var tb = el("button", "linkish", "Test this module");
       tb.addEventListener("click", function () { runTest(m.id, m.title); });
-      top.appendChild(tb);
+      top.appendChild(el("span", "sep")); top.appendChild(tb);
       if (m.sessions && m.sessions.length) {
         top.appendChild(el("span", "sep"));
         top.appendChild(el("span", "", "Deeper in the tracker: " + m.sessions.map(function (x) { return '<a href="../index.html#/w/' + esc(x) + '" target="_blank" rel="noopener">' + esc(x) + "</a>"; }).join(", ")));
@@ -1151,11 +1230,15 @@ details.item > .sbody { padding-left: 0; }
         tbl.innerHTML = h + "</tbody>";
         sec.appendChild(tbl);
       }
-      m.topics.forEach(function (t) {
-        var d = learnItem(t, m);
+      var list = el("div", "ln-list");
+      m.topics.forEach(function (t, i) {
+        var k = flat.findIndex(function (x) { return x.t === t; });
+        var d = learnItem(t, { index: i, total: m.topics.length, prev: k > 0 ? flat[k - 1].t : null, next: k < flat.length - 1 ? flat[k + 1].t : null, open: openTopic });
+        items[t.id] = d;
         rows.push({ d: d, sec: sec, text: [t.title, t.brief].concat(t.points || [], t.production || [], t.say || []).join(" ").toLowerCase() });
-        sec.appendChild(d);
+        list.appendChild(d);
       });
+      sec.appendChild(list);
       (m.extras || []).forEach(function (x) {
         if (x === "ask" && ((LOOP.ask3 || []).length || LOOP.ask.length)) { sec.appendChild(el("div", "lab", "Questions to ask")); askSection(sec); }
         if (x === "drills" && LOOP.drills.length) { sec.appendChild(el("div", "lab", "Practise aloud, timed")); drills(sec); }
@@ -1166,6 +1249,24 @@ details.item > .sbody { padding-left: 0; }
       rows.forEach(function (r) { var hit = !v || r.text.indexOf(v) >= 0; r.d.hidden = !hit; if (hit) { shown[r.sec.id] = true; } });
       rows.forEach(function (r) { r.sec.hidden = !shown[r.sec.id]; });
     });
+    /* keys: Left and Right move between steps, J and K between topics; not while typing */
+    if (learnKeys) { document.removeEventListener("keydown", learnKeys); }
+    learnKeys = function (e) {
+      if (parse().tab !== "learn" || e.altKey || e.ctrlKey || e.metaKey) { return; }
+      var tag = (e.target.tagName || "").toLowerCase();
+      if (tag === "textarea" || tag === "input" || document.querySelector("dialog[open]")) { return; }
+      var d = host.querySelector("details.ln-item[open]"), ln = d && d.querySelector(".ln");
+      if ((e.key === "ArrowRight" || e.key === "ArrowLeft") && ln) { e.preventDefault(); ln.step(e.key === "ArrowRight" ? 1 : -1); }
+      if (e.key === "j" || e.key === "k") {
+        var k = d ? flat.findIndex(function (x) { return x.t.id === d.id; }) : -1;
+        var to = e.key === "j" ? flat[k + 1] : flat[k - 1];
+        if (to) { e.preventDefault(); openTopic(to.t, 0); }
+      }
+    };
+    document.addEventListener("keydown", learnKeys);
+    /* back to where you were, unless the address names a topic */
+    var pos = learnStore().pos;
+    if (!anchor && pos && items[pos.t]) { openTopic(flat.find(function (x) { return x.t.id === pos.t; }).t, pos.s); }
   }
   /* The one page: the points to know, each linking to the topic that teaches it. */
   function onePage(host) {
@@ -1804,7 +1905,7 @@ details.item > .sbody { padding-left: 0; }
       else if (r.tab === "prep") { tabPrep(main); }
       else if (r.tab === "rounds") { tabRounds(main); }
       else if (r.tab === "research") { tabResearch(main); }
-      else if (r.tab === "learn") { tabLearn(main); }
+      else if (r.tab === "learn") { tabLearn(main, r.anchor); }
       else if (r.tab === "design") { tabDesign(main); }
       else if (r.tab === "own") { tabOwn(main); }
       else if (r.tab === "sessions") { tabSessions(main, r.anchor); }
