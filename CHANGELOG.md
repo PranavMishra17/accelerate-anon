@@ -932,3 +932,11 @@ the module, and the open topic sits on a tint. Its step bar stays pinned under t
 previous and next topic. Left and Right move between steps, J and K between topics; Check moves on
 after its last question, and after Say, Next opens the next topic. Opening a topic or changing step
 jumps to its top, and the tab reopens on the last topic and step. No charter deviation.
+
+**2026-10-03 — Baseline: check yourself on every topic.**
+Asked for by Pranav. All 268 topics in fifteen fields now end with two or three multiple-choice
+questions (730 in all, `baseline/quiz/<field>.js`), five options each with I don't know and a guess
+flag, one question per topic on its catch. A topic gets Know, Partly or Not yet, shown in the rail;
+a field's About page says where you stand and runs a test of fifteen, weakest first. Answers stay in
+the browser. Written in parallel by five writers and checked by `baseline/quiz/check.js`. No charter
+deviation.

@@ -56,7 +56,7 @@
     (f.clusters || []).forEach(function (c) {
       box.appendChild(el("h4", "", md(c.name)));
       c.topics.forEach(function (t) {
-        var a = el("a", (t === cur.t ? "here" : "") + (core(f, t) ? " core" : ""), md(t.name));
+        var a = el("a", (t === cur.t ? "here" : "") + (core(f, t) ? " core" : ""), (qOf(f, t).length ? lvMark(levelOf(f, t)) : "") + md(t.name));
         a.href = href(f, t);
         a.title = (core(f, t) ? "Know now. " : "") + (t.line || "");
         box.appendChild(a);
@@ -95,6 +95,129 @@
     res.hidden = false; out.hidden = true;
   }
 
+  /* ------------------------------------------------------------ check yourself
+     baseline/quiz/<field>.js: BASELINE.quiz(field, { topic: [{ q, o: [5], a, why, pair }] }).
+     Answers live in this browser (localStorage 'baseline.quiz.v1'); a topic's level is Know when
+     every question is right and not guessed, Not yet when under half are, Partly otherwise. */
+  var QKEY = "baseline.quiz.v1", LV = { know: "Know", partly: "Partly", notyet: "Not yet" };
+  function qOf(f, t) { return ((B.quizzes || {})[f.id] || {})[t.id] || []; }
+  function qStore() { try { return JSON.parse(localStorage.getItem(QKEY) || "{}"); } catch (e) { console.error("Could not read quiz answers", e); return {}; } }
+  function qSave(s) { try { localStorage.setItem(QKEY, JSON.stringify(s)); } catch (e) { console.error("Could not save quiz answers", e); } }
+  function levelOf(f, t, s) {
+    var qs = qOf(f, t); if (!qs.length) { return null; }
+    s = s || qStore();
+    var n = 0, ok = 0;
+    qs.forEach(function (q, i) { var r = s[f.id + "/" + t.id + "/" + i]; if (r) { n++; if (r.ok && !r.g) { ok++; } } });
+    if (!n) { return null; }
+    if (ok / n < 0.5) { return "notyet"; }
+    return ok === qs.length ? "know" : "partly";
+  }
+  function lvMark(lv) { return '<i class="lv lv-' + (lv || "none") + '" title="' + (lv ? LV[lv] : "Not checked yet") + '"></i>'; }
+  /* one question; done() after the answer shows */
+  function askOne(host, f, t, i, done) {
+    var q = qOf(f, t)[i], key = f.id + "/" + t.id + "/" + i;
+    var box = el("div", "mq");
+    box.appendChild(el("p", "mq-q", md(q.q)));
+    var opts = el("div", "mq-opts"), lab = el("label", "mq-guess"), cb = el("input"), after = el("div", "");
+    cb.type = "checkbox"; lab.appendChild(cb); lab.appendChild(document.createTextNode(" I'm guessing"));
+    function pick(k) {
+      var s = qStore(); s[key] = { k: k, ok: k === q.a, g: k >= 0 && cb.checked, at: Date.now() }; qSave(s);
+      opts.querySelectorAll("button").forEach(function (b, bi) {
+        b.disabled = true;
+        if (bi === q.a) { b.classList.add("right"); } else if (bi === k) { b.classList.add("wrong"); }
+      });
+      cb.disabled = true;
+      after.appendChild(el("p", "mq-why", "<b>" + (k < 0 ? "Not known." : k === q.a ? (cb.checked ? "Right, but guessed." : "Right.") : "Not quite.") + "</b> " + md(q.why || "")));
+      done();
+    }
+    q.o.forEach(function (o, k) {
+      var b = el("button", "mq-o", "<span>" + "ABCDE".charAt(k) + "</span>" + md(o));
+      b.addEventListener("click", function () { pick(k); });
+      opts.appendChild(b);
+    });
+    var idk = el("button", "mq-o mq-idk", "I don't know");
+    idk.addEventListener("click", function () { pick(-1); });
+    opts.appendChild(idk);
+    box.appendChild(opts); box.appendChild(lab); box.appendChild(after);
+    host.appendChild(box);
+  }
+  function drawCheck(v, f, t) {
+    var qs = qOf(f, t);
+    if (!qs.length) { return; }
+    var sec = el("section", "part check"), lv = levelOf(f, t);
+    sec.appendChild(el("h3", "", "Check yourself"));
+    var head = el("p", "check-head", qs.length + " questions." + (lv ? " Your level: " + lvMark(lv) + " <b>" + LV[lv] + "</b>." : " Say 'I don't know' when you don't."));
+    sec.appendChild(head);
+    var host = el("div", ""), start = el("button", "btn", lv ? "Check again" : "Start");
+    sec.appendChild(start); sec.appendChild(host);
+    start.addEventListener("click", function () {
+      start.remove();
+      var i = 0;
+      (function next() {
+        host.innerHTML = "";
+        host.appendChild(el("p", "check-n", "Question " + (i + 1) + " of " + qs.length));
+        askOne(host, f, t, i, function () {
+          i++;
+          var b;
+          if (i < qs.length) { b = el("button", "btn", "Next question"); b.addEventListener("click", next); }
+          else {
+            var L = levelOf(f, t);
+            host.appendChild(el("p", "check-done", "Done. Your level: " + lvMark(L) + " <b>" + (L ? LV[L] : "") + "</b>."));
+            drawOutline();
+            b = null;
+          }
+          if (b) { host.appendChild(b); b.focus({ preventScroll: true }); }
+        });
+      }());
+    });
+    v.appendChild(sec);
+  }
+  /* A field's standing and a test across it, weakest first, in a pop-up. */
+  function drawStanding(v, f) {
+    var tops = topicsOf(f).filter(function (t) { return qOf(f, t).length; });
+    if (!tops.length) { return; }
+    var s = qStore(), c = { know: 0, partly: 0, notyet: 0, none: 0 };
+    tops.forEach(function (t) { c[levelOf(f, t, s) || "none"]++; });
+    var p = el("div", "standing");
+    p.appendChild(el("p", "", "<b>Where you stand.</b> " + lvMark("know") + c.know + " know, " + lvMark("partly") + c.partly + " partly, " +
+      lvMark("notyet") + c.notyet + " not yet, " + lvMark(null) + c.none + " not checked."));
+    var b = el("button", "btn", "Test this field");
+    b.addEventListener("click", function () { testField(f); });
+    p.appendChild(b);
+    v.appendChild(p);
+  }
+  function testField(f) {
+    var s = qStore(), pool = [];
+    topicsOf(f).forEach(function (t) {
+      qOf(f, t).forEach(function (q, i) {
+        var r = s[f.id + "/" + t.id + "/" + i];
+        pool.push({ t: t, i: i, w: !r ? 1 : (!r.ok || r.g) ? 0 : 2, r: Math.random() });
+      });
+    });
+    pool.sort(function (a, b) { return a.w - b.w || a.r - b.r; });
+    pool = pool.slice(0, 15);
+    var dlg = el("dialog", "qtest"), box = el("div", "qtest-box"), n = 0, right = 0;
+    dlg.appendChild(box); document.body.appendChild(dlg);
+    dlg.addEventListener("close", function () { dlg.remove(); drawOutline(); drawReader(); });
+    function step() {
+      box.innerHTML = "";
+      var head = el("div", "qtest-head", "<b>" + esc(f.name) + "</b><span>" + (n < pool.length ? (n + 1) + " of " + pool.length : "Done") + "</span>");
+      var x = el("button", "linkish", "Close"); x.addEventListener("click", function () { dlg.close(); });
+      head.appendChild(x); box.appendChild(head);
+      if (n >= pool.length) { box.appendChild(el("p", "check-done", right + " of " + pool.length + " right, guesses not counted.")); return; }
+      var p = pool[n];
+      box.appendChild(el("p", "check-n", md(p.t.name)));
+      askOne(box, f, p.t, p.i, function () {
+        var r = qStore()[f.id + "/" + p.t.id + "/" + p.i]; if (r.ok && !r.g) { right++; }
+        var nb = el("button", "btn", n + 1 < pool.length ? "Next" : "See how you did");
+        nb.addEventListener("click", function () { n++; step(); });
+        box.appendChild(nb); nb.focus();
+      });
+    }
+    step();
+    try { dlg.showModal(); } catch (e) { dlg.setAttribute("open", ""); }
+  }
+
   /* ----------------------------------------------------------- the reader */
   function reads(list) {
     var ul = el("ul", "reads");
@@ -115,6 +238,7 @@
     (f.overview || []).forEach(function (p) { v.appendChild(el("p", "", md(p))); });
     if (f.id === "overview") { v.appendChild(fieldBrowser(f)); }
     else { var map = drawMap(f); if (map) { v.appendChild(map); } }
+    drawStanding(v, f);
     if (f.start && f.start.length) {
       v.appendChild(el("h2", "", "Start here"));
       var ul = el("ul", "start");
@@ -165,6 +289,7 @@
     if (t.example) { v.appendChild(block("An example", el("p", "example", md(t.example)))); }
     if (t.nuance) { v.appendChild(block("The catch", el("p", "", md(t.nuance)))); }
     if (t.read && t.read.length) { v.appendChild(block("Read more", reads(t.read))); }
+    drawCheck(v, f, t);
     var sa = seeAlso(t.see); if (sa) { v.appendChild(sa); }
   }
   function drawPager(v) {

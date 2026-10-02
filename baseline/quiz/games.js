@@ -1,0 +1,195 @@
+/* Multiple choice for the Games field: 2 or 3 per topic. Checked by baseline/quiz/check.js. */
+BASELINE.quiz("games", {
+  "game-loop": [
+    { q: "A game moves its physics by a variable time step. What problem shows up?",
+      o: ["Physics behaves differently at different frame rates", "The renderer can no longer interpolate", "Input always arrives a frame late", "The game cannot run above 60 fps", "Updates run twice every frame"],
+      a: 0,
+      why: "Scaling by elapsed time makes results depend on step size, so a jump can reach different heights at 30 and 144 fps. A fixed step keeps the simulation the same everywhere." },
+    { q: "Fixed step 1/60 s (16.7 ms), and one frame takes 40 ms. With an accumulator, what happens?",
+      o: ["One update runs and the other 23.3 ms is dropped", "Two updates run and the render interpolates by the 6.7 ms left over", "Three updates run to catch up completely", "One update runs with a 40 ms step", "The frame is skipped"],
+      a: 1,
+      why: "40 ms holds two whole steps; the remainder, 0.4 of a step, places the rendered world between the last two states." },
+    { q: "Players say game A at a steady 30 fps feels smoother than game B averaging 50. Why?",
+      o: ["30 fps has less input lag", "Game B's average is measured wrongly", "Uneven frame times are felt as stutter even when the average is higher", "Lower frame rates get better motion blur", "Most displays prefer 30 Hz"],
+      a: 2,
+      why: "Frame pacing matters as much as the average rate. Swinging between 40 and 60 fps reads as judder." }
+  ],
+  "engines": [
+    { q: "What usually decides a studio's choice of engine most?",
+      o: ["Which engine has the newest rendering feature", "Which engine is open source", "Raw benchmark speed", "People, platforms and tools: hiring, target consoles, how fast designers iterate", "Which scripting language runs fastest"],
+      a: 3,
+      why: "At most scopes the features are close; who you can hire, what you must ship on and how fast the editor lets you iterate matter more." },
+    { q: "When does building your own engine make the most sense?",
+      o: ["For a two-person 2D platformer", "When the team would rather not learn an editor", "Whenever a general engine charges a royalty", "For any console release", "When the game needs something general engines do badly, such as simulating every pixel"],
+      a: 4,
+      why: "Noita simulates every pixel, and studio engines like Frostbite or Decima serve one company's needs. For ordinary scope a general engine saves years." }
+  ],
+  "ecs": [
+    { q: "Why does an ECS movement loop over 10,000 entities beat updating 10,000 separate heap objects?",
+      o: ["Components sit in packed arrays, so the CPU reads them in order and prefetches", "ECS runs its systems on the GPU", "ECS skips entities that are off screen", "Systems run fewer times per frame", "Entities hold no data at all, so nothing is read"],
+      a: 0,
+      why: "Contiguous data lets the cache work; object hierarchies chase pointers to scattered memory and stall on misses." },
+    { q: "A puzzle game has 30 unique, hand-scripted objects. Is a pure ECS worth it?",
+      o: ["Yes, ECS is always faster", "Probably not: with few unique entities it adds indirection without speed", "Yes, because archetypes always save memory", "No, because ECS cannot run systems in parallel", "Yes, because it replaces the game loop"],
+      a: 1,
+      why: "ECS pays off with many similar entities. Most shipped games use components on objects, such as Unity GameObjects or Unreal Actors.",
+      pair: "ecs-vs-components" },
+    { q: "Your game adds and removes components on entities constantly. Which ECS storage suits it better?",
+      o: ["Archetypes grouped by exact component set", "A deep class hierarchy", "A sparse set per component", "One array per entity", "A scene graph of nodes"],
+      a: 2,
+      why: "Archetypes iterate fastest but move an entity between tables whenever its component set changes; sparse sets make adding and removing cheap." }
+  ],
+  "input": [
+    { q: "A player presses jump 50 ms before landing and nothing happens. Which rule fixes it?",
+      o: ["Coyote time", "A dead zone", "A response curve", "Input buffering", "Polling instead of events"],
+      a: 3,
+      why: "Buffering stores an early press and fires it when it becomes legal. Coyote time is the reverse case: a late jump a few frames after leaving a ledge.",
+      pair: "buffering-vs-coyote-time" },
+    { q: "Players say a game's controls feel heavy, yet the input code is fine. Where is that latency mostly decided?",
+      o: ["In the key rebinding layer", "In the stick dead zone", "In the action mapping", "In the controller's battery level", "In the engine's structure: frames of processing, rendering and the display"],
+      a: 4,
+      why: "Input latency adds up the controller, a frame or two of game processing, rendering and the display. Engine structure sets most of it." }
+  ],
+  "tools-pipelines": [
+    { q: "A studio can spend a quarter on a 10% faster runtime or on cutting asset reload from minutes to seconds. What usually pays off more?",
+      o: ["Cutting iteration time", "The runtime speed-up", "Neither; buy faster machines instead", "Moving from Perforce to Git", "Cooking assets less often"],
+      a: 0,
+      why: "Iteration time decides team speed: across 50 artists making 30 changes a day, minutes of waiting add up to around 100 hours a day." },
+    { q: "Why do many large studios use Perforce rather than plain Git?",
+      o: ["Perforce is free for any team size", "It handles terabytes of binary assets and supports file locking", "Git cannot track source code well", "Perforce cooks assets automatically", "Consoles cannot build from Git"],
+      a: 1,
+      why: "Binary art cannot be merged, so locking prevents lost work, and Perforce scales to huge binary repositories. Git with LFS suits smaller teams." }
+  ],
+  "physics": [
+    { q: "A fast bullet passes through a thin wall without colliding. What is this, and what is the usual fix?",
+      o: ["Shadow acne; add a depth bias", "Gimbal lock; store rotations as quaternions", "Tunnelling; continuous collision detection or a raycast along the path", "Drift; add a dead zone", "Overdraw; cull the wall"],
+      a: 2,
+      why: "At 60 Hz a 900 m/s bullet moves 15 m per step, so no overlap is ever seen. Sweeping the shape or casting a ray checks the whole path." },
+    { q: "Why do rollback fighting games often write their own simple physics?",
+      o: ["Engine physics is too slow for two characters", "Engine physics cannot detect collisions", "Fighting games need no gravity", "Floating-point results differ across machines, and rollback needs determinism", "Engine physics does not allow fixed steps"],
+      a: 3,
+      why: "Lockstep and rollback re-simulate the same inputs on every machine; tiny differences from compilers or CPUs make the states drift apart." },
+    { q: "Why are player characters usually kinematic rather than driven by forces?",
+      o: ["Kinematic bodies cannot collide", "Force-driven bodies cannot be animated", "Kinematic bodies never tunnel", "Force-driven bodies need a GPU", "Force-driven movement feels floaty, while code-moved bodies respond exactly"],
+      a: 4,
+      why: "Gameplay code moves a kinematic body directly, with collision checks, which gives tight and predictable control." }
+  ],
+  "animation": [
+    { q: "A team wants movement that responds instantly. What do most games do about animation?",
+      o: ["Drive movement in code and correct the animation to match", "Use root motion for all movement", "Remove blending between clips", "Pose characters with inverse kinematics only", "Play every clip to its end before switching"],
+      a: 0,
+      why: "Root motion looks right but reacts late; code-driven movement responds at once but can slide, so the animation is adjusted to fit.",
+      pair: "root-motion-vs-code-driven" },
+    { q: "A character walks up stairs and its feet float above the steps. Which technique fixes it?",
+      o: ["A blend space", "Foot inverse kinematics", "Motion matching", "Skinning on the GPU", "A new state machine transition"],
+      a: 1,
+      why: "Inverse kinematics adapts the pose to the world, lifting each foot to a step the clip never knew about." }
+  ],
+  "game-ai": [
+    { q: "Playtesters find an enemy that never misses frustrating. What principle applies?",
+      o: ["Make its pathfinding faster", "Switch it to utility AI", "The goal is a fun opponent: telegraph intent and make believable mistakes", "Give it a GOAP planner", "Give it a larger navigation mesh"],
+      a: 2,
+      why: "Game AI serves the player's experience, sometimes by missing on purpose or quietly cheating in the player's favour." },
+    { q: "A guard's finite state machine has grown to 20 states with tangled transitions. What is the common replacement?",
+      o: ["A* over a navigation mesh", "A bigger state machine with priorities", "Motion matching", "A behaviour tree of selectors, sequences and conditions", "A lockstep simulation"],
+      a: 3,
+      why: "Behaviour trees compose behaviour in a hierarchy and scale past the point where flat state machines tangle. A* plans routes, not decisions.",
+      pair: "fsm-vs-behaviour-tree" }
+  ],
+  "game-audio": [
+    { q: "An audio designer wants to add wet gravel footsteps without a programmer. What makes that possible?",
+      o: ["Sample paths written into gameplay code", "A higher voice limit", "HRTF spatialisation", "Ducking", "Event-driven audio: code fires 'footstep', and middleware decides the sound"],
+      a: 4,
+      why: "Events separate what happened from what it sounds like, so variations and new surfaces are authored in the audio tool with no code change." },
+    { q: "A team cuts audio polish to ship on time, and players say hits feel weak. Why?",
+      o: ["Sound carries much of the feedback for actions and threats", "Hit detection broke when audio was removed", "The frame rate dropped", "Audio controls the input latency", "The mix ducked the music too far"],
+      a: 0,
+      why: "Players often hear a hit, a pickup or an enemy behind them before they see it. Without that feedback mechanics feel unresponsive." }
+  ],
+  "netcode": [
+    { q: "With 100 ms ping, your client moves you at once, then the server's snapshot arrives. What does reconciliation do?",
+      o: ["Discard the server state and keep the client's", "Reset to the server state and replay the inputs it has not processed yet", "Freeze the player until the next snapshot", "Snap other players to their newest positions", "Slow the client down to the server's tick"],
+      a: 1,
+      why: "The server is authoritative; replaying unacknowledged inputs on top of its state keeps prediction both responsive and correct." },
+    { q: "A target dies after they have already reached cover on their own screen. What caused it?",
+      o: ["Packet loss over TCP", "Client-side prediction", "Lag compensation rewinding the target to where the shooter saw them", "Entity interpolation of the shooter", "A low tick rate on the target's client"],
+      a: 2,
+      why: "Lag compensation makes the shooter's hits fair, so the target pays. Competitive shooters tune this trade rather than escape it." },
+    { q: "Why do action games send traffic over UDP with their own reliability?",
+      o: ["UDP uses less bandwidth per byte", "TCP cannot carry binary data", "Consoles block TCP", "A late packet is worse than a lost one, and TCP stalls waiting for a resend", "UDP is encrypted by default"],
+      a: 3,
+      why: "Old state is useless once newer state exists, so games resend only what matters instead of waiting in order." }
+  ],
+  "rollback": [
+    { q: "Why do real-time strategy games use lockstep?",
+      o: ["It hides latency for every player", "It needs no determinism", "It lets players run at different speeds", "It removes input delay", "Sending only inputs carries huge worlds on little bandwidth"],
+      a: 4,
+      why: "Thousands of units cost nothing to send when only inputs travel. The price is waiting for the slowest connection." },
+    { q: "A studio wants to add rollback netcode to an existing engine. Where does it usually stall?",
+      o: ["Making the simulation deterministic and its state cheap to save and restore", "Predicting the remote player's input", "Drawing the corrected frame", "Sending inputs over UDP", "Adding input delay"],
+      a: 0,
+      why: "Rollback re-simulates several frames inside one frame's time, which needs exact repeatability and fast snapshots. Engines not built for that resist both.",
+      pair: "lockstep-vs-rollback" }
+  ],
+  "mda": [
+    { q: "A designer wants players to bluff each other. In MDA terms, what is bluffing?",
+      o: ["A mechanic, needing a bluff button", "A dynamic, emerging from rules such as hidden information", "An aesthetic, since it is a feeling", "A mechanic, living in the scoring code", "An arc, delivered once"],
+      a: 1,
+      why: "Dynamics emerge when players use mechanics over time. You cannot code them directly, only rules that make them likely." },
+    { q: "A horror game aims for dread, but testers stockpile 200 rounds and stop feeling threatened. What should change?",
+      o: ["The goal of dread itself", "The art direction", "A mechanic such as the ammo drop rate", "The list of target aesthetics", "The marketing"],
+      a: 2,
+      why: "The aesthetic is fine; the rules produce the wrong dynamic. Change a mechanic and judge it again in play." }
+  ],
+  "core-loops": [
+    { q: "How can you tell a healthy core loop from a compulsion loop?",
+      o: ["Compulsion loops are longer", "Core loops give no rewards", "Compulsion loops are built from arcs", "Remove the rewards: a healthy core is still enjoyable", "Core loops never include failure"],
+      a: 3,
+      why: "If players stop once the currency, timers or streaks are gone, the rewards were carrying the loop." },
+    { q: "In Daniel Cook's terms, what is a cutscene or a scripted level?",
+      o: ["A core loop", "A meta loop", "A compulsion loop", "A dynamic", "An arc, delivered once"],
+      a: 4,
+      why: "Loops are repeated and mastered through a better mental model; arcs deliver content once. The mix sets how replayable a game is.",
+      pair: "loops-vs-arcs" }
+  ],
+  "level-design": [
+    { q: "Why do level designers keep blockouts ugly until the layout plays well?",
+      o: ["Art makes a bad layout expensive to change", "Engines cannot light a blockout", "Testers prefer grey boxes", "Art lowers the frame rate", "Blockouts load faster on consoles"],
+      a: 0,
+      why: "Once art is placed, teams tend to live with a flawed layout. Plain boxes keep change cheap." },
+    { q: "The character can jump 4 m at most. How should the first gap in a level teach the jump?",
+      o: ["A 4.2 m gap over a pit", "A 3 m gap over a safe floor", "A 3.9 m gap with a tutorial popup", "A gap of exactly 4 m", "No gap until the boss fight"],
+      a: 1,
+      why: "Teach safely before testing under pressure: a comfortable gap with no penalty first, a tense one over a pit later." }
+  ],
+  "playtesting": [
+    { q: "Four of five testers miss a climbable ledge and ask for a tutorial popup. What do you do?",
+      o: ["Add the popup they asked for", "Explain the ledge at the start of each session", "Treat it as a symptom and design a fix, such as marking climbable ledges, then retest", "Remove the ledge", "Ignore it, since one tester found it"],
+      a: 2,
+      why: "Players are reliable about where a problem is and unreliable about how to fix it. The fix is the designer's job." },
+    { q: "A tester is stuck mid-session. Why shouldn't you tell them what to do?",
+      o: ["It spoils the telemetry", "It breaks the questionnaire", "It takes too long", "The real player will not have you there, so you lose the finding", "Testers dislike help"],
+      a: 3,
+      why: "The confusion is the data. Explaining the game hides the very problem the test exists to find." }
+  ],
+  "performance": [
+    { q: "How should you test a mobile game's frame rate?",
+      o: ["On a flagship phone for one minute", "In a desktop emulator", "On a desktop GPU", "With the phone plugged in and cooled", "On a two-year-old mid-range phone after ten minutes of play"],
+      a: 4,
+      why: "Thermal throttling cuts speed once the chip heats, and most players own mid-range hardware. Sustained performance is what reviews judge." },
+    { q: "A crowd scene pushes animation from 3 ms to 6 ms in a 16.7 ms frame. What is a typical fix?",
+      o: ["Update distant characters' animation every other frame", "Drop the whole game to 30 fps", "Raise the physics tick rate", "Move audio onto the GPU", "Skip platform certification"],
+      a: 0,
+      why: "Budgets are per system; cutting work the player will not notice keeps the frame rate steady without slowing everything." }
+  ],
+  "business": [
+    { q: "An indie team wants a strong Steam launch. What should they set up early?",
+      o: ["A battle pass", "A store page that collects wishlists long before release", "A subscription tier", "Deep regional discounts at launch", "A live service roadmap"],
+      a: 1,
+      why: "On Steam, launch visibility follows wishlists, so marketing starts with the store page." },
+    { q: "Why is launching a new live service game risky?",
+      o: ["Storefronts do not allow it", "It cannot earn money", "It costs a lot, and players stay with a few games for years", "Consoles do not allow patches", "It requires a custom engine"],
+      a: 2,
+      why: "A new live game competes for time players already spend elsewhere. Concord went offline two weeks after its 2024 launch." }
+  ]
+});

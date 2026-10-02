@@ -1,0 +1,175 @@
+/* Multiple choice for the Graphics field: 2 or 3 per topic. Checked by baseline/quiz/check.js. */
+BASELINE.quiz("graphics", {
+  "rendering-pipeline": [
+    { q: "One triangle covers 1,000 pixels on screen. Which stage does most of the shading work?",
+      o: ["The fragment shader, about once per covered pixel", "The vertex shader, once per pixel", "The rasteriser, once per vertex", "The depth test, three times", "The vertex shader, 1,000 times"],
+      a: 0,
+      why: "The vertex shader runs 3 times; fragments number in the thousands. That ratio is why fragment shading dominates most frames." },
+    { q: "Why does a rasteriser need extra passes for shadows and reflections?",
+      o: ["The GPU cannot do floating-point maths", "Each pixel is shaded alone, without asking where light comes from", "The depth test removes all light information", "Vertex shaders cannot read lights", "Rasterisation supports only one light"],
+      a: 1,
+      why: "Rasterisation projects triangles and never traces light, so global effects have to be faked or computed in separate passes." },
+    { q: "A nearer wall already covers 600 of a triangle's 1,000 pixels. With early depth testing, how many fragments are shaded?",
+      o: ["1,000", "600", "400", "3", "0"],
+      a: 2,
+      why: "The early depth test discards hidden fragments before the fragment shader runs, so only the 400 visible ones are shaded." }
+  ],
+  "gpu": [
+    { q: "A shader with `if (inShadow) cheap(); else full();` slows down along shadow edges. Why?",
+      o: ["The GPU recompiles the shader there", "Fragment shaders cannot branch", "Shadowed pixels need more memory", "Lanes in one warp disagree, so the warp runs both paths", "The depth test fails on edges"],
+      a: 3,
+      why: "A warp issues one instruction for all its threads, so mixed branches run in turn. Warps fully in light or fully in shadow pay for one branch." },
+    { q: "You must process 100 items once a frame and send the results back to the CPU. Where should it run?",
+      o: ["On the GPU, since it has more cores", "On the GPU in a compute shader", "Split evenly between CPU and GPU", "On the GPU with more warps in flight", "Probably on the CPU: the work is narrow and needs a round trip"],
+      a: 4,
+      why: "GPUs need wide, independent work to hide memory latency. Small jobs with a round trip to the CPU usually run faster on the CPU." }
+  ],
+  "shaders": [
+    { q: "A PC game hitches the first time an explosion appears, then runs smoothly. What is the likely cause?",
+      o: ["Shaders being compiled for the user's GPU on first use", "The explosion's texture is too large", "The CPU is overheating", "Draw calls doubled for one frame", "The frame buffer was resized"],
+      a: 0,
+      why: "On PC, shaders are compiled for the exact GPU, often when an effect first appears. Precompiling during loading avoids the stutter." },
+    { q: "An engine moves particle simulation and culling out of the vertex and fragment stages. Which kind of shader runs them?",
+      o: ["A geometry shader", "A compute shader", "A fragment shader at low resolution", "A vertex shader with no outputs", "A pixel shader with blending"],
+      a: 1,
+      why: "Compute shaders run grids of threads over buffers outside the pipeline, which suits culling, particles, skinning and post-processing." },
+    { q: "A Lambert shader computes `max(dot(normal, lightDir), 0.0)`. What does a surface whose normal is at 90 degrees to the light get?",
+      o: ["1.0, fully lit", "0.5, half lit", "0, black", "A negative value", "It depends on where the camera is"],
+      a: 2,
+      why: "The cosine of 90 degrees is 0. Diffuse brightness depends on the angle to the light, not on the camera." }
+  ],
+  "graphics-apis": [
+    { q: "A team ports a renderer from OpenGL to Vulkan line for line, and it gets slower. How is that possible?",
+      o: ["Vulkan has no multithreading", "Vulkan runs only on mobile", "Vulkan does not allow pipeline objects", "Explicit APIs are fast only if the application does the driver's old job well", "Vulkan requires WGSL shaders"],
+      a: 3,
+      why: "Memory, synchronisation and pipeline creation move to the application. Done naively, they can lose to OpenGL's mature driver." },
+    { q: "What is the main CPU gain of Vulkan, Direct3D 12 and Metal over OpenGL?",
+      o: ["Higher GPU clock speeds", "Built-in ray tracing", "Shorter code for a first triangle", "Automatic memory management", "Lower driver overhead and command recording on many threads"],
+      a: 4,
+      why: "Pipelines are built up front and command buffers recorded in parallel, so the cost per draw falls and spreads across cores.",
+      pair: "opengl-vs-explicit-apis" }
+  ],
+  "transforms": [
+    { q: "After porting rendering code from one engine to another, an object is invisible. What is the first suspect?",
+      o: ["A convention mismatch: row or column vectors, handedness, or depth range", "The GPU is out of memory", "The texture failed to load", "There are too many lights", "The shader uses quaternions"],
+      a: 0,
+      why: "Most invisible-object bugs are conventions. Matrix order matters, and matrix multiplication is not commutative." },
+    { q: "An object is scaled 2 times along x only, and its lighting looks wrong. What is the likely bug?",
+      o: ["The perspective divide is missing", "Normals are transformed by the model matrix instead of its inverse transpose", "The view matrix is applied twice", "The quaternions are not normalised", "The depth range is 0 to 1"],
+      a: 1,
+      why: "Non-uniform scaling skews normals unless they are transformed by the inverse transpose of the model matrix." },
+    { q: "What makes far objects look smaller in a perspective projection?",
+      o: ["The view matrix scales by distance", "The rasteriser shrinks distant triangles", "Dividing by w, which the projection set to the depth", "Mipmapping", "The depth test"],
+      a: 2,
+      why: "The projection copies distance into w; dividing by w afterwards shrinks coordinates in proportion to distance." }
+  ],
+  "lighting-pbr": [
+    { q: "Lighting looks washed out, and no material tweak fixes it. What is the likely cause?",
+      o: ["Roughness is set too high", "Metallic is set to 1", "The BRDF lacks a Fresnel term", "Lighting maths runs on sRGB values instead of linear ones", "The normal map is too detailed"],
+      a: 3,
+      why: "Textures and screens store gamma-encoded values; lighting must run in linear colour, with conversions on the way in and out." },
+    { q: "Two balls share a base colour. One has metallic 1, the other metallic 0. How do their highlights differ?",
+      o: ["Both highlights are white", "The metal's highlight is always broader", "The non-metal tints its reflection with the base colour", "Only the metal shows a highlight", "The metal's reflection takes the base colour; the non-metal's stays white"],
+      a: 4,
+      why: "Metals tint their reflection, like gold; non-metals such as plastic show a white highlight over a coloured diffuse surface." },
+    { q: "Why can one PBR material look right in both a bright room and a dark one?",
+      o: ["The model conserves energy and uses measurable inputs", "Artists bake each room's lighting into the texture", "The engine rescales brightness per material", "PBR ignores the colour of the light", "Roughness adapts to the scene automatically"],
+      a: 0,
+      why: "Energy conservation and physical parameters keep the material independent of the lighting, so assets move between scenes." }
+  ],
+  "textures": [
+    { q: "A distant floor texture shimmers as the camera moves. What fixes it?",
+      o: ["Nearest-neighbour filtering", "Mipmaps, with anisotropic filtering for the slanted floor", "A higher-resolution texture", "Turning off block compression", "Storing it as sRGB"],
+      a: 1,
+      why: "A texture shown smaller than its resolution aliases. Mip levels are pre-filtered copies, and anisotropic sampling handles steep viewing angles." },
+    { q: "Rough metal looks subtly wrong. Its roughness map was imported like a photo. Why does that matter?",
+      o: ["Photos have no alpha channel", "Roughness maps need mipmaps turned off", "Data maps must stay linear, and sRGB decoding changes their values", "Roughness maps need four channels", "Photos are always compressed as BC7"],
+      a: 2,
+      why: "Normal and roughness maps hold numbers, not colours. Treating them as sRGB applies a gamma curve that distorts those numbers." }
+  ],
+  "ray-tracing": [
+    { q: "What makes ray tracing a million-triangle scene feasible?",
+      o: ["Testing every triangle in parallel", "Rendering at a lower resolution", "Mipmapping the triangles", "A bounding volume hierarchy, so each ray tests a few dozen boxes", "Shadow maps for every light"],
+      a: 3,
+      why: "A BVH about 20 levels deep turns a million tests per ray into a few dozen." },
+    { q: "A real-time path tracer uses one sample per pixel. What is the main trade-off?",
+      o: ["Only hard shadows are possible", "Reflections are lost", "Colour bleeding is lost", "Textures must be lower resolution", "Noise, which a denoiser trades for blur and lag"],
+      a: 4,
+      why: "Few samples per pixel are noisy; denoising and caching smooth that out at the cost of detail and temporal lag." }
+  ],
+  "shadows": [
+    { q: "Surfaces show stripy self-shadowing. You add a large depth bias, and shadows detach from feet. What are these two artefacts?",
+      o: ["Shadow acne, then peter-panning", "Aliasing, then ghosting", "Tunnelling, then drift", "Overdraw, then banding", "Gimbal lock, then popping"],
+      a: 0,
+      why: "Limited depth precision makes surfaces shadow themselves; too much bias pushes shadows away from the objects that cast them." },
+    { q: "One 2048-texel shadow map covers a 1 km world, and character shadows are blobs. What helps?",
+      o: ["A larger depth bias", "Cascaded shadow maps for nearer and farther slices of the view", "Turning off shadow filtering", "Rendering the shadow map from the camera", "Storing the shadow map as sRGB"],
+      a: 1,
+      why: "Cascades spend fine texels near the camera, where the viewer notices, and coarse ones far away." }
+  ],
+  "deferred-rendering": [
+    { q: "A scene has hundreds of small lights. Why might deferred rendering suit it?",
+      o: ["It makes transparency easy", "It uses less memory than forward rendering", "It stores surfaces in a G-buffer, then lights each pixel once per light", "It enables hardware MSAA directly", "It skips the depth test"],
+      a: 2,
+      why: "Separating geometry from lighting means each light costs only the pixels inside its radius, so many lights become affordable." },
+    { q: "A deferred engine still needs a forward pass. For what?",
+      o: ["Shadow maps", "Opaque walls", "Tone mapping", "Glass, particles and hair", "The depth prepass"],
+      a: 3,
+      why: "A G-buffer stores one surface per pixel, so transparency does not fit. The real choice is which path most of the scene takes.",
+      pair: "forward-vs-deferred" }
+  ],
+  "anti-aliasing": [
+    { q: "A character turns and reveals a wall, which looks soft for a few frames. Why?",
+      o: ["MSAA is turned off", "The wall's mip level is wrong", "The shadow cascade switched", "The tone curve changed", "Temporal upscaling has no history for newly revealed pixels"],
+      a: 4,
+      why: "TAA and upscalers rebuild detail from earlier frames. A disoccluded patch has none, so it starts soft." },
+    { q: "How does MSAA differ from supersampling?",
+      o: ["It tests coverage at several points per pixel but shades once", "It shades every sample in the pixel", "It blurs edges found in the final image", "It reuses earlier frames", "It renders at a lower resolution and upscales"],
+      a: 0,
+      why: "Supersampling shades every sample; MSAA multiplies only the coverage tests, which is cheaper and still smooths geometric edges.",
+      pair: "msaa-vs-supersampling" }
+  ],
+  "post-processing": [
+    { q: "A sunlit window reads 50.0 in linear HDR, a shaded wall 0.2, and the display tops out at 1.0. What keeps both readable?",
+      o: ["Clamping everything to 1.0", "A tone mapping curve", "Bloom", "Colour grading through a lookup table", "A higher sample count"],
+      a: 1,
+      why: "Clamping flattens the window to white and leaves the wall murky. A tone curve rolls highlights off and lifts the mid-tones, like camera exposure." },
+    { q: "Post-processing cost climbs at 4K even though the scene is simple. Why?",
+      o: ["Post passes scale with draw calls", "Post passes run on the CPU", "Each full-screen pass touches every pixel, so cost scales with resolution", "Tone mapping needs ray tracing", "Bloom doubles the triangle count"],
+      a: 2,
+      why: "Ten full-screen passes at 4K move hundreds of megabytes a frame. Teams cap the cost by merging passes into one shader." }
+  ],
+  "performance": [
+    { q: "A frame takes 22 ms against a 16.7 ms target, and the CPU finishes its part in 9 ms. What should you do first?",
+      o: ["Cut draw calls with instancing", "Optimise game logic", "Batch materials together", "Find the GPU cost, such as overdraw or heavy shaders", "Add more CPU threads"],
+      a: 3,
+      why: "The frame is GPU-bound, so CPU work gains nothing. A frame capture shows which pass costs most.",
+      pair: "cpu-bound-vs-gpu-bound" },
+    { q: "A frame capture shows smoke covering the screen 12 layers deep. What is the problem called?",
+      o: ["Divergence", "Aliasing", "Tunnelling", "Shadow acne", "Overdraw"],
+      a: 4,
+      why: "Overdraw shades the same pixel many times, typically from particles and transparency. Fewer layers or half-resolution particles help." }
+  ],
+  "canvas-2d": [
+    { q: "A 50,000-point SVG chart stutters on hover, so you move it to canvas and it runs smoothly. What do you now own?",
+      o: ["Hit testing and accessible labels", "Anti-aliasing of edges", "GPU memory management", "Font rasterisation", "Path filling"],
+      a: 0,
+      why: "Canvas is only pixels, so the browser no longer knows what a point is. Clicks and screen readers need your own layer." },
+    { q: "Which describes Canvas 2D against SVG correctly?",
+      o: ["Canvas is retained; SVG is immediate mode", "Canvas draws immediate-mode pixels; SVG shapes live in the DOM", "Both keep shapes in the DOM", "SVG renders through WebGPU only", "Canvas shapes can each be styled with CSS"],
+      a: 1,
+      why: "Canvas remembers nothing after drawing. SVG shapes can be styled and clicked, but slow down in the many thousands.",
+      pair: "canvas-vs-svg" }
+  ],
+  "neural-rendering": [
+    { q: "A statue captured with Gaussian splatting is wanted under dramatic new lighting in a game. What is the obstacle?",
+      o: ["Splats cannot render in real time", "Splats need ray tracing hardware", "A splat bakes in the light it was photographed under, so relighting is hard", "Splats only render at 720p", "Splats need a NeRF network at runtime"],
+      a: 2,
+      why: "Splats store appearance, not materials. Relighting, editing and collision are still hard, which keeps them out of most game worlds." },
+    { q: "Why does Gaussian splatting render far faster than the original NeRF?",
+      o: ["It uses a larger network", "It traces more rays per pixel", "It needs fewer photos", "It replaces the network with Gaussians that a rasteriser can sort and blend", "It renders only the background"],
+      a: 3,
+      why: "NeRF marched rays through a network for every pixel; splats are explicit primitives drawn by rasterisation.",
+      pair: "nerf-vs-splatting" }
+  ]
+});

@@ -169,3 +169,29 @@ figure.map .n.core rect { stroke: var(--field); stroke-width: 1.5; filter: drop-
   .contents { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .rail { transition: none; } }
+
+/* check yourself: the level marks, one question at a time, a field test */
+.lv { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: 1px; background: var(--line); }
+.lv-know { background: #4E8A5C; } .lv-partly { background: #C08A2E; } .lv-notyet { background: var(--ink-1); }
+.check-head, .check-n { color: var(--ink-3); font-size: var(--fs-sm); }
+.check-done { font-weight: 600; }
+.btn { font-size: var(--fs-sm); padding: 6px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--leaf); cursor: pointer; margin-top: 8px; }
+.btn:hover { border-color: var(--field); color: var(--field); }
+.linkish { background: none; border: 0; color: var(--ink-3); cursor: pointer; text-decoration: underline; font-size: var(--fs-sm); }
+.mq-q { font-weight: 600; }
+.mq-opts { display: grid; gap: 6px; }
+.mq-o { display: flex; gap: 10px; text-align: left; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--leaf); cursor: pointer; }
+.mq-o span { color: var(--ink-3); font-weight: 600; }
+.mq-o:hover:not(:disabled) { border-color: var(--field); }
+.mq-o:disabled { cursor: default; }
+.mq-o.right { border-color: #4E8A5C; box-shadow: inset 3px 0 0 #4E8A5C; }
+.mq-o.wrong { border-color: #C08A2E; box-shadow: inset 3px 0 0 #C08A2E; }
+.mq-idk { color: var(--ink-3); }
+.mq-guess { display: inline-block; margin: 8px 0; font-size: var(--fs-sm); color: var(--ink-3); }
+.mq-why { font-size: var(--fs-sm); }
+.standing { margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+dialog.qtest { border: 0; border-radius: 8px; padding: 0; width: 100%; max-width: min(680px, 94vw); background: var(--paper); color: var(--ink-1); box-shadow: 0 12px 40px rgba(0, 0, 0, .25); }
+dialog.qtest::backdrop { background: rgba(0, 0, 0, .35); }
+.qtest-box { padding: 20px 24px; max-height: 86vh; overflow: auto; }
+.qtest-head { display: flex; gap: 12px; align-items: baseline; margin-bottom: 12px; }
+.qtest-head span { flex: 1; color: var(--ink-3); font-size: var(--fs-sm); }

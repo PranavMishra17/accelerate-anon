@@ -26,7 +26,7 @@ for page in PAGES:
         v = hashlib.sha1(io.open(p, "rb").read()).hexdigest()[:8]
         return '"%s/%s?v=%s"' % (d, f, v)
 
-    out, n = re.subn(r'"(figures|coding|site|baseline|baseline/fields|data/mcq)/([a-z0-9-]+\.(?:js|css))(?:\?v=[0-9a-f]+)?"', stamp, s)
+    out, n = re.subn(r'"(figures|coding|site|baseline|baseline/fields|baseline/quiz|data/mcq)/([a-z0-9-]+\.(?:js|css))(?:\?v=[0-9a-f]+)?"', stamp, s)
     if out != s:
         io.open(path, "w", encoding="utf-8", newline="\n").write(out)
     print("%s: %d links" % (page, n))
