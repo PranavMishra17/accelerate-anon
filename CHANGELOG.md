@@ -907,3 +907,19 @@ around it (voice, handoff, authentication, LLM orchestration, model risk, Vangua
 work). 54 topics with 238 sources, and 27 likely questions that link to the topics answering them.
 Claims were not independently validated, at his request, and the agents flagged vendor-reported
 numbers in place. Loop pages now take an optional `<module>.research.json`. No charter deviation.
+
+**2026-10-03 — Vanguard as one learning path, judged; the call moves to Wed 7 Oct, 3 PM.**
+Asked for by Pranav: compress the Vanguard page into a way to learn, with multiple choice and
+open questions that show how much he knows. Prep (72 questions), Research (61 topics) and the
+sessions' material became one Learn tab: 9 modules, 71 topics, 201 multiple-choice questions.
+Each topic is learned, checked (five options, I don't know, a guess flag), explained aloud against
+a model answer and self-rated, then said; each gets Know, Partly or Not yet, and a map of squares
+shows where he stands. 'Test me' runs the weakest questions first. Old Prep links from the
+tracker land on the topic that absorbed them. Overview gains a One page view of fifteen points,
+from his banking copilot handbook. His alfred_ agent read the alfred_ code: there is no risk score,
+decision layer, verdict enum, trained classifier or NER, and the verdict gate was removed on 3
+August. His story and work answers now describe what is live and what he built (the first pass
+and its guards, entity resolution in chat, the confirm flow and code floors, the grounding guards,
+the failure scanner); the code-level detail sits in a private, gitignored module with its own
+quiz. `vanguard.py` went from 1,270 lines to 273. The interview moved to Wednesday 7 October,
+3 PM. No charter deviation.

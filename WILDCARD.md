@@ -25,6 +25,9 @@ things:
    `QA` group in `QA_ORDER`, logistics, practise aloud, questions to ask); a question opens in place,
    one at a time, with how to understand it on the left and what to say on the right. A Rounds tab
    (`ROUNDS`) records each round once it has happened: the questions, what you said, what to keep.
+   A Learn tab (`interviews/<module>.learn.json`) can replace Prep, Research and Sessions with one
+   path: modules of topics, each learned, checked with multiple choice, explained aloud and said,
+   with a level per topic and a map of where you stand (Vanguard, from 3 October).
    A Research tab (`interviews/<module>.research.json`) holds an industry pass when a loop needs
    nuance beyond its sessions: likely questions linking into topics, each a short brief that opens
    to how it is done in production, deeper notes, sources and lines you could say.

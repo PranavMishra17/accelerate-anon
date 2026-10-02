@@ -127,6 +127,9 @@ def build(module_name):
     # Research tab: <module>.research.json, an industry pass: {lead, questions, themes: [{id, title, blurb, topics}]}
     research_path = os.path.join(HERE, module_name + ".research.json")
     research = json.load(io.open(research_path, encoding="utf-8")) if os.path.exists(research_path) else None
+    # Learn tab: <module>.learn.json, one path of modules and topics (learn, check, explain, say); see template.html
+    learn_path = os.path.join(HERE, module_name + ".learn.json")
+    learn = json.load(io.open(learn_path, encoding="utf-8")) if os.path.exists(learn_path) else None
     for mk in mocks:
         for ex in mk.get("exchanges", []):
             if ex.get("prep"):
@@ -151,6 +154,7 @@ def build(module_name):
         # Overview: the company and the role from its posting; Rounds: what each round asked.
         "company": getattr(m, "COMPANY", []), "posting": getattr(m, "POSTING", None), "rounds": getattr(m, "ROUNDS", []),
         "research": research,
+        "learn": learn, "tabs": getattr(m, "TABS", None),
     }
     tpl = io.open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
     # Shared figure files carry a hash of their contents, so a changed figure is never
@@ -163,6 +167,9 @@ def build(module_name):
         if os.path.exists(p):
             v = hashlib.sha1(io.open(p, "rb").read()).hexdigest()[:8]
             tpl = tpl.replace('../%s/%s"' % f, '../%s/%s?v=%s"' % (f + (v,)))
+    # A loop's private module (gitignored) is loaded only when it exists here, so other pages ask for nothing.
+    if not os.path.exists(os.path.join(HERE, "..", "private", "loops", module_name + ".js")):
+        tpl = tpl.replace('<script src="../private/loops/{{MODULE}}.js"></script>\n', "")
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     page = tpl.replace("{{DATA}}", blob).replace("{{TITLE}}", L["title"]).replace("{{MODULE}}", module_name)
     out = os.path.join(HERE, module_name.replace("_", "-") + ".html")

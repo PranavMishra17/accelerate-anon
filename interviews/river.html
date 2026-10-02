@@ -184,6 +184,59 @@ details.pq > .pq-cols { margin: 0 0 var(--s5); }
 .pq-cols .cv-say { margin-top: 0; }
 .pq-cols.one { grid-template-columns: minmax(0, 1fr); max-width: var(--measure); }
 details.pq { scroll-margin-top: calc(var(--top) + var(--s2)); }
+/* learn: levels, the map, the four steps, multiple choice, the test pop-up, the one page */
+.lv { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--rule); vertical-align: 0; margin-right: var(--s2); flex: none; }
+.lv-know { background: var(--ok); } .lv-partly { background: var(--warn); } .lv-notyet { background: var(--ink); } .lv-none { background: var(--rule); }
+.ln-item > summary { position: relative; }
+.lmap { display: grid; gap: 6px; margin: var(--s2) 0; }
+.lmap-row { display: grid; grid-template-columns: minmax(0, 260px) 1fr; gap: var(--s3); align-items: center; font-size: var(--fs-sm); }
+.lmap-m { color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lmap-cells { display: flex; flex-wrap: wrap; gap: 4px; }
+.lmap-cells .lv { width: 16px; height: 16px; margin: 0; }
+.lmap-key { font-size: var(--fs-sm); color: var(--muted); }
+@media (max-width: 640px) { .lmap-row { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+.ln-mod { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s2); }
+.ln-steps { display: flex; gap: var(--s1); border-bottom: var(--hair); margin: var(--s2) 0 var(--s3); }
+.ln-step { background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--s1) var(--s2); color: var(--muted); font: inherit; cursor: pointer; }
+.ln-step[aria-current="step"] { color: var(--ink); border-bottom-color: var(--accent); }
+.ln-pane { max-width: var(--measure); padding-bottom: var(--s4); }
+.ln-brief { margin: 0 0 var(--s3); }
+.ln-note { color: var(--muted); font-size: var(--fs-sm); }
+.ln-oq { font-weight: var(--w-strong); }
+.ln-ta { width: 100%; min-height: 120px; font: inherit; padding: var(--s2); border: var(--hair); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); margin: var(--s2) 0; }
+.ln-beats { padding-left: var(--s5); } .ln-beats li { margin: 0 0 var(--s1); }
+.ln-rate, .ln-next { margin-top: var(--s3); } .ln-rate { display: flex; gap: var(--s2); flex-wrap: wrap; }
+.ln-done { font-weight: var(--w-strong); }
+.ln-more { font-size: var(--fs-sm); color: var(--muted); }
+.ln-table { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); margin: 0 0 var(--s3); }
+.ln-table th, .ln-table td { text-align: left; vertical-align: top; padding: var(--s1) var(--s2); border-bottom: var(--hair); }
+.ln-table th { color: var(--muted); font-weight: var(--w-strong); }
+.mq { margin: 0 0 var(--s3); }
+.mq-q { font-weight: var(--w-strong); }
+.mq-opts { display: grid; gap: 6px; }
+.mq-o { display: flex; gap: var(--s2); text-align: left; font: inherit; padding: var(--s2) var(--s3); border: var(--hair); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); cursor: pointer; }
+.mq-o:hover:not(:disabled) { border-color: var(--accent); }
+.mq-o:disabled { cursor: default; }
+.mq-o.right { border-color: var(--ok); box-shadow: inset 3px 0 0 var(--ok); }
+.mq-o.wrong { border-color: var(--warn); box-shadow: inset 3px 0 0 var(--warn); }
+.mq-idk { color: var(--muted); }
+.mq-k { color: var(--muted); font-weight: var(--w-strong); flex: none; }
+.mq-guess { display: inline-block; margin: var(--s2) 0; font-size: var(--fs-sm); color: var(--muted); }
+.mq-why { font-size: var(--fs-sm); }
+dialog.ln-test { border: 0; border-radius: var(--radius-lg); padding: 0; max-width: min(720px, 94vw); width: 100%; background: var(--surface); color: var(--ink); box-shadow: var(--shadow-float); }
+dialog.ln-test::backdrop { background: rgba(0, 0, 0, .4); }
+.ln-test-box { padding: var(--s4) var(--s5); max-height: 86vh; overflow: auto; }
+.ln-test-head { display: flex; gap: var(--s3); align-items: baseline; margin-bottom: var(--s3); }
+.ln-test-head span { color: var(--muted); font-size: var(--fs-sm); flex: 1; }
+.onepage { padding-left: var(--s5); max-width: var(--measure); }
+.onepage li { margin: 0 0 var(--s2); }
+.op-to { font-size: var(--fs-sm); white-space: nowrap; }
+@media print { body.print-one main > :not(#onepage), body.print-one header, body.print-one nav, body.print-one aside, body.print-one .op-to, body.print-one #onepage .linkish { display: none !important; } }
+.rs-q { padding: var(--s2) 0; border-top: var(--hair); }
+.rs-q .qt { display: block; }
+.rs-to { display: flex; flex-wrap: wrap; gap: 2px var(--s2); margin-top: 4px; font-size: var(--fs-sm); }
+.rs-deep { max-width: var(--measure); margin: 0 0 var(--s2); }
+details.pq > summary .rs-brief { max-width: var(--measure); }
 .bank-sec { border-left: 3px solid var(--sec); padding: 0 0 0 var(--s5); margin: var(--s7) 0; }
 .bank-sec > h2 { display: flex; align-items: baseline; gap: var(--s2) var(--s3); flex-wrap: wrap; margin-top: 0; }
 .bank-sec .bank-n { font-size: var(--fs-sm); font-weight: var(--w-regular); color: var(--muted); }
@@ -408,7 +461,7 @@ details.item > .sbody { padding-left: 0; }
 <script src="../figures/notes.js?v=b0f43ed5"></script>
 <script src="../private/notes.js?v=64ed8baa"></script>
 <script src="../figures/viewer.js?v=ecb99aae"></script>
-<script type="application/json" id="loop-data">{"id": "river", "title": "River, founder call", "subtitle": "Tarek Abillama, CEO", "when": "Date to be set: book from Tarek's link", "when_iso": "", "who": "Tarek Abillama, co-founder and CEO. His brother Sam Abillama is the other co-founder and suggested the call. Third company for Tarek; with Sam he built Masterboard, a connected chessboard.", "format": "A founder call on video. Expect him to pitch River and test whether you can own real-time, production systems with little help. No coding is likely on a first call.", "bar": "A founder hiring engineer three or four. He wants range, speed and ownership, and someone who has shipped real-time voice. Talk like a builder: what you shipped, how fast, what broke.", "sessions": [], "scripts": [{"id": "intro", "title": "Tell me about yourself", "length": "about 90 seconds", "when": "The opener. Land on real-time voice and production agents.", "probes": ["What does alfred_ do?", "What have you built in voice?", "Why are you looking?"], "say": ["Sure. I started out in computer science research at UIC, where I worked on applied ML and LLM systems. That gave me a pretty strong foundation in actually building and evaluating these systems, rather than just using the models.", "From there I joined WheelPrice, which was a much more startup-oriented environment. I was working across the stack and got a lot more exposure to shipping things that were actually being used by customers. It was a small engineering team, so I had to be pretty broad — backend, AI, infrastructure, and product work all kind of blended together.", "After that I joined alfred_, where I've been working as a founding LLM engineer. It's an AI assistant, and my work has become much more focused on reliability and evaluation — things like building the eval harness, production failure detection, working memory, and making sure agent changes actually improve the product rather than just looking better on a benchmark.", "The common thread through all of that has really been building AI systems in environments where you don't have a perfectly defined problem in front of you. You have to figure out what's broken, decide what to build, and then own it through production.", "And lately that's meant voice: I own alfred_'s voice agent, phone and web, and before that I built a real-time voice platform on LiveKit from scratch. Which is why River caught my eye: a live agent in front of a paying customer is exactly where that reliability matters most."], "land": "Production agents plus real-time voice; River is both at once.", "notes": ["Paragraphs 1 to 4 are your words, unchanged. Only the last line is new."]}, {"id": "why-river", "title": "Why River?", "length": "about 60 seconds", "when": "After his pitch, or straight after the intro.", "probes": ["What do you know about us?", "Why a team of three?", "Why sales?"], "say": ["Honestly, it's the hardest version of a live agent. Liv isn't answering a support question; it's on a video call with a buyer, talking, showing the product through a browser agent and handling objections, all at once and in real time. If it stalls or gets a fact wrong, you lose the deal.", "That's pretty much what I work on now: I own alfred_'s voice agent, a live call that also has to do real work in people's email and calendars without going quiet.", "And it's measured in revenue, which I like. A sales agent either closes or it doesn't.", "Being engineer number three or four is the other part. I've been a founding engineer and I like owning the first version."], "swaps": [{"when": "If he asks what stood out", "line": "That Liv hands bigger deals to a person instead of guessing. Knowing when not to act is most of what makes an agent trustworthy."}], "land": "The hardest live agent, measured in revenue, at the stage I like.", "notes": ["Facts from River's site and postings (Sources). Say 'from what I read'."], "never": ["Don't quote their revenue figures as fact: 'you mentioned' or 'I read'."]}, {"id": "voice", "title": "Tell me about your real-time voice work", "length": "about 2 minutes", "when": "The technical story he will care about most. alfred_ first, MockFlow-AI second.", "probes": ["How do you keep it fast while it does real work?", "How do you handle interruptions?", "How do you know it's working?", "What does it cost to run?"], "say": ["I own alfred_'s voice agent end to end, and it's live for everyone: you call alfred_ or tap the mic in the web app and talk to the assistant that knows your inbox. Calls come in over SIP into LiveKit, the web joins over WebRTC, and one Python worker serves both.", "The problem that's closest to Liv is doing heavy work without going quiet. The agent on the call is lean, a small tool set and two quick model calls. Every utterance also goes, in parallel, to our main agent, the one behind chat and SMS. So there's no escalation step: that would be a wasted model turn, two to three seconds of silence, on exactly the slow turns. Reads it answers itself if it can, and otherwise uses the main agent's result when it lands. Writes always wait, and the person confirms.", "Most of the craft is outside the model: noise isolation, voice activity and end-of-turn detection, an explicit interruption policy, where a backchannel keeps it talking and noise doesn't stop it, and a 'let me check' the worker says, not the model. Evals in three layers, from CI scenarios to simulated noisy callers to replaying real calls.", "Before that I built MockFlow-AI from scratch on LiveKit: under 400 milliseconds end to end, with stages that only move when the model calls a tool."], "swaps": [{"when": "If he asks how it maps to River", "line": "Liv has the same shape with more on the line: a live call that has to stay responsive while a browser agent drives the demo and several models think. I'd keep one fast voice in front and run the heavy work in parallel, never behind an escalation turn."}, {"when": "If he asks about cost", "line": "Every turn starts a background run, even when the lean agent answers it. That's what we pay for latency; at ten times the traffic I'd start it only for intents that can need it, or cancel it once the lean agent has answered. And every call record logs its own cost."}, {"when": "If he asks for a lesson", "line": "Anything that must happen every time belongs in code. A prompted 'let me check' worked in isolation and almost never on real calls with an impatient caller; tightening the prompt made it say 'checking your calendar' without checking. So the worker says it."}], "land": "A live voice agent I own, lean on the call with heavy work in parallel; the craft outside the model; and one I built from scratch.", "notes": ["From your write-up of alfred_'s voice agent (30 September) and the master reference, section 5.1.", "The 2 to 3 seconds is your estimate for an escalation turn: confirm it before you use it."]}, {"id": "logistics", "title": "Logistics he may ask", "length": "a line each", "when": "Your answers are in chat, not on this page.", "probes": ["Would you relocate?", "Four days in office in New York?", "Pay?", "Work authorization?", "Start date?"], "say": [], "land": "Say each once, then back to the role.", "notes": ["**Relocation and office:** you've already told Tarek by email. Say it again in one line.", "**Pay:** the Founding Engineer posting lists $170K to $220K plus equity. Your number from chat.", "**Work authorization and start date:** your answers from chat, one sentence each."]}], "drills": [{"id": "intro", "prompt": "Tell me about yourself.", "target": "90 seconds", "seconds": 90, "ref": "#say-intro"}, {"id": "why-river", "prompt": "Why River?", "target": "60 seconds", "seconds": 60, "ref": "#say-why-river"}, {"id": "voice", "prompt": "Tell me about your real-time voice work.", "target": "2 minutes", "seconds": 120, "ref": "#say-voice"}], "qa": [{"group": "Real-time agents", "blurb": "The follow-ups a founder building live agents asks.", "items": [{"q": "How would you keep a live sales agent from saying something wrong?", "short": "Wrong answers, live", "tests": "Reliability thinking for a live agent.", "a": ["Answer from verified data only, through tools, never from the model's memory; I did that for a customer assistant at WheelPrice. Code checks anything with consequences, like price or terms, before it's said.", "And an eval set built from real calls: every bad call becomes a case the next version has to pass. That's what I built at alfred_, a little over a hundred cases from real failures."], "land": "Tools for facts, code for consequences, real failures as tests.", "id": "q-how-would-you-keep-a-live-sales-agent-from-saying-something-"}, {"q": "How do you handle latency with several models in the loop?", "short": "Latency", "tests": "Real-time depth.", "a": ["Stream everything: speech in, tokens out, speech out, so no stage waits for the whole of the one before. Keep the model on the critical path small, and start the heavy work, like the browser agent, in parallel on the same utterance rather than after an escalation turn, with something to say while it runs. That's how alfred_'s voice agent works.", "Then measure each stage separately. In MockFlow-AI most of the win was streaming instead of polling."], "land": "Stream every stage, small model on the critical path, measure each hop.", "id": "q-how-do-you-handle-latency-with-several-models-in-the-loop"}, {"q": "How would you evaluate Liv's calls?", "short": "Evaluating calls", "tests": "Your strongest area, applied to theirs.", "a": ["Two layers. Outcomes: booked, closed, escalated, and where calls drop. And behaviour: a scanner over transcripts that flags wrong facts, talking over the buyer, missed objections, turned into a regression set.", "Then replay: run a new version against recorded calls before it ships, so you can say which cases got better and which got worse."], "land": "Outcomes, flagged behaviours as tests, replay before shipping.", "id": "q-how-would-you-evaluate-liv-s-calls"}]}], "ask": [], "ask3": [{"id": "tarek", "title": "For Tarek", "when": "At the end, or when he invites questions.", "why": "Founders like questions about the hard problem and the business.", "how": ["One or two, then listen."], "items": [{"to": "Tarek", "q": "What breaks most often on a live call today?", "loop": "First.", "why": "The real problem you'd own."}, {"to": "Tarek", "q": "How do you decide when Liv hands a deal to a person?", "loop": "If he talks about the product.", "why": "Where trust is won or lost."}, {"to": "Tarek", "q": "What would the first engineer hire own in the first three months?", "loop": "Middle.", "why": "Scope."}, {"to": "Tarek", "q": "Are you staying on video, or moving to phone as well?", "loop": "If there's time.", "why": "Product direction; phone brings TCPA."}, {"to": "Tarek", "q": "What does the rest of the process look like?", "loop": "Last.", "why": "Practical."}]}], "traps": [["The wrong River", "River AI, with a large round, is a different company."], ["Quoting their numbers as fact", "Revenue and customer logos are their claims."], ["Overselling scale", "Over a thousand daily phone users is real traffic, not a contact center. MockFlow-AI is live but small."], ["Raising logistics first", "Only if he asks."], ["Funding, crunch, colleagues' names", "Never, about alfred_."]], "tables": [], "admire": "", "kitaruLead": "", "figures": [], "mockHow": "Say 'run the River mock' in chat: Tarek pitches River, then probes real-time and reliability.", "mocks": [], "planKicker": "Before the call", "mechTitle": "", "designLink": null, "extra": "River's site, the postings and the founder's writing are under <b>What this rests on<\/b> on the Prep tab. Refresh the basics on Baseline: <a href=\"../BASELINE.html#/audio\" target=\"_blank\" rel=\"noopener\">Audio and speech<\/a>, <a href=\"../BASELINE.html#/ai\" target=\"_blank\" rel=\"noopener\">AI engineering<\/a>, <a href=\"../BASELINE.html#/inference\" target=\"_blank\" rel=\"noopener\">Inference<\/a>, <a href=\"../BASELINE.html#/backend\" target=\"_blank\" rel=\"noopener\">Backend<\/a>.", "emphasis": [], "own": null, "showUp": [["Know the product in one line.", "Liv, an AI account executive that joins live sales calls on video, demos the product through a browser agent, and closes deals under about $25K."], ["Lead with alfred_'s voice agent.", "Live for everyone, and yours end to end: SIP and WebRTC into LiveKit, one Python worker, a lean agent on the call with the heavy agent started in parallel every turn. Their posting names LiveKit and WebRTC, and Liv runs several models plus a browser agent on one live call: the same problem."], ["Then MockFlow-AI.", "Built from scratch: LiveKit, Deepgram, under 400 ms end to end, stages that move only by tool call."], ["Founders sell too.", "Let him pitch. Ask one follow-up on what he says; interest counts."], ["Logistics: one line each.", "In office in New York, pay, work authorization, start date: your answers are in chat."], ["Close with next steps.", "Ask what the process looks like, and offer to walk through MockFlow-AI or a demo."]], "prepLead": "A founder call. Read how to show up, then say the intro, why River and the voice story out loud. The bank below is for his technical follow-ups.", "storyBlurb": "Your intro, why River, the real-time voice story, and logistics.", "sources": [{"label": "River: company site", "url": "https://rivergtm.com", "why": "Liv, the AI account executive: inbound demos, objections and closing under about $25K, larger deals handed to people. Names founders of Ramp, Kalshi, Lean and Hearth as backers."}, {"label": "Founding Engineer: the job post (Jack & Jill)", "url": "https://www.jackandjill.ai/jobs/engineer/founding-engineer-170k-220k-equity-at-river-b9f2a2ae-8c33-45a2-8653-56fc6370e0a4", "why": "$170K to $220K plus equity. 5+ years running production backends with on-call, real-time or WebRTC depth. TypeScript, Node, WebRTC, inference serving, CI/CD, observability."}, {"label": "Founding Engineer posting (Workfindy)", "url": "https://workfindy.com/jobs/573b10f3-171b-40fc-bf4f-123f2b60cf3b", "why": "The live call: speech, a rendered avatar, several LLMs and a live browser-use agent. Adds Next.js, Postgres, Redis and LiveKit."}, {"label": "Product Engineer posting and company facts (Paraform)", "url": "https://www.paraform.com/share/river/cmsoqj32l00070dl5jea9fndz", "why": "$2M pre-seed; a team of three; weekly revenue from $4,000 to $50,000 within days of launch (their claim). Founders moving to New York; in office four days minimum."}, {"label": "River on Product Hunt", "url": "https://www.producthunt.com/products/river-9", "why": "Launched July 2026, fifth of the day. Multilingual; follow-up by email and WhatsApp."}, {"label": "Tarek Abillama: chess lessons for fundraising and acquisitions (Entrepreneur UK, 27 August 2026)", "url": "https://uk.entrepreneur.com/finance/chess-lessons-for-fundraising-and-acquisitions", "why": "His third startup, two exits; Masterboard and Masterspace with Sam. Raise from strength, keep momentum, build for the long term."}, {"label": "AI voices and the TCPA (Wiley)", "url": "https://www.wiley.law/alert-FCC-Extends-Regulatory-Reach-Over-AI-Announces-TCPA-Restrictions-Cover-AI-Generated-Voices-in-Outbound-Calls", "why": "Outbound AI calls need written consent. River's inbound, video-first design mostly avoids this."}], "company": [], "posting": null, "rounds": []}</script>
+<script type="application/json" id="loop-data">{"id": "river", "title": "River, founder call", "subtitle": "Tarek Abillama, CEO", "when": "Date to be set: book from Tarek's link", "when_iso": "", "who": "Tarek Abillama, co-founder and CEO. His brother Sam Abillama is the other co-founder and suggested the call. Third company for Tarek; with Sam he built Masterboard, a connected chessboard.", "format": "A founder call on video. Expect him to pitch River and test whether you can own real-time, production systems with little help. No coding is likely on a first call.", "bar": "A founder hiring engineer three or four. He wants range, speed and ownership, and someone who has shipped real-time voice. Talk like a builder: what you shipped, how fast, what broke.", "sessions": [], "scripts": [{"id": "intro", "title": "Tell me about yourself", "length": "about 90 seconds", "when": "The opener. Land on real-time voice and production agents.", "probes": ["What does alfred_ do?", "What have you built in voice?", "Why are you looking?"], "say": ["Sure. I started out in computer science research at UIC, where I worked on applied ML and LLM systems. That gave me a pretty strong foundation in actually building and evaluating these systems, rather than just using the models.", "From there I joined WheelPrice, which was a much more startup-oriented environment. I was working across the stack and got a lot more exposure to shipping things that were actually being used by customers. It was a small engineering team, so I had to be pretty broad — backend, AI, infrastructure, and product work all kind of blended together.", "After that I joined alfred_, where I've been working as a founding LLM engineer. It's an AI assistant, and my work has become much more focused on reliability and evaluation — things like building the eval harness, production failure detection, working memory, and making sure agent changes actually improve the product rather than just looking better on a benchmark.", "The common thread through all of that has really been building AI systems in environments where you don't have a perfectly defined problem in front of you. You have to figure out what's broken, decide what to build, and then own it through production.", "And lately that's meant voice: I own alfred_'s voice agent, phone and web, and before that I built a real-time voice platform on LiveKit from scratch. Which is why River caught my eye: a live agent in front of a paying customer is exactly where that reliability matters most."], "land": "Production agents plus real-time voice; River is both at once.", "notes": ["Paragraphs 1 to 4 are your words, unchanged. Only the last line is new."]}, {"id": "why-river", "title": "Why River?", "length": "about 60 seconds", "when": "After his pitch, or straight after the intro.", "probes": ["What do you know about us?", "Why a team of three?", "Why sales?"], "say": ["Honestly, it's the hardest version of a live agent. Liv isn't answering a support question; it's on a video call with a buyer, talking, showing the product through a browser agent and handling objections, all at once and in real time. If it stalls or gets a fact wrong, you lose the deal.", "That's pretty much what I work on now: I own alfred_'s voice agent, a live call that also has to do real work in people's email and calendars without going quiet.", "And it's measured in revenue, which I like. A sales agent either closes or it doesn't.", "Being engineer number three or four is the other part. I've been a founding engineer and I like owning the first version."], "swaps": [{"when": "If he asks what stood out", "line": "That Liv hands bigger deals to a person instead of guessing. Knowing when not to act is most of what makes an agent trustworthy."}], "land": "The hardest live agent, measured in revenue, at the stage I like.", "notes": ["Facts from River's site and postings (Sources). Say 'from what I read'."], "never": ["Don't quote their revenue figures as fact: 'you mentioned' or 'I read'."]}, {"id": "voice", "title": "Tell me about your real-time voice work", "length": "about 2 minutes", "when": "The technical story he will care about most. alfred_ first, MockFlow-AI second.", "probes": ["How do you keep it fast while it does real work?", "How do you handle interruptions?", "How do you know it's working?", "What does it cost to run?"], "say": ["I own alfred_'s voice agent end to end, and it's live for everyone: you call alfred_ or tap the mic in the web app and talk to the assistant that knows your inbox. Calls come in over SIP into LiveKit, the web joins over WebRTC, and one Python worker serves both.", "The problem that's closest to Liv is doing heavy work without going quiet. The agent on the call is lean, a small tool set and two quick model calls. Every utterance also goes, in parallel, to our main agent, the one behind chat and SMS. So there's no escalation step: that would be a wasted model turn, two to three seconds of silence, on exactly the slow turns. Reads it answers itself if it can, and otherwise uses the main agent's result when it lands. Writes always wait, and the person confirms.", "Most of the craft is outside the model: noise isolation, voice activity and end-of-turn detection, an explicit interruption policy, where a backchannel keeps it talking and noise doesn't stop it, and a 'let me check' the worker says, not the model. Evals in three layers, from CI scenarios to simulated noisy callers to replaying real calls.", "Before that I built MockFlow-AI from scratch on LiveKit: under 400 milliseconds end to end, with stages that only move when the model calls a tool."], "swaps": [{"when": "If he asks how it maps to River", "line": "Liv has the same shape with more on the line: a live call that has to stay responsive while a browser agent drives the demo and several models think. I'd keep one fast voice in front and run the heavy work in parallel, never behind an escalation turn."}, {"when": "If he asks about cost", "line": "Every turn starts a background run, even when the lean agent answers it. That's what we pay for latency; at ten times the traffic I'd start it only for intents that can need it, or cancel it once the lean agent has answered. And every call record logs its own cost."}, {"when": "If he asks for a lesson", "line": "Anything that must happen every time belongs in code. A prompted 'let me check' worked in isolation and almost never on real calls with an impatient caller; tightening the prompt made it say 'checking your calendar' without checking. So the worker says it."}], "land": "A live voice agent I own, lean on the call with heavy work in parallel; the craft outside the model; and one I built from scratch.", "notes": ["From your write-up of alfred_'s voice agent (30 September) and the master reference, section 5.1.", "The 2 to 3 seconds is your estimate for an escalation turn: confirm it before you use it."]}, {"id": "logistics", "title": "Logistics he may ask", "length": "a line each", "when": "Your answers are in chat, not on this page.", "probes": ["Would you relocate?", "Four days in office in New York?", "Pay?", "Work authorization?", "Start date?"], "say": [], "land": "Say each once, then back to the role.", "notes": ["**Relocation and office:** you've already told Tarek by email. Say it again in one line.", "**Pay:** the Founding Engineer posting lists $170K to $220K plus equity. Your number from chat.", "**Work authorization and start date:** your answers from chat, one sentence each."]}], "drills": [{"id": "intro", "prompt": "Tell me about yourself.", "target": "90 seconds", "seconds": 90, "ref": "#say-intro"}, {"id": "why-river", "prompt": "Why River?", "target": "60 seconds", "seconds": 60, "ref": "#say-why-river"}, {"id": "voice", "prompt": "Tell me about your real-time voice work.", "target": "2 minutes", "seconds": 120, "ref": "#say-voice"}], "qa": [{"group": "Real-time agents", "blurb": "The follow-ups a founder building live agents asks.", "items": [{"q": "How would you keep a live sales agent from saying something wrong?", "short": "Wrong answers, live", "tests": "Reliability thinking for a live agent.", "a": ["Answer from verified data only, through tools, never from the model's memory; I did that for a customer assistant at WheelPrice. Code checks anything with consequences, like price or terms, before it's said.", "And an eval set built from real calls: every bad call becomes a case the next version has to pass. That's what I built at alfred_, a little over a hundred cases from real failures."], "land": "Tools for facts, code for consequences, real failures as tests.", "id": "q-how-would-you-keep-a-live-sales-agent-from-saying-something-"}, {"q": "How do you handle latency with several models in the loop?", "short": "Latency", "tests": "Real-time depth.", "a": ["Stream everything: speech in, tokens out, speech out, so no stage waits for the whole of the one before. Keep the model on the critical path small, and start the heavy work, like the browser agent, in parallel on the same utterance rather than after an escalation turn, with something to say while it runs. That's how alfred_'s voice agent works.", "Then measure each stage separately. In MockFlow-AI most of the win was streaming instead of polling."], "land": "Stream every stage, small model on the critical path, measure each hop.", "id": "q-how-do-you-handle-latency-with-several-models-in-the-loop"}, {"q": "How would you evaluate Liv's calls?", "short": "Evaluating calls", "tests": "Your strongest area, applied to theirs.", "a": ["Two layers. Outcomes: booked, closed, escalated, and where calls drop. And behaviour: a scanner over transcripts that flags wrong facts, talking over the buyer, missed objections, turned into a regression set.", "Then replay: run a new version against recorded calls before it ships, so you can say which cases got better and which got worse."], "land": "Outcomes, flagged behaviours as tests, replay before shipping.", "id": "q-how-would-you-evaluate-liv-s-calls"}]}], "ask": [], "ask3": [{"id": "tarek", "title": "For Tarek", "when": "At the end, or when he invites questions.", "why": "Founders like questions about the hard problem and the business.", "how": ["One or two, then listen."], "items": [{"to": "Tarek", "q": "What breaks most often on a live call today?", "loop": "First.", "why": "The real problem you'd own."}, {"to": "Tarek", "q": "How do you decide when Liv hands a deal to a person?", "loop": "If he talks about the product.", "why": "Where trust is won or lost."}, {"to": "Tarek", "q": "What would the first engineer hire own in the first three months?", "loop": "Middle.", "why": "Scope."}, {"to": "Tarek", "q": "Are you staying on video, or moving to phone as well?", "loop": "If there's time.", "why": "Product direction; phone brings TCPA."}, {"to": "Tarek", "q": "What does the rest of the process look like?", "loop": "Last.", "why": "Practical."}]}], "traps": [["The wrong River", "River AI, with a large round, is a different company."], ["Quoting their numbers as fact", "Revenue and customer logos are their claims."], ["Overselling scale", "Over a thousand daily phone users is real traffic, not a contact center. MockFlow-AI is live but small."], ["Raising logistics first", "Only if he asks."], ["Funding, crunch, colleagues' names", "Never, about alfred_."]], "tables": [], "admire": "", "kitaruLead": "", "figures": [], "mockHow": "Say 'run the River mock' in chat: Tarek pitches River, then probes real-time and reliability.", "mocks": [], "planKicker": "Before the call", "mechTitle": "", "designLink": null, "extra": "River's site, the postings and the founder's writing are under <b>What this rests on<\/b> on the Prep tab. Refresh the basics on Baseline: <a href=\"../BASELINE.html#/audio\" target=\"_blank\" rel=\"noopener\">Audio and speech<\/a>, <a href=\"../BASELINE.html#/ai\" target=\"_blank\" rel=\"noopener\">AI engineering<\/a>, <a href=\"../BASELINE.html#/inference\" target=\"_blank\" rel=\"noopener\">Inference<\/a>, <a href=\"../BASELINE.html#/backend\" target=\"_blank\" rel=\"noopener\">Backend<\/a>.", "emphasis": [], "own": null, "showUp": [["Know the product in one line.", "Liv, an AI account executive that joins live sales calls on video, demos the product through a browser agent, and closes deals under about $25K."], ["Lead with alfred_'s voice agent.", "Live for everyone, and yours end to end: SIP and WebRTC into LiveKit, one Python worker, a lean agent on the call with the heavy agent started in parallel every turn. Their posting names LiveKit and WebRTC, and Liv runs several models plus a browser agent on one live call: the same problem."], ["Then MockFlow-AI.", "Built from scratch: LiveKit, Deepgram, under 400 ms end to end, stages that move only by tool call."], ["Founders sell too.", "Let him pitch. Ask one follow-up on what he says; interest counts."], ["Logistics: one line each.", "In office in New York, pay, work authorization, start date: your answers are in chat."], ["Close with next steps.", "Ask what the process looks like, and offer to walk through MockFlow-AI or a demo."]], "prepLead": "A founder call. Read how to show up, then say the intro, why River and the voice story out loud. The bank below is for his technical follow-ups.", "storyBlurb": "Your intro, why River, the real-time voice story, and logistics.", "sources": [{"label": "River: company site", "url": "https://rivergtm.com", "why": "Liv, the AI account executive: inbound demos, objections and closing under about $25K, larger deals handed to people. Names founders of Ramp, Kalshi, Lean and Hearth as backers."}, {"label": "Founding Engineer: the job post (Jack & Jill)", "url": "https://www.jackandjill.ai/jobs/engineer/founding-engineer-170k-220k-equity-at-river-b9f2a2ae-8c33-45a2-8653-56fc6370e0a4", "why": "$170K to $220K plus equity. 5+ years running production backends with on-call, real-time or WebRTC depth. TypeScript, Node, WebRTC, inference serving, CI/CD, observability."}, {"label": "Founding Engineer posting (Workfindy)", "url": "https://workfindy.com/jobs/573b10f3-171b-40fc-bf4f-123f2b60cf3b", "why": "The live call: speech, a rendered avatar, several LLMs and a live browser-use agent. Adds Next.js, Postgres, Redis and LiveKit."}, {"label": "Product Engineer posting and company facts (Paraform)", "url": "https://www.paraform.com/share/river/cmsoqj32l00070dl5jea9fndz", "why": "$2M pre-seed; a team of three; weekly revenue from $4,000 to $50,000 within days of launch (their claim). Founders moving to New York; in office four days minimum."}, {"label": "River on Product Hunt", "url": "https://www.producthunt.com/products/river-9", "why": "Launched July 2026, fifth of the day. Multilingual; follow-up by email and WhatsApp."}, {"label": "Tarek Abillama: chess lessons for fundraising and acquisitions (Entrepreneur UK, 27 August 2026)", "url": "https://uk.entrepreneur.com/finance/chess-lessons-for-fundraising-and-acquisitions", "why": "His third startup, two exits; Masterboard and Masterspace with Sam. Raise from strength, keep momentum, build for the long term."}, {"label": "AI voices and the TCPA (Wiley)", "url": "https://www.wiley.law/alert-FCC-Extends-Regulatory-Reach-Over-AI-Announces-TCPA-Restrictions-Cover-AI-Generated-Voices-in-Outbound-Calls", "why": "Outbound AI calls need written consent. River's inbound, video-first design mostly avoids this."}], "company": [], "posting": null, "rounds": [], "research": null, "learn": null, "tabs": null}</script>
 <script>
 "use strict";
 (function () {
@@ -504,13 +557,15 @@ details.item > .sbody { padding-left: 0; }
   /* ---------------------------------------------------------------- tabs */
   var TABS = [
     { id: "overview", label: "Overview", show: function () { return true; } },
+    { id: "learn", label: "Learn", show: function () { return !!(LOOP.learn && LOOP.learn.modules); } },
     { id: "prep", label: "Prep", show: function () { return LOOP.scripts.length || LOOP.drills.length || LOOP.qa.length || LOOP.ask.length || (LOOP.ask3 || []).length; } },
     { id: "rounds", label: "Rounds", show: function () { return (LOOP.rounds || []).length; } },
+    { id: "research", label: "Research", show: function () { return !!LOOP.research; } },
     { id: "design", label: "Design", show: function () { return LOOP.tables.length || LOOP.figures.length; } },
     { id: "own", label: (LOOP.own && LOOP.own.tab) || "Yours", show: function () { return !!LOOP.own; } },
     { id: "sessions", label: "Sessions", show: function () { return LOOP.sessions.length; } },
     { id: "mocks", label: "Mocks", show: function () { return !!LOOP.mockHow; } }
-  ].filter(function (t) { return t.show(); });
+  ].filter(function (t) { return t.show() && (!LOOP.tabs || LOOP.tabs.indexOf(t.id) >= 0); });
   var main = document.getElementById("main");
   var side = document.getElementById("side");
   var nav = [];            /* side links for the current tab: [anchor, label, sub] */
@@ -538,6 +593,7 @@ details.item > .sbody { padding-left: 0; }
     s.appendChild(dl);
     host.appendChild(s);
     nav.push(["brief", "The call"]);
+    onePage(host);
 
     if (LOOP.company && LOOP.company.length) {
       var c = heading(host, "company", "", "The company");
@@ -583,7 +639,8 @@ details.item > .sbody { padding-left: 0; }
         box.appendChild(el("h3", "", esc(d)));
         days[d].forEach(function (x) {
           var a = el("a", "srow" + (isDone(t, x) ? " done" : ""));
-          a.href = link("sessions", x.id);
+          a.href = TABS.some(function (tb) { return tb.id === "sessions"; }) ? link("sessions", x.id) : "../index.html#/w/" + x.id;
+          if (!TABS.some(function (tb) { return tb.id === "sessions"; })) { a.target = "_blank"; a.rel = "noopener"; }
           a.innerHTML = '<span class="dot"></span><span><span class="nm">' + esc(x.name) +
             '</span><span class="bl">' + esc(x.blurb.replace(/^(Friday|Saturday|Sunday)[^.]*\.\s*/, "")) + '</span></span><span class="hrs">' + esc(x.len) + "</span>";
           box.appendChild(a);
@@ -706,9 +763,11 @@ details.item > .sbody { padding-left: 0; }
       all.forEach(function (r) { r.sec.hidden = !shown[r.sec.id]; });
     });
     if (LOOP.drills.length) { drills(card(heading(host, "practise", LOOP.drills.length + " timed questions, out loud", "Practise aloud"), banks.length, 0)); }
+    if ((LOOP.ask3 || []).length || LOOP.ask.length) { askSection(card(heading(host, "ask", "", "Questions to ask"), banks.length + 1, 0)); }
+  }
+  function askSection(a3) {
     var three = LOOP.ask3 || [];
-    if (three.length || LOOP.ask.length) {
-      var a3 = card(heading(host, "ask", "", "Questions to ask"), banks.length + 1, 0);
+    {
       three.forEach(function (k) {
         var sec = el("div", "c3"); sec.id = "ask-" + k.id;
         sec.appendChild(el("h3", "c3-t", esc(k.title) + '<span class="c3-w">' + inl(k.when) + "</span>"));
@@ -726,6 +785,402 @@ details.item > .sbody { padding-left: 0; }
       });
       if (!three.length) { LOOP.ask.forEach(function (x) { a3.appendChild(el("div", "ask", '<span class="to">' + esc(x.to) + "</span><span>" + inl(x.q) + "</span>")); }); }
     }
+  }
+
+  /* ---------------------------------------------------------------- research: the industry pass
+     Two tiers. A topic's brief shows under its title; opened, how it is done in production and
+     the deeper notes sit left, the lines to say right. The likely questions come first and link
+     into the topics that answer them. */
+  function researchBody(t) {
+    var c = el("div", "cv-cols pq-cols");
+    var left = el("div", "cv-col cv-said"), right = el("div", "pq-work");
+    c.appendChild(left); c.appendChild(right);
+    panelSection(left, "In production", panelList(t.practice));
+    if (t.deep) {
+      left.appendChild(el("div", "lab", "Deeper"));
+      t.deep.split(/\n\n+/).forEach(function (para) { left.appendChild(el("p", "rs-deep", inl(para))); });
+    }
+    learn(left, { read: (t.sources || []).map(function (r) { return { url: r.url, label: r.label, why: r.why }; }) });
+    if (t.say && t.say.length) { right.appendChild(transcript(t.say, "What you could say", "")); }
+    if (!right.children.length) { right.remove(); c.classList.add("one"); }
+    return c;
+  }
+  function researchItem(t) {
+    var d = el("details", "item pq"); d.id = t.id;
+    d.setAttribute("name", "research");
+    d.appendChild(el("summary", "", '<span class="qt">' + inl(t.title) + '</span><span class="qm rs-brief">' + inl(t.brief) + "</span>"));
+    var drawn = false;
+    d.addEventListener("toggle", function () {
+      if (!d.open) { return; }
+      if (!drawn) { drawn = true; d.appendChild(researchBody(t)); }
+      glideTo(d);
+    });
+    return d;
+  }
+  function tabResearch(host) {
+    var R = LOOP.research, titles = {};
+    R.themes.forEach(function (th) { th.topics.forEach(function (t) { titles[t.id] = t.title; }); });
+    var s = heading(host, "research", "", "Research");
+    if (R.lead) { s.appendChild(el("p", "lead", inl(R.lead))); }
+    var f = el("input", "filter"); f.type = "search"; f.placeholder = "Search every topic";
+    s.appendChild(f);
+    if ((R.questions || []).length) {
+      var qs = card(heading(host, "rs-questions", "Each opens the topics that answer it.", "Likely questions"), 0, R.questions.length);
+      R.questions.forEach(function (q) {
+        var links = (q.topics || []).filter(function (id) { return titles[id]; }).map(function (id) {
+          return '<a href="' + link("research", id) + '">' + esc(titles[id]) + "</a>";
+        });
+        qs.appendChild(el("div", "rs-q", '<span class="qt">' + inl(q.q) + "</span>" +
+          (q.probe ? '<span class="qm">' + inl(q.probe) + "</span>" : "") +
+          (links.length ? '<span class="rs-to">' + links.join('<span class="sep"></span>') + "</span>" : "")));
+      });
+    }
+    var all = [];
+    R.themes.forEach(function (th, i) {
+      var sec = card(heading(host, th.id, th.blurb || "", th.title), i + 1, th.topics.length);
+      th.topics.forEach(function (t) {
+        var d = researchItem(t);
+        all.push({ d: d, sec: sec, text: [t.title, t.brief, t.deep].concat(t.practice || [], t.say || []).join(" ").toLowerCase() });
+        sec.appendChild(d);
+      });
+    });
+    f.addEventListener("input", function () {
+      var v = f.value.trim().toLowerCase(), shown = {};
+      all.forEach(function (r) { var hit = !v || r.text.indexOf(v) >= 0; r.d.hidden = !hit; if (hit) { shown[r.sec.id] = true; } });
+      all.forEach(function (r) { r.sec.hidden = !shown[r.sec.id]; });
+    });
+  }
+
+  /* ---------------------------------------------------------------- learn: one path, judged
+     LOOP.learn = { lead, onepage, modules: [{ id, title, blurb, sessions, table?, topics: [{ id, title,
+     brief, points, figs, production, read, mcq, open, say, avoid, was }] }] }. A private module
+     (window.LOOP_PRIVATE[loop id].modules) is appended when present. Each topic opens to four
+     steps: Learn, Check (multiple choice, with I don't know and a guess flag), Explain (an open
+     question, then the model answer and a self-rating), Say (shut until Explain is tried).
+     A topic's level (Know, Partly, Not yet) comes from its latest answers and the rating. */
+  var LEARN_KEY = "loop.learn.v1";
+  function learnStore() {
+    try { var all = JSON.parse(localStorage.getItem(LEARN_KEY) || "{}"); return all[LOOP.id] || { mcq: {}, rate: {}, tried: {} }; }
+    catch (err) { console.error("Could not read learning progress", err); return { mcq: {}, rate: {}, tried: {} }; }
+  }
+  function learnSave(st) {
+    try { var all = JSON.parse(localStorage.getItem(LEARN_KEY) || "{}"); all[LOOP.id] = st; localStorage.setItem(LEARN_KEY, JSON.stringify(all)); }
+    catch (err) { console.error("Could not save learning progress", err); }
+  }
+  function learnModules() {
+    var mods = ((LOOP.learn && LOOP.learn.modules) || []).slice();
+    var priv = window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id];
+    if (priv && priv.modules) { mods = mods.concat(priv.modules); }
+    return mods;
+  }
+  function allTopics() {
+    var out = [];
+    learnModules().forEach(function (m) { m.topics.forEach(function (t) { out.push({ m: m, t: t }); }); });
+    return out;
+  }
+  var LEVELS = { know: "Know", partly: "Partly", notyet: "Not yet" };
+  function levelOf(t, st) {
+    st = st || learnStore();
+    var n = 0, ok = 0, any = false;
+    (t.mcq || []).forEach(function (q, i) {
+      var r = st.mcq[t.id + ":" + i];
+      if (!r) { return; }
+      any = true; n += 1;
+      if (r.ok && !r.guess) { ok += 1; }
+    });
+    var rate = st.rate[t.id];
+    if (!any && !rate) { return null; }
+    var all = (t.mcq || []).length;
+    var s = n ? ok / n : null;
+    if (rate === "notyet" || (s !== null && s < 0.5)) { return "notyet"; }
+    if (rate === "know" && (s === null || (s === 1 && n === all))) { return "know"; }
+    if (!rate && s === 1 && n === all) { return "know"; }
+    return "partly";
+  }
+  function levelDot(lv) { return '<span class="lv lv-' + (lv || "none") + '" title="' + (lv ? LEVELS[lv] : "Not judged yet") + '"></span>'; }
+
+  /* one multiple-choice question; done(record) after the answer is shown */
+  function mcqCard(host, t, i, done) {
+    var q = t.mcq[i], st = learnStore(), key = t.id + ":" + i;
+    var box = el("div", "mq");
+    box.appendChild(el("p", "mq-q", inl(q.q)));
+    var opts = el("div", "mq-opts"), guess = el("label", "mq-guess"), cb = el("input");
+    cb.type = "checkbox"; guess.appendChild(cb); guess.appendChild(document.createTextNode(" I'm guessing"));
+    var after = el("div", "mq-after");
+    function pick(k) {
+      var ok = k === q.a;
+      st = learnStore();
+      st.mcq[key] = { pick: k, ok: ok, guess: k >= 0 && cb.checked, at: Date.now() };
+      learnSave(st);
+      opts.querySelectorAll("button").forEach(function (b, bi) {
+        b.disabled = true;
+        if (bi === q.a) { b.classList.add("right"); }
+        else if (bi === k) { b.classList.add("wrong"); }
+      });
+      cb.disabled = true;
+      after.innerHTML = "";
+      after.appendChild(el("p", "mq-why", "<b>" + (k < 0 ? "Not known." : ok ? (cb.checked ? "Right, but guessed." : "Right.") : "Not quite.") + "</b> " + inl(q.why || "")));
+      if (done) { done(st.mcq[key]); }
+    }
+    q.o.forEach(function (o, k) {
+      var b = el("button", "mq-o", '<span class="mq-k">' + "ABCDE".charAt(k) + "</span>" + inl(o));
+      b.addEventListener("click", function () { pick(k); });
+      opts.appendChild(b);
+    });
+    var idk = el("button", "mq-o mq-idk", "I don't know");
+    idk.addEventListener("click", function () { pick(-1); });
+    opts.appendChild(idk);
+    box.appendChild(opts); box.appendChild(guess); box.appendChild(after);
+    host.appendChild(box);
+    return box;
+  }
+
+  function learnBody(t, refresh) {
+    var wrap = el("div", "ln");
+    var steps = [["learn", "Learn"], ["check", "Check"], ["explain", "Explain"], ["say", "Say"]].filter(function (s) {
+      return s[0] !== "check" || (t.mcq && t.mcq.length);
+    }).filter(function (s) { return s[0] !== "explain" || t.open; }).filter(function (s) { return s[0] !== "say" || (t.say && t.say.length); });
+    var bar = el("div", "ln-steps"), pane = el("div", "ln-pane");
+    wrap.appendChild(bar); wrap.appendChild(pane);
+    var cur = 0;
+    function show(i) {
+      cur = i;
+      bar.querySelectorAll("button").forEach(function (b, bi) { b.setAttribute("aria-current", bi === i ? "step" : "false"); });
+      pane.innerHTML = "";
+      var id = steps[i][0], st = learnStore();
+      if (id === "learn") {
+        if (t.brief) { pane.appendChild(el("p", "ln-brief", inl(t.brief))); }
+        if (t.points && t.points.length) {
+          var u = el("ul", "mk-list ln-points");
+          t.points.forEach(function (p) { u.appendChild(el("li", "", inl(p).replace(/^([^:<]{2,60}):/, "<b>$1:</b>"))); });
+          pane.appendChild(u);
+        }
+        (t.figs || []).forEach(function (k) { var f = figNode(k, 0); if (f) { pane.appendChild(f); } });
+        panelSection(pane, "In production", panelList(t.production));
+        learn(pane, { read: t.read || [] });
+        if (t.sessions && t.sessions.length) { pane.appendChild(el("p", "ln-more", "Deeper: " + t.sessions.map(function (s) { return '<a href="../index.html#/w/' + esc(s) + '" target="_blank" rel="noopener">tracker session ' + esc(s) + "</a>"; }).join(", "))); }
+      }
+      if (id === "check") {
+        var qi = 0;
+        var host = el("div");
+        pane.appendChild(el("p", "ln-note", t.mcq.length + " questions. Choose, or say you don't know; tick 'I'm guessing' if you are."));
+        pane.appendChild(host);
+        (function next() {
+          if (qi >= t.mcq.length) {
+            var lv = levelOf(t);
+            host.appendChild(el("p", "ln-done", "Done. " + (lv ? "Your level for this topic: <b>" + LEVELS[lv] + "</b>." : "")));
+            refresh();
+            return;
+          }
+          var i2 = qi; qi += 1;
+          mcqCard(host, t, i2, function () {
+            var nb = el("button", "btn", qi < t.mcq.length ? "Next question" : "Finish");
+            nb.addEventListener("click", function () { nb.remove(); next(); });
+            host.appendChild(nb);
+          });
+        }());
+      }
+      if (id === "explain") {
+        pane.appendChild(el("p", "ln-oq", inl(t.open.q)));
+        if (t.open.probe) { pane.appendChild(el("p", "ln-note", "<b>They are testing:</b> " + inl(t.open.probe))); }
+        var ta = el("textarea", "ln-ta");
+        ta.placeholder = "Say it out loud first, then type or dictate it here (Win+H). Saved on this device.";
+        ta.value = (st.tried[t.id] && st.tried[t.id].text) || "";
+        ta.addEventListener("input", function () { var s2 = learnStore(); s2.tried[t.id] = { text: ta.value, at: Date.now() }; learnSave(s2); });
+        pane.appendChild(ta);
+        var reveal = el("button", "btn", "I've tried it: show the model answer");
+        var ans = el("div", "ln-ans");
+        function open() {
+          reveal.remove();
+          var s2 = learnStore(); s2.tried[t.id] = s2.tried[t.id] || { text: "", at: Date.now() }; s2.tried[t.id].shown = true; learnSave(s2);
+          ans.appendChild(el("div", "lab", "Model answer"));
+          var ol = el("ol", "ln-beats");
+          t.open.a.forEach(function (b) { ol.appendChild(el("li", "", inl(b))); });
+          ans.appendChild(ol);
+          ans.appendChild(el("div", "lab", "How well did you know it?"));
+          var rr = el("div", "ln-rate");
+          [["know", "Know it"], ["partly", "Partly"], ["notyet", "Not yet"]].forEach(function (r) {
+            var b = el("button", "btn" + (learnStore().rate[t.id] === r[0] ? " primary" : ""), r[1]);
+            b.addEventListener("click", function () {
+              var s3 = learnStore(); s3.rate[t.id] = r[0]; learnSave(s3);
+              rr.querySelectorAll("button").forEach(function (x) { x.classList.remove("primary"); });
+              b.classList.add("primary"); refresh();
+            });
+            rr.appendChild(b);
+          });
+          ans.appendChild(rr);
+        }
+        reveal.addEventListener("click", open);
+        pane.appendChild(reveal); pane.appendChild(ans);
+        if (st.tried[t.id] && st.tried[t.id].shown) { open(); }
+      }
+      if (id === "say") {
+        var s4 = learnStore();
+        if (t.open && !(s4.tried[t.id] && s4.tried[t.id].shown)) {
+          pane.appendChild(el("p", "ln-note", "Shut until you've tried the open question in Explain."));
+          var go = el("button", "btn", "Go to Explain");
+          go.addEventListener("click", function () { show(steps.map(function (s) { return s[0]; }).indexOf("explain")); });
+          pane.appendChild(go);
+        } else {
+          pane.appendChild(transcript(t.say, "What you would say", ""));
+          panelSection(pane, "Avoid", panelList(t.avoid, "mk-bad"));
+        }
+      }
+      if (i < steps.length - 1 && id !== "check") {
+        var nx = el("button", "btn ln-next", "Next: " + steps[i + 1][1]);
+        nx.addEventListener("click", function () { show(i + 1); });
+        pane.appendChild(nx);
+      }
+    }
+    steps.forEach(function (s, i) {
+      var b = el("button", "ln-step", esc(s[1]));
+      b.addEventListener("click", function () { show(i); });
+      bar.appendChild(b);
+    });
+    show(0);
+    return wrap;
+  }
+  function learnItem(t, m) {
+    var d = el("details", "item pq ln-item"); d.id = t.id;
+    d.setAttribute("name", "learn");
+    var sum = el("summary", "");
+    function paint() { sum.innerHTML = levelDot(levelOf(t)) + '<span class="qt">' + inl(t.title) + '</span><span class="qm">' + inl(t.brief || "") + "</span>"; }
+    paint();
+    d.appendChild(sum);
+    var drawn = false;
+    d.addEventListener("toggle", function () {
+      if (!d.open) { return; }
+      if (!drawn) { drawn = true; d.appendChild(learnBody(t, function () { paint(); drawMap(); })); }
+      glideTo(d);
+    });
+    return d;
+  }
+  /* Where you stand: a row per module, a square per topic, coloured by level. */
+  var mapHost = null;
+  function drawMap() {
+    if (!mapHost) { return; }
+    var st = learnStore(), counts = { know: 0, partly: 0, notyet: 0, none: 0 };
+    mapHost.innerHTML = "";
+    var grid = el("div", "lmap");
+    learnModules().forEach(function (m) {
+      var row = el("div", "lmap-row");
+      var a = el("a", "lmap-m", esc(m.title)); a.href = link("learn", "m-" + m.id);
+      row.appendChild(a);
+      var cells = el("span", "lmap-cells");
+      m.topics.forEach(function (t) {
+        var lv = levelOf(t, st); counts[lv || "none"] += 1;
+        var c = el("a", "lv lv-" + (lv || "none")); c.href = link("learn", t.id); c.title = t.title + ": " + (lv ? LEVELS[lv] : "not judged yet");
+        cells.appendChild(c);
+      });
+      row.appendChild(cells);
+      grid.appendChild(row);
+    });
+    mapHost.appendChild(grid);
+    mapHost.appendChild(el("p", "lmap-key", levelDot("know") + counts.know + " know" + '<span class="sep"></span>' + levelDot("partly") + counts.partly + " partly" +
+      '<span class="sep"></span>' + levelDot("notyet") + counts.notyet + " not yet" + '<span class="sep"></span>' + levelDot(null) + counts.none + " not judged"));
+  }
+  /* A test across a module or the whole path, in a pop-up: weakest first, then unanswered. */
+  function runTest(scope, title) {
+    var st = learnStore(), pool = [];
+    allTopics().forEach(function (x) {
+      if (scope && x.m.id !== scope) { return; }
+      (x.t.mcq || []).forEach(function (q, i) {
+        var r = st.mcq[x.t.id + ":" + i];
+        pool.push({ t: x.t, i: i, w: !r ? 1 : (!r.ok || r.guess) ? 0 : 2, r: Math.random() });
+      });
+    });
+    pool.sort(function (a, b) { return a.w - b.w || a.r - b.r; });
+    pool = pool.slice(0, scope ? 12 : 20);
+    if (!pool.length) { return; }
+    var dlg = el("dialog", "ln-test"), box = el("div", "ln-test-box"), n = 0, right = 0;
+    dlg.appendChild(box); document.body.appendChild(dlg);
+    dlg.addEventListener("close", function () { dlg.remove(); route(); });
+    function step() {
+      box.innerHTML = "";
+      var head = el("div", "ln-test-head", "<b>" + esc(title) + "</b><span>" + (n < pool.length ? (n + 1) + " of " + pool.length : "Done") + "</span>");
+      var x = el("button", "linkish", "Close"); x.addEventListener("click", function () { dlg.close(); });
+      head.appendChild(x); box.appendChild(head);
+      if (n >= pool.length) {
+        box.appendChild(el("p", "ln-done", right + " of " + pool.length + " right, guesses not counted."));
+        var lv = {};
+        pool.forEach(function (p) { lv[p.t.id] = p.t; });
+        var u = el("ul", "mk-list");
+        Object.keys(lv).forEach(function (k) { var L = levelOf(lv[k]); u.appendChild(el("li", "", levelDot(L) + " " + inl(lv[k].title) + ": " + (L ? LEVELS[L] : "not judged"))); });
+        box.appendChild(u);
+        return;
+      }
+      var p = pool[n];
+      box.appendChild(el("p", "ln-note", esc(p.t.title)));
+      mcqCard(box, p.t, p.i, function (rec) {
+        if (rec.ok && !rec.guess) { right += 1; }
+        var nb = el("button", "btn primary", n + 1 < pool.length ? "Next" : "See how you did");
+        nb.addEventListener("click", function () { n += 1; step(); });
+        box.appendChild(nb); nb.focus();
+      });
+    }
+    step();
+    try { dlg.showModal(); } catch (err) { dlg.setAttribute("open", ""); }
+  }
+  function tabLearn(host) {
+    var L = LOOP.learn || {};
+    var s = heading(host, "learn", "", "Learn");
+    if (L.lead) { s.appendChild(el("p", "lead", inl(L.lead))); }
+    s.appendChild(el("div", "lab", "Where you stand"));
+    mapHost = el("div", "lmap-host"); s.appendChild(mapHost); drawMap();
+    var acts = el("div", "acts");
+    var all = el("button", "btn primary", "Test me on everything");
+    all.addEventListener("click", function () { runTest(null, "Everything, weakest first"); });
+    acts.appendChild(all);
+    var f = el("input", "filter"); f.type = "search"; f.placeholder = "Search every topic";
+    s.appendChild(acts); s.appendChild(f);
+    var rows = [];
+    learnModules().forEach(function (m, mi) {
+      var sec = card(heading(host, "m-" + m.id, m.blurb || "", m.title), mi, 0);
+      var top = el("p", "ln-mod");
+      var tb = el("button", "linkish", "Test this module");
+      tb.addEventListener("click", function () { runTest(m.id, m.title); });
+      top.appendChild(tb);
+      if (m.sessions && m.sessions.length) {
+        top.appendChild(el("span", "sep"));
+        top.appendChild(el("span", "", "Deeper in the tracker: " + m.sessions.map(function (x) { return '<a href="../index.html#/w/' + esc(x) + '" target="_blank" rel="noopener">' + esc(x) + "</a>"; }).join(", ")));
+      }
+      sec.appendChild(top);
+      if (m.table && m.table.rows) {
+        var tbl = el("table", "ln-table"), h = "<thead><tr>" + m.table.head.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") + "</tr></thead><tbody>";
+        m.table.rows.forEach(function (r) { h += "<tr>" + r.map(function (c) { return "<td>" + inl(c) + "</td>"; }).join("") + "</tr>"; });
+        tbl.innerHTML = h + "</tbody>";
+        sec.appendChild(tbl);
+      }
+      m.topics.forEach(function (t) {
+        var d = learnItem(t, m);
+        rows.push({ d: d, sec: sec, text: [t.title, t.brief].concat(t.points || [], t.production || [], t.say || []).join(" ").toLowerCase() });
+        sec.appendChild(d);
+      });
+      (m.extras || []).forEach(function (x) {
+        if (x === "ask" && ((LOOP.ask3 || []).length || LOOP.ask.length)) { sec.appendChild(el("div", "lab", "Questions to ask")); askSection(sec); }
+        if (x === "drills" && LOOP.drills.length) { sec.appendChild(el("div", "lab", "Practise aloud, timed")); drills(sec); }
+      });
+    });
+    f.addEventListener("input", function () {
+      var v = f.value.trim().toLowerCase(), shown = {};
+      rows.forEach(function (r) { var hit = !v || r.text.indexOf(v) >= 0; r.d.hidden = !hit; if (hit) { shown[r.sec.id] = true; } });
+      rows.forEach(function (r) { r.sec.hidden = !shown[r.sec.id]; });
+    });
+  }
+  /* The one page: the points to know, each linking to the topic that teaches it. */
+  function onePage(host) {
+    var O = LOOP.learn && LOOP.learn.onepage;
+    if (!O || !O.points) { return; }
+    var s = heading(host, "onepage", "", "One page");
+    if (O.lead) { s.appendChild(el("p", "lead", inl(O.lead))); }
+    var u = el("ul", "onepage");
+    O.points.forEach(function (p) {
+      u.appendChild(el("li", "", "<b>" + inl(p.t) + "</b> " + inl(p.d) + (p.to ? ' <a class="op-to" href="' + link("learn", p.to) + '">Learn it</a>' : "")));
+    });
+    s.appendChild(u);
+    var pr = el("button", "linkish", "Print the one page");
+    pr.addEventListener("click", function () { document.body.classList.add("print-one"); window.print(); document.body.classList.remove("print-one"); });
+    s.appendChild(pr);
   }
 
   /* ---------------------------------------------------------------- rounds: what each round asked
@@ -1304,6 +1759,11 @@ details.item > .sbody { padding-left: 0; }
   function parse() {
     var p = (location.hash || "").replace(/^#\/?/, "").split("/").filter(Boolean);
     var tab = TABS.some(function (t) { return t.id === p[0]; }) ? p[0] : "overview";
+    if (tab === "overview" && p[0] && p[0] !== "overview" && LOOP.learn && p[1]) {
+      var to = null;
+      learnModules().forEach(function (m) { m.topics.forEach(function (t) { if ((t.was || []).indexOf(p[1]) >= 0 || t.id === p[1]) { to = t.id; } }); });
+      if (to) { history.replaceState(null, "", link("learn", to)); return { tab: "learn", anchor: to }; }
+    }
     return { tab: tab, anchor: p[1] || null };
   }
   function drawTabs(current) {
@@ -1343,6 +1803,8 @@ details.item > .sbody { padding-left: 0; }
       if (r.tab === "overview") { tabOverview(main); }
       else if (r.tab === "prep") { tabPrep(main); }
       else if (r.tab === "rounds") { tabRounds(main); }
+      else if (r.tab === "research") { tabResearch(main); }
+      else if (r.tab === "learn") { tabLearn(main); }
       else if (r.tab === "design") { tabDesign(main); }
       else if (r.tab === "own") { tabOwn(main); }
       else if (r.tab === "sessions") { tabSessions(main, r.anchor); }
