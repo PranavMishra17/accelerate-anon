@@ -217,6 +217,9 @@ details.ln-item[open] > summary .qm, details.ln-item[open] > summary .ln-n { dis
 .ln-arrow { font: inherit; font-size: var(--fs-sm); background: none; border: var(--hair); border-radius: var(--radius-sm); color: var(--soft); padding: 2px var(--s2); cursor: pointer; }
 .ln-arrow:disabled { opacity: .4; cursor: default; }
 .ln-qn { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s1); }
+.ln-code { margin: var(--s2) 0; border-top: var(--hair); } .ln-code > summary { cursor: pointer; padding: var(--s2) 0; font-size: var(--fs-sm); }
+.ln-lang { font-weight: var(--w-strong); } .ln-file { color: var(--muted); font-family: var(--mono); font-size: var(--fs-xs); }
+.ln-code pre { max-height: 60vh; overflow: auto; }
 .ln-next { margin-top: var(--s4); }
 .ln-rate { display: flex; gap: var(--s2); flex-wrap: wrap; margin-top: var(--s2); }
 .ln-rate .btn.on { border-color: var(--accent); color: var(--accent); }
@@ -1010,6 +1013,14 @@ details.item > .sbody { padding-left: 0; }
         }
         (t.figs || []).forEach(function (k) { var f = figNode(k, 0); if (f) { pane.appendChild(f); } });
         panelSection(pane, "In production", panelList(t.production));
+        (t.code || []).forEach(function (c) {
+          if (!c.src) { return; }
+          var d = el("details", "ln-code");
+          d.appendChild(el("summary", "", '<span class="ln-lang">' + esc(c.lang === "typescript" ? "TypeScript" : c.lang === "python" ? "Python" : c.lang) + "</span> " + inl(c.title || "") +
+            (c.file ? ' <span class="ln-file">' + esc(c.file.split("/").pop()) + "</span>" : "")));
+          var pre = el("pre", "cv-code"); pre.appendChild(el("code", "", esc(c.src))); d.appendChild(pre);
+          pane.appendChild(d);
+        });
         learn(pane, { read: t.read || [] });
       }
       if (id === "check") {

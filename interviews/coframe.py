@@ -20,11 +20,11 @@ LOOP = {
     # lightened to 7:1 on the dark surface, a step lighter than Oxus's indigo so the two read apart.
     "brand": "#5A52EC", "brand_dark": "#B79CF7",
     # Round 2 is the next call. The time is booked through Ashby's link; noon Eastern is a placeholder.
-    "when_iso": "2026-10-06T12:00:00-04:00",
-    "when": "Round 2: Tuesday 6 October (time to be booked; hold the full hour)",
+    "when_iso": "2026-10-09T12:00:00-04:00",
+    "when": "Round 2: Friday 9 October, one hour (time from your booking)",
     "who": ("Round 2: Pavlo Razumovskyi, Coframe's technical co-founder. Round 1 (done, 1 October) was Neesha "
             "Malik, Founding Talent, who moved you forward."),
-    "format": ("Round 2 is a technical exercise, typically 30 to 40 minutes, with 60 reserved: keep the full hour. "
+    "format": ("Round 2 is one hour with the technical co-founder: coding, system design and technical conversation, in Python and TypeScript. "
                "Coding plus technical conversation. AI tools you use daily are encouraged (Claude Code, Codex and so on). "
                "Have an environment ready to read and run Python and TypeScript scripts (VS Code or Cursor), and a setup "
                "that shares microphone, camera and screen (allow the browser to screen share)."),
@@ -159,9 +159,9 @@ ROUNDS = [
           "notes": ["Check before the next round: how alfred_ marks a job claimable again after a crash (pgmq's visibility timeout or your own sweep), so you say it exactly."]},
      ]},
     {"title": "Round 2: technical exercise",
-     "when": "Tuesday 6 October 2026 (time to be booked through the Ashby link; keep the full hour)",
+     "when": "Friday 9 October 2026, one hour (time from your booking)",
      "who": "Pavlo Razumovskyi, technical co-founder",
-     "format": "A technical exercise, typically 30 to 40 minutes with 60 reserved: coding and technical conversation. AI tools encouraged; read and run Python and TypeScript; share microphone, camera and screen.",
+     "format": "One hour: coding, system design and technical conversation, in Python and TypeScript. AI tools encouraged; read and run Python and TypeScript; share microphone, camera and screen.",
      "outcome": "Not yet held.",
      "notes": ["Before the day: an editor (VS Code or Cursor) with Python 3 and Node with TypeScript (tsx or ts-node) that run a script in one command; Claude Code signed in and working in that folder; a screen share tested in the browser with camera and microphone.",
                "Expect to read, run, fix or extend Python and TypeScript, and to talk through the agent-platform judgement from round 1 on real code: isolated execution, retries and durability, tracing, latency and cost. Round 1's questions below are the ones most likely to come back in more depth.",

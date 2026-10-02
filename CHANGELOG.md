@@ -940,3 +940,11 @@ flag, one question per topic on its catch. A topic gets Know, Partly or Not yet,
 a field's About page says where you stand and runs a test of fifteen, weakest first. Answers stay in
 the browser. Written in parallel by five writers and checked by `baseline/quiz/check.js`. No charter
 deviation.
+
+**2026-10-03 — Commure as a learning path; Coframe round 2 moves to Friday 9 October.**
+The Commure page now has the Learn tab Vanguard uses, in place of Prep and Sessions: seven modules
+(Monday's screen first, then the call path, the conversation loop, the backend, Python async, his
+voice agent and the design), 35 topics, 91 multiple-choice questions. Old Prep links land on the
+topic that absorbed them. Learn topics can now carry code files, shown folded under Learn. Coframe
+round 2 is now Friday 9 October, one hour with Pavlo: coding, system design, Python and TypeScript.
+No charter deviation.
