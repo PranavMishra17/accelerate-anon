@@ -1022,3 +1022,17 @@ p = 0.7), and points to sources on exactly this: IntuitiveML's three-minute vide
 Learning 22.7.2, StatQuest's binomial walk-through. `figures/stamp.py` now also stamps
 `data/reading.js` and `baseline/res/`, so new resources show without a hard refresh. No charter
 deviation.
+
+**2026-10-03: Weeks 2 to 5, every maths step rebuilt to teach, like week 1's negative log-likelihood step.**
+26 steps: the four mathematics sessions (derivatives, vectors and matrices, gradients and descent,
+probability) and the three that are mathematics underneath (sampling and Nyquist, attention's
+square-root scaling, the source-filter model). Each lead now says what the question asks and the one
+idea that unlocks it; the mathematics is written as equations (213 lines, each with a plain line under
+it and a worked example in numbers); each step has a think-it-through list and a new check question on
+the unlocking idea; resources were replaced wherever they covered the topic but not the question (the
+whole-book PDFs are gone; d2l.ai sections, 3Blue1Brown, StatQuest, Khan Academy, Better Explained and
+others in their place, every link fetched and every video checked). Eight new figures where none showed
+the idea: a square growing by dx, a grid under a matrix, transposed shapes, backprop with the step's
+numbers, a die's shrunk sample space, a tone read at the wrong rate, spectra before and after
+resampling, one envelope sampled at 90 and 250 Hz. Model answers were corrected where they missed the
+unlocking idea. No charter deviation.

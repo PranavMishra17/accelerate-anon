@@ -719,6 +719,412 @@ var FIGURES = (function () {
     }
   };
 
+  DIA.derivSquare = {
+    title: "Grow a square by dx and two strips appear. The corner is too small to count.",
+    cap: "<b>The derivative of x² is the two strips, per unit of dx.</b> Nudge the side x by dx and the area gains two strips of area x · dx and a corner of area dx². At x = 3 and dx = 0.01 the strips give 0.06 and the corner only 0.0001, so the change per unit of x is 6.01, which tends to 2x = 6 as dx shrinks. That is d/dx x² = 2x, seen as an area.",
+    svg: function () {
+      var b = "", x = 3, dx = 0.01;
+      var area0 = x * x, strips = 2 * x * dx, corner = dx * dx, area1 = (x + dx) * (x + dx);
+      var change = area1 - area0, per = change / dx;
+      var X0 = 50, Y0 = 44, side = 150, g = 18;
+      var sw = function (y, tone) { return '<rect x="350" y="' + (y - 10) + '" width="12" height="12" class="d-fill-' + tone + ' d-str-' + tone + '" stroke-width="1"/>'; };
+
+      b += S.tag(0, 14, "A square of side x");
+      b += S.node("square", '<rect x="' + X0 + '" y="' + Y0 + '" width="' + side + '" height="' + side + '" class="d-fill-sys d-str-sys" stroke-width="1.25"/>' +
+        S.text(X0 + side / 2, Y0 + side / 2 + 4, "x²", "d-t-b", "middle") +
+        S.text(X0 + side / 2, Y0 - 8, "x", "d-t", "middle") +
+        S.text(X0 - 8, Y0 + side / 2 + 4, "x", "d-t", "end"));
+      b += S.node("strips", '<rect x="' + (X0 + side) + '" y="' + Y0 + '" width="' + g + '" height="' + side + '" class="d-fill-alaap d-str-alaap" stroke-width="1.25"/>' +
+        '<rect x="' + X0 + '" y="' + (Y0 + side) + '" width="' + side + '" height="' + g + '" class="d-fill-alaap d-str-alaap" stroke-width="1.25"/>' +
+        S.text(X0 + side + g + 8, Y0 + side / 2 + 4, "x · dx", "d-t", "start") +
+        S.text(X0 + side / 2, Y0 + side + g + 16, "x · dx", "d-t", "middle") +
+        S.text(X0 + side + g / 2, Y0 - 8, "dx", "d-t", "middle") +
+        S.text(X0 - 8, Y0 + side + g / 2 + 4, "dx", "d-t", "end"));
+      b += S.node("corner", '<rect x="' + (X0 + side) + '" y="' + (Y0 + side) + '" width="' + g + '" height="' + g + '" class="d-fill-iv d-str-iv" stroke-width="1.25"/>' +
+        S.text(X0 + side + g + 8, Y0 + side + g + 2, "dx² (negligible)", "d-t-s", "start"));
+
+      b += S.tag(350, 30, "At x = 3, dx = 0.01");
+      b += S.node("numbers", sw(64, "sys") + S.text(370, 64, "x² = " + area0, "d-t") +
+        sw(88, "alaap") + S.text(370, 88, "two strips: 2 · " + x + " · " + dx + " = " + strips.toFixed(2), "d-t") +
+        sw(112, "iv") + S.text(370, 112, "corner: dx² = " + corner.toFixed(4), "d-t") +
+        S.text(350, 138, area0 + " + " + strips.toFixed(2) + " + " + corner.toFixed(4) + " = " + area1.toFixed(4) + " = (3.01)²", "d-t-b"));
+      b += S.node("slope", S.text(350, 170, "change in area: " + area1.toFixed(4) + " − " + area0 + " = " + change.toFixed(4), "d-t") +
+        S.text(350, 190, "per unit of x: " + change.toFixed(4) + " / " + dx + " = " + per.toFixed(2), "d-t") +
+        S.text(350, 210, "as dx shrinks this tends to 2x = " + 2 * x, "d-t-b") +
+        S.text(350, 230, "the corner is under 0.2% of the change", "d-t-s"));
+      b += S.text(0, 258, "dx is drawn far larger than 0.01 so the strips can be seen", "d-t-s");
+      return S.frame(640, 268, b);
+    }
+  };
+
+  DIA.gridTransform = {
+    title: "A matrix is where the grid's two arrows land. The rest follows.",
+    cap: "<b>The columns of A are the landing places of î and ĵ.</b> With A = [[1, 2], [−1, 3]], î = (1, 0) lands at (1, −1) and ĵ = (0, 1) at (2, 3). Every grid line stays straight, parallel and evenly spaced, so the vector (2, −1), which is 2 steps of î and −1 step of ĵ, lands at 2 · (1, −1) − 1 · (2, 3) = (0, −5). Both panels use the same scale.",
+    svg: function () {
+      var b = "", i, s = 22, cy = 164, cxB = 135, cxA = 470;
+      var A = function (x, y) { return [x + 2 * y, -x + 3 * y]; };
+      var I = function (x, y) { return [x, y]; };
+      var P = function (cx, p) { return [(cx + p[0] * s).toFixed(1), (cy - p[1] * s).toFixed(1)]; };
+      var CV = { math: "--math,#3f7a55", alaap: "--alaap,#a85f3f", sys: "--sys,#3f6ea8", flat: "--ink,#1a1a19" };
+      var line = function (cx, p, q, cls, w, dash) {
+        var a = P(cx, p), c = P(cx, q);
+        return '<line x1="' + a[0] + '" y1="' + a[1] + '" x2="' + c[0] + '" y2="' + c[1] + '" class="' + cls + '" stroke-width="' + w + '"' + (dash ? ' stroke-dasharray="4 3"' : '') + '/>';
+      };
+      var poly = function (cx, pts, tone) {
+        return '<polygon points="' + pts.map(function (p) { var q = P(cx, p); return q[0] + "," + q[1]; }).join(" ") + '" class="d-fill-' + tone + ' d-str-' + tone + '" stroke-width="1"/>';
+      };
+      var grid = function (cx, tf, cls) {
+        var o = "", k;
+        for (k = -1; k <= 1; k++) {
+          o += line(cx, tf(k, -1.5), tf(k, 1.5), cls, k === 0 ? 1.6 : 1);
+          o += line(cx, tf(-1.5, k), tf(1.5, k), cls, k === 0 ? 1.6 : 1);
+        }
+        return o;
+      };
+      var arrow = function (cx, p, tone) {
+        var a = P(cx, [0, 0]), t = P(cx, p), dx = t[0] - a[0], dy = t[1] - a[1], L = Math.sqrt(dx * dx + dy * dy);
+        var ux = dx / L, uy = dy / L, hl = 8, hw = 3.6;
+        var bx = t[0] - ux * hl, by = t[1] - uy * hl;
+        return '<line x1="' + a[0] + '" y1="' + a[1] + '" x2="' + bx.toFixed(1) + '" y2="' + by.toFixed(1) + '" class="d-str-' + tone + '" stroke-width="2.4"/>' +
+          '<polygon points="' + t[0] + "," + t[1] + " " + (bx - uy * hw).toFixed(1) + "," + (by + ux * hw).toFixed(1) + " " + (bx + uy * hw).toFixed(1) + "," + (by - ux * hw).toFixed(1) +
+          '" style="fill:var(' + CV[tone] + ')"/>';
+      };
+
+      b += S.tag(40, 14, "Before: the plain grid");
+      b += S.node("grid-before", poly(cxB, [I(0, 0), I(1, 0), I(1, 1), I(0, 1)], "req") + grid(cxB, I, "d-str-flat"));
+      b += S.node("basis-before", arrow(cxB, [1, 0], "math") + arrow(cxB, [0, 1], "alaap") +
+        S.text(P(cxB, [1, 0])[0] * 1 + 5, cy - 5, "î", "d-t-b", "start") + S.text(cxB + 6, P(cxB, [0, 1])[1] * 1 - 3, "ĵ", "d-t-b", "start"));
+      b += S.node("vector-before", arrow(cxB, [2, -1], "sys") + S.text(+P(cxB, [2, -1])[0] + 6, +P(cxB, [2, -1])[1] + 6, "v = (2, −1)", "d-t-b", "start"));
+
+      b += S.arrow(232, cy, 338, cy, { id: "grid-before>grid-after" });
+      b += S.text(285, cy - 8, "apply A", "d-t-s", "middle");
+
+      b += S.tag(350, 14, "After A: still a grid");
+      b += S.node("grid-after", poly(cxA, [A(0, 0), A(1, 0), A(1, 1), A(0, 1)], "req") + grid(cxA, A, "d-str-sys"));
+      b += S.node("columns-of-a", arrow(cxA, A(1, 0), "math") + arrow(cxA, A(0, 1), "alaap") +
+        S.text(cxA + 46, cy + 26, "Aî = (1, −1)", "d-t-b", "start") +
+        S.text(+P(cxA, A(0, 1))[0] + 6, +P(cxA, A(0, 1))[1] + 6, "Aĵ = (2, 3)", "d-t-b", "start"));
+      b += S.node("vector-after", line(cxA, [0, 0], [2, -2], "d-str-sys", 1.6, true) + line(cxA, [2, -2], [0, -5], "d-str-sys", 1.6, true) +
+        arrow(cxA, A(2, -1), "sys") +
+        S.text(+P(cxA, [2, -2])[0] + 8, +P(cxA, [2, -2])[1] + 4, "2 · Aî", "d-t-s", "start") +
+        S.text(+P(cxA, [1, -3.5])[0] + 8, +P(cxA, [1, -3.5])[1] + 4, "−1 · Aĵ", "d-t-s", "start") +
+        S.text(+P(cxA, [0, -5])[0] + 8, +P(cxA, [0, -5])[1] + 6, "Av = (0, −5)", "d-t-b", "start"));
+
+      b += S.text(0, 322, "The columns of A are where î and ĵ land: Aî = (1, −1), Aĵ = (2, 3).", "d-t-s");
+      b += S.text(0, 340, "Av = 2 · (1, −1) − 1 · (2, 3) = (0, −5): the same recipe, with the new columns.", "d-t-s");
+      b += S.text(0, 358, "Grid lines stay straight, parallel and evenly spaced; the origin stays put.", "d-t-s");
+      b += S.text(0, 376, "The unit square (area 1) becomes a parallelogram of area 5 (1 · 3 − 2 · (−1)).", "d-t-s");
+      return S.frame(640, 388, b);
+    }
+  };
+
+  DIA.shapesTranspose = {
+    title: "The inner sizes must match. Transposing a product reverses the order.",
+    cap: "<b>Shapes decide which products exist.</b> A (4 × 3) times B (3 × 5) works because the inner 3s match, and the outer sizes give 4 × 5. Transposing swaps rows and columns, so (AB)ᵀ is 5 × 4, and BᵀAᵀ = (5 × 3)(3 × 4) is exactly that shape. The other order AᵀBᵀ = (3 × 4)(5 × 3) has inner sizes 4 and 5, so it is undefined.",
+    svg: function () {
+      var b = "", u = 16;
+      var rect = function (x, y, c, r, tone, label) {
+        return '<rect x="' + x + '" y="' + y + '" width="' + c * u + '" height="' + r * u + '" class="d-fill-' + tone + ' d-str-' + tone + '" stroke-width="1.25"/>' +
+          S.text(x + c * u / 2, y + r * u / 2 + 4, label, "d-t-b", "middle");
+      };
+      var thick = function (x1, y1, x2, y2, tone) {
+        return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" class="d-str-' + tone + '" stroke-width="4" stroke-linecap="round"/>';
+      };
+      var left = function (x, y, t) { return S.text(x - 8, y, t, "d-t-s", "end"); };
+      var top = function (x, y, t) { return S.text(x, y - 6, t, "d-t-s", "middle"); };
+
+      /* row 1: A (4 x 3) times B (3 x 5) */
+      b += S.tag(0, 14, "A times B");
+      b += S.node("a-times-b", rect(60, 34, 3, 4, "sys", "A") + left(60, 70, "4") +
+        S.text(134, 74, "×", "d-t-b", "middle") +
+        rect(170, 50, 5, 3, "req", "B") + top(210, 50, "5"));
+      b += S.node("inner-3", thick(60, 98, 108, 98, "alaap") + S.text(84, 116, "3", "d-t-b", "middle") +
+        thick(170, 50, 170, 98, "alaap") + S.text(160, 78, "3", "d-t-b", "end"));
+      b += S.text(276, 74, "=", "d-t-b", "middle");
+      b += S.node("ab-shape", rect(306, 34, 5, 4, "math", "AB") + left(306, 70, "4") + top(346, 34, "5"));
+      b += S.text(420, 64, "(4 × 3)(3 × 5) = 4 × 5", "d-t-b");
+      b += S.text(420, 84, "the inner 3s match and drop out", "d-t-s");
+
+      /* row 2: B^T (5 x 3) times A^T (3 x 4) */
+      b += S.tag(0, 150, "Transposed, the order reverses");
+      b += S.node("bt-times-at", rect(60, 170, 3, 5, "req", "Bᵀ") + left(60, 214, "5") +
+        S.text(134, 218, "×", "d-t-b", "middle") +
+        rect(170, 194, 4, 3, "sys", "Aᵀ") + top(202, 194, "4"));
+      b += S.node("inner-3-t", thick(60, 250, 108, 250, "alaap") + S.text(84, 268, "3", "d-t-b", "middle") +
+        thick(170, 194, 170, 242, "alaap") + S.text(160, 222, "3", "d-t-b", "end"));
+      b += S.text(262, 218, "=", "d-t-b", "middle");
+      b += S.node("abt-shape", rect(290, 170, 4, 5, "math", "(AB)ᵀ") + left(290, 214, "5") + top(322, 170, "4"));
+      b += S.text(390, 208, "(5 × 3)(3 × 4) = 5 × 4", "d-t-b");
+      b += S.text(390, 228, "the shape of (AB)ᵀ, so BᵀAᵀ is defined", "d-t-s");
+
+      /* row 3: A^T (3 x 4) times B^T (5 x 3), undefined */
+      b += S.tag(0, 296, "The other order does not multiply");
+      b += S.node("wrong-order", rect(60, 332, 4, 3, "sys", "Aᵀ") + left(60, 360, "3") +
+        thick(60, 380, 124, 380, "iv") + S.text(92, 396, "4", "d-t-b", "middle") +
+        S.text(150, 360, "×", "d-t-b", "middle") +
+        rect(200, 316, 3, 5, "req", "Bᵀ") + top(224, 316, "3") +
+        thick(200, 316, 200, 396, "iv") + S.text(190, 360, "5", "d-t-b", "end") +
+        S.text(290, 348, "AᵀBᵀ: (3 × 4)(5 × 3)", "d-t-b") +
+        '<line x1="286" y1="344" x2="440" y2="344" class="d-str-iv" stroke-width="2"/>' +
+        S.text(290, 368, "inner sizes 4 and 5 differ, so it is undefined", "d-t-s"));
+      return S.frame(640, 414, b);
+    }
+  };
+
+  DIA.backpropNumbers = {
+    title: "Forward values above, local derivatives below, and the gradient is their product",
+    cap: "<b>Run forward and keep every value, then multiply the local derivatives back along the chain.</b> With x = 2, w₁ = 0.5, w₂ = 1.5, y = 1 the forward pass gives h = 1.0, a = 0.731, z = 1.097. Each step has one easy derivative: 0.193, 1.5, 0.197 and 2, and the sigmoid's 0.197 uses the a it produced going forward. Multiplying all four gives dL/dw₁ = 0.114, and two of them give dL/dw₂ = 0.141.",
+    svg: function () {
+      var b = "", i;
+      var x = 2, w1 = 0.5, w2 = 1.5, y = 1;
+      var h = w1 * x, a = 1 / (1 + Math.exp(-h)), z = w2 * a, L = (z - y) * (z - y);
+      var dLdz = 2 * (z - y), dzda = w2, dadh = a * (1 - a), dhdw1 = x;
+      var dLdw2 = dLdz * a, dLdw1 = dLdz * dzda * dadh * dhdw1;
+      var f3 = function (v) { return v.toFixed(3); };
+      var BX = [50, 210, 370, 530], BW = 104, BY = 44, BH = 40, AY = 64;
+      var ids = ["step-h", "step-a", "step-z", "step-loss"];
+      var labs = ["h = w₁x", "a = σ(h)", "z = w₂a", "L = (z − y)²"];
+      var subs = ["w₁ = 0.5", "sigmoid", "w₂ = 1.5", "y = 1, L = " + L.toFixed(4)];
+      var fwd = ["h = " + h.toFixed(1), "a = " + f3(a), "z = " + f3(z)];
+      var bwd = ["dh/dw₁ = " + dhdw1, "da/dh = " + f3(dadh), "dz/da = " + dzda, "dL/dz = " + f3(dLdz)];
+
+      b += S.tag(0, 14, "Forward: keep every value");
+      for (i = 0; i < 4; i++) {
+        b += S.box({ id: ids[i], x: BX[i], y: BY, w: BW, h: BH, label: labs[i], sub: subs[i], tone: i === 3 ? "now" : "math" });
+      }
+      b += S.arrow(4, AY, 46, AY, { id: "x>step-h" });
+      for (i = 0; i < 3; i++) {
+        b += S.arrow(BX[i] + BW + 4, AY, BX[i + 1] - 4, AY, { id: ids[i] + ">" + ids[i + 1] });
+      }
+      var fl = S.text(25, 34, "x = " + x, "d-t-b", "middle");
+      for (i = 0; i < 3; i++) { fl += S.text(BX[i] + BW + 26, 34, fwd[i], "d-t-b", "middle"); }
+      b += S.node("forward-values", fl);
+
+      b += S.tag(0, 100, "Backward: one local derivative per step");
+      var bl = "";
+      for (i = 3; i >= 0; i--) {
+        var c = BX[i] + BW / 2, e = i > 0 ? BX[i - 1] + BW / 2 : 14;
+        b += S.arrow(c - 4, 112, e + 4, 112, { dash: true, id: i > 0 ? ids[i] + ">" + ids[i - 1] + "-back" : "step-h>w1" });
+        bl += S.text((c + e) / 2, 130, bwd[i], "d-t-b", "middle");
+      }
+      b += S.node("local-derivatives", bl);
+
+      b += S.node("dl-dw2", S.text(0, 166, "dL/dw₂ = " + f3(dLdz) + " · " + f3(a) + " = " + f3(dLdw2), "d-t-b") +
+        S.text(0, 184, "dz/dw₂ is a, the value that step saw going forward", "d-t-s"));
+      b += S.node("dl-dw1", S.text(0, 208, "dL/dw₁ = " + f3(dLdz) + " · " + dzda + " · " + f3(dadh) + " · " + dhdw1 + " = " + f3(dLdw1), "d-t-b") +
+        S.text(0, 226, "the four labels under the arrows, multiplied; " + f3(dadh) + " = a(1 − a) = " + f3(a) + " · " + f3(1 - a) + ", from the forward a", "d-t-s"));
+      return S.frame(640, 240, b);
+    }
+  };
+
+DIA.dieConditional = {
+    title: "Given even, the die has three faces left, and one of them is a six",
+    cap: "<b>Conditioning is a count on a smaller sample space.</b> Of the six faces of a fair die, three are even, so P(even) = 3/6 = 1/2. Throw away the odd faces and only 2, 4 and 6 remain; the six is one of those three, so P(6 | even) = P(6 and even) / P(even) = (1/6) / (1/2) = 1/3. Dividing by P(even) is the rescaling: three faces that were 1/6 each now add to 1.",
+    svg: function () {
+      var b = "", v, x, odd = "", even = "", lower = "", six = "";
+      var sq = 52, gap = 10, y = 22, big = 72;
+      b += S.tag(0, 12, "Sample space: one roll of a fair die");
+      for (v = 1; v <= 6; v++) {
+        x = (v - 1) * (sq + gap);
+        if (v % 2 === 0) {
+          even += '<rect x="' + x + '" y="' + y + '" width="' + sq + '" height="' + sq + '" class="d-fill-sys d-str-sys" stroke-width="2.25"/>' +
+            S.text(x + sq / 2, y + sq / 2 + 5, v, "d-t-b", "middle");
+        } else {
+          odd += '<rect x="' + x + '" y="' + y + '" width="' + sq + '" height="' + sq + '" class="d-fill-flat d-str-flat" stroke-width="1.25"/>' +
+            S.text(x + sq / 2, y + sq / 2 + 5, v, "d-t-s", "middle");
+        }
+      }
+      b += S.node("odd-faces", odd);
+      b += S.node("even-faces", even);
+      b += S.node("overlap-counts",
+        S.text(392, 40, "P(even) = 3/6 = 1/2", "d-t-b") +
+        S.text(392, 60, "P(6 and even) = 1/6", "d-t-s") +
+        S.text(0, 92, "each face is 1/6", "d-t-s"));
+      b += S.arrow(212, 100, 212, 144, { id: "even-faces>shrunk-world" });
+      b += S.text(222, 126, "keep only the even faces", "d-t-s");
+      b += S.tag(0, 162, "Shrunk world: only the even faces remain");
+      for (v = 2; v <= 6; v += 2) {
+        x = (v / 2 - 1) * (big + 20);
+        if (v === 6) {
+          six = '<rect x="' + x + '" y="174" width="' + big + '" height="' + big + '" class="d-fill-alaap d-str-alaap" stroke-width="2.5"/>' +
+            S.text(x + big / 2, 174 + big / 2 + 5, v, "d-t-b", "middle");
+        } else {
+          lower += '<rect x="' + x + '" y="174" width="' + big + '" height="' + big + '" class="d-fill-sys d-str-sys" stroke-width="1.5"/>' +
+            S.text(x + big / 2, 174 + big / 2 + 5, v, "d-t-b", "middle");
+        }
+      }
+      b += S.node("shrunk-world", lower);
+      b += S.node("the-six", six);
+      b += S.text(0, 268, "each now 1/3, and the three add to 1", "d-t-s");
+      b += S.node("formula",
+        S.text(300, 198, "P(6 | even)", "d-t-b") +
+        S.text(300, 218, "= P(6 and even) / P(even)", "d-t") +
+        S.text(300, 238, "= (1/6) / (1/2)", "d-t") +
+        S.text(300, 258, "= 1/3", "d-t-b"));
+      return S.frame(640, 280, b);
+    }
+  };
+
+  DIA.aliasRead = {
+    title: "Read at the wrong rate, every frequency scales by the same ratio",
+    cap: "<b>A wrong sample rate scales every frequency by one ratio.</b> The readings carry no clock, so a 24 kHz clip analysed as if it were 16 kHz has every frequency multiplied by 16/24 = 2/3: a 1 kHz tone reads as 667 Hz and nothing raises an error. Each rate also has its own ceiling, N/2, of 8, 11.025, 12 and 22.05 kHz for 16, 22.05, 24 and 44.1 kHz.",
+    svg: function () {
+      var b = "", i, x, t;
+      var X0 = 120, K = 400, AY = 104;
+      var xt = X0 + K * 1, xr = X0 + K * (2 / 3);
+      b += S.tag(0, 14, "A 24 kHz tone, analysed as if the clip were 16 kHz");
+      b += '<path d="M' + X0 + ',' + AY + ' L' + (X0 + K * 1.2) + ',' + AY + '" class="d-line" stroke-width="1"/>';
+      for (i = 0; i <= 6; i++) {
+        t = i * 0.2; x = X0 + K * t;
+        b += '<path d="M' + x + ',' + AY + ' L' + x + ',' + (AY + 5) + '" class="d-line" stroke-width="1"/>';
+        b += S.text(x, AY + 18, i === 0 ? "0" : String(Math.round(t * 10) / 10), "d-t-x", "middle");
+      }
+      b += S.text(X0 + K * 1.2 + 6, AY + 4, "kHz", "d-t-x");
+      b += S.node("true-tone",
+        '<path d="M' + xt + ',' + AY + ' L' + xt + ',58" class="d-str-alaap" stroke-width="1.5"/>' +
+        '<circle cx="' + xt + '" cy="' + AY + '" r="5" class="d-fill-alaap d-str-alaap" stroke-width="1.25"/>' +
+        S.text(xt, 50, "true 1 kHz", "d-t-b", "middle"));
+      b += S.node("read-tone",
+        '<path d="M' + xr.toFixed(1) + ',' + AY + ' L' + xr.toFixed(1) + ',58" class="d-str-sys" stroke-width="1.5"/>' +
+        '<circle cx="' + xr.toFixed(1) + '" cy="' + AY + '" r="5" class="d-fill-sys d-str-sys" stroke-width="1.25"/>' +
+        S.text(xr, 50, "reads as 667 Hz", "d-t-b", "middle"));
+      b += S.arrow(xt - 6, 80, xr + 6, 80, { id: "true-tone>read-tone", dash: true, label: "× 16/24" });
+      b += S.text(0, 142, "Every frequency in the clip scales by 16/24 = 2/3. No error is raised.", "d-t-s");
+
+      b += S.tag(0, 174, "Nyquist ceiling of each rate: N / 2");
+      var rows = [
+        { id: "bar-16", rate: "16 kHz audio", c: 8, tone: "sys" },
+        { id: "bar-22", rate: "22.05 kHz audio", c: 11.025, tone: "flat" },
+        { id: "bar-24", rate: "24 kHz audio", c: 12, tone: "alaap" },
+        { id: "bar-44", rate: "44.1 kHz audio", c: 22.05, tone: "flat" }
+      ];
+      rows.forEach(function (r, k) {
+        var y = 186 + k * 24, w = r.c * 20;
+        b += S.node(r.id,
+          S.text(X0 - 8, y + 12, r.rate, "d-t-s", "end") +
+          S.bar({ x: X0, y: y, w: w, h: 16, tone: r.tone }) +
+          S.text(X0 + w + 6, y + 12, r.c + " kHz", "d-t-b"));
+      });
+      b += '<path d="M' + X0 + ',282 L600,282" class="d-line" stroke-width="1"/>';
+      for (i = 0; i <= 4; i++) {
+        x = X0 + i * 120;
+        b += '<path d="M' + x + ',282 L' + x + ',287" class="d-line" stroke-width="1"/>';
+        b += S.text(x, 300, String(i * 6), "d-t-x", "middle");
+      }
+      b += S.text(606, 286, "kHz", "d-t-x");
+      return S.frame(640, 310, b);
+    }
+  };
+
+  DIA.resampleSpectra = {
+    title: "Resampled down to 16 kHz, the spectrum stops dead at 8 kHz",
+    cap: "<b>Resampling to 16 kHz keeps the spectrum below 8 kHz and removes everything above it.</b> The new rate's ceiling is 16/2 = 8 kHz. A resampler filters out 8 to 12 kHz before it drops readings, because left in, that content would fold back below 8 kHz. So the new spectrum matches the original and then ends at a cliff at 8 kHz. The curve is an illustrative speech-like shape computed from a formula, not a measurement.",
+    svg: function () {
+      var b = "", i, f, x, y, d1 = "", d2 = "";
+      var X0 = 50, Y0 = 44, W = 520, H = 180, FMAX = 12, DB = 60;
+      var px = function (k) { return X0 + k / FMAX * W; };
+      var py = function (db) { return Y0 - db / DB * H; };
+      var S0 = function (k) {
+        return -6 - 22 * Math.log(1 + k / 0.3) / Math.LN10 + 5 * Math.exp(-Math.pow((k - 0.7) / 0.25, 2)) +
+          4 * Math.exp(-Math.pow((k - 2.5) / 0.5, 2)) + 3 * Math.exp(-Math.pow((k - 3.6) / 0.5, 2));
+      };
+      for (i = 0; i <= 240; i++) {
+        f = i * 0.05;
+        d1 += (i ? " L" : "M") + px(f).toFixed(1) + "," + py(S0(f)).toFixed(1);
+        if (f <= 8.0001) { d2 += (d2 ? " L" : "M") + px(f).toFixed(1) + "," + py(S0(f)).toFixed(1); }
+      }
+      d2 += " L" + px(8).toFixed(1) + "," + (Y0 + H);
+      b += S.axes(X0, Y0, W, H, "", "dB");
+      [0, -20, -40, -60].forEach(function (db) {
+        b += '<path d="M' + (X0 - 4) + ',' + py(db) + ' L' + X0 + ',' + py(db) + '" class="d-line" stroke-width="1"/>';
+        b += S.text(X0 - 8, py(db) + 4, String(db).replace("-", "−"), "d-t-x", "end");
+      });
+      for (i = 0; i <= 6; i++) {
+        x = px(i * 2);
+        b += '<path d="M' + x + ',' + (Y0 + H) + ' L' + x + ',' + (Y0 + H + 4) + '" class="d-line" stroke-width="1"/>';
+        b += S.text(x, Y0 + H + 17, String(i * 2), "d-t-x", "middle");
+      }
+      b += S.text(X0 + W / 2, Y0 + H + 36, "frequency (kHz)", "d-t-s", "middle");
+      b += S.node("lost-band",
+        '<rect x="' + px(8) + '" y="' + Y0 + '" width="' + (px(12) - px(8)) + '" height="' + H + '" class="d-fill-alaap" fill-opacity="0.35" stroke="none"/>' +
+        S.text((px(8) + px(12)) / 2, Y0 + H - 24, "gone after resampling", "d-t-s", "middle"));
+      b += S.node("original-spectrum",
+        '<path d="' + d1 + '" fill="none" class="d-line" stroke-width="3.25"/>' +
+        '<path d="M' + (X0 + 12) + ',' + (Y0 + H - 38) + ' L' + (X0 + 34) + ',' + (Y0 + H - 38) + '" class="d-line" stroke-width="3.25"/>' +
+        S.text(X0 + 42, Y0 + H - 34, "original, 24 kHz: runs to 12 kHz", "d-t-s"));
+      b += S.node("new-nyquist",
+        S.path("M" + px(8) + "," + (Y0 - 6) + " L" + px(8) + "," + (Y0 + H), "flat", true) +
+        S.text(px(8), Y0 - 12, "new Nyquist 8 kHz", "d-t-b", "middle"));
+      b += S.node("old-nyquist",
+        S.path("M" + px(12) + "," + (Y0 - 6) + " L" + px(12) + "," + (Y0 + H), "flat", true) +
+        S.text(px(12) + 8, Y0 - 12, "old Nyquist 12 kHz", "d-t-b", "middle"));
+      b += S.node("resampled-spectrum",
+        S.path(d2, "sys") +
+        '<path d="M' + (X0 + 12) + ',' + (Y0 + H - 18) + ' L' + (X0 + 34) + ',' + (Y0 + H - 18) + '" class="d-str-sys" stroke-width="1.75"/>' +
+        S.text(X0 + 42, Y0 + H - 14, "resampled, 16 kHz: ends at 8 kHz", "d-t-s"));
+      return S.frame(640, 268, b);
+    }
+  };
+
+  DIA.tiltSampling = {
+    title: "One envelope, two sets of harmonics, two slopes",
+    cap: "<b>The same envelope, sampled two ways, gives two fitted slopes.</b> Harmonics are samples of the envelope taken every F0 hertz: 88 of them between 80 and 8000 Hz at 90 Hz, 32 at 250 Hz. The tilt is a straight line fitted to whatever samples it is given, and the 27 lowest bins (below 500 Hz) carry 43.2% of the slope. The 90 Hz voice puts five harmonics in them, the 250 Hz voice one, so the fit moves while the envelope does not. The axis is logarithmic, which is why harmonics crowd together at high frequencies. The curve is illustrative.",
+    svg: function () {
+      var b = "", p, k, i, f, x, y;
+      var X0 = 50, W = 560, H = 92, LO = 80, HI = 8000;
+      var bs = [[28.94, 0.2506, 0.8278], [11.6, 2.2967, 0.3263], [1.17, 6.1837, 1.0946]];
+      var env = function (hz) {
+        var o = Math.log(hz / 80) / Math.LN2, v = -2.1035 * o, j;
+        for (j = 0; j < bs.length; j++) { v += bs[j][0] * Math.exp(-Math.pow((o - bs[j][1]) / bs[j][2], 2)); }
+        return v;
+      };
+      var px = function (hz) { return X0 + W * Math.log(hz / LO) / Math.log(HI / LO); };
+      var dmax = -1e9, dmin = 1e9;
+      for (i = 0; i <= 200; i++) { f = env(80 * Math.pow(100, i / 200)); dmax = Math.max(dmax, f); dmin = Math.min(dmin, f); }
+      var voices = [{ f0: 90, n: 88, sub: "88 harmonics", fit: "fit: steeper slope", place: "Five harmonics land in the shaded bins.", yp: 24 },
+                    { f0: 250, n: 32, sub: "32 harmonics", fit: "fit: flatter slope", place: "One harmonic (250 Hz) lands in the shaded bins.", yp: 190 }];
+      voices.forEach(function (v) {
+        var yp = v.yp, base = yp + H;
+        var py = function (db) { return yp + 4 + (dmax - db) / (dmax - dmin) * (H - 12); };
+        var stemsLow = "", stemsHi = "", xs = [], ys = [], mx = 0, my = 0, sxy = 0, sxx = 0, m, c, d = "";
+        for (k = 1; k * v.f0 <= HI; k++) {
+          f = k * v.f0;
+          if (f < LO) { continue; }
+          x = px(f).toFixed(1); y = py(env(f)).toFixed(1);
+          if (f < 500) { stemsLow += "M" + x + "," + base + " L" + x + "," + y + " "; } else { stemsHi += "M" + x + "," + base + " L" + x + "," + y + " "; }
+          xs.push(Math.log(f) / Math.LN2); ys.push(env(f));
+        }
+        for (i = 0; i < xs.length; i++) { mx += xs[i]; my += ys[i]; }
+        mx /= xs.length; my /= xs.length;
+        for (i = 0; i < xs.length; i++) { sxy += (xs[i] - mx) * (ys[i] - my); sxx += (xs[i] - mx) * (xs[i] - mx); }
+        m = sxy / sxx; c = my - m * mx;
+        for (i = 0; i <= 120; i++) {
+          f = LO * Math.pow(HI / LO, i / 120);
+          d += (i ? " L" : "M") + px(f).toFixed(1) + "," + py(env(f)).toFixed(1);
+        }
+        var fa = Math.log(LO) / Math.LN2, fb = Math.log(HI) / Math.LN2;
+        var tid = String(v.f0);
+        b += S.text(0, yp - 9, "F0 = " + v.f0 + " Hz: " + v.sub + ", 80 to 8000 Hz", "d-t-b");
+        b += '<path d="M' + X0 + ',' + base + ' L' + (X0 + W) + ',' + base + '" class="d-line" stroke-width="1"/>';
+        b += S.node("heavy-bins-" + tid,
+          '<rect x="' + X0 + '" y="' + yp + '" width="' + (px(500) - X0).toFixed(1) + '" height="' + H + '" class="d-fill-alaap" fill-opacity="0.35" stroke="none"/>' +
+          '<path d="' + stemsLow + '" fill="none" class="d-str-alaap" stroke-width="2"/>');
+        b += S.node("harmonics-" + tid, '<path d="' + stemsHi + '" fill="none" class="d-line" stroke-width="0.9"/>');
+        b += S.node("envelope-" + tid, S.path(d, "sys"));
+        b += S.node("fit-" + tid,
+          S.path("M" + px(LO).toFixed(1) + "," + py(m * fa + c).toFixed(1) + " L" + px(HI).toFixed(1) + "," + py(m * fb + c).toFixed(1), "iv") +
+          '<path d="M498,' + (yp - 12) + ' L514,' + (yp - 12) + '" class="d-str-iv" stroke-width="1.75"/>' +
+          S.text(520, yp - 9, v.fit, "d-t-s"));
+        [100, 200, 500, 1000, 2000, 4000, 8000].forEach(function (t) {
+          b += '<path d="M' + px(t).toFixed(1) + ',' + base + ' L' + px(t).toFixed(1) + ',' + (base + 4) + '" class="d-line" stroke-width="1"/>';
+          b += S.text(px(t), base + 16, t >= 1000 ? (t / 1000) + "k" : String(t), "d-t-x", "middle");
+        });
+        b += S.text(X0, base + 32, "Shaded: the 27 heavy bins below 500 Hz, 43.2% of the slope. " + v.place, "d-t-s");
+      });
+      return S.frame(640, 322, b);
+    }
+  };
+
   DIA.chain = {
     title: "A network is a composition. The chain rule is how you differentiate one.",
     cap: "<b>Forward, then backward.</b> Each layer is a function; the network is their composition. Going forward you record what each layer saw — that recording is the tape. Going backward you multiply the local derivatives along the chain. Autograd is not magic added to PyTorch; it is this bookkeeping, done automatically.",
