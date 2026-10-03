@@ -995,3 +995,17 @@ for title, channel and length, and any with fewer than 1,000 views was dropped (
 the Coframe founder's AGI House talk and Rasa's own talk. The 44 left empty are steps with no
 concept to teach (rehearse, pitch your own system, a personal story) or niche topics where only
 weak videos exist; an empty slot beats a weak video. No charter deviation.
+
+**2026-10-03: Every "What you would say" in weeks 1 to 5 is shaped to skim; the hundred-million answer rewritten.**
+He found the model answers were 10 to 20 line paragraphs with nothing bold and no clear start or
+end. All 61 are now an opening line in bold, three to six beats each with a bold head, and one
+closing line (`ans: {lead, pts, close}`), same facts and shorter sentences. Week 1 session A step
+4 (the hundred-million answer, no product names) was rewritten by hand: a new "How to think it
+through" block (`think`: the questions to ask yourself, in order) and an answer that walks the
+scale from a hundred a day to a hundred million (about 1,200 a second), naming what changes at
+each step: a queue off the request path, a bounded queue and backpressure, partitioning on a skewed
+key, idempotent retries and dead letters, admission per caller, sizing from the tail. The rehearsal
+step after it got the matching short version. Four factual slips found on the way were corrected
+(the base-rate ratio is about a thousand, adult male F0 is about 85 to 180 Hz, a retry's dedup key
+is the scenario id alone, the latency ladder steps are one to three orders of magnitude). No
+charter deviation.

@@ -31,6 +31,9 @@ def sessions_from_tracker(ids):
 
 
 def ans_text(ans):
+    if isinstance(ans, dict):   # {lead, pts, close}: the shaped answer
+        ans = [ans.get("lead", "")] + ans.get("pts", []) + [ans.get("close", "")]
+        ans = [a for a in ans if a]
     if isinstance(ans, list):
         return " ".join(a.rstrip(".") + "." for a in ans)
     return ans or ""
