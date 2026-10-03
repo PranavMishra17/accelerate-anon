@@ -1027,7 +1027,7 @@ deviation.
 26 steps: the four mathematics sessions (derivatives, vectors and matrices, gradients and descent,
 probability) and the three that are mathematics underneath (sampling and Nyquist, attention's
 square-root scaling, the source-filter model). Each lead now says what the question asks and the one
-idea that unlocks it; the mathematics is written as equations (213 lines, each with a plain line under
+idea that unlocks it; the mathematics is written as equations (198 lines, each with a plain line under
 it and a worked example in numbers); each step has a think-it-through list and a new check question on
 the unlocking idea; resources were replaced wherever they covered the topic but not the question (the
 whole-book PDFs are gone; d2l.ai sections, 3Blue1Brown, StatQuest, Khan Academy, Better Explained and
