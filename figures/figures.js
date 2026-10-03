@@ -303,6 +303,39 @@ var FIGURES = (function () {
     }
   };
 
+  DIA.nll = {
+    title: "Log keeps the peak where it is. The minus sign turns it into a valley.",
+    cap: "<b>Same best p on both sides.</b> Ten coin flips, seven heads. Left, the likelihood L(p) = p⁷(1−p)³ peaks at p = 0.7, at a height of about 0.002, already tiny with ten data points. Right, −log L(p) = −7 log p − 3 log(1−p) has its lowest point at the same p = 0.7. Log is increasing, so it never moves the top; the minus sign flips the top into a bottom, which is what a loss and gradient descent need.",
+    svg: function () {
+      var b = "", i, p, x, y, d1 = "", d2 = "";
+      var X0 = 40, X1 = 330, Y = 30, W = 220, H = 120;
+      var px = function (x0, q) { return x0 + (q - 0.05) / 0.9 * W; };
+      var L = function (q) { return Math.pow(q, 7) * Math.pow(1 - q, 3); };
+      var N = function (q) { return -(7 * Math.log(q) + 3 * Math.log(1 - q)); };
+      var Lmax = L(0.7);
+      for (i = 0; i <= 90; i++) {
+        p = 0.05 + i * 0.01;
+        x = px(X0, p); y = Y + H - L(p) / Lmax * (H - 8);
+        d1 += (i ? " L" : "M") + x.toFixed(1) + "," + y.toFixed(1);
+        x = px(X1, p); y = Y + H - (Math.min(N(p), 16) - 5) / 11 * H;
+        d2 += (i ? " L" : "M") + x.toFixed(1) + "," + Math.min(y, Y + H).toFixed(1);
+      }
+      b += S.tag(0, 14, "Likelihood: climb to the top");
+      b += S.axes(X0, Y, W, H, "p", "L(p)");
+      b += S.node("likelihood", S.path(d1, "math"));
+      b += S.node("peak", S.path("M" + px(X0, 0.7).toFixed(1) + "," + Y + " L" + px(X0, 0.7).toFixed(1) + "," + (Y + H), "flat", true) +
+        S.text(px(X0, 0.7) + 6, Y + 12, "highest at p = 0.7", "d-t-s"));
+      b += S.tag(X1 - 40, 14, "Negative log-likelihood: walk to the bottom");
+      b += S.axes(X1, Y, W, H, "p", "−log L(p)");
+      b += S.node("nll", S.path(d2, "alaap"));
+      b += S.node("valley", S.path("M" + px(X1, 0.7).toFixed(1) + "," + Y + " L" + px(X1, 0.7).toFixed(1) + "," + (Y + H), "flat", true) +
+        S.text(px(X1, 0.7) - 6, Y + 12, "lowest at p = 0.7", "d-t-s", "end"));
+      b += S.text(0, 182, "L(0.7) ≈ 0.0022 with 10 flips; with 1,000 examples a product like this is below 10⁻³⁰⁸ and rounds to 0", "d-t-s");
+      b += S.text(0, 200, "−log L(0.7) ≈ 6.1, an ordinary number; the slope of log L is a sum, 7/p − 3/(1−p), zero at p = 0.7", "d-t-s");
+      return S.frame(600, 212, b);
+    }
+  };
+
   DIA.chain = {
     title: "A network is a composition. The chain rule is how you differentiate one.",
     cap: "<b>Forward, then backward.</b> Each layer is a function; the network is their composition. Going forward you record what each layer saw — that recording is the tape. Going backward you multiply the local derivatives along the chain. Autograd is not magic added to PyTorch; it is this bookkeeping, done automatically.",

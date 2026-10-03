@@ -1009,3 +1009,16 @@ step after it got the matching short version. Four factual slips found on the wa
 (the base-rate ratio is about a thousand, adult male F0 is about 85 to 180 Hz, a retry's dedup key
 is the scenario id alone, the latency ladder steps are one to three orders of magnitude). No
 charter deviation.
+
+**2026-10-03: Week 1, logarithms step 4 (why minimise negative log-likelihood) rebuilt to teach.**
+He could not answer the step from what it gave him: the resources covered likelihood in general,
+the figure was the log-sum one, and the step jumped from log rules to likelihood with no bridge.
+It now says what the question is (two rewrites that keep the same best parameter), shows the
+mathematics as equations (a new `eq` field drawn in a math face: the likelihood as a product,
+arg max, log is increasing so the arg max is unchanged, product to sum, the minus sign to a loss,
+seven heads in ten worked to p = 0.7, underflow in numbers), adds a think-it-through list and a
+new figure (`nll`: the likelihood's peak and the negative log-likelihood's valley at the same
+p = 0.7), and points to sources on exactly this: IntuitiveML's three-minute video, Dive into Deep
+Learning 22.7.2, StatQuest's binomial walk-through. `figures/stamp.py` now also stamps
+`data/reading.js` and `baseline/res/`, so new resources show without a hard refresh. No charter
+deviation.

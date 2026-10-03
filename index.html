@@ -367,6 +367,12 @@
   .wb-model .wb-lead { font-weight: 700; padding-bottom: var(--s2); }
   .wb-model .wb-close { padding-top: var(--s2); border-top: 1px solid color-mix(in srgb, var(--bg) 18%, transparent); opacity: .85; }
   .sxthink { margin: 0; padding-left: 22px; }
+  /* Equations: a math face for the formula only, the plain line under it in the step face. */
+  .sxeq { margin: 0; }
+  .sxeq dt { font-family: "Cambria Math", "STIX Two Math", "Latin Modern Math", "Times New Roman", serif; font-size: 17px; color: var(--ink);
+    padding: var(--s2) var(--s3); background: var(--surface); border-left: 2px solid var(--rule); overflow-x: auto; white-space: nowrap; }
+  .sxeq dt sub, .sxeq dt sup { font-size: 0.72em; }
+  .sxeq dd { margin: var(--s1) 0 var(--s3) var(--s3); color: var(--soft); }
   .sxthink li { margin: 0 0 var(--s2); padding-left: var(--s1); }
   .wb-model p { margin: 0; }
   .wb-quiet { color: var(--muted); font-size: var(--fs-sm); }
@@ -707,12 +713,12 @@
   </main>
 </div>
 <script src="figures/icons.js?v=f5a48822"></script>
-<script src="figures/figures.js?v=bba2fb33"></script>
-<script src="figures/notes.js?v=b0f43ed5"></script>
+<script src="figures/figures.js?v=8380c806"></script>
+<script src="figures/notes.js?v=3959b0b1"></script>
 <script src="figures/viewer.js?v=ecb99aae"></script>
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
-<script src="data/reading.js"></script>
+<script src="data/reading.js?v=b4be654b"></script>
 <script src="site/res.js?v=1788a96c"></script>
 <script src="data/mcq/base.js?v=5fc7e7ac"></script>
 <script src="data/mcq/week1.js?v=6e94184a"></script>
@@ -930,21 +936,24 @@
               out: "ten worked manipulations on paper, kept",
               skip: "The video walkthroughs on that page. Solve cold first, check after.",
               ans: {"lead": "Ten manipulations done cold on paper, checked afterwards, made the log rules automatic.", "pts": ["Definition: log base 2 of 32 is 5, since 2 to the 5 is 32; log base 3 of 1 is 0, since anything to the power 0 is 1.", "Product rule: log(100) plus log(10) is log(1000), which is 3.", "Quotient rule: log base 2 of 8 minus log base 2 of 2 is log base 2 of 4, which is 2.", "Zero, one, negative: 5 to the 0 is 1, e to the 1 is e, and 2 to the minus 3 is one eighth.", "Power rule: log base 5 of 25 cubed is 3 times log base 5 of 25, which is 3 times 2, or 6."], "close": "Done on paper before checking, the product-to-sum rule and pulling the exponent out front stop being things to look up."} },
-            { t: "Write one line: why minimise negative log-likelihood rather than maximise likelihood", al: [{ p: "plan/s5-1", why: "A mixture density network is trained on exactly this loss." }],
+            { t: "Why minimise negative log-likelihood instead of maximising likelihood: two moves that keep the same answer", al: [{ p: "plan/s5-1", why: "A mixture density network is trained on exactly this loss." }],
               close: [
                 { k: "why", q: "Why minimise the negative log-likelihood rather than maximise the likelihood directly?", a: "The raw likelihood is a product of many small probabilities that underflows to zero, while its log is a stable sum; and standard optimisers are built to descend, so negating the log-likelihood turns maximisation into the descent they already do." },
-                { k: "blank", q: "Negating the log-likelihood turns a maximisation problem into the ___ optimisers are already built to do.", a: "descent" },
+                { k: "why", q: "Why does taking the log not change which parameter is best?", a: "Log is an increasing function: if L(a) is bigger than L(b), then log L(a) is bigger than log L(b), so the highest point stays at the same parameter; only the heights change." },
                 { k: "pick", q: "Your optimiser only knows how to walk downhill, and you want the parameters that make your data most probable. What do you hand it?",
                   o: ["The likelihood, unmodified", "The negative log-likelihood", "The log-likelihood, unmodified"], a: 1,
                   why: "Negating the log-likelihood turns 'find the maximum' into 'find the minimum', which is the direction a descent-only optimiser can actually walk." },
                 { k: "short", q: "One sentence: what happens numerically to a product of many small probabilities if it is not logged first?", a: "It underflows to zero in floating point long before you have multiplied through the whole dataset." },
-                { k: "figure", q: "In the logs figure, why is the summed-log box labelled 'stable, and easy to differentiate' rather than just 'stable'?", a: "A sum differentiates term by term, one derivative per log, while the product on the left needs the product rule and stays exposed to underflow throughout." }
+                { k: "figure", q: "In the likelihood and negative log-likelihood figure, where is the lowest point of the right-hand curve, and why there?", a: "At p = 0.7, the same place the likelihood peaks: the log keeps the peak where it is, and the minus sign turns it into a valley." }
               ],
-              d: "Two reasons, both practical. Products of many small probabilities underflow; sums do not. And optimisers are written to descend, not to climb.",
-              m: 15,
-              where: "No resource - your own line, checked against the reasons above only after writing it",
-              out: "one written line giving both reasons: underflow avoided by summing rather than multiplying, and optimisers descend rather than climb",
-              ans: {"lead": "I minimise the negative log-likelihood for two practical reasons: stability and what optimisers are built for.", "pts": ["Underflow: the likelihood is a product of many small probabilities that underflows to zero once it grows large.", "Sums are stable: its log turns that product into a sum, which stays numerically stable.", "Optimisers descend: they are built to walk downhill, so negating the log-likelihood turns maximisation into the descent they know."], "close": "So it is the same answer, in the form the numbers and tools handle well."} }
+              d: "You know likelihood and why we maximise it. The question is only about rewriting it: two moves, and each one keeps the same best parameter. Move 1, take the log: log is increasing, so the top stays where it was, and the product becomes a sum (this week's rule). Move 2, put a minus in front: the top becomes a bottom, so it is a loss to minimise. The equations below say it exactly; the figure shows it on ten coin flips.",
+              m: 30,
+              where: "Dive into Deep Learning, appendix 22.7 Maximum Likelihood: 'The Maximum Likelihood Principle', 'A Concrete Example', then 'Numerical Optimization and the Negative Log-Likelihood'",
+              url: "https://d2l.ai/chapter_appendix-mathematics-for-deep-learning/maximum-likelihood.html#numerical-optimization-and-the-negative-log-likelihood",
+              eq: [{"e": "L(θ) = p(x<sub>1</sub> | θ) · p(x<sub>2</sub> | θ) ⋯ p(x<sub>n</sub> | θ) = ∏<sub>i</sub> p(x<sub>i</sub> | θ)", "t": "The likelihood: how probable the data you saw is, for one value of the parameter θ. Independent data points multiply."}, {"e": "θ̂ = arg max<sub>θ</sub> L(θ)", "t": "Maximum likelihood: pick the θ that makes your data most probable. This is the question; everything below only rewrites it."}, {"e": "a &gt; b &nbsp;⇔&nbsp; log a &gt; log b &nbsp;&nbsp;so&nbsp;&nbsp; arg max<sub>θ</sub> L(θ) = arg max<sub>θ</sub> log L(θ)", "t": "Move 1, the key step. Log is increasing, so it changes the heights but never where the top is."}, {"e": "log L(θ) = Σ<sub>i</sub> log p(x<sub>i</sub> | θ)", "t": "What the log buys: this week's rule log(ab) = log a + log b turns the product into a sum."}, {"e": "NLL(θ) = −Σ<sub>i</sub> log p(x<sub>i</sub> | θ) &nbsp;&nbsp;and&nbsp;&nbsp; θ̂ = arg min<sub>θ</sub> NLL(θ)", "t": "Move 2: a minus sign turns the top into a bottom, arg max f = arg min (−f). Now it is a loss, and gradient descent walks downhill to it."}, {"e": "L(p) = p<sup>7</sup>(1 − p)<sup>3</sup> &nbsp;→&nbsp; log L(p) = 7 log p + 3 log(1 − p)", "t": "Worked example: seven heads in ten flips of a coin with bias p."}, {"e": "d/dp log L(p) = 7/p − 3/(1 − p) = 0 &nbsp;⇒&nbsp; p̂ = 0.7", "t": "The sum differentiates term by term. The product p⁷(1 − p)³ would need the product rule, and the answer is the same: seven in ten."}, {"e": "0.01<sup>1000</sup> = 10<sup>−2000</sup> &lt; 10<sup>−308</sup> → 0 &nbsp;&nbsp;but&nbsp;&nbsp; 1000 · log 0.01 ≈ −4605", "t": "Why it matters on real data: a thousand probabilities of 0.01 multiply to below the smallest float64 and round to zero; their logs add to an ordinary number."}],
+              think: ["What is being maximised: the likelihood L(θ), how probable the data you saw is under parameter θ. It is a product, one factor per data point.", "Does taking the log change the answer: no. Log is increasing, so it changes heights but never where the top is.", "What does the log buy you: a sum instead of a product. No underflow, and a derivative you can take one term at a time.", "Why the minus sign: tools minimise. Losses go down and gradient descent walks downhill, so −log L puts the same θ at the bottom.", "Check it with numbers: seven heads in ten flips. Does the bottom of −log L land at p = 0.7, the same place L peaks?"],
+              out: "one written line with both moves: the log keeps the best θ because it is increasing and turns the product into a sum, and the minus makes it a loss to minimise",
+              ans: {"lead": "Minimising the negative log-likelihood gives exactly the same parameters as maximising the likelihood; it is the same problem in a form computers handle.", "pts": ["Same answer: log is increasing, so the θ that makes L highest also makes log L highest.", "Product to sum: log L is a sum of log-probabilities, so it does not underflow the way a product of thousands of small probabilities does.", "Easy derivative: a sum differentiates term by term; for seven heads in ten, the slope of log L is 7/p − 3/(1 − p), zero at p = 0.7.", "Minus for a loss: optimisers minimise, so −log L turns the top into a bottom at the same θ.", "Same as cross-entropy: averaged over examples, the negative log-likelihood is the log loss you minimise when training a classifier."], "close": "So nothing about the answer changes; the log and the minus make it stable and something an optimiser can walk downhill to."} }
           ],
           quiz: [
             { q: "Why take the log of a likelihood?",
@@ -8672,6 +8681,12 @@
     var mat = el("div", "sdmat"), work = el("div", "sdwork");
     if (!isStudy && it.d && !s.study) { mat.appendChild(el("p", "sxd", it.d)); }
     if (it.pts && it.pts.length) { var pul = el("ul", "sxpts"); it.pts.forEach(function (q) { pul.appendChild(sayPoint(q)); }); mat.appendChild(pul); }
+    /* eq: the mathematics as equations, each with one line on what it says; e is trusted markup (sub, sup, i) */
+    if (it.eq && it.eq.length) {
+      var eqd = el("dl", "sxeq");
+      it.eq.forEach(function (q) { var dt = el("dt"); dt.innerHTML = q.e; eqd.appendChild(dt); eqd.appendChild(el("dd", "", q.t)); });
+      section(mat, it.eqTitle || "The mathematics", eqd);
+    }
     /* think: the questions you ask yourself, in order, before there is anything to say */
     if (it.think && it.think.length) { var tol = el("ol", "sxthink"); it.think.forEach(function (q) { tol.appendChild(sayPoint(q)); }); section(mat, "How to think it through", tol); }
     (x.figs || []).forEach(function (k, n) { var f = plate(k, n + 1); if (f) { mat.appendChild(f); } });
