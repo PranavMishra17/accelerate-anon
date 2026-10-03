@@ -977,3 +977,13 @@ site). 818 articles kept from about 1,400; 400 distinct conceptual videos added,
 YouTube for title, channel and length (`tools/yt.py`), and drawn as thumbnail cards by one shared
 renderer (`site/res.js`). 264 sub-pointers have no video yet: the search budget ran out partway,
 so a top-up pass can fill them. Parked loops (ZenML, Oxus) were left as they were. No charter deviation.
+
+**2026-10-03: System design guide, a sketch on every deep dive and the key patterns.**
+Every deep dive on the eight worked designs (33) now draws its picked solution, with the spot
+where the problem happens marked in a warning colour with a cross, a caption, and one sentence
+on what breaks there without the pick. Races, crashes between steps, retries and expiries are
+drawn as sequence diagrams (a new renderer: actors across, time down, Step through one step at
+a time); the rest as boxes. Each design's Patterns used shows the three most central patterns as
+sketches in its own components (24), chosen so no pattern repeats a dive's picture; the other
+cards stay text. Sketches scroll sideways on a phone rather than shrink. Asked for after the
+staged HLD pass; scoped by him to all dives and the top three patterns. No charter deviation.

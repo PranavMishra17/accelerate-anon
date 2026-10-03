@@ -36,7 +36,9 @@ patterns holding nearly a hundred techniques, each with its own mechanism diagra
 designs worked end to end: NotebookLM, a prior authorisation agent, an email and calendar
 agent, a coding agent, a voice agent for patient calls, Ticketmaster, and an agent-evaluation
 product. A design reads one step at a time, with the board, how to get there, what to say,
-and the follow-ups to expect.
+and the follow-ups to expect. The high-level design builds up in stages, every deep dive draws
+its chosen fix with the failure point marked (as a sequence diagram where timing is the point),
+and the main patterns each design uses are drawn in that design's own parts.
 
 <p align="center"><img src="docs/screenshots/system-design.png" width="860" alt="A worked design, one step at a time"></p>
 
