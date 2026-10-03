@@ -23,7 +23,32 @@ BASELINE.res("ml", {
    "why": "Masked-language pretraining: the self-supervised idea in the BERT paper."
   }
  ],
- "loss-functions": [],
+ "loss-functions": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Intuitively Understanding the Cross Entropy Loss",
+   "url": "https://www.youtube.com/watch?v=Pwgpl9mKars",
+   "m": 6,
+   "yt": {
+    "id": "Pwgpl9mKars",
+    "ch": "Adian Liusie"
+   },
+   "why": "Why cross-entropy measures how surprised the model is by the right answer."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Loss Functions - EXPLAINED!",
+   "url": "https://www.youtube.com/watch?v=QBbC3Cjsnjg",
+   "m": 9,
+   "yt": {
+    "id": "QBbC3Cjsnjg",
+    "ch": "CodeEmporium"
+   },
+   "why": "MSE, MAE and cross-entropy side by side, with when to use each."
+  }
+ ],
  "gradient-descent": [
   {
    "kind": "video",
@@ -238,6 +263,30 @@ BASELINE.res("ml", {
  ],
  "optimisers": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Optimization for Deep Learning (Momentum, RMSprop, AdaGrad, Adam)",
+   "url": "https://www.youtube.com/watch?v=NE88eqLngkg",
+   "m": 16,
+   "yt": {
+    "id": "NE88eqLngkg",
+    "ch": "DeepBean"
+   },
+   "why": "Builds from SGD to momentum to per-weight step sizes to Adam."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Adam Optimization Algorithm (C2W2L08)",
+   "url": "https://www.youtube.com/watch?v=JXQT_vxqwIs",
+   "m": 8,
+   "yt": {
+    "id": "JXQT_vxqwIs",
+    "ch": "DeepLearningAI"
+   },
+   "why": "The Adam update written out step by step."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Adam paper (Kingma and Ba): sections 1 and 2, the algorithm",
@@ -248,6 +297,30 @@ BASELINE.res("ml", {
  ],
  "mixed-precision": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Mixed Precision Training - Explained",
+   "url": "https://www.youtube.com/watch?v=87GhCIQudEA",
+   "m": 11,
+   "yt": {
+    "id": "87GhCIQudEA",
+    "ch": "DataMListic"
+   },
+   "why": "Which maths runs in 16-bit, the fp32 master weights, and loss scaling."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "How Fully Sharded Data Parallel (FSDP) works?",
+   "url": "https://www.youtube.com/watch?v=By_O0k102PY",
+   "m": 33,
+   "yt": {
+    "id": "By_O0k102PY",
+    "ch": "Ahmed Taha"
+   },
+   "why": "How sharding weights, grads and optimizer state fits bigger models; watch the first 15 minutes."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "PyTorch docs: automatic mixed precision (autocast and GradScaler)",
@@ -257,6 +330,30 @@ BASELINE.res("ml", {
   }
  ],
  "frameworks": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Understanding JAX: JIT, XLA, and Pure Functions Explained",
+   "url": "https://www.youtube.com/watch?v=SMAsCd4W5Z0",
+   "m": 11,
+   "yt": {
+    "id": "SMAsCd4W5Z0",
+    "ch": "Google for Developers"
+   },
+   "why": "What jit, grad and vmap do, and why JAX wants pure functions."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "PyTorch vs TensorFlow vs JAX: The Ultimate Comparison",
+   "url": "https://www.youtube.com/watch?v=mf2oCBeg7T8",
+   "m": 4,
+   "yt": {
+    "id": "mf2oCBeg7T8",
+    "ch": "The Program One"
+   },
+   "why": "Eager PyTorch against compiled JAX in a few minutes."
+  },
   {
    "kind": "keep",
    "src": "tutorial",
@@ -299,6 +396,30 @@ BASELINE.res("ml", {
  ],
  "fine-tuning-lora": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "What is Low-Rank Adaptation (LoRA) | explained by the inventor",
+   "url": "https://www.youtube.com/watch?v=DhRoTONcyZE",
+   "m": 8,
+   "yt": {
+    "id": "DhRoTONcyZE",
+    "ch": "Edward Hu"
+   },
+   "why": "Why a small low-rank add-on is enough, from the author."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "LoRA: Low-Rank Adaptation of Large Language Models - Explained visually + PyTorch code from scratch",
+   "url": "https://www.youtube.com/watch?v=PXWYUTMt-AU",
+   "m": 27,
+   "yt": {
+    "id": "PXWYUTMt-AU",
+    "ch": "Umar Jamil"
+   },
+   "why": "The A and B matrices and parameter counts, then the code."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "LoRA paper (Hu et al.): abstract and section 4",
@@ -308,6 +429,30 @@ BASELINE.res("ml", {
   }
  ],
  "preference-tuning": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Reinforcement Learning with Human Feedback (RLHF), Clearly Explained!!!",
+   "url": "https://www.youtube.com/watch?v=qPN_XZcJf_s",
+   "m": 19,
+   "yt": {
+    "id": "qPN_XZcJf_s",
+    "ch": "StatQuest with Josh Starmer"
+   },
+   "why": "The SFT, reward model and policy steps in plain terms."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Direct Preference Optimization: Your Language Model is Secretly a Reward Model | DPO paper explained",
+   "url": "https://www.youtube.com/watch?v=XZLc09hkMwA",
+   "m": 9,
+   "yt": {
+    "id": "XZLc09hkMwA",
+    "ch": "AI Coffee Break with Letitia"
+   },
+   "why": "How DPO skips the reward model and trains on preference pairs."
+  },
   {
    "kind": "read",
    "req": true,

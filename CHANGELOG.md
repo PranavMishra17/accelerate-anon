@@ -987,3 +987,11 @@ a time); the rest as boxes. Each design's Patterns used shows the three most cen
 sketches in its own components (24), chosen so no pattern repeats a dive's picture; the other
 cards stay text. Sketches scroll sideways on a phone rather than shrink. Asked for after the
 staged HLD pass; scoped by him to all dives and the top three patterns. No charter deviation.
+
+**2026-10-03: Video top-up, 264 sub-pointers without a video down to 44.**
+392 videos added across the tracker, the three loop pages and Baseline, found through YouTube's own
+results page (`python tools/yt.py --search`), so no web-search budget is spent. Each was checked
+for title, channel and length, and any with fewer than 1,000 views was dropped (28 picks), except
+the Coframe founder's AGI House talk and Rasa's own talk. The 44 left empty are steps with no
+concept to teach (rehearse, pitch your own system, a personal story) or niche topics where only
+weak videos exist; an empty slot beats a weak video. No charter deviation.

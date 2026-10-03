@@ -1,4 +1,5 @@
 """Check YouTube videos before linking them: python tools/yt.py <url or id> [...]
+Find them: python tools/yt.py --search "query" [n]   (YouTube's results page; id, title, channel, minutes, views)
 
 Prints one JSON line per video: {"id", "url", "title", "ch", "len"} where len is minutes (rounded
 up, null if YouTube would not say), or {"url", "error"} when the video is missing or private.
@@ -76,12 +77,54 @@ def check(s, cache):
     return out
 
 
+def minutes(text):
+    parts = [int(p) for p in (text or "").split(":") if p.isdigit()]
+    secs = 0
+    for p in parts:
+        secs = secs * 60 + p
+    return math.ceil(secs / 60) if parts else None
+
+
+def search(query, n, cache):
+    """YouTube's own results page, no API key: [{id, url, title, ch, len, views}], videos only (no Shorts, live or mixes).
+    Each result is cached with its length, so a later check needs no watch-page fetch."""
+    page = get("https://www.youtube.com/results?search_query=" + urllib.parse.quote(query))
+    m = re.search(r"var ytInitialData = (\{.*?\});</script>", page)
+    if not m:
+        raise RuntimeError("no results data on the page (consent wall or layout change)")
+    found = []
+
+    def walk(o):
+        if isinstance(o, dict):
+            v = o.get("videoRenderer")
+            if v and v.get("lengthText"):
+                found.append({"id": v["videoId"], "url": "https://www.youtube.com/watch?v=" + v["videoId"],
+                              "title": "".join(r.get("text", "") for r in v["title"]["runs"]),
+                              "ch": "".join(r.get("text", "") for r in v.get("ownerText", {}).get("runs", [])),
+                              "len": minutes(v["lengthText"].get("simpleText")),
+                              "views": (v.get("viewCountText") or {}).get("simpleText", "")})
+            for x in o.values():
+                walk(x)
+        elif isinstance(o, list):
+            for x in o:
+                walk(x)
+    walk(json.loads(m.group(1)))
+    for f in found:
+        cache.setdefault(f["id"], {k: f[k] for k in ("id", "url", "title", "ch", "len")})
+    return found[:n]
+
+
 if __name__ == "__main__":
     try:
         sys.stdout.reconfigure(encoding="utf-8")   # titles carry any script; the Windows console default would crash
     except Exception:
         pass
     cache = load()
+    if sys.argv[1:2] == ["--search"]:   # python tools/yt.py --search "query" [n]
+        for r in search(sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else 10, cache):
+            print(json.dumps(r, ensure_ascii=False))
+        save(cache)
+        sys.exit(0)
     for a in sys.argv[1:]:
         print(json.dumps(check(a, cache), ensure_ascii=False))
     save(cache)

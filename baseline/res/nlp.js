@@ -3,6 +3,30 @@
 BASELINE.res("nlp", {
  "tokenization": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Byte Pair Encoding Tokenization",
+   "url": "https://www.youtube.com/watch?v=HEikzVL-lZU",
+   "m": 6,
+   "yt": {
+    "id": "HEikzVL-lZU",
+    "ch": "Hugging Face"
+   },
+   "why": "The merge loop that builds a BPE vocabulary, worked on a small corpus."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "LLM Tokenizers Explained: BPE Encoding, WordPiece and SentencePiece",
+   "url": "https://www.youtube.com/watch?v=hL4ZnAWSyuU",
+   "m": 6,
+   "yt": {
+    "id": "hL4ZnAWSyuU",
+    "ch": "DataMListic"
+   },
+   "why": "BPE, WordPiece and SentencePiece compared in one pass."
+  },
+  {
    "kind": "keep",
    "src": "course",
    "req": true,
@@ -21,6 +45,30 @@ BASELINE.res("nlp", {
   }
  ],
  "bow-tfidf": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Term Frequency Inverse Document Frequency (TF-IDF) Explained",
+   "url": "https://www.youtube.com/watch?v=zLMEnNbdh4Q",
+   "m": 9,
+   "yt": {
+    "id": "zLMEnNbdh4Q",
+    "ch": "DataMListic"
+   },
+   "why": "Why rare words get more weight, with the formula worked through."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Natural Language Processing|Bag Of Words Intuition",
+   "url": "https://www.youtube.com/watch?v=IKgBLTeQQL8",
+   "m": 10,
+   "yt": {
+    "id": "IKgBLTeQQL8",
+    "ch": "Krish Naik"
+   },
+   "why": "Turning text into count vectors over a vocabulary."
+  },
   {
    "kind": "read",
    "req": true,
@@ -62,6 +110,30 @@ BASELINE.res("nlp", {
  ],
  "sentence-embeddings": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Sentence Transformers - EXPLAINED!",
+   "url": "https://www.youtube.com/watch?v=O3xbVmpdJwU",
+   "m": 18,
+   "yt": {
+    "id": "O3xbVmpdJwU",
+    "ch": "CodeEmporium"
+   },
+   "why": "Siamese BERT with pooling, and why it beats raw BERT for similarity."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "SimCSE: Simple Contrastive Learning of Sentence Embeddings - EMNLP 2021",
+   "url": "https://www.youtube.com/watch?v=u-OQVQSvx38",
+   "m": 12,
+   "yt": {
+    "id": "u-OQVQSvx38",
+    "ch": "Princeton NLP"
+   },
+   "why": "Contrastive training from the authors, positives and in-batch negatives."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Reimers and Gurevych, Sentence-BERT (abstract and section 3)",
@@ -79,6 +151,30 @@ BASELINE.res("nlp", {
   }
  ],
  "text-classification": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "SetFit: Few Shot Learning for Text Classification",
+   "url": "https://www.youtube.com/watch?v=Pg-smN4fUy0",
+   "m": 12,
+   "yt": {
+    "id": "Pg-smN4fUy0",
+    "ch": "Rajistics - data science, AI, and machine learning"
+   },
+   "why": "A mid-ladder rung: a few labelled examples, no prompts, small model."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "High quality text classification with few training examples with SetFit",
+   "url": "https://www.youtube.com/watch?v=IHalt4Nbf_Q",
+   "m": 7,
+   "yt": {
+    "id": "IHalt4Nbf_Q",
+    "ch": "Cohere"
+   },
+   "why": "A shorter pass on how SetFit fine-tunes and where it fits."
+  },
   {
    "kind": "read",
    "req": true,
@@ -146,6 +242,18 @@ BASELINE.res("nlp", {
  ],
  "sequence-labelling": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Introduction to Named Entity Tagging",
+   "url": "https://www.youtube.com/watch?v=7CRyqwCZFY0",
+   "m": 6,
+   "yt": {
+    "id": "7CRyqwCZFY0",
+    "ch": "From Languages to Information"
+   },
+   "why": "A label per token, BIO tags, and how entities are read off them."
+  },
+  {
    "kind": "keep",
    "src": "course",
    "req": true,
@@ -194,6 +302,30 @@ BASELINE.res("nlp", {
   }
  ],
  "encoders-decoders": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Which transformer architecture is best? Encoder-only vs Encoder-decoder vs Decoder-only models",
+   "url": "https://www.youtube.com/watch?v=wOcbALDw0bU",
+   "m": 8,
+   "yt": {
+    "id": "wOcbALDw0bU",
+    "ch": "Efficient NLP"
+   },
+   "why": "Which shape fits which task, and why decoder-only took over."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Transformers, explained: Understand the model behind GPT, BERT, and T5",
+   "url": "https://www.youtube.com/watch?v=SZorAJ4I-sA",
+   "m": 10,
+   "yt": {
+    "id": "SZorAJ4I-sA",
+    "ch": "Google Cloud Tech"
+   },
+   "why": "BERT, GPT and T5 placed on the same transformer."
+  },
   {
    "kind": "keep",
    "src": "course",
@@ -244,6 +376,30 @@ BASELINE.res("nlp", {
  ],
  "decoding": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Greedy? Min-p? Beam Search? How LLMs Actually Pick Words - Decoding Strategies Explained",
+   "url": "https://www.youtube.com/watch?v=o-_SZ_itxeA",
+   "m": 12,
+   "yt": {
+    "id": "o-_SZ_itxeA",
+    "ch": "AI Coffee Break with Letitia"
+   },
+   "why": "Greedy, beam, temperature, top-k and top-p on one running example."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "LLM Prompt Engineering with Random Sampling: Temperature, Top-k, Top-p",
+   "url": "https://www.youtube.com/watch?v=-BBulGM6xF0",
+   "m": 9,
+   "yt": {
+    "id": "-BBulGM6xF0",
+    "ch": "DataMListic"
+   },
+   "why": "What each sampling knob does to the distribution."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Holtzman et al., The curious case of neural text degeneration (nucleus sampling)",
@@ -280,6 +436,18 @@ BASELINE.res("nlp", {
  ],
  "dialogue-state": [
   {
+   "kind": "video",
+   "req": false,
+   "label": "[DLHLP 2020] Dialogue State Tracking (as Question Answering)",
+   "url": "https://www.youtube.com/watch?v=tRDF_w700Uw",
+   "m": 43,
+   "yt": {
+    "id": "tRDF_w700Uw",
+    "ch": "Hung-yi Lee"
+   },
+   "why": "What the state holds and how it is tracked turn by turn; watch the first 15 minutes."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Google Cloud: Dialogflow CX pages, forms and parameters",
@@ -297,6 +465,18 @@ BASELINE.res("nlp", {
   }
  ],
  "conversation-design": [
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Everything You Ever Wanted to Know About Conversation Design - Cathy Pearl, Google",
+   "url": "https://www.youtube.com/watch?v=vafh50qmWMM",
+   "m": 26,
+   "yt": {
+    "id": "vafh50qmWMM",
+    "ch": "SAIConference"
+   },
+   "why": "Sample dialogs, error recovery, confirmation and handoff from a Google conversation designer."
+  },
   {
    "kind": "read",
    "req": true,
@@ -316,6 +496,30 @@ BASELINE.res("nlp", {
  ],
  "nlu-llm-hybrid": [
   {
+   "kind": "video",
+   "req": false,
+   "label": "What is Tool Calling? Connecting LLMs to Your Data",
+   "url": "https://www.youtube.com/watch?v=h8gMhXYAv1k",
+   "m": 5,
+   "yt": {
+    "id": "h8gMhXYAv1k",
+    "ch": "IBM Technology"
+   },
+   "why": "How an LLM picks and fills a function, the function-calling pattern."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Faster LLM Function Calling - Dynamic Routes",
+   "url": "https://www.youtube.com/watch?v=QsZm0XCysoQ",
+   "m": 7,
+   "yt": {
+    "id": "QsZm0XCysoQ",
+    "ch": "James Briggs"
+   },
+   "why": "A fast embedding router in front of the LLM, the hybrid routing idea."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Arora et al., Intent detection in the age of LLMs (hybrid SetFit and LLM routing)",
@@ -333,6 +537,18 @@ BASELINE.res("nlp", {
   }
  ],
  "error-analysis": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Machine Learning Fundamentals: The Confusion Matrix",
+   "url": "https://www.youtube.com/watch?v=Kdsp6soqA7o",
+   "m": 8,
+   "yt": {
+    "id": "Kdsp6soqA7o",
+    "ch": "StatQuest with Josh Starmer"
+   },
+   "why": "Reading a confusion matrix, the base for per-intent precision and recall."
+  },
   {
    "kind": "read",
    "req": true,

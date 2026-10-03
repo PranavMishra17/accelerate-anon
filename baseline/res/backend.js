@@ -3,6 +3,30 @@
 BASELINE.res("backend", {
  "load-balancing": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Top 6 Load Balancing Algorithms Every Developer Should Know",
+   "url": "https://www.youtube.com/watch?v=dBmxNsS3BGE",
+   "m": 6,
+   "yt": {
+    "id": "dBmxNsS3BGE",
+    "ch": "ByteByteGo"
+   },
+   "why": "Round robin, least connections, hashing and the rest side by side."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Load balancing in Layer 4 vs Layer 7 with HAProxy examples",
+   "url": "https://www.youtube.com/watch?v=aKMLgFVxZYk",
+   "m": 38,
+   "yt": {
+    "id": "aKMLgFVxZYk",
+    "ch": "Hussein Nasser"
+   },
+   "why": "Layer 4 against layer 7 shown in HAProxy; watch the first half."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Sam Rose: load balancing, an interactive essay on the algorithms",
@@ -195,6 +219,30 @@ BASELINE.res("backend", {
  ],
  "orms": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "N+1 Problem: Eager Loading with Active Record",
+   "url": "https://www.youtube.com/watch?v=wLMRzdOztUY",
+   "m": 14,
+   "yt": {
+    "id": "wLMRzdOztUY",
+    "ch": "AgentOps Show"
+   },
+   "why": "The N+1 pattern shown live, and the eager loading that removes it."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Raw SQL, SQL Query Builder, or ORM?",
+   "url": "https://www.youtube.com/watch?v=x1fCJ7sUXCM",
+   "m": 17,
+   "yt": {
+    "id": "x1fCJ7sUXCM",
+    "ch": "ArjanCodes"
+   },
+   "why": "Raw SQL, query builder and ORM compared on what each hides."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "PlanetScale: what is the N+1 query problem and how to solve it",
@@ -212,6 +260,30 @@ BASELINE.res("backend", {
   }
  ],
  "connection-pools": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Connection Pooling in PostgresSQL with NodeJS (Performance Numbers)",
+   "url": "https://www.youtube.com/watch?v=GTeCtIoV2Tw",
+   "m": 13,
+   "yt": {
+    "id": "GTeCtIoV2Tw",
+    "ch": "Hussein Nasser"
+   },
+   "why": "Measured numbers: pooled against unpooled Postgres connections."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Database Connection Pool Sizing - Demystified!",
+   "url": "https://www.youtube.com/watch?v=Cp-aFYHLiCw",
+   "m": 39,
+   "yt": {
+    "id": "Cp-aFYHLiCw",
+    "ch": "Devoxx"
+   },
+   "why": "Why a small pool wins; watch for the sizing argument."
+  },
   {
    "kind": "read",
    "req": true,
@@ -231,6 +303,30 @@ BASELINE.res("backend", {
  ],
  "migrations": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Every engineer should know this (Expand-Contract Pattern)",
+   "url": "https://www.youtube.com/watch?v=ONSCQWLD9d0",
+   "m": 7,
+   "yt": {
+    "id": "ONSCQWLD9d0",
+    "ch": "Software Developer Diaries"
+   },
+   "why": "Add, copy, switch, remove: the safe order for any schema change."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "How do software projects achieve zero downtime database migrations?",
+   "url": "https://www.youtube.com/watch?v=cw5K2O4AHJc",
+   "m": 8,
+   "yt": {
+    "id": "cw5K2O4AHJc",
+    "ch": "Web Dev Cody"
+   },
+   "why": "How a live system changes its schema without downtime."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Stripe: online migrations at scale, the four-step dual-write pattern",
@@ -240,6 +336,30 @@ BASELINE.res("backend", {
   }
  ],
  "caching": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Caching Pitfalls Every Developer Should Know",
+   "url": "https://www.youtube.com/watch?v=wh98s0XhMmQ",
+   "m": 7,
+   "yt": {
+    "id": "wh98s0XhMmQ",
+    "ch": "ByteByteGo"
+   },
+   "why": "Stampede, stale data and the other ways a cache goes wrong."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Basic Caching Techniques Explained: Write-Through, Write-Back, Aside",
+   "url": "https://www.youtube.com/watch?v=ccemOqDrc2I",
+   "m": 10,
+   "yt": {
+    "id": "ccemOqDrc2I",
+    "ch": "Hussein Nasser"
+   },
+   "why": "Cache-aside, write-through and write-back in one pass."
+  },
   {
    "kind": "read",
    "req": true,
@@ -251,6 +371,30 @@ BASELINE.res("backend", {
  ],
  "queues-workers": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "What is a message queue and where is it used?",
+   "url": "https://www.youtube.com/watch?v=oUJbuFMyBDk",
+   "m": 10,
+   "yt": {
+    "id": "oUJbuFMyBDk",
+    "ch": "Gaurav Sen"
+   },
+   "why": "Why work leaves the request and what a queue gives you."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "How to implement Work Queues with Relational Databases and SQL SKIP LOCKED",
+   "url": "https://www.youtube.com/watch?v=xzmd6cVoggc",
+   "m": 8,
+   "yt": {
+    "id": "xzmd6cVoggc",
+    "ch": "Vlad Mihalcea"
+   },
+   "why": "A job queue in plain Postgres with SKIP LOCKED."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Postgres docs: the locking clause of SELECT, including SKIP LOCKED",
@@ -260,6 +404,30 @@ BASELINE.res("backend", {
   }
  ],
  "idempotency": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Designing Idempotent API Endpoints for Payments at Stripe",
+   "url": "https://www.youtube.com/watch?v=J2IcD9FZvZU",
+   "m": 15,
+   "yt": {
+    "id": "J2IcD9FZvZU",
+    "ch": "Arpit Bhayani"
+   },
+   "why": "How a payments API makes a retried charge safe with a key."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Idempotency in APIs: you should be aware of this!",
+   "url": "https://www.youtube.com/watch?v=t99NvIazD68",
+   "m": 8,
+   "yt": {
+    "id": "t99NvIazD68",
+    "ch": "Software Developer Diaries"
+   },
+   "why": "Which HTTP methods are idempotent and how to make the rest so."
+  },
   {
    "kind": "read",
    "req": true,
@@ -271,6 +439,30 @@ BASELINE.res("backend", {
  ],
  "timeouts-retries": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Every engineer should know this (retries with jitter)",
+   "url": "https://www.youtube.com/watch?v=yGO4Igb45V0",
+   "m": 10,
+   "yt": {
+    "id": "yGO4Igb45V0",
+    "ch": "Software Developer Diaries"
+   },
+   "why": "Why synchronized retries pile on, and the jitter that spreads them."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "4 Traffic Failure Handling Patterns: Timeout, Retry, Jitter, Backoff",
+   "url": "https://www.youtube.com/watch?v=m28VAy2yZsE",
+   "m": 17,
+   "yt": {
+    "id": "m28VAy2yZsE",
+    "ch": "SoftwareDude"
+   },
+   "why": "Timeout, retry, jitter and backoff as one set of failure patterns."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "AWS Builders' Library: timeouts, retries and backoff with jitter",
@@ -281,6 +473,30 @@ BASELINE.res("backend", {
  ],
  "rate-limiting": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Rate Limiter System Design: Token Bucket, Leaky Bucket, Scaling",
+   "url": "https://www.youtube.com/watch?v=YXkOdWBwqaA",
+   "m": 8,
+   "yt": {
+    "id": "YXkOdWBwqaA",
+    "ch": "ByteByteGo"
+   },
+   "why": "Token bucket and leaky bucket, then how to scale the limiter."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Five Rate Limiting Algorithms: Key Concepts in System Design",
+   "url": "https://www.youtube.com/watch?v=mQCJJqUfn9Y",
+   "m": 18,
+   "yt": {
+    "id": "mQCJJqUfn9Y",
+    "ch": "Hello Byte"
+   },
+   "why": "The five algorithms compared, windows included."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Stripe: scaling your API with rate limiters",
@@ -290,6 +506,30 @@ BASELINE.res("backend", {
   }
  ],
  "serverless-edge": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "AWS Lambda Function Execution and Cold Start",
+   "url": "https://www.youtube.com/watch?v=BhQh9QZdiKQ",
+   "m": 14,
+   "yt": {
+    "id": "BhQh9QZdiKQ",
+    "ch": "Be A Better Dev"
+   },
+   "why": "What a cold start does, step by step."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "What the heck is a V8 isolate?",
+   "url": "https://www.youtube.com/watch?v=LXv5H8B-h5E",
+   "m": 5,
+   "yt": {
+    "id": "LXv5H8B-h5E",
+    "ch": "Annie Sexton"
+   },
+   "why": "What an isolate is and why it starts faster than a container."
+  },
   {
    "kind": "read",
    "req": true,
@@ -309,6 +549,30 @@ BASELINE.res("backend", {
  ],
  "monolith-microservices": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Monolithic vs Microservice Architecture: Which To Use and When?",
+   "url": "https://www.youtube.com/watch?v=NdeTGlZ__Do",
+   "m": 11,
+   "yt": {
+    "id": "NdeTGlZ__Do",
+    "ch": "Alex Hyett"
+   },
+   "why": "When one deployable is enough and when to split."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Moving from monoliths to microservices",
+   "url": "https://www.youtube.com/watch?v=rckfN7xFig0",
+   "m": 20,
+   "yt": {
+    "id": "rckfN7xFig0",
+    "ch": "Gaurav Sen"
+   },
+   "why": "What changes in practice when a monolith is split."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Martin Fowler: Monolith First",
@@ -327,6 +591,30 @@ BASELINE.res("backend", {
  ],
  "observability": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Metrics, Logs and Traces: What To Observe and Why",
+   "url": "https://www.youtube.com/watch?v=aJpzr8648XE",
+   "m": 9,
+   "yt": {
+    "id": "aJpzr8648XE",
+    "ch": "Tech Upskill"
+   },
+   "why": "What each of logs, metrics and traces answers."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Distributed Tracing in Microservices",
+   "url": "https://www.youtube.com/watch?v=XYvQHjWJJTE",
+   "m": 8,
+   "yt": {
+    "id": "XYvQHjWJJTE",
+    "ch": "ByteMonk"
+   },
+   "why": "How one request is followed across services with traces."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "OpenTelemetry: observability primer",
@@ -344,6 +632,30 @@ BASELINE.res("backend", {
   }
  ],
  "testing-services": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Static, Unit, Integration, and End-to-End Tests Explained",
+   "url": "https://www.youtube.com/watch?v=TLccnKIMggA",
+   "m": 14,
+   "yt": {
+    "id": "TLccnKIMggA",
+    "ch": "Lucas Paganini"
+   },
+   "why": "What unit, integration and end-to-end tests each catch."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "When To Unit, E2E, And Integration Test",
+   "url": "https://www.youtube.com/watch?v=isI1c0eGSZ0",
+   "m": 15,
+   "yt": {
+    "id": "isI1c0eGSZ0",
+    "ch": "The PrimeTime"
+   },
+   "why": "How to choose the level for a given piece of code."
+  },
   {
    "kind": "read",
    "req": true,

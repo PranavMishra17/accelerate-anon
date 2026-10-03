@@ -47,6 +47,30 @@ BASELINE.res("ai", {
  ],
  "context-engineering": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Context engineering explained: What every AI developer should know",
+   "url": "https://www.youtube.com/watch?v=BBPQYtR7oUk",
+   "m": 11,
+   "yt": {
+    "id": "BBPQYtR7oUk",
+    "ch": "Google Cloud Tech and Smitha Kolan - Machine Learning Engineer"
+   },
+   "why": "Shows what goes into the window on each call and why order and selection matter."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Context Engineering for Agents",
+   "url": "https://www.youtube.com/watch?v=4GiqzUHD5AA",
+   "m": 23,
+   "yt": {
+    "id": "4GiqzUHD5AA",
+    "ch": "LangChain"
+   },
+   "why": "The write, select, compress and isolate moves, with agent examples."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Anthropic, Effective context engineering for AI agents",
@@ -64,6 +88,30 @@ BASELINE.res("ai", {
   }
  ],
  "structured-output": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Structured Output from LLMs: Grammars, Regex, and State Machines",
+   "url": "https://www.youtube.com/watch?v=xpvFinvqRCA",
+   "m": 18,
+   "yt": {
+    "id": "xpvFinvqRCA",
+    "ch": "Efficient NLP"
+   },
+   "why": "How constrained decoding forces a schema-valid answer, token by token."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "OpenAI Structured Output - All You Need to Know",
+   "url": "https://www.youtube.com/watch?v=fuMKrKlaku4",
+   "m": 25,
+   "yt": {
+    "id": "fuMKrKlaku4",
+    "ch": "Dave Ebbelaar"
+   },
+   "why": "Schema in, validated object out, in practice with Pydantic."
+  },
   {
    "kind": "read",
    "req": true,
@@ -96,6 +144,30 @@ BASELINE.res("ai", {
   }
  ],
  "chunking-embeddings": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Chunking Strategies Explained",
+   "url": "https://www.youtube.com/watch?v=ZTOtxiWb2bE",
+   "m": 9,
+   "yt": {
+    "id": "ZTOtxiWb2bE",
+    "ch": "Redis"
+   },
+   "why": "Fixed, recursive and semantic chunking, and the trade-off in chunk size."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "The Best RAG Technique Yet? Anthropic's Contextual Retrieval Explained",
+   "url": "https://www.youtube.com/watch?v=tmiBae2goJM",
+   "m": 17,
+   "yt": {
+    "id": "tmiBae2goJM",
+    "ch": "Prompt Engineering"
+   },
+   "why": "Why a bare chunk loses meaning and how a short added context fixes retrieval."
+  },
   {
    "kind": "read",
    "req": true,
@@ -195,6 +267,30 @@ BASELINE.res("ai", {
  ],
  "multi-agent": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Multi Agent Systems Explained: How AI Agents & LLMs Work Together",
+   "url": "https://www.youtube.com/watch?v=sWH0T4Zez6I",
+   "m": 8,
+   "yt": {
+    "id": "sWH0T4Zez6I",
+    "ch": "IBM Technology"
+   },
+   "why": "The lead and worker shape, and when splitting a task helps."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Conceptual Guide: Multi Agent Architectures",
+   "url": "https://www.youtube.com/watch?v=4nZl32FwU-o",
+   "m": 9,
+   "yt": {
+    "id": "4nZl32FwU-o",
+    "ch": "LangChain"
+   },
+   "why": "Supervisor, network and hierarchical layouts compared."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Anthropic, How we built our multi-agent research system",
@@ -227,6 +323,30 @@ BASELINE.res("ai", {
  ],
  "evaluation": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Error Analysis: The Highest ROI Technique In AI Engineering",
+   "url": "https://www.youtube.com/watch?v=e2i6JbU2R-s",
+   "m": 13,
+   "yt": {
+    "id": "e2i6JbU2R-s",
+    "ch": "Hamel Husain"
+   },
+   "why": "Start from real traces, name the failure modes, then build the eval set."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "LLM Evals: Common Mistakes",
+   "url": "https://www.youtube.com/watch?v=GL0XhAj5LPE",
+   "m": 29,
+   "yt": {
+    "id": "GL0XhAj5LPE",
+    "ch": "Hamel Husain"
+   },
+   "why": "What goes wrong in eval sets and metrics; watch the first half."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Eugene Yan, Patterns for building LLM-based systems: the evals section",
@@ -236,6 +356,18 @@ BASELINE.res("ai", {
   }
  ],
  "llm-as-judge": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "LLM as a Judge: Scaling AI Evaluation Strategies",
+   "url": "https://www.youtube.com/watch?v=trfUBIDeI1Y",
+   "m": 7,
+   "yt": {
+    "id": "trfUBIDeI1Y",
+    "ch": "IBM Technology"
+   },
+   "why": "Rubrics, pairwise and single-score judging, and the biases to check."
+  },
   {
    "kind": "read",
    "req": true,
@@ -255,6 +387,30 @@ BASELINE.res("ai", {
  ],
  "hallucination": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Why Large Language Models Hallucinate",
+   "url": "https://www.youtube.com/watch?v=cfqtFvWOfg0",
+   "m": 10,
+   "yt": {
+    "id": "cfqtFvWOfg0",
+    "ch": "IBM Technology"
+   },
+   "why": "Why a plausible continuation is not a checked fact, and the usual mitigations."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Why do AI models hallucinate?",
+   "url": "https://www.youtube.com/watch?v=005JLRt3gXI",
+   "m": 6,
+   "yt": {
+    "id": "005JLRt3gXI",
+    "ch": "Claude and Anthropic"
+   },
+   "why": "A short lab view of where false answers come from."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Lilian Weng, Extrinsic hallucinations in LLMs",
@@ -264,6 +420,30 @@ BASELINE.res("ai", {
   }
  ],
  "guardrails": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Prompt Injection, explained",
+   "url": "https://www.youtube.com/watch?v=FgxwCaL6UTA",
+   "m": 13,
+   "yt": {
+    "id": "FgxwCaL6UTA",
+    "ch": "Simon Willison"
+   },
+   "why": "The attack from the person who named it, and why filters alone do not stop it."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "What Is a Prompt Injection Attack?",
+   "url": "https://www.youtube.com/watch?v=jrHRe9lSqqA",
+   "m": 11,
+   "yt": {
+    "id": "jrHRe9lSqqA",
+    "ch": "IBM Technology"
+   },
+   "why": "Direct and indirect injection with the defences around the model."
+  },
   {
    "kind": "read",
    "req": true,
@@ -283,6 +463,30 @@ BASELINE.res("ai", {
  ],
  "cost-latency": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "What is Prompt Caching? Optimize LLM Latency with AI Transformers",
+   "url": "https://www.youtube.com/watch?v=u57EnkQaUTY",
+   "m": 10,
+   "yt": {
+    "id": "u57EnkQaUTY",
+    "ch": "IBM Technology"
+   },
+   "why": "How a reused prompt prefix skips work, and what breaks the cache."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "What is an LLM Router?",
+   "url": "https://www.youtube.com/watch?v=V_K6PCmdtRg",
+   "m": 10,
+   "yt": {
+    "id": "V_K6PCmdtRg",
+    "ch": "Sam Witteveen"
+   },
+   "why": "Sending easy requests to a cheap model and hard ones to a strong one."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Anthropic docs: prompt caching (how it works and pricing)",
@@ -301,6 +505,30 @@ BASELINE.res("ai", {
  ],
  "fine-tuning-vs-prompting": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "RAG vs Fine-Tuning vs Prompt Engineering: Optimizing AI Models",
+   "url": "https://www.youtube.com/watch?v=zYGDpG-pTho",
+   "m": 14,
+   "yt": {
+    "id": "zYGDpG-pTho",
+    "ch": "IBM Technology"
+   },
+   "why": "The ladder: prompt first, retrieve for knowledge, fine-tune for style or format."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "RAG vs. Fine Tuning",
+   "url": "https://www.youtube.com/watch?v=00Q0G84kq3M",
+   "m": 9,
+   "yt": {
+    "id": "00Q0G84kq3M",
+    "ch": "IBM Technology"
+   },
+   "why": "A shorter pass on when each one wins."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Eugene Yan, Patterns for building LLM-based systems (the fine-tuning section)",
@@ -310,6 +538,30 @@ BASELINE.res("ai", {
   }
  ],
  "observability": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "LLM Observability Explained: Why do you need LLM Observability?",
+   "url": "https://www.youtube.com/watch?v=o76xU3RQ47Q",
+   "m": 4,
+   "yt": {
+    "id": "o76xU3RQ47Q",
+    "ch": "Agenta AI"
+   },
+   "why": "Why LLM apps fail quietly and what a trace has to record."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Langfuse Intro - Observability & Tracing Deep Dive",
+   "url": "https://www.youtube.com/watch?v=pTneXS_m1rk",
+   "m": 12,
+   "yt": {
+    "id": "pTneXS_m1rk",
+    "ch": "Langfuse"
+   },
+   "why": "Traces, spans, cost and latency views on a real app."
+  },
   {
    "kind": "read",
    "req": true,

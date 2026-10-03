@@ -377,6 +377,18 @@ BASELINE.res("graphics", {
  ],
  "canvas-2d": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Comparing SVG, Canvas, and WebGL",
+   "url": "https://www.youtube.com/watch?v=h6iliGRC0Ec",
+   "m": 3,
+   "yt": {
+    "id": "h6iliGRC0Ec",
+    "ch": "yWorks"
+   },
+   "why": "Retained versus immediate mode and when each starts to slow down."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "MDN: Canvas API tutorial (basic usage through transformations)",

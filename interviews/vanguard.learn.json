@@ -275,6 +275,18 @@
      "was": [],
      "res": [
       {
+       "kind": "video",
+       "req": false,
+       "label": "Rasa Algorithm Whiteboard: Fallback Detection",
+       "url": "https://www.youtube.com/watch?v=VldHznqAYlE",
+       "m": 13,
+       "yt": {
+        "id": "VldHznqAYlE",
+        "ch": "Rasa"
+       },
+       "why": "Shows how a classifier decides a message belongs to no intent, the out-of-scope half of understanding."
+      },
+      {
        "kind": "read",
        "req": true,
        "label": "Microsoft Learn: CLU evaluation metrics",
@@ -905,6 +917,18 @@
      ],
      "res": [
       {
+       "kind": "video",
+       "req": false,
+       "label": "Everything You Ever Wanted to Know About Conversation Design",
+       "url": "https://www.youtube.com/watch?v=vafh50qmWMM",
+       "m": 26,
+       "yt": {
+        "id": "vafh50qmWMM",
+        "ch": "SAIConference"
+       },
+       "why": "Cathy Pearl on error recovery and graceful failure in conversation design; watch for how prompts change on a retry."
+      },
+      {
        "kind": "read",
        "req": true,
        "label": "Google: Conversation design, errors",
@@ -1006,6 +1030,18 @@
       "q-explicit-or-implicit-confirmation-when-do-you-use-which"
      ],
      "res": [
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Everything You Ever Wanted to Know About Conversation Design",
+       "url": "https://www.youtube.com/watch?v=vafh50qmWMM",
+       "m": 26,
+       "yt": {
+        "id": "vafh50qmWMM",
+        "ch": "SAIConference"
+       },
+       "why": "Cathy Pearl covers confirming what was heard in proportion to the stakes; watch the confirmation segment."
+      },
       {
        "kind": "read",
        "req": true,
@@ -1223,6 +1259,18 @@
       "f-handoff-agent-assist"
      ],
      "res": [
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Production Voice AI Workflows: Consent and Escalations",
+       "url": "https://www.youtube.com/watch?v=bc9kI5TRhX4",
+       "m": 13,
+       "yt": {
+        "id": "bc9kI5TRhX4",
+        "ch": "LiveKit and codeSTACKr"
+       },
+       "why": "How a voice agent escalates to a person in a real build, with the trigger and the context passed along."
+      },
       {
        "kind": "read",
        "req": true,
@@ -1667,6 +1715,18 @@
      ],
      "res": [
       {
+       "kind": "video",
+       "req": false,
+       "label": "Rasa Algorithm Whiteboard: Fallback Detection",
+       "url": "https://www.youtube.com/watch?v=VldHznqAYlE",
+       "m": 13,
+       "yt": {
+        "id": "VldHznqAYlE",
+        "ch": "Rasa"
+       },
+       "why": "How a fallback class and threshold catch messages that match no supported intent."
+      },
+      {
        "kind": "read",
        "req": true,
        "label": "Google Cloud: Dialogflow CX intents",
@@ -1767,6 +1827,18 @@
       "a-entities-slots"
      ],
      "res": [
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Slot-Filling in Conversations with Deep Learning",
+       "url": "https://www.youtube.com/watch?v=Z1C1owUV0sI",
+       "m": 21,
+       "yt": {
+        "id": "Z1C1owUV0sI",
+        "ch": "Hasgeek TV"
+       },
+       "why": "A conference talk on how slot filling works under the hood, from tagging to values."
+      },
       {
        "kind": "read",
        "req": true,
@@ -2834,6 +2906,18 @@
      ],
      "res": [
       {
+       "kind": "video",
+       "req": true,
+       "label": "Error Analysis: The Highest ROI Technique In AI Engineering",
+       "url": "https://www.youtube.com/watch?v=e2i6JbU2R-s",
+       "m": 13,
+       "yt": {
+        "id": "e2i6JbU2R-s",
+        "ch": "Hamel Husain"
+       },
+       "why": "A practical method for reading real traffic, grouping the failures and deciding what to fix next."
+      },
+      {
        "kind": "read",
        "req": true,
        "label": "AWS Docs: Creating Lex V2 bots using the Automated Chatbot Designer",
@@ -3055,6 +3139,30 @@
       "q-how-do-you-test-a-conversational-system-before-release"
      ],
      "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Error Analysis: The Highest ROI Technique In AI Engineering",
+       "url": "https://www.youtube.com/watch?v=e2i6JbU2R-s",
+       "m": 13,
+       "yt": {
+        "id": "e2i6JbU2R-s",
+        "ch": "Hamel Husain"
+       },
+       "why": "Where regression cases come from: real failures read from traces and turned into tests."
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Regression Testing for LLMs: Golden Datasets Explained",
+       "url": "https://www.youtube.com/watch?v=7vqU_Yj5kUc",
+       "m": 7,
+       "yt": {
+        "id": "7vqU_Yj5kUc",
+        "ch": "Latitude"
+       },
+       "why": "A short explainer of a golden set that grows from failures and guards each release."
+      },
       {
        "kind": "read",
        "req": true,
@@ -4164,6 +4272,18 @@
       "q-why-vanguard-and-what-do-you-know-about-our-assistants"
      ],
      "res": [
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Top Lessons from Deploying Agentic AI in Banking",
+       "url": "https://www.youtube.com/watch?v=jOXg05CYNcc",
+       "m": 31,
+       "yt": {
+        "id": "jOXg05CYNcc",
+        "ch": "Intelligence Briefing"
+       },
+       "why": "A practitioner view of how banks stage generative AI, useful for the public-record pattern."
+      },
       {
        "kind": "read",
        "req": true,
@@ -5533,6 +5653,30 @@
      ],
      "res": [
       {
+       "kind": "video",
+       "req": true,
+       "label": "Rasa Algorithm Whiteboard: Fallback Detection",
+       "url": "https://www.youtube.com/watch?v=VldHznqAYlE",
+       "m": 13,
+       "yt": {
+        "id": "VldHznqAYlE",
+        "ch": "Rasa"
+       },
+       "why": "Fallback detection by threshold and a none class, and the trade-off in choosing the cut."
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "When calibration beats metrics",
+       "url": "https://www.youtube.com/watch?v=oOZr4kRJgFE",
+       "m": 13,
+       "yt": {
+        "id": "oOZr4kRJgFE",
+        "ch": "Probabl"
+       },
+       "why": "Why a calibrated score is what makes a confidence threshold mean something."
+      },
+      {
        "kind": "read",
        "req": true,
        "label": "Larson et al.: An evaluation dataset for intent classification and out-of-scope prediction",
@@ -6033,6 +6177,30 @@
       "e-finance-specifics"
      ],
      "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Embedding model evaluation and selection guide",
+       "url": "https://www.youtube.com/watch?v=9gkT_dfa5yA",
+       "m": 7,
+       "yt": {
+        "id": "9gkT_dfa5yA",
+        "ch": "Weaviate vector database"
+       },
+       "why": "Shortlist from a leaderboard, then test on your own queries, which is the point of this step."
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Evaluating Embeddings with MTEB, Massive Text Embeddings Benchmark",
+       "url": "https://www.youtube.com/watch?v=S6XY9mFRHGs",
+       "m": 6,
+       "yt": {
+        "id": "S6XY9mFRHGs",
+        "ch": "Cohere"
+       },
+       "why": "Nils Reimers on what MTEB measures and where it stops predicting your domain."
+      },
       {
        "kind": "read",
        "req": true,

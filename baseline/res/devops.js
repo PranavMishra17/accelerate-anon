@@ -229,6 +229,30 @@ BASELINE.res("devops", {
  ],
  "config-and-secrets": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "HashiCorp Vault explained in 180 seconds",
+   "url": "https://www.youtube.com/watch?v=nG8fCdWkLzc",
+   "m": 4,
+   "yt": {
+    "id": "nG8fCdWkLzc",
+    "ch": "Cybr"
+   },
+   "why": "A fast picture of what a secrets manager does: central storage, access control and dynamic credentials."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Every developer needs to know 12-factor app principles",
+   "url": "https://www.youtube.com/watch?v=FryJt0Tbt9Q",
+   "m": 13,
+   "yt": {
+    "id": "FryJt0Tbt9Q",
+    "ch": "Travis Media"
+   },
+   "why": "Covers the config-in-the-environment rule that lets one build run in every environment."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "The Twelve-Factor App: III, config",
@@ -375,6 +399,18 @@ BASELINE.res("devops", {
  ],
  "on-call": [
   {
+   "kind": "video",
+   "req": false,
+   "label": "Understanding on-call rotation in site reliability engineering",
+   "url": "https://www.youtube.com/watch?v=VpK6UxYqRjc",
+   "m": 7,
+   "yt": {
+    "id": "VpK6UxYqRjc",
+    "ch": "Random Thoughts Tech"
+   },
+   "why": "Short walk through how rotations, primary and secondary, and handover work."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Google SRE book, ch. 11: Being On-Call",
@@ -384,6 +420,30 @@ BASELINE.res("devops", {
   }
  ],
  "owasp-top-10": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "OWASP Top 10 2025: your complete guide to securing your applications",
+   "url": "https://www.youtube.com/watch?v=Jzr0Jdnq_EI",
+   "m": 25,
+   "yt": {
+    "id": "Jzr0Jdnq_EI",
+    "ch": "Aikido Security"
+   },
+   "why": "Walks the 2025 list category by category with the standard defence for each."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "OWASP top 10 explained",
+   "url": "https://www.youtube.com/watch?v=U_tsCjOrcK4",
+   "m": 11,
+   "yt": {
+    "id": "U_tsCjOrcK4",
+    "ch": "Awesome"
+   },
+   "why": "A shorter tour of the main categories."
+  },
   {
    "kind": "read",
    "req": true,
@@ -395,6 +455,30 @@ BASELINE.res("devops", {
  ],
  "threat-modelling": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "STRIDE threat modeling for beginners in 20 minutes",
+   "url": "https://www.youtube.com/watch?v=rEnJYNkUde0",
+   "m": 22,
+   "yt": {
+    "id": "rEnJYNkUde0",
+    "ch": "Netsec Explained"
+   },
+   "why": "Draw the data-flow diagram, mark trust boundaries and walk STRIDE."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Data flow diagrams in threat modeling",
+   "url": "https://www.youtube.com/watch?v=0FoesyawfPU",
+   "m": 3,
+   "yt": {
+    "id": "0FoesyawfPU",
+    "ch": "Adam Shostack"
+   },
+   "why": "Shostack on drawing the diagram you model from."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Threat Modeling Manifesto: values, principles and the four questions",
@@ -404,6 +488,30 @@ BASELINE.res("devops", {
   }
  ],
  "supply-chain": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "XZ backdoor: timeline and overview",
+   "url": "https://www.youtube.com/watch?v=MllrK4XSJxc",
+   "m": 11,
+   "yt": {
+    "id": "MllrK4XSJxc",
+    "ch": "Seytonic"
+   },
+   "why": "How a trusted maintainer planted a backdoor and how it was caught."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "SLSA, Sigstore, SBOM and software supply chain security: what does it all mean?",
+   "url": "https://www.youtube.com/watch?v=hF95PiItWtM",
+   "m": 44,
+   "yt": {
+    "id": "hF95PiItWtM",
+    "ch": "NDC Conferences"
+   },
+   "why": "The defences in one talk; watch for the SLSA and SBOM parts."
+  },
   {
    "kind": "read",
    "req": true,
@@ -415,6 +523,18 @@ BASELINE.res("devops", {
  ],
  "secrets-scanning": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Introduction to secret leaks and getting started with GitHub Secret Protection",
+   "url": "https://www.youtube.com/watch?v=vMhDkt5JNN0",
+   "m": 4,
+   "yt": {
+    "id": "vMhDkt5JNN0",
+    "ch": "GitHub"
+   },
+   "why": "Push protection and scanning, and what to do once a secret leaks."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "GitHub docs: about secret scanning",
@@ -424,6 +544,30 @@ BASELINE.res("devops", {
   }
  ],
  "zero-trust": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Zero Trust explained in 4 mins",
+   "url": "https://www.youtube.com/watch?v=yn6CPQ9RioA",
+   "m": 4,
+   "yt": {
+    "id": "yn6CPQ9RioA",
+    "ch": "IBM Technology"
+   },
+   "why": "The shift from a trusted inside to verifying every request."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Cybersecurity and Zero Trust",
+   "url": "https://www.youtube.com/watch?v=FMMWSLIcaME",
+   "m": 18,
+   "yt": {
+    "id": "FMMWSLIcaME",
+    "ch": "IBM Technology"
+   },
+   "why": "A longer walk through identity, least privilege and policy."
+  },
   {
    "kind": "read",
    "req": true,

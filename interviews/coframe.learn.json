@@ -171,6 +171,18 @@
      ],
      "res": [
       {
+       "kind": "video",
+       "req": false,
+       "label": "AI Agents Can Now Build Their Own UI in Real Time",
+       "url": "https://www.youtube.com/watch?v=MD8VQzvMVek",
+       "m": 16,
+       "yt": {
+        "id": "MD8VQzvMVek",
+        "ch": "Cole Medin"
+       },
+       "why": "A look at generating a page from a user's request, the shape of the round's task."
+      },
+      {
        "kind": "read",
        "req": true,
        "label": "GitHub: Coframe agent-engineer-take-home",
@@ -911,6 +923,18 @@
      ],
      "res": [
       {
+       "kind": "video",
+       "req": false,
+       "label": "A/B Testing Course: Flickering? Anti-flickering!",
+       "url": "https://www.youtube.com/watch?v=rs2qcYlDoMM",
+       "m": 5,
+       "yt": {
+        "id": "rs2qcYlDoMM",
+        "ch": "Data36 - Online Data Science Courses"
+       },
+       "why": "Why variant scripts hide the page and how the anti-flicker snippet trades speed for flicker."
+      },
+      {
        "kind": "read",
        "req": true,
        "label": "Cloudflare Workers: context, passThroughOnException",
@@ -1447,6 +1471,18 @@
       "Criticising their stack without having seen it."
      ],
      "res": [
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Josh Payne: How Coframe Is Building Living Interfaces",
+       "url": "https://www.youtube.com/watch?v=XXtRMlhbkAA",
+       "m": 34,
+       "yt": {
+        "id": "XXtRMlhbkAA",
+        "ch": "AGI House"
+       },
+       "why": "The company's own account of its product and direction, to ground the questions you ask."
+      },
       {
        "kind": "read",
        "req": true,

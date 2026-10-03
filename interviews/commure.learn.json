@@ -1421,6 +1421,30 @@
      "was": [],
      "res": [
       {
+       "kind": "video",
+       "req": false,
+       "label": "Supabase Edge Functions Explained",
+       "url": "https://www.youtube.com/watch?v=za_loEtS4gs",
+       "m": 7,
+       "yt": {
+        "id": "za_loEtS4gs",
+        "ch": "Supabase"
+       },
+       "why": "What an edge function is and its short-lived, request-bound model."
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Edge functions VS Serverless functions",
+       "url": "https://www.youtube.com/watch?v=M2KUAb1FH1Y",
+       "m": 8,
+       "yt": {
+        "id": "M2KUAb1FH1Y",
+        "ch": "Tuomo Kankaanpää"
+       },
+       "why": "Compares the two runtimes by lifetime and limits."
+      },
+      {
        "kind": "read",
        "req": true,
        "label": "Supabase: Edge Functions limits",
@@ -2652,7 +2676,32 @@
       "Quoting user counts or traffic: describe what it is sized for"
      ],
      "was": [],
-     "res": []
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "AI Voice Agent Course #1: Voice Agent Architecture (LiveKit and Python)",
+       "url": "https://www.youtube.com/watch?v=3SA6J8xIoYk",
+       "m": 11,
+       "yt": {
+        "id": "3SA6J8xIoYk",
+        "ch": "AgenticXLab"
+       },
+       "why": "The pieces of a LiveKit and Python voice agent drawn in one pass."
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "How Voice AI Systems Really Work: The Complete Architecture Guide",
+       "url": "https://www.youtube.com/watch?v=rpqvo74ursk",
+       "m": 16,
+       "yt": {
+        "id": "rpqvo74ursk",
+        "ch": "Quincy McCants "
+       },
+       "why": "A full architecture walk-through of a voice AI system to compare with your own drawing."
+      }
+     ]
     },
     {
      "id": "own-call",
@@ -2736,7 +2785,32 @@
       "Saying the prompt makes it safe: the safety is in code, and they will ask what happens when the model ignores the prompt"
      ],
      "was": [],
-     "res": []
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Voice Agent Pipeline Explained: VAD, STT, LLM and TTS",
+       "url": "https://www.youtube.com/watch?v=SPB2T-eLrOg",
+       "m": 11,
+       "yt": {
+        "id": "SPB2T-eLrOg",
+        "ch": "LiveKit"
+       },
+       "why": "The turn loop of a voice agent, stage by stage."
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Production Voice AI Workflows: Consent and Escalations",
+       "url": "https://www.youtube.com/watch?v=bc9kI5TRhX4",
+       "m": 13,
+       "yt": {
+        "id": "bc9kI5TRhX4",
+        "ch": "LiveKit and codeSTACKr"
+       },
+       "why": "Consent and escalation steps around a live call in a real LiveKit build."
+      }
+     ]
     },
     {
      "id": "own-parallel",
@@ -2819,6 +2893,30 @@
      ],
      "was": [],
      "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Fix Voice Agent Tool Call Latency With Async Function Tools",
+       "url": "https://www.youtube.com/watch?v=AQZOIr3511U",
+       "m": 7,
+       "yt": {
+        "id": "AQZOIr3511U",
+        "ch": "LiveKit and codeSTACKr"
+       },
+       "why": "Keeping the caller hearing something while slow work runs in the background."
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Reduce the Latency of your Voice Agent",
+       "url": "https://www.youtube.com/watch?v=jnedfk5PL2A",
+       "m": 14,
+       "yt": {
+        "id": "jnedfk5PL2A",
+        "ch": "LiveKit"
+       },
+       "why": "Where voice agent latency comes from and the levers that cut it."
+      },
       {
        "kind": "read",
        "req": true,
@@ -3116,6 +3214,30 @@
      ],
      "was": [],
      "res": [
+      {
+       "kind": "video",
+       "req": false,
+       "label": "AI Voice Agents For Healthcare Practices: How It Works",
+       "url": "https://www.youtube.com/watch?v=5kesK0mhqDk",
+       "m": 19,
+       "yt": {
+        "id": "5kesK0mhqDk",
+        "ch": "Brendan Jowett"
+       },
+       "why": "The call types a healthcare voice agent handles and what stays with staff."
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "How Voice AI Systems Really Work: The Complete Architecture Guide",
+       "url": "https://www.youtube.com/watch?v=rpqvo74ursk",
+       "m": 16,
+       "yt": {
+        "id": "rpqvo74ursk",
+        "ch": "Quincy McCants "
+       },
+       "why": "The path of one call through a voice system, before any scale boxes."
+      },
       {
        "kind": "read",
        "req": true,
@@ -3420,6 +3542,18 @@
       "q-how-would-you-keep-a-patient-call-from-going-wrong"
      ],
      "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "HIPAA Training 101: Who Needs HIPAA Business Associate Agreements?",
+       "url": "https://www.youtube.com/watch?v=vlPHweVIk-0",
+       "m": 2,
+       "yt": {
+        "id": "vlPHweVIk-0",
+        "ch": "Compliancy Group"
+       },
+       "why": "A two minute answer to who needs a BAA, which covers every vendor touching call audio."
+      },
       {
        "kind": "keep",
        "src": "site",

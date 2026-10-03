@@ -3,6 +3,30 @@
 BASELINE.res("frontend", {
  "rendering-pipeline": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "How browsers render websites (the step-by-step process)",
+   "url": "https://www.youtube.com/watch?v=NBAjlYb6jIs",
+   "m": 8,
+   "yt": {
+    "id": "NBAjlYb6jIs",
+    "ch": "DevJourney"
+   },
+   "why": "The path from HTML and CSS to DOM, CSSOM, layout, paint and composite in one sitting."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Critical rendering path: crash course on web performance",
+   "url": "https://www.youtube.com/watch?v=PkOBnYxqj3k",
+   "m": 42,
+   "yt": {
+    "id": "PkOBnYxqj3k",
+    "ch": "Ilya Grigorik"
+   },
+   "why": "The classic talk on how scripts and CSS block rendering; watch the first half."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Chrome for Developers: inside look at modern web browser, part 3, the renderer",
@@ -127,6 +151,30 @@ BASELINE.res("frontend", {
  ],
  "state-management": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "React Query makes writing React code 200% better",
+   "url": "https://www.youtube.com/watch?v=lVLz_ASqAio",
+   "m": 14,
+   "yt": {
+    "id": "lVLz_ASqAio",
+    "ch": "Web Dev Simplified"
+   },
+   "why": "Shows why server state wants a cache with refetching and invalidation, not a store."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "The state of state management in React",
+   "url": "https://www.youtube.com/watch?v=qqqyUTTS-9g",
+   "m": 26,
+   "yt": {
+    "id": "qqqyUTTS-9g",
+    "ch": "PedroTech"
+   },
+   "why": "Compares local state, context and a small store so you can say where each kind of state lives."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "TanStack Query docs: overview, server state against client state",
@@ -136,6 +184,30 @@ BASELINE.res("frontend", {
   }
  ],
  "routing-data-fetching": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "React Router in depth #6: loaders",
+   "url": "https://www.youtube.com/watch?v=K-bxVELldCc",
+   "m": 13,
+   "yt": {
+    "id": "K-bxVELldCc",
+    "ch": "Net Ninja"
+   },
+   "why": "Route loaders load data before render, which is how a router avoids fetch-in-component waterfalls."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "The best data fetching pattern in React",
+   "url": "https://www.youtube.com/watch?v=iO6px_wz1oc",
+   "m": 17,
+   "yt": {
+    "id": "iO6px_wz1oc",
+    "ch": "Cosden Solutions"
+   },
+   "why": "Contrasts fetching in effects with route-level and cached patterns."
+  },
   {
    "kind": "read",
    "req": true,
@@ -147,6 +219,30 @@ BASELINE.res("frontend", {
  ],
  "design-systems": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Tokens, variables, and styles: introduction to design systems",
+   "url": "https://www.youtube.com/watch?v=JyCmacSyDY4",
+   "m": 14,
+   "yt": {
+    "id": "JyCmacSyDY4",
+    "ch": "Figma"
+   },
+   "why": "Explains design tokens as named values that let a theme change in one place."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Brad Frost: is atomic design dead?",
+   "url": "https://www.youtube.com/watch?v=PK_PICNTgAg",
+   "m": 37,
+   "yt": {
+    "id": "PK_PICNTgAg",
+    "ch": "Hatch Conference"
+   },
+   "why": "Brad Frost on atoms to pages and how tokens and components fit it today."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Brad Frost: Atomic Design, chapter 2",
@@ -157,6 +253,30 @@ BASELINE.res("frontend", {
  ],
  "rendering-strategies": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "What do CSR, SSR, SSG and ISR even mean",
+   "url": "https://www.youtube.com/watch?v=p02AIAoImzU",
+   "m": 14,
+   "yt": {
+    "id": "p02AIAoImzU",
+    "ch": "Web Dev Simplified"
+   },
+   "why": "Clear side-by-side of where HTML is made and what each choice costs."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "What is CSR, SSR, SSG, ISR? Rendering strategies explained",
+   "url": "https://www.youtube.com/watch?v=VDqEg0IoSIs",
+   "m": 21,
+   "yt": {
+    "id": "VDqEg0IoSIs",
+    "ch": "Shruti Kapoor"
+   },
+   "why": "A second pass with the trade-offs and when to pick each."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "web.dev: rendering on the web",
@@ -166,6 +286,30 @@ BASELINE.res("frontend", {
   }
  ],
  "hydration": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Hydration explained",
+   "url": "https://www.youtube.com/watch?v=kZG3izJu7qE",
+   "m": 5,
+   "yt": {
+    "id": "kZG3izJu7qE",
+    "ch": "Awesome"
+   },
+   "why": "Shows why server HTML looks ready but ignores clicks until hydration attaches handlers."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Streaming server rendering with Suspense",
+   "url": "https://www.youtube.com/watch?v=pj5N-Khihgc",
+   "m": 19,
+   "yt": {
+    "id": "pj5N-Khihgc",
+    "ch": "React Conf"
+   },
+   "why": "The React team on streaming the shell first and hydrating pieces as they arrive."
+  },
   {
    "kind": "read",
    "req": true,
@@ -185,6 +329,30 @@ BASELINE.res("frontend", {
  ],
  "server-components": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "React Server Components change everything",
+   "url": "https://www.youtube.com/watch?v=rGPpQdbDbwo",
+   "m": 16,
+   "yt": {
+    "id": "rGPpQdbDbwo",
+    "ch": "Web Dev Simplified"
+   },
+   "why": "Server and client components, what ships to the browser and what stays on the server."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "And now you understand React Server Components",
+   "url": "https://www.youtube.com/watch?v=pOo7x8OiAec",
+   "m": 22,
+   "yt": {
+    "id": "pOo7x8OiAec",
+    "ch": "React Conf"
+   },
+   "why": "Kent C. Dodds builds up the model from first principles."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "React docs: Server Components reference",
@@ -194,6 +362,30 @@ BASELINE.res("frontend", {
   }
  ],
  "web-vitals": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "What are Core Web Vitals? Explained in 7 minutes",
+   "url": "https://www.youtube.com/watch?v=pTswmgVWSH8",
+   "m": 8,
+   "yt": {
+    "id": "pTswmgVWSH8",
+    "ch": "Sematext"
+   },
+   "why": "LCP, INP and CLS with their thresholds and what each one measures."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "How to optimize web responsiveness with Interaction to Next Paint",
+   "url": "https://www.youtube.com/watch?v=KZ1kxzsJZ5g",
+   "m": 16,
+   "yt": {
+    "id": "KZ1kxzsJZ5g",
+    "ch": "Chrome for Developers"
+   },
+   "why": "The Chrome team on what INP counts and how to bring it under 200 ms."
+  },
   {
    "kind": "read",
    "req": true,
@@ -243,6 +435,30 @@ BASELINE.res("frontend", {
  ],
  "accessibility": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Web accessibility tutorial: keyboard navigation, ARIA, contrast, screen readers",
+   "url": "https://www.youtube.com/watch?v=VyWRmepESoQ",
+   "m": 24,
+   "yt": {
+    "id": "VyWRmepESoQ",
+    "ch": "RoadsideCoder"
+   },
+   "why": "Covers the core checks: keyboard access, labels, contrast and ARIA."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "ARIA HTML tutorial: what is ARIA and why it is important",
+   "url": "https://www.youtube.com/watch?v=0hqhAIjE_8I",
+   "m": 14,
+   "yt": {
+    "id": "0hqhAIjE_8I",
+    "ch": "DesignCourse"
+   },
+   "why": "When native HTML is enough and when ARIA patches the accessibility tree."
+  },
+  {
    "kind": "keep",
    "src": "course",
    "req": true,
@@ -262,6 +478,30 @@ BASELINE.res("frontend", {
  ],
  "testing-frontend": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "What is React Testing Library?",
+   "url": "https://www.youtube.com/watch?v=JKOwJUM4_RM",
+   "m": 8,
+   "yt": {
+    "id": "JKOwJUM4_RM",
+    "ch": "Syntax"
+   },
+   "why": "Why tests query by role and text and act like a user rather than touch implementation."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "What is Playwright? Introduction, features and demo",
+   "url": "https://www.youtube.com/watch?v=wGr5rz8WGCE",
+   "m": 13,
+   "yt": {
+    "id": "wGr5rz8WGCE",
+    "ch": "Testopic"
+   },
+   "why": "End-to-end tests in a real browser, with auto-waiting and cross-browser runs."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Testing Library: guiding principles",
@@ -279,6 +519,30 @@ BASELINE.res("frontend", {
   }
  ],
  "web-apis": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Web Workers vs Service Workers: what is the real difference",
+   "url": "https://www.youtube.com/watch?v=Iz5f3ctn1W8",
+   "m": 7,
+   "yt": {
+    "id": "Iz5f3ctn1W8",
+    "ch": "Monsterlessons Academy"
+   },
+   "why": "Separates the off-thread worker from the network-proxy worker used for offline."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "IndexedDB: what is it, and when you should choose it",
+   "url": "https://www.youtube.com/watch?v=-AzFQN9Vp7k",
+   "m": 10,
+   "yt": {
+    "id": "-AzFQN9Vp7k",
+    "ch": "WebDevLog"
+   },
+   "why": "Where IndexedDB sits next to cookies and localStorage."
+  },
   {
    "kind": "read",
    "req": true,

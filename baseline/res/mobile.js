@@ -92,6 +92,30 @@ BASELINE.res("mobile", {
  ],
  "kmp": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "What is Kotlin Multiplatform and how does it work?",
+   "url": "https://www.youtube.com/watch?v=RSBO1C_Du2U",
+   "m": 11,
+   "yt": {
+    "id": "RSBO1C_Du2U",
+    "ch": "Philipp Lackner"
+   },
+   "why": "How shared Kotlin compiles to JVM and native, and what is shared versus native UI."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Get started with Kotlin Multiplatform",
+   "url": "https://www.youtube.com/watch?v=gP5Y-ct6QXI",
+   "m": 18,
+   "yt": {
+    "id": "gP5Y-ct6QXI",
+    "ch": "Android Developers"
+   },
+   "why": "Official walk through sharing logic across Android and iOS."
+  },
+  {
    "kind": "keep",
    "src": "tutorial",
    "req": true,
@@ -103,6 +127,30 @@ BASELINE.res("mobile", {
  ],
  "app-lifecycle": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "The Activity lifecycle explained",
+   "url": "https://www.youtube.com/watch?v=UJN3AL4tiqw",
+   "m": 9,
+   "yt": {
+    "id": "UJN3AL4tiqw",
+    "ch": "Coding in Flow"
+   },
+   "why": "Walks onCreate through onDestroy and what triggers each, including rotation."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Activities and the Activity lifecycle",
+   "url": "https://www.youtube.com/watch?v=SJw3Nu_h8kk",
+   "m": 13,
+   "yt": {
+    "id": "SJw3Nu_h8kk",
+    "ch": "Philipp Lackner"
+   },
+   "why": "Shows the lifecycle callbacks running live, with state saving."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Android Developers: the activity lifecycle",
@@ -112,6 +160,18 @@ BASELINE.res("mobile", {
   }
  ],
  "background-work": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "All 4 types of background work on Android explained",
+   "url": "https://www.youtube.com/watch?v=gI7cvPVWZ7w",
+   "m": 17,
+   "yt": {
+    "id": "gI7cvPVWZ7w",
+    "ch": "Philipp Lackner"
+   },
+   "why": "Foreground services, WorkManager and the other options, framed as mobile system design."
+  },
   {
    "kind": "read",
    "req": true,
@@ -123,6 +183,18 @@ BASELINE.res("mobile", {
  ],
  "push-notifications": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Push notifications in 2026: Expo, APNs and FCM basics",
+   "url": "https://www.youtube.com/watch?v=dB-gkYdTi3o",
+   "m": 19,
+   "yt": {
+    "id": "dB-gkYdTi3o",
+    "ch": "Code with Beto"
+   },
+   "why": "Device token, APNs and FCM roles, and how a push reaches a closed app."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Firebase docs: Cloud Messaging overview",
@@ -133,6 +205,30 @@ BASELINE.res("mobile", {
  ],
  "deep-links": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "Part 1: Introduction to deep links",
+   "url": "https://www.youtube.com/watch?v=1qFIg-lz4Ys",
+   "m": 7,
+   "yt": {
+    "id": "1qFIg-lz4Ys",
+    "ch": "Android Developers"
+   },
+   "why": "What deep links and App Links are and how verification opens the app directly."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Universal Links and Apple App Site Association (AASA)",
+   "url": "https://www.youtube.com/watch?v=oJaxHabyp-4",
+   "m": 9,
+   "yt": {
+    "id": "oJaxHabyp-4",
+    "ch": "iCode"
+   },
+   "why": "The iOS side: the AASA file on your domain and how to debug it."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Android Developers: about App Links",
@@ -142,6 +238,30 @@ BASELINE.res("mobile", {
   }
  ],
  "offline-sync": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Create offline-first apps",
+   "url": "https://www.youtube.com/watch?v=jaZ2gLMGUsM",
+   "m": 6,
+   "yt": {
+    "id": "jaZ2gLMGUsM",
+    "ch": "Android Developers"
+   },
+   "why": "Local database as source of truth, with sync running in the background."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Local-first vs offline-first in 100 seconds",
+   "url": "https://www.youtube.com/watch?v=kjOx-Le5gB8",
+   "m": 3,
+   "yt": {
+    "id": "kjOx-Le5gB8",
+    "ch": "PowerSync"
+   },
+   "why": "The difference in who holds the truth and how syncing follows."
+  },
   {
    "kind": "read",
    "req": true,
@@ -171,6 +291,18 @@ BASELINE.res("mobile", {
  ],
  "mobile-security": [
   {
+   "kind": "video",
+   "req": false,
+   "label": "Full guide to encryption and decryption in Android (Keystore, ciphers)",
+   "url": "https://www.youtube.com/watch?v=aaSck7jBDbw",
+   "m": 28,
+   "yt": {
+    "id": "aaSck7jBDbw",
+    "ch": "Philipp Lackner"
+   },
+   "why": "A hands-on use of the Keystore for protecting data on the device."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "OWASP: Mobile Application Security Verification Standard (MASVS)",
@@ -180,6 +312,30 @@ BASELINE.res("mobile", {
   }
  ],
  "performance-battery": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Measuring jank and startup with Macrobenchmark",
+   "url": "https://www.youtube.com/watch?v=0adLO2VRJtc",
+   "m": 11,
+   "yt": {
+    "id": "0adLO2VRJtc",
+    "ch": "Android Developers"
+   },
+   "why": "How to measure cold start and dropped frames instead of guessing."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "This is how you measure the performance of your Android app",
+   "url": "https://www.youtube.com/watch?v=XHz_cFwdfoM",
+   "m": 22,
+   "yt": {
+    "id": "XHz_cFwdfoM",
+    "ch": "Philipp Lackner"
+   },
+   "why": "Profiling, startup and frame metrics on a real app."
+  },
   {
    "kind": "read",
    "req": true,
@@ -199,6 +355,30 @@ BASELINE.res("mobile", {
  ],
  "on-device-ml": [
   {
+   "kind": "video",
+   "req": true,
+   "label": "WWDC24: Deploy machine learning and AI models on-device with Core ML",
+   "url": "https://www.youtube.com/watch?v=aawk4l9W9YU",
+   "m": 19,
+   "yt": {
+    "id": "aawk4l9W9YU",
+    "ch": "Apple Developer"
+   },
+   "why": "Converting, compressing and running models on the Neural Engine with Core ML."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "LiteRT: the universal framework for on-device AI",
+   "url": "https://www.youtube.com/watch?v=A5qHo1wsz3A",
+   "m": 7,
+   "yt": {
+    "id": "A5qHo1wsz3A",
+    "ch": "Think AI "
+   },
+   "why": "The Android and cross-platform counterpart to Core ML."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Google AI Edge: LiteRT overview",
@@ -217,6 +397,30 @@ BASELINE.res("mobile", {
  ],
  "app-store": [
   {
+   "kind": "video",
+   "req": false,
+   "label": "Why my app was rejected and how I got it approved: App Store review explained",
+   "url": "https://www.youtube.com/watch?v=gvQiTtUU_LE",
+   "m": 6,
+   "yt": {
+    "id": "gvQiTtUU_LE",
+    "ch": "Think Like an Engineer"
+   },
+   "why": "How review works and what typically triggers a rejection."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Why apps get rejected from the App Store: common reasons",
+   "url": "https://www.youtube.com/watch?v=CGW3_eRM1G0",
+   "m": 18,
+   "yt": {
+    "id": "CGW3_eRM1G0",
+    "ch": "Noah Does Coding"
+   },
+   "why": "Concrete guideline problems to check before submitting."
+  },
+  {
    "kind": "read",
    "req": true,
    "label": "Apple: App Review Guidelines, sections 2 Performance and 3 Business",
@@ -226,6 +430,18 @@ BASELINE.res("mobile", {
   }
  ],
  "releases": [
+  {
+   "kind": "video",
+   "req": false,
+   "label": "What are feature flags?",
+   "url": "https://www.youtube.com/watch?v=AJa2B-twtG4",
+   "m": 7,
+   "yt": {
+    "id": "AJa2B-twtG4",
+    "ch": "IBM Technology"
+   },
+   "why": "Ship code switched off and turn it on for a percentage of users, the safety net a mobile app needs."
+  },
   {
    "kind": "read",
    "req": true,
@@ -244,6 +460,30 @@ BASELINE.res("mobile", {
   }
  ],
  "crash-analytics": [
+  {
+   "kind": "video",
+   "req": true,
+   "label": "Firebase Crashlytics intro",
+   "url": "https://www.youtube.com/watch?v=Ire9yQg4OFA",
+   "m": 9,
+   "yt": {
+    "id": "Ire9yQg4OFA",
+    "ch": "The Android Factory"
+   },
+   "why": "What a crash reporter collects and how crashes are grouped into issues."
+  },
+  {
+   "kind": "video",
+   "req": false,
+   "label": "Firebase Crashlytics: custom crash reporting",
+   "url": "https://www.youtube.com/watch?v=JxVYfZprK0g",
+   "m": 14,
+   "yt": {
+    "id": "JxVYfZprK0g",
+    "ch": "The Android Factory"
+   },
+   "why": "Adding keys, logs and non-fatal reports for better triage."
+  },
   {
    "kind": "read",
    "req": true,
