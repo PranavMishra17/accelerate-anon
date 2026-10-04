@@ -87,6 +87,7 @@
   .side .ri:hover { color: var(--ink); background: var(--sunken); }
   .side .ri.on { color: var(--ink); font-weight: 600; background: var(--accent-soft); box-shadow: inset 2px 0 0 var(--accent); }
   .side .ri .nm { flex: 1; min-width: 0; }
+  .side .ri .ri-tag { flex: none; font-size: var(--fs-xs); color: var(--muted); margin-left: var(--s2); }
   .side .ri .ct { flex: none; font-size: var(--fs-xs); color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
   .side .ri .num { flex: none; width: 12px; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
   .side .ri.now .num { color: var(--accent); font-weight: 600; }
@@ -738,7 +739,7 @@
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
 <script src="data/streams.js?v=a5b27e3d"></script>
-<script src="data/reading.js?v=07bb0d22"></script>
+<script src="data/reading.js?v=9792938f"></script>
 <script src="site/res.js?v=0f70fc55"></script>
 <script src="data/mcq/base.js?v=5fc7e7ac"></script>
 <script src="data/mcq/week1.js?v=8276998c"></script>
@@ -1200,7 +1201,7 @@
                 { k: "why", q: "In the derivation, how does e⁻ˣ/(1 + e⁻ˣ) become 1 − σ(x)?", a: "Write 1 as (1 + e⁻ˣ)/(1 + e⁻ˣ). Then 1 − σ(x) = (1 + e⁻ˣ − 1)/(1 + e⁻ˣ) = e⁻ˣ/(1 + e⁻ˣ), which is exactly the second factor." },
                 { k: "word", q: "What is σ(x) = 1/(1 + e⁻ˣ) usually called, in shorthand?", a: "The sigmoid" },
                 { k: "blank", q: "σ′(x) = σ(x) · ___.", a: "1 − σ(x)" },
-                { k: "why", q: "Why is writing the sigmoid's derivative as σ(x)(1 − σ(x)) specifically convenient in backpropagation?", a: "The forward pass has already computed sigma(x) at that point, so the gradient costs one subtraction and one multiplication rather than a fresh evaluation of the exponential." },
+                { k: "why", q: "Why is writing the sigmoid's derivative as σ(x)(1 − σ(x)) convenient once σ(x) has already been computed?", a: "The forward pass has already computed sigma(x) at that point, so the gradient costs one subtraction and one multiplication rather than a fresh evaluation of the exponential." },
                 { k: "pick", q: "You already have σ(x) from the forward pass and need σ′(x) for backprop. What is the cheapest way to get it?",
                   o: ["Re-evaluate e⁻ˣ from scratch and redo the full derivative", "Multiply σ(x) by (1 − σ(x)), values already in hand", "There is no shortcut; always recompute from x"], a: 1,
                   why: "The self-referential form means the gradient is one subtraction and one multiplication away from a value already sitting in memory from the forward pass." },
@@ -1210,10 +1211,10 @@
               m: 15,
               where: "Dive into Deep Learning, 5.1 Multilayer Perceptrons, 'Sigmoid Function'; check your result against equation 5.1.7 only after you have your own answer",
               url: "https://d2l.ai/chapter_multilayer-perceptrons/mlp.html#sigmoid-function",
-              eq: [{"e": "σ(x) = 1 / (1 + e<sup>−x</sup>) = (1 + e<sup>−x</sup>)<sup>−1</sup>", "t": "Rewrite as a power so the chain rule applies. The outer function is u<sup>−1</sup> and the inner function is u = 1 + e<sup>−x</sup>."}, {"e": "dσ/dx = −(1 + e<sup>−x</sup>)<sup>−2</sup> · d/dx (1 + e<sup>−x</sup>)", "t": "Chain rule: power rule on the outside, then multiply by the derivative of the inside."}, {"e": "d/dx (1 + e<sup>−x</sup>) = −e<sup>−x</sup>", "t": "The inside is itself a chain: the derivative of e<sup>u</sup> is e<sup>u</sup>, times u′ = −1."}, {"e": "σ′(x) = e<sup>−x</sup> / (1 + e<sup>−x</sup>)<sup>2</sup>", "t": "The two minus signs cancel. This is a correct answer already; the next lines only make it useful."}, {"e": "σ′(x) = [1 / (1 + e<sup>−x</sup>)] · [e<sup>−x</sup> / (1 + e<sup>−x</sup>)]", "t": "Split the square into two factors. The first is exactly σ(x)."}, {"e": "1 − σ(x) = (1 + e<sup>−x</sup> − 1) / (1 + e<sup>−x</sup>) = e<sup>−x</sup> / (1 + e<sup>−x</sup>)", "t": "The trick: write 1 as (1 + e<sup>−x</sup>) / (1 + e<sup>−x</sup>). The second factor is exactly 1 − σ(x)."}, {"e": "σ′(x) = σ(x) · (1 − σ(x))", "t": "The result, written only in terms of σ itself."}, {"e": "σ(0) = 0.5 ⇒ σ′(0) = 0.25 &nbsp;&nbsp; σ(4) ≈ 0.982 ⇒ σ′(4) ≈ 0.0177", "t": "Two numbers. The slope peaks at 0.25 where σ = 0.5 and collapses in the tails, which is the figure's point."}, {"e": "z = σ(a) &nbsp;⇒&nbsp; ∂L/∂a = ∂L/∂z · z(1 − z)", "t": "Backprop: the forward pass already holds z = σ(a), so the local gradient costs one subtraction and one multiplication."}],
+              eq: [{"e": "σ(x) = 1 / (1 + e<sup>−x</sup>) = (1 + e<sup>−x</sup>)<sup>−1</sup>", "t": "Rewrite as a power so the chain rule applies. The outer function is u<sup>−1</sup> and the inner function is u = 1 + e<sup>−x</sup>."}, {"e": "dσ/dx = −(1 + e<sup>−x</sup>)<sup>−2</sup> · d/dx (1 + e<sup>−x</sup>)", "t": "Chain rule: power rule on the outside, then multiply by the derivative of the inside."}, {"e": "d/dx (1 + e<sup>−x</sup>) = −e<sup>−x</sup>", "t": "The inside is itself a chain: the derivative of e<sup>u</sup> is e<sup>u</sup>, times u′ = −1."}, {"e": "σ′(x) = e<sup>−x</sup> / (1 + e<sup>−x</sup>)<sup>2</sup>", "t": "The two minus signs cancel. This is a correct answer already; the next lines only make it useful."}, {"e": "σ′(x) = [1 / (1 + e<sup>−x</sup>)] · [e<sup>−x</sup> / (1 + e<sup>−x</sup>)]", "t": "Split the square into two factors. The first is exactly σ(x)."}, {"e": "1 − σ(x) = (1 + e<sup>−x</sup> − 1) / (1 + e<sup>−x</sup>) = e<sup>−x</sup> / (1 + e<sup>−x</sup>)", "t": "The trick: write 1 as (1 + e<sup>−x</sup>) / (1 + e<sup>−x</sup>). The second factor is exactly 1 − σ(x)."}, {"e": "σ′(x) = σ(x) · (1 − σ(x))", "t": "The result, written only in terms of σ itself."}, {"e": "σ(0) = 0.5 ⇒ σ′(0) = 0.25 &nbsp;&nbsp; σ(4) ≈ 0.982 ⇒ σ′(4) ≈ 0.0177", "t": "Two numbers. The slope peaks at 0.25 where σ = 0.5 and collapses in the tails, which is the figure's point."}],
               think: ["How do you set it up for the chain rule: write σ as (1 + e^−x) to the power −1. What are the outer and inner functions?", "What does the chain rule give you: outer derivative times inner derivative. What is each one here?", "What happens to the signs: the power rule brings down −1 and the inside gives −e^−x. What do they make together?", "How do you reach σ(1 − σ): split the fraction in two, then write 1 as (1 + e^−x) over itself. Which factor is which?", "Why is this form worth having: what does backprop already hold when it needs σ′?"],
               out: "sigma times one minus sigma reached by your own hand, without looking up the result first",
-              ans: {"lead": "Sigma prime of x equals sigma of x times one minus sigma of x, and that form is convenient because the forward pass has already computed sigma.", "pts": ["Rewrite: sigma(x) is one over one plus e to the minus x, which is (one plus e to the minus x) to the power minus one.", "Chain rule: bring down the minus one, drop the power by one, and multiply by the derivative of the inner term, which is minus e to the minus x.", "Signs cancel: that leaves sigma prime of x equal to e to the minus x, over (one plus e to the minus x) squared.", "Split in two: one over (one plus e to the minus x) is exactly sigma(x), and e to the minus x over (one plus e to the minus x) is exactly one minus sigma(x), since the two add up to (one plus e to the minus x) over itself, which is one.", "Multiply back: sigma(x) times one minus sigma(x) reproduces e to the minus x over (one plus e to the minus x) squared exactly."], "close": "In backpropagation sigma(x) is already computed at that point, so the gradient costs one subtraction and one multiplication rather than a fresh evaluation of the exponential."} },
+              ans: {"lead": "Sigma prime of x equals sigma of x times one minus sigma of x, and that form is convenient because the forward pass has already computed sigma.", "pts": ["Rewrite: sigma(x) is one over one plus e to the minus x, which is (one plus e to the minus x) to the power minus one.", "Chain rule: bring down the minus one, drop the power by one, and multiply by the derivative of the inner term, which is minus e to the minus x.", "Signs cancel: that leaves sigma prime of x equal to e to the minus x, over (one plus e to the minus x) squared.", "Split in two: one over (one plus e to the minus x) is exactly sigma(x), and e to the minus x over (one plus e to the minus x) is exactly one minus sigma(x), since the two add up to (one plus e to the minus x) over itself, which is one.", "Multiply back: sigma(x) times one minus sigma(x) reproduces e to the minus x over (one plus e to the minus x) squared exactly."], "close": "Once σ(x) is computed, the slope is right there, so the gradient costs one subtraction and one multiplication rather than a fresh evaluation of the exponential."} },
             { t: "Write two sentences on what the chain rule lets you do that nothing else does", al: [{ p: "plan/stage-7", why: "Autograd is the chain rule turned into a data structure; you build it in TrenTorch 06." }],
               close: [
                 { k: "short", q: "Using the chain rule and no expansion, what is the derivative of (3x + 1)² at x = 2?", a: "Let u = 3x + 1, so u = 7 at x = 2. Then dy/du = 2u = 14 and du/dx = 3, so dy/dx = 14 · 3 = 42." },
@@ -1221,18 +1222,18 @@
                   items: ["The derivative of f2 with respect to f1", "The derivative of f1 with respect to x", "The derivative of loss with respect to f3", "The derivative of f3 with respect to f2"],
                   a: "d(loss)/d(f3), then d(f3)/d(f2), then d(f2)/d(f1), then d(f1)/dx." },
                 { k: "figure", q: "In the chain figure, what does each box remember during the forward pass, and why does that matter going backward?", a: "What it saw at that layer, inputs and outputs, which is exactly the tape that lets the backward pass multiply local derivatives without recomputing the forward pass." },
-                { k: "why", q: "Why does the chain rule let you get a gradient for every parameter without ever expanding the whole network into one formula?", a: "It computes the derivative of a nested composition from only the derivatives of its individual pieces, so each layer only ever needs its own local derivative, not the derivative of the whole composition at once." },
+                { k: "why", q: "Why does the chain rule never need you to expand the nested function first?", a: "Each factor only needs its own function's derivative, evaluated where the forward pass left it; multiplied together they give the whole derivative, which is why it scales to long chains." },
                 { k: "blank", q: "Autograd is not magic added to PyTorch; it is the chain rule's ___, done automatically.", a: "bookkeeping" },
                 { k: "word", q: "In the chain figure, which direction do the dashed arrows run?", a: "Backward, from loss toward x" }
               ],
-              d: "The question is what the chain rule gives you that no other rule does. The answer is the derivative of a deeply nested function by multiplying the derivatives of its parts, without ever expanding the whole thing. The equations go from two nested functions to a network of layers, with one number check; the figure shows the forward boxes and the backward arrows that carry the running product.",
+              d: "The question is what the chain rule does that the power, product and quotient rules cannot: differentiate a function inside a function. One variable throughout: x goes in, passes through a chain of functions, one number comes out, and you multiply one ordinary derivative per link. Networks have many inputs and need partial derivatives; those come in week 4 (Gradients and descent), built on this one-variable rule.",
               m: 5,
-              where: "3Blue1Brown, Deep Learning chapter 4, 'Backpropagation calculus': the chain rule on a chain of single neurons, which is this question exactly",
-              url: "https://www.youtube.com/watch?v=tIeHLnjs5U8",
-              eq: [{"e": "y = f(g(x)) &nbsp;⇒&nbsp; dy/dx = f′(g(x)) · g′(x)", "t": "Composition: g feeds f. The derivative of the whole is the derivative of f at g(x) times the derivative of g."}, {"e": "x → u → y &nbsp;&nbsp; dy/dx = dy/du · du/dx", "t": "The same rule with names for the middle value: each arrow contributes one local rate."}, {"e": "(3x + 1)<sup>2</sup> at x = 2: &nbsp; u = 7, &nbsp; dy/du = 2u = 14, &nbsp; du/dx = 3, &nbsp; dy/dx = 14 · 3 = 42", "t": "Worked example with no expansion. Expanding to 9x<sup>2</sup> + 6x + 1 gives 18x + 6 = 42 at x = 2, so the rule agrees."}, {"e": "x → f<sub>1</sub> → f<sub>2</sub> → f<sub>3</sub> → L &nbsp;&nbsp; ∂L/∂x = ∂L/∂f<sub>3</sub> · ∂f<sub>3</sub>/∂f<sub>2</sub> · ∂f<sub>2</sub>/∂f<sub>1</sub> · ∂f<sub>1</sub>/∂x", "t": "The chain figure: four local derivatives multiplied from the loss backward. Each box only needs its own derivative."}, {"e": "∂L/∂w<sub>2</sub> = ∂L/∂f<sub>2</sub> · ∂f<sub>2</sub>/∂w<sub>2</sub>, &nbsp; where &nbsp; ∂L/∂f<sub>2</sub> = ∂L/∂f<sub>3</sub> · ∂f<sub>3</sub>/∂f<sub>2</sub>", "t": "A weight inside layer 2 reuses the running product coming from the loss. One backward pass serves every parameter."}, {"e": "L = ℓ(f<sub>3</sub>(f<sub>2</sub>(f<sub>1</sub>(x)))) &nbsp;⇒&nbsp; ∂L/∂x = ℓ′ · f<sub>3</sub>′ · f<sub>2</sub>′ · f<sub>1</sub>′", "t": "A network is a composition, so its gradient is a product of per-layer terms. Autograd is this bookkeeping done for you."}],
-              think: ["What is a composition: one function feeding another. Can you name the inner and outer function in (3x + 1)²?", "What does the rule multiply: local derivatives, one per arrow. Which direction do you walk to collect them?", "Why is there no expansion: each function only needs its own derivative. What would expanding a 50-layer network look like?", "What does each layer remember: its inputs from the forward pass, since the local derivative is evaluated there.", "What does a weight reuse: the running product from the loss down to its layer. Why does one backward pass give every gradient?"],
+              where: "3Blue1Brown, Essence of Calculus chapter 4, 'Visualizing the chain rule and product rule': the chain rule half",
+              url: "https://www.youtube.com/watch?v=YG15m2VwSjA",
+              eq: [{"e": "y = f(g(x)) &nbsp;⇒&nbsp; dy/dx = f′(g(x)) · g′(x)", "t": "Composition: g feeds f. The derivative of the whole is the derivative of f at g(x), times the derivative of g."}, {"e": "x → u → y &nbsp;&nbsp; dy/dx = dy/du · du/dx", "t": "The same rule with a name for the middle value: each arrow contributes one local rate."}, {"e": "(3x + 1)<sup>2</sup> at x = 2: &nbsp; u = 7, &nbsp; dy/du = 2u = 14, &nbsp; du/dx = 3, &nbsp; dy/dx = 14 · 3 = 42", "t": "Worked example with no expansion."}, {"e": "(3x + 1)<sup>2</sup> = 9x<sup>2</sup> + 6x + 1 &nbsp;⇒&nbsp; 18x + 6 = 42 at x = 2", "t": "Check by expanding first: the same 42, so the rule agrees."}, {"e": "y = σ(2x) &nbsp;⇒&nbsp; dy/dx = σ(2x)(1 − σ(2x)) · 2 &nbsp;&nbsp; at x = 0: 0.25 · 2 = 0.5", "t": "With last step's sigmoid as the outer function: its slope at the inner value, times the inner slope 2."}, {"e": "x → f<sub>1</sub> → f<sub>2</sub> → f<sub>3</sub> → y &nbsp;&nbsp; dy/dx = dy/df<sub>3</sub> · df<sub>3</sub>/df<sub>2</sub> · df<sub>2</sub>/df<sub>1</sub> · df<sub>1</sub>/dx", "t": "A longer chain, still one number in and one out: one ordinary derivative per link, multiplied. This is the chain figure."}, {"e": "each factor needs only its own function, at the value the forward pass left there", "t": "Why it never needs expanding: no factor looks at the whole chain. That is what lets it scale to long chains."}],
+              think: ["What is a composition: one function feeding another. In (3x + 1)², which is the inner function and which the outer?", "What does the rule multiply: one local derivative per link. Each is an ordinary derivative of one function.", "Where is each factor evaluated: the outer derivative at the inner value, not at x. In (3x + 1)² at x = 2, that is u = 7.", "Why no expansion: each factor only needs its own function. Can you check one answer by expanding anyway?"],
               out: "two written sentences on what composition lets the chain rule compute that nothing else does",
-              ans: {"lead": "The chain rule gives me the derivative of a deeply nested function by multiplying the derivatives of its parts, with no need to expand the whole function.", "pts": ["Composition: it handles functions built by nesting other functions inside each other.", "Multiply local rates: the derivative of the whole is the product of each layer's own derivative, evaluated where the forward pass had it.", "No expanding: I never have to write the whole composition as one expression first.", "That is a neural network: layers composed into one deep function.", "Backward through it: multiplying from the loss backward gives a gradient for every parameter, reusing the running product, without hand-deriving the network as a single formula."], "close": "So it is the chain rule, multiplied backward through the layers, that makes a gradient for every parameter possible."} }
+              ans: {"lead": "The chain rule differentiates a function inside a function by multiplying the derivatives of its parts, without expanding the whole thing first.", "pts": ["Composition: it handles functions built by nesting one inside another, which no other rule does.", "Multiply local rates: dy/dx = dy/du · du/dx, one ordinary derivative per link of the chain.", "Evaluate in place: the outer derivative is taken at the inner value, so for (3x + 1)² at x = 2 it is 2 · 7 = 14, times 3, giving 42.", "Scales to long chains: each factor only needs its own function, which is what partial derivatives build on in week 4."], "close": "So it turns one hard derivative into a product of easy ones."} }
           ],
           quiz: [
             { q: "The sigmoid's derivative, in terms of the sigmoid itself, is:",
@@ -7568,7 +7569,8 @@
     var on = view.page === "session" && view.week === w && view.session === i;
     var a = railLink(hashFor("session", w, i), (SHORT[s.id] || s.name).replace(/^(Oxus|ZenML): /, ""), on, "ss");
     a.insertBefore(dotFor(s), a.firstChild);
-    a.title = s.name + (sessionClosed(s) ? ", closed" : "");
+    a.appendChild(el("span", "ri-tag", teaches(s)));
+    a.title = s.name + ", " + teaches(s).toLowerCase() + (sessionClosed(s) ? ", closed" : "");
     return a;
   }
   function closeRail() {
@@ -7811,7 +7813,7 @@
           (diff < 7 ? "on " + DAYNAME[when.getDay()] : "on " + when.getDate() + " " + MONTHNAME[when.getMonth()]);
         why = "For " + String(nx.s.forWhat).split(",")[0] + (whenTxt ? ", " + whenTxt : "") + ". " + why;
       } else {
-        why = "Week " + (nx.wi + 1) + ", " + nx.s.track.toLowerCase() + ". " + why;
+        why = "Week " + (nx.wi + 1) + ", " + teaches(nx.s).toLowerCase() + ". " + why;
       }
       hero.appendChild(el("p", "hsub", why));
     } else {
@@ -7875,7 +7877,7 @@
       var mk = el("div", "marks"), n = 0;
       w.sessions.forEach(function (s) {
         var d = dotFor(s);
-        d.title = (SHORT[s.id] || s.name) + ", " + s.track.toLowerCase() + (sessionClosed(s) ? ", closed" : "");
+        d.title = (SHORT[s.id] || s.name) + ", " + teaches(s).toLowerCase() + (sessionClosed(s) ? ", closed" : "");
         mk.appendChild(d);
         if (sessionClosed(s)) { n += 1; }
       });
@@ -8454,7 +8456,7 @@
         var sw = el("span", "swatch");
         sw.style.background = "var(--" + tone(s.track) + ")";
         tt.appendChild(sw);
-        tt.appendChild(document.createTextNode(s.track));
+        tt.appendChild(document.createTextNode(teaches(s)));
         tr.appendChild(tt);
         tr.appendChild(el("td", "r", s.len.replace("h ", ":").replace("m", "")));
         tr.appendChild(el("td", "r" + (state.done[s.id] ? " posted" : (isFolded(s) ? " folded-note" : "")),
@@ -8488,7 +8490,7 @@
     var body = el("div", "");
     body.appendChild(el("div", "srn", s.name));
     if (s.blurb) { body.appendChild(el("div", "srw", s.blurb)); }
-    var meta = [s.track, s.len, dn + " of " + total + " steps done"];
+    var meta = [teaches(s), s.len, dn + " of " + total + " steps done"];
     if (state.done[s.id]) { meta.push("closed " + state.done[s.id]); }
     else if (isFolded(s)) { meta.push("folded into wildcard work"); }
     body.appendChild(el("div", "srm", meta.join(" · ")));
@@ -9625,7 +9627,7 @@
     var kick = el("div", "kicker");
     var trk = el("span", "trk");
     trk.appendChild(dotFor(s));
-    trk.appendChild(document.createTextNode(s.track));
+    trk.appendChild(document.createTextNode(teaches(s)));
     kick.appendChild(trk);
     kick.appendChild(el("span", "", wild ? (s.forWhat || "Wildcard") : "Week " + (view.week + 1) + ", " + range(view.week)));
     var xm = extraMinutes(s);
@@ -9881,6 +9883,11 @@
     data: "Data", devops: "DevOps, security and reliability", distributed: "Distributed systems", frontend: "Frontend engineering",
     games: "Game development", graphics: "Graphics", inference: "Inference engineering", ml: "ML and deep learning",
     mobile: "Mobile engineering", nlp: "NLP and conversational AI", systems: "Systems fundamentals" };
+  /* What a session teaches, as its tag. The track names the plan's slot (Requeue was for requeued
+     diagnostic questions, Alaap for the project), not the subject, so the tag says the subject. */
+  var TEACHES = { Mathematics: "Maths", Systems: "Systems", Requeue: "ML", Alaap: "Audio", Interview: "Interview" };
+  var TEACHES_ID = { wc25: "ML", wc26: "ML", wc27: "ML" };
+  function teaches(s) { return TEACHES_ID[s.id] || TEACHES[s.track] || s.track || ""; }
   function streamList() { return window.STREAMS || []; }
   function feeds(st, s) { return (st.sessions || []).indexOf(s.id) >= 0 || (st.tracks || []).indexOf(s.track) >= 0; }
   function streamOf(s) {

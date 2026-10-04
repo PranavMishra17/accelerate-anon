@@ -1056,3 +1056,13 @@ pages, guide, Baseline) and a backlog of whole courses for later, seeded with ve
 resource card in a step now has For later, which parks a course in a stream's backlog (the step's own by
 default) so a detour never takes over a session. The far rivers carry a research week's questions
 before any study time. A view only, his pick: the milestone plan is unchanged. No charter deviation.
+
+**2026-10-03: Week 2 back in sequence; every session tagged with what it teaches.**
+The maths pass had turned week 2's chain-rule step into backprop through a network, with partial
+derivatives and the 3Blue1Brown backpropagation video, a week before partial derivatives are taught
+(week 4, Gradients and descent, which already carries backprop by hand and that video). The step is
+one variable again: composition, dy/dx = dy/du · du/dx, (3x + 1)² worked and checked by expanding,
+σ(2x) using the step before, a longer chain, and a pointer forward to week 4. The sigmoid step lost its
+one partial-derivative line. Sessions now show a tag for what they teach (Maths, Systems, ML, Audio,
+Interview) in the rail, the week list and the session header, since the track names a slot in the plan
+(Requeue, Alaap), not the subject: Overfitting reads ML. No charter deviation.
