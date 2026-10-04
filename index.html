@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="baseline/map.css?v=69fc8392">
 <link rel="stylesheet" href="site/tokens.css?v=0e3b75d2">
 <link rel="stylesheet" href="site/nav.css?v=2ebfb65e">
-<link rel="stylesheet" href="site/res.css?v=06774f99">
+<link rel="stylesheet" href="site/res.css?v=8c01f12a">
 <script src="private/site.js"></script>
 <script src="site/nav.js?v=a8689a71" defer></script>
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
@@ -367,6 +367,25 @@
   .wb-model .wb-lead { font-weight: 700; padding-bottom: var(--s2); }
   .wb-model .wb-close { padding-top: var(--s2); border-top: 1px solid color-mix(in srgb, var(--bg) 18%, transparent); opacity: .85; }
   .sxthink { margin: 0; padding-left: 22px; }
+  /* Streams (#/streams): a summary table, then one section per stream. */
+  .strm-sum { width: 100%; border-collapse: collapse; margin: var(--s4) 0 var(--s5); font-size: var(--fs-sm); }
+  .strm-sum th { text-align: left; font-weight: 600; color: var(--muted); padding: 6px var(--s3) 6px 0; border-bottom: 1px solid var(--rule); }
+  .strm-sum td { padding: 7px var(--s3) 7px 0; border-bottom: 1px solid var(--rule); }
+  .strm { margin: var(--s6) 0 0; }
+  .strm-what { margin: var(--s2) 0 var(--s1); color: var(--ink); }
+  .strm-depth { margin: var(--s2) 0 0; font-size: var(--fs-sm); color: var(--soft); }
+  .strm-h { font-size: var(--fs-sm); font-weight: 600; color: var(--muted); margin: var(--s4) 0 var(--s2); }
+  .strm-fed, .strm-bls { list-style: none; margin: 0; padding: 0; }
+  .strm-fed li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2); padding: 4px 0; }
+  .strm-fed li.done a, .strm-fed li.parked a { color: var(--muted); }
+  .strm-m { font-size: var(--fs-xs); color: var(--muted); }
+  .strm-research { margin: 0 0 var(--s3); padding-left: 22px; }
+  .strm-research li { margin: 0 0 var(--s1); }
+  .strm-bl { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--s3); align-items: start; padding: var(--s2) 0; border-top: 1px solid var(--rule); }
+  .strm-bl.done .strm-blb a { color: var(--muted); text-decoration: line-through; }
+  .strm-blb { display: flex; flex-direction: column; gap: 2px; }
+  .strm-why { font-size: var(--fs-sm); color: var(--soft); }
+  @media (max-width: 520px) { .strm-sum th:nth-child(2), .strm-sum td:nth-child(2) { display: none; } }
   /* Equations: a math face for the formula only, the plain line under it in the step face. */
   .sxeq { margin: 0; }
   .sxeq dt { font-family: "Cambria Math", "STIX Two Math", "Latin Modern Math", "Times New Roman", serif; font-size: 17px; color: var(--ink);
@@ -718,8 +737,9 @@
 <script src="figures/viewer.js?v=ecb99aae"></script>
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
+<script src="data/streams.js?v=a5b27e3d"></script>
 <script src="data/reading.js?v=07bb0d22"></script>
-<script src="site/res.js?v=1788a96c"></script>
+<script src="site/res.js?v=0f70fc55"></script>
 <script src="data/mcq/base.js?v=5fc7e7ac"></script>
 <script src="data/mcq/week1.js?v=8276998c"></script>
 <script src="data/mcq/week2.js?v=c99169f7"></script>
@@ -6856,7 +6876,8 @@
       visits: {}, answers: {}, folded: {}, recall: {}, declared: {},
       clock: {}, floor: {}, exports: {}, closer: {}, origin: null,
       requeue: { read: null, answered: {}, added: [] }, livery: "base",
-      mcq: {}   /* multiple-choice runs, keyed by run id: see the MCQ block below */
+      mcq: {},   /* multiple-choice runs, keyed by run id: see the MCQ block below */
+      backlog: { saved: [], done: {} }   /* whole courses parked for later, per stream: see #/streams */
     };
   }
   var state = freshState();
@@ -6893,6 +6914,7 @@
           state.quizHistory = p.quizHistory || {};
           state.livery = p.livery || "base";
           state.mcq = (p.mcq && typeof p.mcq === "object" && !(p.mcq instanceof Array)) ? p.mcq : {};
+          state.backlog = (p.backlog && p.backlog.saved) ? p.backlog : { saved: [], done: {} };
           Object.keys(state.quiz).forEach(function (qid) {
             if (!state.quizHistory[qid] && state.quiz[qid]) { state.quizHistory[qid] = [state.quiz[qid]]; }
           });
@@ -7480,7 +7502,7 @@
         var wn = /^\d+$/.test(p[1]) ? n(p[1]) : byId(WILDCARD.sessions, p[1]);
         if (WILDCARD.sessions[wn]) { return { page: "session", week: "wc", session: wn }; }
       }
-      if (["requeue", "protocol", "charter", "written", "ahead", "data", "resources", "search", "map", "book", "sky", "progress", "figure"].indexOf(p[0]) >= 0) {
+      if (["requeue", "protocol", "charter", "written", "ahead", "data", "resources", "search", "map", "book", "sky", "progress", "figure", "streams"].indexOf(p[0]) >= 0) {
         return { page: p[0], week: view.week, session: 0 };
       }
     } catch (err) { console.error("Could not read the address", err); }
@@ -7634,6 +7656,7 @@
     side.appendChild(railLink("#/search", "Search", view.page === "search"));
 
     side.appendChild(el("div", "rh", "Reference"));
+    side.appendChild(railLink("#/streams", "Streams", view.page === "streams"));
     side.appendChild(railLink("#/charter", "Charter", view.page === "charter"));
     side.appendChild(railLink("#/protocol", "Protocol", view.page === "protocol"));
     side.appendChild(railLink("#/map", "The work ahead", view.page === "map" || view.page === "ahead"));
@@ -7645,7 +7668,7 @@
   var PAGE_NAME = { drill: "Drill", sheet: "Sheet", dia: "Diagram first", requeue: "Requeue", protocol: "Protocol",
     charter: "Charter", written: "Written work", resources: "Resources", search: "Search", map: "The work ahead",
     ahead: "What comes after", data: "Data and export", book: "The book", sky: "The sky", progress: "Progress",
-    figure: "Explain a figure" };
+    figure: "Explain a figure", streams: "Streams" };
   function scopeCrumb(scope) {
     var one = sessionById(scope), at = one ? placeOf(one) : null;
     if (at) {
@@ -8788,7 +8811,7 @@
     if (isStudy) { section(mat, "Do", doRows(s, it, i)); }
     else { section(mat, null, metaRows(s, it, says)); }
     /* a curated list (data/reading.js res: Required and Optional, videos as cards) replaces the old links */
-    if (x.res && window.Res) { section(mat, null, Res.render(x.res, { onClick: function (r) { logVisit(s.id, r.label, r.url); } })); }
+    if (x.res && window.Res) { section(mat, null, Res.render(x.res, { onClick: function (r) { logVisit(s.id, r.label, r.url); }, save: saveHook(s) })); }
     else { section(mat, "Read", readList(s, [].concat(isStudy ? (it.res || []) : (it.links || []), x.read || [], x.aieng || []))); }
     section(mat, "In your system design guide", guideList(s, [].concat(it.sd || [], x.sd || []), sdHref, sdLabel, "System design: "));
     section(mat, "In your Alaap and TrenTorch plan", guideList(s, it.al, function (q) { return alHref(q.p); }, function (q) { return alLabel(q.p); }, "Alaap plan: "));
@@ -9846,6 +9869,185 @@
 
     v.appendChild(rubric("Session hygiene"));
     v.appendChild(el("p", "", "The systems session has one rule: nothing else is open. Not Claude Code, not applications, not the phone. Interleaving works for applications because applications are shallow and batchable. It does not work for this."));
+  }
+
+  /* ----------------------------------------------------------------- streams */
+
+  /* The streams (data/streams.js): one trunk, three rivers, a bridge, your edge and two far rivers. A view
+     over the plan, never a second plan. A session feeds a stream by its track or by its id. Whole courses
+     parked "for later" from any resource card live in state.backlog, beside the seeded ones. */
+  var STREAM_KIND = { trunk: "The trunk", river: "A river", bridge: "The bridge", edge: "Your edge", far: "A far river" };
+  var FIELD_NAME = { ai: "AI engineering", audio: "Audio and speech", backend: "Backend engineering", cloud: "Cloud computing",
+    data: "Data", devops: "DevOps, security and reliability", distributed: "Distributed systems", frontend: "Frontend engineering",
+    games: "Game development", graphics: "Graphics", inference: "Inference engineering", ml: "ML and deep learning",
+    mobile: "Mobile engineering", nlp: "NLP and conversational AI", systems: "Systems fundamentals" };
+  function streamList() { return window.STREAMS || []; }
+  function feeds(st, s) { return (st.sessions || []).indexOf(s.id) >= 0 || (st.tracks || []).indexOf(s.track) >= 0; }
+  function streamOf(s) {
+    var l = streamList(), i;
+    for (i = 0; i < l.length; i++) { if ((l[i].sessions || []).indexOf(s.id) >= 0) { return l[i]; } }
+    for (i = 0; i < l.length; i++) { if ((l[i].tracks || []).indexOf(s.track) >= 0) { return l[i]; } }
+    return l[0] || null;
+  }
+  function streamName(id) { var st = streamList().filter(function (x) { return x.id === id; })[0]; return st ? st.name : id; }
+  /* The "For later" control on a step's resource cards: the step's own stream by default. */
+  function saveHook(s) {
+    var l = streamList();
+    if (!l.length) { return null; }
+    var home = streamOf(s);
+    return {
+      streams: l.map(function (x) { return { id: x.id, name: x.name }; }),
+      def: home ? home.id : l[0].id,
+      onSave: function (r, id) {
+        state.backlog.saved.push({ s: id, label: r.label || r.book, url: r.url, m: r.m || 0, from: s.id, at: stampNow() });
+        save();
+      },
+      savedIn: function (r) {
+        var hit = state.backlog.saved.filter(function (b) { return b.url === r.url; })[0];
+        return hit ? streamName(hit.s) : null;
+      }
+    };
+  }
+  /* Baseline answers live in the same browser ('baseline.quiz.v1', keys field/topic/i): right and answered per field. */
+  function baselineCounts(fields) {
+    var s;
+    try { s = JSON.parse(window.localStorage.getItem("baseline.quiz.v1") || "{}"); } catch (err) { return null; }
+    var n = 0, ok = 0;
+    Object.keys(s).forEach(function (k) {
+      if (fields.indexOf(k.split("/")[0]) >= 0) { n++; if (s[k] && s[k].ok && !s[k].g) { ok++; } }
+    });
+    return { n: n, ok: ok };
+  }
+  function streamSessions() {
+    var all = [];
+    eachSession(function (s) { all.push({ s: s, href: "#/s/" + s.id }); });
+    eachWild(function (s) { all.push({ s: s, href: "#/w/" + s.id }); });
+    return all;
+  }
+  function backlogRow(ul, item, saved) {
+    var li = el("li", "strm-bl" + (state.backlog.done[item.url] ? " done" : ""));
+    var tick = el("button", "sxt" + (state.backlog.done[item.url] ? " on" : ""), state.backlog.done[item.url] ? "✓" : "");
+    tick.setAttribute("aria-label", (state.backlog.done[item.url] ? "Mark not done: " : "Mark done: ") + item.label);
+    tick.addEventListener("click", function () {
+      if (state.backlog.done[item.url]) { delete state.backlog.done[item.url]; } else { state.backlog.done[item.url] = stampNow(); }
+      save(); draw();
+    });
+    li.appendChild(tick);
+    var body = el("div", "strm-blb");
+    if (item.url) {
+      var a = el("a", "", item.label);
+      a.href = item.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+      body.appendChild(a);
+    } else { body.appendChild(el("span", "", item.book || item.label)); }
+    var meta = [];
+    if (item.m) { meta.push(saved ? item.m + " min" : "about " + item.m + " h"); }
+    if (saved) { meta.push("saved from " + (item.from || "a step")); }
+    if (meta.length) { body.appendChild(el("span", "strm-m", meta.join(", "))); }
+    if (item.why) { body.appendChild(el("span", "strm-why", item.why)); }
+    li.appendChild(body);
+    if (saved) {
+      var rm = el("button", "wb-btn strm-rm", "Remove");
+      rm.addEventListener("click", function () {
+        state.backlog.saved = state.backlog.saved.filter(function (b) { return b !== item; });
+        save(); draw();
+      });
+      li.appendChild(rm);
+    }
+    ul.appendChild(li);
+  }
+  function viewStreams() {
+    var v = document.getElementById("view");
+    v.appendChild(el("h1", "", "Streams"));
+    v.appendChild(el("p", "sm dim", "Everything you are getting good at: one trunk, three rivers, a bridge, your edge and two far rivers. A view over the plan, not a second plan; the weeks stay the order you study in. A whole course you get pulled into goes in its stream's backlog with For later on any resource card, so a detour never takes over a session."));
+    var l = streamList(), all = streamSessions();
+    if (!l.length) { v.appendChild(el("p", "", "The streams file (data/streams.js) did not load.")); return; }
+
+    var tb = el("table", "strm-sum"), hr = el("tr");
+    ["Stream", "Kind", "Sessions closed", "Backlog done"].forEach(function (h) { hr.appendChild(el("th", "", h)); });
+    tb.appendChild(hr);
+    l.forEach(function (st) {
+      var fs = all.filter(function (x) { return feeds(st, x.s); });
+      var bl = (st.backlog || []).concat(state.backlog.saved.filter(function (b) { return b.s === st.id; }));
+      var tr = el("tr"), td = el("td"), a = el("a", "", st.name);
+      a.href = "#/streams";
+      a.addEventListener("click", function (e) { e.preventDefault(); var t = document.getElementById("strm-" + st.id); if (t) { t.scrollIntoView({ behavior: "instant", block: "start" }); } });
+      td.appendChild(a); tr.appendChild(td);
+      tr.appendChild(el("td", "dim", STREAM_KIND[st.kind] || st.kind));
+      tr.appendChild(el("td", "", fs.length ? fs.filter(function (x) { return sessionClosed(x.s); }).length + " of " + fs.length : "none yet"));
+      tr.appendChild(el("td", "", bl.filter(function (b) { return state.backlog.done[b.url]; }).length + " of " + bl.length));
+      tb.appendChild(tr);
+    });
+    v.appendChild(tb);
+
+    l.forEach(function (st) {
+      var sec = el("section", "strm");
+      sec.id = "strm-" + st.id;
+      sec.appendChild(rubric(st.name, STREAM_KIND[st.kind] || ""));
+      sec.appendChild(el("p", "strm-what", st.what));
+      sec.appendChild(el("p", "sm dim", st.why));
+
+      var fs = all.filter(function (x) { return feeds(st, x.s); });
+      var depth = [];
+      if (fs.length) { depth.push(fs.filter(function (x) { return sessionClosed(x.s); }).length + " of " + fs.length + " sessions closed"); }
+      if ((st.fields || []).length) {
+        var bc = baselineCounts(st.fields);
+        if (bc) { depth.push(bc.n ? "Baseline: " + bc.ok + " right of " + bc.n + " answered" : "Baseline: not checked yet"); }
+      }
+      if (depth.length) { sec.appendChild(el("p", "strm-depth", depth.join("; "))); }
+
+      var fed = el("ul", "strm-fed");
+      fs.forEach(function (x) {
+        var li = el("li", sessionClosed(x.s) ? "done" : (x.s.parked ? "parked" : ""));
+        var a = el("a", "", x.s.name);
+        a.href = x.href;
+        li.appendChild(a);
+        li.appendChild(el("span", "strm-m", sessionClosed(x.s) ? "closed" : (x.s.parked ? "parked" : stepsDone(x.s) + " of " + x.s.steps.length + " steps")));
+        fed.appendChild(li);
+      });
+      (st.loops || []).forEach(function (id) {
+        var lp = LOOPS.filter(function (x) { return x.id === id; })[0];
+        if (!lp) { return; }
+        var li = el("li"), a = el("a", "", lp.name);
+        a.href = lp.file; a.target = "_blank"; a.rel = "noopener";
+        li.appendChild(a); li.appendChild(el("span", "strm-m", "interview page"));
+        fed.appendChild(li);
+      });
+      (st.on || []).forEach(function (o) {
+        var li = el("li"), a = el("a", "", o.label);
+        a.href = o.url; a.target = "_blank"; a.rel = "noopener";
+        li.appendChild(a); li.appendChild(el("span", "strm-m", "on this site"));
+        fed.appendChild(li);
+      });
+      (st.fields || []).forEach(function (f) {
+        var li = el("li"), a = el("a", "", "Baseline: " + (FIELD_NAME[f] || f));
+        a.href = "BASELINE.html#/" + f; a.target = "_blank"; a.rel = "noopener";
+        li.appendChild(a); li.appendChild(el("span", "strm-m", "field map"));
+        fed.appendChild(li);
+      });
+      if (fed.children.length) { sec.appendChild(el("h3", "strm-h", "What feeds it now")); sec.appendChild(fed); }
+
+      if (st.research) {
+        var done = state.backlog.done["research:" + st.id];
+        sec.appendChild(el("h3", "strm-h", done ? "Research week: done" : "Research week: not done yet"));
+        var ol = el("ol", "strm-research");
+        st.research.forEach(function (q) { ol.appendChild(el("li", "", q)); });
+        sec.appendChild(ol);
+        var rb = el("button", "wb-btn" + (done ? " on" : ""), done ? "Research week done" : "Mark the research week done");
+        rb.addEventListener("click", function () {
+          if (done) { delete state.backlog.done["research:" + st.id]; } else { state.backlog.done["research:" + st.id] = stampNow(); }
+          save(); draw();
+        });
+        sec.appendChild(rb);
+      }
+
+      var saved = state.backlog.saved.filter(function (b) { return b.s === st.id; });
+      sec.appendChild(el("h3", "strm-h", "Backlog: whole courses for later"));
+      var bl = el("ul", "strm-bls");
+      (st.backlog || []).forEach(function (b) { backlogRow(bl, b, false); });
+      saved.forEach(function (b) { backlogRow(bl, b, true); });
+      sec.appendChild(bl);
+      v.appendChild(sec);
+    });
   }
 
   function viewCharter() {
@@ -11243,6 +11445,7 @@
       else if (view.page === "requeue") { viewRequeue(); }
       else if (view.page === "protocol") { viewProtocol(); }
       else if (view.page === "charter") { viewCharter(); }
+      else if (view.page === "streams") { viewStreams(); }
       else if (view.page === "ahead") { viewAhead(); }
       else if (view.page === "written") { viewWritten(); }
       else if (view.page === "resources") { viewResources(); }

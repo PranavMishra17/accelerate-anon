@@ -1045,3 +1045,14 @@ quizzes, the Baseline quizzes and the three interview Learn paths now use notati
 option order and answers unchanged, prose kept where it is an idea and not a formula. Two figures drawn for
 the steps that had none: choosing a derivative rule by the expression's shape (w2b step 2) and the voice
 measurements placed on the source or filter side (w5c step 2). No charter deviation.
+
+**2026-10-03: Streams, a view of everything being learned (tracker, #/streams).**
+He asked what all the streams are and whether a map of them should change the approach. Answer, as a
+page: one trunk (Foundations: mathematics, DSA, how computers and networks work), three rivers (Systems;
+ML, by mechanism; AI engineering), a bridge (inference engineering), his edge (audio and voice) and two
+far rivers (space, defence and hardware; graphics, games and XR). Each shows how deep he is (sessions
+closed out of those feeding it, Baseline answers for its fields), what feeds it now (sessions, interview
+pages, guide, Baseline) and a backlog of whole courses for later, seeded with verified links. Any
+resource card in a step now has For later, which parks a course in a stream's backlog (the step's own by
+default) so a detour never takes over a session. The far rivers carry a research week's questions
+before any study time. A view only, his pick: the milestone plan is unchanged. No charter deviation.

@@ -21,3 +21,12 @@
 /* host pages style links in their panels as chips; a resource row stays plain text at body size */
 .res a.res-link, .res span.res-link { border: 0; padding: 0; background: none; box-shadow: none; border-radius: 0; font-size: var(--fs-md, 15px); line-height: 1.45; }
 .res a.res-video { box-shadow: none; }
+
+/* For later: park a whole course in a stream's backlog without leaving the step. */
+.res-vcell { display: flex; flex-direction: column; gap: 4px; }
+.res-save { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-xs, 12px); color: var(--muted); }
+.res-row .res-save { margin-left: var(--s2, 8px); }
+.res-save-b { font: inherit; font-size: var(--fs-xs, 12px); padding: 1px 8px; border: 1px solid var(--rule); border-radius: var(--radius-sm, 4px); background: var(--surface); color: var(--soft); cursor: pointer; }
+.res-save-b:hover { color: var(--accent); border-color: var(--accent); }
+.res-save-s { font: inherit; font-size: var(--fs-xs, 12px); padding: 1px 4px; border: 1px solid var(--rule); border-radius: var(--radius-sm, 4px); background: var(--surface); color: var(--ink); }
+.res-saved { color: var(--ok); }

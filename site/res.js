@@ -5,7 +5,9 @@
            Scratch lesson, a book chapter, the Alaap plan, a tutorial or roadmap; src names which)
      req   true for Required, false for Optional
      m     minutes; why one line on what you get; book text for a chapter with no link
-   Res.render(list, { onClick(item) }) returns an element, or null for an empty list.
+   Res.render(list, { onClick(item), save }) returns an element, or null for an empty list. save, optional:
+   { streams: [{ id, name }], def: stream id, onSave(item, id), savedIn(item) -> stream name or null } adds a
+   small "For later" control to each linked item, to park a whole course in a stream's backlog.
    The cap (two articles and two videos per sub-pointer) is enforced by the checks, not here. */
 (function () {
   "use strict";
@@ -40,20 +42,51 @@
     if (item.why) { li.appendChild(el("span", "res-why", item.why)); }
     return li;
   }
-  function group(title, items, onClick) {
+  /* "For later": pick a stream (the step's own by default) and park the item in its backlog. */
+  function saver(item, save) {
+    var box = el("span", "res-save");
+    function done(name) { box.innerHTML = ""; box.appendChild(el("span", "res-saved", "Saved for later: " + name)); }
+    var was = save.savedIn(item);
+    if (was) { done(was); return box; }
+    var b = el("button", "res-save-b", "For later");
+    b.type = "button";
+    b.addEventListener("click", function (e) {
+      e.preventDefault(); e.stopPropagation();
+      box.innerHTML = "";
+      var sel = el("select", "res-save-s");
+      save.streams.forEach(function (s) { var o = el("option", null, s.name); o.value = s.id; if (s.id === save.def) { o.selected = true; } sel.appendChild(o); });
+      var ok = el("button", "res-save-b", "Save");
+      ok.type = "button";
+      ok.addEventListener("click", function (ev) {
+        ev.preventDefault(); ev.stopPropagation();
+        save.onSave(item, sel.value);
+        done(sel.options[sel.selectedIndex].textContent);
+      });
+      box.appendChild(sel); box.appendChild(ok);
+    });
+    box.appendChild(b);
+    return box;
+  }
+  function savable(item) { return item.url && !(item.kind === "keep" && item.src === "site"); }
+  function group(title, items, onClick, save) {
     if (!items.length) { return null; }
     var g = el("div", "res-group");
     g.appendChild(el("div", "res-label", title));
     var vids = items.filter(function (x) { return x.kind === "video" && x.yt && x.yt.id; });
     if (vids.length) {
       var vg = el("div", "res-videos");
-      vids.forEach(function (x) { vg.appendChild(video(x, onClick)); });
+      vids.forEach(function (x) {
+        if (!save) { vg.appendChild(video(x, onClick)); return; }
+        var cell = el("div", "res-vcell");
+        cell.appendChild(video(x, onClick)); cell.appendChild(saver(x, save));
+        vg.appendChild(cell);
+      });
       g.appendChild(vg);
     }
     var rest = items.filter(function (x) { return vids.indexOf(x) < 0; });
     if (rest.length) {
       var ul = el("ul", "res-list");
-      rest.forEach(function (x) { ul.appendChild(row(x, onClick)); });
+      rest.forEach(function (x) { var li = row(x, onClick); if (save && savable(x)) { li.appendChild(saver(x, save)); } ul.appendChild(li); });
       g.appendChild(ul);
     }
     return g;
@@ -64,7 +97,7 @@
     opts = opts || {};
     var box = el("div", "res");
     [["Required", true], ["Optional", false]].forEach(function (p) {
-      var g = group(p[0], list.filter(function (x) { return !!x.req === p[1]; }), opts.onClick);
+      var g = group(p[0], list.filter(function (x) { return !!x.req === p[1]; }), opts.onClick, opts.save);
       if (g) { box.appendChild(g); }
     });
     return box;
