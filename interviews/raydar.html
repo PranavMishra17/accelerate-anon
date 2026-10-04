@@ -1227,7 +1227,7 @@ details.item > .sbody { padding-left: 0; }
     }
     var rows = [];
     learnModules().forEach(function (m) {
-      var sec = heading(host, "m-" + m.id, m.blurb || "", m.title);
+      var sec = heading(host, "m-" + m.id, (m.day ? m.day + ". " : "") + (m.blurb || ""), m.title);   /* day: a plan tag, never a gate */
       sec.classList.add("ln-sec");
       var top = el("p", "ln-mod", m.topics.length + " topics");
       var tb = el("button", "linkish", "Test this module");

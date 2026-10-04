@@ -653,7 +653,7 @@ const GUIDE = {
       onwardPatterns: "Fifteen recurring deep-dive problems. Each one opens with a diagram, then every technique with its own mechanism diagram.",
       onwardDesigns: "Seven designs worked through all six steps, each ending with the patterns it uses and why.",
       designsTitle: "Worked designs",
-      designsLede: "Each design runs through the same six steps, then lists the deep-dive patterns it uses. Five are agentic, Ticketmaster is the classic baseline for contrast, and Kitaru is an agent-eval product read from its source.",
+      designsLede: "Each design runs through the same six steps, then lists the deep-dive patterns it uses. Five are agentic, three are compact conversational AI designs (a grounded FAQ assistant, a contact-centre voice line, the analytics and improvement loop) beside the bank virtual assistant, Ticketmaster is the classic baseline for contrast, and Kitaru is an agent-eval product read from its source.",
       designsNav: "Designs",
       allDesigns: "All designs",
       stepsInDesign: "Steps in this design",
@@ -3406,6 +3406,758 @@ POST /v1/handoffs  { conversation_id, reason, queue, priority, mode: warm | cold
 });
 
 GUIDE.examples.push({
+  id: "faq-assistant",
+  compact: true,
+  tabLabel: "Fund FAQ assistant",
+  title: "A grounded FAQ assistant for a fund company",
+  kind: "Conversational AI, grounded answers",
+  prompt: "Design a customer FAQ assistant for a fund company. It answers questions about fees, accounts and tax forms, only from approved, versioned content, with a citation on every answer. When the answer is not in the content it says so and offers a person. Compliance approves the content, a change must reach answers quickly and provably, and the team must be able to measure whether answers are grounded.",
+  lens: [
+    "The model writes; it does not know. Every claim in an answer must trace to a passage that compliance approved, and not finding one is a correct outcome.",
+    "The content is the product. Governance (who approves, how a change goes live, when it expires) decides answer quality as much as retrieval does.",
+    "Quality is measured in two places: did retrieval find the passage, and did the answer stay inside it. Fixing the wrong one wastes weeks."
+  ],
+  steps: {
+    requirements: {
+      board: [
+        { type: "list", title: "Functional (top 3)", ordered: true, items: [
+          "Answer questions about fees, account types, tax forms and deadlines in plain language, each answer carrying citations to the approved document, version and section it came from.",
+          "Refuse when the content does not contain the answer, and route anything account-specific, advice-like or complaint-like to a person.",
+          "Let content owners change content through a review and approval flow, and make an approved change reach answers within minutes, with an audit trail of which version produced every answer."
+        ]},
+        { type: "list", title: "Out of scope", items: [
+          "Personal account data, investment advice or recommendations, and building the authoring tool or the identity system. The assistant answers general questions only."
+        ]},
+        { type: "defs", title: "Non-functional (quantified)", items: [
+          { term: "Groundedness", desc: "At least 98% of answered questions have every claim supported by a cited passage, measured on a labelled sample. Target assumed; compliance sets the real one." },
+          { term: "Wrong-refusal rate", desc: "Of questions the content can answer, at most 10% are refused. A wall is safe and useless, so both rates are reported together." },
+          { term: "Latency", desc: "Assumed: first token under 1.5s, full answer under 4s at p95, streamed." },
+          { term: "Freshness", desc: "An approved change is live within 15 minutes; a document past its review date stops being cited until re-approved." },
+          { term: "Auditable", desc: "Any answer can be replayed: the question, passages, content release, model and prompt version, and the answer text." },
+          { term: "Availability", desc: "Assumed 99.9%. With the model down, the assistant shows the top cited passages as plain search results." }
+        ]},
+        { type: "math", title: "Sizing (every input assumed, labelled)", lines: [
+          "Assumed: 20,000 questions a day, 10% in the peak hour. That is 2,000 an hour, about 0.6 a second, and 4x bursts of about 2.2 a second.",
+          "Assumed: 400 approved documents of about 12 chunks each, 4,800 chunks. With 1,024-dimension float vectors that is 4,800 x 1,024 x 4 bytes, about 20 MB.",
+          "Assumed: 5 passages of about 300 tokens plus 300 tokens of prompt and question, 1,800 tokens in, 150 out. At an assumed $3 per million input and $15 per million output tokens: 1,800 x 3 / 1M = $0.0054 plus 150 x 15 / 1M = $0.0023, about $0.008 an answer.",
+          "20,000 x $0.008 is about $160 a day, an upper bound, since refused and cached questions skip the model."
+        ], conclusion: "Load is tiny and the index fits in memory on one database. Compute is not the hard part. Content correctness, refusal behaviour and proof of groundedness are." }
+      ],
+      reasoning: [
+        "Open with the promise: answers only from approved content. Every other requirement serves it.",
+        "Say that refusal and groundedness are measured as a pair, or one can be gamed to flatter the other.",
+        "Do the sizing quickly: it shows scale is not the problem, which moves the time to governance and evaluation."
+      ],
+      script: [
+        "Three things: answer fee, account and tax-form questions with citations; refuse when the content does not say, and route account or advice questions to a person; and let content owners change content through review, with every answer traceable to a version.",
+        "The non-functional I lead with is groundedness, at least 98% of claims supported on a labelled sample, next to the wrong-refusal rate, so a bot that refuses everything does not look safe and good.",
+        "Sizing, assumed: 20,000 questions a day, about 2 a second at burst, 4,800 chunks, about 20 MB of vectors, roughly $0.008 an answer, so about $160 a day at most. Scale is easy; correctness is the work."
+      ],
+      probes: [
+        "Why not fine-tune the model on the fee documents? Fees change, and a tuned model cannot cite or forget a superseded version. Retrieval over versioned content gives a citation and a switch for every change.",
+        "Why 98% and not 100%? 100% cannot be proven on a sample. State the target, the interval, and what happens to the misses: they are reviewed and added to the regression set."
+      ]
+    },
+
+    entities: {
+      board: [
+        { type: "defs", title: "Core entities (first draft)", items: [
+          { term: "Document", desc: "A stable id (fee schedule, Form 1099 guide), owner, category, and a pointer to its live version." },
+          { term: "Version", desc: "Immutable text with a status (draft, in review, approved, live, retired), approver and role, effective date and review-by date." },
+          { term: "Chunk", desc: "A section-sized passage of one version: text, heading path, embedding, and the document version it belongs to." },
+          { term: "Release", desc: "The set of live versions at a moment, with its evaluation result. Answers record the release id; rollback is a pointer move." },
+          { term: "Answer", desc: "Status (answered, not found, out of scope, handed off), text, citations (document, version, section), release id, model and prompt version." },
+          { term: "Eval case", desc: "A question with the passage that should be found, or the label expect-refusal, and a source (real log, owner-written, adversarial)." }
+        ]}
+      ],
+      reasoning: [
+        "Version is immutable. Edits create a new version, which is what makes citations and audits mean anything.",
+        "Release is the unit that goes live and rolls back, so tests and answers both point at it.",
+        "Eval case carries expect-refusal, because half the quality story is what the assistant must not answer."
+      ],
+      script: [
+        "Document, Version, Chunk, Release, Answer and Eval case.",
+        "Versions are immutable with a status, an approver and a review-by date. A release is the set of live versions with its test result, and every answer records the release it used.",
+        "Eval cases include questions that must be refused, so refusal is tested, not hoped for."
+      ]
+    },
+
+    api: {
+      board: [
+        { type: "code", title: "Ask, feedback, and the content lifecycle", code: `
+POST /v1/ask  { question, session_id, locale, product? }
+     -> { answer_id, status: answered | not_found | out_of_scope | handoff,
+          answer, citations: [{ doc_id, version, section, label }], release_id }
+     (streamed; status and citations arrive with the final event)
+
+POST /v1/answers/{answer_id}/feedback  { helpful, reason? }
+
+Content lifecycle (internal)
+PUT  /v1/content/{doc_id}/drafts            { text, metadata }
+POST /v1/content/{doc_id}/versions/{v}/approve
+     { approver, role, effective_from, review_by }
+POST /v1/releases   { version_ids[] } -> runs the eval gate -> { release_id, passed, report }
+POST /v1/releases/{id}/activate | /rollback
+` },
+        { type: "list", title: "Choices to state out loud", items: [
+          "The response carries a status, not only text, so the UI can show a refusal differently and the logs can count each outcome.",
+          "Citations are structured (document, version, section), never links the model made up. They come from the retrieved chunks.",
+          "Approve and release are separate calls: a version can be approved yet not live until the gate passes.",
+          "Activate and rollback move one pointer, so a bad release is undone in seconds."
+        ]}
+      ],
+      reasoning: [
+        "Two surfaces: the customer one is small; the content lifecycle is where governance lives.",
+        "Make status a field. Refusal is an outcome with its own metrics."
+      ],
+      script: [
+        "Ask returns a status, the answer, structured citations with document, version and section, and the release id.",
+        "Content has drafts, approval with approver and review-by date, then a release call that runs the eval gate before activation. Rollback is one pointer move."
+      ]
+    },
+
+    dataflow: {
+      board: [
+        { type: "list", title: "One question", ordered: true, items: [
+          "Input rails check scope: account-specific, advice-seeking, complaint and attack-shaped questions leave here for a person or a fixed reply. PII is redacted. [code]",
+          "Rewrite the question using the last turn if it is a follow-up. [model: small]",
+          "Hybrid retrieval over live chunks only: keyword and vector search merged, then a reranker scores the best 20. [code + model]",
+          "Relevance check: if the top reranked score is below the line, or the passages disagree on a number, skip generation and refuse. [code]",
+          "Generate from the top 5 passages with an instruction to use only them and to cite each claim by chunk id. [model: LLM]",
+          "Grounding check: each cited chunk id must exist in the retrieved set, and an entailment check confirms each claim is supported. A failure becomes a refusal. [code + model]",
+          "Reply with the answer and citations resolved to document, version and section, or the refusal with a route to a person. [code]",
+          "Log the question, passages, scores, release id, versions, prompt version and status, redacted. [code]"
+        ]},
+        { type: "list", title: "Around the question", items: [
+          "A content change flows author, review, release gate, activation. Only activation changes what retrieval searches. [code]",
+          "A document past its review-by date drops out of retrieval until re-approved. [code]"
+        ]},
+        { type: "note", text: "The model has two jobs, rewrite and write the answer, and two checks sit around it in code: the relevance line before and the grounding check after." }
+      ],
+      reasoning: [
+        "Put the refusal point before generation. Most wrong answers are made when passages are weak and the model tries anyway.",
+        "Verification is a second place to refuse, and it needs the retrieved set to check ids against.",
+        "Content flow is a separate path from the question flow; draw both."
+      ],
+      script: [
+        "A question passes input rails, is rewritten if it is a follow-up, then hybrid retrieval over live chunks with reranking.",
+        "If the best score is under the line, we refuse before calling the model. Otherwise the model answers from five passages and cites chunk ids; a grounding check confirms the ids exist and each claim is supported.",
+        "Success or refusal, the turn is logged with the release id. A content change goes through review and a release gate, and only activation changes what retrieval can see."
+      ]
+    },
+
+    hld: {
+      board: [
+        { type: "diagram", title: "Grounded FAQ assistant high-level design", stagesAll: "The whole assistant: a question path that answers or refuses, and a governed path that puts approved content into the index.", stages: [
+          { title: "Question in", add: ["customer", "rails", "api"], say: "A customer asks; input rails remove questions the assistant must not answer; the answer service runs the rest." },
+          { title: "Find and answer", add: ["retrieve", "index", "gen", "verify"], say: "Retrieval searches only live content, the model writes from the top passages, and a grounding check passes or refuses." },
+          { title: "Refuse and hand off", add: ["agents", "logs"], say: "Out-of-scope and not-found questions go to a person; every turn is logged with the release it used." },
+          { title: "Governed content", add: ["cms", "review", "publish"], say: "Owners draft, compliance approves, and a release gate must pass before the index changes." }
+        ], nodes: [
+          { id: "customer", label: "Customer", sub: "web, app", col: 0, row: 1, tone: "external" },
+          { id: "rails", label: "Input rails", sub: "scope, PII, attacks", col: 1, row: 0, tone: "guard" },
+          { id: "api", label: "Answer service", sub: "orchestrates", col: 1, row: 1, tone: "orchestrator" },
+          { id: "agents", label: "Contact centre", sub: "person, callback", col: 1, row: 2, tone: "human" },
+          { id: "logs", label: "Answer log", sub: "release id, versions", col: 1, row: 3, tone: "store" },
+          { id: "gen", label: "Generator", sub: "cites chunk ids", col: 2, row: 0, tone: "model" },
+          { id: "verify", label: "Grounding check", sub: "ids, entailment", col: 2, row: 1, tone: "guard" },
+          { id: "retrieve", label: "Retrieval", sub: "hybrid, rerank", col: 2, row: 2, tone: "service" },
+          { id: "cms", label: "Content source", sub: "owner drafts", col: 3, row: 0, tone: "service" },
+          { id: "review", label: "Compliance review", sub: "approve, review-by", col: 3, row: 1, tone: "human" },
+          { id: "publish", label: "Release gate", sub: "eval, then switch", col: 3, row: 2, tone: "guard" },
+          { id: "index", label: "Content index", sub: "live versions only", col: 3, row: 3, tone: "store" }
+        ], edges: [
+          { from: "customer", to: "rails", label: "question" },
+          { from: "rails", to: "api", label: "in scope" },
+          { from: "rails", to: "agents" },
+          { from: "api", to: "retrieve", label: "query" },
+          { from: "retrieve", to: "index", label: "live only" },
+          { from: "api", to: "gen", label: "top 5 passages" },
+          { from: "gen", to: "verify", label: "draft, cites" },
+          { from: "verify", to: "customer", label: "cited answer" },
+          { from: "api", to: "agents", label: "not found" },
+          { from: "api", to: "logs", async: true },
+          { from: "cms", to: "review", label: "draft change" },
+          { from: "review", to: "publish", label: "approved" },
+          { from: "publish", to: "index", label: "new release" }
+        ]},
+        { type: "list", title: "Walk each request through it", ordered: true, items: [
+          "**Ask.** Input rails send account, advice and complaint questions to a person and strip PII.",
+          "**Find.** The answer service queries retrieval, which searches only the live release, and refuses early when the best score is weak.",
+          "**Write.** The generator writes from the top 5 passages and cites chunk ids.",
+          "**Check.** The grounding check confirms every cited id was retrieved and every claim is supported, or the answer becomes a refusal.",
+          "**Change.** Owners draft, compliance approves, the release gate runs the eval set, and only then does the index switch to the new release."
+        ]},
+        { type: "defs", title: "Fields worth writing next to the stores", items: [
+          { term: "Version", desc: "`doc_id, version, status, text_hash, approver, role, effective_from, review_by, retired_at`" },
+          { term: "Answer log", desc: "`answer_id, question_redacted, status, passage_ids[], top_score, release_id, model, prompt_version, citations[], latency_ms`" }
+        ]}
+      ],
+      reasoning: [
+        "Draw two paths. The question path answers or refuses; the content path decides what answers are allowed to say.",
+        "Put the release gate between review and the index. That is where an unreviewed or regressing change is stopped.",
+        "The answer log carries the release id, which is what lets you replay any answer."
+      ],
+      script: [
+        "A question goes through input rails, then the answer service retrieves from the live content index, the generator writes from the top passages with citations, and a grounding check passes or refuses.",
+        "Refusals and out-of-scope go to the contact centre. Every turn is logged with the release id.",
+        "Content is drafted, approved by compliance, and goes through a release gate that runs the evaluation set before the index switches to the new release."
+      ],
+      probes: [
+        "Where can the model still go wrong? In a claim that is close to the passage but not in it. The entailment check catches most; a labelled sample measures what it misses.",
+        "What if two approved documents disagree? The relevance check flags conflicting numbers and refuses; the conflict becomes a content ticket for the owners."
+      ]
+    },
+
+    deepdives: {
+      board: [
+        { type: "dive", title: "Refusal versus answering", diagram: {"cap": "The answer service refuses before generation when the best passage scores below the line, so the model never gets to fill the gap.", "fail": "Without a refusal point, the model answers a fee question the content does not cover from what it remembers, and the customer cannot tell.", "actors": [{"id": "cust", "label": "Customer", "tone": "external"}, {"id": "api", "label": "Answer service", "tone": "orchestrator"}, {"id": "ret", "label": "Retrieval", "tone": "service"}, {"id": "gen", "label": "Generator", "tone": "model"}], "steps": [{"from": "cust", "to": "api", "label": "fee for class Z?"}, {"from": "api", "to": "ret", "label": "query"}, {"over": "ret", "label": "best score below the line"}, {"over": "api", "label": "refuse before generating"}, {"over": "gen", "label": "would fill the gap", "fail": true}, {"from": "api", "to": "cust", "label": "not in our content, person?"}]}, nfr: "Groundedness, trust", problem: "A model that always answers will answer questions the content does not cover, fluently and wrongly. A model that refuses too easily is a useless FAQ.", options: [
+          { name: "Prompt it to say I don't know", take: "Cheap, but the model decides, and it is least reliable exactly when passages are weak." },
+          { name: "Score threshold before generation", take: "Refuse when the top reranked score is below a line, and when passages disagree on a number. Code decides; the model is never asked." },
+          { name: "Verify after generation", take: "Check cited ids and claim support, and turn a failure into a refusal. Catches a confident answer the passages do not support." }
+        ], pick: "Both code checks: a relevance line before and the grounding check after, with the prompt as a third layer. Set the line on the eval set at the point where wrong answers on unanswerable questions fall to the target and wrong refusals stay under 10%. Refusals say what was missing, offer a person, and are counted by topic: a cluster of refusals is a content gap to write, not a failure to hide." },
+        { type: "dive", title: "Content versioning and compliance review", diagram: {"cap": "A change is approved by compliance, passes the eval gate, then moves a live pointer; old releases stay for rollback, and answers record the release.", "fail": "Without versions and a gate, an edit to a fee page reaches customers unreviewed, and no one can say which text an earlier answer used.", "nodes": [{"id": "cms", "label": "Content source", "sub": "owner drafts", "col": 0, "row": 1, "tone": "service"}, {"id": "exp", "label": "Expiry sweep", "sub": "review-by dates", "col": 1, "row": 2, "tone": "service"}, {"id": "review", "label": "Compliance review", "sub": "approve, sign", "col": 1, "row": 1, "tone": "human"}, {"id": "gate", "label": "Release gate", "sub": "eval set must pass", "col": 2, "row": 1, "tone": "guard"}, {"id": "index", "label": "Live release", "sub": "pointer, one switch", "col": 3, "row": 1, "tone": "store", "fail": true}, {"id": "prev", "label": "Previous release", "sub": "kept for rollback", "col": 3, "row": 2, "tone": "store"}, {"id": "log", "label": "Answer log", "sub": "release per answer", "col": 2, "row": 0, "tone": "store"}], "edges": [{"from": "cms", "to": "review", "label": "draft change"}, {"from": "exp", "to": "review", "label": "due soon"}, {"from": "review", "to": "gate", "label": "approved"}, {"from": "gate", "to": "index", "label": "build, switch"}, {"from": "index", "to": "prev", "label": "kept"}, {"from": "index", "to": "log", "label": "release id", "async": true}]}, nfr: "Compliance, freshness, audit", problem: "Fee schedules and tax guidance change, regulated wording must be approved, and an old answer must be explainable years later. An edit that goes live unreviewed, or a stale page that keeps being cited, is a compliance incident.", options: [
+          { name: "Index whatever the source says", take: "Fast and fresh, with no approval and no record. An edit is live the moment it is saved." },
+          { name: "Immutable versions with status", take: "Draft, in review, approved, live, retired. Approver, role, effective date and review-by date are stored on the version, and only approved versions can be indexed." },
+          { name: "Releases as the unit of change", take: "A release is a set of approved versions with its eval result. Activation is one pointer move, rollback is moving it back, and each answer logs its release id." }
+        ], pick: "Immutable versions plus releases. A change reaches answers only after compliance approval and a passing gate, in minutes not days: the pipeline re-chunks and re-embeds only the changed document, so it is fast enough to be routine. A document past its review-by date leaves retrieval until re-approved, and an effective date lets a new fee go live on its day. Answers already given stay explainable because the old release is kept." },
+        { type: "dive", title: "Retrieval quality and evaluation", diagram: {"cap": "Retrieval is scored on its own (recall at 5) before generation, and a groundedness check scores answers, so a miss and a hallucination are told apart.", "fail": "Without measuring retrieval separately, a missed passage looks like a model fault, and weeks go into prompts that cannot fix it.", "nodes": [{"id": "set", "label": "Eval set", "sub": "300, 60 unanswerable", "col": 0, "row": 1, "tone": "store"}, {"id": "ret", "label": "Retrieval", "sub": "hybrid, rerank", "col": 1, "row": 1, "tone": "service", "fail": true}, {"id": "gen", "label": "Generator", "sub": "answer, cites", "col": 2, "row": 1, "tone": "model"}, {"id": "judge", "label": "Groundedness", "sub": "claims supported?", "col": 3, "row": 1, "tone": "guard"}, {"id": "metrics", "label": "Scorecard", "sub": "per topic, per release", "col": 2, "row": 0, "tone": "store"}, {"id": "human", "label": "Human labels", "sub": "sample, calibrates", "col": 3, "row": 2, "tone": "human"}], "edges": [{"from": "set", "to": "ret", "label": "question"}, {"from": "ret", "to": "gen", "label": "top 5"}, {"from": "ret", "to": "metrics", "label": "recall at 5"}, {"from": "gen", "to": "judge", "label": "answer, passages"}, {"from": "judge", "to": "metrics", "label": "supported share"}, {"from": "human", "to": "judge", "label": "agreement check"}]}, nfr: "Groundedness, quality", problem: "A bad answer has two very different causes: the right passage was never retrieved, or it was retrieved and the answer strayed from it. One end-to-end score hides which.", options: [
+          { name: "Judge the final answer only", take: "One number, easy to run, and it cannot say whether to fix chunking, search or the prompt." },
+          { name: "Score retrieval and generation apart", take: "Recall at 5 on questions with a known source passage, then groundedness (every claim supported by a cited passage) and refusal correctness on the answers." },
+          { name: "Calibrate the judge", take: "An LLM judge scores groundedness at scale, checked against human labels on a sample, since judges favour fluent text and can be wrong." }
+        ], pick: "Score the stages apart on a set of 300 questions, 60 of them unanswerable and expecting refusal, drawn from real logs, owner-written cases and adversarial ones. Report recall at 5, groundedness, wrong-answer rate on unanswerable questions and wrong-refusal rate, per topic. With n = 300 and a true rate of 95%, the 95% interval is 1.96 x sqrt(0.95 x 0.05 / 300), about plus or minus 2.5 points, so small differences between releases are noise. Use a hybrid of keyword and vector search with a reranker, because fee codes and form numbers need exact matches that vectors blur. Every escalation and thumbs-down becomes a new case." },
+        { type: "list", title: "Operating it", items: [
+          "Gate each release on the eval set and the never-break cases (fee figures, tax deadlines). A regression on any blocks activation.",
+          "Run a changed prompt or model in shadow on live questions and compare the scorecard before it answers anyone.",
+          "Watch refusal rate by topic, groundedness on a daily sample, and stale-document count. A refusal spike after a release is a rollback signal or a content gap."
+        ]}
+      ],
+      reasoning: [
+        "Start with refusal: it is the behaviour that defines a grounded assistant.",
+        "Then governance: who approves, how a change goes live, how it expires, how an old answer is explained.",
+        "Then measurement, with retrieval and generation scored apart.",
+        "Close with how it runs: gates, shadow and monitoring."
+      ],
+      script: [
+        "Refusal is decided in code: below a relevance line, or when passages disagree, we refuse before the model is called, and a grounding check after generation can turn an answer into a refusal. The line is set on the eval set against wrong answers and wrong refusals.",
+        "Content is immutable versions with approver and review-by dates, grouped into releases. Compliance approves, a gate runs the eval set, then one pointer moves. Old releases stay for rollback and every answer logs its release.",
+        "Evaluation scores retrieval and generation apart: recall at 5, groundedness, and refusal correctness, on 300 questions, 60 unanswerable. At that size, plus or minus 2.5 points is noise. The judge is calibrated against human labels, and every escalation becomes a new case."
+      ],
+      probes: [
+        "Customers report a wrong fee. Contain the topic, fetch the answer's release and passages from the log, and decide: stale or wrong content (fix the source and release), retrieval miss (fix chunking or search), or generation strayed (grounding check and prompt). Add the case to the eval set.",
+        "A fee changes next Monday. Draft, approve with an effective date of Monday, and the release gate runs; the index switches on the day. The old version stays live until then and is retired after.",
+        "How would you know the judge is right? Hand-label a sample, measure agreement per category, and re-check after any judge or model change."
+      ]
+    }
+  },
+  refs: []
+});
+
+GUIDE.examples.push({
+  id: "voice-ivr",
+  compact: true,
+  tabLabel: "Contact-centre voice assistant",
+  title: "Contact-centre voice assistant with handoff",
+  kind: "Telephony voice, authentication and handoff",
+  prompt: "Design the voice assistant on a financial services phone line. A caller speaks; the assistant transcribes, works out what they want, verifies who they are, completes simple tasks itself (balance, recent transactions, card status, a payment), and hands the rest to a human agent as a warm transfer with the conversation so far. Budget the latency of a turn, support barge-in, and say what happens when speech recognition is unsure.",
+  lens: [
+    "A phone call has no screen. Every turn spends a fixed budget of milliseconds, and the design is deciding which stage gets how much, and which turns are allowed to exceed it.",
+    "Recognition is a guess with a score. Digits, amounts and names are confirmed in proportion to the cost of being wrong, and the keypad is the fallback for anything secret.",
+    "The handoff is where the assistant's work is judged: the agent should start with the reason, who the caller is and what was tried, and the caller should repeat nothing."
+  ],
+  steps: {
+    requirements: {
+      board: [
+        { type: "list", title: "Functional (top 3)", ordered: true, items: [
+          "Answer the line, understand a spoken request, and finish simple self-service tasks: balance, recent transactions, card status and a bill payment.",
+          "Verify the caller before any account detail, at a level that matches the risk of the task (read, or move money).",
+          "Transfer to a person warm, with a summary, the verified identity and what was tried, on request or when the assistant cannot help."
+        ]},
+        { type: "list", title: "Out of scope", items: [
+          "Advice, lending decisions, outbound calling, and building the telephony carrier, the speech engines or core banking. The assistant calls them."
+        ]},
+        { type: "defs", title: "Non-functional (quantified)", items: [
+          { term: "Latency per turn", desc: "First audio about 1 to 1.5s after the caller stops. Worked out in the math block." },
+          { term: "Barge-in", desc: "Speech over the assistant stops its audio within about 100ms, and the assistant knows how much the caller heard." },
+          { term: "Authentication", desc: "No account detail without level 1, no money or card change without level 2. Secret digits travel as keypad tones, never as speech." },
+          { term: "Availability", desc: "Every call is answered. With speech down, a keypad menu works; with a backend down, the assistant says so and offers a person or a callback." },
+          { term: "Compliance", desc: "Call audio and transcripts are regulated records: redacted, access-restricted, retained to a limit, and every decision reproducible." }
+        ]},
+        { type: "math", title: "Sizing and the latency budget (inputs assumed, labelled)", lines: [
+          "Assumed: 20,000 calls a day, 12% of them in the peak hour, 4 minutes each. Peak is 20,000 x 0.12 = 2,400 calls, or 9,600 call-minutes, which is 9,600 / 60 = 160 calls at once. With 2x headroom, plan 320 concurrent streams.",
+          "Assumed: 25% of calls go to a person. That is 5,000 a day, 600 in the peak hour, 10 a minute. At an assumed 6 minutes of handling each, about 60 agents are busy at the peak.",
+          "Turn budget, assumed per stage: end of turn 400 + final transcript 100 + classifier 10 + backend read 250 + first speech audio 200 + telephony both ways 100 = 1,060ms.",
+          "An LLM call on an uncertain turn, measured at about 981ms p50 in the guide's NLU dive, would make that 1,060 + 981 = 2,041ms. That is over the 1.5s ceiling."
+        ], conclusion: "Streaming, a fast classifier and a small backend read fit the budget with about 440ms spare. A turn that needs the LLM does not fit, so it is either a spoken acknowledgement first or a plain clarifying question. Plan 320 streams for speech, and agent capacity for 10 transfers a minute." }
+      ],
+      reasoning: [
+        "Sizing gives two numbers that shape the design: 320 concurrent audio streams, and 10 handoffs a minute.",
+        "Write the latency budget as a sum before drawing anything. It decides what may be a model call.",
+        "Separate read from money in the authentication requirement now; it drives the whole identity flow."
+      ],
+      script: [
+        "Three things: a spoken self-service line for balance, transactions, card status and payments; authentication matched to risk; and a warm handoff with context.",
+        "The numbers I lead with: first audio in 1 to 1.5s, barge-in stopping audio within about 100ms, and secret digits only by keypad.",
+        "With assumptions: 20,000 calls a day, 160 concurrent at peak, so plan about 320 streams, and 10 handoffs a minute at the peak. The turn budget sums to about 1,060ms, which leaves no room for an LLM call on every turn."
+      ],
+      probes: [
+        "Why not an LLM on every turn? 981ms on top of 1,060ms breaks the ceiling. The LLM is for the uncertain turns, behind an acknowledgement.",
+        "Why 25% handoff? It is an assumption to size the agent pool; the real figure comes from the intents the business wants contained."
+      ]
+    },
+
+    entities: {
+      board: [
+        { type: "defs", title: "Core entities", items: [
+          { term: "Call", desc: "One phone contact: caller number, line, start, the verified customer once known, auth level, outcome (done, transferred, abandoned)." },
+          { term: "Turn", desc: "One caller utterance and the reply: n-best transcript with word confidences, intent and score, slots, spoken text up to any barge-in cut, stage timings." },
+          { term: "Session state", desc: "Active flow and step, slots with confirmed flags, auth level and its expiry, no-match and no-input counters." },
+          { term: "Auth level", desc: "0 none, 1 verified for reads, 2 verified for money and card changes. Each intent carries the level it needs." },
+          { term: "Handoff package", desc: "Reason, queue and priority, verified customer, auth level, summary, intent, redacted slots, what was tried, and the transcript link." },
+          { term: "Transcript", desc: "The redacted record of a call, kept for review and training, with role-restricted access and a retention limit." }
+        ]}
+      ],
+      reasoning: [
+        "Auth level with an expiry is its own concept. Everything account-specific reads it, and it is set only by the identity service.",
+        "Spoken text up to the cut belongs on Turn. After a barge-in, that is what the caller heard."
+      ],
+      script: [
+        "Call, Turn, Session state, Auth level, Handoff package and Transcript.",
+        "The two I underline: Auth level, a number with an expiry that only the identity service sets, and Turn, which stores the transcript alternatives with confidences and exactly how much of the reply the caller heard before cutting in."
+      ]
+    },
+
+    api: {
+      board: [
+        { type: "code", title: "Telephony in, one turn call, identity, fulfilment and handoff", code: `
+Telephony: SIP/RTP -> media gateway -> streaming ASR
+  events: partial{text}, final{n_best[{text, word_conf[]}], dtmf?}
+  TTS out: stream(sentence) ; cancel(call_id) on barge-in
+
+POST /v1/turns   { call_id, input: { n_best[], dtmf? }, heard_up_to? }
+     -> { say[], expect?: slot, transfer?: handoff_id, end? }
+
+Identity
+POST /v1/identity/challenge { call_id, customer_ref?, method: otp_push | pin_dtmf }
+POST /v1/identity/verify    { challenge_id, response }  -> { level, expires_s }
+
+POST /v1/fulfil/{intent}  { call_id, customer_ref, slots, level,
+                            idempotency_key, confirmed_turn_id? }
+     -> { status: ok | needs_auth | needs_info | denied | error, data }
+
+POST /v1/handoffs { call_id, reason, queue, priority, customer_ref, level,
+                    summary, tried[], slots_redacted, transcript_ref }
+     -> { handoff_id, wait_estimate_s } | { callback_offer }
+` },
+        { type: "list", title: "Choices to state out loud", items: [
+          "ASR returns the n-best list and word confidences, so the dialogue manager can pick by the expected slot and confirm the weak words.",
+          "Barge-in is a cancel on the audio stream plus a heard_up_to marker on the next turn, so state never assumes the caller heard a whole sentence.",
+          "Identity is its own service. Fulfilment takes a level and refuses if the intent needs more.",
+          "The handoff payload is a summary with the verified identity, not a transcript dump."
+        ]}
+      ],
+      reasoning: [
+        "Four contracts: audio and events, the turn, identity, and what a person receives.",
+        "heard_up_to is small and easy to forget. Without it, a cut-in reply leaves the assistant believing it said something it did not finish."
+      ],
+      script: [
+        "Telephony streams audio to ASR, which emits partials and a final result with the n-best list and word confidences. Keypad tones arrive as DTMF events.",
+        "One turn call returns what to say, which slot to expect, and whether to transfer. Identity has a challenge and a verify call that returns a level with an expiry. Fulfilment takes that level and refuses if it is too low.",
+        "The handoff carries a summary, the verified customer, what was tried and a link to the transcript."
+      ]
+    },
+
+    dataflow: {
+      board: [
+        { type: "list", title: "One caller turn", ordered: true, items: [
+          "The caller speaks; audio streams to ASR as it arrives, and partial text flows to the dialogue manager before the caller finishes. [model: ASR]",
+          "End-of-turn detection ends the turn about 400ms after speech stops. A final transcript arrives as n-best with word confidences. [model]",
+          "Shortcuts first: a keypad digit, ‘agent’, ‘operator’, or a clean answer to the expected slot skips the NLU. [code]",
+          "The classifier returns intents with calibrated scores. Confident turns proceed; close or low turns take a clarifying question, or the LLM behind a spoken acknowledgement. [model + code]",
+          "Entities come from the n-best, reranked by the expected slot (an amount, a payee name from this customer's list), then validated in code. [code]",
+          "If the intent needs a level the caller lacks, the identity flow runs before anything else. [code]",
+          "A read calls the backend and answers; a payment reads back and waits for an explicit yes, then calls once, keyed. [code]",
+          "The reply text is streamed to TTS sentence by sentence, so first audio starts before the whole answer exists. [model: TTS]",
+          "Throughout, the telephony edge keeps listening. [code]"
+        ]},
+        { type: "list", title: "When recognition is unsure", items: [
+          "High confidence: proceed, with an implicit confirmation for low-risk slots (‘Paying 120 to your Visa’).",
+          "Middle band, or a risky slot (an amount or a payee): ask one closed question with the heard value, never ‘did you say’ for a whole sentence.",
+          "Low, or two misses in a row: reprompt once with a different phrasing and an example, offer the keypad for digits, and on the third miss transfer to a person.",
+          "Digits that are secret (PIN, card number, one-time code) are never spoken: the keypad is the only channel, and tones are redacted in logs."
+        ]},
+        { type: "list", title: "Barge-in", items: [
+          "While the assistant speaks, ASR keeps running behind echo cancellation. Speech over about 200ms, above a threshold, is a barge-in.",
+          "Code cancels the TTS stream within about 100ms and records how much text was spoken. A short ‘uh huh’ is a backchannel and does not cut.",
+          "The cut-off utterance is then treated as the next turn, with the spoken-so-far text attached."
+        ]}
+      ],
+      reasoning: [
+        "Everything in a turn overlaps: audio streams in, partials arrive early, the reply streams out before it is finished.",
+        "Make the uncertainty rules explicit and tie them to the cost of a wrong value.",
+        "The edge listens while it speaks. That one fact is barge-in."
+      ],
+      script: [
+        "Audio streams to ASR and partial text flows early. The turn ends about 400ms after speech stops, and the final transcript arrives as n-best with word confidences.",
+        "Shortcuts skip the NLU; the classifier takes confident turns; uncertain ones get a clarifying question or an acknowledged LLM call. Entities are reranked by the expected slot and validated in code.",
+        "When unsure: implicit confirm if cheap, a closed question for amounts and names, a reprompt with an example, then the keypad, then a person after the third miss.",
+        "While speaking, ASR keeps running; real speech cancels TTS within 100ms and records what was heard."
+      ]
+    },
+
+    hld: {
+      board: [
+        { type: "diagram", title: "Contact-centre voice assistant high-level design", stagesAll: "The whole call: audio in and out, understanding and decisions, identity and action, then people and the record.", stages: [
+          { title: "The call", add: ["caller", "tel", "asr", "tts"], say: "The caller reaches the telephony edge. Audio streams to speech recognition, and the reply streams back as speech, with barge-in handled at the edge." },
+          { title: "Understand and decide", add: ["nlu", "dm", "state"], say: "The NLU router finds intent and entities. The dialogue manager keeps session state and chooses the next action." },
+          { title: "Identify and act", add: ["idv", "gate", "core"], say: "The identity service sets the auth level. The fulfilment gateway checks it, the yes and the key, then calls core banking once." },
+          { title: "People and record", add: ["agents", "logs"], say: "A handoff bridges the call to a human agent with the package; every turn is stored redacted for review." }
+        ], nodes: [
+          { id: "caller", label: "Caller", sub: "phone", col: 0, row: 1, tone: "external" },
+          { id: "asr", label: "Streaming ASR", sub: "partials, n-best", col: 1, row: 0, tone: "model" },
+          { id: "tel", label: "Telephony edge", sub: "SIP, media, barge-in", col: 1, row: 1, tone: "service" },
+          { id: "tts", label: "Speech out", sub: "streamed TTS", col: 1, row: 2, tone: "model" },
+          { id: "nlu", label: "NLU router", sub: "classifier, LLM", col: 2, row: 0, tone: "model" },
+          { id: "dm", label: "Dialogue manager", sub: "flows, policy", col: 2, row: 1, tone: "orchestrator" },
+          { id: "agents", label: "Contact centre", sub: "warm, with context", col: 2, row: 2, tone: "human" },
+          { id: "state", label: "Session store", sub: "slots, auth, counters", col: 2, row: 3, tone: "store" },
+          { id: "idv", label: "Identity service", sub: "OTP push, PIN", col: 3, row: 0, tone: "external" },
+          { id: "gate", label: "Fulfilment gateway", sub: "level, yes, keyed", col: 3, row: 1, tone: "guard" },
+          { id: "core", label: "Core banking", sub: "source of truth", col: 3, row: 2, tone: "external" },
+          { id: "logs", label: "Transcript store", sub: "redacted, labelled", col: 3, row: 3, tone: "store" }
+        ], edges: [
+          { from: "caller", to: "tel", label: "call" },
+          { from: "tel", to: "asr", label: "audio" },
+          { from: "asr", to: "dm", label: "n-best, conf" },
+          { from: "dm", to: "nlu", label: "parse turn" },
+          { from: "dm", to: "state" },
+          { from: "dm", to: "tts", label: "reply text" },
+          { from: "tts", to: "tel", label: "audio out" },
+          { from: "dm", to: "gate", label: "act, on a yes" },
+          { from: "gate", to: "idv", label: "verify" },
+          { from: "gate", to: "core", label: "once, keyed" },
+          { from: "dm", to: "agents", label: "handoff package" },
+          { from: "tel", to: "agents", label: "bridge call" },
+          { from: "dm", to: "logs", label: "redacted turn", async: true }
+        ]},
+        { type: "list", title: "Walk a call through it", ordered: true, items: [
+          "**Arrive.** The telephony edge answers and streams audio to ASR, and the assistant greets the caller.",
+          "**Understand.** Partials and then the final n-best reach the dialogue manager, which asks the NLU router for intent and entities.",
+          "**Identify.** If the intent needs a level, the identity service challenges (a push to the registered app, or a PIN on the keypad) and returns a level with an expiry.",
+          "**Act.** The gateway checks the level, the validators, the explicit yes and the key, and calls core banking once.",
+          "**Reply.** The text streams to TTS; the edge keeps listening so speech can cut in.",
+          "**Transfer.** For a person, the dialogue manager sends the package and the edge bridges the call."
+        ]}
+      ],
+      reasoning: [
+        "Put the telephony edge in the middle of the audio path. It is where barge-in and the bridge to an agent live.",
+        "Draw the gateway as the only door to the bank, with identity behind it, as in the virtual assistant design.",
+        "Keep speech stages as separate boxes. The latency budget is a sum over them."
+      ],
+      script: [
+        "The telephony edge answers the call and streams audio to ASR; replies stream back through speech out, and the edge handles barge-in and the bridge to a human.",
+        "The dialogue manager owns the call. It asks the NLU router for intent, keeps state in a session store, and decides: ask, answer, verify, act or transfer.",
+        "Identity is its own service. The fulfilment gateway is the one door to core banking, and it checks level, yes and key in code.",
+        "Handoff sends a package to the contact centre and the edge bridges the call. Every turn lands redacted in a transcript store."
+      ],
+      probes: [
+        "Where does the LLM sit? In the NLU router for uncertain turns and in the handoff summary. Never between the dialogue manager and the gateway.",
+        "Why is identity not part of the dialogue manager? One service sets the level and expiry, so no flow or model can grant itself access."
+      ]
+    },
+
+    deepdives: {
+      board: [
+        { type: "dive", title: "The latency budget, stage by stage", diagram: {"cap": "Audio streams in, the turn ends 400ms after speech, the classifier and a small read answer, and TTS starts on the first sentence; an LLM turn is acknowledged first.", "fail": "Without a stage budget, an LLM call on an uncertain turn adds 981ms to 1,060ms and the line goes silent for over 2s, which sounds like a dropped call.", "actors": [{"id": "caller", "label": "Caller", "tone": "external"}, {"id": "asr", "label": "Streaming ASR", "tone": "model"}, {"id": "dm", "label": "Dialogue manager", "tone": "orchestrator"}, {"id": "tts", "label": "Speech out", "tone": "model"}], "steps": [{"from": "caller", "to": "asr", "label": "speech, streamed"}, {"over": "asr", "label": "end of turn at 400 ms"}, {"from": "asr", "to": "dm", "label": "final text, 100 ms"}, {"over": "dm", "label": "NLU 10 ms, read 250 ms"}, {"over": "dm", "label": "uncertain: LLM +981 ms", "fail": true}, {"from": "dm", "to": "tts", "label": "first sentence"}, {"from": "tts", "to": "caller", "label": "first audio, 200 ms"}]}, nfr: "Latency", problem: "Silence on a phone sounds like a dropped call. The budget is a sum, 400 + 100 + 10 + 250 + 200 + 100 = 1,060ms, and one LLM call breaks it.", options: [
+          { name: "Optimise at the end", take: "Build the pipeline, then tune. Stages grow until the sum is over the ceiling, and nobody owns the number." },
+          { name: "Stage budgets and overlap", take: "Each stage has a budget and a timer in logs. ASR streams partials, TTS starts on the first sentence, and the backend call starts on the partial when the intent is already clear." },
+          { name: "A rule for turns that do not fit", take: "If the NLU is uncertain or a read is slow, say a short acknowledgement at once, or ask a clarifying question, instead of staying silent." }
+        ], pick: "Stage budgets, overlap, and the rule for turns that do not fit. Report p50 and p95 per stage on every call, and alert on the stage that moved. The budget leaves about 440ms spare under 1.5s; spend none of it on the LLM path unless the acknowledgement is already playing." },
+        { type: "dive", title: "Authentication before account actions", diagram: {"cap": "Caller ID is a hint. The identity service pushes a code to the registered app, the caller keys it in, and the gateway checks the level in code.", "fail": "Without a step-up, a spoofed caller ID or a replayed voice reaches a payment, because the line looked like the customer.", "actors": [{"id": "caller", "label": "Caller", "tone": "external"}, {"id": "dm", "label": "Dialogue manager", "tone": "orchestrator"}, {"id": "idv", "label": "Identity service", "tone": "external"}, {"id": "gate", "label": "Fulfilment gateway", "tone": "guard"}], "steps": [{"from": "caller", "to": "dm", "label": "pay a bill"}, {"over": "dm", "label": "caller ID is only a hint", "fail": true}, {"over": "dm", "label": "payment needs level 2"}, {"from": "dm", "to": "idv", "label": "challenge"}, {"from": "idv", "to": "caller", "label": "code to registered app"}, {"from": "caller", "to": "dm", "label": "digits by keypad"}, {"from": "dm", "to": "gate", "label": "pay, level 2, yes"}, {"over": "gate", "label": "level checked in code"}]}, nfr: "Money safety, compliance", problem: "A call looks like the customer when it is not: caller ID can be spoofed, a voice can be replayed or cloned, and knowledge questions leak. Anything that moves money needs more than a plausible voice.", options: [
+          { name: "Caller ID and security questions", take: "Cheap and familiar. Caller ID is spoofable and the answers are in leaked data, so it is a hint, not a gate." },
+          { name: "Voice biometrics alone", take: "Convenient, but a recorded or synthetic voice can pass it. Use it as one signal, not the gate for money." },
+          { name: "Step-up by risk tier", take: "Level 0 for hours and branches. Level 1 for reads: a recognised number plus a PIN on the keypad. Level 2 for payments and card changes: a one-time code pushed to the registered app or device, keyed in, with a read-back." }
+        ], pick: "Step-up by risk tier, with biometrics and caller ID as signals that lower friction, not as the gate. The identity service alone sets the level and its expiry; the gateway refuses an intent whose level is too low. Secret digits go by keypad and are redacted in logs; three failed attempts lock the flow and route to a person." },
+        { type: "dive", title: "Handoff with context", diagram: {"cap": "A summary builder and the dialogue manager's state become one package; the router picks a queue, and the agent sees the package before the caller is bridged.", "fail": "Without the package arriving first, the agent answers cold and the caller repeats their name, their account and their problem.", "nodes": [{"id": "dm", "label": "Dialogue manager", "sub": "reason, slots, tried", "col": 0, "row": 1, "tone": "orchestrator"}, {"id": "sum", "label": "Summary builder", "sub": "LLM, 3 sentences", "col": 1, "row": 0, "tone": "model"}, {"id": "pkg", "label": "Handoff package", "sub": "level, slots, link", "col": 1, "row": 1, "tone": "store"}, {"id": "router", "label": "Queue router", "sub": "skill, priority", "col": 1, "row": 2, "tone": "service"}, {"id": "agent", "label": "Agent desktop", "sub": "screen pop first", "col": 2, "row": 1, "tone": "human", "fail": true}, {"id": "caller", "label": "Caller", "sub": "bridged after brief", "col": 3, "row": 1, "tone": "external"}, {"id": "cb", "label": "Callback offer", "sub": "out of hours", "col": 2, "row": 2, "tone": "human"}], "edges": [{"from": "dm", "to": "sum", "label": "turns, tried"}, {"from": "sum", "to": "pkg", "label": "summary"}, {"from": "dm", "to": "router", "label": "reason, priority"}, {"from": "router", "to": "agent", "label": "route by skill"}, {"from": "pkg", "to": "agent", "label": "screen pop"}, {"from": "agent", "to": "caller", "label": "bridge"}, {"from": "router", "to": "cb", "label": "no agent"}]}, nfr: "Resolution, handle time", problem: "A transfer that loses context makes the caller start over, which is the thing they called a machine to avoid. Handle time rises and satisfaction falls.", options: [
+          { name: "Cold transfer", take: "Send the call to a queue with no data. Simple, and the caller repeats everything." },
+          { name: "Pass the transcript", take: "The agent gets the whole call. Complete, and nobody reads 40 turns while a caller waits." },
+          { name: "Warm transfer with a package", take: "Reason, verified customer and level, a three-sentence summary, the slots, and what was tried, shown on the agent's screen before the caller is bridged. The full transcript is a link." }
+        ], pick: "Warm transfer with a package, routed by reason to a skilled queue. The agent has the package before the bridge, and an authenticated caller is not asked to verify again. With no agent available or out of hours, offer a callback with the same package. Measure the repeat-explanation rate and handle time on transferred calls." },
+        { type: "defs", title: "Barge-in and low-confidence ASR, in short", items: [
+          { term: "Barge-in", desc: "ASR keeps running behind echo cancellation while the assistant speaks. Real speech cancels TTS within about 100ms and records the text spoken so far; a short backchannel does not cut." },
+          { term: "Confirm in proportion", desc: "Cheap slots get an implicit confirmation; amounts, payees and digits get a closed question. Two misses in a row change the method (an example, then the keypad); a third goes to a person." },
+          { term: "Keep n-best", desc: "Choose among the alternatives using the expected slot and this customer's own payee list, so a near-sounding name resolves to someone they pay." }
+        ]}
+      ],
+      reasoning: [
+        "Lead with the latency sum. It is the number the interviewer can check.",
+        "Then authentication, because a financial services interviewer will ask what stops a spoofed call.",
+        "End on the handoff. It is where the user feels the system, and it ties the earlier choices together."
+      ],
+      script: [
+        "Latency first: 400 ms to end the turn, 100 for the final text, 10 for the classifier, 250 for a small read, 200 for first audio and 100 for the network, which is 1,060ms. An LLM call adds about 981ms, so uncertain turns get an acknowledgement or a clarifying question.",
+        "Authentication by risk tier. Caller ID and voice are signals. Reads need a PIN on the keypad; payments need a one-time code pushed to the registered app. Only the identity service sets the level, and the gateway checks it.",
+        "Handoff is warm: the agent sees reason, verified identity, a short summary, slots and what was tried before the caller is bridged. Out of hours, a callback with the same package.",
+        "Barge-in cancels TTS within 100ms and records what was heard; uncertain recognition gets a closed question, then an example, then the keypad, then a person."
+      ],
+      probes: [
+        "Caller reports the assistant is slow. Break the turn down by stage from the per-call timings: end of turn, ASR final, backend read and TTS first byte. Find the stage whose p95 moved, check for an LLM path that started firing, and roll back or add an acknowledgement.",
+        "How do you keep a cloned voice out of payments? Voice is only a signal. A payment needs a code pushed to the registered app and keyed in, plus a read-back and an explicit yes, so a voice alone cannot move money."
+      ]
+    }
+  },
+  refs: [
+    { label: "Twilio: AI-to-human handoff with context", url: "https://www.twilio.com/en-us/blog/insights/ai-to-human-handoff-context" },
+    { label: "Intent detection in the age of LLMs (hybrid routing)", url: "https://arxiv.org/abs/2410.01627" },
+    { label: "Google conversation design: errors", url: "https://developers.google.com/assistant/conversation-design/errors" },
+    { label: "Google conversation design: confirmations", url: "https://developers.google.com/assistant/conversation-design/confirmations" },
+    { label: "OWASP top 10 for LLM applications", url: "https://genai.owasp.org/llm-top-10/" }
+  ]
+});
+
+GUIDE.examples.push({
+  id: "convo-analytics",
+  compact: true,
+  tabLabel: "Conversation analytics",
+  title: "Conversation analytics and the improvement loop",
+  kind: "Conversational AI, logging, evaluation and retraining",
+  prompt: "Design the analytics and improvement loop behind a customer-facing assistant. Every conversation is logged, personal data is redacted, failures are found (fallbacks, repeated rephrasing, handoffs, low confidence), clustered into new or confused intents, sent to a labelling queue, then retrained and gated by an evaluation set before release. Dashboards show containment, resolution and cost.",
+  lens: [
+    "The loop is a data product with a privacy boundary at its front door: nothing is stored before it is redacted, so every later stage, including training, inherits the safety.",
+    "Failures have to be found without labels. The system ranks conversations by weak signals, clusters them, and spends scarce human labelling time on the biggest clusters.",
+    "A retrained model is a release. It ships only if a frozen evaluation set, sized for the effect you care about, says it did not get worse anywhere that matters."
+  ],
+  steps: {
+    requirements: {
+      board: [
+        { type: "list", title: "Functional (top 3)", ordered: true, items: [
+          "Log every conversation turn from every channel with the model version, intent, score, path and outcome, redacted before it is stored.",
+          "Find failed and confusing conversations without labels, cluster them into new or confused intents, and queue the biggest clusters for human labelling.",
+          "Retrain from the labels, gate the candidate on an evaluation set, release it gradually, and show containment, resolution and cost on dashboards."
+        ]},
+        { type: "list", title: "Out of scope", items: [
+          "The assistant itself (NLU, dialogue, fulfilment) and the contact centre tools. This design reads their events and writes back a model, a taxonomy change and a test set."
+        ]},
+        { type: "defs", title: "Non-functional (quantified)", items: [
+          { term: "Privacy", desc: "No card number, account number, name, address or one-time code in any store, index, dashboard, prompt or training set in clear text. Raw text lives only in memory for the redaction step. Retention limit on transcripts (assumed 90 days) and on label sets." },
+          { term: "Freshness", desc: "A failure seen today is on the dashboard within minutes and in the labelling queue by the next morning. A model cycle from labels to release takes about a week, because the gate and the gradual rollout take real calendar time." },
+          { term: "Loss", desc: "Logging never blocks or slows a customer turn. A dropped batch is retried; a redaction failure drops the turn from storage and raises an alert rather than storing it raw." },
+          { term: "Trustworthy metrics", desc: "Every dashboard number has one written definition, computed from outcomes and not from the absence of a handoff." },
+          { term: "Labelling capacity", desc: "Human time is the bottleneck, so the queue is ranked by volume times cost and capped at what reviewers can finish in a day." }
+        ]},
+        { type: "math", title: "Sizing (every input assumed, labelled)", lines: [
+          "Assumed: 200K conversations a day, about 8 turns each. That is 1.6M turns a day, 1.6M / 86,400 = about 18.5 a second on average.",
+          "Assumed: 12% of the day's turns in the peak hour. 0.12 x 1.6M = 192K turns, 192K / 3,600 = about 53 a second.",
+          "Assumed: about 2 KB per redacted turn record. 1.6M x 2 KB = 3.2 GB a day, and 90 days is 3.2 x 90 = 288 GB of hot storage.",
+          "Assumed: 12% of conversations flagged as failures. 0.12 x 200K = 24,000 a day, clustered into about 150 clusters.",
+          "Assumed: 4 labellers, 25 conversations an hour, 6 hours a day. 4 x 25 x 6 = 600 labelled a day, which is about 4 samples from each of the 150 clusters."
+        ], conclusion: "Storage and compute are small. The constraint is human labelling: 600 a day against 24,000 flagged, so the design is about choosing which 600. Load-test the logger at 53 turns a second with a 4x burst." }
+      ],
+      reasoning: [
+        "Name the privacy rule first. It decides where redaction sits and what every later stage may touch.",
+        "Say that labels are the scarce resource, then size it. That justifies clustering and ranking.",
+        "Ask what counts as a failure and as resolved before drawing anything."
+      ],
+      script: [
+        "Three things: log every turn redacted, find and cluster failures without labels and queue them for people, and retrain behind a gate with dashboards on top.",
+        "Privacy comes first: nothing personal is stored before redaction, and a redaction failure drops the turn instead of storing it raw. Logging never slows a customer turn.",
+        "Sizing, with assumptions: 200K conversations and 1.6M turns a day, about 53 a second at peak, 3.2 GB a day. Cheap. The real limit is 600 labels a day against 24,000 flagged conversations, so ranking is the design."
+      ],
+      probes: [
+        "Why redact before storing and not at read time? Because every store, replica, index, export and training set would otherwise hold the raw values, and read-time masking is one missed code path from a leak.",
+        "What is a failure? Not only a fallback. A rephrase after a confident answer, a handoff after two turns, a thumbs down and an abandoned flow all count; I would score them together and review the ranking."
+      ]
+    },
+
+    entities: {
+      board: [
+        { type: "defs", title: "Core entities (first draft)", items: [
+          { term: "Turn event", desc: "One redacted turn: conversation id, channel, text with typed placeholders, intent, score, margin, path, model version, latency, outcome flags." },
+          { term: "Conversation", desc: "The turns joined by id with a final outcome (resolved, handed off, abandoned), the repeat-contact flag and the cost." },
+          { term: "Failure signal", desc: "A weak label from behaviour: fallback, rephrase, handoff, low confidence, thumbs down, abandonment. It has a type, a turn and a weight." },
+          { term: "Cluster", desc: "A group of similar failed utterances with a size, an example list, a proposed name, a cost estimate and a status (new, confusing, knowledge gap, ignore)." },
+          { term: "Label task", desc: "A sample from a cluster for a person: the redacted conversation, the question, and the answer fields (correct intent, one failure cause)." },
+          { term: "Dataset version", desc: "A frozen train, validation and evaluation split built from labels, with the labelling guide version. The evaluation split is never trained on." },
+          { term: "Release candidate", desc: "A model plus taxonomy and thresholds, its gate results per intent, its rollout stage and the model it would replace." }
+        ]}
+      ],
+      reasoning: [
+        "Turn event and Conversation are the facts. Failure signal and Cluster are the derived views that rank the work.",
+        "Dataset version is the noun that keeps the gate honest: a frozen evaluation split with a known guide."
+      ],
+      script: [
+        "Turn event, Conversation, Failure signal, Cluster, Label task, Dataset version and Release candidate.",
+        "The one to underline is Dataset version: the evaluation split is frozen, never trained on, and tied to a labelling guide version, which makes the release gate mean something."
+      ]
+    },
+
+    api: {
+      board: [
+        { type: "code", title: "Event intake, labelling and release", code: `
+Event intake (from the assistant, async)
+POST /v1/events   { conversation_id, turn_id, channel, text_raw, intent, score,
+                    margin, path, model_version, outcome? }   -> 202
+     text_raw exists only in memory; the redactor emits text_redacted.
+
+Reading (analysts and dashboards, never raw text)
+GET  /v1/metrics?from=&to=&by=intent|channel|version
+     -> { containment, resolution, fallback_rate, handoff_rate, cost_per_conv }
+GET  /v1/clusters?status=new&order=volume_x_cost
+     -> [{ cluster_id, size, name, examples[] (redacted), est_cost }]
+
+Labelling
+GET  /v1/label-tasks?assignee=me       -> next batch
+POST /v1/label-tasks/{id}  { correct_intent, entities[], failure_cause, labeller }
+
+Release
+POST /v1/candidates   { dataset_version, model_ref }  -> { candidate_id }
+GET  /v1/candidates/{id}/gate  -> { per_intent[], never_break, verdict }
+POST /v1/candidates/{id}/promote  { stage: shadow | 5pct | 25pct | full }
+` },
+        { type: "list", title: "Choices to state out loud", items: [
+          "Intake is asynchronous and returns 202 at once, so a slow analytics path never touches a customer turn.",
+          "Read APIs return redacted text only. Raw text has no read path at all.",
+          "The gate returns a verdict per intent plus a never-break result, not one average.",
+          "Promotion is a staged call, so a rollback is the previous stage."
+        ]}
+      ],
+      reasoning: [
+        "Four contracts: events in, metrics and clusters out, labels in, candidates through the gate.",
+        "Make the absence of a raw-text read path part of the API."
+      ],
+      script: [
+        "Events arrive on an async intake that returns 202; raw text exists only in memory until the redactor emits the redacted version.",
+        "Reads are metrics and clusters, redacted text only. Labelling is a task queue. Release is a candidate with a per-intent gate and a staged promote."
+      ]
+    },
+
+    dataflow: {
+      board: [
+        { type: "list", title: "One turn, then the nightly loop", ordered: true, items: [
+          "The assistant emits a turn event asynchronously. It never waits for analytics. [code]",
+          "The redactor finds personal data with patterns (card numbers with a checksum, account formats, phone, email) and a name and address tagger, and replaces each with a typed placeholder. [code + model: small]",
+          "Only redacted turns are written to the event log and then the transcript store. If redaction errors, the turn is dropped and an alert fires. [code]",
+          "A stream job joins turns into conversations and computes outcome fields: handoff, abandonment, repeat contact within 72 hours. [code]",
+          "Failure signals are scored per conversation: fallback, rephrase after an answer, handoff soon after a low score, thumbs down, low confidence. [code]",
+          "The nightly job embeds the failed utterances, clusters them and has an LLM name each cluster. Clusters are ranked by volume times cost. [model]",
+          "Top clusters become label tasks. Reviewers pick the correct intent and one failure cause, working from the redacted text. [human]",
+          "Labels are merged into a new dataset version. A candidate model is trained on the train split. [model]",
+          "The release gate scores it on the frozen evaluation split, per intent, plus the never-break suite. A pass starts shadow, then a small traffic share, then full. [code]",
+          "Dashboards read pre-aggregated metrics: containment, resolution, fallback, handoff, cost per conversation. [code]"
+        ]},
+        { type: "note", text: "Models draft and rank: the cluster names, the embeddings and the retrained classifier. People decide what counts as correct, and code decides whether a candidate ships." }
+      ],
+      reasoning: [
+        "The order matters: redact, store, derive, rank, label, train, gate. Nothing after redaction sees raw text.",
+        "Mark which steps are people. The loop speed is their speed."
+      ],
+      script: [
+        "Per turn: the assistant emits an event, the redactor replaces personal data with placeholders, and only the redacted turn is stored. Errors drop the turn.",
+        "A stream job builds conversations and outcomes. Failure signals are scored, the nightly job clusters failed utterances and ranks by volume times cost, and the top clusters go to reviewers.",
+        "Labels become a frozen dataset version, a candidate trains, the gate scores it per intent, and it rolls out in stages. Dashboards read pre-aggregated metrics."
+      ]
+    },
+
+    hld: {
+      board: [
+        { type: "diagram", title: "Conversation analytics high-level design", stagesAll: "The whole loop: capture, find failures, label, then retrain and release, with dashboards reading the same store.", stages: [{ title: "Capture", add: ["assistant", "redact", "store"], say: "The assistant emits events; the redactor strips personal data first, and only redacted turns are stored." }, { title: "Find failures", add: ["detect", "dash", "cluster"], say: "A detector scores failure signals; dashboards show the numbers; failed utterances are clustered by meaning." }, { title: "Label", add: ["labelq", "reviewers"], say: "The biggest clusters become label tasks that reviewers answer from redacted text." }, { title: "Retrain and release", add: ["trainer", "gate"], say: "Labels train a candidate; the gate scores it on a frozen set and rolls it out in stages." }], nodes: [
+          { id: "dash", label: "Dashboards", sub: "containment, cost", col: 2, row: 0, tone: "service" },
+          { id: "assistant", label: "Assistant", sub: "emits turn events", col: 0, row: 1, tone: "external" },
+          { id: "redact", label: "Redactor", sub: "before any store", col: 1, row: 1, tone: "guard" },
+          { id: "store", label: "Transcript store", sub: "redacted, 90 days", col: 2, row: 1, tone: "store" },
+          { id: "detect", label: "Failure detector", sub: "weak signals, score", col: 3, row: 1, tone: "service" },
+          { id: "gate", label: "Release gate", sub: "frozen eval set", col: 0, row: 2, tone: "guard" },
+          { id: "trainer", label: "Trainer", sub: "candidate model", col: 1, row: 2, tone: "model" },
+          { id: "labelq", label: "Label queue", sub: "ranked tasks", col: 2, row: 2, tone: "queue" },
+          { id: "cluster", label: "Clustering", sub: "embed, name, rank", col: 3, row: 2, tone: "model" },
+          { id: "reviewers", label: "Reviewers", sub: "labels, causes", col: 2, row: 3, tone: "human" }
+        ], edges: [
+          { from: "assistant", to: "redact", label: "raw turn", async: true },
+          { from: "redact", to: "store", label: "redacted only" },
+          { from: "store", to: "dash", label: "metrics" },
+          { from: "store", to: "detect", label: "conversations" },
+          { from: "detect", to: "cluster", label: "failed turns" },
+          { from: "cluster", to: "labelq", label: "ranked clusters" },
+          { from: "labelq", to: "reviewers", label: "samples" },
+          { from: "reviewers", to: "labelq", label: "labels", async: true },
+          { from: "labelq", to: "trainer", label: "dataset version" },
+          { from: "trainer", to: "gate", label: "candidate" },
+          { from: "gate", to: "assistant", label: "staged release" }
+        ]},
+        { type: "list", title: "Walk each request through it", ordered: true, items: [
+          "**Capture.** A turn event leaves the assistant asynchronously. The redactor replaces card, account, phone, email, name and address with typed placeholders; only that version is written.",
+          "**Measure.** The store feeds the dashboards and the detector. Containment and resolution come from outcomes, not from missing handoffs.",
+          "**Find.** The detector scores failure signals. Clustering groups the failed utterances by meaning, names them and ranks them by volume times cost.",
+          "**Label.** Reviewers answer samples from the top clusters. Their labels land in the queue as a dataset version.",
+          "**Release.** The trainer builds a candidate, the gate scores it per intent on the frozen set, and the release goes shadow, 5%, 25%, full."
+        ]}
+      ],
+      reasoning: [
+        "Draw the redactor in front of the store, as a guard. That one box answers the privacy question.",
+        "Draw the loop closing: the gate's output goes back to the assistant."
+      ],
+      script: [
+        "The assistant emits events; a redactor in front of the store strips personal data, so everything downstream is safe by construction.",
+        "Dashboards and a failure detector read the store. Failed utterances are clustered and ranked, the top clusters go to reviewers, and their labels build a dataset version.",
+        "A trainer builds a candidate, the release gate scores it on a frozen set per intent, and it rolls out in stages back into the assistant."
+      ],
+      probes: [
+        "Where could personal data still leak? Free text the redactor misses, so I measure its recall on a labelled sample, and keep clusters' examples and label tasks redacted too.",
+        "Why a separate gate and not the trainer's own validation? The validation split is used to tune; the gate set is frozen and owned by the release, so the numbers cannot drift toward the model."
+      ]
+    },
+
+    deepdives: {
+      board: [
+        { type: "dive", title: "Redaction before anything is stored", diagram: {"cap": "Pattern rules and a name tagger run on each turn in memory; merged spans become typed placeholders, and only the redacted turn is stored.", "fail": "Without redaction before the store, a card number sits in every log, replica, export and training set, and masking at read time is one missed path from a leak.", "nodes": [{"id": "turn", "label": "Turn in", "sub": "raw, in memory", "col": 0, "row": 1, "tone": "external"}, {"id": "rules", "label": "Pattern rules", "sub": "card checksum, ids", "col": 1, "row": 0, "tone": "guard"}, {"id": "ner", "label": "Name tagger", "sub": "names, addresses", "col": 1, "row": 2, "tone": "model"}, {"id": "merge", "label": "Merge spans", "sub": "typed placeholders", "col": 2, "row": 1, "tone": "guard"}, {"id": "store", "label": "Transcript store", "sub": "redacted only", "col": 3, "row": 1, "tone": "store", "fail": true}, {"id": "drop", "label": "Drop and alert", "sub": "on any error", "col": 3, "row": 0, "tone": "human"}], "edges": [{"from": "turn", "to": "rules", "label": "every turn"}, {"from": "turn", "to": "ner", "label": "every turn"}, {"from": "rules", "to": "merge", "label": "spans"}, {"from": "ner", "to": "merge", "label": "spans"}, {"from": "merge", "to": "store", "label": "redacted text"}, {"from": "merge", "to": "drop", "label": "redactor error"}]}, nfr: "Privacy", problem: "Customers say card numbers and addresses aloud and in chat. If raw text reaches the store, every replica, search index, dashboard export and training set holds it, and the leak surface is every one of them.", options: [
+          { name: "Mask at read time", take: "Store raw, hide values in the viewer. Easy to build, but every other path (exports, backups, training jobs) still sees the raw text." },
+          { name: "Redact at ingest, patterns only", take: "Card numbers with a checksum, account formats, phone and email are precise. Names and addresses have no fixed shape, so patterns miss them." },
+          { name: "Redact at ingest, patterns plus a tagger", take: "A small tagger covers names and addresses, patterns cover the structured values, and spans merge into typed placeholders such as CARD or NAME that keep the sentence useful to a classifier." }
+        ], pick: "Redact at ingest with patterns plus a tagger, in memory, before anything is written. On any redactor error the turn is dropped and an alert fires. Measure recall on a labelled sample every release; a miss rate is a number on a dashboard. Voice collects card digits as DTMF so they never become transcript text. Examples shown in clusters and label tasks are the redacted text." },
+        { type: "dive", title: "Finding failures without labels", diagram: {"cap": "Several weak behavioural signals are scored per conversation; failed utterances are embedded and clustered, and samples go to people.", "fail": "Without combining signals, a single one misleads: a rephrase can be a good clarification, and a handoff can be the right outcome.", "nodes": [{"id": "store", "label": "Redacted turns", "sub": "convos, outcomes", "col": 0, "row": 1, "tone": "store"}, {"id": "signals", "label": "Weak signals", "sub": "fallback, rephrase", "col": 1, "row": 0, "tone": "guard", "fail": true}, {"id": "conf", "label": "Low confidence", "sub": "score and margin", "col": 1, "row": 2, "tone": "model"}, {"id": "score", "label": "Failure score", "sub": "weighted per convo", "col": 2, "row": 1, "tone": "service"}, {"id": "embed", "label": "Embed, cluster", "sub": "name, volume x cost", "col": 3, "row": 1, "tone": "model"}, {"id": "review", "label": "Sampled review", "sub": "4 per cluster", "col": 3, "row": 2, "tone": "human"}], "edges": [{"from": "store", "to": "signals", "label": "behaviour"}, {"from": "store", "to": "conf", "label": "scores"}, {"from": "signals", "to": "score", "label": "flags"}, {"from": "conf", "to": "score", "label": "flags"}, {"from": "score", "to": "embed", "label": "top 12%"}, {"from": "embed", "to": "review", "label": "samples"}]}, nfr: "Labelling capacity", problem: "No one has labelled the 24,000 flagged conversations a day, and people can read 600. Each behavioural signal is also ambiguous on its own.", options: [
+          { name: "Review a random sample", take: "Unbiased but wasteful: most turns are fine, and rare failures hide among them." },
+          { name: "Take one signal, such as handoff", take: "Cheap and clear, but a handoff can be correct (fraud) and many failures end in a silent abandon." },
+          { name: "Score several signals, cluster, rank by volume times cost", take: "Combine fallback, rephrase after an answer, handoff soon after a low score, thumbs down and low confidence. Embed the failed utterances, cluster, name each cluster, and review a few samples per cluster." }
+        ], pick: "Score several signals together, cluster the failures, rank clusters by volume times cost, and review about 4 samples from each of the top 150, which is the 600 labels a day. Keep a small random slice as well so the ranking can be checked against the unflagged traffic. A cluster ends as a new intent, an addition to an existing one, a knowledge gap, or ignore. Watch the signal weights: re-fit them from labelled samples when you have them." },
+        { type: "dive", title: "The release gate", diagram: {"cap": "A candidate is scored per intent on a frozen set and a never-break suite, then shadowed and rolled out in stages with guardrail metrics watched.", "fail": "Without per-intent scoring, a better average can hide a rare intent that got worse, and a card block starts failing.", "actors": [{"id": "trainer", "label": "Trainer", "tone": "model"}, {"id": "gate", "label": "Release gate", "tone": "guard"}, {"id": "live", "label": "Live traffic", "tone": "external"}], "steps": [{"from": "trainer", "to": "gate", "label": "candidate"}, {"over": "gate", "label": "frozen set, per intent"}, {"over": "gate", "label": "mean hides a rare intent", "fail": true}, {"over": "gate", "label": "never-break suite"}, {"from": "gate", "to": "live", "label": "shadow, then 5%"}, {"from": "live", "to": "gate", "label": "guardrail metrics"}, {"from": "gate", "to": "trainer", "label": "promote or block"}]}, nfr: "Correctness", problem: "A retrained model usually improves the cluster it was trained for and can quietly worsen something else. The evaluation set is also finite, so small differences are noise.", options: [
+          { name: "One accuracy number on a random split", take: "Easy, but the average is dominated by common intents and hides rare, costly ones." },
+          { name: "Per-intent scores plus a never-break suite", take: "Report precision and recall per intent, with the money and fraud paths as a fixed suite that must stay clean. Block on a drop in any protected intent." },
+          { name: "Add shadow and a staged rollout", take: "Run the candidate on live traffic without acting, then 5%, 25%, full, with fallback rate, handoff rate and resolution as guardrails. Rollback is the previous stage." }
+        ], pick: "All three. Freeze the evaluation set and the labelling guide, score per intent, keep the never-break suite, then shadow and stage the rollout with guardrails. Size the set for the effect you care about, and put intervals next to every number. A threshold or taxonomy change goes through the same gate as a model." },
+        { type: "math", title: "How big the evaluation set must be", lines: [
+          "Assumed: 1,500 test turns, accuracy about 0.90. The standard error is sqrt(0.90 x 0.10 / 1,500) = sqrt(0.00006) = about 0.0077.",
+          "A 95% interval is about 1.96 x 0.0077 = about 1.5 points either side. A change smaller than that cannot be told from noise.",
+          "Assumed: a rare intent with 30 test turns. sqrt(0.90 x 0.10 / 30) = sqrt(0.003) = about 0.055, and 1.96 x 0.055 = about 11 points either side."
+        ], conclusion: "Overall, a drop under about 1.5 points is invisible; for a rare intent, a drop under about 11 points is. So the gate needs more examples for the rare costly intents, a never-break suite instead of a percentage for the highest-risk ones, and shadow traffic as a second opinion." },
+        { type: "defs", title: "Dashboards, and what each hides", items: [
+          { term: "Containment", desc: "Conversations that never reached a person. A wall contains, so never report it alone." },
+          { term: "Resolution", desc: "Task completed and no repeat contact on any channel within 72 hours. Computed from outcomes, not as one minus handoff." },
+          { term: "Fallback and handoff rate", desc: "By intent and by model version. A rise after a release is a regression; a rise with no release is a new topic." },
+          { term: "Cost per conversation", desc: "Model calls, speech and human time together, so a cheaper path that pushes work to people shows up." },
+          { term: "Loop health", desc: "Clusters opened, labels done, candidates blocked, days from failure to release. If the queue grows, the loop is the bottleneck." }
+        ]}
+      ],
+      reasoning: [
+        "Start with privacy, because it gates every other stage.",
+        "Then finding failures without labels: this is where scarce human time is allocated.",
+        "Then the gate, with the interval arithmetic, because it is where a retrain can quietly hurt."
+      ],
+      script: [
+        "Privacy first: redact in memory at ingest with patterns plus a tagger, store only placeholders, drop the turn on an error, and measure redaction recall on a sample every release.",
+        "Failures without labels: combine several behavioural signals, embed and cluster the failed utterances, rank by volume times cost, and review about 4 samples from each of the top 150, which is the 600 labels people can do.",
+        "The gate: a frozen evaluation set, scores per intent, a never-break suite, then shadow and staged rollout with guardrails. With 1,500 turns, a 1.5 point drop is noise, and for a rare intent it is about 11, so the highest-risk paths use a fixed suite."
+      ],
+      probes: [
+        "The new model is better overall and a rare intent got worse. The gate blocks on a protected-intent drop, so it does not ship as is. I would add examples for that intent from the clusters, retrain, and re-run the same frozen set.",
+        "Containment rose and complaints rose. Check resolution and repeat contact, then read handed-off and abandoned conversations. Containment can rise because the assistant stopped letting people reach a person.",
+        "How do you keep the labellers consistent? A written guide with edge-case rulings, two labellers on a subset with agreement measured, and a gold set nobody trains on."
+      ]
+    }
+  },
+  refs: []
+});
+
+GUIDE.examples.push({
   id: "ticketmaster",
   tabLabel: "Ticketmaster (baseline)",
   title: "Ticketmaster",
@@ -4227,6 +4979,84 @@ GUIDE.patternUsage = {
       { groups: ["real-time"], why: "Results are read after a run, not pushed while it happens." }
     ]
   }
+};
+GUIDE.patternUsage["faq-assistant"] = {
+  uses: [
+    { group: "grounding", diagram: {"cap": "Answers come only from retrieved approved content and carry citations; no source means a refusal and a person, and the release gate tests every change.", "nodes": [{"id": "api", "label": "Answer service", "sub": "question in", "col": 0, "row": 0, "tone": "orchestrator"}, {"id": "ret", "label": "Approved content", "sub": "live release, cited", "col": 1, "row": 0, "tone": "store"}, {"id": "gate", "label": "Release gate", "sub": "300 cases, 60 refuse", "col": 0, "row": 1, "tone": "guard"}, {"id": "ans", "label": "Cited answer", "sub": "or not found", "col": 1, "row": 1, "tone": "model"}, {"id": "agents", "label": "Contact centre", "sub": "refusals counted", "col": 1, "row": 2, "tone": "human"}], "edges": [{"from": "api", "to": "ret", "label": "query"}, {"from": "ret", "to": "ans", "label": "top 5 passages"}, {"from": "gate", "to": "ans", "label": "gates release"}, {"from": "ans", "to": "agents", "label": "no source"}]}, why: "The product promise is answers only from approved content, so grounding and refusal are the design.", techniques: [
+      { id: "rag", how: "Answers are written from the top 5 passages of the live release, never from the model's memory." },
+      { id: "citations", how: "Each claim cites a chunk id; the check confirms the id was retrieved and the claim is supported." },
+      { id: "refusal", how: "Below the relevance line, or on conflicting passages, the answer is not found with a route to a person, and is counted by topic." },
+      { id: "eval-gate", how: "300 cases, 60 of them unanswerable, gate every content release, prompt or model change." },
+      { id: "shadow-online", how: "A changed prompt or model runs in shadow on live questions before it answers anyone." }
+    ]},
+    { group: "search", why: "Fee codes, form numbers and plain-language questions all have to find the right passage.", techniques: [
+      { id: "hybrid-rerank", how: "Keyword and vector results are merged, then a reranker orders the top 20 for the 5 sent to the model." },
+      { id: "vector", how: "About 4,800 chunks, 20 MB of vectors; one database with a vector index holds them." }
+    ]},
+    { group: "consistency", why: "An approved change must reach answers quickly, and an expired one must stop being cited.", techniques: [
+      { id: "cdc", how: "A change event from the content source re-chunks and re-embeds only that document." },
+      { id: "per-feature", how: "Fee and tax content switches by release pointer so it is never half old and half new; the glossary may lag." }
+    ]},
+    { group: "llm-cost", why: "Most questions repeat, and refused ones need no model call.", techniques: [
+      { id: "early-exit", how: "Account and advice questions leave at the input rails, and weak retrieval refuses before generation." },
+      { id: "response-cache", how: "Answers are cached by question and release id, so activating a release drops the old entries." }
+    ]}
+  ],
+  notNeeded: [
+    { groups: ["scaling-reads", "scaling-writes"], why: "About 0.6 questions a second, 2.2 at burst; one database and a small service carry it." },
+    { groups: ["agent-safety"], why: "The assistant takes no actions; it only answers, and account questions leave at the input rails." },
+    { groups: ["agent-durability"], why: "An answer takes seconds; a dropped request is asked again." }
+  ]
+};
+GUIDE.patternUsage["voice-ivr"] = {
+  uses: [
+    { group: "reliability", diagram: {"cap": "A silent or failing speech engine drops to a keypad menu, and a failing backend trips a breaker that routes the caller to a person.", "nodes": [{"id": "menu", "label": "Keypad menu", "sub": "digits, agent", "col": 0, "row": 0, "tone": "guard"}, {"id": "asr", "label": "Streaming ASR", "sub": "slow or down", "col": 1, "row": 0, "tone": "model"}, {"id": "dm", "label": "Dialogue manager", "sub": "per-call timeouts", "col": 0, "row": 1, "tone": "orchestrator"}, {"id": "core", "label": "Core banking", "sub": "failing", "col": 1, "row": 1, "tone": "external"}, {"id": "cb", "label": "Circuit breaker", "sub": "open after failures", "col": 0, "row": 2, "tone": "guard"}, {"id": "agents", "label": "Contact centre", "sub": "or a callback", "col": 1, "row": 2, "tone": "human"}], "edges": [{"from": "dm", "to": "asr", "label": "timeout, 1 retry"}, {"from": "dm", "to": "menu", "label": "ASR down: keypad"}, {"from": "dm", "to": "cb", "label": "backend call"}, {"from": "cb", "to": "core", "label": "probe"}, {"from": "cb", "to": "agents", "label": "open: a person"}]}, why: "Every call must be answered, with speech down or the bank slow.", techniques: [
+      { id: "timeouts-retries", how: "A short timeout on ASR and backend calls, and at most one retry within the turn budget." },
+      { id: "circuit-breaker", how: "After repeated backend failures the breaker opens and callers go to a person or a callback, with no waiting on the bank." },
+      { id: "degradation", how: "With speech down, a keypad menu still works; the assistant says what it cannot do instead of failing silently." }
+    ]},
+    { group: "llm-cost", why: "The turn budget is about 1,060ms and an LLM call is about 981ms.", techniques: [
+      { id: "streaming", how: "Audio in and speech out both stream, so work overlaps instead of queueing." },
+      { id: "early-exit", how: "Keypad digits, ‘agent’ and a clean answer to the expected slot skip the NLU." },
+      { id: "routing", how: "A small classifier answers confident turns; only uncertain ones reach an LLM, behind an acknowledgement." }
+    ]},
+    { group: "agent-safety", why: "The assistant verifies callers and moves money by voice.", techniques: [
+      { id: "policy-gate", how: "Each intent carries the auth level it needs; the gateway refuses a call whose level is too low." },
+      { id: "effect-classes", how: "Reads answer at once at level 1; payments and card changes need level 2, a read-back and a confirmed turn id." },
+      { id: "least-privilege", how: "Backend calls use credentials scoped to the verified customer and the call." }
+    ]}
+  ],
+  notNeeded: [
+    { groups: ["scaling-writes", "contention"], why: "About 10 handoffs a minute and 160 calls at peak; the bank's systems own balances and payments." },
+    { groups: ["grounding"], why: "Account answers come from the bank's APIs. An FAQ path exists but is the virtual assistant design's subject." },
+    { groups: ["agent-durability"], why: "Calls last minutes; session state in a store and keyed writes cover a dropped turn." }
+  ]
+};
+GUIDE.patternUsage["convo-analytics"] = {
+  uses: [
+    { group: "long-running", why: "Clustering, embedding and training are batch jobs that take minutes to hours and must survive a crash.", diagram: {"cap": "A nightly schedule queues the embed and cluster jobs; workers checkpoint per batch and a job that keeps failing lands in a dead-letter queue.", "nodes": [{"id": "sched", "label": "Nightly schedule", "sub": "daily jobs", "col": 0, "row": 0, "tone": "service"}, {"id": "queue", "label": "Job queue", "sub": "embed, cluster", "col": 1, "row": 0, "tone": "queue"}, {"id": "workers", "label": "Worker pool", "sub": "lease a batch", "col": 1, "row": 1, "tone": "service"}, {"id": "ckpt", "label": "Checkpoints", "sub": "last batch done", "col": 0, "row": 1, "tone": "store"}, {"id": "dlq", "label": "Dead letters", "sub": "after 3 tries", "col": 1, "row": 2, "tone": "queue"}], "edges": [{"from": "sched", "to": "queue", "label": "daily jobs"}, {"from": "queue", "to": "workers", "label": "lease"}, {"from": "workers", "to": "ckpt", "label": "per batch"}, {"from": "workers", "to": "dlq", "label": "after 3 tries"}]}, techniques: [
+      { id: "worker-pool", how: "Embedding and clustering run as queued jobs on a worker pool, never in the request path." },
+      { id: "retries-dlq", how: "A failing batch retries with backoff, then goes to a dead-letter queue and an alert." },
+      { id: "checkpointing", how: "A job records the last batch done, so a restart resumes instead of re-embedding 24,000 utterances." }
+    ]},
+    { group: "grounding", why: "A retrained model is a claim about quality, and the evaluation set is what backs it.", techniques: [
+      { id: "eval-gate", how: "The frozen evaluation set and the never-break suite gate every model, threshold and taxonomy change." },
+      { id: "shadow-online", how: "A candidate shadows live traffic, then rolls out at 5%, 25%, full against guardrail metrics." }
+    ]},
+    { group: "scaling-writes", why: "Turn events arrive at about 53 a second at peak and must never slow a customer turn.", techniques: [
+      { id: "queue-buffer", how: "Intake returns 202 and buffers events, so a slow store never reaches the assistant." },
+      { id: "batching", how: "Redacted turns are written in batches to the transcript store and the metrics tables." }
+    ]},
+    { group: "reliability", why: "The loop must not take the assistant down, and silent loss of data would hide failures.", techniques: [
+      { id: "monitoring", how: "Loss, redaction error rate, queue age and loop health are alerted on, not only the assistant's own metrics." },
+      { id: "flags", how: "A new model rolls out by traffic share and rolls back with a switch." }
+    ]}
+  ],
+  notNeeded: [
+    { groups: ["scaling-reads"], why: "Dashboards read pre-aggregated tables, and analysts are a handful of users." },
+    { groups: ["agent-safety"], why: "The loop calls no tools and takes no actions; its safety work is redaction and the gate." },
+    { groups: ["search", "geo"], why: "Clusters and labels are looked up by id and status; no free-text search or location is needed." }
+  ]
 };
 
 /* ------------------------------------------------------------------ */

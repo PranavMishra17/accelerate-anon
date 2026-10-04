@@ -1066,3 +1066,20 @@ one variable again: composition, dy/dx = dy/du · du/dx, (3x + 1)² worked and c
 one partial-derivative line. Sessions now show a tag for what they teach (Maths, Systems, ML, Audio,
 Interview) in the rail, the week list and the session header, since the track names a slot in the plan
 (Requeue, Alaap), not the subject: Overfitting reads ML. No charter deviation.
+
+**2026-10-04: Weeks 3 to 5 in sequence; Vanguard's path rebuilt for the three days before the call.**
+Weeks 3 to 5 were audited the way week 2 was fixed: 18 places where a step leaned on something not yet
+taught. Week 4's backprop watch now comes after partial derivatives and gradient descent (its resources and
+questions re-keyed); attention's square-root scaling gets a primer on E[ ] and variance; the null space,
+covariance and determinant left week 3's eigenvector step; spectrum, FFT and decibels are explained before
+the resampling and source-filter steps use them; replication gets its one-line leader and follower primer.
+Vanguard: modules now run foundations first (the map, classification and embeddings, LLMs, then intents
+and dialogue, design, grounding, error analysis, evals) with a day tag each (Sunday to Tuesday, your story on
+Wednesday morning); every non-story topic's answer is shaped to skim; resources were re-aimed at each
+topic's question with 22 more videos; one-line primers replace forward leans. Six tested Python builds
+(`interviews/vanguard_builds/`: an intent classifier with out-of-scope thresholds, entity extraction and
+resolution, a transfer dialogue with confirm and repair, a grounded FAQ with citations and refusal, a hybrid
+router with a code guard, an eval harness with a regression gate) sit inside the topics they teach. A new
+system design module draws on the guide, which gains three compact designs: a grounded FAQ assistant, a
+contact-centre voice line with handoff, and the conversation analytics and improvement loop. It also links
+his week 2 and 3 design sessions. No charter deviation.

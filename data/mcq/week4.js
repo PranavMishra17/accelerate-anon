@@ -210,7 +210,7 @@ MCQ.add("w4a:4", [
 
 /* w4b: Gradients and descent */
 
-MCQ.add("w4b:0", [
+MCQ.add("w4b:2", [
   { q: "Backprop gives you a number for one weight deep in the network. What does that number mean?",
     o: ["How large the weight currently is",
         "How often the weight's neuron fired on the batch",
@@ -245,7 +245,7 @@ MCQ.add("w4b:0", [
     why: "The cost is an average over all examples, and a random batch's average estimates it at a fraction of the cost. The steps are noisier but far more of them fit in the same time." }
 ]);
 
-MCQ.add("w4b:1", [
+MCQ.add("w4b:0", [
   { q: "f(x, y) = x²y + y. What is the gradient at (2, 3)?",
     o: ["(12, 5)", "(12, 4)", "(5, 12)", "(4, 5)", "(12, 13)"],
     a: 0,
@@ -269,7 +269,7 @@ MCQ.add("w4b:1", [
     why: "A zero gradient only says no direction changes the loss to first order. Minima, maxima and saddle points all have that, and in large networks saddles are common." }
 ]);
 
-MCQ.add("w4b:2", [
+MCQ.add("w4b:1", [
   { q: "θ = 3, the learning rate is 0.1, and the gradient of the loss at θ is 2. What is θ after one gradient descent step?",
     o: ["3.2", "1.0", "2.7", "2.8", "2.98"],
     a: 3,
