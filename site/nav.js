@@ -90,3 +90,19 @@
     start();
   }
 })();
+
+/* AI Engineering from Scratch lessons load from raw.githubusercontent.com, which some networks block. When a
+   local copy of the course is running (study.cmd serves a clone on http://localhost:8010), lesson links open
+   there instead: probed once at load, rewritten at click time, so every page and every rendered list is covered.
+   Off on the public site. */
+(function () {
+  if (window.SITE_PUBLIC || !window.fetch) { return; }
+  var LOCAL = "http://localhost:8010/site/lesson.html", up = false;
+  fetch("http://localhost:8010/site/data.js", { mode: "no-cors", cache: "no-store" }).then(function () { up = true; }, function () {});
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest && e.target.closest('a[href^="https://aiengineeringfromscratch.com/lesson"]');
+    if (!a || !up) { return; }
+    var href = a.getAttribute("href");
+    a.setAttribute("href", LOCAL + href.slice(href.indexOf("?")));
+  }, true);
+})();

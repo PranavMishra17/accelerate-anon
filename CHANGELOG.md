@@ -1112,3 +1112,13 @@ In an open topic the right pane (Check yourself, Explain it, What you would say)
 while the material scrolls, as on Accelerate. Check yourself opens the topic's questions one at a time in the
 pop-up the tests use (Judge first's way), and the pane shows how many are answered and the level after.
 No charter deviation.
+
+**2026-10-04: AI Engineering from Scratch, served locally; ten of its NLP lessons in the Vanguard path.**
+Every lesson on the course's site failed on his network: the site loads lessons from raw.githubusercontent.com,
+whose connections are cut here (the TLS handshake breaks, over IPv4 and IPv6), while github.com works. The
+course is cloned to E:\ai-engineering-from-scratch and study.cmd now also pulls it and serves it on port 8010
+(the site reads lessons from the clone when served locally). site/nav.js, loaded by every page, opens course
+lesson links on the local copy when it is running and on the website otherwise. Ten phase 5 lessons sit as
+Required items in the Vanguard topics they serve (text classification, NER, entity linking, embedding models,
+chatbots from rules to agents, dialogue state tracking, structured outputs, retrieval, NLI, LLM evaluation);
+the phase as a whole is in the AI engineering backlog for after the call. No charter deviation.

@@ -16,4 +16,15 @@ if errorlevel 1 (
   ping -n 2 127.0.0.1 >nul
 )
 
+rem AI Engineering from Scratch, served from a local clone (its lessons load from raw.githubusercontent.com,
+rem which this network blocks). Pages open lesson links here when it is running. Pull the latest first.
+set "AIENG=%~dp0..\..\ai-engineering-from-scratch"
+if exist "%AIENG%\site\lesson.html" (
+  netstat -ano | findstr /r /c:"TCP.*:8010 .*LISTENING" >nul 2>&1
+  if errorlevel 1 (
+    start "course update" /min cmd /c "git -C "%AIENG%" pull --ff-only --quiet"
+    start "course server" /min cmd /c "python -m http.server 8010 --bind 127.0.0.1 --directory "%AIENG%""
+  )
+)
+
 start "" "http://localhost:8000/index.html"

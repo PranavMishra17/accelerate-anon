@@ -596,6 +596,15 @@
      "was": [],
      "res": [
       {
+       "kind": "keep",
+       "src": "aieng",
+       "req": true,
+       "label": "AI Engineering from Scratch, phase 5: Chatbots: Rule-Based to Neural to LLM Agents",
+       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F05-nlp-foundations-to-advanced%2F17-chatbots-rule-to-neural",
+       "m": 25,
+       "why": "The whole history of conversational systems in one lesson: why each era replaced the last."
+      },
+      {
        "kind": "video",
        "req": true,
        "label": "Generative vs rules-based chatbots",
@@ -1062,6 +1071,15 @@
       "e-hierarchy-multilabel-multilingual"
      ],
      "res": [
+      {
+       "kind": "keep",
+       "src": "aieng",
+       "req": true,
+       "label": "AI Engineering from Scratch, phase 5: Sentiment Analysis",
+       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F05-nlp-foundations-to-advanced%2F05-sentiment-analysis",
+       "m": 25,
+       "why": "Text classification built from scratch: the ladder from a lexicon to a trained model, the same ladder an intent classifier climbs."
+      },
       {
        "kind": "video",
        "req": true,
@@ -1994,6 +2012,15 @@
       "e-finance-specifics"
      ],
      "res": [
+      {
+       "kind": "keep",
+       "src": "aieng",
+       "req": true,
+       "label": "AI Engineering from Scratch, phase 5: Embedding Models, the 2026 Deep Dive",
+       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F05-nlp-foundations-to-advanced%2F22-embedding-models-deep-dive",
+       "m": 25,
+       "why": "Which embedding model to pick and why, with the trade-offs this topic asks about."
+      },
       {
        "kind": "video",
        "req": true,
@@ -3734,6 +3761,24 @@
      ],
      "res": [
       {
+       "kind": "keep",
+       "src": "aieng",
+       "req": true,
+       "label": "AI Engineering from Scratch, phase 5: Named Entity Recognition",
+       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F05-nlp-foundations-to-advanced%2F06-named-entity-recognition",
+       "m": 25,
+       "why": "How entity extraction works as sequence labelling (BIO tags), and where it fails."
+      },
+      {
+       "kind": "keep",
+       "src": "aieng",
+       "req": true,
+       "label": "AI Engineering from Scratch, phase 5: Entity Linking and Disambiguation",
+       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F05-nlp-foundations-to-advanced%2F25-entity-linking",
+       "m": 25,
+       "why": "Resolving an extracted mention to the one real record it means: the resolve step."
+      },
+      {
        "kind": "video",
        "req": true,
        "label": "Form filling in Dialogflow CX (slot filling)",
@@ -3875,6 +3920,15 @@
       "h-state-routing"
      ],
      "res": [
+      {
+       "kind": "keep",
+       "src": "aieng",
+       "req": true,
+       "label": "AI Engineering from Scratch, phase 5: Dialogue State Tracking",
+       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F05-nlp-foundations-to-advanced%2F29-dialogue-state-tracking",
+       "m": 25,
+       "why": "Slots, belief state and how a system tracks them turn by turn, built in code."
+      },
       {
        "kind": "video",
        "req": true,
@@ -4186,6 +4240,15 @@
       "a-hybrid-llm-era"
      ],
      "res": [
+      {
+       "kind": "keep",
+       "src": "aieng",
+       "req": true,
+       "label": "AI Engineering from Scratch, phase 5: Structured Outputs and Constrained Decoding",
+       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F05-nlp-foundations-to-advanced%2F20-structured-outputs-constrained-decoding",
+       "m": 25,
+       "why": "How an LLM is made to return a valid intent and slots every time, the piece a hybrid router depends on."
+      },
       {
        "kind": "video",
        "req": true,
@@ -7086,6 +7149,15 @@
      ],
      "res": [
       {
+       "kind": "keep",
+       "src": "aieng",
+       "req": true,
+       "label": "AI Engineering from Scratch, phase 5: Natural Language Inference: Textual Entailment",
+       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F05-nlp-foundations-to-advanced%2F21-nli-textual-entailment",
+       "m": 25,
+       "why": "Whether a passage supports a sentence: the check behind a groundedness verifier."
+      },
+      {
        "kind": "video",
        "req": true,
        "label": "Rasa: Introduction to CALM",
@@ -7242,6 +7314,15 @@
       "c-abstention-citation-ux"
      ],
      "res": [
+      {
+       "kind": "keep",
+       "src": "aieng",
+       "req": true,
+       "label": "AI Engineering from Scratch, phase 5: Information Retrieval and Search",
+       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F05-nlp-foundations-to-advanced%2F14-information-retrieval-search",
+       "m": 25,
+       "why": "BM25, dense retrieval and ranking: what finds the approved passage an answer must cite."
+      },
       {
        "kind": "video",
        "req": true,
@@ -9412,6 +9493,15 @@
       "h-eval-scale"
      ],
      "res": [
+      {
+       "kind": "keep",
+       "src": "aieng",
+       "req": true,
+       "label": "AI Engineering from Scratch, phase 5: LLM Evaluation: RAGAS, DeepEval, G-Eval",
+       "url": "https://aiengineeringfromscratch.com/lesson?path=phases%2F05-nlp-foundations-to-advanced%2F27-llm-evaluation-frameworks",
+       "m": 25,
+       "why": "The evaluation frameworks and what each layer measures."
+      },
       {
        "kind": "video",
        "req": true,
