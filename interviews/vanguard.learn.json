@@ -2228,7 +2228,7 @@
        "o": [
         "The first run warms the cache, so later runs are faster",
         "Each run trains the model on the scenario",
-        "Tool-calling agents are inconsistent across runs; pass^k asks for every run to pass",
+        "Tool-calling agents are inconsistent across runs; passᵏ asks for every run to pass",
         "Graders need several runs before they agree",
         "Schema validation only runs on repeated calls"
        ],
@@ -3094,11 +3094,11 @@
         "Pass: 87.5% is above a typical threshold",
         "Count only the first run, since users see one",
         "Set temperature to zero and call it fixed",
-        "Fail pass^8 and investigate the failing run",
+        "Fail pass⁸ and investigate the failing run",
         "Remove the scenario as flaky"
        ],
        "a": 3,
-       "why": "At volume, one failure in eight is many customers. pass^k asks for all k runs to succeed, and the failing transcript is where the bug is."
+       "why": "At volume, one failure in eight is many customers. passᵏ asks for all k runs to succeed, and the failing transcript is where the bug is."
       },
       {
        "q": "Which case belongs in the must-never set rather than under a thresholded quality score?",
@@ -4490,12 +4490,12 @@
        "o": [
         "pass@k: at least one of k tries succeeds",
         "Mean BLEU against a reference reply",
-        "pass^k: all k tries succeed",
+        "passᵏ: all k tries succeed",
         "Single-run accuracy at temperature zero",
         "Average judge score across the tries"
        ],
        "a": 2,
-       "why": "A customer gets one try. pass^k measures whether the agent is consistently right; pass@k suits settings where you can generate several and pick a checked winner.",
+       "why": "A customer gets one try. passᵏ measures whether the agent is consistently right; pass@k suits settings where you can generate several and pick a checked winner.",
        "pair": "passk-vs-pass-at-k"
       },
       {
@@ -4503,7 +4503,7 @@
        "o": [
         "Production logs are miscounting completions",
         "The simulator is too adversarial",
-        "pass^k inflates the simulated number",
+        "passᵏ inflates the simulated number",
         "Production uses a different model by accident",
         "Simulated users are more cooperative than real ones"
        ],
@@ -5998,7 +5998,7 @@
         "The loss can skip the softmax with enough examples"
        ],
        "a": 1,
-       "why": "Every other example's positive is a negative for this query, so a batch of N gives N minus 1 negatives for free. More negatives means more chances to meet hard ones."
+       "why": "Every other example's positive is a negative for this query, so a batch of N gives N − 1 negatives for free. More negatives means more chances to meet hard ones."
       },
       {
        "q": "Your vectors are L2-normalised. Which metric should the index use?",
@@ -6010,7 +6010,7 @@
         "It depends on the length of the query"
        ],
        "a": 0,
-       "why": "For unit vectors the dot product is the cosine, and squared distance is 2 minus 2 times the cosine, so the ranking is identical and the dot product is the cheapest."
+       "why": "For unit vectors the dot product is the cosine, and squared distance is 2 − 2cos, so the ranking is identical and the dot product is the cheapest."
       },
       {
        "q": "Searching 2 million help passages per query: bi-encoder or cross-encoder?",
@@ -6394,7 +6394,7 @@
      ],
      "mcq": [
       {
-       "q": "Why are attention scores divided by √d_k before the softmax?",
+       "q": "Why are attention scores divided by √dₖ before the softmax?",
        "o": [
         "So that each row of attention weights sums to exactly 1",
         "To keep the dot products near unit variance so the softmax does not saturate",
@@ -6403,10 +6403,10 @@
         "To keep each value vector at unit length before the weighted sum"
        ],
        "a": 1,
-       "why": "Dot products of d_k-dimensional unit-variance vectors have variance d_k. Large scores push the softmax to near one-hot with tiny gradients; dividing by the standard deviation √d_k restores unit variance. The softmax itself makes rows sum to 1."
+       "why": "Dot products of dₖ-dimensional unit-variance vectors have variance dₖ. Large scores push the softmax to near one-hot with tiny gradients; dividing by the standard deviation √dₖ restores unit variance. The softmax itself makes rows sum to 1."
       },
       {
-       "q": "A colleague divides the scores by d_k instead of √d_k, with d_k = 128. What happens?",
+       "q": "A colleague divides the scores by dₖ instead of √dₖ, with dₖ = 128. What happens?",
        "o": [
         "Nothing, because the softmax is unchanged when all scores are scaled",
         "The softmax saturates to one-hot sooner and gradients vanish",
@@ -6415,7 +6415,7 @@
         "Training speeds up because the gradients through the softmax get larger"
        ],
        "a": 3,
-       "why": "Dividing by d_k leaves variance 1/d_k, so every score is close to zero and the softmax spreads weight almost evenly. Softmax is invariant to adding a constant, not to scaling.",
+       "why": "Dividing by dₖ leaves variance 1/dₖ, so every score is close to zero and the softmax spreads weight almost evenly. Softmax is invariant to adding a constant, not to scaling.",
        "pair": "softmax-shift-vs-scale"
       },
       {
@@ -6423,12 +6423,12 @@
        "o": [
         "Adding the same constant to every score",
         "Multiplying every score by the same positive constant",
-        "Dividing every score by √d_k",
+        "Dividing every score by √dₖ",
         "Squaring every score before the softmax",
         "Replacing the largest score with zero"
        ],
        "a": 0,
-       "why": "exp(s + c) factors out as exp(c), which cancels in the normalisation. Scaling changes how peaked the distribution is, which is exactly why the √d_k factor matters.",
+       "why": "exp(s + c) factors out as exp(c), which cancels in the normalisation. Scaling changes how peaked the distribution is, which is exactly why the √dₖ factor matters.",
        "pair": "softmax-shift-vs-scale"
       }
      ],
@@ -6542,7 +6542,7 @@
         "About 64B"
        ],
        "a": 1,
-       "why": "12 × 32 × 4096² is about 6.44B: 4 d² per layer for the Q, K, V and output projections and 8 d² for a 4x feed-forward. That is the scale of a 7B model once embeddings are added."
+       "why": "12 × 32 × 4096² is about 6.44B: 4d² per layer for the Q, K, V and output projections and 8d² for a 4x feed-forward. That is the scale of a 7B model once embeddings are added."
       }
      ],
      "open": {

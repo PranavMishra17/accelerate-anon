@@ -5295,7 +5295,7 @@
         "It depends only on the backoff cap"
        ],
        "a": 2,
-       "why": "Each layer multiplies the one below: 3 x 3 x 3 = 27. Keep retries at one layer and make the others fail fast."
+       "why": "Each layer multiplies the one below: 3 × 3 × 3 = 27. Keep retries at one layer and make the others fail fast."
       },
       {
        "q": "An httpx stream has `Timeout(30)`. The model sends one token every 10 s for 20 minutes. What happens?",
@@ -7983,7 +7983,7 @@
         "Lower the significance threshold to compensate"
        ],
        "a": 1,
-       "why": "At 100,000 visitors an 800 gap gives a chi-square near 25.6, a p-value far below 0.001. Something is losing or adding visitors to one arm."
+       "why": "At 100,000 visitors an 800 gap gives a χ² near 25.6, a p-value far below 0.001. Something is losing or adding visitors to one arm."
       },
       {
        "q": "Why include the experiment id in the hash input?",

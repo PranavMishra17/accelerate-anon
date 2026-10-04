@@ -126,7 +126,7 @@ BASELINE.quiz("cloud", {
           "Zero, because requests queue until the spike ends",
           "About 10, each serving up to 80 at once"],
       a: 4,
-      why: "Concurrency is requests per instance, so 800 divided by 80 is about 10. With no traffic it scales back to zero." },
+      why: "Concurrency is requests per instance, so 800 / 80 ≈ 10. With no traffic it scales back to zero." },
     { q: "A startup with four services asks whether to start on managed Kubernetes because large companies use it. What is the usual advice?",
       o: ["Yes, Kubernetes is the only way to run containers in production",
           "Not yet: a serverless container platform is less work for a handful of services",
@@ -166,9 +166,9 @@ BASELINE.quiz("cloud", {
           "A fixed monthly fee per function",
           "By the size of the uploaded file",
           "Per gigabyte of code deployed",
-          "Time used multiplied by the memory size configured"],
+          "Time used × the memory size configured"],
       a: 4,
-      why: "With no traffic nothing runs and nothing is billed. Each invocation is billed for its duration times its memory setting." }
+      why: "With no traffic nothing runs and nothing is billed. Each invocation is billed for its duration × its memory setting." }
   ],
   "gpus": [
     { q: "A 70B-parameter model in 16-bit weights must be served. Why does it not fit on one 80 GB H100?",

@@ -387,7 +387,7 @@ BASELINE.quiz("distributed", {
     { q: "Each server answers in 10 ms at the median but 1 s at p99. A request needs replies from all of 100 servers. About what share of requests take a second or more?",
       o: ["About 63 percent", "About 1 percent", "About 10 percent", "About 99 percent", "About 37 percent"],
       a: 0,
-      why: "The chance that all 100 are fast is 0.99 to the 100th, about 37 percent, so about 63 percent wait on at least one slow server." },
+      why: "The chance that all 100 are fast is 0.99¹⁰⁰, about 37 percent, so about 63 percent wait on at least one slow server." },
     { q: "With hedged requests, when do you send the second copy to another replica?",
       o: ["Always, to every replica at once",
           "Only after the first request has fully timed out",

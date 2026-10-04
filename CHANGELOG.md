@@ -1036,3 +1036,12 @@ the idea: a square growing by dx, a grid under a matrix, transposed shapes, back
 numbers, a die's shrunk sample space, a tone read at the wrong rate, spectra before and after
 resampling, one envelope sampled at 90 and 250 Hz. Model answers were corrected where they missed the
 unlocking idea. No charter deviation.
+
+**2026-10-03: Multiple choice written as maths; the last two figures drawn.**
+He found the multiple-choice and check questions about equations were worded in English in the question,
+the options and the answers. 346 strings across the week MCQ banks, the tracker's step checks and session
+quizzes, the Baseline quizzes and the three interview Learn paths now use notation (log₂ 32 = ?, σ′(x) =
+σ(x)(1 − σ(x)), (AB)ᵀ = BᵀAᵀ, θ ← θ − η∇L, √dₖ, P(A | B)), plain Unicode so every page draws it as is;
+option order and answers unchanged, prose kept where it is an idea and not a formula. Two figures drawn for
+the steps that had none: choosing a derivative rule by the expression's shape (w2b step 2) and the voice
+measurements placed on the source or filter side (w5c step 2). No charter deviation.

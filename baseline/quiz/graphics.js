@@ -33,10 +33,10 @@ BASELINE.quiz("graphics", {
       o: ["A geometry shader", "A compute shader", "A fragment shader at low resolution", "A vertex shader with no outputs", "A pixel shader with blending"],
       a: 1,
       why: "Compute shaders run grids of threads over buffers outside the pipeline, which suits culling, particles, skinning and post-processing." },
-    { q: "A Lambert shader computes `max(dot(normal, lightDir), 0.0)`. What does a surface whose normal is at 90 degrees to the light get?",
+    { q: "A Lambert shader computes `max(dot(normal, lightDir), 0.0)`. What does a surface whose normal is at 90° to the light get?",
       o: ["1.0, fully lit", "0.5, half lit", "0, black", "A negative value", "It depends on where the camera is"],
       a: 2,
-      why: "The cosine of 90 degrees is 0. Diffuse brightness depends on the angle to the light, not on the camera." }
+      why: "cos 90° = 0. Diffuse brightness depends on the angle to the light, not on the camera." }
   ],
   "graphics-apis": [
     { q: "A team ports a renderer from OpenGL to Vulkan line for line, and it gets slower. How is that possible?",
@@ -55,9 +55,9 @@ BASELINE.quiz("graphics", {
       a: 0,
       why: "Most invisible-object bugs are conventions. Matrix order matters, and matrix multiplication is not commutative." },
     { q: "An object is scaled 2 times along x only, and its lighting looks wrong. What is the likely bug?",
-      o: ["The perspective divide is missing", "Normals are transformed by the model matrix instead of its inverse transpose", "The view matrix is applied twice", "The quaternions are not normalised", "The depth range is 0 to 1"],
+      o: ["The perspective divide is missing", "Normals are transformed by the model matrix M instead of (M⁻¹)ᵀ", "The view matrix is applied twice", "The quaternions are not normalised", "The depth range is 0 to 1"],
       a: 1,
-      why: "Non-uniform scaling skews normals unless they are transformed by the inverse transpose of the model matrix." },
+      why: "Non-uniform scaling skews normals unless they are transformed by (M⁻¹)ᵀ, the inverse transpose of the model matrix M." },
     { q: "What makes far objects look smaller in a perspective projection?",
       o: ["The view matrix scales by distance", "The rasteriser shrinks distant triangles", "Dividing by w, which the projection set to the depth", "Mipmapping", "The depth test"],
       a: 2,

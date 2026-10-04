@@ -12,7 +12,7 @@ BASELINE.quiz("audio", {
     { q: "How many bytes is one 20 ms frame of 16 kHz, 16-bit mono PCM?",
       o: ["160", "320", "640", "1,280", "32,000"],
       a: 2,
-      why: "16,000 samples a second times 0.02 s is 320 samples; at 2 bytes each that is 640 bytes." }
+      why: "16,000 samples/s × 0.02 s = 320 samples; at 2 bytes each that is 640 bytes." }
   ],
   "spectrograms": [
     { q: "Why can't a log-mel spectrogram be played straight back as audio?",
@@ -24,9 +24,9 @@ BASELINE.quiz("audio", {
       a: 4,
       why: "Mel filters are narrow at low frequencies and wide at high ones, matching how we hear and cutting about 200 FFT bins to 80 or 128 useful values." },
     { q: "30 seconds of 16 kHz audio, 25 ms windows stepping 10 ms, 80 mel filters. What grid does the model see?",
-      o: ["About 80 by 3,000", "About 80 by 1,200", "About 201 by 3,000", "About 400 by 160", "About 80 by 480,000"],
+      o: ["About 80 × 3,000", "About 80 × 1,200", "About 201 × 3,000", "About 400 × 160", "About 80 × 480,000"],
       a: 0,
-      why: "The 10 ms step sets the frame count: 30 s divided by 10 ms is 3,000 frames, each reduced to 80 mel values. That is Whisper's input shape." }
+      why: "The 10 ms step sets the frame count: 30 s / 10 ms = 3,000 frames, each reduced to 80 mel values. That is Whisper's input shape." }
   ],
   "codecs": [
     { q: "A voice pipeline converts mu-law to PCM to Opus and back on every hop. What does that cost?",
@@ -149,7 +149,7 @@ BASELINE.quiz("audio", {
     { q: "EnCodec runs at 75 frames a second with 8 codebooks of 1,024 entries. How many tokens a second must a TTS model predict?",
       o: ["600", "75", "1,024", "6,000", "8"],
       a: 0,
-      why: "75 frames times 8 codebooks is 600 tokens. Each token is 10 bits, so 6,000 is the bitrate in bits, not the token count." }
+      why: "75 frames × 8 codebooks = 600 tokens. Each token is 10 bits, so 6,000 is the bitrate in bits, not the token count." }
   ],
   "voice-cloning": [
     { q: "A zero-shot clone made from a 6-second clip recorded in a car comes out with road hum. What is the fix?",
@@ -233,6 +233,6 @@ BASELINE.quiz("audio", {
     { q: "Can word error rate go above 100%?",
       o: ["No, it is a share of words recognized", "Only for languages without spaces", "Yes, because insertions count and can outnumber the reference words", "Only when the audio is silent", "Only when scored with MOS"],
       a: 2,
-      why: "WER is substitutions plus deletions plus insertions over the reference word count, so a hypothesis full of extra words can pass 100%." }
+      why: "WER is (substitutions + deletions + insertions) / reference word count, so a hypothesis full of extra words can pass 100%." }
   ]
 });

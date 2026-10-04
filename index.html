@@ -713,19 +713,19 @@
   </main>
 </div>
 <script src="figures/icons.js?v=f5a48822"></script>
-<script src="figures/figures.js?v=e98d5f14"></script>
-<script src="figures/notes.js?v=ab47d9ae"></script>
+<script src="figures/figures.js?v=4a4d9dd0"></script>
+<script src="figures/notes.js?v=5d8dd758"></script>
 <script src="figures/viewer.js?v=ecb99aae"></script>
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
-<script src="data/reading.js?v=c2636714"></script>
+<script src="data/reading.js?v=07bb0d22"></script>
 <script src="site/res.js?v=1788a96c"></script>
 <script src="data/mcq/base.js?v=5fc7e7ac"></script>
-<script src="data/mcq/week1.js?v=6e94184a"></script>
-<script src="data/mcq/week2.js?v=df055e0e"></script>
-<script src="data/mcq/week3.js?v=d3cee43a"></script>
-<script src="data/mcq/week4.js?v=a737e00a"></script>
-<script src="data/mcq/week5.js?v=8c6018b7"></script>
+<script src="data/mcq/week1.js?v=8276998c"></script>
+<script src="data/mcq/week2.js?v=c99169f7"></script>
+<script src="data/mcq/week3.js?v=bef66b75"></script>
+<script src="data/mcq/week4.js?v=806fefb1"></script>
+<script src="data/mcq/week5.js?v=45a8e78b"></script>
 <script>
 (function () {
   "use strict";
@@ -923,10 +923,10 @@
               ans: {"lead": "The log of a product is the sum of the logs, because the log reads an exponent back off and multiplying adds exponents.", "pts": ["Set up: let x be log base c of a and y be log base c of b, so a is c to the x and b is c to the y.", "Multiply: ab is c to the x times c to the y, which is c to the (x plus y), by the rule for multiplying powers of one base.", "Take the log: log base c of ab is x plus y, which is log a plus log b.", "Why it matters: a likelihood is a product of many small probabilities, and multiplying thousands of them underflows to zero in floating point.", "Sums are stable: summing the logs does not underflow.", "Easier to differentiate: a product awkward to differentiate becomes a sum that differentiates term by term."], "close": "So likelihoods are logged because the product rule turns a fragile product into a stable sum."} },
             { t: "Ten log and exponent manipulations by hand, on paper",
               close: [
-                { k: "num", q: "Log base 2 of 32 equals what?", a: "5" },
-                { k: "num", q: "5 to the power 0 equals what?", a: "1" },
-                { k: "word", q: "What is the name of the rule that lets you pull an exponent out front of a log, as in log(a^n) = n log(a)?", a: "The power rule" },
-                { k: "blank", q: "Log base 2 of 8 minus log base 2 of 2 equals log base 2 of ___, by the quotient rule.", a: "4" },
+                { k: "num", q: "log₂ 32 = ?", a: "5" },
+                { k: "num", q: "5⁰ = ?", a: "1" },
+                { k: "word", q: "What is the name of the rule that lets you pull an exponent out front of a log, as in log(aⁿ) = n log(a)?", a: "The power rule" },
+                { k: "blank", q: "log₂ 8 − log₂ 2 = log₂ ___, by the quotient rule.", a: "4" },
                 { k: "why", q: "Why work these ten cold on paper before checking the video walkthroughs?", a: "Solving cold first is what makes the product-to-sum rule and pulling the exponent out front automatic, rather than something to look up every time." }
               ],
               d: "Paper, not a screen, not a notebook cell. Ten is a small number and it will take less time than it sounds.",
@@ -939,7 +939,7 @@
             { t: "Why minimise negative log-likelihood instead of maximising likelihood: two moves that keep the same answer", al: [{ p: "plan/s5-1", why: "A mixture density network is trained on exactly this loss." }],
               close: [
                 { k: "why", q: "Why minimise the negative log-likelihood rather than maximise the likelihood directly?", a: "The raw likelihood is a product of many small probabilities that underflows to zero, while its log is a stable sum; and standard optimisers are built to descend, so negating the log-likelihood turns maximisation into the descent they already do." },
-                { k: "why", q: "Why does taking the log not change which parameter is best?", a: "Log is an increasing function: if L(a) is bigger than L(b), then log L(a) is bigger than log L(b), so the highest point stays at the same parameter; only the heights change." },
+                { k: "why", q: "Why does taking the log not change which parameter is best?", a: "Log is an increasing function: if L(a) > L(b), then log L(a) > log L(b), so the highest point stays at the same parameter; only the heights change." },
                 { k: "pick", q: "Your optimiser only knows how to walk downhill, and you want the parameters that make your data most probable. What do you hand it?",
                   o: ["The likelihood, unmodified", "The negative log-likelihood", "The log-likelihood, unmodified"], a: 1,
                   why: "Negating the log-likelihood turns 'find the maximum' into 'find the minimum', which is the direction a descent-only optimiser can actually walk." },
@@ -959,7 +959,7 @@
             { q: "Why take the log of a likelihood?",
               o: ["It is more accurate", "It turns a product into a sum, avoiding underflow and simplifying the derivative", "It bounds the value between zero and one", "It makes the function convex"], a: 1,
               why: "Multiplying thousands of small probabilities underflows to zero. Logging converts the product to a sum, which is stable and differentiates term by term." },
-            { q: "log(a) + log(b) equals what?",
+            { q: "log(a) + log(b) = ?",
               o: ["log(a + b)", "log(ab)", "log(a)log(b)", "log(a/b)"], a: 1,
               why: "The defining property, and the reason the log appears throughout likelihood work." },
             { q: "An exponentially growing quantity, plotted on a log vertical axis, looks like what?",
@@ -1069,13 +1069,13 @@
             { t: "Learn fan-out and tail-latency amplification",
               sd: [{ v: "overview", a: "pattern-scaling-reads", why: "Replicas, caches and hot keys: the read side of the same problem." }],
               close: [
-                { k: "num", q: "0.99 to the power 100 comes out to roughly what percentage?", a: "About 37 percent" },
+                { k: "num", q: "0.99¹⁰⁰ comes out to roughly what percentage?", a: "About 37 percent" },
                 { k: "figure", q: "In the tail figure, how many of the twelve drawn shards are shown slow?", a: "Two of the twelve, standing in for each real shard's one-in-a-hundred chance of being slow at any moment." },
                 { k: "why", q: "Why does a component's one-percent-slow tail become the system's typical case once a request fans out to a hundred shards?", a: "The request is only fast if all hundred shards are independently fast, and multiplying a 99 percent chance by itself a hundred times drives that down to about 37 percent, so roughly 63 percent of requests hit at least one slow shard." },
                 { k: "blank", q: "About ___ percent of requests are slow when fanning out to a hundred shards each independently slow one percent of the time.", a: "63" },
                 { k: "pick", q: "You cut the fan-out from 100 shards to 20, with the same one-percent-slow rate per shard. What happens to the fraction of slow requests?",
-                  o: ["It stays at about 63 percent, since the per-shard rate is unchanged", "It drops sharply, to roughly 18 percent, since 0.99 to the power 20 is about 82 percent", "It rises, since fewer shards means less redundancy"], a: 1,
-                  why: "Tail amplification scales with how many independent chances there are to hit the tail; at fan-out 20, 0.99 to the power 20 is about 0.82, so only about 18 percent of requests hit a slow shard." }
+                  o: ["It stays at about 63 percent, since the per-shard rate is unchanged", "It drops sharply, to roughly 18 percent, since 0.99²⁰ is about 82 percent", "It rises, since fewer shards means less redundancy"], a: 1,
+                  why: "Tail amplification scales with how many independent chances there are to hit the tail; at fan-out 20, 0.99²⁰ is about 0.82, so only about 18 percent of requests hit a slow shard." }
               ],
               d: "The second diagram is the whole argument. It is also one of the most useful things you can say out loud in a systems interview, because it shows you think about systems rather than components.",
               m: 20,
@@ -1121,7 +1121,7 @@
               why: "Hashing spreads keys evenly, not traffic. All of one user's events land on one partition however good the hash." },
             { q: "A request fans out to 100 shards and waits for all. Each is slow one percent of the time. How often is the request slow?",
               o: ["About one percent", "About ten percent", "About sixty-three percent", "It depends on the network"], a: 2,
-              why: "One minus 0.99 to the hundredth, about 63 percent. The p99 of a component becomes the typical case for the system." },
+              why: "1 − 0.99¹⁰⁰, about 63 percent. The p99 of a component becomes the typical case for the system." },
             { q: "Why avoid a partition key with low cardinality?",
               o: ["It uses more storage", "It caps how many partitions you can have and guarantees skew", "Hashing is slower", "It breaks replication"], a: 1,
               why: "Twelve possible values means at most twelve partitions, and any imbalance among them is permanent." }
@@ -1159,12 +1159,12 @@
               close: [
                 { k: "why", q: "How do you choose between the power, product, quotient and chain rules for an expression?", a: "Read the outermost operation: a product of two things, a quotient of two things, a power of x, or a function applied to another function. Apply that rule, then differentiate the pieces inside, using the other rules where they appear." },
                 { k: "word", q: "Which rule differentiates a function that is one expression divided by another?", a: "The quotient rule" },
-                { k: "blank", q: "The product rule applied to f(x) = x cubed times sine of x gives f'(x) = 3x squared sine of x plus x cubed ___.", a: "cosine of x" },
+                { k: "blank", q: "The product rule applied to f(x) = x³ sin x gives f′(x) = 3x² sin x + x³ ___.", a: "cos x" },
                 { k: "why", q: "Why drill fifteen to twenty of these by hand before checking the rule first?", a: "So picking the right rule becomes automatic rather than something to look up mid-problem, the same way a cold derivation only sticks once it is done without checking first." },
-                { k: "pick", q: "You are differentiating x squared over (x plus 1). Which rule applies?",
+                { k: "pick", q: "You are differentiating x²/(x + 1). Which rule applies?",
                   o: ["The power rule alone", "The product rule", "The quotient rule"], a: 2,
                   why: "It is one expression divided by another, exactly the shape the quotient rule is for; the product rule is for two things multiplied, not divided." },
-                { k: "num", q: "By the power rule, differentiating x to the power 5 gives what coefficient in front of x to the power 4?", a: "5" }
+                { k: "num", q: "By the power rule, d/dx x⁵ gives what coefficient in front of x⁴?", a: "5" }
               ],
               d: "The question is not what the rules say but whether you can pick the right one without looking. The idea that makes this automatic: read the outermost operation of the expression. A product of two things, a quotient of two things, or a power of x each has one rule, and the pieces inside use the others. The equations give the three rules with the answers you should reach, and a number check that a quotient answer is right.",
               m: 20,
@@ -1177,12 +1177,12 @@
               ans: {"lead": "I work the power, product and quotient rules cold until picking the right one is automatic.", "pts": ["Power rule: for f(x) equal to x to the power 5, f prime of x is 5x to the power 4.", "Product rule: for x cubed times sine of x, f prime of x is 3x squared times sine of x, plus x cubed times cosine of x.", "Quotient rule: for x squared over (x plus 1), f prime of x is 2x times (x plus 1) minus x squared, all over (x plus 1) squared, which simplifies to (x squared plus 2x) over (x plus 1) squared.", "Fifteen more: done cold, before checking against the rule."], "close": "That made choosing the rule automatic rather than something to look up mid-problem."} },
             { t: "Requeued Q7 — derive the sigmoid's derivative in terms of itself",
               close: [
-                { k: "why", q: "In the derivation, how does e^−x / (1 + e^−x) become 1 − σ(x)?", a: "Write 1 as (1 + e^−x) / (1 + e^−x). Then 1 − σ(x) = (1 + e^−x − 1) / (1 + e^−x) = e^−x / (1 + e^−x), which is exactly the second factor." },
-                { k: "word", q: "What is sigma(x) = 1 / (1 + e to the minus x) usually called, in shorthand?", a: "The sigmoid" },
-                { k: "blank", q: "Sigma prime of x equals sigma(x) times ___.", a: "one minus sigma(x)" },
-                { k: "why", q: "Why is writing the sigmoid's derivative as sigma(x) times (1 minus sigma(x)) specifically convenient in backpropagation?", a: "The forward pass has already computed sigma(x) at that point, so the gradient costs one subtraction and one multiplication rather than a fresh evaluation of the exponential." },
-                { k: "pick", q: "You already have sigma(x) from the forward pass and need sigma prime(x) for backprop. What is the cheapest way to get it?",
-                  o: ["Re-evaluate e to the minus x from scratch and redo the full derivative", "Multiply sigma(x) by (1 minus sigma(x)), values already in hand", "There is no shortcut; always recompute from x"], a: 1,
+                { k: "why", q: "In the derivation, how does e⁻ˣ/(1 + e⁻ˣ) become 1 − σ(x)?", a: "Write 1 as (1 + e⁻ˣ)/(1 + e⁻ˣ). Then 1 − σ(x) = (1 + e⁻ˣ − 1)/(1 + e⁻ˣ) = e⁻ˣ/(1 + e⁻ˣ), which is exactly the second factor." },
+                { k: "word", q: "What is σ(x) = 1/(1 + e⁻ˣ) usually called, in shorthand?", a: "The sigmoid" },
+                { k: "blank", q: "σ′(x) = σ(x) · ___.", a: "1 − σ(x)" },
+                { k: "why", q: "Why is writing the sigmoid's derivative as σ(x)(1 − σ(x)) specifically convenient in backpropagation?", a: "The forward pass has already computed sigma(x) at that point, so the gradient costs one subtraction and one multiplication rather than a fresh evaluation of the exponential." },
+                { k: "pick", q: "You already have σ(x) from the forward pass and need σ′(x) for backprop. What is the cheapest way to get it?",
+                  o: ["Re-evaluate e⁻ˣ from scratch and redo the full derivative", "Multiply σ(x) by (1 − σ(x)), values already in hand", "There is no shortcut; always recompute from x"], a: 1,
                   why: "The self-referential form means the gradient is one subtraction and one multiplication away from a value already sitting in memory from the forward pass." },
                 { k: "short", q: "One sentence: what makes the sigmoid's derivative unusual compared to a typical derivative?", a: "It is written entirely in terms of the function's own output, so no fresh evaluation of the original function is needed to get the gradient." }
               ],
@@ -1199,7 +1199,7 @@
                 { k: "short", q: "Using the chain rule and no expansion, what is the derivative of (3x + 1)² at x = 2?", a: "Let u = 3x + 1, so u = 7 at x = 2. Then dy/du = 2u = 14 and du/dx = 3, so dy/dx = 14 · 3 = 42." },
                 { k: "order", q: "Walking backward through the chain figure's boxes x, f1, f2, f3, loss, put these four local derivatives in the order you multiply them to reach d(loss)/dx.",
                   items: ["The derivative of f2 with respect to f1", "The derivative of f1 with respect to x", "The derivative of loss with respect to f3", "The derivative of f3 with respect to f2"],
-                  a: "The derivative of loss with respect to f3, then f3 with respect to f2, then f2 with respect to f1, then f1 with respect to x." },
+                  a: "d(loss)/d(f3), then d(f3)/d(f2), then d(f2)/d(f1), then d(f1)/dx." },
                 { k: "figure", q: "In the chain figure, what does each box remember during the forward pass, and why does that matter going backward?", a: "What it saw at that layer, inputs and outputs, which is exactly the tape that lets the backward pass multiply local derivatives without recomputing the forward pass." },
                 { k: "why", q: "Why does the chain rule let you get a gradient for every parameter without ever expanding the whole network into one formula?", a: "It computes the derivative of a nested composition from only the derivatives of its individual pieces, so each layer only ever needs its own local derivative, not the derivative of the whole composition at once." },
                 { k: "blank", q: "Autograd is not magic added to PyTorch; it is the chain rule's ___, done automatically.", a: "bookkeeping" },
@@ -1409,7 +1409,7 @@
           quiz: [
             { q: "Ten kilobytes per trace, a hundred million traces a day. Roughly how much per day?",
               o: ["1 GB", "100 GB", "1 TB", "100 TB"], a: 2,
-              why: "Ten kilobytes times a hundred million is about a terabyte a day, roughly thirty a month. Reaching that number in ten seconds is the skill." },
+              why: "10 KB × 100,000,000 ≈ 1 TB a day, roughly thirty a month. Reaching that number in ten seconds is the skill." },
             { q: "Why are writes cheap in an LSM-tree?",
               o: ["Better compression", "Writes are appended sequentially rather than updated in place", "Everything stays in memory", "It skips the write-ahead log"], a: 1,
               why: "Sequential appends beat random in-place updates, and sorting is deferred to background compaction. The trade is that reads may check several layers." },
@@ -1427,7 +1427,7 @@
           steps: [
             { t: "Watch Essence of Linear Algebra chapters 1 to 4, then chapter 14",
               close: [
-                { k: "why", q: "Why is knowing where the two basis vectors land enough to know where every vector lands?", a: "Any vector is x times î plus y times ĵ, and a linear transformation keeps sums and scalings, so Av is x times Aî plus y times Aĵ. The two landing places fix the whole transformation." },
+                { k: "why", q: "Why is knowing where the two basis vectors land enough to know where every vector lands?", a: "Any vector is xî + yĵ, and a linear transformation keeps sums and scalings, so Av = xAî + yAĵ. The two landing places fix the whole transformation." },
                 { k: "word", q: "What is a vector fundamentally, in this series' framing — not an arrow or a list of numbers first?", a: "Something you can scale and add" },
                 { k: "blank", q: "The span of a set of vectors is everything reachable by ___ and adding them.", a: "scaling" },
                 { k: "pick", q: "A matrix is best understood, in this framing, as:",
@@ -1454,7 +1454,7 @@
                 { k: "pick", q: "Two embeddings point in the same direction, but one has three times the magnitude of the other. Under cosine similarity, what happens?",
                   o: ["They score as dissimilar, because their lengths differ", "They score as maximally similar, because only direction is compared", "The result is undefined without normalising first"], a: 1,
                   why: "Cosine similarity divides the magnitudes back out of the dot product, so only the angle between the two vectors decides the score, however different their lengths are." },
-                { k: "blank", q: "cosθ equals (a · b) over (the magnitude of a times the ___ of b).", a: "magnitude" },
+                { k: "blank", q: "cos θ = (a · b)/(|a||b|), where |b| is the ___ of b.", a: "magnitude" },
                 { k: "short", q: "One sentence: why is cosine similarity 'nothing extra' relative to the dot product?", a: "It is exactly the dot product computed after both vectors have been divided down to unit length, so the magnitudes cancel out and only the angle remains." }
               ],
               d: "The question: why is cosine similarity the dot product of the two vectors after each is divided by its own length, and why does that suit embeddings. The idea that unlocks it is a · b = |a||b| cos θ, so dividing by both lengths leaves cos θ. The equations show where that formula comes from, the division, and two numeric checks. The vectors figure draws the same triangle.",
@@ -1467,14 +1467,14 @@
               ans: {"lead": "Cosine similarity is the dot product with the magnitudes divided back out, which is why it suits embeddings.", "pts": ["Start: a · b = |a||b| cos θ. It comes from the law of cosines, which expands |a − b| squared two ways, by algebra and by geometry, and leaves this.", "Divide: dividing both sides by |a| and |b| leaves cos θ equal to (a · b) over (|a||b|).", "Normalised: a dot product lets scalars come out of either side, so this is the dot product of a/|a| and b/|b|, the unit-length versions. Cosine similarity is nothing extra.", "Why length drops out: an embedding's length often reflects something incidental, like how frequent a token or document is, while its direction carries the meaning.", "Same direction, same score: (3, 4) and (6, 8) score (18 + 32)/(5 · 10) = 1, even though one is twice as long."], "close": "That is the property the memory system relies on every time it ranks results by cosine similarity."} },
             { t: "Requeued Q6 — get the shape of a transposed matrix product by hand", al: [{ p: "plan/stage-3", why: "Shapes are the first thing TrenTorch's Tensor module makes you predict." }],
               close: [
-                { k: "why", q: "Why is an entry of (AB) transpose the same sum as an entry of B transpose times A transpose?", a: "Entry (i, j) of the transpose is entry (j, i) of AB, which is the sum over k of A(j, k) times B(k, i). Entry (i, j) of B transpose times A transpose is the sum over k of B(k, i) times A(j, k). It is the same terms, so the matrices are equal." },
-                { k: "num", q: "A is 4 by 3 and B is 3 by 5. What shape is AB?", a: "4 by 5" },
-                { k: "num", q: "What shape is (AB)^T?", a: "5 by 4" },
-                { k: "pick", q: "For A (4x3) and B (3x5), which product is actually defined: A^T B^T, or B^T A^T?",
-                  o: ["A^T B^T", "B^T A^T", "Both are defined and give the same shape"], a: 1,
-                  why: "A^T is 3x4 and B^T is 5x3. A^T B^T would need A^T's columns (4) to match B^T's rows (5) — they do not. B^T A^T needs B^T's columns (3) to match A^T's rows (3) — they do, giving 5x4." },
-                { k: "why", q: "Why must transposing a product reverse the order of the factors?", a: "Writing out the (i,j) entry of AB and comparing it against the (j,i) entry of (AB)^T shows the two are the same sum, term for term, only when matched against B^T times A^T rather than A^T times B^T — and the shapes confirm it independently, since A^T B^T is not even defined for non-square A and B." },
-                { k: "blank", q: "For A 4 by 3 and B 3 by 5, (AB)^T has shape 5 by ___.", a: "4" }
+                { k: "why", q: "Why is an entry of (AB)ᵀ the same sum as an entry of BᵀAᵀ?", a: "Entry (i, j) of (AB)ᵀ is entry (j, i) of AB, which is ∑ₖ A(j, k) B(k, i). Entry (i, j) of BᵀAᵀ is ∑ₖ B(k, i) A(j, k). It is the same terms, so the matrices are equal." },
+                { k: "num", q: "A is 4 × 3 and B is 3 × 5. What shape is AB?", a: "4 × 5" },
+                { k: "num", q: "What shape is (AB)ᵀ?", a: "5 × 4" },
+                { k: "pick", q: "For A (4 × 3) and B (3 × 5), which product is actually defined: AᵀBᵀ, or BᵀAᵀ?",
+                  o: ["AᵀBᵀ", "BᵀAᵀ", "Both are defined and give the same shape"], a: 1,
+                  why: "Aᵀ is 3 × 4 and Bᵀ is 5 × 3. AᵀBᵀ would need Aᵀ's columns (4) to match Bᵀ's rows (5), and they do not. BᵀAᵀ needs Bᵀ's columns (3) to match Aᵀ's rows (3), and they do, giving 5 × 4." },
+                { k: "why", q: "Why must transposing a product reverse the order of the factors?", a: "Writing out the (i,j) entry of AB and comparing it against the (j,i) entry of (AB)ᵀ shows the two are the same sum, term for term, only when matched against BᵀAᵀ rather than AᵀBᵀ, and the shapes confirm it independently, since AᵀBᵀ is not even defined for non-square A and B." },
+                { k: "blank", q: "For A (4 × 3) and B (3 × 5), (AB)ᵀ has shape 5 × ___.", a: "4" }
               ],
               d: "The question: for A (4 by 3) and B (3 by 5), what shape is AB, what shape is its transpose, and why does transposing a product reverse the order. The idea that unlocks it: an entry of AB is a sum over a shared index k, and reading that same sum from the other side gives B transpose times A transpose. The shapes agree with it, which is the quickest check. Work the equations in order.",
               m: 12,
@@ -1489,11 +1489,11 @@
               close: [
                 { k: "short", q: "For A = [[2, 0], [0, −1]], is (1, 1) an eigenvector?", a: "No. A(1, 1) = (2, −1), which is not a multiple of (1, 1), so the vector is turned off its line." },
                 { k: "figure", q: "In the eigenvectors figure, what is different about the transformed arrow in the right-hand panel compared with the left?", a: "In the left panel (an ordinary vector), Av lands off the original line — it is turned. In the right panel (an eigenvector), Av stays on the same line as v; only its length changes." },
-                { k: "why", q: "Why is the null-space definition of an eigenvector (a vector in the null space of A minus lambda times the identity) not itself the geometric meaning?", a: "The null-space equation is how you solve for an eigenvector algebraically, but it does not say what one is — the geometric fact is that its direction survives the transformation unchanged and only its length is scaled by the eigenvalue; the null-space equation is a computational route to that fact, not the fact itself." },
-                { k: "pick", q: "Asked what an eigenvector is, someone answers: 'it's a vector in the null space of A minus lambda times the identity.' What has gone wrong?",
+                { k: "why", q: "Why is the null-space definition of an eigenvector (a vector in the null space of A − λI) not itself the geometric meaning?", a: "The null-space equation is how you solve for an eigenvector algebraically, but it does not say what one is — the geometric fact is that its direction survives the transformation unchanged and only its length is scaled by the eigenvalue; the null-space equation is a computational route to that fact, not the fact itself." },
+                { k: "pick", q: "Asked what an eigenvector is, someone answers: 'it's a vector in the null space of A − λI.' What has gone wrong?",
                   o: ["Nothing — that is correct and complete", "They have given a true fact used to compute eigenvectors, but not what one geometrically is", "They have confused an eigenvector with an eigenvalue"], a: 1,
-                  why: "The null-space equation is real and useful for solving Av = lambda v algebraically, but it answers how you compute an eigenvector, not what one means: direction preserved, length scaled by lambda." },
-                { k: "short", q: "One sentence: what does Av = lambda v say happened to v geometrically?", a: "v was not knocked off its own line by the transformation — only its length changed, scaled by lambda." },
+                  why: "The null-space equation is real and useful for solving Av = λv algebraically, but it answers how you compute an eigenvector, not what one means: direction preserved, length scaled by λ." },
+                { k: "short", q: "One sentence: what does Av = λv say happened to v geometrically?", a: "v was not knocked off its own line by the transformation, only its length changed, scaled by λ." },
                 { k: "word", q: "Which description generalises to PCA finding the directions of greatest variance — the null-space one, or the geometric one?", a: "The geometric one" }
               ],
               d: "The question: say what an eigenvector is geometrically, cold. The idea that unlocks it is that most vectors are turned off their own line by a transformation, and an eigenvector is one that is not: it lands on the same line and is only scaled, by the eigenvalue. The equations give that one sentence as Av = λv, test it on a matrix you can compute by hand, and show why it matters for PCA and stability. The null-space equation is how you find one, not what one is.",
@@ -1507,12 +1507,12 @@
             { t: "Ten shape problems until shapes are automatic",
               close: [
                 { k: "why", q: "Why must the inner sizes match for AB to be defined?", a: "Each entry of AB is a dot product of a row of A with a column of B. A dot product needs two lists of the same length, so A's number of columns must equal B's number of rows." },
-                { k: "num", q: "A matrix 2 by 6 times one 6 by 2 gives what shape?", a: "2 by 2" },
-                { k: "num", q: "A 1 by 3 row vector times a 3 by 1 column vector gives what shape?", a: "1 by 1 — a scalar" },
-                { k: "blank", q: "A 3 by 1 column vector times a 1 by 3 row vector gives a 3 by 3 result, called the ___ product.", a: "outer" },
-                { k: "pick", q: "Two matrices are both 5 by 2. Can you multiply them directly, in either order?",
+                { k: "num", q: "A 2 × 6 matrix times a 6 × 2 matrix gives what shape?", a: "2 × 2" },
+                { k: "num", q: "A 1 × 3 row vector times a 3 × 1 column vector gives what shape?", a: "1 × 1, a scalar" },
+                { k: "blank", q: "A 3 × 1 column vector times a 1 × 3 row vector gives a 3 × 3 result, called the ___ product.", a: "outer" },
+                { k: "pick", q: "Two matrices are both 5 × 2. Can you multiply them directly, in either order?",
                   o: ["Yes, either order works", "No — the inner dimensions (2 and 5) do not match; one must be transposed or the order changed", "Yes, but only left to right"], a: 1,
-                  why: "For A times B to be defined, A's column count must match B's row count. Two 5x2 matrices have inner dimensions 2 and 5 in either order, which do not match without transposing one first." },
+                  why: "For A times B to be defined, A's column count must match B's row count. Two 5 × 2 matrices have inner dimensions 2 and 5 in either order, which do not match without transposing one first." },
                 { k: "why", q: "Why does drilling shape-only problems, without computing the actual entries, still build a useful skill?", a: "Checking that inner dimensions match and reading the outer dimensions off as the answer is exactly the check that catches most shape errors when writing PyTorch — the entries themselves are a separate, slower step that this drill deliberately skips to make the check automatic." }
               ],
               d: "The question: given two shapes, can you say in a glance whether they multiply and what comes out. The idea that unlocks it is that each entry of a product is a sum over a shared index, so the sum needs the same length on both sides: the inner sizes must match and the outer sizes are the answer. The lines below are a drill set with the rule first. Try each answer before reading it, and let the figure show the same rule for PyTorch tensors.",
@@ -1526,9 +1526,9 @@
               ans: {"lead": "Shapes are automatic once you check that the inner dimensions match and read the outer dimensions off as the answer.", "pts": ["Matrix times matrix: 4 by 3 times 3 by 5 gives 4 by 5, and 2 by 6 times 6 by 2 gives 2 by 2.", "Row times column: a 1 by 3 row vector times a 3 by 1 column vector gives 1 by 1, a scalar.", "Column times row: a 3 by 1 times a 1 by 3 gives 3 by 3, the outer product.", "When it fails: a 5 by 2 cannot multiply another 5 by 2, because the inner dimensions, 2 and 5, do not match. One has to be transposed first, or the multiplication has to go the other way round."], "close": "Ten of these back to back made the check and the read-off automatic, rather than something to re-derive each time."} }
           ],
           quiz: [
-            { q: "A is 4 by 3, B is 3 by 5. What shape is the transpose of AB?",
-              o: ["4 by 5", "5 by 4", "3 by 3", "5 by 3"], a: 1,
-              why: "AB is 4 by 5, so its transpose is 5 by 4 — and the transpose of a product is the product of the transposes, reversed." },
+            { q: "A is 4 × 3, B is 3 × 5. What shape is (AB)ᵀ?",
+              o: ["4 × 5", "5 × 4", "3 × 3", "5 × 3"], a: 1,
+              why: "AB is 4 × 5, so (AB)ᵀ is 5 × 4: the transpose of a product is the product of the transposes, reversed, (AB)ᵀ = BᵀAᵀ." },
             { q: "Geometrically, an eigenvector is:",
               o: ["A vector mapped to zero", "A vector scaled without changing direction", "The direction of steepest ascent", "The longest column"], a: 1,
               why: "Direction preserved, length scaled by the eigenvalue. Vectors mapped to zero are the null space, a different idea." },
@@ -1565,7 +1565,7 @@
               ans: {"lead": "A sample rate of N can only represent frequencies up to N over 2, because a tone above that gives the same readings as a lower one and cannot be told apart from it.", "pts": ["Waveform: a very long list of air-pressure readings taken at a fixed rate, N a second.", "The fold: a tone at f and a tone at N − f give identical readings, so anything above N over 2 is recorded as its mirror image below it, which is aliasing.", "Worked case: at 24 kHz, a 15 kHz tone and a 9 kHz tone give the same numbers, so 15 kHz reads as 9 kHz. The ceiling is 12 kHz.", "The rule: sample at more than twice the highest frequency of interest.", "Bit depth: a separate question, how finely each reading is quantised, which sets the noise floor rather than the frequency ceiling."], "close": "Sample rate sets the frequency ceiling and bit depth sets the noise floor."} },
             { t: "Understand why this project juggles four sample rates, and what it cost", al: [{ p: "plan/s2-1", why: "The four sample rates, and the S21 result that analysing at the wrong one reversed." }],
               close: [
-                { k: "why", q: "Why does a wrong sample rate scale every frequency by the same ratio instead of adding noise?", a: "Because the readings fix only cycles per reading, and Hz is that times the rate. A wrong assumed rate multiplies every frequency by assumed over true, and it is silent since the file loads either way." },
+                { k: "why", q: "Why does a wrong sample rate scale every frequency by the same ratio instead of adding noise?", a: "Because the readings fix only cycles per reading, and Hz is that times the rate. A wrong assumed rate multiplies every frequency by assumed rate / true rate, and it is silent since the file loads either way." },
                 { k: "num", q: "If 24 kHz corpus audio is mistakenly analysed as if it were 16 kHz, by what ratio is every measured frequency off?", a: "By 16/24: every frequency reads at two-thirds of its true value, so a 1 kHz tone reads as about 667 Hz" },
                 { k: "pick", q: "You load a 22.05 kHz Sarvam clip but your analysis script assumes 44.1 kHz. What happens to every frequency you measure?",
                   o: ["Nothing — sample rate assumptions do not affect frequency measurement", "Every measured frequency comes out at double its true value", "The script crashes with an error"], a: 1,
@@ -1801,11 +1801,11 @@
             { t: "Requeued Q10 — write the gradient descent update rule from memory", al: [{ p: "plan/stage-8", why: "SGD and Adam, built by hand in TrenTorch 07, then run inside the loop in 08." }],
               close: [
                 { k: "why", q: "For L = θ² with η = 0.1, each step multiplies θ by what, and what happens with η = 1.1?", a: "With η = 0.1, θ becomes θ − 0.1 · 2θ = 0.8θ, so it shrinks toward 0. With η = 1.1 it becomes −1.2θ: it flips sign and grows, so the steps overshoot and diverge." },
-                { k: "blank", q: "Eta multiplies the ___, and nothing else — not the loss, not the parameter itself.", a: "gradient" },
-                { k: "pick", q: "In theta <- theta - eta * gradient(L), what does the learning rate eta actually multiply?",
+                { k: "blank", q: "η multiplies the ___, and nothing else: not the loss, not the parameter itself.", a: "gradient" },
+                { k: "pick", q: "In θ ← θ − η ∇L, what does the learning rate η actually multiply?",
                   o: ["The loss function directly", "The parameter's current value", "The gradient of the loss with respect to the parameter"], a: 2,
-                  why: "Eta is purely a step size scaling the direction the gradient gives — it never touches the loss itself or the parameter's value directly." },
-                { k: "word", q: "In theta <- theta - eta * gradient(L), what is theta?", a: "The parameter being updated" },
+                  why: "η is purely a step size scaling the direction the gradient gives; it never touches the loss itself or the parameter's value directly." },
+                { k: "word", q: "In θ ← θ − η ∇L, what is θ?", a: "The parameter being updated" },
                 { k: "why", q: "Why is there a minus sign in the update rule rather than a plus?", a: "The gradient points uphill, toward increasing loss, so subtracting it is what moves the step downhill — the minus sign is the entire reason the rule is descent." },
                 { k: "short", q: "One sentence: what would the rule do if it added the gradient instead of subtracting it?", a: "It would climb toward higher loss instead of lower loss — ascent, not descent." }
               ],
@@ -1820,13 +1820,13 @@
             { t: "Requeued Q11 — backpropagate a tiny composed function by hand, on paper",
               close: [
                 { k: "why", q: "Why must you run the forward pass and keep its numbers before starting backward?", a: "Each local derivative is evaluated at the value that step actually saw. a(1 − a) needs a, and dz/dw2 is a. Without the forward values the backward pass has nothing to plug in." },
-                { k: "num", q: "In the worked example (x = 2, w1 = 0.5, w2 = 1.5, y = 1), what is h on the forward pass?", a: "1.0" },
+                { k: "num", q: "In the worked example (x = 2, w₁ = 0.5, w₂ = 1.5, y = 1), what is h on the forward pass?", a: "1.0" },
                 { k: "num", q: "In that same example, what is a, the sigmoid of h, to three decimal places?", a: "About 0.731" },
                 { k: "figure", q: "In the chain figure, what does each box remember from the forward pass that the backward pass needs?", a: "What it saw — the value that box actually received, needed to evaluate its local derivative on the way back." },
-                { k: "pick", q: "In the worked example, dL/dw2 is dL/dz times dz/dw2. What is dz/dw2, given z = w2 times a?",
-                  o: ["w2", "a, the previous layer's output, about 0.731", "x, the original input"], a: 1,
-                  why: "z = w2 times a, so the local derivative of z with respect to w2 is just a — the value that layer actually saw on the forward pass, about 0.731." },
-                { k: "short", q: "One sentence: to reach dL/dw1, why do you need da/dh, the sigmoid's self-referential derivative a(1 minus a)?", a: "Because w1 sits one layer further back than w2, so the chain has to pass through the sigmoid's own local derivative before it can reach w1." }
+                { k: "pick", q: "In the worked example, dL/dw₂ is dL/dz · dz/dw₂. What is dz/dw₂, given z = w₂a?",
+                  o: ["w₂", "a, the previous layer's output, about 0.731", "x, the original input"], a: 1,
+                  why: "z = w₂a, so dz/dw₂ is just a, the value that layer actually saw on the forward pass, about 0.731." },
+                { k: "short", q: "One sentence: to reach dL/dw₁, why do you need da/dh, the sigmoid's self-referential derivative a(1 − a)?", a: "Because w₁ sits one layer further back than w₂, so the chain has to pass through the sigmoid's own local derivative before it can reach w1." }
               ],
               d: "The task is to differentiate one tiny network by hand and keep the working. The idea that unlocks it: write the network as a chain of single steps, and each step has its own easy local derivative. The gradient for any weight is the product of the local derivatives along the path from the loss back to it. Run the forward pass first and keep every number, because the local derivatives are evaluated at those values.",
               m: 25,
@@ -1847,7 +1847,7 @@
                   o: ["Nothing — that is correct", "Autograd is the chain rule itself, applied automatically to a tape recorded during the forward pass", "Autograd replaces the chain rule with a numerical approximation"], a: 1,
                   why: "Autograd is not a separate mechanism added on top — it is the chain rule, applied automatically to the tape the forward pass records." },
                 { k: "blank", q: "The derivative of a composition is the product of the derivatives of each part, evaluated at the values that part actually ___.", a: "saw" },
-                { k: "figure", q: "In the chain figure, what does the equation across the bottom show being multiplied together?", a: "The local derivatives along the path back to x — d(loss)/d(f3) times d(f3)/d(f2) times d(f2)/d(f1) times d(f1)/dx." }
+                { k: "figure", q: "In the chain figure, what does the equation across the bottom show being multiplied together?", a: "The local derivatives along the path back to x: d(loss)/d(f3) · d(f3)/d(f2) · d(f2)/d(f1) · d(f1)/dx." }
               ],
               d: "The question is why the chain rule is what makes backprop possible, in two sentences a strong engineer who has never trained a model would follow. The idea that unlocks it: a network is a composition, the chain rule differentiates a composition as a product of local derivatives, and a backward walk reuses that product for every weight at once. Sentence one is the composition and the product. Sentence two is the reuse, and its payoff of one pass, not one per parameter.",
               m: 8,
@@ -1861,7 +1861,7 @@
           quiz: [
             { q: "In the update rule, the learning rate multiplies what?",
               o: ["The loss", "The gradient of the loss with respect to the parameters", "The parameters", "The second derivative"], a: 1,
-              why: "Parameter minus learning rate times gradient. The learning rate is purely a step size on the direction the gradient provides." },
+              why: "θ ← θ − η ∇L. The learning rate is purely a step size on the direction the gradient provides." },
             { q: "Why subtract the gradient rather than add it?",
               o: ["To keep parameters positive", "The gradient points uphill and the goal is downhill", "To avoid overflow", "Convention"], a: 1,
               why: "The gradient is the direction of steepest increase of the loss. Minimising means stepping against it." },
@@ -1879,7 +1879,7 @@
           steps: [
             { t: "Write where embedding numbers physically come from", al: [{ p: "plan/s3-1", why: "Train a network to tell speakers apart, drop the classifier: that layer is the embedding." }],
               close: [
-                { k: "why", q: "In one training step, which rows of the embedding table change, and in which direction?", a: "Only the rows of tokens that were looked up in that example. Each moves by minus the gradient: toward the vector of the word that really appeared and away from the words the model wrongly favoured." },
+                { k: "why", q: "In one training step, which rows of the embedding table change, and in which direction?", a: "Only the rows of tokens that were looked up in that example. Each moves by −gradient: toward the vector of the word that really appeared and away from the words the model wrongly favoured." },
                 { k: "pick", q: "Before training starts, what is in a given row of the embedding table?",
                   o: ["A vector chosen by hand to reflect that token's meaning", "A row of random numbers, no different from any other row", "A one-hot vector marking the token's identity"], a: 1,
                   why: "An embedding table starts as a matrix of random numbers, one row per token — there is nothing meaningful in any row until training moves it." },
@@ -1917,13 +1917,13 @@
               ans: {"lead": "Query, key and value are three learned projections of the same input, and V stands for value, not vector. Together they are a dictionary lookup made soft.", "pts": ["Same input: all three come from one input vector through three learned matrices, x W<sup>Q</sup>, x W<sup>K</sup>, x W<sup>V</sup>.", "Query: what this position is looking for. A dot product with every key scores how well each position fits it.", "Key: what each position advertises about itself. After softmax the scores become weights that say how much to read from each position.", "Value: the content that is carried forward. The output is the weighted sum of the values, ∑ α<sub>j</sub> v<sub>j</sub>."], "close": "The key decides how much to read and the value decides what is read. That is why V is value, not vector."} },
             { t: "Work out why the dot product is divided by the square root of d_k", al: [{ p: "plan/stage-15", why: "The same question is the stage's exit check, with the variance argument as its answer." }],
               close: [
-                { k: "short", q: "If d_k is 64, what is the standard deviation of a raw dot-product score, and what is it after scaling?", a: "8 before scaling, the square root of 64, and 1 after dividing by 8." },
-                { k: "pick", q: "Why divide the attention scores by the square root of d_k?",
-                  o: ["To keep the numbers small enough to fit in floating point", "To make Q, K and V the same size, since d_k is a dimension count", "Because the dot product's variance grows with d_k, and without scaling, softmax saturates and its gradient vanishes"], a: 2,
-                  why: "The first two sound plausible but are not the reason. It is a variance argument: summing over d_k dimensions grows the score's variance, wide scores saturate softmax, and a saturated softmax has almost no gradient left to learn from." },
-                { k: "why", q: "Why does summing over more dimensions (a larger d_k) make the raw dot product's variance grow?", a: "Each of the d_k product terms in the sum contributes roughly its own unit of variance, so the variance of the whole sum grows linearly with d_k, and its standard deviation grows with the square root of d_k." },
+                { k: "short", q: "If dₖ is 64, what is the standard deviation of a raw dot-product score, and what is it after scaling?", a: "8 before scaling, √64, and 1 after dividing by 8." },
+                { k: "pick", q: "Why divide the attention scores by √dₖ?",
+                  o: ["To keep the numbers small enough to fit in floating point", "To make Q, K and V the same size, since dₖ is a dimension count", "Because the dot product's variance grows with dₖ, and without scaling, softmax saturates and its gradient vanishes"], a: 2,
+                  why: "The first two sound plausible but are not the reason. It is a variance argument: summing over dₖ dimensions grows the score's variance, wide scores saturate softmax, and a saturated softmax has almost no gradient left to learn from." },
+                { k: "why", q: "Why does summing over more dimensions (a larger dₖ) make the raw dot product's variance grow?", a: "Each of the dₖ product terms in the sum contributes roughly its own unit of variance, so the variance of the whole sum grows linearly with dₖ, and its standard deviation grows with √dₖ." },
                 { k: "figure", q: "In the attention figure, what happens to the bars once the scaling is removed?", a: "They saturate — one bar takes almost all the weight and the rest collapse toward zero, exactly where the gradient goes to almost nothing." },
-                { k: "blank", q: "Dividing by the square root of d_k rescales the standard deviation back down to about ___, regardless of d_k.", a: "1" },
+                { k: "blank", q: "Dividing by √dₖ rescales the standard deviation back down to about ___, regardless of d_k.", a: "1" },
                 { k: "short", q: "One sentence: what does a saturated softmax cost you during training?", a: "Almost all its gradient — once one weight is near 1 and the rest near 0, there is barely any gradient left to learn from." }
               ],
               d: "The question is why the scores are divided by √d<sub>k</sub> and not by something else. The idea that unlocks it is that a dot product adds d<sub>k</sub> terms, so its variance is d<sub>k</sub> and its spread is √d<sub>k</sub>. Large scores saturate the softmax, and a saturated softmax passes almost no gradient. Dividing by √d<sub>k</sub> brings the spread back to 1 whatever d<sub>k</sub> is. The equations do the variance sum and then a worked example at d<sub>k</sub> = 64; the figure shows the bars saturating.",
@@ -2119,7 +2119,7 @@
               ans: {"lead": "Fluency means reading P(A | B) as the probability of A given B without pausing, and seeing that Bayes' theorem is the definition of conditioning written two ways.", "pts": ["Random variable: a rule giving each outcome of a random process a number; its distribution lists the possible values and how likely each is, never negative and adding to one.", "Conditioning: P(A | B) throws away every outcome outside B and rescales by P(B), so it is P(A and B) divided by P(B). On a die, P(6 | even) = (1/6) / (1/2) = 1/3.", "Not symmetric: P(A | B) and P(B | A) count over different groups. P(6 | even) is 1/3 but P(even | 6) is 1.", "Bayes: P(A and B) equals P(A | B) P(B) and also P(B | A) P(A). Equate them and divide by P(B), and a conditional you know flips into the one you want."], "close": "If I can read P(A | B) aloud with no pause, and rebuild Bayes from the two ways of writing the overlap, the notation stops getting in the way of the paper."} },
             { t: "Requeued Q9 — set up and solve the disease problem",
               close: [
-                { k: "why", q: "Why is the answer 99 divided by 5,094 and not 99 percent?", a: "Because the 99 percent is P(positive | ill), a share of the ill group. The question is P(ill | positive), a share of everyone who tests positive, and that column is mostly false positives from the 99,900 healthy people." },
+                { k: "why", q: "Why is the answer 99/5,094 and not 99 percent?", a: "Because the 99 percent is P(positive | ill), a share of the ill group. The question is P(ill | positive), a share of everyone who tests positive, and that column is mostly false positives from the 99,900 healthy people." },
                 { k: "num", q: "P(ill given a positive test) works out to roughly what percentage?", a: "About 2 percent" },
                 { k: "figure", q: "In the Bayes figure, how many false positives come from the 99,900 healthy people?", a: "4,995" },
                 { k: "pick", q: "The test is 99 percent sensitive and only 5 percent false-positive — both look excellent. Why is a positive result still mostly wrong?",
@@ -2165,7 +2165,7 @@
                 { k: "pick", q: "Squared error and cross-entropy are both valid losses in principle. Why does cross-entropy win for a softmax classifier specifically?",
                   o: ["It is cheaper to compute", "Its gradient does not carry the vanishing factor squared error's does when softmax saturates", "It only works when there are exactly two classes"], a: 1,
                   why: "When softmax has saturated toward zero or one on a wrong answer, squared error's gradient picks up a factor from that saturated output and shrinks toward zero exactly when the model most needs correcting; cross-entropy's gradient does not carry that factor." },
-                { k: "short", q: "One sentence: what does calling softmax's output a distribution actually buy you?", a: "It licenses distribution-native tools — cross-entropy as the natural loss, the negative log of the true class's probability as the natural error signal — instead of treating classification scores as arbitrary numbers." }
+                { k: "short", q: "One sentence: what does calling softmax's output a distribution actually buy you?", a: "It licenses distribution-native tools: cross-entropy as the natural loss, −log p(true class) as the natural error signal, instead of treating classification scores as arbitrary numbers." }
               ],
               d: "The question has two halves: why can softmax outputs be read as probabilities, and why is cross-entropy the loss to pair with them. Half one is two checks, positive and sums to one. Half two comes from this week's idea: cross-entropy on a softmax is the negative log of the probability given to the right class, and its gradient is p − y, with no factor that shrinks when the model is confidently wrong. Squared error has that shrinking factor. The equations show both gradients on a worked example.",
               m: 25,
@@ -2182,7 +2182,7 @@
               o: ["About 99 percent", "About 50 percent", "About 2 percent", "About 0.1 percent"], a: 2,
               why: "False positives come from a pool five hundred times larger, so they swamp the true ones: roughly 99 against 4,995." },
             { q: "What makes softmax outputs a probability distribution?",
-              o: ["They are positive", "They are non-negative and sum to one", "They lie between minus one and one", "They are normally distributed"], a: 1,
+              o: ["They are positive", "They are non-negative and sum to one", "They lie between −1 and 1", "They are normally distributed"], a: 1,
               why: "Exponentiate for non-negativity, divide by the sum for normalisation. That is the whole construction." },
             { q: "Why is cross-entropy preferred over squared error for classification?",
               o: ["Cheaper to compute", "Its gradient does not collapse when the output saturates", "It handles more classes", "It is convex"], a: 1,
@@ -2815,7 +2815,7 @@
             ],
             close: [
               { k: "short", q: "150 intents, ten of which carry most of the traffic: macro or micro F1, and why?", a: "Report both and lead with macro. Micro is dominated by the ten big intents and hides rare ones failing; macro counts each intent equally, with per-intent recall beside it." },
-              { k: "why", q: "What does perplexity tell you about a model, and what does it not?", a: "How well a language model predicts held-out text: exp of the average negative log-likelihood. It says nothing direct about whether answers are correct, grounded or useful for the task." }
+              { k: "why", q: "What does perplexity tell you about a model, and what does it not?", a: "How well a language model predicts held-out text: exp(average negative log-likelihood). It says nothing direct about whether answers are correct, grounded or useful for the task." }
             ] },
           { t: "Draw the map cold, then say it", m: 10,
             out: "Draw the NLP map from memory, then say it in ninety seconds with an example from your own work on each branch you can",
@@ -2966,7 +2966,7 @@
               "Normalize at write time: on unit vectors, cosine, dot product and L2 rank the same"
             ],
             close: [
-              { k: "why", q: "Explain InfoNCE and in-batch negatives.", a: "For each query, a softmax over its similarity to one positive and many negatives; the loss is the negative log of the positive's share. In-batch negatives reuse the other examples' positives at no extra compute, so larger batches give more and harder negatives. Temperature controls how sharply hard negatives are penalized." }
+              { k: "why", q: "Explain InfoNCE and in-batch negatives.", a: "For each query, a softmax over its similarity to one positive and many negatives; the loss is −log of the positive's share. In-batch negatives reuse the other examples' positives at no extra compute, so larger batches give more and harder negatives. Temperature controls how sharply hard negatives are penalized." }
             ] },
           { t: "Vector search: HNSW, IVF, PQ", m: 8,
             out: "Explain HNSW, IVF and PQ, and when you use each",

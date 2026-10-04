@@ -742,6 +742,54 @@ DIA.dieConditional = {
     }
   };
 
+  DIA.derivRules = {
+  title: "Read the outer shape of the expression. The shape picks the rule.",
+  cap: "<b>Choosing a derivative rule is a lookup by shape.</b> Find the outermost operation: a power of x, a product, a quotient, or a function inside a function. Each shape has one rule, and the pieces inside are handled with the others. The quotient row is the step's own example, (x² / (x + 1))′ = (x² + 2x) / (x + 1)², which at x = 1 gives 0.75.",
+  svg: function () {
+    var b = "", i, y;
+    var rows = [
+      { id: "power", shape: "xⁿ", sub: "a power", rule: "d/dx xⁿ = n xⁿ⁻¹", ex: "(x⁵)′ = 5x⁴", tone: "sys" },
+      { id: "product", shape: "f · g", sub: "a product", rule: "(f g)′ = f′ g + f g′", ex: "(x³ sin x)′ = 3x² sin x + x³ cos x", tone: "math" },
+      { id: "quotient", shape: "f / g", sub: "a quotient", rule: "(f / g)′ = (f′ g − f g′) / g²", ex: "(x² / (x + 1))′ = (x² + 2x) / (x + 1)²", tone: "alaap" },
+      { id: "nested", shape: "f(g(x))", sub: "one inside another", rule: "(f∘g)′ = f′(g(x)) · g′(x)", ex: "(sin x²)′ = cos(x²) · 2x", tone: "req" }
+    ];
+    b += S.tag(0, 14, "Shape you see");
+    b += S.tag(180, 14, "Rule to use");
+    b += S.tag(400, 14, "Worked example");
+    for (i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      y = 26 + i * 70;
+      b += S.box({ id: "shape-" + r.id, x: 0, y: y, w: 150, h: 58, label: r.shape, sub: r.sub, tone: r.tone });
+      b += S.node("rule-" + r.id,
+        S.arrow(154, y + 29, 174, y + 29, { id: "shape-" + r.id + ">rule-" + r.id }) +
+        S.text(182, y + 25, r.rule, "d-t-b") +
+        S.text(182, y + 45, "then differentiate the pieces", "d-t-s") +
+        S.text(400, y + 25, r.ex, "d-t-s"));
+    }
+    return S.frame(640, 314, b);
+  }
+};
+
+DIA.sourceFilterMap = {
+  title: "Source on one side, filter on the other. Spectral tilt sits on the line.",
+  cap: "<b>A clean measurement moves only when its own side changes.</b> f0_mean is the source. Vocal-tract length and the formants are the filter. Spectral tilt is a straight-line fit that weights each bin by its distance from the middle of the band, and 27 bins below 500 Hz carry 43.2% of that weight. Those bins hold the first few F0 harmonics, so moving F0 moves the tilt: the leak.",
+  svg: function () {
+    var b = "";
+    b += S.tag(0, 14, "Source: the buzz");
+    b += S.tag(640, 14, "Filter: the tube");
+    b = b.replace(/(<text x="640"[^>]*)text-anchor="start"/, '$1text-anchor="end"');
+    b += S.node("split", '<path d="M320,24 L320,262" class="d-line" stroke-width="1" stroke-dasharray="4 3"/>');
+    b += S.box({ id: "f0_mean", x: 20, y: 36, w: 220, h: 48, label: "f0_mean", sub: "mean of the pitch track", tone: "sys" });
+    b += S.box({ id: "vtl_cm", x: 400, y: 36, w: 220, h: 48, label: "vtl_cm", sub: "from F1 and F3 only", tone: "math" });
+    b += S.box({ id: "formants", x: 400, y: 100, w: 220, h: 48, label: "formants F1, F2, F3", sub: "the tube's resonances", tone: "math" });
+    b += S.box({ id: "spectral_tilt", x: 100, y: 190, w: 440, h: 52, label: "spectral_tilt", sub: "meant to be its own axis, moves with F0", tone: "alaap" });
+    b += S.arrow(130, 84, 130, 188, { id: "f0_mean>spectral_tilt" });
+    b += S.node("heavy-bins", S.text(142, 134, "27 heavy low bins", "d-t-b") + S.text(142, 152, "carry 43.2% of the fit", "d-t-b"));
+    b += S.text(320, 266, "S21: r with F0 = +0.918 on synthetic voices whose envelope slope was held constant", "d-t-s", "middle");
+    return S.frame(640, 280, b);
+  }
+};
+
   DIA.chain = {
     title: "A network is a composition. The chain rule is how you differentiate one.",
     cap: "<b>Forward, then backward.</b> Each layer is a function; the network is their composition. Going forward you record what each layer saw — that recording is the tape. Going backward you multiply the local derivatives along the chain. Autograd is not magic added to PyTorch; it is this bookkeeping, done automatically.",

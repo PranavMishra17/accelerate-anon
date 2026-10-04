@@ -220,7 +220,7 @@ BASELINE.quiz("ai", {
           "About 30%",
           "About 60%"],
       a: 4,
-      why: "0.95 to the tenth power is about 0.6. Errors compound, so agents need budgets, checkpoints and evals over whole trajectories." },
+      why: "0.95¹⁰ ≈ 0.6. Errors compound, so agents need budgets, checkpoints and evals over whole trajectories." },
     { q: "Every ticket goes: classify it, extract the fields, draft a reply. Which design fits?",
       o: ["A workflow, where code fixes the sequence of model calls",
           "An agent that chooses its own steps for each ticket",
