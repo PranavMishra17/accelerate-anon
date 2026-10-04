@@ -207,12 +207,12 @@ details.ln-item > summary, .ln-thead { display: grid; grid-template-columns: aut
 .ln-c .bd.on { background: var(--ok); border-color: var(--ok); }
 .ln-two { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: var(--s5); align-items: start; }
 .ln-two.wide { grid-template-columns: minmax(0, 1fr); }
-.ln-work { border-left: var(--hair); padding-left: var(--s4); }
-.ln-two.wide .ln-work { border-left: 0; padding-left: 0; border-top: var(--hair); padding-top: var(--s3); max-width: var(--measure); }
+.ln-work { border-left: var(--hair); padding-left: var(--s4); position: sticky; top: calc(var(--top) + 44px); max-height: calc(100vh - var(--top) - 56px); overflow-y: auto; }
+.ln-two.wide .ln-work { border-left: 0; padding-left: 0; border-top: var(--hair); padding-top: var(--s3); max-width: var(--measure); position: static; max-height: none; overflow: visible; }
 .ln-work .lab, .ln-mat .lab { margin-top: var(--s4); }
 .ln-work > .lab:first-child, .ln-mat > .lab:first-child { margin-top: 0; }
 .ln-bar-t { font-weight: var(--w-strong); }
-@media (max-width: 900px) { .ln-two { grid-template-columns: minmax(0, 1fr); } .ln-work { border-left: 0; padding-left: 0; border-top: var(--hair); padding-top: var(--s3); } }
+@media (max-width: 900px) { .ln-two { grid-template-columns: minmax(0, 1fr); } .ln-work { border-left: 0; padding-left: 0; border-top: var(--hair); padding-top: var(--s3); position: static; max-height: none; overflow: visible; } }
 @media (max-width: 640px) { details.ln-item > summary, .ln-thead { grid-template-columns: auto minmax(0, 1fr) 48px; } .ln-c:nth-of-type(n+2), .ln-thead .ln-c:nth-of-type(n+2) { display: none; } }
 details.ln-item > summary::-webkit-details-marker { display: none; }
 details.ln-item > summary .lv { margin: 5px 0 0; }
@@ -1050,27 +1050,14 @@ details.item > .sbody { padding-left: 0; }
     else { learn(mat, { read: t.read || [] }); }
 
     /* your work: check yourself */
+    /* check yourself: the topic's questions one at a time in the pop-up, as Judge first on Accelerate */
     if (t.mcq && t.mcq.length) {
       work.appendChild(el("div", "lab", "Check yourself"));
-      var qi = 0, host = el("div");
-      work.appendChild(el("p", "ln-note", t.mcq.length + " questions. Choose, or say you don't know; tick 'I'm guessing' if you are."));
-      work.appendChild(host);
-      (function next() {
-        var i2 = qi; qi += 1;
-        host.innerHTML = "";
-        host.appendChild(el("p", "ln-qn", "Question " + (i2 + 1) + " of " + t.mcq.length));
-        mcqCard(host, t, i2, function () {
-          ctx.refresh();
-          if (qi < t.mcq.length) {
-            var nb = el("button", "btn primary", "Next question");
-            nb.addEventListener("click", function () { next(); });
-            host.appendChild(nb); nb.focus({ preventScroll: true });
-          } else {
-            var lv = levelOf(t);
-            host.appendChild(el("p", "ln-done", "Done." + (lv ? " Your level for this topic: <b>" + LEVELS[lv] + "</b>." : "")));
-          }
-        });
-      }());
+      var cs = learnStore(), answered = t.mcq.filter(function (q, i) { return cs.mcq[t.id + ":" + i]; }).length, lvc = levelOf(t);
+      work.appendChild(el("p", "ln-note", answered ? answered + " of " + t.mcq.length + " answered" + (lvc ? "; your level: <b>" + LEVELS[lvc] + "</b>" : "") + "." : t.mcq.length + " questions, in a pop-up. Choose, or say you don't know; tick 'I'm guessing' if you are."));
+      var cb2 = el("button", "btn primary", answered ? "Check again" : "Check yourself: " + t.mcq.length + " questions");
+      cb2.addEventListener("click", function () { runTest(null, t.title, { topic: t.id, onClose: function () { ctx.refresh(); ctx.open(t, 0); } }); });
+      work.appendChild(cb2);
     }
 
     /* the open question, then what you would say */
@@ -1185,21 +1172,23 @@ details.item > .sbody { padding-left: 0; }
       '<span class="sep"></span>' + levelDot("notyet") + counts.notyet + " not yet" + '<span class="sep"></span>' + levelDot(null) + counts.none + " not judged"));
   }
   /* A test across a module or the whole path, in a pop-up: weakest first, then unanswered. */
-  function runTest(scope, title) {
+  function runTest(scope, title, opts) {
+    opts = opts || {};
     var st = learnStore(), pool = [];
     allTopics().forEach(function (x) {
       if (scope && x.m.id !== scope) { return; }
+      if (opts.topic && x.t.id !== opts.topic) { return; }
       (x.t.mcq || []).forEach(function (q, i) {
         var r = st.mcq[x.t.id + ":" + i];
         pool.push({ t: x.t, i: i, w: !r ? 1 : (!r.ok || r.guess) ? 0 : 2, r: Math.random() });
       });
     });
-    pool.sort(function (a, b) { return a.w - b.w || a.r - b.r; });
-    pool = pool.slice(0, scope ? 12 : 20);
+    if (opts.topic) { pool.sort(function (a, b) { return a.i - b.i; }); }
+    else { pool.sort(function (a, b) { return a.w - b.w || a.r - b.r; }); pool = pool.slice(0, scope ? 12 : 20); }
     if (!pool.length) { return; }
     var dlg = el("dialog", "ln-test"), box = el("div", "ln-test-box"), n = 0, right = 0;
     dlg.appendChild(box); document.body.appendChild(dlg);
-    dlg.addEventListener("close", function () { dlg.remove(); route(); });
+    dlg.addEventListener("close", function () { dlg.remove(); if (opts.onClose) { opts.onClose(); } else { route(); } });
     function step() {
       box.innerHTML = "";
       var head = el("div", "ln-test-head", "<b>" + esc(title) + "</b><span>" + (n < pool.length ? (n + 1) + " of " + pool.length : "Done") + "</span>");

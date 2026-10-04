@@ -1106,3 +1106,9 @@ Long watches, fifteen 20 to 85 minute talks found by a deep crawl. The Learn tab
 like an Accelerate session: a table of topics (level, check, explain, rated) and a two-pane drawer, the
 material left and your work right, what to say shut until tried; design topics take the full width. No
 charter deviation.
+
+**2026-10-04: Loop pages: the work pane stays with you, and Check yourself is a pop-up.**
+In an open topic the right pane (Check yourself, Explain it, What you would say) is pinned under the bar
+while the material scrolls, as on Accelerate. Check yourself opens the topic's questions one at a time in the
+pop-up the tests use (Judge first's way), and the pane shows how many are answered and the level after.
+No charter deviation.
