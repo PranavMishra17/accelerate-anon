@@ -145,6 +145,12 @@ code {
 
 /* Pages with a side list: Patterns and Designs */
 .split { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: var(--s6); padding-bottom: var(--s6); }
+/* ?embed=<design>: one design inside another page (a loop page's Learn topic). No top bar, footer or design list;
+   the design's own step tabs stay. The height is posted to the parent so the frame never scrolls on its own. */
+html.embed { --bar-h: 0px; }
+html.embed .topbar, html.embed .foot, html.embed .side { display: none; }
+html.embed .split { grid-template-columns: minmax(0, 1fr); gap: 0; }
+html.embed body { background: var(--bg); }
 .main { min-width: 0; }
 .side {
   position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--tabs-h)); align-self: start;
@@ -6902,7 +6908,27 @@ window.addEventListener("unhandledrejection", (event) => {
   log.error("Unhandled promise rejection", describeError(event.reason));
 });
 
+/* Embed mode (?embed=<design id>): see the CSS. Links that leave this design open the guide in a new tab. */
+const EMBED = new URLSearchParams(window.location.search).get("embed");
+function bootEmbed() {
+  if (!EMBED) return;
+  document.documentElement.classList.add("embed");
+  if (!window.location.hash) window.location.replace("#/designs/" + EMBED + "/requirements");
+  const post = () => window.parent.postMessage({ sdEmbed: EMBED, h: document.documentElement.scrollHeight }, "*");
+  if (window.ResizeObserver) new ResizeObserver(post).observe(document.body);
+  window.addEventListener("load", post);
+  /* a new step: the parent page jumps to the frame's top, since the frame itself never scrolls */
+  window.addEventListener("hashchange", () => setTimeout(() => { post(); window.parent.postMessage({ sdEmbed: EMBED, jump: true }, "*"); }, 0));
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest && e.target.closest("a[href^='#']");
+    if (!a || a.getAttribute("href").indexOf("#/designs/" + EMBED) === 0) return;
+    e.preventDefault();
+    window.open(window.location.pathname + a.getAttribute("href"), "_blank", "noopener");
+  });
+}
+
 function boot() {
+  bootEmbed();
   safeRun("boot", () => {
     log.info("Starting guide", { examples: GUIDE.examples.length, steps: GUIDE.framework.length });
     validateGuide();

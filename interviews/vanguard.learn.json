@@ -7809,7 +7809,7 @@
    "id": "sysdesign",
    "title": "System design: four assistants, drawn end to end",
    "day": "Day 3, Tuesday 6 Oct",
-   "blurb": "The design question, practised four ways from the system design guide: the bank virtual assistant in full, then three compact designs (a grounded FAQ assistant, a contact-centre voice line, the analytics and improvement loop), and your own design sessions.",
+   "blurb": "Each topic opens the design itself: requirements, the high-level design built in stages, the deep dives with their sketches, and the patterns used. The bank virtual assistant in full, then three compact designs: a grounded FAQ assistant, a contact-centre voice line, and the analytics and improvement loop.",
    "topics": [
     {
      "id": "sd-virtual-assistant",
@@ -7887,7 +7887,8 @@
       "**Confidence is the interface:** every route and fallback reads a calibrated score, and I treat a threshold change like a release.",
       "**Money behind a gate:** identity, limits and an explicit yes after a read-back, in code, whatever the model says.",
       "And I'd say the weekly review loop is the product, because containment without resolution is a wall."
-     ]
+     ],
+     "design": "virtual-assistant"
     },
     {
      "id": "sd-faq-assistant",
@@ -7990,7 +7991,8 @@
       "**Content as releases:** immutable versions, compliance approval with dates, an eval gate, one pointer switch, rollback kept.",
       "**Measure the stages apart:** recall at 5 for retrieval, groundedness and refusal correctness for answers, on 300 cases with an honest interval.",
       "The model writes, the content decides, and the log can replay any answer."
-     ]
+     ],
+     "design": "faq-assistant"
     },
     {
      "id": "sd-voice-ivr",
@@ -8094,7 +8096,8 @@
       "**Recognition:** keep the n-best and confidences; confirm amounts and names with a closed question, then an example, then the keypad, then a person.",
       "**Authentication:** caller ID and voice are signals; reads need a keypad PIN, money needs a code pushed to the registered app, and only the identity service sets the level.",
       "The agent should know the reason, the caller and what was tried before the caller is bridged."
-     ]
+     ],
+     "design": "voice-ivr"
     },
     {
      "id": "sd-convo-analytics",
@@ -8185,67 +8188,8 @@
       "**Failures:** several weak signals, embedded and clustered, ranked by volume times cost, because people can label 600 of 24,000.",
       "**Release:** a frozen set scored per intent plus a never-break suite, then shadow and staged rollout; at 1,500 turns a 1.5 point change is noise.",
       "Containment goes next to resolution, so a bot that never transfers does not look like it is winning."
-     ]
-    },
-    {
-     "id": "sd-milestone",
-     "title": "Your own design sessions: evidence ingestion and walkthrough to flowchart",
-     "brief": "The two design sessions in your plan (weeks 2 and 3) practise the same moves this module uses.",
-     "points": [
-      "Evidence ingestion from messy documents (week 2): PDFs, scans, spreadsheets and recordings without losing where anything came from; provenance and confidence per field are the same muscles as grounding an assistant's answers in approved content.",
-      "Walkthrough to flowchart, and the year-over-year base (week 3): turning a recorded process walkthrough into a flowchart and carrying last year's workpapers forward; it practises structured output from messy conversation and versioned re-runs, the same ideas as extracting entities from a dialogue and gating a model change.",
-      "Do them in order with the plan; they are not needed before Wednesday, but if you have done them, use them as stories of design under uncertainty."
      ],
-     "production": [
-      "Both sessions end with a design you can draw cold, the format the interview's design question will use."
-     ],
-     "figs": [],
-     "res": [
-      {
-       "kind": "keep",
-       "src": "site",
-       "req": true,
-       "label": "Design: evidence ingestion from messy documents (week 2)",
-       "url": "../index.html#/w/wc3",
-       "m": 90,
-       "why": "Provenance, confidence and a pipeline you can defend."
-      },
-      {
-       "kind": "keep",
-       "src": "site",
-       "req": false,
-       "label": "Design: walkthrough to flowchart, and the year-over-year base (week 3)",
-       "url": "../index.html#/w/wc4",
-       "m": 60,
-       "why": "Structured output from a conversation, and a versioned base carried forward."
-      }
-     ],
-     "mcq": [
-      {
-       "q": "What carries over from evidence ingestion to an assistant's grounded answers?",
-       "o": [
-        "Nothing; they are different systems",
-        "Keeping where every fact came from, so an answer can cite it and an auditor can check it",
-        "Using the same database",
-        "OCR accuracy",
-        "The same user interface"
-       ],
-       "a": 1,
-       "why": "Provenance per field in ingestion is the same discipline as citations and approved sources in a grounded assistant."
-      }
-     ],
-     "open": {
-      "q": "Design a pipeline that takes messy documents in and still lets you say where every extracted value came from.",
-      "probe": "How did you handle a value the system was unsure about?",
-      "a": "Keep the source and position of every extracted value, a confidence per field, and route low-confidence values to a person rather than guessing; the same rule an assistant uses for unsure intents."
-     },
-     "say": [
-      "**Both of my design sessions are about knowing where every value came from.**",
-      "**Ingestion:** every field keeps its source and a confidence, and unsure ones go to a person.",
-      "**Walkthrough to flowchart:** structure pulled out of a recorded conversation, and last year's base carried forward under version control.",
-      "**Same as an assistant:** grounded answers cite approved content, and a threshold change ships through the same kind of gate.",
-      "So I'd use them as examples of designing under uncertainty."
-     ]
+     "design": "convo-analytics"
     }
    ]
   },

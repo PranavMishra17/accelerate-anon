@@ -218,6 +218,8 @@ details.ln-item[open] > summary .qm, details.ln-item[open] > summary .ln-n { dis
 .ln-arrow { font: inherit; font-size: var(--fs-sm); background: none; border: var(--hair); border-radius: var(--radius-sm); color: var(--soft); padding: 2px var(--s2); cursor: pointer; }
 .ln-arrow:disabled { opacity: .4; cursor: default; }
 .ln-qn { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s1); }
+.ln-design { margin: var(--s3) 0; } .ln-design-h { margin: 0 0 var(--s2); font-size: var(--fs-sm); }
+.ln-design-f { display: block; width: 100%; height: 900px; border: var(--hair); border-radius: var(--radius); background: var(--bg); }
 .ln-code { margin: var(--s2) 0; border-top: var(--hair); } .ln-code > summary { cursor: pointer; padding: var(--s2) 0; font-size: var(--fs-sm); }
 .ln-lang { font-weight: var(--w-strong); } .ln-file { color: var(--muted); font-family: var(--mono); font-size: var(--fs-xs); }
 .ln-code pre { max-height: 60vh; overflow: auto; }
@@ -972,6 +974,23 @@ details.item > .sbody { padding-left: 0; }
     window.scrollTo({ top: window.scrollY + y - top - 4, behavior: "instant" });
   }
   /* ctx: { refresh, index, total, prev, next, open(topic, step), startStep } */
+  /* A system design from the guide, shown whole inside a topic: the guide in embed mode (no top bar or design
+     list), its own step tabs kept (requirements to deep dives and patterns used, with the staged HLD and every
+     sketch). The frame grows to the height the guide posts, so only this page scrolls. One home: the guide. */
+  function designFrame(id) {
+    var box = el("div", "ln-design");
+    var src = "../SYSTEM%20DESIGN.html?embed=" + encodeURIComponent(id) + "#/designs/" + encodeURIComponent(id) + "/requirements";
+    box.appendChild(el("p", "ln-design-h", '<a href="../SYSTEM%20DESIGN.html#/designs/' + esc(id) + '/requirements" target="_blank" rel="noopener">Open this design in the guide</a>'));
+    var f = document.createElement("iframe");
+    f.className = "ln-design-f"; f.src = src; f.title = "System design: " + id; f.loading = "lazy";
+    window.addEventListener("message", function (e) {
+      if (e.source !== f.contentWindow || !e.data || e.data.sdEmbed !== id) { return; }
+      if (e.data.h) { f.style.height = Math.min(e.data.h + 8, 60000) + "px"; }
+      if (e.data.jump) { box.scrollIntoView({ behavior: "instant", block: "start" }); }
+    });
+    box.appendChild(f);
+    return box;
+  }
   function learnBody(t, ctx) {
     var wrap = el("div", "ln");
     var steps = [["learn", "Learn"], ["check", "Check"], ["explain", "Explain"], ["say", "Say"]].filter(function (s) {
@@ -1015,6 +1034,7 @@ details.item > .sbody { padding-left: 0; }
           pane.appendChild(u);
         }
         (t.figs || []).forEach(function (k) { var f = figNode(k, 0); if (f) { pane.appendChild(f); } });
+        if (t.design) { pane.appendChild(designFrame(t.design)); }
         panelSection(pane, "In production", panelList(t.production));
         (t.code || []).forEach(function (c) {
           if (!c.src) { return; }

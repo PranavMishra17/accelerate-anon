@@ -1083,3 +1083,12 @@ router with a code guard, an eval harness with a regression gate) sit inside the
 system design module draws on the guide, which gains three compact designs: a grounded FAQ assistant, a
 contact-centre voice line with handoff, and the conversation analytics and improvement loop. It also links
 his week 2 and 3 design sessions. No charter deviation.
+
+**2026-10-04: Vanguard's system design topics show the designs themselves; the flowchart topic removed.**
+The design topics were text that pointed to the guide. Each now opens the design inside the topic: the guide
+in a new embed mode (`?embed=<design>`: no top bar, footer or design list; the design's own step tabs kept),
+so requirements, the high-level design built in stages, the deep dives with their sketches and the patterns
+used are all on the Vanguard page, from one home in the guide. The frame takes the height the guide posts and
+the page jumps to it on a step change. The topic linking the week 3 walkthrough-to-flowchart session was
+removed: it is audit automation and has nothing to do with this call (it had been added because he mentioned
+the week 3 design without checking what it was). No charter deviation.
