@@ -1092,3 +1092,17 @@ used are all on the Vanguard page, from one home in the guide. The frame takes t
 the page jumps to it on a step change. The topic linking the week 3 walkthrough-to-flowchart session was
 removed: it is audit automation and has nothing to do with this call (it had been added because he mentioned
 the week 3 design without checking what it was). No charter deviation.
+
+**2026-10-04: Vanguard: resources on exactly what each topic asks, a voice AI module, harness engineering, long watches; every loop page's Learn tab in Accelerate's two-pane layout.**
+He found the resources thin and off-target (one general video where the topic asked something specific). For
+this path only the cap is three videos and three articles per topic: every topic was re-sourced against its own
+questions (Dialogflow CX, Azure CLU, Rasa CALM and Amazon Lex docs on the exact concept, conference talks,
+Hamel Husain on error analysis and evals), 235 videos and 198 articles in all. New: Voice AI, end to end (Day 2,
+8 topics: the cascade, streaming against batch speech to text, turn detection and barge-in, speech to speech
+models behind an orchestrator, WebSocket and WebRTC streaming and the stateful worker per call, the latency
+budget and co-location, scaling voice workers, cost per call minute); three harness engineering topics in
+evals, built on the Learn Harness Engineering course (also added to the AI engineering stream's backlog); and
+Long watches, fifteen 20 to 85 minute talks found by a deep crawl. The Learn tab on every loop page now reads
+like an Accelerate session: a table of topics (level, check, explain, rated) and a two-pane drawer, the
+material left and your work right, what to say shut until tried; design topics take the full width. No
+charter deviation.

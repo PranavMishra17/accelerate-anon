@@ -62,6 +62,7 @@ var STREAMS = [
       { label: "AI Engineering from Scratch, phase 7: transformers deep dive (16 lessons)", url: "https://aiengineeringfromscratch.com/lesson?path=phases%2F07-transformers-deep-dive%2F01-why-transformers", m: 9, why: "Where AI engineering meets the ML river.", src: "aieng" },
       { label: "Hugging Face LLM course", url: "https://huggingface.co/learn/llm-course/chapter1/1", m: 20, why: "Transformers, tokenizers, fine-tuning, hands on.", src: "course" },
       { label: "Anthropic: Building effective agents", url: "https://www.anthropic.com/engineering/building-effective-agents", m: 1, why: "Workflows against agents, and when each is right.", src: "tutorial" },
+      { label: "Learn Harness Engineering (14 lectures)", url: "https://walkinglabs.github.io/learn-harness-engineering/en/", m: 10, why: "Why capable agents still fail, and what the loop around the model must do: instructions, state, memory, validation, observability. Intuitive on why some things work and others do not.", src: "course" },
       { label: "Hamel Husain: Your AI product needs evals", url: "https://hamel.dev/blog/posts/evals/", m: 1, why: "Harness engineering as error analysis first.", src: "tutorial" }
     ] },
 

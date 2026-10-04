@@ -198,7 +198,22 @@ details.pq { scroll-margin-top: calc(var(--top) + var(--s2)); }
 .ln-sec { margin-top: var(--s6); }
 .ln-list { border-top: var(--hair); }
 details.ln-item { scroll-margin-top: calc(var(--top) + var(--s2)); }
-details.ln-item > summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--s3); align-items: start; padding: var(--s3) var(--s6) var(--s3) var(--s2); cursor: pointer; list-style: none; }
+details.ln-item > summary, .ln-thead { display: grid; grid-template-columns: auto minmax(0, 1fr) 64px 64px 72px; gap: var(--s3); align-items: start; padding: var(--s3) var(--s2); cursor: pointer; list-style: none; }
+.ln-thead { cursor: default; padding-top: var(--s1); padding-bottom: var(--s1); font-size: var(--fs-xs); color: var(--muted); border-bottom: var(--hair); }
+.ln-thead > span:first-child { width: 10px; }
+.ln-c { text-align: center; font-size: var(--fs-sm); color: var(--muted); padding-top: 2px; }
+.ln-rt { text-align: left; }
+.ln-c .bd { display: inline-block; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--muted); }
+.ln-c .bd.on { background: var(--ok); border-color: var(--ok); }
+.ln-two { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: var(--s5); align-items: start; }
+.ln-two.wide { grid-template-columns: minmax(0, 1fr); }
+.ln-work { border-left: var(--hair); padding-left: var(--s4); }
+.ln-two.wide .ln-work { border-left: 0; padding-left: 0; border-top: var(--hair); padding-top: var(--s3); max-width: var(--measure); }
+.ln-work .lab, .ln-mat .lab { margin-top: var(--s4); }
+.ln-work > .lab:first-child, .ln-mat > .lab:first-child { margin-top: 0; }
+.ln-bar-t { font-weight: var(--w-strong); }
+@media (max-width: 900px) { .ln-two { grid-template-columns: minmax(0, 1fr); } .ln-work { border-left: 0; padding-left: 0; border-top: var(--hair); padding-top: var(--s3); } }
+@media (max-width: 640px) { details.ln-item > summary, .ln-thead { grid-template-columns: auto minmax(0, 1fr) 48px; } .ln-c:nth-of-type(n+2), .ln-thead .ln-c:nth-of-type(n+2) { display: none; } }
 details.ln-item > summary::-webkit-details-marker { display: none; }
 details.ln-item > summary .lv { margin: 5px 0 0; }
 details.ln-item > summary .qt { display: block; font-weight: var(--w-strong); }
@@ -206,8 +221,8 @@ details.ln-item > summary .qm { max-width: var(--measure); }
 details.ln-item > summary:hover .qt { color: var(--accent); }
 .ln-n { font-size: var(--fs-xs); color: var(--muted); padding-top: 3px; }
 details.ln-item[open] { background: var(--sunken); }
-details.ln-item[open] > summary .qm, details.ln-item[open] > summary .ln-n { display: none; }
-.ln { padding: 0 var(--s4) var(--s5) calc(var(--s2) + 10px + var(--s3)); }
+details.ln-item[open] > summary .qm { display: none; }
+.ln { padding: 0 var(--s4) var(--s5) var(--s4); }
 .ln-bar { position: sticky; top: var(--top); z-index: 3; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2);
   background: var(--sunken); border-bottom: var(--hair); margin: 0 0 var(--s4); padding: var(--s1) 0; }
 .ln-steps { display: flex; gap: var(--s1); }
@@ -229,7 +244,7 @@ details.ln-item[open] > summary .qm, details.ln-item[open] > summary .ln-n { dis
 @media (max-width: 640px) { .ln { padding: 0 var(--s2) var(--s4); } .ln-nav .ln-pos { display: none; } }
 @media (max-width: 640px) { .lmap-row { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
 .ln-mod { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s2); }
-.ln-pane { max-width: var(--measure); padding-bottom: var(--s4); }
+
 .ln-brief { margin: 0 0 var(--s3); }
 .ln-note { color: var(--muted); font-size: var(--fs-sm); }
 .ln-oq { font-weight: var(--w-strong); }
@@ -991,151 +1006,147 @@ details.item > .sbody { padding-left: 0; }
     box.appendChild(f);
     return box;
   }
+  /* The open topic, Accelerate's way: a bar (where you are, previous and next), then two panes.
+     Left, the material: brief, points, figures, the design, production, code, resources.
+     Right, your work: check yourself, the open question with your answer box, then what you would say,
+     shut until you have tried. A topic with a system design takes the full width for the design. */
   function learnBody(t, ctx) {
     var wrap = el("div", "ln");
-    var steps = [["learn", "Learn"], ["check", "Check"], ["explain", "Explain"], ["say", "Say"]].filter(function (s) {
-      if (s[0] === "check") { return t.mcq && t.mcq.length; }
-      if (s[0] === "explain") { return !!t.open; }
-      if (s[0] === "say") { return t.say && t.say.length; }
-      return true;
-    });
-    var bar = el("div", "ln-bar"), tabs = el("div", "ln-steps"), side = el("div", "ln-nav"), pane = el("div", "ln-pane");
-    bar.appendChild(tabs); bar.appendChild(side);
-    wrap.appendChild(bar); wrap.appendChild(pane);
+    var bar = el("div", "ln-bar"), side = el("div", "ln-nav");
+    bar.appendChild(el("span", "ln-bar-t", ""));
+    bar.appendChild(side);
+    wrap.appendChild(bar);
     side.appendChild(el("span", "ln-pos", (ctx.index + 1) + " of " + ctx.total));
     var pv = el("button", "ln-arrow", "Previous topic"), nv = el("button", "ln-arrow", "Next topic");
     pv.disabled = !ctx.prev; nv.disabled = !ctx.next;
     pv.addEventListener("click", function () { ctx.open(ctx.prev, 0); });
     nv.addEventListener("click", function () { ctx.open(ctx.next, 0); });
     side.appendChild(pv); side.appendChild(nv);
-    var ids = steps.map(function (s) { return s[0]; });
-    function nextButton(i) {
-      var b;
-      if (i < steps.length - 1) {
-        b = el("button", "btn primary ln-next", "Next: " + steps[i + 1][1]);
-        b.addEventListener("click", function () { show(i + 1); });
-      } else if (ctx.next) {
-        b = el("button", "btn primary ln-next", "Next topic: " + esc(ctx.next.title));
-        b.addEventListener("click", function () { ctx.open(ctx.next, 0); });
-      }
-      return b;
+    var st = learnStore();
+    st.pos = { t: t.id, s: 0 }; learnSave(st);
+
+    var two = el("div", "ln-two" + (t.design ? " wide" : ""));
+    var mat = el("div", "ln-mat"), work = el("div", "ln-work");
+    two.appendChild(mat); two.appendChild(work); wrap.appendChild(two);
+
+    /* the material */
+    if (t.brief) { mat.appendChild(el("p", "ln-brief", inl(t.brief))); }
+    if (t.points && t.points.length) {
+      var u = el("ul", "mk-list ln-points");
+      t.points.forEach(function (p) { u.appendChild(el("li", "", inl(p).replace(/^([^:<]{2,60}):/, "<b>$1:</b>"))); });
+      mat.appendChild(u);
     }
-    function show(i) {
-      wrap.dataset.step = i;
-      tabs.querySelectorAll("button").forEach(function (b, bi) { b.setAttribute("aria-current", bi === i ? "step" : "false"); });
-      pane.innerHTML = "";
-      var id = steps[i][0], st = learnStore();
-      st.pos = { t: t.id, s: i }; learnSave(st);
-      if (id === "learn") {
-        if (t.brief) { pane.appendChild(el("p", "ln-brief", inl(t.brief))); }
-        if (t.points && t.points.length) {
-          var u = el("ul", "mk-list ln-points");
-          t.points.forEach(function (p) { u.appendChild(el("li", "", inl(p).replace(/^([^:<]{2,60}):/, "<b>$1:</b>"))); });
-          pane.appendChild(u);
-        }
-        (t.figs || []).forEach(function (k) { var f = figNode(k, 0); if (f) { pane.appendChild(f); } });
-        if (t.design) { pane.appendChild(designFrame(t.design)); }
-        panelSection(pane, "In production", panelList(t.production));
-        (t.code || []).forEach(function (c) {
-          if (!c.src) { return; }
-          var d = el("details", "ln-code");
-          d.appendChild(el("summary", "", '<span class="ln-lang">' + esc(c.lang === "typescript" ? "TypeScript" : c.lang === "python" ? "Python" : c.lang) + "</span> " + inl(c.title || "") +
-            (c.file ? ' <span class="ln-file">' + esc(c.file.split("/").pop()) + "</span>" : "")));
-          var pre = el("pre", "cv-code"); pre.appendChild(el("code", "", esc(c.src))); d.appendChild(pre);
-          pane.appendChild(d);
-        });
-        if (t.res && window.Res) { var rs = Res.render(t.res); if (rs) { pane.appendChild(rs); } }
-        else { learn(pane, { read: t.read || [] }); }
-      }
-      if (id === "check") {
-        var qi = 0, host = el("div");
-        pane.appendChild(el("p", "ln-note", t.mcq.length + " questions. Choose, or say you don't know; tick 'I'm guessing' if you are."));
-        pane.appendChild(host);
-        (function next() {
-          var i2 = qi; qi += 1;
-          host.innerHTML = "";
-          host.appendChild(el("p", "ln-qn", "Question " + (i2 + 1) + " of " + t.mcq.length));
-          mcqCard(host, t, i2, function () {
-            ctx.refresh();
-            var last = qi >= t.mcq.length, nb;
-            if (!last) {
-              nb = el("button", "btn primary", "Next question");
-              nb.addEventListener("click", function () { next(); jumpTo(wrap, true); });
-            } else {
-              var lv = levelOf(t);
-              host.appendChild(el("p", "ln-done", "Done." + (lv ? " Your level for this topic: <b>" + LEVELS[lv] + "</b>." : "")));
-              nb = nextButton(i);
-            }
-            if (nb) { host.appendChild(nb); nb.focus({ preventScroll: true }); }
-          });
-        }());
-        return;
-      }
-      if (id === "explain") {
-        pane.appendChild(el("p", "ln-oq", inl(t.open.q)));
-        if (t.open.probe) { pane.appendChild(el("p", "ln-note", "<b>They are testing:</b> " + inl(t.open.probe))); }
-        var ta = el("textarea", "ln-ta");
-        ta.placeholder = "Say it out loud first, then type or dictate it here (Win+H). Saved on this device.";
-        ta.value = (st.tried[t.id] && st.tried[t.id].text) || "";
-        ta.addEventListener("input", function () { var s2 = learnStore(); s2.tried[t.id] = s2.tried[t.id] || {}; s2.tried[t.id].text = ta.value; s2.tried[t.id].at = Date.now(); learnSave(s2); });
-        pane.appendChild(ta);
-        var reveal = el("button", "btn", "I've tried it: show the model answer");
-        var ans = el("div", "ln-ans");
-        var open = function () {
-          reveal.remove();
-          var s2 = learnStore(); s2.tried[t.id] = s2.tried[t.id] || { text: "", at: Date.now() }; s2.tried[t.id].shown = true; learnSave(s2);
-          ans.appendChild(el("div", "lab", "Model answer"));
-          var ol = el("ol", "ln-beats");
-          t.open.a.forEach(function (b) { ol.appendChild(el("li", "", inl(b))); });
-          ans.appendChild(ol);
-          ans.appendChild(el("div", "lab", "How well did you know it?"));
-          var rr = el("div", "ln-rate");
-          [["know", "Know it"], ["partly", "Partly"], ["notyet", "Not yet"]].forEach(function (r) {
-            var b = el("button", "btn" + (learnStore().rate[t.id] === r[0] ? " on" : ""), r[1]);
-            b.addEventListener("click", function () {
-              var s3 = learnStore(); s3.rate[t.id] = r[0]; learnSave(s3);
-              rr.querySelectorAll("button").forEach(function (x) { x.classList.remove("on"); });
-              b.classList.add("on"); ctx.refresh();
-            });
-            rr.appendChild(b);
-          });
-          ans.appendChild(rr);
-          var nb = nextButton(i); if (nb) { ans.appendChild(nb); }
-        };
-        reveal.addEventListener("click", open);
-        pane.appendChild(reveal); pane.appendChild(ans);
-        if (st.tried[t.id] && st.tried[t.id].shown) { open(); }
-        return;
-      }
-      if (id === "say") {
-        if (t.open && !(st.tried[t.id] && st.tried[t.id].shown)) {
-          pane.appendChild(el("p", "ln-note", "Shut until you've tried the open question in Explain."));
-          var go = el("button", "btn", "Go to Explain");
-          go.addEventListener("click", function () { show(ids.indexOf("explain")); });
-          pane.appendChild(go);
-          return;
-        }
-        pane.appendChild(transcript(t.say, "What you would say", ""));
-        panelSection(pane, "Avoid", panelList(t.avoid, "mk-bad"));
-      }
-      var nb2 = nextButton(i); if (nb2) { pane.appendChild(nb2); }
-    }
-    steps.forEach(function (s, i) {
-      var b = el("button", "ln-step", esc(s[1]));
-      b.addEventListener("click", function () { show(i); jumpTo(wrap, true); });
-      tabs.appendChild(b);
+    (t.figs || []).forEach(function (k) { var f = figNode(k, 0); if (f) { mat.appendChild(f); } });
+    if (t.design) { mat.appendChild(designFrame(t.design)); }
+    panelSection(mat, "In production", panelList(t.production));
+    (t.code || []).forEach(function (c) {
+      if (!c.src) { return; }
+      var d = el("details", "ln-code");
+      d.appendChild(el("summary", "", '<span class="ln-lang">' + esc(c.lang === "typescript" ? "TypeScript" : c.lang === "python" ? "Python" : c.lang) + "</span> " + inl(c.title || "") +
+        (c.file ? ' <span class="ln-file">' + esc(c.file.split("/").pop()) + "</span>" : "")));
+      var pre = el("pre", "cv-code"); pre.appendChild(el("code", "", esc(c.src))); d.appendChild(pre);
+      mat.appendChild(d);
     });
-    wrap.step = function (d) { var i = (+wrap.dataset.step || 0) + d; if (i >= 0 && i < steps.length) { show(i); jumpTo(wrap, true); } };
-    show(Math.min(ctx.startStep || 0, steps.length - 1));
+    if (t.res && window.Res) { var rs = Res.render(t.res); if (rs) { mat.appendChild(el("div", "lab", "Watch and read")); mat.appendChild(rs); } }
+    else { learn(mat, { read: t.read || [] }); }
+
+    /* your work: check yourself */
+    if (t.mcq && t.mcq.length) {
+      work.appendChild(el("div", "lab", "Check yourself"));
+      var qi = 0, host = el("div");
+      work.appendChild(el("p", "ln-note", t.mcq.length + " questions. Choose, or say you don't know; tick 'I'm guessing' if you are."));
+      work.appendChild(host);
+      (function next() {
+        var i2 = qi; qi += 1;
+        host.innerHTML = "";
+        host.appendChild(el("p", "ln-qn", "Question " + (i2 + 1) + " of " + t.mcq.length));
+        mcqCard(host, t, i2, function () {
+          ctx.refresh();
+          if (qi < t.mcq.length) {
+            var nb = el("button", "btn primary", "Next question");
+            nb.addEventListener("click", function () { next(); });
+            host.appendChild(nb); nb.focus({ preventScroll: true });
+          } else {
+            var lv = levelOf(t);
+            host.appendChild(el("p", "ln-done", "Done." + (lv ? " Your level for this topic: <b>" + LEVELS[lv] + "</b>." : "")));
+          }
+        });
+      }());
+    }
+
+    /* the open question, then what you would say */
+    var sayBox = el("div", "ln-saybox");
+    function drawSay() {
+      sayBox.innerHTML = "";
+      if (!(t.say && t.say.length)) { return; }
+      var s2 = learnStore();
+      if (t.open && !(s2.tried[t.id] && s2.tried[t.id].shown)) {
+        sayBox.appendChild(el("div", "lab", "What you would say"));
+        sayBox.appendChild(el("p", "ln-note", "Shut until you have tried the question above."));
+        return;
+      }
+      sayBox.appendChild(transcript(t.say, "What you would say", ""));
+      panelSection(sayBox, "Avoid", panelList(t.avoid, "mk-bad"));
+    }
+    if (t.open) {
+      work.appendChild(el("div", "lab", "Explain it"));
+      work.appendChild(el("p", "ln-oq", inl(t.open.q)));
+      if (t.open.probe) { work.appendChild(el("p", "ln-note", "<b>They are testing:</b> " + inl(t.open.probe))); }
+      var ta = el("textarea", "ln-ta");
+      ta.placeholder = "Say it out loud first, then type or dictate it here (Win+H). Saved on this device.";
+      ta.value = (st.tried[t.id] && st.tried[t.id].text) || "";
+      ta.addEventListener("input", function () { var s2 = learnStore(); s2.tried[t.id] = s2.tried[t.id] || {}; s2.tried[t.id].text = ta.value; s2.tried[t.id].at = Date.now(); learnSave(s2); });
+      work.appendChild(ta);
+      var reveal = el("button", "btn", "I've tried it: show the model answer");
+      var ans = el("div", "ln-ans");
+      var open = function () {
+        reveal.remove();
+        var s2 = learnStore(); s2.tried[t.id] = s2.tried[t.id] || { text: "", at: Date.now() }; s2.tried[t.id].shown = true; learnSave(s2);
+        ans.appendChild(el("div", "lab", "Model answer"));
+        var ol = el("ol", "ln-beats");
+        (Array.isArray(t.open.a) ? t.open.a : [t.open.a]).forEach(function (b2) { ol.appendChild(el("li", "", inl(b2))); });
+        ans.appendChild(ol);
+        ans.appendChild(el("div", "lab", "How well did you know it?"));
+        var rr = el("div", "ln-rate");
+        [["know", "Know it"], ["partly", "Partly"], ["notyet", "Not yet"]].forEach(function (r) {
+          var bt = el("button", "btn" + (learnStore().rate[t.id] === r[0] ? " on" : ""), r[1]);
+          bt.addEventListener("click", function () {
+            var s3 = learnStore(); s3.rate[t.id] = r[0]; learnSave(s3);
+            rr.querySelectorAll("button").forEach(function (x) { x.classList.remove("on"); });
+            bt.classList.add("on"); ctx.refresh();
+          });
+          rr.appendChild(bt);
+        });
+        ans.appendChild(rr);
+        drawSay(); ctx.refresh();
+      };
+      reveal.addEventListener("click", open);
+      work.appendChild(reveal); work.appendChild(ans);
+      if (st.tried[t.id] && st.tried[t.id].shown) { open(); }
+    }
+    work.appendChild(sayBox);
+    drawSay();
+    if (!sayBox.children.length && work.children.length === 1) { two.classList.add("wide"); }
+    if (ctx.next) {
+      var nt = el("button", "btn primary ln-next", "Next topic: " + esc(ctx.next.title));
+      nt.addEventListener("click", function () { ctx.open(ctx.next, 0); });
+      wrap.appendChild(nt);
+    }
     return wrap;
   }
   function learnItem(t, ctx) {
     var d = el("details", "item ln-item"); d.id = t.id;
     d.setAttribute("name", "learn");
     var sum = el("summary", "");
+    /* the row, like a session step in Accelerate: level, topic, then where each beat stands */
     function paint() {
-      sum.innerHTML = levelDot(levelOf(t)) + '<span class="ln-head"><span class="qt">' + inl(t.title) + '</span><span class="qm">' + inl(t.brief || "") +
-        '</span></span><span class="ln-n">' + (ctx.index + 1) + "/" + ctx.total + "</span>";
+      var s = learnStore(), n = (t.mcq || []).length, done = 0;
+      (t.mcq || []).forEach(function (q, i) { if (s.mcq[t.id + ":" + i]) { done += 1; } });
+      var tried = !!(s.tried[t.id] && s.tried[t.id].shown), rate = s.rate[t.id];
+      sum.innerHTML = levelDot(levelOf(t)) + '<span class="ln-head"><span class="qt">' + inl(t.title) + '</span><span class="qm">' + inl(t.brief || "") + "</span></span>" +
+        '<span class="ln-c">' + (n ? done + "/" + n : "") + "</span>" +
+        '<span class="ln-c">' + (t.open ? '<i class="bd' + (tried ? " on" : "") + '" title="' + (tried ? "Tried" : "Not tried") + '"></i>' : "") + "</span>" +
+        '<span class="ln-c ln-rt">' + (rate ? LEVELS[rate] : "") + "</span>";
     }
     paint();
     d.appendChild(sum);
@@ -1266,6 +1277,7 @@ details.item > .sbody { padding-left: 0; }
         sec.appendChild(tbl);
       }
       var list = el("div", "ln-list");
+      list.appendChild(el("div", "ln-thead", '<span></span><span>Topic</span><span class="ln-c">Check</span><span class="ln-c">Explain</span><span class="ln-c ln-rt">Rated</span>'));
       m.topics.forEach(function (t, i) {
         var k = flat.findIndex(function (x) { return x.t === t; });
         var d = learnItem(t, { index: i, total: m.topics.length, prev: k > 0 ? flat[k - 1].t : null, next: k < flat.length - 1 ? flat[k + 1].t : null, open: openTopic });
@@ -1284,14 +1296,13 @@ details.item > .sbody { padding-left: 0; }
       rows.forEach(function (r) { var hit = !v || r.text.indexOf(v) >= 0; r.d.hidden = !hit; if (hit) { shown[r.sec.id] = true; } });
       rows.forEach(function (r) { r.sec.hidden = !shown[r.sec.id]; });
     });
-    /* keys: Left and Right move between steps, J and K between topics; not while typing */
+    /* keys: J and K move between topics; not while typing */
     if (learnKeys) { document.removeEventListener("keydown", learnKeys); }
     learnKeys = function (e) {
       if (parse().tab !== "learn" || e.altKey || e.ctrlKey || e.metaKey) { return; }
       var tag = (e.target.tagName || "").toLowerCase();
       if (tag === "textarea" || tag === "input" || document.querySelector("dialog[open]")) { return; }
       var d = host.querySelector("details.ln-item[open]"), ln = d && d.querySelector(".ln");
-      if ((e.key === "ArrowRight" || e.key === "ArrowLeft") && ln) { e.preventDefault(); ln.step(e.key === "ArrowRight" ? 1 : -1); }
       if (e.key === "j" || e.key === "k") {
         var k = d ? flat.findIndex(function (x) { return x.t.id === d.id; }) : -1;
         var to = e.key === "j" ? flat[k + 1] : flat[k - 1];
