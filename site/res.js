@@ -68,11 +68,20 @@
     return box;
   }
   function savable(item) { return item.url && !(item.kind === "keep" && item.src === "site"); }
-  /* A video's own bar: speed, open in a new tab, copy the file's path (for Explorer or VLC; a page cannot open
-     Explorer itself). Hotkeys act on the video last played, hovered or clicked, never while typing:
+  /* A video's own bar: speed, open in a new tab, show in Explorer (tools/serve.py opens it), copy the file's path.
+     Hotkeys act on the video last played, hovered or clicked, else the one on screen, never while typing:
      Space or K play and pause, Left and Right 5 s, J and L 10 s, Shift+> and Shift+< speed, 0 to 9 jump, F full screen, M mute. */
-  var MEDIA_DIR = "", lastVideo = null, SPEEDS = [1, 1.25, 1.5, 1.75, 2];
-  /* local-only */ MEDIA_DIR = "E:\_Resume-Curator\self-study\media\videos\\"; /* end local-only */
+  var MEDIA_DIR = "", LOCAL = false, lastVideo = null, SPEEDS = [1, 1.25, 1.5, 1.75, 2];
+  /* local-only */ MEDIA_DIR = "E:\\_Resume-Curator\\self-study\\media\\videos\\"; LOCAL = true; /* end local-only */
+  function fileName(v) { return decodeURIComponent(v.getAttribute("src").split("/").pop()); }
+  function onScreen() {
+    var best = null;
+    Array.prototype.forEach.call(document.querySelectorAll("video"), function (v) {
+      var r = v.getBoundingClientRect();
+      if (!best && r.bottom > 0 && r.top < window.innerHeight && r.width) { best = v; }
+    });
+    return best;
+  }
   function videoBar(v) {
     var bar = el("div", "res-vbar"), btns = [];
     function mark() { btns.forEach(function (b) { b.classList.toggle("on", +b.dataset.r === v.playbackRate); }); }
@@ -83,20 +92,31 @@
     });
     v.addEventListener("ratechange", mark);
     var open = el("a", "res-vb", "Open in a new tab"); open.href = v.getAttribute("src"); open.target = "_blank"; open.rel = "noopener";
+    if (LOCAL) {
+      var show = el("button", "res-vb", "Show in Explorer"); show.type = "button";
+      show.addEventListener("click", function () {
+        fetch("/__reveal?f=" + encodeURIComponent(fileName(v))).then(function (r) { if (!r.ok) { throw 0; } show.textContent = "Opened"; },
+          function () { show.textContent = "Start study.cmd to use this"; })
+          .catch(function () { show.textContent = "Not found"; })
+          .then(function () { setTimeout(function () { show.textContent = "Show in Explorer"; }, 2000); });
+      });
+      bar.appendChild(show);
+    }
     var copy = el("button", "res-vb", "Copy file path"); copy.type = "button";
     copy.addEventListener("click", function () {
-      var path = MEDIA_DIR + decodeURIComponent(v.getAttribute("src").split("/").pop());
+      var path = MEDIA_DIR + fileName(v);
       (navigator.clipboard ? navigator.clipboard.writeText(path) : Promise.reject()).then(function () { copy.textContent = "Copied"; setTimeout(function () { copy.textContent = "Copy file path"; }, 1500); },
         function () { window.prompt("Copy this path:", path); });
     });
-    bar.appendChild(open); bar.appendChild(copy);
+    bar.insertBefore(open, show || null); bar.appendChild(copy);
+    bar.appendChild(el("span", "res-keys", "Keys: Space, \u2190 \u2192 5 s, J L 10 s, < > speed, F, M"));
     ["play", "click", "mouseenter", "focus"].forEach(function (e) { v.addEventListener(e, function () { lastVideo = v; }); });
     mark();
     return bar;
   }
   document.addEventListener("keydown", function (e) {
-    var v = lastVideo;
-    if (!v || !document.contains(v) || e.ctrlKey || e.metaKey || e.altKey) { return; }
+    var v = lastVideo && document.contains(lastVideo) ? lastVideo : onScreen();
+    if (!v || e.ctrlKey || e.metaKey || e.altKey) { return; }
     var tag = (e.target.tagName || "").toLowerCase();
     if (tag === "input" || tag === "textarea" || tag === "select" || e.target.isContentEditable) { return; }
     var k = e.key, d = isFinite(v.duration) ? v.duration : 0, done = true;

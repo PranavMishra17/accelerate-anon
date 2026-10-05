@@ -4,12 +4,25 @@ python tools/serve.py [port]   (default 8000; study.cmd runs it)
 
 Python's http.server answers every request with the whole file, and browsers cannot seek in a video served that
 way. This adds byte ranges (206 Partial Content) and nothing else."""
-import os, re, sys
+import os, re, subprocess, sys
+from urllib.parse import parse_qs, urlparse
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 
 class RangeHandler(SimpleHTTPRequestHandler):
+    def do_GET(self):
+        # /__reveal?f=<name>: select a video in Explorer. Only files in media/videos, by bare name.
+        u = urlparse(self.path)
+        if u.path == "/__reveal":
+            name = os.path.basename(parse_qs(u.query).get("f", [""])[0])
+            path = os.path.join(self.directory, "media", "videos", name)
+            if not name or not os.path.isfile(path):
+                self.send_error(404, "no such video"); return
+            subprocess.Popen(["explorer", "/select,", os.path.normpath(path)])
+            self.send_response(204); self.end_headers(); return
+        super().do_GET()
+
     def send_head(self):
         rng = self.headers.get("Range")
         path = self.translate_path(self.path)

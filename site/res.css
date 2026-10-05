@@ -32,7 +32,8 @@
 .res-saved { color: var(--ok); }
 
 /* An explainer video made for this step, played in place. */
-.res-clip { margin: 0 0 var(--s3, 12px); }
+/* host pages give figure a paper card for diagrams; a video is not a diagram */
+figure.res-clip, figure.ln-clip { margin: 0 0 var(--s3, 12px); padding: 0; background: none; border: 0; color: inherit; overflow: visible; }
 .res-clip video { display: block; width: 100%; max-width: 720px; border-radius: var(--radius, 6px); background: #000; aspect-ratio: 16 / 9; }
 .res-clip-cap { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; margin-top: 6px; }
 .res-len-t { font-size: var(--fs-xs, 12px); color: var(--muted); }
@@ -41,4 +42,5 @@
 .res-vbar { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .res-vb { font: inherit; font-size: var(--fs-xs, 12px); padding: 2px 8px; border: 1px solid var(--rule); border-radius: var(--radius-sm, 4px); background: var(--surface); color: var(--soft); cursor: pointer; text-decoration: none; }
 .res-vb:hover { color: var(--accent); border-color: var(--accent); }
+.res-keys { flex-basis: 100%; font-size: var(--fs-xs, 12px); color: var(--muted); }
 .res-vb.on { color: var(--accent); border-color: var(--accent); font-weight: 600; }
