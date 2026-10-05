@@ -2348,6 +2348,14 @@
      ],
      "res": [
       {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: the transformer, one block",
+       "url": "../media/videos/transformer-one-block.mp4",
+       "m": 4,
+       "why": "Why attention replaced recurrence: queries, keys and values on one sentence, the scaled softmax, heads, residuals, and predicting the next token."
+      },
+      {
        "kind": "video",
        "req": true,
        "label": "Why scaling by the square root of dimensions matters in attention",
@@ -2485,6 +2493,14 @@
       "q-walk-me-through-one-transformer-block"
      ],
      "res": [
+      {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: the transformer, one block",
+       "url": "../media/videos/transformer-one-block.mp4",
+       "m": 4,
+       "why": "Why attention replaced recurrence: queries, keys and values on one sentence, the scaled softmax, heads, residuals, and predicting the next token."
+      },
       {
        "kind": "video",
        "req": true,
@@ -3467,6 +3483,14 @@
      ],
      "res": [
       {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: intents, entities, slots and dialogue state",
+       "url": "../media/videos/intents-entities-slots-state.mp4",
+       "m": 4,
+       "why": "What each piece is and how they differ: an entity is what was said, a slot is what the task needs, and the orchestrator decides the next action in code."
+      },
+      {
        "kind": "video",
        "req": true,
        "label": "7 best practices for Dialogflow CX",
@@ -3761,6 +3785,14 @@
      ],
      "res": [
       {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: intents, entities, slots and dialogue state",
+       "url": "../media/videos/intents-entities-slots-state.mp4",
+       "m": 4,
+       "why": "What each piece is and how they differ: an entity is what was said, a slot is what the task needs, and the orchestrator decides the next action in code."
+      },
+      {
        "kind": "keep",
        "src": "aieng",
        "req": true,
@@ -3923,10 +3955,18 @@
       {
        "kind": "clip",
        "req": true,
+       "label": "Explainer: intents, entities, slots and dialogue state",
+       "url": "../media/videos/intents-entities-slots-state.mp4",
+       "m": 4,
+       "why": "What each piece is and how they differ: an entity is what was said, a slot is what the task needs, and the orchestrator decides the next action in code."
+      },
+      {
+       "kind": "clip",
+       "req": true,
        "label": "Explainer: a transfer dialogue, confirm and repair",
        "url": "../media/videos/transfer-dialogue-confirm-repair.mp4",
        "m": 3,
-       "why": "A transfer as slot filling: resolve, read back, correct, digress and resume, hand off."
+       "why": "Why 'yeah maybe' must never move money: slots, resolving names, read back, a correction that changes one slot, and the code-only gate."
       },
       {
        "kind": "keep",
@@ -4090,7 +4130,7 @@
        "label": "Explainer: the hybrid NLU router",
        "url": "../media/videos/hybrid-nlu-router.mp4",
        "m": 3,
-       "why": "Classifier fast path, thresholds, the LLM fallback, and the code guard on money actions."
+       "why": "Who gets to move the money: a fast classifier with a bar per intent, the LLM for unsure turns, and a code guard an injection cannot talk past."
       },
       {
        "kind": "video",
@@ -4262,7 +4302,7 @@
        "label": "Explainer: the hybrid NLU router",
        "url": "../media/videos/hybrid-nlu-router.mp4",
        "m": 3,
-       "why": "Classifier fast path, thresholds, the LLM fallback, and the code guard on money actions."
+       "why": "Who gets to move the money: a fast classifier with a bar per intent, the LLM for unsure turns, and a code guard an injection cannot talk past."
       },
       {
        "kind": "keep",
@@ -5035,7 +5075,7 @@
        "label": "Explainer: a transfer dialogue, confirm and repair",
        "url": "../media/videos/transfer-dialogue-confirm-repair.mp4",
        "m": 3,
-       "why": "A transfer as slot filling: resolve, read back, correct, digress and resume, hand off."
+       "why": "Why 'yeah maybe' must never move money: slots, resolving names, read back, a correction that changes one slot, and the code-only gate."
       },
       {
        "kind": "video",
@@ -6415,10 +6455,10 @@
       {
        "kind": "clip",
        "req": true,
-       "label": "Explainer: WebSockets and stateful voice workers",
+       "label": "Explainer: WebSockets and stateful call workers",
        "url": "../media/videos/websocket-stateful-workers.mp4",
        "m": 3,
-       "why": "Why a call holds one open connection to one worker, and what that means for load balancing and deploys."
+       "why": "Why a call is one pinned connection: the upgrade, the caller leg, per-call state, least connections, sizing, and draining on deploy."
       },
       {
        "kind": "video",
@@ -6791,10 +6831,10 @@
       {
        "kind": "clip",
        "req": true,
-       "label": "Explainer: WebSockets and stateful voice workers",
+       "label": "Explainer: WebSockets and stateful call workers",
        "url": "../media/videos/websocket-stateful-workers.mp4",
        "m": 3,
-       "why": "Why a call holds one open connection to one worker, and what that means for load balancing and deploys."
+       "why": "Why a call is one pinned connection: the upgrade, the caller leg, per-call state, least connections, sizing, and draining on deploy."
       },
       {
        "kind": "video",
@@ -8479,8 +8519,8 @@
        "req": true,
        "label": "Explainer: the assistant improvement loop",
        "url": "../media/videos/assistant-improvement-loop.mp4",
-       "m": 3,
-       "why": "Logs to redaction, failure mining, clustering, labelling, retraining and the release gate."
+       "m": 4,
+       "why": "How a live assistant gets better each week: redact, find failures without labels, cluster, label where it counts, and gate every release per intent."
       },
       {
        "kind": "video",
@@ -11643,8 +11683,8 @@
        "req": true,
        "label": "Explainer: the assistant improvement loop",
        "url": "../media/videos/assistant-improvement-loop.mp4",
-       "m": 3,
-       "why": "Logs to redaction, failure mining, clustering, labelling, retraining and the release gate."
+       "m": 4,
+       "why": "How a live assistant gets better each week: redact, find failures without labels, cluster, label where it counts, and gate every release per intent."
       },
       {
        "kind": "keep",

@@ -1158,3 +1158,11 @@ who he is now, the systems around the agent, then WheelPrice and UIC, then demo 
 and Learn tabs, word for word, with only the last sentence pointed at voice and patients' calls. His short- and
 long-term goals, his closing and his own questions (process and timeline, how the team has changed, the first 90
 days) are added from the same file. No charter deviation.
+
+**2026-10-05: Vanguard explainers rebuilt on a new video engine, plus two new ones.** He found the first batch read
+like slides (four boxes in a line, narration reading labels). The engine in E:/explainer-videos now lays graphs out
+automatically (ELK, groups as columns), builds them on spoken words with camera moves and failures, and adds sequence,
+chart and equation scenes, a local Kokoro voice and a lint plus stills check before rendering; each video has its
+own palette. All five Vanguard videos were remade, and two were added: the transformer in one block (LLMs module)
+and intents, entities, slots and dialogue state (Intents module). The player gained Show in Explorer (through
+tools/serve.py), hotkeys that reach the video on screen, and dark-safe cards. No charter deviation.
