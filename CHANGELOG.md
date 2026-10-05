@@ -1146,3 +1146,9 @@ files and browsers cannot seek in a video served that way; tools/serve.py adds b
 it. Every explainer video has speed buttons (1× to 2×), Open in a new tab, Copy file path (for Explorer or VLC; a
 page cannot open Explorer itself), and hotkeys on the video last used: Space or K, Left and Right 5 s, J and L 10 s,
 Shift+> and Shift+< speed, 0 to 9 jump, F full screen, M mute. No charter deviation.
+
+**2026-10-05: Commure's Prep tab is back, with why leave, why voice AI and a screen question bank.** The intro (his
+words), why Commure, his voice work, logistics and the questions to ask were in the module but hidden when the page
+became a Learn path. The Prep tab shows them again, with two new answers: why leave alfred_ (paragraphs 1, 2 and 4 his
+words, as for Mphasis and Coframe; paragraph 3 names voice agents in healthcare) and why voice AI; and a bank of the
+eleven questions a recruiter screen asks, each pointing to its script. No charter deviation.

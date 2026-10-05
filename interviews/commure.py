@@ -152,6 +152,31 @@ SCRIPTS = [
      "notes": ["For a recruiter, the first paragraph and one sentence of the second are enough. The rest is for when she asks.",
                "Numbers: sub-400ms and kappa 0.82 over 50 items (MockFlow-AI); 2 to 3 s escalation avoided (your estimate: confirm it)."]},
 
+    {"id": "why-voice", "title": "Why voice AI?", "length": "about 45 seconds",
+     "when": "Asked on its own, or folded into why Commure.",
+     "probes": ["Why not text agents?", "What's hard about voice?", "Where do you think voice agents are going?"],
+     "say": [
+         "Honestly, because it's where the engineering gets hardest and the payoff is most direct. With text you can take a few seconds; on a phone call, silence sounds like the line dropped. So latency, interruptions and turn-taking stop being nice-to-haves.",
+         "And for a lot of people, especially patients, the phone is still the default. Someone calling to book an appointment isn't going to open an app. If the agent can actually pick up and finish the job, that's a real difference for them.",
+         "I've been doing this for a while now: I own alfred_'s voice agent on phone and web, I built a real-time voice platform on LiveKit from scratch, and at the UIC lab I worked on voice for patients in the hospital. So voice is pretty much where I want to keep going."],
+     "swaps": [{"when": "If she asks where voice agents are going", "line": "Speech-to-speech models are getting good, but in a setting like healthcare you still want an orchestrator around them that decides what the agent is allowed to do. That's the part I find most interesting."}],
+     "land": "Hardest engineering, most direct payoff; the phone is still how patients reach care; I already own a live voice agent.",
+     "notes": ["New, in your voice, from your prep facts: alfred_'s voice agent (SIP and WebRTC into LiveKit), MockFlow-AI, the UIC patient voice work."]},
+
+    {"id": "leave", "title": "Why are you looking to leave alfred_?", "length": "about 45 seconds",
+     "when": "You are exploring while employed. Make that clear without sounding defensive.",
+     "probes": ["Is something wrong at alfred_?", "You've only been there since April. Why move so soon?", "Will you leave us quickly too?"],
+     "say": [
+         "There's nothing particularly wrong with alfred_. I've actually learned a lot there and I still enjoy the work.",  # verbatim
+         "I'm mostly looking at what I want the next few years of my career to look like. At alfred_, I've had a lot of ownership because it's a small team, and that's been great. But the work is ultimately internal to one product.",  # verbatim
+         "What I'm increasingly interested in is voice agents that finish real work for people where it really matters. A patient calling to get care, and an agent that books it in Epic correctly, is about as direct as that gets, and Commure is doing it across a lot of health systems.",
+         "So it's less \u201cI need to get away from Alfred\u201d and more \u201cI've found a direction I want to go deeper into.\u201d"],  # verbatim
+     "swaps": [{"when": "If she asks bluntly: why not stay?", "line": "I could. And that's why I'm being selective about what I talk to. I'm not looking to leave just to change companies. It has to give me a meaningfully different scope, and voice agents in healthcare at Commure's scale does."},
+               {"when": "If she asks: only since April, why so soon?", "line": "Fair question. It's been a very dense six months, and the pieces I built there are running. I'm not in a rush; I'm talking to very few places, because the scope has to be genuinely different."}],
+     "land": "Less \u201cget away from alfred_\u201d, more \u201ca direction I want to go deeper into\u201d.",
+     "notes": ["Paragraphs 1, 2 and 4 are your words, unchanged (from your Mphasis and Coframe answers). Paragraph 3 now names voice agents in healthcare.",
+               "Pay, visa and start date are in chat, not on this page."]},
+
     {"id": "logistics", "title": "Logistics she will ask", "length": "a line each",
      "when": "Your answers are in chat, not on this page.",
      "probes": ["The role is on site in Mountain View, five days. Does that work?", "Would you relocate?", "Compensation?", "Work authorization?", "Start date?"],
@@ -164,8 +189,46 @@ SCRIPTS = [
 
 # The Prep bank and the sessions' material now live in one learning path: interviews/commure.learn.json
 # (Learn tab), built 3 October 2026. The old bank is in git history.
-QA = []
-TABS = ["overview", "learn", "mocks"]
+QA = [
+    {"group": "The recruiter screen: questions she is likely to ask", "blurb": "Short answers; each points to the script that carries it.", "items": [
+        {"q": "Walk me through your background.", "short": "Your background", "tests": "A clear, short arc that lands on this role.",
+         "a": ["Use your intro (Your story, Tell me about yourself): research at UIC, shipping at WheelPrice, founding LLM engineer at alfred_, and now the voice agent I own."],
+         "land": "Research, shipping, production agents, a live voice agent."},
+        {"q": "What do you know about Commure?", "short": "What you know about Commure", "tests": "Did you prepare?",
+         "a": ["From what I read, Commure builds an AI platform for healthcare: ambient documentation, revenue cycle, and agents that handle patient calls end to end, scheduling, rescheduling, intake, written back to Epic, Cerner or athena.",
+               "They report around 30% of patient calls go unanswered; the voice agents are there so every call gets picked up and finished."],
+         "land": "AI across the healthcare admin stack; voice agents that pick up and finish every patient call.",
+         "notes": ["Say 'they report' for their figures."]},
+        {"q": "Why Commure?", "short": "Why Commure", "tests": "Motivation that fits the role.",
+         "a": ["Use Why Commure: a real problem with a real patient on the other end, the hardest version of the work I like (real-time voice plus actions in a system of record), and healthcare I've worked in."],
+         "land": "Real problem, hardest version of my work, a domain I know."},
+        {"q": "Why voice AI?", "short": "Why voice AI", "tests": "Genuine interest, not a trend.",
+         "a": ["Use Why voice AI: latency and turn-taking make it the hardest engineering, the phone is how patients reach care, and I already own a live voice agent."],
+         "land": "Hard, direct, and already my work."},
+        {"q": "Why are you leaving alfred_?", "short": "Why leave", "tests": "No red flags; a pull, not a push.",
+         "a": ["Use Why leave: nothing wrong at alfred_, but the work is one product; I want voice agents doing real work where it matters, which is Commure."],
+         "land": "A direction I want to go deeper into."},
+        {"q": "Tell me about the project closest to this role.", "short": "Closest project", "tests": "Ownership and outcome.",
+         "a": ["Use Your voice work: alfred_'s voice agent, which I own end to end and is live; a lean agent on the call with the main agent working in parallel; writes wait and the person confirms. Then MockFlow-AI, which I built from scratch."],
+         "land": "A live voice agent I own; one I built from scratch."},
+        {"q": "How much Python have you written?", "short": "Your Python", "tests": "The role is Python first.",
+         "a": ["A lot. My research and the UIC backend were Python, the eval tooling and FastAPI services are Python, and MockFlow-AI's agent worker is Python on LiveKit. alfred_'s voice worker is Python too; most of alfred_'s product code is TypeScript."],
+         "land": "Python across research, services, evals and voice workers.",
+         "notes": ["Confirm the voice worker language in your own words if unsure; the prep says one Python worker serves phone and web."]},
+        {"q": "Do you have healthcare experience?", "short": "Healthcare", "tests": "Domain fit.",
+         "a": ["Some, from research rather than a health system: my research is multi-agent medical reasoning, TeamMedAgents, and at the UIC lab I deployed an audio model for patient voice interaction on the hospital network. I haven't integrated Epic myself, but the pattern I use for writes, read back and confirm, carries over directly."],
+         "land": "Medical reasoning research and patient voice work; honest about Epic."},
+        {"q": "What are you looking for in your next role?", "short": "What you want next", "tests": "Fit with the team.",
+         "a": ["Owning a real-time agent in production, on a small team that ships fast, where what I build changes something for a real person on the other end of the call."],
+         "land": "Ownership, speed, a real person on the other end."},
+        {"q": "The role is on site in Mountain View, five days a week. Does that work?", "short": "On site", "tests": "Logistics.",
+         "a": ["Your answer is in chat, one sentence, then back to the role."],
+         "land": "Say it once."},
+        {"q": "Are you interviewing elsewhere?", "short": "Other interviews", "tests": "Timeline.",
+         "a": ["A few conversations, and I'm being selective. This one stands out because it's the most direct fit with what I already do: a live voice agent that takes real actions."],
+         "land": "Selective; this is the closest fit."}]},
+]
+TABS = ["overview", "prep", "learn", "mocks"]
 
 ASK_3C = [
     {"id": "audrey", "title": "For Audrey", "when": "At the end. One or two.",
