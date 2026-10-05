@@ -1152,3 +1152,9 @@ words), why Commure, his voice work, logistics and the questions to ask were in 
 became a Learn path. The Prep tab shows them again, with two new answers: why leave alfred_ (paragraphs 1, 2 and 4 his
 words, as for Mphasis and Coframe; paragraph 3 names voice agents in healthcare) and why voice AI; and a bank of the
 eleven questions a recruiter screen asks, each pointing to its script. No charter deviation.
+
+**2026-10-05: Commure uses his base intro.** The intro was the career-history version; his base intro (INTRO.md:
+who he is now, the systems around the agent, then WheelPrice and UIC, then demo to reliable) replaces it on the Prep
+and Learn tabs, word for word, with only the last sentence pointed at voice and patients' calls. His short- and
+long-term goals, his closing and his own questions (process and timeline, how the team has changed, the first 90
+days) are added from the same file. No charter deviation.

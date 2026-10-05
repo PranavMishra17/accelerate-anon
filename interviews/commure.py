@@ -113,17 +113,12 @@ SOURCES = [
 ]
 
 SCRIPTS = [
-    {"id": "intro", "title": "Tell me about yourself", "length": "about 90 seconds",
-     "when": "The opener. Land on healthcare and real-time voice.",
-     "probes": ["What does alfred_ do?", "What did you build at UIC?", "Why voice agents?"],
-     "say": [
-         "Sure. I started out in computer science research at UIC, where I worked on applied ML and LLM systems. That gave me a pretty strong foundation in actually building and evaluating these systems, rather than just using the models.",  # verbatim
-         "From there I joined WheelPrice, which was a much more startup-oriented environment. I was working across the stack and got a lot more exposure to shipping things that were actually being used by customers. It was a small engineering team, so I had to be pretty broad — backend, AI, infrastructure, and product work all kind of blended together.",  # verbatim
-         "After that I joined alfred_, where I've been working as a founding LLM engineer. It's an AI assistant, and my work has become much more focused on reliability and evaluation — things like building the eval harness, production failure detection, working memory, and making sure agent changes actually improve the product rather than just looking better on a benchmark.",  # verbatim
-         "The common thread through all of that has really been building AI systems in environments where you don't have a perfectly defined problem in front of you. You have to figure out what's broken, decide what to build, and then own it through production.",  # verbatim
-         "And for the last few months that's meant voice: I own alfred_'s voice agent, which people call from their phones, and before that I built a real-time voice platform on LiveKit from scratch. So an agent that actually answers patients' calls and finishes the job is pretty much where I want to be."],
-     "land": "Research, shipping, production agents, and now a live voice agent I own.",
-     "notes": ["Paragraphs 1 to 4 are your words, unchanged. Only the last line is new."]},
+    {"id": "intro", "title": "Tell me about yourself", "length": "about 60 seconds",
+     "when": "The opener. Your base intro: who you are now, what you do, then where you came from, then why this.",
+     "probes": ["What does alfred_ do?", "What do you own there?", "Why voice agents?"],
+     "say": ["I’m currently a founding LLM engineer at alfred_, ai assistant for work-apps - email calenader + any n all integrations -", "A lot of my work sits at the intersection of AI systems and backend infrastructure — I’ve built our evaluation harness from scratch, worked on memory architecture, production failure detection, tool execution reliability, and the infrastructure we use to understand and improve agent behavior in production.", "Before alfred_, I was at an early-stage startup called WheelPrice, where I worked across the stack and owned several production systems, and before that I was doing applied ML/AI research at UIC.", "What I’ve realized I enjoy most is the infrastructure side of AI — taking these systems from something that works in a demo to something that can reliably operate, recover, be evaluated, and scale.", "And for the last few months that's meant voice: I own alfred_'s voice agent, phone and web, so an agent that answers patients' calls and actually finishes the job is pretty much where I want to be."],
+     "land": "Founding LLM engineer, the systems around the agent, demo to reliable; now a live voice agent I own.",
+     "notes": ["Your base intro from INTRO.md, word for word. Only the last sentence is new: it named Coframe, it now lands on voice and patients' calls."]},
 
     {"id": "why-commure", "title": "Why Commure? Why voice agents?", "length": "about 60 seconds",
      "when": "After the intro, or after her pitch.",
@@ -176,6 +171,32 @@ SCRIPTS = [
      "land": "Less \u201cget away from alfred_\u201d, more \u201ca direction I want to go deeper into\u201d.",
      "notes": ["Paragraphs 1, 2 and 4 are your words, unchanged (from your Mphasis and Coframe answers). Paragraph 3 now names voice agents in healthcare.",
                "Pay, visa and start date are in chat, not on this page."]},
+
+    {"id": "goals-short", "title": "What are your short-term goals?", "length": "about 45 seconds",
+     "when": "Often asked by a recruiter to see fit.",
+     "probes": ["What would your first three months look like?"],
+     "say": [
+         "Short term, I want to be somewhere the agentic engineering is actually at the frontier \u2014 not a demo, but running against real stakes, where getting it wrong has weight. That's the fastest way I know to get good, seriously good, at this.",  # verbatim
+         "In the first few months, I'd want to get inside the codebase and the clinical domain fast, start pulling weight on the agent and eval side quickly since that's where I'm strongest, and be someone the team can hand a hard, ambiguous problem to without much hand-holding. I learn by being in the guts of the system, not by reading about it, so I want the steepest, most serious version of that learning curve available."],  # verbatim
+     "land": "Real stakes, fast; inside the codebase and the clinical domain; trusted with hard, ambiguous problems.",
+     "notes": ["Your words from INTRO.md, unchanged."]},
+
+    {"id": "goals-long", "title": "What are your long-term goals?", "length": "about 45 seconds",
+     "when": "What do you want to achieve in your career?",
+     "probes": ["Do you want to manage people?"],
+     "say": [
+         "Long term, I want to understand this domain and this kind of engineering deeply enough that I can actually lead it \u2014 see where the real bottlenecks are, and push us toward the better one before it costs months. But I don't want that to mean stepping back from the actual work. I want to be doing frontline engineering the whole way there \u2014 the judgment I'd want to lead with only comes from still being in the code and still hitting the failure modes myself.",  # verbatim
+         "I want to keep getting deeper on that, hands still on it, until I'm someone who can call the direction and still build it. Honestly, a small-to-growing team building something genuinely hard and meaningful, with smart people I can learn from, is exactly where I always want to be."],  # verbatim
+     "land": "Lead by still building.",
+     "notes": ["Your words from INTRO.md, unchanged."]},
+
+    {"id": "closing", "title": "Closing the call", "length": "a few lines",
+     "when": "After your questions, at the end.",
+     "probes": [],
+     "say": [
+         "Really appreciate you taking the time today. This was helpful \u2014 honestly, the more I hear about what the team is working on, the more excited I am about the fit. Looking forward to hearing about next steps whenever you have them."],  # verbatim
+     "land": "Thanks, excited about the fit, next steps.",
+     "notes": ["Your closing from INTRO.md, unchanged."]},
 
     {"id": "logistics", "title": "Logistics she will ask", "length": "a line each",
      "when": "Your answers are in chat, not on this page.",
@@ -235,7 +256,9 @@ ASK_3C = [
      "why": "Practical questions about the process and the team.",
      "how": ["Ask one, then listen."],
      "items": [
-         {"to": "Audrey", "q": "What do the technical rounds look like, and roughly what's the timeline?", "loop": "First.", "why": "Tells you what to prepare."},
+         {"to": "Audrey", "q": "What does the full interview process look like from here, and the rough timeline?", "loop": "First.", "why": "Your question (INTRO.md). Tells you what to prepare."},
+         {"to": "Audrey", "q": "How has the engineering team changed recently? I'm curious how the work culture has evolved.", "loop": "Middle.", "why": "Your question (INTRO.md), tidied from your note."},
+         {"to": "Audrey", "q": "What does success look like for this role in the first 90 days?", "loop": "Middle.", "why": "Your question (INTRO.md)."},
          {"to": "Audrey", "q": "How big is the voice agents team, and who would I work with most?", "loop": "Middle.", "why": "Scope."},
          {"to": "Audrey", "q": "What makes someone stand out on this team?", "loop": "If there's time.", "why": "What to lead with next."},
          {"to": "Audrey", "q": "Is there anything in my background you'd want me to make clearer?", "loop": "Last.", "why": "Invites a concern while you can answer it."}]},
