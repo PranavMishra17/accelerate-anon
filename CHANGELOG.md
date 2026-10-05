@@ -1136,3 +1136,7 @@ deviation.
 plan cannot use library voices through the API, and its monthly allowance covers about five of the seven), so
 captions now follow the voice word for word. Backprop and negative log-likelihood stay captions-only until the
 next allowance or an upgrade. No charter deviation.
+
+**2026-10-05: Each loop module shows its explainer videos up front.** Under a module's heading, the videos its
+topics carry play in a row, each linking to the topic that teaches it (Vanguard: voice, NLU, design, errors,
+system design). No charter deviation.

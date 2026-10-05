@@ -244,6 +244,9 @@ details.ln-item[open] > summary .qm { display: none; }
 @media (max-width: 640px) { .ln { padding: 0 var(--s2) var(--s4); } .ln-nav .ln-pos { display: none; } }
 @media (max-width: 640px) { .lmap-row { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
 .ln-mod { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s2); }
+.ln-clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--s3); margin: var(--s2) 0 var(--s4); }
+.ln-clip { margin: 0; } .ln-clip video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: var(--radius); }
+.ln-clip figcaption { font-size: var(--fs-sm); margin-top: var(--s1); color: var(--soft); } .ln-clip figcaption b { color: var(--ink); font-weight: var(--w-strong); }
 
 .ln-brief { margin: 0 0 var(--s3); }
 .ln-note { color: var(--muted); font-size: var(--fs-sm); }
@@ -1258,6 +1261,21 @@ details.item > .sbody { padding-left: 0; }
         top.appendChild(el("span", "", "Deeper in the tracker: " + m.sessions.map(function (x) { return '<a href="../index.html#/w/' + esc(x) + '" target="_blank" rel="noopener">' + esc(x) + "</a>"; }).join(", ")));
       }
       sec.appendChild(top);
+      /* the module's explainer videos up front, each linking to the topic that teaches it */
+      var clips = [], seenClip = {};
+      m.topics.forEach(function (t) { (t.res || []).forEach(function (x) { if (x.kind === "clip" && !seenClip[x.url]) { seenClip[x.url] = 1; clips.push({ x: x, t: t }); } }); });
+      if (clips.length) {
+        var cw = el("div", "ln-clips");
+        clips.forEach(function (c) {
+          var f = el("figure", "ln-clip"), v = document.createElement("video");
+          v.controls = true; v.preload = "metadata"; v.src = c.x.url; v.playsInline = true;
+          f.appendChild(v);
+          var cap = el("figcaption", "", '<b>' + esc(c.x.label.replace(/^Explainer: (.)/, function (s, ch) { return ch.toUpperCase(); })) + "</b> " + (c.x.m ? '<span class="ln-file">' + c.x.m + " min</span>" : "") + '<br><a href="' + link("learn", c.t.id) + '">In: ' + esc(c.t.title) + "</a>");
+          f.appendChild(cap);
+          cw.appendChild(f);
+        });
+        sec.appendChild(cw);
+      }
       if (m.table && m.table.rows) {
         var tbl = el("table", "ln-table"), h = "<thead><tr>" + m.table.head.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") + "</tr></thead><tbody>";
         m.table.rows.forEach(function (r) { h += "<tr>" + r.map(function (c) { return "<td>" + inl(c) + "</td>"; }).join("") + "</tr>"; });
