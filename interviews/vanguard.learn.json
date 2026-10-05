@@ -3921,6 +3921,14 @@
      ],
      "res": [
       {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: a transfer dialogue, confirm and repair",
+       "url": "../media/videos/transfer-dialogue-confirm-repair.mp4",
+       "m": 3,
+       "why": "A transfer as slot filling: resolve, read back, correct, digress and resume, hand off."
+      },
+      {
        "kind": "keep",
        "src": "aieng",
        "req": true,
@@ -4076,6 +4084,14 @@
       "q-an-faq-intent-and-a-transactional-intent-keep-colliding-like"
      ],
      "res": [
+      {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: the hybrid NLU router",
+       "url": "../media/videos/hybrid-nlu-router.mp4",
+       "m": 3,
+       "why": "Classifier fast path, thresholds, the LLM fallback, and the code guard on money actions."
+      },
       {
        "kind": "video",
        "req": true,
@@ -4240,6 +4256,14 @@
       "a-hybrid-llm-era"
      ],
      "res": [
+      {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: the hybrid NLU router",
+       "url": "../media/videos/hybrid-nlu-router.mp4",
+       "m": 3,
+       "why": "Classifier fast path, thresholds, the LLM fallback, and the code guard on money actions."
+      },
       {
        "kind": "keep",
        "src": "aieng",
@@ -5006,6 +5030,14 @@
      ],
      "res": [
       {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: a transfer dialogue, confirm and repair",
+       "url": "../media/videos/transfer-dialogue-confirm-repair.mp4",
+       "m": 3,
+       "why": "A transfer as slot filling: resolve, read back, correct, digress and resume, hand off."
+      },
+      {
        "kind": "video",
        "req": true,
        "label": "Everything you ever wanted to know about conversation design",
@@ -5691,6 +5723,14 @@
      "figs": [],
      "res": [
       {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: the voice agent cascade",
+       "url": "../media/videos/voice-agent-cascade.mp4",
+       "m": 3,
+       "why": "One spoken turn from audio frames to the reply, and the latency budget stage by stage."
+      },
+      {
        "kind": "video",
        "req": true,
        "label": "Voice Agent Pipeline Explained: VAD, STT, LLM and TTS",
@@ -6373,6 +6413,14 @@
      "figs": [],
      "res": [
       {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: WebSockets and stateful voice workers",
+       "url": "../media/videos/websocket-stateful-workers.mp4",
+       "m": 3,
+       "why": "Why a call holds one open connection to one worker, and what that means for load balancing and deploys."
+      },
+      {
        "kind": "video",
        "req": true,
        "label": "How Web Sockets work, System Design Interview Basics",
@@ -6740,6 +6788,14 @@
      ],
      "figs": [],
      "res": [
+      {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: WebSockets and stateful voice workers",
+       "url": "../media/videos/websocket-stateful-workers.mp4",
+       "m": 3,
+       "why": "Why a call holds one open connection to one worker, and what that means for load balancing and deploys."
+      },
       {
        "kind": "video",
        "req": true,
@@ -8418,6 +8474,14 @@
       "a-error-analysis"
      ],
      "res": [
+      {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: the assistant improvement loop",
+       "url": "../media/videos/assistant-improvement-loop.mp4",
+       "m": 3,
+       "why": "Logs to redaction, failure mining, clustering, labelling, retraining and the release gate."
+      },
       {
        "kind": "video",
        "req": true,
@@ -11438,6 +11502,14 @@
      "figs": [],
      "res": [
       {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: the voice agent cascade",
+       "url": "../media/videos/voice-agent-cascade.mp4",
+       "m": 3,
+       "why": "One spoken turn from audio frames to the reply, and the latency budget stage by stage."
+      },
+      {
        "kind": "keep",
        "src": "site",
        "label": "System design guide: Contact-centre voice assistant with handoff",
@@ -11566,6 +11638,14 @@
      ],
      "figs": [],
      "res": [
+      {
+       "kind": "clip",
+       "req": true,
+       "label": "Explainer: the assistant improvement loop",
+       "url": "../media/videos/assistant-improvement-loop.mp4",
+       "m": 3,
+       "why": "Logs to redaction, failure mining, clustering, labelling, retraining and the release gate."
+      },
       {
        "kind": "keep",
        "src": "site",

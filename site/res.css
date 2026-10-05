@@ -30,3 +30,9 @@
 .res-save-b:hover { color: var(--accent); border-color: var(--accent); }
 .res-save-s { font: inherit; font-size: var(--fs-xs, 12px); padding: 1px 4px; border: 1px solid var(--rule); border-radius: var(--radius-sm, 4px); background: var(--surface); color: var(--ink); }
 .res-saved { color: var(--ok); }
+
+/* An explainer video made for this step, played in place. */
+.res-clip { margin: 0 0 var(--s3, 12px); }
+.res-clip video { display: block; width: 100%; max-width: 720px; border-radius: var(--radius, 6px); background: #000; aspect-ratio: 16 / 9; }
+.res-clip-cap { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; margin-top: 6px; }
+.res-len-t { font-size: var(--fs-xs, 12px); color: var(--muted); }

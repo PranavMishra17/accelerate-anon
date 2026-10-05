@@ -16,3 +16,6 @@ _site/
 
 # Working notes for Claude: local only
 CLAUDE.md
+
+# Explainer videos rendered from E:/explainer-videos: local only, too large for the repo
+media/

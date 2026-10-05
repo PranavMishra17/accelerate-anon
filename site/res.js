@@ -68,10 +68,24 @@
     return box;
   }
   function savable(item) { return item.url && !(item.kind === "keep" && item.src === "site"); }
+  /* kind "clip": a local explainer video (media/videos, gitignored), played in place */
+  function clip(item) {
+    var f = el("figure", "res-clip");
+    var v = document.createElement("video");
+    v.controls = true; v.preload = "metadata"; v.src = item.url; v.playsInline = true;
+    f.appendChild(v);
+    var cap = el("figcaption", "res-clip-cap");
+    cap.appendChild(el("span", "res-title", item.label));
+    if (item.m) { cap.appendChild(el("span", "res-len-t", " " + item.m + " min")); }
+    if (item.why) { cap.appendChild(el("span", "res-why", item.why)); }
+    f.appendChild(cap);
+    return f;
+  }
   function group(title, items, onClick, save) {
     if (!items.length) { return null; }
     var g = el("div", "res-group");
     g.appendChild(el("div", "res-label", title));
+    items.filter(function (x) { return x.kind === "clip"; }).forEach(function (x) { g.appendChild(clip(x)); });
     var vids = items.filter(function (x) { return x.kind === "video" && x.yt && x.yt.id; });
     if (vids.length) {
       var vg = el("div", "res-videos");
@@ -83,7 +97,7 @@
       });
       g.appendChild(vg);
     }
-    var rest = items.filter(function (x) { return vids.indexOf(x) < 0; });
+    var rest = items.filter(function (x) { return vids.indexOf(x) < 0 && x.kind !== "clip"; });
     if (rest.length) {
       var ul = el("ul", "res-list");
       rest.forEach(function (x) { var li = row(x, onClick); if (save && savable(x)) { li.appendChild(saver(x, save)); } ul.appendChild(li); });

@@ -1122,3 +1122,12 @@ lesson links on the local copy when it is running and on the website otherwise. 
 Required items in the Vanguard topics they serve (text classification, NER, entity linking, embedding models,
 chatbots from rules to agents, dialogue state tracking, structured outputs, retrieval, NLI, LLM evaluation);
 the phase as a whole is in the AI engineering backlog for after the call. No charter deviation.
+
+**2026-10-05: Seven explainer videos, played in the steps and topics they teach.**
+His picks, made in E:/explainer-videos (Remotion, captions burned in; narration once an ElevenLabs key is
+added): the voice agent cascade, WebSockets and stateful voice workers, the hybrid NLU router, a transfer
+dialogue with confirm and repair, the assistant improvement loop (Vanguard), backprop on week 4's tiny chain
+and why minimise negative log-likelihood (week 1). Each is about two and a half minutes, built from the page it
+sits on. The MP4s live in a gitignored media/videos (local only, nothing published); the shared resource
+renderer gained a `clip` kind that plays a video in place, placed first in the topic or step. No charter
+deviation.
