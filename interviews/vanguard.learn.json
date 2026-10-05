@@ -5728,7 +5728,7 @@
        "label": "Explainer: the voice agent cascade",
        "url": "../media/videos/voice-agent-cascade.mp4",
        "m": 3,
-       "why": "One spoken turn from audio frames to the reply, and the latency budget stage by stage."
+       "why": "Where the second goes: the naive build failing, then streaming, speaking early, co-location and the gate in front of a speech model."
       },
       {
        "kind": "video",
@@ -11507,7 +11507,7 @@
        "label": "Explainer: the voice agent cascade",
        "url": "../media/videos/voice-agent-cascade.mp4",
        "m": 3,
-       "why": "One spoken turn from audio frames to the reply, and the latency budget stage by stage."
+       "why": "Where the second goes: the naive build failing, then streaming, speaking early, co-location and the gate in front of a speech model."
       },
       {
        "kind": "keep",
