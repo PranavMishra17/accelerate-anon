@@ -1131,3 +1131,8 @@ and why minimise negative log-likelihood (week 1). Each is about two and a half 
 sits on. The MP4s live in a gitignored media/videos (local only, nothing published); the shared resource
 renderer gained a `clip` kind that plays a video in place, placed first in the topic or step. No charter
 deviation.
+
+**2026-10-05: The five Vanguard explainers narrated.** Voiced with ElevenLabs' built-in George voice (the free
+plan cannot use library voices through the API, and its monthly allowance covers about five of the seven), so
+captions now follow the voice word for word. Backprop and negative log-likelihood stay captions-only until the
+next allowance or an upgrade. No charter deviation.
