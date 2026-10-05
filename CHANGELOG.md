@@ -1140,3 +1140,9 @@ next allowance or an upgrade. No charter deviation.
 **2026-10-05: Each loop module shows its explainer videos up front.** Under a module's heading, the videos its
 topics carry play in a row, each linking to the topic that teaches it (Vanguard: voice, NLU, design, errors,
 system design). No charter deviation.
+
+**2026-10-05: Videos can be skipped and sped up.** Skipping never worked because Python's http.server sends whole
+files and browsers cannot seek in a video served that way; tools/serve.py adds byte ranges and study.cmd now runs
+it. Every explainer video has speed buttons (1× to 2×), Open in a new tab, Copy file path (for Explorer or VLC; a
+page cannot open Explorer itself), and hotkeys on the video last used: Space or K, Left and Right 5 s, J and L 10 s,
+Shift+> and Shift+< speed, 0 to 9 jump, F full screen, M mute. No charter deviation.

@@ -1270,7 +1270,7 @@ details.item > .sbody { padding-left: 0; }
         clips.forEach(function (c) {
           var f = el("figure", "ln-clip"), v = document.createElement("video");
           v.controls = true; v.preload = "metadata"; v.src = c.x.url; v.playsInline = true;
-          f.appendChild(v);
+          f.appendChild(window.Res && Res.enhanceVideo ? Res.enhanceVideo(v) : v);
           var cap = el("figcaption", "", '<b>' + esc(c.x.label.replace(/^Explainer: (.)/, function (s, ch) { return ch.toUpperCase(); })) + "</b> " + (c.x.m ? '<span class="ln-file">' + c.x.m + " min</span>" : "") + '<br><a href="' + link("learn", c.t.id) + '">In: ' + esc(c.t.title) + "</a>");
           f.appendChild(cap);
           cw.appendChild(f);

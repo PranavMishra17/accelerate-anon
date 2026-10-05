@@ -68,12 +68,59 @@
     return box;
   }
   function savable(item) { return item.url && !(item.kind === "keep" && item.src === "site"); }
+  /* A video's own bar: speed, open in a new tab, copy the file's path (for Explorer or VLC; a page cannot open
+     Explorer itself). Hotkeys act on the video last played, hovered or clicked, never while typing:
+     Space or K play and pause, Left and Right 5 s, J and L 10 s, Shift+> and Shift+< speed, 0 to 9 jump, F full screen, M mute. */
+  var MEDIA_DIR = "", lastVideo = null, SPEEDS = [1, 1.25, 1.5, 1.75, 2];
+  /* local-only */ MEDIA_DIR = "E:\_Resume-Curator\self-study\media\videos\\"; /* end local-only */
+  function videoBar(v) {
+    var bar = el("div", "res-vbar"), btns = [];
+    function mark() { btns.forEach(function (b) { b.classList.toggle("on", +b.dataset.r === v.playbackRate); }); }
+    SPEEDS.forEach(function (r) {
+      var b = el("button", "res-vb", r + "×"); b.type = "button"; b.dataset.r = r;
+      b.addEventListener("click", function () { v.playbackRate = r; lastVideo = v; mark(); });
+      btns.push(b); bar.appendChild(b);
+    });
+    v.addEventListener("ratechange", mark);
+    var open = el("a", "res-vb", "Open in a new tab"); open.href = v.getAttribute("src"); open.target = "_blank"; open.rel = "noopener";
+    var copy = el("button", "res-vb", "Copy file path"); copy.type = "button";
+    copy.addEventListener("click", function () {
+      var path = MEDIA_DIR + decodeURIComponent(v.getAttribute("src").split("/").pop());
+      (navigator.clipboard ? navigator.clipboard.writeText(path) : Promise.reject()).then(function () { copy.textContent = "Copied"; setTimeout(function () { copy.textContent = "Copy file path"; }, 1500); },
+        function () { window.prompt("Copy this path:", path); });
+    });
+    bar.appendChild(open); bar.appendChild(copy);
+    ["play", "click", "mouseenter", "focus"].forEach(function (e) { v.addEventListener(e, function () { lastVideo = v; }); });
+    mark();
+    return bar;
+  }
+  document.addEventListener("keydown", function (e) {
+    var v = lastVideo;
+    if (!v || !document.contains(v) || e.ctrlKey || e.metaKey || e.altKey) { return; }
+    var tag = (e.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "textarea" || tag === "select" || e.target.isContentEditable) { return; }
+    var k = e.key, d = isFinite(v.duration) ? v.duration : 0, done = true;
+    if (k === " " || k === "k" || k === "K") { if (v.paused) { v.play(); } else { v.pause(); } }
+    else if (k === "ArrowRight") { v.currentTime = Math.min(d, v.currentTime + 5); }
+    else if (k === "ArrowLeft") { v.currentTime = Math.max(0, v.currentTime - 5); }
+    else if (k === "l" || k === "L") { v.currentTime = Math.min(d, v.currentTime + 10); }
+    else if (k === "j" || k === "J") { v.currentTime = Math.max(0, v.currentTime - 10); }
+    else if (k === ">") { v.playbackRate = Math.min(3, Math.round((v.playbackRate + 0.25) * 100) / 100); }
+    else if (k === "<") { v.playbackRate = Math.max(0.5, Math.round((v.playbackRate - 0.25) * 100) / 100); }
+    else if (/^[0-9]$/.test(k) && d) { v.currentTime = d * (+k) / 10; }
+    else if (k === "f" || k === "F") { if (document.fullscreenElement) { document.exitFullscreen(); } else if (v.requestFullscreen) { v.requestFullscreen(); } }
+    else if (k === "m" || k === "M") { v.muted = !v.muted; }
+    else { done = false; }
+    if (done) { e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+  function enhanceVideo(v) { var wrap = el("div", "res-vwrap"); wrap.appendChild(v); wrap.appendChild(videoBar(v)); return wrap; }
+
   /* kind "clip": a local explainer video (media/videos, gitignored), played in place */
   function clip(item) {
     var f = el("figure", "res-clip");
     var v = document.createElement("video");
     v.controls = true; v.preload = "metadata"; v.src = item.url; v.playsInline = true;
-    f.appendChild(v);
+    f.appendChild(enhanceVideo(v));
     var cap = el("figcaption", "res-clip-cap");
     cap.appendChild(el("span", "res-title", item.label));
     if (item.m) { cap.appendChild(el("span", "res-len-t", " " + item.m + " min")); }
@@ -116,5 +163,5 @@
     });
     return box;
   }
-  window.Res = { render: render };
+  window.Res = { render: render, enhanceVideo: enhanceVideo };
 }());

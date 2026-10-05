@@ -11,7 +11,7 @@ cd /d "%~dp0"
 rem Start the server only if nothing is already listening on 8000.
 netstat -ano | findstr /r /c:"TCP.*:8000 .*LISTENING" >nul 2>&1
 if errorlevel 1 (
-  start "self-study server" /min cmd /c "python -m http.server 8000 --bind 127.0.0.1"
+  start "self-study server" /min cmd /c "python tools\serve.py 8000"
   rem give it a moment to bind before the browser asks for the page
   ping -n 2 127.0.0.1 >nul
 )
