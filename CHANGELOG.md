@@ -1166,3 +1166,5 @@ chart and equation scenes, a local Kokoro voice and a lint plus stills check bef
 own palette. All five Vanguard videos were remade, and two were added: the transformer in one block (LLMs module)
 and intents, entities, slots and dialogue state (Intents module). The player gained Show in Explorer (through
 tools/serve.py), hotkeys that reach the video on screen, and dark-safe cards. No charter deviation.
+
+**2026-10-06: Backend explainers, linked in the Systems sessions.** Five videos made from the alfred_ code, concept first with the codebase as the case: Deno edge functions (w4a step 1), long-running workers (w4a step 2), Postgres as the queue and scheduler (w1a step 2, w2a step 1), realtime change streams (w5a step 1) and shipping safely (w4a step 0). They play locally from media/videos; the public site leaves clips out, since the files are not published. The Alfred page gained a Backend engineering section, and its handbook folder is now rebuilt by every build. No charter deviation: they feed existing Systems steps.

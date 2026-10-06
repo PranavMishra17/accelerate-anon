@@ -149,6 +149,8 @@
     return f;
   }
   function group(title, items, onClick, save) {
+    // Explainer clips live in gitignored media/videos, so the public site has no file to play: leave them out there.
+    if (window.SITE_PUBLIC) { items = items.filter(function (x) { return x.kind !== "clip"; }); }
     if (!items.length) { return null; }
     var g = el("div", "res-group");
     g.appendChild(el("div", "res-label", title));
