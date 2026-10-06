@@ -29,7 +29,7 @@ OWNER, NAME = REPO.split("/")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "_site")
-PAGES = ["SYSTEM DESIGN.html", "CODING.html", "CHEATSHEET.html", "DEEP-LEARNING.html", "BASELINE.html"]
+PAGES = ["SYSTEM DESIGN.html", "CODING.html", "CHEATSHEET.html", "DEEP-LEARNING.html", "BASELINE.html", "PROJECTS.html"]
 EXTRA = ["brand/accelerate.svg"]           # drawn by site/nav.js, so no page names it in an attribute
 TEXT = (".html", ".js", ".css", ".json", ".svg", ".txt", ".md")
 

@@ -32,7 +32,8 @@
   var PAGES = [
     { key: "baseline", href: "BASELINE.html", label: "Baseline, a map of the fields", short: "Baseline", icon: ICON.map },
     { key: "guide", href: "SYSTEM%20DESIGN.html", label: "System design guide", short: "System design", icon: ICON.network },
-    { key: "coding", href: "CODING.html", label: "Algorithms and coding, with its one-screen cheat sheet", short: "Coding", icon: ICON.code }
+    { key: "coding", href: "CODING.html", label: "Algorithms and coding, with its one-screen cheat sheet", short: "Coding", icon: ICON.code },
+    { key: "projects", href: "PROJECTS.html", label: "Projects, how each one works", short: "Projects", icon: ICON["layout-grid"] }
   ];
   if (PUBLIC) {
     PAGES.push({ key: "dl", href: "DEEP-LEARNING.html", label: "Deep learning from scratch", short: "Deep learning", icon: ICON["audio-waveform"] });

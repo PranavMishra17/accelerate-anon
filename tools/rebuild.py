@@ -15,6 +15,7 @@ LOOPS = [f[:-3] for f in sorted(os.listdir(os.path.join(ROOT, "interviews")))
 
 steps = [["node", "figures/check.js"], ["node", "baseline/check.js"], ["node", "baseline/quiz/check.js"], ["node", "data/mcq/check.js"],["python", "coding/test_data.py"], ["python", "figures/stamp.py"]]
 steps += [["python", "interviews/build.py", m] for m in LOOPS]
+steps += [["python", "projects/build.py"]]
 steps.append(["python", "interviews/hub.py"])   # INTERVIEWS.html, after the loop pages
 PRIVATE = os.path.join(ROOT, "private")   # gitignored, local only: each private/<page>/build.py
 if os.path.isdir(PRIVATE):
