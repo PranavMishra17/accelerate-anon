@@ -287,7 +287,7 @@ BASELINE.field({
           example: "A caller asks 'Do you have anything Friday?'. Their speech ends at 0 ms; the turn is confirmed at 300 ms and the final transcript lands at 350. The LLM starts streaming 'Let me check that' at 700 and calls the calendar tool; TTS sends first audio at 800, so the caller hears a reply in under a second while the tool runs.",
           nuance: "The cascade wins on control and debuggability: every turn leaves a transcript and an LLM call you can replay. Teams that need it to feel instant often run a small fast model to talk and a larger one to think in parallel.",
           read: [{ label: "Voice AI and Voice Agents primer: section 4, the basic conversational loop", url: "https://voiceaiandvoiceagents.com/", m: 20 }],
-          see: [{ label: "System design guide: voice agent for patient calls", href: "SYSTEM%20DESIGN.html#/designs/voice-agent" }],
+          see: [{ label: "System design guide: voice AI agent platform", href: "SYSTEM%20DESIGN.html#/designs/voice-agent" }],
           tags: ["voice agent", "pipecat", "livekit", "cascade", "vapi"] },
         { id: "telephony-webrtc", name: "Telephony and WebRTC",
           line: "The two ways audio reaches an agent: the phone network, or a browser or app.",
@@ -332,7 +332,7 @@ BASELINE.field({
           example: "An illustrative p95 budget: network in 40 ms, endpointing wait 400, ASR final 100, LLM first token 350, TTS first byte 150, network out 40, buffers 60. Total 1,140 ms. The endpointing wait is the largest item, so a semantic turn model that safely cuts it to 200 ms saves more than any model upgrade.",
           nuance: "The endpointing wait is usually the largest single item and it is a setting, not a model. Cutting it is cheap until the agent starts interrupting people mid-sentence.",
           read: [{ label: "Voice AI and Voice Agents primer: the latency section and its table", url: "https://voiceaiandvoiceagents.com/", m: 15 }],
-          see: [{ label: "System design guide: voice agent for patient calls", href: "SYSTEM%20DESIGN.html#/designs/voice-agent" }],
+          see: [{ label: "System design guide: voice AI agent platform", href: "SYSTEM%20DESIGN.html#/designs/voice-agent" }],
           tags: ["latency", "ttfb", "ttft", "voice-to-voice", "p95"] },
         { id: "evaluation", name: "Evaluation: WER, MOS and beyond",
           line: "How speech systems are scored, and why the headline numbers mislead.",
@@ -357,6 +357,6 @@ BASELINE.field({
   ],
   see: [
     { label: "Deep learning from scratch: the audio stages", href: "DEEP-LEARNING.html#/plan/stage-15" },
-    { label: "System design guide: voice agent for patient calls", href: "SYSTEM%20DESIGN.html#/designs/voice-agent" }
+    { label: "System design guide: voice AI agent platform", href: "SYSTEM%20DESIGN.html#/designs/voice-agent" }
   ]
 });

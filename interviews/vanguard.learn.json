@@ -6177,6 +6177,15 @@
        "url": "../interviews/commure.html",
        "m": 25,
        "why": "The turn and interrupt topics with the silence rules that belong in code, not in the prompt."
+      },
+      {
+       "kind": "keep",
+       "src": "site",
+       "req": false,
+       "label": "Guide: voice AI agent platform at scale",
+       "url": "../SYSTEM%20DESIGN.html#/designs/voice-agent",
+       "m": 25,
+       "why": "The platform design's barge-in dive: what counts as an interruption, and cutting the context to what the caller heard."
       }
      ],
      "mcq": [
@@ -6726,6 +6735,15 @@
        "url": "../index.html#/w/wc20",
        "m": 135,
        "why": "Includes per-stage timing practice."
+      },
+      {
+       "kind": "keep",
+       "src": "site",
+       "req": false,
+       "label": "Guide: voice AI agent platform at scale",
+       "url": "../SYSTEM%20DESIGN.html#/designs/voice-agent",
+       "m": 25,
+       "why": "The platform design's 800ms budget, stage by stage, and which overlaps get a turn under a second."
       }
      ],
      "mcq": [
@@ -6901,6 +6919,15 @@
        "url": "../index.html#/w/wc21",
        "m": 135,
        "why": "The same sizing worked on a whiteboard."
+      },
+      {
+       "kind": "keep",
+       "src": "site",
+       "req": false,
+       "label": "Guide: voice AI agent platform at scale",
+       "url": "../SYSTEM%20DESIGN.html#/designs/voice-agent",
+       "m": 25,
+       "why": "The platform design's placement dive: workers that report capacity, prewarmed processes, autoscaling on slots and draining on deploy."
       }
      ],
      "mcq": [
@@ -7061,6 +7088,15 @@
        "url": "../index.html#/w/wc21",
        "m": 135,
        "why": "Includes scaling arithmetic on a call workload."
+      },
+      {
+       "kind": "keep",
+       "src": "site",
+       "req": false,
+       "label": "Guide: voice AI agent platform at scale",
+       "url": "../SYSTEM%20DESIGN.html#/designs/voice-agent",
+       "m": 25,
+       "why": "The platform design's cost per minute from published prices, and why cost is recorded by part on every call."
       }
      ],
      "mcq": [

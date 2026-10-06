@@ -739,7 +739,7 @@
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
 <script src="data/streams.js?v=b71517c7"></script>
-<script src="data/reading.js?v=4cbe0af9"></script>
+<script src="data/reading.js?v=2250b5fb"></script>
 <script src="site/res.js?v=c33c7564"></script>
 <script src="data/mcq/base.js?v=5fc7e7ac"></script>
 <script src="data/mcq/week1.js?v=8276998c"></script>
@@ -2675,7 +2675,7 @@
         steps: [
           { t: "Read the design once, all six steps", m: 25,
             sd: [{ v: "voice-agent", a: "requirements", why: "The requirements and the sizing." }, { v: "voice-agent", a: "hld", why: "The high-level design." }, { v: "voice-agent", a: "deepdives", why: "Parallel agents, turn-taking, write-back, evals." }],
-            d: "Read the guide's voice agent for patient calls, step by step, with 'How to get there' open. Notice how each part maps to what you already know: the call path and dispatch from Thursday, the latency budget and turn-taking from the conversation session, idempotent write-back from Friday, the parallel agents from your own system. Note the three things you would not have thought of yourself.",
+            d: "Read the guide's voice agent design, step by step, with 'How to get there' open. Notice how each part maps to what you already know: the call path and dispatch from Thursday, the latency budget and turn-taking from the conversation session, idempotent write-back from Friday, the parallel agents from your own system. Note the three things you would not have thought of yourself.",
             ans: [
               "Requirements: every call answered; scheduling, intake, FAQs; clinical questions to staff",
               "Sizing from about 800 calls a day",
@@ -7298,7 +7298,7 @@
       overview: "The framework", notebooklm: "NotebookLM", "prior-auth": "Prior auth validator",
       "email-agent": "Email and calendar agent", "coding-agent": "Cloud coding agent",
       ticketmaster: "Ticketmaster", alfred: "alfred_", kitaru: "Kitaru",
-      "voice-agent": "Voice agent for patient calls", "virtual-assistant": "Enterprise virtual assistant"
+      "voice-agent": "Voice AI agent platform", "virtual-assistant": "Enterprise virtual assistant"
     },
     anchors: {
       requirements: "requirements", entities: "core entities", api: "API", dataflow: "data flow",
@@ -8273,7 +8273,7 @@
     "baseline/fields/ml.js?v=6fe036c9",
     "baseline/fields/ai.js?v=5d438f37",
     "baseline/fields/inference.js?v=97ec20b6",
-    "baseline/fields/audio.js?v=7f1844fb",
+    "baseline/fields/audio.js?v=9f479d07",
     "baseline/fields/nlp.js?v=e3d91622",
     "baseline/fields/graphics.js?v=2966e0fd",
     "baseline/fields/games.js?v=581d1e9b",
