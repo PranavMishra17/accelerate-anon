@@ -5540,6 +5540,340 @@
    ]
   },
   {
+   "id": "spot",
+   "title": "Spot the bug in AI-written code",
+   "blurb": "Fifteen short snippets an AI tool might hand you, in Python and TypeScript, each with one real bug: the reading Pavlo watches when you review the tool's diff.",
+   "sessions": [],
+   "topics": [
+    {
+     "id": "spot-python",
+     "title": "Python the tool wrote: closures, the loop, queues",
+     "brief": "Three bugs an AI tool writes in Python that pass a quick test and fail in production. Read each one the way you would read its diff on Friday.",
+     "points": [
+      "Closures: a lambda reads a loop variable when it is called, not when it is made.",
+      "The event loop: one blocking call inside async code stalls every request on that loop.",
+      "Queues: a worker that never calls `task_done()` makes `join()` wait forever."
+     ],
+     "mcq": [
+      {
+       "q": "handlers = []\nfor name in [\"a\", \"b\", \"c\"]:\n    handlers.append(lambda: f\"hi {name}\")\nprint([h() for h in handlers])\n\nWhat prints, and why?",
+       "o": [
+        "['hi a', 'hi b', 'hi c']: nothing is wrong",
+        "['hi c', 'hi c', 'hi c']: each lambda reads name when it is called",
+        "NameError: name is out of scope after the loop",
+        "SyntaxError: a lambda cannot hold an f-string",
+        "[]: the comprehension runs lazily"
+       ],
+       "a": 1,
+       "why": "The lambdas close over the variable, not its value; by the time they run, the loop has left name as 'c'. Fix: `lambda name=name: ...`, or build each handler in a function.",
+       "pair": "binding-time"
+      },
+      {
+       "q": "async def handle(req):\n    data = requests.get(req.url, timeout=5).json()\n    return await summarize(data)\n\nThis runs in an asyncio server. What goes wrong under load?",
+       "o": [
+        "Nothing: the timeout bounds it",
+        "requests.get blocks the event loop, so every other request on that loop waits up to 5 seconds",
+        "await is missing before requests.get, so data is a coroutine",
+        "summarize runs twice",
+        ".json() is async in requests 3"
+       ],
+       "a": 1,
+       "why": "requests is synchronous: while it waits on the network the loop cannot run anything else. Use an async client (httpx.AsyncClient) or move it off the loop with `asyncio.to_thread`.",
+       "pair": "blocking-loop"
+      },
+      {
+       "q": "async def worker(q: asyncio.Queue):\n    while True:\n        job = await q.get()\n        try:\n            await run(job)\n        except Exception:\n            log.exception(\"job failed\")\n\n# shutdown:\nawait q.join()\n\nShutdown awaits q.join(). What happens?",
+       "o": [
+        "It returns once the queue is empty",
+        "It hangs forever: no worker calls q.task_done()",
+        "It raises CancelledError in every worker",
+        "except Exception swallows CancelledError, so workers never stop",
+        "It returns at once because join() only checks size"
+       ],
+       "a": 1,
+       "why": "join() waits until every item put has been matched by a task_done() call. Put `q.task_done()` in a finally. (Since 3.8 CancelledError is a BaseException, so except Exception does not swallow it.)",
+       "pair": "queue-join"
+      }
+     ],
+     "open": {
+      "q": "Claude Code hands you a 60-line async worker that passes its test. What do you read for before you accept it?",
+      "probe": "Whether he has a checklist for async code beyond 'the test passed'.",
+      "a": [
+       "Anything blocking inside async def: sync HTTP, file or DB calls, CPU loops.",
+       "Every task it creates: who awaits it, and what happens to it on failure or cancellation.",
+       "Queues and locks: task_done in a finally, bounded sizes, nothing held across an await that can hang.",
+       "Timeouts on every external call, and what the caller sees when one fires.",
+       "Then I run it myself with a slow and a failing fake, not only the happy-path test."
+      ]
+     },
+     "say": [
+      "I read async diffs for three things first: anything that blocks the loop, any task nobody owns, and any external call without a timeout.",
+      "Then I run it against a slow fake and a failing fake, because the happy-path test is the one the tool already passed."
+     ]
+    },
+    {
+     "id": "spot-async",
+     "title": "Fan-out and timeouts that leak work",
+     "brief": "Concurrency that looks right and quietly keeps paying: calls that outlive their caller, saves that never wait, timeouts that cancel nothing.",
+     "points": [
+      "`gather` hands the first error to the caller and leaves the rest running; `TaskGroup` cancels them.",
+      "`forEach` with an async callback awaits nothing: use `for...of` or `Promise.all`.",
+      "`Promise.race` picks a winner and cancels nobody: pass an AbortSignal and clear the timer."
+     ],
+     "mcq": [
+      {
+       "q": "results = await asyncio.gather(*(call_model(p) for p in prompts))\n\nOne call raises after 1 second; the other nine take 30 seconds and each is billed. What happens?",
+       "o": [
+        "All ten are cancelled the moment one fails",
+        "The error reaches the caller at once, the other nine keep running and billing, and their results are lost",
+        "gather waits for all ten, then raises",
+        "The failed call is retried automatically",
+        "gather returns None in that slot"
+       ],
+       "a": 1,
+       "why": "gather propagates the first exception without cancelling its siblings. Use `asyncio.TaskGroup` to cancel them, or `return_exceptions=True` if every result stands alone.",
+       "pair": "fan-out-cancel"
+      },
+      {
+       "q": "async function saveAll(items: Item[]) {\n  items.forEach(async (it) => {\n    await db.save(it);\n  });\n  console.log(\"saved\");\n}\n\nWhat is wrong?",
+       "o": [
+        "Nothing: forEach awaits async callbacks",
+        "\"saved\" logs before any save finishes, saveAll resolves early, and a failed save becomes an unhandled rejection",
+        "db.save runs one at a time, so it is slow",
+        "TypeScript rejects an async callback here",
+        "Each item is saved twice"
+       ],
+       "a": 1,
+       "why": "forEach ignores the promises its callback returns. Use `for (const it of items) await db.save(it)` for order, or `await Promise.all(items.map(...))`, bounded if the list is long.",
+       "pair": "fan-out-cancel"
+      },
+      {
+       "q": "const result = await Promise.race([\n  callModel(prompt),\n  new Promise((_, reject) =>\n    setTimeout(() => reject(new Error(\"timeout\")), 4000)),\n]);\n\nThis is the 4-second budget for a generated page. What does it get wrong?",
+       "o": [
+        "Nothing: race cancels the loser",
+        "On a timeout the model call keeps running and billing, and when the model wins the timer is never cleared",
+        "race resolves with the first rejection only",
+        "The timeout fires immediately because setTimeout is synchronous",
+        "callModel runs twice"
+       ],
+       "a": 1,
+       "why": "Promise.race settles with the first promise and does nothing to the other. Pass an AbortController's signal to callModel and abort it on timeout, clear the timer in a finally, and render the fallback page.",
+       "pair": "timeout-cancel"
+      }
+     ],
+     "open": {
+      "q": "You have 4 seconds to get a page spec from a model, with a fallback. Write the shape of it out loud in TypeScript, then in Python.",
+      "probe": "Whether the timeout actually stops the work, and whether the fallback is a design, not an afterthought.",
+      "a": [
+       "TypeScript: an AbortController, a timer that aborts it, the signal passed to the model call, the timer cleared in finally; on abort or invalid output, the default page.",
+       "Python: `async with asyncio.timeout(4):` around the call; on TimeoutError, the default page; the cancellation reaches the HTTP client.",
+       "Validate the output against a schema before rendering; invalid is the same as late.",
+       "Log which path won (model, timeout, invalid) so the fallback rate is a number you watch."
+      ]
+     },
+     "say": [
+      "A timeout that doesn't cancel is just a deadline you stop waiting for: the call keeps spending.",
+      "So in TypeScript I abort the signal, in Python asyncio.timeout cancels the task, and in both the fallback renders and the path is logged."
+     ]
+    },
+    {
+     "id": "spot-boundary",
+     "title": "Untrusted data treated as typed",
+     "brief": "Model output, query strings and JSON are untrusted until checked. The tool often writes a cast or a dataclass where a validator belongs.",
+     "points": [
+      "`JSON.parse(x) as T` checks nothing: parse with a schema (zod `safeParse`) and handle the failure.",
+      "A dataclass stores what it is given; pydantic validates and converts.",
+      "An id from a model or a query string must be checked against the catalog, never asserted with `!`."
+     ],
+     "mcq": [
+      {
+       "q": "const spec = JSON.parse(modelText) as LayoutSpec;\nreturn spec.sections.map(renderSection);\n\nThe model sometimes returns prose around the JSON, or a field it invented. What happens?",
+       "o": [
+        "The cast makes TypeScript validate the shape at runtime",
+        "JSON.parse throws on prose, and on wrong JSON the cast hides it until spec.sections crashes at runtime",
+        "TypeScript refuses to compile the cast",
+        "Missing fields become undefined safely and render nothing",
+        "as LayoutSpec strips unknown fields"
+       ],
+       "a": 1,
+       "why": "Types vanish at runtime; `as` is a promise to the compiler, not a check. Extract the JSON, `LayoutSpec.safeParse` it with zod, and fall back on failure.",
+       "pair": "types-runtime"
+      },
+      {
+       "q": "@dataclass\nclass Variant:\n    id: str\n    weight: float\n\nv = Variant(**json.loads('{\"id\": \"b\", \"weight\": \"0.5\"}'))\ntotal = v.weight + 0.5\n\nWhat happens?",
+       "o": [
+        "weight becomes 0.5 and total is 1.0",
+        "weight stays the string '0.5', so the addition raises TypeError",
+        "The dataclass raises a ValidationError on construction",
+        "mypy stops it at runtime",
+        "weight becomes 0.0"
+       ],
+       "a": 1,
+       "why": "Dataclass annotations are not checked at runtime. Use a pydantic model (`Variant.model_validate_json(raw)`), which converts '0.5' to 0.5 or rejects bad input at the boundary.",
+       "pair": "types-runtime"
+      },
+      {
+       "q": "const ids = String(req.query.ids).split(\",\");\nconst products = ids.map((id) => catalog.get(id)!);\nreturn render(products.map((p) => p.name));\n\nids come from an upstream agent's URL. What breaks?",
+       "o": [
+        "Nothing: the ! makes get return a product",
+        "An unknown or hallucinated id gives undefined, and p.name throws: one bad id takes the page down",
+        "split fails on a single id",
+        "catalog.get is async, so products are promises",
+        "TypeScript rejects ! on a Map"
+       ],
+       "a": 1,
+       "why": "The non-null assertion silences the compiler, not the runtime. Filter ids against the catalog (`.filter(Boolean)` after get, or check `catalog.has`), cap their count, and render the default when none survive.",
+       "pair": "types-runtime"
+      }
+     ],
+     "open": {
+      "q": "Model output reaches your renderer. Where exactly do you validate it, with what, and what does the user see when it fails?",
+      "probe": "Whether validation sits at one boundary with a real failure path.",
+      "a": [
+       "At the boundary, once: the moment the text comes back from the model, before anything else touches it.",
+       "TypeScript: a zod schema, the type inferred from it, safeParse; Python: a pydantic model.",
+       "On failure: one repair attempt if there is budget, otherwise the default page; never a half-rendered page.",
+       "Count failures by reason, because a rising invalid rate means the prompt or the model changed."
+      ]
+     },
+     "say": [
+      "I treat model output like user input: it's untrusted until a schema says otherwise.",
+      "One validator at the boundary, the type inferred from the schema, and a default page when it fails, with the failure counted."
+     ]
+    },
+    {
+     "id": "spot-state",
+     "title": "Races, retries and sticky buckets",
+     "brief": "State bugs that only show with two workers, one timeout or one restart: the kind Coframe's own take-homes are built around.",
+     "points": [
+      "Check-then-act across two awaits is a race; claim work with one atomic statement.",
+      "Retrying a call with a side effect needs an idempotency key, or a timeout becomes a double charge.",
+      "Python's `hash()` of a string changes per process: bucketing needs a stable hash."
+     ],
+     "mcq": [
+      {
+       "q": "async def claim(job_id):\n    job = await db.get(job_id)\n    if job.status == \"queued\":\n        await db.update(job_id, status=\"running\")\n        return True\n    return False\n\nTwo workers call claim on the same job at the same moment. What happens?",
+       "o": [
+        "Exactly one wins, because the update is a single statement",
+        "Both read 'queued' and both run the job",
+        "The second update raises a conflict error",
+        "Neither runs it: they deadlock",
+        "asyncio serialises the two calls"
+       ],
+       "a": 1,
+       "why": "Between the read and the write another worker can read the same row. Claim in one atomic statement: `UPDATE jobs SET status='running' WHERE id=$1 AND status='queued' RETURNING id`, or `SELECT ... FOR UPDATE SKIP LOCKED`.",
+       "pair": "check-then-act"
+      },
+      {
+       "q": "for (let i = 0; i < 3; i++) {\n  try {\n    return await payments.charge(userId, amount);\n  } catch {\n    await sleep(2 ** i * 100);\n  }\n}\n\nThe first charge succeeds at the provider, but the response times out. What happens?",
+       "o": [
+        "The retry is harmless because charge is idempotent by default",
+        "The retry charges the user again: nothing tells the provider it is the same charge",
+        "The loop stops after the first timeout",
+        "sleep blocks the event loop",
+        "TypeScript requires a typed catch here"
+       ],
+       "a": 1,
+       "why": "A timeout says nothing about whether the side effect happened. Send one idempotency key with every attempt, retry only errors that can succeed later, and add jitter.",
+       "pair": "idempotency"
+      },
+      {
+       "q": "def bucket(user_id: str, variants: list[str]) -> str:\n    return variants[hash(user_id) % len(variants)]\n\nCoframe-style: a user must see the same variant on every visit. What is wrong?",
+       "o": [
+        "Nothing: hash is deterministic",
+        "hash() of a str is salted per process, so the same user lands in different variants on different servers and after restarts",
+        "Modulo makes the split uneven for three variants",
+        "hash can return a negative index, which raises",
+        "It is too slow per request"
+       ],
+       "a": 1,
+       "why": "Since Python 3.3, string hashing is randomised per process (PYTHONHASHSEED). Use a stable hash of experiment id plus user id (sha256 or murmur), take it modulo 10,000 for weights, and check the split with an SRM test.",
+       "pair": "sticky-bucket"
+      }
+     ],
+     "open": {
+      "q": "A job runner restarts in the middle of a batch. Walk me through how you make sure nothing runs twice and nothing is lost.",
+      "probe": "Atomic claim, leases, idempotent side effects, reconciliation on start.",
+      "a": [
+       "Claim atomically with a lease that expires, so a crashed worker's job becomes claimable again.",
+       "Make every side effect idempotent with a key derived from the job and step, so a re-run is harmless.",
+       "Record progress per step, so a resumed job skips what finished.",
+       "On start, reconcile against the source of truth instead of trusting the in-memory state."
+      ]
+     },
+     "say": [
+      "Anything that can run twice will, so I make running twice harmless: an atomic claim with a lease, and an idempotency key on every side effect.",
+      "And on restart I reconcile against the source of truth rather than trusting what the process remembered."
+     ]
+    },
+    {
+     "id": "spot-llm",
+     "title": "LLM wrappers, streams and tools",
+     "brief": "The code around a model call: parsing a stream, retrying a provider, and what the model is allowed to do with untrusted text.",
+     "points": [
+      "Network chunks do not line up with SSE events: buffer, split on blank lines, decode with `stream: true`.",
+      "Retry only what can succeed later, add jitter, and raise after the last attempt.",
+      "Untrusted text on a path with destructive tools is a prompt-injection hole."
+     ],
+     "mcq": [
+      {
+       "q": "for await (const chunk of res.body) {\n  const text = new TextDecoder().decode(chunk);\n  const evt = JSON.parse(text.replace(\"data: \", \"\"));\n  emit(evt);\n}\n\nParsing a streamed model response. What breaks?",
+       "o": [
+        "Nothing: each chunk is one event",
+        "A chunk can hold half an event or several, so JSON.parse throws; and a fresh decoder per chunk can split multi-byte characters",
+        "for await does not work on a response body",
+        "replace removes every 'data: ', including inside the JSON",
+        "emit runs before the stream starts"
+       ],
+       "a": 1,
+       "why": "TCP chunks are arbitrary. Keep one `TextDecoder` with `{stream: true}`, append to a buffer, split on the blank line that ends an event, keep the remainder, and skip `[DONE]` and comment lines.",
+       "pair": "stream-framing"
+      },
+      {
+       "q": "async def complete(prompt):\n    for attempt in range(5):\n        try:\n            return await client.complete(prompt)\n        except Exception:\n            await asyncio.sleep(2 ** attempt)\n\nWhat is the most serious problem?",
+       "o": [
+        "Nothing: it backs off exponentially",
+        "It retries errors that can never succeed (a 400, a bad key) and, after the fifth failure, returns None instead of raising",
+        "sleep blocks the event loop",
+        "It retries too few times for a provider",
+        "return inside try skips the retry"
+       ],
+       "a": 1,
+       "why": "Retry only transient errors (429, 5xx, timeouts), honour Retry-After, add jitter so clients do not retry in step, and raise after the last attempt so the caller can fall back.",
+       "pair": "retry-policy"
+      },
+      {
+       "q": "page = fetch(url).text\nprompt = f\"Summarise this page and follow its instructions:\\n{page}\"\nreply = llm(prompt, tools=[send_email, delete_file])\n\nWhat is wrong?",
+       "o": [
+        "Nothing: the model only summarises",
+        "Untrusted page text is mixed into the instructions on a path that has destructive tools, so the page can make the model send email or delete files",
+        "f-strings cannot hold HTML",
+        "The prompt is too long for the model",
+        "tools must be passed as strings"
+       ],
+       "a": 1,
+       "why": "Treat fetched text as data: delimit it, tell the model it is never an instruction, and give that path no tools with side effects. Destructive actions need a separate, confirmed step.",
+       "pair": "injection"
+      }
+     ],
+     "open": {
+      "q": "Your agent reads a customer's web page and can then call tools. How do you stop a sentence on that page from becoming an action?",
+      "probe": "Least privilege by path, not prompt wording alone.",
+      "a": [
+       "Separate paths: reading untrusted content happens where there are no side-effect tools.",
+       "Delimit the content and say it is data, but do not rely on that alone.",
+       "Destructive or external actions need a typed, confirmed step, with allowlists and budgets.",
+       "Log and eval injection attempts as a case set, so a regression shows up."
+      ]
+     },
+     "say": [
+      "The prompt isn't a security boundary, so I don't rely on telling the model to ignore the page.",
+      "The path that reads untrusted text has no tools that act; anything that acts is a separate, confirmed step."
+     ]
+    }
+   ]
+  },
+  {
    "id": "builds",
    "title": "Live builds: agent plumbing",
    "blurb": "Four one-hour builds a co-founder might hand you, each solved in Python and TypeScript with tests: a generated page inside a budget, a durable runner, a rate-limited fan-out, a streaming parser.",

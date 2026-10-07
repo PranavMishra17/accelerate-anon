@@ -948,11 +948,19 @@ details.item > .sbody { padding-left: 0; }
   }
   function levelDot(lv) { return '<span class="lv lv-' + (lv || "none") + '" title="' + (lv ? LEVELS[lv] : "Not judged yet") + '"></span>'; }
 
+  /* A question may open with code: everything before its last blank line is shown as a code
+     block, the last paragraph as the question. Without a blank line it is plain text. */
+  function mqQuestion(host, s) {
+    var cut = s.lastIndexOf("\n\n");
+    if (cut > 0) { host.appendChild(el("pre", "cv-code mq-code", esc(s.slice(0, cut)))); s = s.slice(cut + 2); }
+    host.appendChild(el("p", "mq-q", inl(s)));
+  }
+
   /* one multiple-choice question; done(record) after the answer is shown */
   function mcqCard(host, t, i, done) {
     var q = t.mcq[i], st = learnStore(), key = t.id + ":" + i;
     var box = el("div", "mq");
-    box.appendChild(el("p", "mq-q", inl(q.q)));
+    mqQuestion(box, q.q);
     var opts = el("div", "mq-opts"), guess = el("label", "mq-guess"), cb = el("input");
     cb.type = "checkbox"; guess.appendChild(cb); guess.appendChild(document.createTextNode(" I'm guessing"));
     var after = el("div", "mq-after");
