@@ -251,6 +251,7 @@ details.ln-item[open] > summary .qm { display: none; }
 .ln-brief { margin: 0 0 var(--s3); }
 .ln-note { color: var(--muted); font-size: var(--fs-sm); }
 .ln-oq { font-weight: var(--w-strong); }
+.live-ask { margin: var(--s2) 0 var(--s4); padding-left: var(--s4); border-left: 2px solid var(--rule); color: var(--soft); }
 .ln-task, .ln-gate { margin: var(--s4) 0; }
 .ln-task .acts { align-items: center; }
 .ln-spot { padding-left: var(--s5); }
@@ -618,6 +619,7 @@ details.item > .sbody { padding-left: 0; }
     { id: "design", label: "Design", show: function () { return LOOP.tables.length || LOOP.figures.length; } },
     { id: "own", label: (LOOP.own && LOOP.own.tab) || "Yours", show: function () { return !!LOOP.own; } },
     { id: "sessions", label: "Sessions", show: function () { return LOOP.sessions.length; } },
+    { id: "live", label: "Live build", show: function () { return (LOOP.live || []).length; } },
     { id: "mocks", label: "Mocks", show: function () { return !!LOOP.mockHow; } }
   ].filter(function (t) { return t.show() && (!LOOP.tabs || LOOP.tabs.indexOf(t.id) >= 0); });
   var main = document.getElementById("main");
@@ -1774,6 +1776,28 @@ details.item > .sbody { padding-left: 0; }
      what you said, with a verdict; it opens to why, how to approach it, and the answer to
      say, behind the same toggle the Prep tab uses. */
   var VERDICT = { landed: "Landed", partly: "Partly", missed: "Missed", gap: "Gap: you did not have an answer" };
+  /* Live build: repos handed over as the interviewer would hand them, each a vague request to
+     clarify and build in a separate coding session while the interviewer is played in chat. */
+  function tabLive(host) {
+    var intro = heading(host, "live-how", "", "Live build");
+    (LOOP.liveLead || []).forEach(function (p) { intro.appendChild(el("p", "lead", inl(p))); });
+    LOOP.live.forEach(function (x) {
+      var s = heading(host, "live-" + x.id, x.lang + ", about " + x.minutes + " minutes", x.title);
+      s.appendChild(el("div", "lab", "What he says"));
+      s.appendChild(el("blockquote", "live-ask", inl(x.ask)));
+      s.appendChild(el("div", "lab", "Start"));
+      var ol = el("ol", "mk-list");
+      x.start.forEach(function (t) { ol.appendChild(el("li", "", inl(t))); });
+      s.appendChild(ol);
+      if (x.after && x.after.length) {
+        s.appendChild(el("div", "lab", "After the build"));
+        var ul = el("ul", "mk-list");
+        x.after.forEach(function (t) { ul.appendChild(el("li", "", inl(t))); });
+        s.appendChild(ul);
+      }
+    });
+  }
+
   function tabMocks(host) {
     var s = heading(host, "mock", "Run in chat", "Mock interviews");
     s.appendChild(el("p", "lead", inl(LOOP.mockHow)));
@@ -2058,6 +2082,7 @@ details.item > .sbody { padding-left: 0; }
       else if (r.tab === "design") { tabDesign(main); }
       else if (r.tab === "own") { tabOwn(main); }
       else if (r.tab === "sessions") { tabSessions(main, r.anchor); }
+      else if (r.tab === "live") { tabLive(main); }
       else if (r.tab === "mocks") { tabMocks(main); }
     } catch (err) {
       console.error("Could not draw the page", err);

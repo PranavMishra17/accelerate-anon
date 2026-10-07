@@ -158,6 +158,7 @@ def build(module_name):
         "company": getattr(m, "COMPANY", []), "posting": getattr(m, "POSTING", None), "rounds": getattr(m, "ROUNDS", []),
         "research": research,
         "learn": learn, "tabs": getattr(m, "TABS", None),
+        "live": getattr(m, "LIVE", []), "liveLead": getattr(m, "LIVE_LEAD", []),
     }
     tpl = io.open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
     # Shared figure files carry a hash of their contents, so a changed figure is never

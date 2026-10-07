@@ -290,7 +290,33 @@ SCRIPTS = [
 # The Prep bank now lives in one learning path with the round-2 research: interviews/coframe.learn.json
 # (Learn tab), built 3 October 2026; code in interviews/coframe_builds/. The old bank is in git history.
 QA = []
-TABS = ["overview", "learn", "rounds", "mocks"]
+TABS = ["overview", "learn", "live", "rounds", "mocks"]
+
+LIVE_LEAD = [
+    "The invite: a technical exercise of about 30 to 40 minutes with Pavlo, in Python and TypeScript, with your own AI tools. Each repo below is handed over the way he might hand one over: a short, vague request, working but naive code, and a harness that shows what is wrong. The design is yours to find.",
+    "Run one: open a new Claude Code session in the repo's folder, then say **start mock: <name>** in this chat. Here I play Pavlo: ask him anything you would ask in the room, and he answers like he would, which is not with the design. Say **debrief** when you stop; the critique comes then.",
+]
+
+LIVE = [
+    {"id": "storefront", "title": "Storefront: pages that fit the visitor", "lang": "TypeScript", "minutes": 40,
+     "ask": "Here's a little storefront. Visitors show up with some context about who they are, and right now everyone gets the same page. Make the page fit the visitor. Oh, and the whole page has to render in under five seconds.",
+     "start": ["Folder: `E:\\coframe-live\\storefront-ts`. Run `npm install` once.",
+               "Open a new Claude Code session there. In this chat: **start mock: storefront**.",
+               "Read the README, ask Pavlo what you need, then build. `npm run harness` is the scoreboard."],
+     "after": ["How you would run this at thousands of visitors a minute.", "How you would know the tailored page is better than the default."]},
+    {"id": "jobs", "title": "Agent jobs: make them reliable", "lang": "Python", "minutes": 40,
+     "ask": "We run coding agents as background jobs on a few workers. It mostly works, but jobs go missing and some pull requests get the same comment twice. We deploy a few times a day. Make it reliable.",
+     "start": ["Folder: `E:\\coframe-live\\agent-jobs-py`. Python only, nothing to install.",
+               "Open a new Claude Code session there. In this chat: **start mock: jobs**.",
+               "`python harness.py` runs the fleet under deploys and reports stuck jobs and duplicate comments."],
+     "after": ["The same design on Postgres with many machines.", "What you would still worry about."]},
+    {"id": "experiments", "title": "Experiments: fix the loop end to end", "lang": "TypeScript and Python", "minutes": 40,
+     "ask": "A customer is running a three-variant test. The edge picks the variant, an hourly job updates the weights. They say visitors see different versions when they come back, and our numbers are higher than theirs. Also they'd like the winner found sooner. Can you fix it?",
+     "start": ["Folder: `E:\\coframe-live\\experiments-mixed`. Node 22 and Python 3.12, nothing to install.",
+               "Open a new Claude Code session there. In this chat: **start mock: experiments**.",
+               "`python sim.py` runs 12 simulated hours and reports flips, counted against real conversions, and the winner's share."],
+     "after": ["Hundreds of experiments and millions of visits a day.", "How the edge gets new weights, and two experiments on one page."]},
+]
 
 # Questions you ask, three groups: for Neesha and the process, about the Agent Platform team,
 # and about the company. One or two in total on a fifteen-minute call; the rest are spares.
@@ -348,4 +374,4 @@ DRILLS = [
     {"id": "now", "prompt": "What are you working on right now? For someone who isn't an engineer.", "target": "60 seconds", "seconds": 60, "ref": "#say-now"},
 ]
 
-MOCK_HOW = "Say 'run the Coframe mock' in chat: Pavlo, technical, about 45 minutes: a small live build in Python or TypeScript with AI tools, then productionization and platform design."
+MOCK_HOW = "For a live build with Pavlo, use the Live build tab. For the whole hour, say 'run the Coframe mock' in chat: Pavlo, technical, about 45 minutes: a small live build in Python or TypeScript with AI tools, then productionization and platform design."

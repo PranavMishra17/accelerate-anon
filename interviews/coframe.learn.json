@@ -5965,8 +5965,8 @@
   },
   {
    "id": "builds",
-   "title": "Live builds: agent plumbing",
-   "blurb": "Four one-hour builds a co-founder might hand you, each solved in Python and TypeScript with tests: a generated page inside a budget, a durable runner, a rate-limited fan-out, a streaming parser.",
+   "title": "Warm-up drills",
+   "blurb": "Eight one-hour builds, each a task first with the solution shut until you have tried: agent plumbing (a page inside a budget, a durable runner, a rate-limited fan-out, a streaming parser) and Coframe's world (assignment, two-way sync, running generated code, reading traces). For a full mock with Pavlo, use the Live build tab.",
    "sessions": [],
    "topics": [
     {
@@ -6637,15 +6637,7 @@
       "where": "Build it in E:/coframe-bench with Claude Code: `git checkout -b <task>`, then `npm run check`. Python first, then the same in TypeScript if time allows.",
       "minutes": 50
      }
-    }
-   ]
-  },
-  {
-   "id": "builds2",
-   "title": "Live builds: Coframe's world",
-   "blurb": "Four one-hour builds from Coframe's own problems, each with a plan, the split between you and the AI tool, tested Python and TypeScript, and the productionization answer.",
-   "sessions": [],
-   "topics": [
+    },
     {
      "id": "builds2-bandit",
      "title": "A variant assignment service",
