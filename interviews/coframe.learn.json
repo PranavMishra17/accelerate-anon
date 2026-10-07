@@ -5548,12 +5548,7 @@
     {
      "id": "spot-python",
      "title": "Python the tool wrote: closures, the loop, queues",
-     "brief": "Three bugs an AI tool writes in Python that pass a quick test and fail in production. Read each one the way you would read its diff on Friday.",
-     "points": [
-      "Closures: a lambda reads a loop variable when it is called, not when it is made.",
-      "The event loop: one blocking call inside async code stalls every request on that loop.",
-      "Queues: a worker that never calls `task_done()` makes `join()` wait forever."
-     ],
+     "brief": "Three snippets an AI tool wrote in Python. Each passes a quick test. Read each like a diff on a shared screen: what breaks, when, and what is the fix?",
      "mcq": [
       {
        "q": "handlers = []\nfor name in [\"a\", \"b\", \"c\"]:\n    handlers.append(lambda: f\"hi {name}\")\nprint([h() for h in handlers])\n\nWhat prints, and why?",
@@ -5609,17 +5604,35 @@
      "say": [
       "I read async diffs for three things first: anything that blocks the loop, any task nobody owns, and any external call without a timeout.",
       "Then I run it against a slow fake and a failing fake, because the happy-path test is the one the tool already passed."
+     ],
+     "spot": [
+      {
+       "ask": "What prints, and why?",
+       "lang": "python",
+       "code": "handlers = []\nfor name in [\"a\", \"b\", \"c\"]:\n    handlers.append(lambda: f\"hi {name}\")\nprint([h() for h in handlers])",
+       "bug": "['hi c', 'hi c', 'hi c']: each lambda reads name when it is called",
+       "fix": "The lambdas close over the variable, not its value; by the time they run, the loop has left name as 'c'. Fix: `lambda name=name: ...`, or build each handler in a function."
+      },
+      {
+       "ask": "This runs in an asyncio server. What goes wrong under load?",
+       "lang": "python",
+       "code": "async def handle(req):\n    data = requests.get(req.url, timeout=5).json()\n    return await summarize(data)",
+       "bug": "requests.get blocks the event loop, so every other request on that loop waits up to 5 seconds",
+       "fix": "requests is synchronous: while it waits on the network the loop cannot run anything else. Use an async client (httpx.AsyncClient) or move it off the loop with `asyncio.to_thread`."
+      },
+      {
+       "ask": "Shutdown awaits q.join(). What happens?",
+       "lang": "python",
+       "code": "async def worker(q: asyncio.Queue):\n    while True:\n        job = await q.get()\n        try:\n            await run(job)\n        except Exception:\n            log.exception(\"job failed\")\n\n# shutdown:\nawait q.join()",
+       "bug": "It hangs forever: no worker calls q.task_done()",
+       "fix": "join() waits until every item put has been matched by a task_done() call. Put `q.task_done()` in a finally. (Since 3.8 CancelledError is a BaseException, so except Exception does not swallow it.)"
+      }
      ]
     },
     {
      "id": "spot-async",
      "title": "Fan-out and timeouts that leak work",
-     "brief": "Concurrency that looks right and quietly keeps paying: calls that outlive their caller, saves that never wait, timeouts that cancel nothing.",
-     "points": [
-      "`gather` hands the first error to the caller and leaves the rest running; `TaskGroup` cancels them.",
-      "`forEach` with an async callback awaits nothing: use `for...of` or `Promise.all`.",
-      "`Promise.race` picks a winner and cancels nobody: pass an AbortSignal and clear the timer."
-     ],
+     "brief": "Three snippets that run work concurrently, in Python and TypeScript. Read each like a diff: what actually happens when something fails or runs long?",
      "mcq": [
       {
        "q": "results = await asyncio.gather(*(call_model(p) for p in prompts))\n\nOne call raises after 1 second; the other nine take 30 seconds and each is billed. What happens?",
@@ -5674,17 +5687,35 @@
      "say": [
       "A timeout that doesn't cancel is just a deadline you stop waiting for: the call keeps spending.",
       "So in TypeScript I abort the signal, in Python asyncio.timeout cancels the task, and in both the fallback renders and the path is logged."
+     ],
+     "spot": [
+      {
+       "ask": "One call raises after 1 second; the other nine take 30 seconds and each is billed. What happens?",
+       "lang": "python",
+       "code": "results = await asyncio.gather(*(call_model(p) for p in prompts))",
+       "bug": "The error reaches the caller at once, the other nine keep running and billing, and their results are lost",
+       "fix": "gather propagates the first exception without cancelling its siblings. Use `asyncio.TaskGroup` to cancel them, or `return_exceptions=True` if every result stands alone."
+      },
+      {
+       "ask": "What is wrong?",
+       "lang": "typescript",
+       "code": "async function saveAll(items: Item[]) {\n  items.forEach(async (it) => {\n    await db.save(it);\n  });\n  console.log(\"saved\");\n}",
+       "bug": "\"saved\" logs before any save finishes, saveAll resolves early, and a failed save becomes an unhandled rejection",
+       "fix": "forEach ignores the promises its callback returns. Use `for (const it of items) await db.save(it)` for order, or `await Promise.all(items.map(...))`, bounded if the list is long."
+      },
+      {
+       "ask": "This is the 4-second budget for a generated page. What does it get wrong?",
+       "lang": "typescript",
+       "code": "const result = await Promise.race([\n  callModel(prompt),\n  new Promise((_, reject) =>\n    setTimeout(() => reject(new Error(\"timeout\")), 4000)),\n]);",
+       "bug": "On a timeout the model call keeps running and billing, and when the model wins the timer is never cleared",
+       "fix": "Promise.race settles with the first promise and does nothing to the other. Pass an AbortController's signal to callModel and abort it on timeout, clear the timer in a finally, and render the fallback page."
+      }
      ]
     },
     {
      "id": "spot-boundary",
      "title": "Untrusted data treated as typed",
-     "brief": "Model output, query strings and JSON are untrusted until checked. The tool often writes a cast or a dataclass where a validator belongs.",
-     "points": [
-      "`JSON.parse(x) as T` checks nothing: parse with a schema (zod `safeParse`) and handle the failure.",
-      "A dataclass stores what it is given; pydantic validates and converts.",
-      "An id from a model or a query string must be checked against the catalog, never asserted with `!`."
-     ],
+     "brief": "Three snippets that take data from outside the program. Read each like a diff: what happens on the input you did not expect?",
      "mcq": [
       {
        "q": "const spec = JSON.parse(modelText) as LayoutSpec;\nreturn spec.sections.map(renderSection);\n\nThe model sometimes returns prose around the JSON, or a field it invented. What happens?",
@@ -5739,17 +5770,35 @@
      "say": [
       "I treat model output like user input: it's untrusted until a schema says otherwise.",
       "One validator at the boundary, the type inferred from the schema, and a default page when it fails, with the failure counted."
+     ],
+     "spot": [
+      {
+       "ask": "The model sometimes returns prose around the JSON, or a field it invented. What happens?",
+       "lang": "typescript",
+       "code": "const spec = JSON.parse(modelText) as LayoutSpec;\nreturn spec.sections.map(renderSection);",
+       "bug": "JSON.parse throws on prose, and on wrong JSON the cast hides it until spec.sections crashes at runtime",
+       "fix": "Types vanish at runtime; `as` is a promise to the compiler, not a check. Extract the JSON, `LayoutSpec.safeParse` it with zod, and fall back on failure."
+      },
+      {
+       "ask": "What happens?",
+       "lang": "python",
+       "code": "@dataclass\nclass Variant:\n    id: str\n    weight: float\n\nv = Variant(**json.loads('{\"id\": \"b\", \"weight\": \"0.5\"}'))\ntotal = v.weight + 0.5",
+       "bug": "weight stays the string '0.5', so the addition raises TypeError",
+       "fix": "Dataclass annotations are not checked at runtime. Use a pydantic model (`Variant.model_validate_json(raw)`), which converts '0.5' to 0.5 or rejects bad input at the boundary."
+      },
+      {
+       "ask": "ids come from an upstream agent's URL. What breaks?",
+       "lang": "typescript",
+       "code": "const ids = String(req.query.ids).split(\",\");\nconst products = ids.map((id) => catalog.get(id)!);\nreturn render(products.map((p) => p.name));",
+       "bug": "An unknown or hallucinated id gives undefined, and p.name throws: one bad id takes the page down",
+       "fix": "The non-null assertion silences the compiler, not the runtime. Filter ids against the catalog (`.filter(Boolean)` after get, or check `catalog.has`), cap their count, and render the default when none survive."
+      }
      ]
     },
     {
      "id": "spot-state",
      "title": "Races, retries and sticky buckets",
-     "brief": "State bugs that only show with two workers, one timeout or one restart: the kind Coframe's own take-homes are built around.",
-     "points": [
-      "Check-then-act across two awaits is a race; claim work with one atomic statement.",
-      "Retrying a call with a side effect needs an idempotency key, or a timeout becomes a double charge.",
-      "Python's `hash()` of a string changes per process: bucketing needs a stable hash."
-     ],
+     "brief": "Three snippets that change shared state. Read each like a diff: what happens with two workers, a timeout, or a restart?",
      "mcq": [
       {
        "q": "async def claim(job_id):\n    job = await db.get(job_id)\n    if job.status == \"queued\":\n        await db.update(job_id, status=\"running\")\n        return True\n    return False\n\nTwo workers call claim on the same job at the same moment. What happens?",
@@ -5804,17 +5853,35 @@
      "say": [
       "Anything that can run twice will, so I make running twice harmless: an atomic claim with a lease, and an idempotency key on every side effect.",
       "And on restart I reconcile against the source of truth rather than trusting what the process remembered."
+     ],
+     "spot": [
+      {
+       "ask": "Two workers call claim on the same job at the same moment. What happens?",
+       "lang": "python",
+       "code": "async def claim(job_id):\n    job = await db.get(job_id)\n    if job.status == \"queued\":\n        await db.update(job_id, status=\"running\")\n        return True\n    return False",
+       "bug": "Both read 'queued' and both run the job",
+       "fix": "Between the read and the write another worker can read the same row. Claim in one atomic statement: `UPDATE jobs SET status='running' WHERE id=$1 AND status='queued' RETURNING id`, or `SELECT ... FOR UPDATE SKIP LOCKED`."
+      },
+      {
+       "ask": "The first charge succeeds at the provider, but the response times out. What happens?",
+       "lang": "typescript",
+       "code": "for (let i = 0; i < 3; i++) {\n  try {\n    return await payments.charge(userId, amount);\n  } catch {\n    await sleep(2 ** i * 100);\n  }\n}",
+       "bug": "The retry charges the user again: nothing tells the provider it is the same charge",
+       "fix": "A timeout says nothing about whether the side effect happened. Send one idempotency key with every attempt, retry only errors that can succeed later, and add jitter."
+      },
+      {
+       "ask": "Coframe-style: a user must see the same variant on every visit. What is wrong?",
+       "lang": "python",
+       "code": "def bucket(user_id: str, variants: list[str]) -> str:\n    return variants[hash(user_id) % len(variants)]",
+       "bug": "hash() of a str is salted per process, so the same user lands in different variants on different servers and after restarts",
+       "fix": "Since Python 3.3, string hashing is randomised per process (PYTHONHASHSEED). Use a stable hash of experiment id plus user id (sha256 or murmur), take it modulo 10,000 for weights, and check the split with an SRM test."
+      }
      ]
     },
     {
      "id": "spot-llm",
      "title": "LLM wrappers, streams and tools",
-     "brief": "The code around a model call: parsing a stream, retrying a provider, and what the model is allowed to do with untrusted text.",
-     "points": [
-      "Network chunks do not line up with SSE events: buffer, split on blank lines, decode with `stream: true`.",
-      "Retry only what can succeed later, add jitter, and raise after the last attempt.",
-      "Untrusted text on a path with destructive tools is a prompt-injection hole."
-     ],
+     "brief": "Three snippets around a model call. Read each like a diff: what goes wrong in production?",
      "mcq": [
       {
        "q": "for await (const chunk of res.body) {\n  const text = new TextDecoder().decode(chunk);\n  const evt = JSON.parse(text.replace(\"data: \", \"\"));\n  emit(evt);\n}\n\nParsing a streamed model response. What breaks?",
@@ -5869,6 +5936,29 @@
      "say": [
       "The prompt isn't a security boundary, so I don't rely on telling the model to ignore the page.",
       "The path that reads untrusted text has no tools that act; anything that acts is a separate, confirmed step."
+     ],
+     "spot": [
+      {
+       "ask": "Parsing a streamed model response. What breaks?",
+       "lang": "typescript",
+       "code": "for await (const chunk of res.body) {\n  const text = new TextDecoder().decode(chunk);\n  const evt = JSON.parse(text.replace(\"data: \", \"\"));\n  emit(evt);\n}",
+       "bug": "A chunk can hold half an event or several, so JSON.parse throws; and a fresh decoder per chunk can split multi-byte characters",
+       "fix": "TCP chunks are arbitrary. Keep one `TextDecoder` with `{stream: true}`, append to a buffer, split on the blank line that ends an event, keep the remainder, and skip `[DONE]` and comment lines."
+      },
+      {
+       "ask": "What is the most serious problem?",
+       "lang": "python",
+       "code": "async def complete(prompt):\n    for attempt in range(5):\n        try:\n            return await client.complete(prompt)\n        except Exception:\n            await asyncio.sleep(2 ** attempt)",
+       "bug": "It retries errors that can never succeed (a 400, a bad key) and, after the fifth failure, returns None instead of raising",
+       "fix": "Retry only transient errors (429, 5xx, timeouts), honour Retry-After, add jitter so clients do not retry in step, and raise after the last attempt so the caller can fall back."
+      },
+      {
+       "ask": "What is wrong?",
+       "lang": "python",
+       "code": "page = fetch(url).text\nprompt = f\"Summarise this page and follow its instructions:\\n{page}\"\nreply = llm(prompt, tools=[send_email, delete_file])",
+       "bug": "Untrusted page text is mixed into the instructions on a path that has destructive tools, so the page can make the model send email or delete files",
+       "fix": "Treat fetched text as data: delimit it, tell the model it is never an instruction, and give that path no tools with side effects. Destructive actions need a separate, confirmed step."
+      }
      ]
     }
    ]
@@ -6027,7 +6117,22 @@
         "ch": "Trevor Spires"
        }
       }
-     ]
+     ],
+     "task": {
+      "say": "A visitor lands on a product listing page with `q` (free text, like 'quiet TV for a small bedroom') and maybe `ids` of products an upstream agent picked. Render a page tailored to them, full render under 5 seconds, every time.",
+      "given": [
+       "A catalog of about 35 products behind a function `get_products()`.",
+       "A model call `complete(prompt)` that sometimes takes 6 seconds, sometimes returns invalid output.",
+       "The default page, which works today."
+      ],
+      "done": [
+       "Every request renders within 5 seconds, tailored or default.",
+       "Bad `q` or unknown `ids` never crash the page.",
+       "Tests cover: a good answer, a slow model, invalid output, an unknown id."
+      ],
+      "where": "Build it in E:/coframe-bench with Claude Code: `git checkout -b <task>`, then `npm run check`. Python first, then the same in TypeScript if time allows.",
+      "minutes": 50
+     }
     },
     {
      "id": "builds-durable-runner",
@@ -6179,7 +6284,21 @@
        "m": 8,
        "why": "Durable execution as a library over Postgres."
       }
-     ]
+     ],
+     "task": {
+      "say": "Write a runner for multi-step agent jobs (fetch, call the model, write a file, open a PR). If the process crashes halfway and restarts, the job continues where it left off.",
+      "given": [
+       "Steps as plain functions that take the previous step's output.",
+       "A way to simulate a crash after any step."
+      ],
+      "done": [
+       "A restarted job skips the steps that finished.",
+       "A step that touches the outside world never does it twice.",
+       "Tests: crash after each step, then resume."
+      ],
+      "where": "Build it in E:/coframe-bench with Claude Code: `git checkout -b <task>`, then `npm run check`. Python first, then the same in TypeScript if time allows.",
+      "minutes": 50
+     }
     },
     {
      "id": "builds-fanout",
@@ -6340,7 +6459,22 @@
        "m": 12,
        "why": "Tasks, gather, TaskGroup, timeout and cancellation."
       }
-     ]
+     ],
+     "task": {
+      "say": "Call a model API for 200 items. The provider allows 10 requests a second and returns 429 and 5xx now and then. Collect every result you can, and stop everything if the caller gives up.",
+      "given": [
+       "A fake API you can make slow, rate-limited or failing.",
+       "A deadline or cancel signal from the caller."
+      ],
+      "done": [
+       "Never more than the allowed rate.",
+       "One bad item does not sink the batch; its error is reported.",
+       "Cancelling stops all in-flight calls.",
+       "Tests for each of those."
+      ],
+      "where": "Build it in E:/coframe-bench with Claude Code: `git checkout -b <task>`, then `npm run check`. Python first, then the same in TypeScript if time allows.",
+      "minutes": 50
+     }
     },
     {
      "id": "builds-sse",
@@ -6488,7 +6622,21 @@
         "ch": "Hussein Nasser"
        }
       }
-     ]
+     ],
+     "task": {
+      "say": "Read a model's streamed response as it arrives (server-sent events, OpenAI style), show the text as it streams, and collect the tool calls it makes. The user can press Stop at any time.",
+      "given": [
+       "A fake stream that delivers bytes in arbitrary chunks, including mid-character and mid-event.",
+       "Sample events with text deltas and tool-call argument deltas."
+      ],
+      "done": [
+       "Text assembled correctly whatever the chunking.",
+       "Tool calls returned whole, only when the stream ended properly.",
+       "Stop ends cleanly. Tests feed the same stream in different chunk sizes."
+      ],
+      "where": "Build it in E:/coframe-bench with Claude Code: `git checkout -b <task>`, then `npm run check`. Python first, then the same in TypeScript if time allows.",
+      "minutes": 50
+     }
     }
    ]
   },
@@ -6649,7 +6797,23 @@
         "ch": "Lucia from The Initial"
        }
       }
-     ]
+     ],
+     "task": {
+      "say": "Build the service that answers 'which variant does this visitor see?' for one experiment with three variants, choosing with Thompson sampling, with conversion counts updated in hourly batches.",
+      "given": [
+       "A visitor id on each request.",
+       "An hourly batch of conversion events.",
+       "A store for counts that can be down."
+      ],
+      "done": [
+       "A returning visitor sees the same variant.",
+       "Replaying an hourly batch changes nothing.",
+       "If the store is down, the page still gets an answer.",
+       "A seeded simulation shows the best variant winning traffic."
+      ],
+      "where": "Build it in E:/coframe-bench with Claude Code: `git checkout -b <task>`, then `npm run check`. Python first, then the same in TypeScript if time allows.",
+      "minutes": 50
+     }
     },
     {
      "id": "builds2-sync",
@@ -6782,7 +6946,21 @@
         "ch": "Alex Hyett"
        }
       }
-     ]
+     ],
+     "task": {
+      "say": "Keep a sheet of approvals (Product, Brand, Design, Legal; each Yes, No or Skip) in step with a variants API, both ways. The API forgets everything when it restarts.",
+      "given": [
+       "A fake sheet and a fake API, each with read and write calls.",
+       "A way to restart the API mid-run."
+      ],
+      "done": [
+       "After any run, both sides agree.",
+       "Running it twice in a row changes nothing the second time.",
+       "It recovers after an API restart. Tests for each."
+      ],
+      "where": "Build it in E:/coframe-bench with Claude Code: `git checkout -b <task>`, then `npm run check`. Python first, then the same in TypeScript if time allows.",
+      "minutes": 50
+     }
     },
     {
      "id": "builds2-sandbox",
@@ -6931,7 +7109,22 @@
         "ch": "Kishore Newton"
        }
       }
-     ]
+     ],
+     "task": {
+      "say": "Run a piece of code an agent just wrote, and report back what happened: exit code, output, errors, and whether it ran too long.",
+      "given": [
+       "The code as a string, in Python.",
+       "A time limit per run."
+      ],
+      "done": [
+       "Runaway code is stopped at the limit.",
+       "Huge output does not flood memory.",
+       "No secrets from your environment reach it, and its files are cleaned up.",
+       "Tests: a normal run, a crash, an infinite loop, a flood of output."
+      ],
+      "where": "Build it in E:/coframe-bench with Claude Code: `git checkout -b <task>`, then `npm run check`. Python first, then the same in TypeScript if time allows.",
+      "minutes": 50
+     }
     },
     {
      "id": "builds2-traces",
@@ -7083,7 +7276,21 @@
         "ch": "Adam Gardner"
        }
       }
-     ]
+     ],
+     "task": {
+      "say": "Given a flat list of trace spans from many agent runs, rebuild each run and summarise it the way someone debugging would want: how long it took, how much it cost, what it waited on, what failed.",
+      "given": [
+       "Spans with run id, span id, parent id, start, end, cost, and an error field.",
+       "Some runs with parallel calls and retries."
+      ],
+      "done": [
+       "Each run's duration, cost and failure are right.",
+       "A failure that a retry recovered is not reported as the run's failure.",
+       "Tests on a few hand-built runs."
+      ],
+      "where": "Build it in E:/coframe-bench with Claude Code: `git checkout -b <task>`, then `npm run check`. Python first, then the same in TypeScript if time allows.",
+      "minutes": 50
+     }
     }
    ]
   },

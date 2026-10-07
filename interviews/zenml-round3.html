@@ -251,6 +251,11 @@ details.ln-item[open] > summary .qm { display: none; }
 .ln-brief { margin: 0 0 var(--s3); }
 .ln-note { color: var(--muted); font-size: var(--fs-sm); }
 .ln-oq { font-weight: var(--w-strong); }
+.ln-task, .ln-gate { margin: var(--s4) 0; }
+.ln-task .acts { align-items: center; }
+.ln-spot { padding-left: var(--s5); }
+.ln-spot li { margin-bottom: var(--s5); }
+.ln-spot .ln-lang { font-size: var(--fs-sm); color: var(--muted); margin-top: var(--s2); }
 .ln-ta { width: 100%; min-height: 120px; font: inherit; padding: var(--s2); border: var(--hair); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); margin: var(--s2) 0; }
 .ln-beats { padding-left: var(--s5); } .ln-beats li { margin: 0 0 var(--s1); }
 .ln-done { font-weight: var(--w-strong); }
@@ -955,6 +960,81 @@ details.item > .sbody { padding-left: 0; }
     host.appendChild(el("p", "mq-q", inl(s)));
   }
 
+  function triedOf(id) { var s = learnStore(); s.tried[id] = s.tried[id] || {}; return s; }
+  function langName(l) { return l === "typescript" ? "TypeScript" : l === "python" ? "Python" : l; }
+
+  /* A build's task as it would be handed over: what you get, what done means, a timer and a box
+     for the plan. Saved on this device. */
+  function taskBlock(t) {
+    var k = t.task, box = el("div", "ln-task"), mins = k.minutes || 50;
+    box.appendChild(el("div", "lab", "The task"));
+    box.appendChild(el("p", "ln-brief", inl(k.say)));
+    panelSection(box, "You are given", panelList(k.given));
+    panelSection(box, "Done means", panelList(k.done));
+    if (k.where) { box.appendChild(el("p", "ln-note", inl(k.where))); }
+    var row = el("div", "acts"), timer = el("span", "timer", "0:00"), go = el("button", "btn primary", "Start " + mins + " minutes");
+    row.appendChild(go); row.appendChild(timer); box.appendChild(row);
+    var tick = null, t0 = 0;
+    go.addEventListener("click", function () {
+      if (tick) { clearInterval(tick); tick = null; go.textContent = "Start " + mins + " minutes"; return; }
+      t0 = Date.now(); go.textContent = "Stop";
+      tick = setInterval(function () {
+        var s = Math.round((Date.now() - t0) / 1000);
+        timer.textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+        timer.classList.toggle("over", s > mins * 60);
+      }, 250);
+    });
+    var ta = el("textarea", "ln-ta");
+    ta.placeholder = "Your clarifying questions and three-step plan, before the first prompt. Saved on this device.";
+    ta.value = (learnStore().tried[t.id] || {}).plan || "";
+    ta.addEventListener("input", function () { var s = triedOf(t.id); s.tried[t.id].plan = ta.value; learnSave(s); });
+    box.appendChild(ta);
+    return box;
+  }
+
+  /* The approach, the notes and the solution code, behind one button until he has tried. */
+  function solutionGate(mat, t, host) {
+    var wrap = el("div", "ln-gate");
+    mat.appendChild(wrap);
+    function show() { wrap.innerHTML = ""; wrap.appendChild(el("div", "lab", "The approach and solution")); wrap.appendChild(host); }
+    if ((learnStore().tried[t.id] || {}).sol) { show(); return; }
+    var b = el("button", "btn", "I've built it, or tried for 45 minutes: show the approach and solution");
+    b.addEventListener("click", function () { var s = triedOf(t.id); s.tried[t.id].sol = true; learnSave(s); show(); });
+    wrap.appendChild(b);
+  }
+
+  /* Spot the bug: each snippet as code, a box for his read, then the bug and the fix. */
+  function spotBlock(t) {
+    var ol = el("ol", "ln-spot");
+    t.spot.forEach(function (x, i) {
+      var li = el("li");
+      li.appendChild(el("p", "ln-oq", inl(x.ask)));
+      li.appendChild(el("div", "ln-lang", esc(langName(x.lang))));
+      li.appendChild(el("pre", "cv-code", esc(x.code)));
+      var ta = el("textarea", "ln-ta");
+      ta.placeholder = "What is wrong, and how would you fix it?";
+      var saved = (learnStore().tried[t.id] || {})["s" + i] || {};
+      ta.value = saved.text || "";
+      ta.addEventListener("input", function () { var s = triedOf(t.id), o = s.tried[t.id]["s" + i] || {}; o.text = ta.value; s.tried[t.id]["s" + i] = o; learnSave(s); });
+      li.appendChild(ta);
+      var out = el("div", "ln-ans");
+      function show() {
+        out.innerHTML = "";
+        out.appendChild(el("p", "", "<b>The bug:</b> " + inl(x.bug)));
+        out.appendChild(el("p", "", "<b>The fix:</b> " + inl(x.fix)));
+      }
+      if (saved.shown) { show(); }
+      else {
+        var b = el("button", "btn", "Show the bug");
+        b.addEventListener("click", function () { var s = triedOf(t.id), o = s.tried[t.id]["s" + i] || {}; o.shown = true; s.tried[t.id]["s" + i] = o; learnSave(s); b.remove(); show(); });
+        li.appendChild(b);
+      }
+      li.appendChild(out);
+      ol.appendChild(li);
+    });
+    return ol;
+  }
+
   /* one multiple-choice question; done(record) after the answer is shown */
   function mcqCard(host, t, i, done) {
     var q = t.mcq[i], st = learnStore(), key = t.id + ":" + i;
@@ -1039,24 +1119,32 @@ details.item > .sbody { padding-left: 0; }
     var mat = el("div", "ln-mat"), work = el("div", "ln-work");
     two.appendChild(mat); two.appendChild(work); wrap.appendChild(two);
 
-    /* the material */
-    if (t.brief) { mat.appendChild(el("p", "ln-brief", inl(t.brief))); }
+    /* the material. A spot-the-bug topic opens on its snippets; a build opens on its task, and
+       its approach and solution stay shut until he has tried. */
+    var host = mat;
+    if (t.spot) {
+      if (t.brief) { mat.appendChild(el("p", "ln-brief", inl(t.brief))); }
+      mat.appendChild(spotBlock(t));
+    }
+    if (t.task) { mat.appendChild(taskBlock(t)); host = el("div", "ln-sol"); }
+    if (t.brief && !t.spot) { host.appendChild(el("p", "ln-brief", inl(t.brief))); }
     if (t.points && t.points.length) {
       var u = el("ul", "mk-list ln-points");
       t.points.forEach(function (p) { u.appendChild(el("li", "", inl(p).replace(/^([^:<]{2,60}):/, "<b>$1:</b>"))); });
-      mat.appendChild(u);
+      host.appendChild(u);
     }
-    (t.figs || []).forEach(function (k) { var f = figNode(k, 0); if (f) { mat.appendChild(f); } });
-    if (t.design) { mat.appendChild(designFrame(t.design)); }
-    panelSection(mat, "In production", panelList(t.production));
+    (t.figs || []).forEach(function (k) { var f = figNode(k, 0); if (f) { host.appendChild(f); } });
+    if (t.design) { host.appendChild(designFrame(t.design)); }
+    panelSection(host, "In production", panelList(t.production));
     (t.code || []).forEach(function (c) {
       if (!c.src) { return; }
       var d = el("details", "ln-code");
       d.appendChild(el("summary", "", '<span class="ln-lang">' + esc(c.lang === "typescript" ? "TypeScript" : c.lang === "python" ? "Python" : c.lang) + "</span> " + inl(c.title || "") +
         (c.file ? ' <span class="ln-file">' + esc(c.file.split("/").pop()) + "</span>" : "")));
       var pre = el("pre", "cv-code"); pre.appendChild(el("code", "", esc(c.src))); d.appendChild(pre);
-      mat.appendChild(d);
+      host.appendChild(d);
     });
+    if (host !== mat) { solutionGate(mat, t, host); }
     if (t.res && window.Res) { var rs = Res.render(t.res); if (rs) { mat.appendChild(el("div", "lab", "Watch and read")); mat.appendChild(rs); } }
     else { learn(mat, { read: t.read || [] }); }
 
