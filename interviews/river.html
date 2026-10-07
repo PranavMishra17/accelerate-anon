@@ -1000,7 +1000,8 @@ details.item > .sbody { padding-left: 0; }
     mat.appendChild(wrap);
     function show() { wrap.innerHTML = ""; wrap.appendChild(el("div", "lab", "The approach and solution")); wrap.appendChild(host); }
     if ((learnStore().tried[t.id] || {}).sol) { show(); return; }
-    var b = el("button", "btn", "I've built it, or tried for 45 minutes: show the approach and solution");
+    var short = t.task && t.task.minutes <= 10;
+    var b = el("button", "btn", short ? "I've planned it out loud: show the approach and solution" : "I've built it, or tried for 45 minutes: show the approach and solution");
     b.addEventListener("click", function () { var s = triedOf(t.id); s.tried[t.id].sol = true; learnSave(s); show(); });
     wrap.appendChild(b);
   }
