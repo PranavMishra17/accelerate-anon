@@ -265,6 +265,9 @@ html.embed body { background: var(--bg); }
 .lens li { margin: var(--s1) 0; }
 .home-card { background: var(--sunken); border-radius: var(--radius-lg); padding: 10px var(--s4); font-size: var(--fs-sm); color: var(--soft); }
 .home-card a { font-weight: var(--w-strong); }
+.video-card { margin-top: var(--s2); }
+.video-card summary { cursor: pointer; }
+.video-card video { display: block; width: 100%; margin-top: var(--s2); border-radius: var(--radius); }
 .mini-num { display: inline-block; width: 20px; font-weight: var(--w-strong); color: var(--muted); }
 
 .steps, .board, .blk, .col { min-width: 0; }
@@ -1743,6 +1746,7 @@ GUIDE.examples.push({
   tabLabel: "NotebookLM",
   title: "NotebookLM",
   kind: "Grounded RAG with async generation",
+  video: { src: "media/videos/notebooklm-system-design.mp4", label: "Explainer: this design, step by step", m: 5 },
   prompt: "Design NotebookLM. Users add their own sources to a notebook, chat with answers grounded only in those sources with citations, and generate things like study guides and audio overviews.",
   lens: [
     "The product promise is groundedness, so it becomes a measurable requirement with an eval set from day one, not a deep-dive afterthought.",
@@ -5338,6 +5342,17 @@ function svgEl(tag, attrs, ...children) {
   return node;
 }
 
+/* A design's explainer video, local only: media/videos is gitignored and the public site has none.
+   Shut by default; the file loads when opened, and the card removes itself if the file is missing. */
+function renderVideoCard(v) {
+  const video = h("video", { controls: "", preload: "none", playsinline: "", src: v.src });
+  const card = h("details", { class: "home-card video-card" },
+    h("summary", null, h("strong", null, v.label), " ", fillTemplate("({m} min)", { m: v.m })), video);
+  video.addEventListener("error", () => card.remove());
+  fetch(v.src, { method: "HEAD" }).then((r) => { if (!r.ok) card.remove(); }).catch(() => card.remove());
+  return card;
+}
+
 const INLINE_PATTERN = /(`[^`]+`|\*\*[^*]+\*\*)/g;
 
 function inline(text) {
@@ -6635,7 +6650,8 @@ function renderDesignPage(example) {
           h("summary", null, h("span", { class: "lens-title" }, LABELS.lens), h("span", { class: "lens-sub" }, inline(lens[0].split(/(?<=\.)\s/)[0]))),
           h("ul", null, lens.map((item) => h("li", null, inline(item))))) : null,
         example.home && !window.SITE_PUBLIC ? h("p", { class: "home-card" }, inline(example.home.text), " ",
-          h("a", { href: example.home.href, target: "_blank", rel: "noopener" }, example.home.label)) : null)),
+          h("a", { href: example.home.href, target: "_blank", rel: "noopener" }, example.home.label)) : null,
+        example.video && !window.SITE_PUBLIC ? renderVideoCard(example.video) : null)),
     renderStepBar(example, steps),
     h("div", { class: "steps" }, sections));
 }

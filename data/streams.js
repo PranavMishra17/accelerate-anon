@@ -47,7 +47,10 @@ var STREAMS = [
       { label: "Dive into Deep Learning", url: "https://d2l.ai/", m: 60, why: "The textbook the maths steps already point into, with code.", src: "course" },
       { label: "AI Engineering from Scratch, phase 2: ML fundamentals (18 lessons)", url: "https://aiengineeringfromscratch.com/lesson?path=phases%2F02-ml-fundamentals%2F01-what-is-machine-learning", m: 10, why: "Classical ML before deep learning.", src: "aieng" },
       { label: "AI Engineering from Scratch, phase 3: deep learning core (13 lessons)", url: "https://aiengineeringfromscratch.com/lesson?path=phases%2F03-deep-learning-core%2F01-the-perceptron", m: 8, why: "Perceptron to training loop.", src: "aieng" },
-      { label: "PyTorch: learn the basics", url: "https://docs.pytorch.org/tutorials/beginner/basics/intro.html", m: 3, why: "Tensors to the optimisation loop, the official way.", src: "tutorial" }
+      { label: "PyTorch: learn the basics", url: "https://docs.pytorch.org/tutorials/beginner/basics/intro.html", m: 3, why: "Tensors to the optimisation loop, the official way.", src: "tutorial" },
+      { label: "Pramod Goyal: Reinforcement learning from scratch #1 (an X article)", url: "https://x.com/goyal__pramod/status/2106244243727507733", m: 2, why: "Problem first: a casino of slot machines becomes the multi-armed bandit, then Sutton and Barto chapters 2 to 4, with a long reference list.", src: "tutorial" },
+      { label: "Cameron Wolfe: Proximal Policy Optimization (PPO)", url: "https://cameronrwolfe.substack.com/p/proximal-policy-optimization-ppo", m: 1, why: "Policy gradients to PPO, the algorithm under RLHF.", src: "tutorial" },
+      { label: "Schulman et al., Proximal Policy Optimization Algorithms (the paper)", url: "https://arxiv.org/abs/1707.06347", m: 2, why: "The source, once the explainer above makes sense.", src: "tutorial" }
     ] },
 
   { id: "ai", name: "AI engineering", kind: "river",
@@ -74,7 +77,11 @@ var STREAMS = [
     on: [],
     backlog: [
       { label: "100 days of inference", url: "https://github.com/elizabetht/100-days-of-inference", m: 50, why: "The inference engineering roadmap, a day at a time.", src: "roadmap" },
-      { label: "AI Engineering from Scratch, phase 17: infrastructure and production (28 lessons)", url: "https://aiengineeringfromscratch.com/lesson?path=phases%2F17-infrastructure-and-production%2F01-managed-llm-platforms", m: 15, why: "Serving, scaling and cost in production.", src: "aieng" }
+      { label: "AI Engineering from Scratch, phase 17: infrastructure and production (28 lessons)", url: "https://aiengineeringfromscratch.com/lesson?path=phases%2F17-infrastructure-and-production%2F01-managed-llm-platforms", m: 15, why: "Serving, scaling and cost in production.", src: "aieng" },
+      { label: "Karan: everything an AI engineer needs to know about GPUs (an X article)", url: "https://x.com/kmeanskaran/status/2105635344385450151", m: 1, why: "Prefill is bound by compute, decode by memory bandwidth, and two divisions before renting a GPU (weights over VRAM, active weights over bandwidth): step 1 of the roadmap's inference sketch.", src: "tutorial" },
+      { label: "Hugging Face: model memory anatomy", url: "https://huggingface.co/docs/transformers/main/en/model_memory_anatomy", m: 1, why: "Where training memory goes: weights, gradients, optimiser states, activations.", src: "tutorial" },
+      { label: "Pope et al., Efficiently Scaling Transformer Inference (MLSys 2023)", url: "https://proceedings.mlsys.org/paper_files/paper/2023/file/c4be71ab8d24cdfb45e3d06dbfca2780-Paper-mlsys2023.pdf", m: 3, why: "Why prefill and decode batch differently, multi-chip layouts, and the KV cache as the capacity limit.", src: "tutorial" },
+      { label: "Wafer: the paper above as deployment checks (an X post)", url: "https://x.com/wafer_ai/status/2105092095786762676", m: 1, why: "A short way into Pope et al. before the PDF.", src: "tutorial" }
     ] },
 
   { id: "audio", name: "Audio and voice", kind: "edge",
