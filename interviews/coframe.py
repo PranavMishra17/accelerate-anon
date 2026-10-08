@@ -397,3 +397,60 @@ WATCH = {"title": "Watch before Friday",
         {"kind": "video", "req": False, "label": 'Distributed tracing in microservices', "url": "https://www.youtube.com/watch?v=XYvQHjWJJTE", "m": 8, "why": 'Agents reading their own execution traces.', "yt": {"id": "XYvQHjWJJTE", "ch": 'ByteMonk'}},
         {"kind": "video", "req": False, "label": 'Payments with idempotency keys', "url": "https://www.youtube.com/watch?v=m6DtqSb1BDM", "m": 17, "why": 'Exactly-once retries, done well.', "yt": {"id": "m6DtqSb1BDM", "ch": 'Arpit Bhayani'}},
     ]}
+
+TIMELINE = {"title": "Coframe in public: a timeline",
+    "lead": "Everything Coframe and its people have put out, oldest first, from a search on 8 October 2026 (the blog, press, podcasts, GitHub, the job board, LinkedIn). Read it for the shape of the product, then use the questions at the end. Blog dates are often a site-wide stamp, so most posts sit in the product list instead.",
+    "events": [
+        {"when": "23 May 2023", "what": "The Coframe GitHub organisation is created.", "src": "https://github.com/Coframe"},
+        {"when": "Nov to Dec 2023", "what": "**Coffee**, an open-source tool that generates React components on save, built mostly by Josh Payne and Pavlo (about 1.5k stars); posted to Hacker News 13 Dec 2023.", "src": "https://github.com/Coframe/coffee"},
+        {"when": "Date unclear, about 2024", "what": "**A UI-code model with OpenAI**: GPT-4o Vision fine-tuned on many websites, measured on their own **BrandBench** (194 held-out sites, a section removed and regenerated, a GPT-4o judge scoring style match): +26% over base GPT-4o.", "src": "https://www.coframe.com/post/coframe-openai-ui-code-generation-model"},
+        {"when": "29 Oct 2024", "what": "**$9.3M seed**, co-led by Khosla Ventures and NFDG (Nat Friedman, Daniel Gross); still in limited testing with growth teams; a 42% average click-through lift reported for one large customer.", "src": "https://www.aol.com/news/coframe-raises-9-million-websites-130406960.html"},
+        {"when": "10 Sep 2025", "what": "Josh Payne on the Making Sense of Martech podcast: 'living interfaces', the OpenAI collaboration, automating about 90% of conversion-rate work, optimising for AI search.", "src": "https://msom.transistor.fm/episodes/living-interfaces-openai-collabs-enterprise-ai-with-josh-payne-ceo-of-coframe"},
+        {"when": "20 Apr 2026", "what": "**Engineering hiring push**: Applied Scientist (Experimentation), Product Engineer, Agent Engineer, **Agent Platform Engineer** and Integrations Engineer posted within about 90 minutes.", "src": "https://jobs.ashbyhq.com/Coframe"},
+        {"when": "31 May 2026", "what": "**Pavlo writes the three public take-homes in one evening**: agent engineer (a just-in-time page for a TV store in under 5 seconds), forward-deployed engineer (Google Sheet to variants API sync) and applied science (an experimentation ROI simulator).", "src": "https://github.com/Coframe/agent-engineer-take-home"},
+        {"when": "7 and 16 Jun 2026", "what": "Aleksey Korshuk makes the applied-science take-home open-ended and adds a personalization take-home.", "src": "https://github.com/Coframe"},
+        {"when": "Jul 2026", "what": "Enterprise Product Engineer, Solutions Engineer and an SEO and AI-search strategist posted; the agent-engineer take-home last updated 13 Jul.", "src": "https://jobs.ashbyhq.com/Coframe"},
+        {"when": "Aug 2026", "what": "**Forks that hint at the agent platform**: Vercel's agent-browser (6 Aug) and Cloudflare's agents SDK (13 Aug).", "src": "https://github.com/Coframe"},
+        {"when": "16 Sep 2026", "what": "**Backend System Architect** posted.", "src": "https://jobs.ashbyhq.com/Coframe"},
+        {"when": "22 Sep 2026", "what": "**More browser forks**: kernel-images (browsers as a service) and neko (a self-hosted browser streamed over WebRTC); a burst of go-to-market and finance hiring the same week.", "src": "https://github.com/Coframe"},
+        {"when": "7 Oct 2026", "what": "**Coframe acquires HaystacksAI**; its founder Bo Mohazzabi (ex-Optimizely, Amplitude) becomes VP of GTM, toward an autonomous 'Growth Agent'. The post claims $150M+ incremental revenue for customers in six months.", "src": "https://www.coframe.com/post/coframe-acquires-haystacks"},
+        {"when": "7 Oct 2026", "what": "**Predicting experiment winners from screenshots**: 57% consistent accuracy on a public benchmark with Sonnet 5 and nine-vote majority, but only 36 to 40% on 278 of their real experiments, with strong position bias. Their conclusion: a screening tool, not a replacement for live tests.", "src": "https://www.coframe.com/post/predicting-website-experiment-winners"}
+    ],
+    "product": [
+        {"t": "**Ideas and variants**: generative models propose variants for a page; a person approves before anything ships.", "src": "https://www.coframe.com/post/how-coframe-finds-winners-90-percent-of-the-time"},
+        {"t": "**Design and code**: their fine-tuned vision model writes on-brand UI code, measured with BrandBench.", "src": "https://www.coframe.com/post/coframe-openai-ui-code-generation-model"},
+        {"t": "**The optimiser**: Thompson sampling with a Beta prior per variant, updated hourly; losing variants are replaced by new generated ones, which get an incubation period first.", "src": "https://www.coframe.com/post/the-math-behind-coframes-optimizers"},
+        {"t": "**A prior before traffic**: the screenshot winner predictor screens candidates; weak on real experiments, so live tests stay the judge.", "src": "https://www.coframe.com/post/predicting-website-experiment-winners"},
+        {"t": "**Personalization**: segments, and an upstream agent that profiles each visitor and passes context on the URL (the take-home's q= and ids=).", "src": "https://github.com/Coframe/agent-engineer-take-home"},
+        {"t": "**Approvals as state**: reviews that are invalidated when engineering changes a variant.", "src": "https://www.coframe.com/answers/ai-ab-tests-with-human-approval"},
+        {"t": "**Agents on their own code and an internal agent platform**: the Agent Platform Engineer posting (long-running runs with stop and resume, isolated environments, remote browsers, tracing and evals, CI/CD), toward 'hundreds of thousands of interfaces'.", "src": "https://jobs.ashbyhq.com/Coframe"},
+        {"t": "**A Growth Agent**: the new direction after Haystacks, agents on outbound and go-to-market signals.", "src": "https://www.coframe.com/post/coframe-acquires-haystacks"}
+    ],
+    "team": [
+        {"name": "Josh Payne", "role": "Founder and CEO", "note": "Co-founded Autograph before; lectures on AI at Stanford; most commits on Coffee; the 2025 podcast above.", "url": "https://www.linkedin.com/in/joshpxyne/"},
+        {"name": "Pavlo Razumovskyi", "role": "Technical co-founder (your round 2)", "note": "GitHub `1um`; wrote Coffee's model strategies and all three take-homes; still maintains repos himself (latest Mar 2026). No public talks found.", "url": "https://www.linkedin.com/in/pavlorazumovskyi/"},
+        {"name": "Aleksey Korshuk", "role": "AI engineer and researcher", "note": "Wrote the applied-science and personalization take-homes.", "url": "https://www.linkedin.com/in/aleksey-korshuk/"},
+        {"name": "Glavin Wiechert", "role": "Founding AI engineer (LinkedIn)", "note": "Bio: production AI agents, harnesses, evals, agent reliability. Whether he is still there is not confirmed.", "url": "https://www.linkedin.com/in/glavin/"},
+        {"name": "Bo Mohazzabi", "role": "VP of GTM, from 7 Oct 2026", "note": "Came with the Haystacks acquisition.", "url": "https://www.coframe.com/post/coframe-acquires-haystacks"},
+        {"name": "Neesha Malik", "role": "Founding Talent", "note": "Your round 1.", "url": "https://www.linkedin.com/in/neesha-malik/"},
+        {"name": "Michael Choi", "role": "Solutions engineering", "note": "", "url": "https://www.linkedin.com/in/michaelchoi7/"},
+        {"name": "Ryan Krebs", "role": "Go-to-market", "note": "", "url": "https://www.linkedin.com/in/ryankrebs/"}
+    ],
+    "ask": [
+        {"q": "What does one generation job look like today, and what breaks first at 10 times the volume?", "why": "The posting aims at hundreds of thousands of interfaces.", "src": "https://jobs.ashbyhq.com/Coframe"},
+        {"q": "You forked kernel-images, neko, agent-browser and Cloudflare's agents in August and September. Which are you building on, and which did you rule out?", "why": "Remote browsers are a line in the posting.", "src": "https://github.com/Coframe"},
+        {"q": "The screenshot predictor dropped from 57% on the benchmark to under 40% on your real experiments. How does that change what agents may ship without a person?", "why": "", "src": "https://www.coframe.com/post/predicting-website-experiment-winners"},
+        {"q": "Is just-in-time generation under 5 seconds real in production, or cached per segment? Where does the latency budget go?", "why": "Your take-home sets the 5 second limit.", "src": "https://github.com/Coframe/agent-engineer-take-home"},
+        {"q": "When the optimiser replaces a losing arm with a generated one, how does the new arm get its incubation traffic, and what happens if generation fails mid-experiment?", "why": "", "src": "https://www.coframe.com/post/the-math-behind-coframes-optimizers"},
+        {"q": "Agents contribute to Coframe's own codebase. How do you trace, evaluate and gate those pull requests, and what does an agent regression look like?", "why": "", "src": "https://jobs.ashbyhq.com/Coframe"},
+        {"q": "For stop-and-resume runs, did you build your own durable execution or use something like Temporal, Durable Objects or Inngest? What failed first?", "why": "", "src": ""},
+        {"q": "Is the Growth Agent from Haystacks a separate product or the same platform, and what does it ask of the platform?", "why": "", "src": "https://www.coframe.com/post/coframe-acquires-haystacks"},
+        {"q": "Approvals are invalidated when engineering changes a variant. How is that modelled as state in the pipeline?", "why": "", "src": "https://www.coframe.com/answers/ai-ab-tests-with-human-approval"},
+        {"q": "How do you judge a take-home, and what separated the best submissions from the rest?", "why": "Aleksey rewrote one to be open-ended in June.", "src": "https://github.com/Coframe"}
+    ],
+    "unknown": [
+        "Real publication dates for most blog posts (the site stamps October 2026 on all of them).",
+        "Incremental revenue: the job posting says $221.4M in six months, the Haystacks post $150M+; which is current is unclear.",
+        "How variants are delivered on customers' pages (the edge script) and the analytics architecture: no public source.",
+        "A YC batch for Coframe (the YC page returned 404), Pavlo's background before Coframe (LinkedIn is gated), and whether the forks run in production."
+    ]}

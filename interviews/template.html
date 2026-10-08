@@ -251,6 +251,13 @@ details.ln-item[open] > summary .qm { display: none; }
 .ln-brief { margin: 0 0 var(--s3); }
 .ln-note { color: var(--muted); font-size: var(--fs-sm); }
 .ln-oq { font-weight: var(--w-strong); }
+.tl-list { list-style: none; padding: 0; margin: var(--s3) 0; border-left: 2px solid var(--rule); }
+.tl-list li { display: grid; grid-template-columns: 9.5em 1fr; gap: var(--s3); padding: var(--s2) 0 var(--s2) var(--s3); }
+.tl-when { color: var(--muted); font-size: var(--fs-sm); white-space: nowrap; }
+.tl-src { font-size: var(--fs-sm); margin-left: var(--s1); }
+.tl-team { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
+.tl-team th, .tl-team td { text-align: left; vertical-align: top; padding: var(--s2) var(--s3) var(--s2) 0; border-bottom: var(--hair); }
+@media (max-width: 640px) { .tl-list li { grid-template-columns: 1fr; gap: 0; } }
 .live-ask { margin: var(--s2) 0 var(--s4); padding-left: var(--s4); border-left: 2px solid var(--rule); color: var(--soft); }
 .ln-task, .ln-gate { margin: var(--s4) 0; }
 .ln-task .acts { align-items: center; }
@@ -710,6 +717,47 @@ details.item > .sbody { padding-left: 0; }
       var a = el("a", "btn", esc(x.label)); a.href = link(x.id); go.appendChild(a);
     });
     p.appendChild(go);
+    /* the company in public: a dated timeline, the team, how the product fits, questions it raises */
+    if (LOOP.timeline) {
+      var T = LOOP.timeline;
+      var ts = heading(host, "timeline", "", T.title);
+      if (T.lead) { ts.appendChild(el("p", "lead", inl(T.lead))); }
+      var src = function (u) { return u ? ' <a class="tl-src" href="' + esc(u) + '" target="_blank" rel="noopener">source</a>' : ""; };
+      var ol = el("ol", "tl-list");
+      (T.events || []).forEach(function (e) {
+        ol.appendChild(el("li", "", '<span class="tl-when">' + esc(e.when) + '</span><span class="tl-what">' + inl(e.what) + src(e.src) + "</span>"));
+      });
+      ts.appendChild(ol);
+      if (T.product && T.product.length) {
+        ts.appendChild(el("h3", "mk-h", "How the product fits together"));
+        var pl = el("ul", "mk-list");
+        T.product.forEach(function (x) { pl.appendChild(el("li", "", inl(x.t) + src(x.src))); });
+        ts.appendChild(pl);
+      }
+      if (T.team && T.team.length) {
+        ts.appendChild(el("h3", "mk-h", "The team, in public"));
+        var tb = el("table", "tl-team");
+        tb.innerHTML = "<thead><tr><th>Who</th><th>Role</th><th>What they have put out</th></tr></thead>";
+        var body = el("tbody");
+        T.team.forEach(function (m) {
+          body.appendChild(el("tr", "", "<td>" + (m.url ? '<a href="' + esc(m.url) + '" target="_blank" rel="noopener">' + esc(m.name) + "</a>" : esc(m.name)) +
+            "</td><td>" + esc(m.role) + "</td><td>" + inl(m.note || "") + "</td>"));
+        });
+        tb.appendChild(body); ts.appendChild(tb);
+      }
+      if (T.ask && T.ask.length) {
+        ts.appendChild(el("h3", "mk-h", "Questions this raises for Pavlo"));
+        var al = el("ol", "mk-list");
+        T.ask.forEach(function (x) { al.appendChild(el("li", "", "<b>" + inl(x.q) + "</b> " + inl(x.why || "") + src(x.src))); });
+        ts.appendChild(al);
+      }
+      if (T.unknown && T.unknown.length) {
+        ts.appendChild(el("h3", "mk-h", "Not verified"));
+        var ul2 = el("ul", "mk-list");
+        T.unknown.forEach(function (x) { ul2.appendChild(el("li", "", inl(x))); });
+        ts.appendChild(ul2);
+      }
+    }
     /* extra viewing for the round, last on the page */
     if (LOOP.watch && window.Res) {
       var w = heading(host, "watch", "", LOOP.watch.title);
