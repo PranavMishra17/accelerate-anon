@@ -759,10 +759,12 @@ details.item > .sbody { padding-left: 0; }
     }
     /* extra viewing for the round, last on the page */
     if (LOOP.watch && window.Res) {
-      var w = heading(host, "watch", "", LOOP.watch.title);
-      if (LOOP.watch.lead) { w.appendChild(el("p", "lead", inl(LOOP.watch.lead))); }
-      var rs = Res.render(LOOP.watch.items);
-      if (rs) { w.appendChild(rs); }
+      [].concat(LOOP.watch).forEach(function (W, wi) {
+        var w = heading(host, "watch" + (wi ? "-" + wi : ""), "", W.title);
+        if (W.lead) { w.appendChild(el("p", "lead", inl(W.lead))); }
+        var rs = Res.render(W.items);
+        if (rs) { w.appendChild(rs); }
+      });
     }
   }
 
