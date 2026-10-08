@@ -2444,6 +2444,390 @@
    ]
   },
   {
+   "id": "runtimes",
+   "title": "Where agent code runs",
+   "blurb": "The gaps between your edge functions and an agent platform: runtimes compared (edge, workers, containers, microVMs, sandboxes), claiming jobs against durable execution, the distributed-systems ideas behind reliable fleets, and deploying long-running agents, Kubernetes included.",
+   "sessions": [],
+   "topics": [
+    {
+     "id": "runtime-compare",
+     "title": "Edge functions, workers, containers, VMs and sandboxes",
+     "brief": "Where one unit of agent work runs decides what it can hold, how long it may take, how fast it starts and what it can break. Five places, from lightest to most isolated, with alfred_ on the map.",
+     "points": [
+      "Edge function: an isolate (V8 or Deno) on a shared runtime, booted per request; starts in tens of milliseconds, keeps no warm state between calls, and has a wall clock. alfred_'s turn runs here: 150 s idle fails the caller with a 504, 400 s kills the isolate.",
+      "Warm worker: a long-running process you own (a container that stays up) polling a queue; it holds connections, caches, binaries and long jobs. alfred_'s Railway workers poll every 5 s and heartbeat every 30 s. You pay while it idles, and a deploy must drain it.",
+      "Container: process isolation with Linux namespaces and cgroups, sharing the host kernel; starts in about a second. One kernel exploit is a host escape, so it is not a boundary for code a model wrote.",
+      "VM and microVM: its own kernel on a hypervisor. A microVM (Firecracker) cuts the device model down and boots in about 125 ms, which is why AWS Lambda and most agent sandboxes use one.",
+      "Agent sandbox: a microVM (or a gVisor-style container) per task with no secrets inside, a network allowlist, time and memory caps, and a snapshot so it starts warm. E2B, Modal and Daytona sell exactly this.",
+      "Choosing: short, stateless and close to the user goes to the edge; long, stateful or binary-heavy goes to a worker; untrusted code from a model goes to a microVM sandbox, never a shared container."
+     ],
+     "mcq": [
+      {
+       "q": "alfred_ runs an agent turn in a Deno edge function. One turn calls a slow tool and needs 7 minutes. What happens?",
+       "o": [
+        "It completes; edge functions scale their time",
+        "The platform moves it to a container automatically",
+        "It retries forever until it finishes",
+        "The isolate is killed at the 400 s wall clock mid-turn, so long work has to be handed to a worker or split into steps",
+        "The 150 s idle timeout only warns, so it finishes"
+       ],
+       "a": 3,
+       "why": "An edge function has a hard wall clock. alfred_ budgets a turn at 360 s for this reason and hands long jobs (documents, routines) to Railway workers.",
+       "pair": "runtime-limits"
+      },
+      {
+       "q": "Why do agent sandboxes use microVMs rather than plain containers for code a model wrote?",
+       "o": [
+        "A container shares the host kernel, so one kernel exploit escapes to the host; a microVM has its own kernel and a tiny attack surface",
+        "Containers cannot run Python",
+        "MicroVMs are always cheaper",
+        "Containers cannot cap memory",
+        "MicroVMs come with GPUs"
+       ],
+       "a": 0,
+       "why": "Isolation strength is the point. Containers are fine for your own trusted code; model-written code is untrusted input that executes.",
+       "pair": "isolation"
+      },
+      {
+       "q": "Which job belongs on a warm worker rather than an edge function?",
+       "o": [
+        "Returning a small JSON response",
+        "Verifying a webhook signature",
+        "Serving a cached page",
+        "Reading one row for the user",
+        "A 20-minute document conversion that needs LibreOffice and a held connection"
+       ],
+       "a": 4,
+       "why": "Long, binary-heavy, stateful work outlives an edge function's wall clock and needs its own process; quick request work fits the edge.",
+       "pair": "runtime-limits"
+      }
+     ],
+     "open": {
+      "q": "alfred_ runs its agent in edge functions. Why not run it on warm workers? Defend the choice, then say when you would move it.",
+      "probe": "Whether you know your runtime's limits as numbers and have a trigger for moving, not a preference.",
+      "a": [
+       "Why the edge works now: a turn is usually seconds, scales to zero, deploys in one step and sits next to Postgres; the team does not run servers.",
+       "What it costs: a wall clock (150 s idle, 400 s hard), no warm state, cold starts tied to bundle size; we built a lease heartbeat and a 360 s turn budget around it.",
+       "Long work already moved: documents, routines and the phone agent run in Railway containers that poll and heartbeat.",
+       "When I would move the agent loop: runs that regularly pass a few minutes, waits on people or webhooks, or many side effects per run; then a worker fleet with durable steps, or a durable-execution engine."
+      ]
+     },
+     "say": [
+      "I think of it as matching the work to the runtime: the edge for short turns, workers for anything long or heavy, and a microVM for code we did not write.",
+      "In alfred_ the turn lives in a Deno edge function with a 400 second wall clock, so we budget 360 and push long jobs to Railway workers."
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Is edge computing really faster?",
+       "url": "https://www.youtube.com/watch?v=yOP5-3_WFus",
+       "m": 9,
+       "why": "What an edge function is and where it stops being faster.",
+       "yt": {
+        "id": "yOP5-3_WFus",
+        "ch": "Fireship"
+       }
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Containers vs VMs: what's the difference?",
+       "url": "https://www.youtube.com/watch?v=cjXI-yxqGTI",
+       "m": 9,
+       "why": "The kernel boundary behind every sandbox choice.",
+       "yt": {
+        "id": "cjXI-yxqGTI",
+        "ch": "IBM Technology"
+       }
+      }
+     ]
+    },
+    {
+     "id": "runtime-durable",
+     "title": "Claiming a job against durable execution",
+     "brief": "alfred_ claims a job with SKIP LOCKED and runs the agent loop inside one invocation. Temporal and Inngest record every step so a crash resumes where it stopped. Know what each survives and when to switch.",
+     "points": [
+      "alfred_ today: a webhook writes a job row; a worker claims it with `FOR UPDATE SKIP LOCKED` and calls the turn; the agent's own loop runs inside that one call. What survives a crash: the job row, the lease, traces and messages. What does not: where the loop was.",
+      "What a crash costs: the lease stops being renewed (heartbeat every 30 s), another worker claims the job, and the turn starts again from the top, so tool calls repeat unless each is idempotent. That is how alfred_ once sent a duplicate reply.",
+      "Durable execution: the engine stores each step's result in an event history; after a crash a new worker replays the code, gets recorded results back for finished steps and continues at the first unfinished one.",
+      "Temporal: a server plus workers you run; workflows are replayed from history and must be deterministic (no random, clock or direct I/O in workflow code); activities carry retries and timeouts. Strong for long, branching runs with timers and human waits.",
+      "Inngest and Restate: steps called over HTTP, so even serverless and edge functions become durable without a long-lived worker; the trade is a vendor or one more service, and step boundaries chosen by you.",
+      "When to switch: runs longer than the runtime's wall clock, waits for people or webhooks, many side effects per run, or re-running whole turns becoming expensive. Until then: a claimed job with a lease, checkpointed steps and idempotent tools is the honest middle."
+     ],
+     "mcq": [
+      {
+       "q": "An agent turn has made four tool calls when its worker dies. With claim-and-lease only, what happens next?",
+       "o": [
+        "It resumes at the fifth call",
+        "The job is lost for good",
+        "When the lease expires another worker claims the job and runs the turn from the start, repeating the four calls",
+        "The database rolls back the four calls",
+        "Temporal takes over automatically"
+       ],
+       "a": 2,
+       "why": "A lease recovers ownership, not progress. Progress needs checkpoints per step, and repeats need idempotent side effects.",
+       "pair": "durable-replay"
+      },
+      {
+       "q": "Why must Temporal workflow code be deterministic?",
+       "o": [
+        "So it runs faster",
+        "On recovery the workflow is replayed against its event history; a different path (random, the clock, direct I/O) would no longer match the recorded steps",
+        "So TypeScript can type-check it",
+        "For billing",
+        "Because of the GIL"
+       ],
+       "a": 1,
+       "why": "Replay is the recovery mechanism. Anything non-deterministic belongs in an activity, whose result is recorded.",
+       "pair": "durable-replay"
+      },
+      {
+       "q": "Which is the strongest reason to move alfred_'s agent runs onto durable execution?",
+       "o": [
+        "It is what everyone uses now",
+        "It makes the database smaller",
+        "It lowers time to first token",
+        "Runs that wait hours for a person or a webhook and make many side effects, where restarting a turn is costly",
+        "Edge functions cannot run Python"
+       ],
+       "a": 3,
+       "why": "Durable execution earns its cost on long, waiting, side-effect-heavy runs; for short turns a lease and idempotent tools are enough.",
+       "pair": "durable-when"
+      }
+     ],
+     "open": {
+      "q": "Walk me through what happens in alfred_ when a worker dies in the middle of a turn, and what you would change if runs got ten times longer.",
+      "probe": "Leases versus checkpoints versus durable execution, and an honest account of today's gap.",
+      "a": [
+       "Today: the job row and lease survive; the heartbeat stops, the lease goes stale, the job is claimed again and the turn restarts from the beginning.",
+       "The risk is repeated side effects; we closed the duplicate reply with the heartbeat, a 202 that requeues, and a backstop, and a send still needs a key per message.",
+       "Ten times longer: checkpoint each step (store tool results by run and step) so a restart skips finished work; make every external call idempotent.",
+       "Past the wall clock or with human waits: move the loop to durable execution, Inngest-style steps if we stay serverless, Temporal if we run workers."
+      ]
+     },
+     "say": [
+      "Our claim with SKIP LOCKED gives us ownership, not progress: a dead worker's job comes back, but the turn starts over.",
+      "So for short turns I keep the lease and make tools idempotent; for long runs with waits I would put the loop on durable execution."
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Durable execution (Temporal and Inngest)",
+       "url": "https://www.youtube.com/watch?v=GT9k8OSjzX8",
+       "m": 19,
+       "why": "Event history, replay and steps, compared.",
+       "yt": {
+        "id": "GT9k8OSjzX8",
+        "ch": "Jordan has no life"
+       }
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Make your AI agent durable in 8 minutes",
+       "url": "https://www.youtube.com/watch?v=3nhRaJ3eOS8",
+       "m": 8,
+       "why": "Steps over HTTP: durability without a warm worker.",
+       "yt": {
+        "id": "3nhRaJ3eOS8",
+        "ch": "Inngest"
+       }
+      }
+     ]
+    },
+    {
+     "id": "runtime-distributed",
+     "title": "Distributed systems nuances for agent runs",
+     "brief": "The handful of ideas behind every reliable agent fleet: delivery guarantees, idempotency, leases with fencing, backpressure, consistency and partial failure. Each one is a bug in the live repos.",
+     "points": [
+      "Delivery: at-most-once loses work, at-least-once repeats it, and exactly-once is at-least-once plus idempotent processing. Every queue you will meet is at-least-once.",
+      "Idempotency: each side effect gets a key from the run and the step; the receiver stores the key with the result and returns the stored result on a repeat. Without one, a timeout after success becomes a duplicate.",
+      "Leases and fencing: a lease says who owns work until a time; a fencing token, a number that rises with every new lease, lets the resource reject a stale owner that wakes up late.",
+      "Backpressure: bound the queue and cap concurrency per tenant and per provider; when full, slow or refuse new work instead of letting latency, cost and rate-limit errors climb.",
+      "Consistency: read-your-writes for the person who just acted, eventual for dashboards, strong where money or a pull request is involved.",
+      "Partial failure: a call can fail, succeed without telling you, or hang; timeouts on every call, retries with jitter only for what can succeed later, and a dead-letter state someone owns."
+     ],
+     "mcq": [
+      {
+       "q": "A queue is at-least-once. What does exactly-once processing require on your side?",
+       "o": [
+        "Idempotent handling: a key per message or effect, so a repeat returns the first result",
+        "Nothing more",
+        "A larger queue",
+        "A FIFO queue",
+        "One lock per queue"
+       ],
+       "a": 0,
+       "why": "Exactly-once delivery is not on offer in practice; exactly-once effects come from deduplication at the receiver.",
+       "pair": "delivery"
+      },
+      {
+       "q": "A worker pauses 40 s for garbage collection, its lease expires, another worker takes the job, then the first wakes and writes. What stops the stale write?",
+       "o": [
+        "The lease itself",
+        "A longer timeout",
+        "Retries",
+        "A mutex in the first worker's memory",
+        "A fencing token checked by the resource, which rejects the older token"
+       ],
+       "a": 4,
+       "why": "A lease cannot stop a paused process from acting on old beliefs; the resource has to check a monotonic token.",
+       "pair": "fencing"
+      },
+      {
+       "q": "The agent fleet hits the model provider's rate limit. What is backpressure here?",
+       "o": [
+        "Retry at once until it works",
+        "Drop every request",
+        "Cap concurrency per provider and tenant, queue the rest, and slow or reject new work when the queue is full",
+        "Switch provider on every error",
+        "Raise the timeout"
+       ],
+       "a": 2,
+       "why": "Backpressure pushes the limit back toward the source; blind retries multiply the load that caused the 429s.",
+       "pair": "backpressure"
+      }
+     ],
+     "open": {
+      "q": "Take alfred_'s duplicate reply. Explain it in distributed-systems terms, and the fix.",
+      "probe": "Naming at-least-once, the lost-ack window and idempotency precisely.",
+      "a": [
+       "The job queue is at-least-once: a worker awaiting a turn died at the 150 s idle limit and the job was claimed again.",
+       "The first turn had already sent; the second turn sent again: a side effect without a key under at-least-once delivery.",
+       "Fixes: a lease heartbeat so a live turn keeps its claim, a 202 that requeues instead of failing, and a backstop.",
+       "The remaining window: a crash after sending but before marking delivered; closing it needs one idempotency key per reply, checked before sending."
+      ]
+     },
+     "say": [
+      "Everything I build assumes at-least-once, so every side effect carries a key and a repeat is harmless.",
+      "Our duplicate reply was exactly that: a lost acknowledgement and a send with no key."
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Kafka delivery semantics: at-least-once, at-most-once, exactly-once",
+       "url": "https://www.youtube.com/watch?v=V0c0qAP7sWk",
+       "m": 8,
+       "why": "The three guarantees, plainly.",
+       "yt": {
+        "id": "V0c0qAP7sWk",
+        "ch": "Irtiza Hafiz"
+       }
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Fix duplicate messages with the idempotent consumer pattern",
+       "url": "https://www.youtube.com/watch?v=GsZ_ZtlRCBg",
+       "m": 15,
+       "why": "The receiver side of exactly-once.",
+       "yt": {
+        "id": "GsZ_ZtlRCBg",
+        "ch": "Milan Jovanović"
+       }
+      }
+     ]
+    },
+    {
+     "id": "runtime-deploy",
+     "title": "Deploying long-running agents, and do you need Kubernetes",
+     "brief": "Shipping a new agent version while runs are in flight: rolling, blue-green and canary, draining, migrations, and an honest answer on Kubernetes.",
+     "points": [
+      "Rolling: replace instances a few at a time; cheap, but two versions run side by side, so every change must be backward compatible (old and new code reading the same rows and messages).",
+      "Blue-green: bring the new set up beside the old, switch traffic at once, keep the old ready for rollback; costs double capacity for a while.",
+      "Canary: a small share of traffic or tenants first, watched against the baseline, then widened. For agents the signal is task success and eval scores, plus error rate and cost per run, not only HTTP 200s.",
+      "Draining: a deploy must not kill a long run. On SIGTERM stop claiming, finish or checkpoint the current run within a grace period, then exit; or make runs resumable so a kill costs one step.",
+      "Migrations: expand, then contract (add the column, deploy code that handles both, backfill, remove the old). alfred_'s gap: nothing guarantees migrations run before the functions that need them.",
+      "Kubernetes: schedules containers across machines, restarts them, rolls deployments and scales on metrics; worth it with many services and someone to run it. A small team on Railway, Fly or managed serverless gets most of that without a control plane. Say so plainly."
+     ],
+     "mcq": [
+      {
+       "q": "A deploy restarts workers while agent runs are mid-flight. What should a worker do on SIGTERM?",
+       "o": [
+        "Exit at once",
+        "Stop claiming new jobs, finish or checkpoint the current run within a grace period, then exit",
+        "Ignore it",
+        "Restart the current run from scratch",
+        "Delete the job"
+       ],
+       "a": 1,
+       "why": "Graceful draining plus resumable runs means a deploy never costs a customer a half-done task.",
+       "pair": "drain"
+      },
+      {
+       "q": "Why does a rolling deploy demand backward compatibility?",
+       "o": [
+        "It does not",
+        "It makes deploys faster",
+        "Kubernetes requires it",
+        "Old and new versions run at the same time against the same database and queue",
+        "Because of canary weights"
+       ],
+       "a": 3,
+       "why": "During the roll both versions read and write shared state, so each must understand the other's data.",
+       "pair": "rolling"
+      },
+      {
+       "q": "For a change to an agent's prompt or model, what is the best canary signal?",
+       "o": [
+        "Task success and eval scores on the canary slice against the baseline, plus error rate and cost per run",
+        "CPU use",
+        "HTTP 200 rate alone",
+        "Deploy duration",
+        "The number of pods"
+       ],
+       "a": 0,
+       "why": "An agent can return 200 and still do the wrong thing; the canary must measure the outcome.",
+       "pair": "canary"
+      }
+     ],
+     "open": {
+      "q": "Do you run Kubernetes? Answer honestly, and still show judgment.",
+      "probe": "Honesty about the gap plus a clear model of what it buys and when a team needs it.",
+      "a": [
+       "No: alfred_ runs on Supabase edge functions and Railway containers, so the platform does scheduling and restarts for us.",
+       "What Kubernetes would add: our own scheduling across machines, rollouts, autoscaling on custom metrics, sidecars for tracing, and isolation choices like gVisor or Kata for sandboxes.",
+       "What it costs: a control plane to run and upgrade, networking and security work, and people who know it.",
+       "When I would want it: many services, sandboxes we schedule ourselves, GPUs, or a platform team; until then managed runtimes let four engineers ship."
+      ]
+     },
+     "say": [
+      "I haven't run Kubernetes in production; alfred_ is edge functions and Railway, so the platform restarts and scales things for us.",
+      "I know what it buys, scheduling, rollouts and autoscaling on our own metrics, and I'd want it once we schedule our own sandboxes or have many services."
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Top 5 most-used deployment strategies",
+       "url": "https://www.youtube.com/watch?v=AWVTKBUnoIg",
+       "m": 10,
+       "why": "Rolling, blue-green, canary, and when each fits.",
+       "yt": {
+        "id": "AWVTKBUnoIg",
+        "ch": "ByteByteGo"
+       }
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Do you actually need Kubernetes?",
+       "url": "https://www.youtube.com/watch?v=67fsLJd9Xn8",
+       "m": 15,
+       "why": "The honest small-team answer.",
+       "yt": {
+        "id": "67fsLJd9Xn8",
+        "ch": "DevOps Toolbox"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
    "id": "python",
    "title": "Python in depth",
    "blurb": "Explain what the Python in front of you actually does, spot the traps in AI-written code, and defend each choice of concurrency, typing and validation.",
@@ -2536,6 +2920,30 @@
       }
      ],
      "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "All Python syntax in 25 minutes",
+       "url": "https://www.youtube.com/watch?v=PNSIWjWAA7o",
+       "m": 25,
+       "why": "The whole language at a glance before the traps.",
+       "yt": {
+        "id": "PNSIWjWAA7o",
+        "ch": "Beau Carnes"
+       }
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "10 important Python concepts in 20 minutes",
+       "url": "https://www.youtube.com/watch?v=Gx5qb1uHss4",
+       "m": 19,
+       "why": "The everyday idioms people expect you to know.",
+       "yt": {
+        "id": "Gx5qb1uHss4",
+        "ch": "Indently"
+       }
+      },
       {
        "kind": "video",
        "req": true,
@@ -3548,6 +3956,30 @@
       }
      ],
      "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "TypeScript: the basics",
+       "url": "https://www.youtube.com/watch?v=ahCwqrYpIuM",
+       "m": 13,
+       "why": "The type system in one sitting.",
+       "yt": {
+        "id": "ahCwqrYpIuM",
+        "ch": "Fireship"
+       }
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "An introduction to TypeScript for Python programmers",
+       "url": "https://www.youtube.com/watch?v=kBVZgCrdVCw",
+       "m": 22,
+       "why": "The differences between the two languages, side by side.",
+       "yt": {
+        "id": "kBVZgCrdVCw",
+        "ch": "ArjanCodes"
+       }
+      },
       {
        "kind": "read",
        "req": true,
