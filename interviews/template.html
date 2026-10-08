@@ -710,6 +710,13 @@ details.item > .sbody { padding-left: 0; }
       var a = el("a", "btn", esc(x.label)); a.href = link(x.id); go.appendChild(a);
     });
     p.appendChild(go);
+    /* extra viewing for the round, last on the page */
+    if (LOOP.watch && window.Res) {
+      var w = heading(host, "watch", "", LOOP.watch.title);
+      if (LOOP.watch.lead) { w.appendChild(el("p", "lead", inl(LOOP.watch.lead))); }
+      var rs = Res.render(LOOP.watch.items);
+      if (rs) { w.appendChild(rs); }
+    }
   }
 
   /* ---------------------------------------------------------------- prep: the question bank
