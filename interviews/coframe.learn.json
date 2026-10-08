@@ -2446,7 +2446,7 @@
   {
    "id": "runtimes",
    "title": "Where agent code runs",
-   "blurb": "The gaps between your edge functions and an agent platform: runtimes compared (edge, workers, containers, microVMs, sandboxes), claiming jobs against durable execution, the distributed-systems ideas behind reliable fleets, and deploying long-running agents, Kubernetes included.",
+   "blurb": "The gaps between your edge functions and an agent platform: runtimes compared (edge, workers, containers, microVMs, sandboxes), claiming jobs against durable execution, the distributed-systems ideas behind reliable fleets, deploying long-running agents (Kubernetes included), and browser agents from CDP to a fleet.",
    "sessions": [],
    "topics": [
     {
@@ -2821,6 +2821,196 @@
        "yt": {
         "id": "67fsLJd9Xn8",
         "ch": "DevOps Toolbox"
+       }
+      }
+     ]
+    },
+    {
+     "id": "runtime-browser-see",
+     "title": "How a browser agent sees and acts",
+     "brief": "Under every browser agent: the network, the browser's state, the page's own JavaScript, and CDP driving it all. What the agent reads, how it acts, and when the page is really ready.",
+     "points": [
+      "The layers: the network (requests and responses); the browser (the DOM, layout, the accessibility tree, the rendered pixels, cookies and storage); the page's own JavaScript runtime; and CDP, the Chrome DevTools Protocol, a WebSocket of JSON commands and events that drives all of it.",
+      "Playwright and Puppeteer sit on CDP: they turn 'click this' into CDP calls, wait for elements, and isolate sessions in browser contexts, separate cookies and storage inside one browser process.",
+      "How the agent sees: the DOM is complete but huge and noisy; the accessibility tree is compact and semantic (roles, names, states), close to what a person perceives; a screenshot shows what is really visible (layout, overlays, the brand's look) but costs vision tokens and needs coordinates. Strong agents send a pruned accessibility tree with a screenshot.",
+      "How it acts: by an element reference from the tree (stable, cheap) or by pixel coordinates (works on canvas and odd widgets, breaks when the layout shifts). Every action ends by waiting on a condition (an element, a URL, the network going quiet), never a fixed sleep.",
+      "Rendering decides when a page is real: server-rendered HTML is readable at once; a client-rendered app is empty until its JavaScript runs; after hydration the page becomes interactive, and acting before it clicks a dead button. Coframe's variants land on pages that hydrate, so a check must wait for the interactive state.",
+      "Cache the actions: frameworks like Browserbase's Stagehand let the model find an action once and replay the recorded selector next time, calling the model again only when the page changed. That is how browser agents get fast and cheap."
+     ],
+     "mcq": [
+      {
+       "q": "Why do many browser agents send a pruned accessibility tree instead of the raw DOM?",
+       "o": [
+        "The DOM cannot be read through CDP",
+        "It includes the pixels",
+        "It runs the page's JavaScript",
+        "It is required by Playwright",
+        "It is compact and semantic (roles, names, states), close to what a person perceives, so it costs fewer tokens and gives stable references"
+       ],
+       "a": 4,
+       "why": "The DOM carries every wrapper div and script; the accessibility tree keeps what can be read or used, which is what the model needs to choose an action.",
+       "pair": "browser-perception"
+      },
+      {
+       "q": "An agent clicks 'Buy' on a client-rendered page the moment the HTML arrives, and nothing happens. The likely cause?",
+       "o": [
+        "The button's text was wrong",
+        "CDP lost the connection",
+        "The page has not hydrated: the button is in the HTML but its event handler is not attached yet",
+        "The accessibility tree hid it",
+        "The screenshot was stale"
+       ],
+       "a": 2,
+       "why": "Wait for an interactive signal (the element enabled, a hydration marker, the network quiet) before acting on a client-rendered page.",
+       "pair": "hydration"
+      },
+      {
+       "q": "What does CDP give an agent platform that a screenshot-only loop does not?",
+       "o": [
+        "Nothing beyond pixels",
+        "Structured control and events: network requests, console errors, DOM and accessibility snapshots, performance metrics, all over one WebSocket",
+        "A faster model",
+        "Free proxies",
+        "Automatic captcha solving"
+       ],
+       "a": 1,
+       "why": "Pixels show the result; CDP shows why: the failed request, the console error, the layout shift.",
+       "pair": "browser-perception"
+      }
+     ],
+     "open": {
+      "q": "Before a generated variant ships, an agent must check it renders correctly on the customer's page. How does it look at the page, and what does it check?",
+      "probe": "Waiting for the real state, combining signals, and making the check reviewable.",
+      "a": [
+       "Open the page in a fresh context with the variant applied, desktop and mobile viewports.",
+       "Wait for the interactive state: the network quiet and the changed element present and enabled, not a fixed sleep.",
+       "Check through CDP: no new console errors or failed requests, layout shift and largest paint within bounds against the control.",
+       "Check what a visitor sees: a screenshot against the control (a visual diff limited to the changed region) and the element in the accessibility tree.",
+       "Save the trace and screenshots with the result, so a person or the agent can review a failure."
+      ]
+     },
+     "say": [
+      "I'd have the agent read the accessibility tree to act and a screenshot to judge, and use CDP for the things a picture can't tell you: console errors, failed requests, layout shift.",
+      "On a hydrating page the check has to wait for the interactive state, otherwise it passes a page whose button does nothing."
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "The power of headless Chrome and browser automation (Google I/O '18)",
+       "url": "https://www.youtube.com/watch?v=lhZOFUY1weo",
+       "m": 34,
+       "why": "Headless Chrome and the DevTools Protocol from the people who built them.",
+       "yt": {
+        "id": "lhZOFUY1weo",
+        "ch": "Chrome for Developers"
+       }
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "How we built Stagehand v3: deep dive",
+       "url": "https://www.youtube.com/watch?v=Hw0DauPXhnU",
+       "m": 4,
+       "why": "Model-chosen actions, cached and replayed: Browserbase, which Coframe uses.",
+       "yt": {
+        "id": "Hw0DauPXhnU",
+        "ch": "Browserbase"
+       }
+      }
+     ]
+    },
+    {
+     "id": "runtime-browser-fleet",
+     "title": "Running browsers as a fleet",
+     "brief": "One browser is a script; thousands a day is infrastructure: sessions as the unit, pools, build or buy, failure that compounds, traces, and safety.",
+     "points": [
+      "Cost: a Chrome instance takes hundreds of megabytes and up to a core under load; the unit you schedule is a session, not a request, the same way a voice platform schedules call slots.",
+      "Pools: keep browsers warm, hand one session to a task, reset or destroy it afterwards; isolate tenants by context, or by whole browser for stronger walls; cap session length and pages per session.",
+      "Build or buy: Browserbase, Kernel and Browserless run browsers as a service with recording, regions and fingerprint handling; self-hosting (Kernel's images, or neko streaming a browser over WebRTC) gives control and a lower unit cost. Coframe forked both kinds in August and September 2026, and Browserbase has a case study on Coframe.",
+      "Failure compounds: 99% per step over 50 steps is about 60% for the whole run. Shorten flows, use plain scripts where the path is known, verify after each action, retry at the step and checkpoint long runs.",
+      "Observability: record every session (Playwright traces keep DOM snapshots, network and console per action; or a video) so a failed run can be replayed by a person or read back by the agent.",
+      "Safety: credentials come from a vault into the session and are never shown to the model; page text is untrusted input (prompt injection); limit the browser's network egress; never share a cookie jar across customers."
+     ],
+     "mcq": [
+      {
+       "q": "An agent run takes 50 browser steps, each 99% reliable. Roughly how often does the whole run succeed?",
+       "o": [
+        "99%",
+        "About 95%",
+        "About 37%",
+        "About 60%",
+        "Exactly 50%"
+       ],
+       "a": 3,
+       "why": "0.99 to the 50th is about 0.605. Per-step reliability compounds, which is why short flows and step-level retries matter.",
+       "pair": "compounding"
+      },
+      {
+       "q": "Two customers' agent tasks share one browser process. What keeps their cookies and storage apart, at minimum?",
+       "o": [
+        "Separate browser contexts (or separate browsers for a stronger wall)",
+        "Different tabs",
+        "Different user agents",
+        "Incognito is the same as a tab",
+        "Nothing is needed"
+       ],
+       "a": 0,
+       "why": "A context is a clean profile inside one process; a separate browser or microVM is the stronger boundary for untrusted work.",
+       "pair": "browser-isolation"
+      },
+      {
+       "q": "A browser task failed in production last night. What makes it debuggable today?",
+       "o": [
+        "The final screenshot alone",
+        "Rerunning it and hoping",
+        "The model's last message",
+        "CPU graphs",
+        "A recorded trace per session: DOM snapshots, network and console per action, replayable"
+       ],
+       "a": 4,
+       "why": "Without a trace the failure is gone; with one, a person or the agent can step through what the page did.",
+       "pair": "browser-observability"
+      }
+     ],
+     "open": {
+      "q": "Design the browser layer for agents that validate thousands of variants a day.",
+      "probe": "Sessions as the unit, sizing, isolation, build or buy, and how you see failures.",
+      "a": [
+       "The unit is a session: tasks wait in a queue with a concurrency cap per tenant; size the warm pool from arrival rate times session length (Little's law) plus headroom.",
+       "Isolation: a fresh context per task, a separate browser per tenant when the work is untrusted; sessions capped in time.",
+       "Buy first (Browserbase) to ship, measure unit cost, and self-host when volume makes it worth it.",
+       "Reliability: step timeouts, verify after each action, retry at the step, and a fallback to a plain script for known paths.",
+       "Observability: a trace and screenshots per check in object storage, with success rate, time and cost per check on a dashboard."
+      ]
+     },
+     "say": [
+      "I'd treat browser sessions the way a voice platform treats call slots: a warm pool sized from traffic, one fresh context per task, a cap per tenant.",
+      "And because failure compounds over steps, every action gets verified and every session gets a trace we can replay."
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Why 99% accurate browser agents still fail",
+       "url": "https://www.youtube.com/watch?v=5xi_S1f9sDU",
+       "m": 17,
+       "why": "Compounding failure, and what Browserbase does about it.",
+       "yt": {
+        "id": "5xi_S1f9sDU",
+        "ch": "AI Engineer"
+       }
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Exploring Playwright's trace viewer",
+       "url": "https://www.youtube.com/watch?v=yP6AnTxC34s",
+       "m": 6,
+       "why": "What a recorded session lets you see after the fact.",
+       "yt": {
+        "id": "yP6AnTxC34s",
+        "ch": "Playwright"
        }
       }
      ]

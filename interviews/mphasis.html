@@ -251,6 +251,13 @@ details.ln-item[open] > summary .qm { display: none; }
 .ln-brief { margin: 0 0 var(--s3); }
 .ln-note { color: var(--muted); font-size: var(--fs-sm); }
 .ln-oq { font-weight: var(--w-strong); }
+.wr-list { list-style: none; padding: 0; margin: var(--s3) 0; }
+.wr-row { display: grid; grid-template-columns: 168px 1fr; gap: var(--s4); padding: var(--s3) 0; border-bottom: var(--hair); }
+.wr-thumb img { width: 168px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius); display: block; }
+.wr-title { font-weight: var(--w-strong); }
+.wr-meta { font-size: var(--fs-sm); color: var(--muted); margin: 2px 0 var(--s1); }
+.wr-why { margin: 0; color: var(--soft); }
+@media (max-width: 640px) { .wr-row { grid-template-columns: 1fr; } .wr-thumb img { width: 100%; } }
 .tl-list { list-style: none; padding: 0; margin: var(--s3) 0; border-left: 2px solid var(--rule); }
 .tl-list li { display: grid; grid-template-columns: 9.5em 1fr; gap: var(--s3); padding: var(--s2) 0 var(--s2) var(--s3); }
 .tl-when { color: var(--muted); font-size: var(--fs-sm); white-space: nowrap; }
@@ -762,8 +769,27 @@ details.item > .sbody { padding-left: 0; }
       [].concat(LOOP.watch).forEach(function (W, wi) {
         var w = heading(host, "watch" + (wi ? "-" + wi : ""), "", W.title);
         if (W.lead) { w.appendChild(el("p", "lead", inl(W.lead))); }
-        var rs = Res.render(W.items);
-        if (rs) { w.appendChild(rs); }
+        if (W.layout === "rows") {
+          /* a watching order: a small thumbnail, then the title and a paragraph on why, full width */
+          var ol = el("ol", "wr-list");
+          W.items.forEach(function (x) {
+            var li = el("li", "wr-row");
+            var a = el("a", "wr-thumb"); a.href = x.url; a.target = "_blank"; a.rel = "noopener";
+            if (x.yt && x.yt.id) { var im = el("img"); im.loading = "lazy"; im.alt = ""; im.src = "https://i.ytimg.com/vi/" + x.yt.id + "/mqdefault.jpg"; a.appendChild(im); }
+            li.appendChild(a);
+            var tx = el("div", "wr-text");
+            tx.appendChild(el("a", "wr-title", esc(x.label))).href = x.url;
+            tx.lastChild.target = "_blank"; tx.lastChild.rel = "noopener";
+            tx.appendChild(el("div", "wr-meta", esc((x.yt && x.yt.ch) || "") + (x.m ? ", " + x.m + " min" : "")));
+            tx.appendChild(el("p", "wr-why", inl(x.why || "")));
+            li.appendChild(tx);
+            ol.appendChild(li);
+          });
+          w.appendChild(ol);
+        } else {
+          var rs = Res.render(W.items);
+          if (rs) { w.appendChild(rs); }
+        }
       });
     }
   }
