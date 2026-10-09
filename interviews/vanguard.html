@@ -265,6 +265,20 @@ details.ln-item[open] > summary .qm { display: none; }
 .tl-team { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
 .tl-team th, .tl-team td { text-align: left; vertical-align: top; padding: var(--s2) var(--s3) var(--s2) 0; border-bottom: var(--hair); }
 @media (max-width: 640px) { .tl-list li { grid-template-columns: 1fr; gap: 0; } }
+.lb-item > summary { grid-template-columns: 24px minmax(0, 1fr) !important; }
+.lb-h { font-size: var(--fs-md); font-weight: var(--w-strong); margin: var(--s5) 0 var(--s2); padding-top: var(--s3); border-top: var(--hair); }
+.ln-mat > .lb-h:first-child, .ln-work > .lb-h:first-child, .ln-mat > p:first-child + .lb-h { margin-top: 0; border-top: 0; padding-top: 0; }
+.lb-two { padding-top: var(--s3); }
+.lb-note { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s3); }
+.lb-drive { margin: 0; padding-left: var(--s5); }
+.lb-drive > li { margin: 0 0 var(--s4); }
+.lb-step { font-weight: var(--w-strong); margin: 0 0 var(--s1); }
+.lb-say { margin: 0 0 var(--s1); padding: var(--s2) var(--s3); border-left: 2px solid var(--accent); background: var(--bg); color: var(--ink); }
+.lb-means { margin: 0 0 var(--s1); color: var(--soft); font-size: var(--fs-sm); }
+.lb-terms { margin: 0; display: flex; flex-wrap: wrap; gap: var(--s1); }
+.lb-terms span { font-size: var(--fs-xs); color: var(--soft); border: var(--hair); border-radius: var(--radius-sm); padding: 1px var(--s2); }
+.lb-q { font-weight: var(--w-strong); margin: var(--s4) 0 0; }
+.lb-q + details.say { margin-top: var(--s1); }
 .live-phase { border-top: var(--hair); padding: var(--s2) 0; }
 .live-phase > summary { cursor: pointer; font-weight: var(--w-strong); list-style: none; display: flex; gap: var(--s3); align-items: baseline; }
 .live-phase > summary::-webkit-details-marker { display: none; }
@@ -1874,39 +1888,79 @@ details.item > .sbody { padding-left: 0; }
   function tabLive(host) {
     var intro = heading(host, "live-how", "", "Live build");
     (LOOP.liveLead || []).forEach(function (p) { intro.appendChild(el("p", "lead", inl(p))); });
-    /* What a build or take-home tests, and the roadmap through it: always open, read first. */
-    function testsAndRoad(s, x) {
-      [["What they are testing", x.tests, "ul"], ["The roadmap", x.roadmap, "ol"], ["Traps", x.traps, "ul"],
-       ["What he will likely ask after", x.followups, "ul"], ["What the public solutions did", x.forks, "ul"]].forEach(function (k) {
-        if (!k[1] || !k[1].length) { return; }
-        s.appendChild(el("div", "lab", k[0]));
-        var l = el(k[2], "mk-list");
-        k[1].forEach(function (t) { l.appendChild(el("li", "", inl(t).replace(/^([^:<]{2,60}):/, "<b>$1:</b>"))); });
-        s.appendChild(l);
-      });
+    function list(box, title, items, tag) {
+      if (!items || !items.length) { return; }
+      box.appendChild(el("h3", "lb-h", esc(title)));
+      var l = el(tag, "mk-list");
+      items.forEach(function (t) { l.appendChild(el("li", "", inl(t).replace(/^([^:<]{2,60}):/, "<b>$1:</b>"))); });
+      box.appendChild(l);
     }
-    (LOOP.takehomes || []).forEach(function (x) {
-      var s = heading(host, "th-" + x.id, x.lang + (x.url ? ", Coframe's public take-home" : ""), x.title);
-      if (x.url) { s.appendChild(el("p", "lead", '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.url.replace("https://github.com/", "")) + "</a>")); }
-      if (x.what) { s.appendChild(el("p", "lead", inl(x.what))); }
-      testsAndRoad(s, x);
-    });
-    LOOP.live.forEach(function (x) {
-      var s = heading(host, "live-" + x.id, x.lang + ", about " + x.minutes + " minutes", x.title);
-      s.appendChild(el("div", "lab", "What he says"));
-      s.appendChild(el("blockquote", "live-ask", inl(x.ask)));
-      testsAndRoad(s, x);
-      s.appendChild(el("div", "lab", "Start"));
-      var ol = el("ol", "mk-list");
-      x.start.forEach(function (t) { ol.appendChild(el("li", "", inl(t))); });
-      s.appendChild(ol);
-      if (x.after && x.after.length) {
-        s.appendChild(el("div", "lab", "After the build"));
-        var ul = el("ul", "mk-list");
-        x.after.forEach(function (t) { ul.appendChild(el("li", "", inl(t))); });
-        s.appendChild(ul);
+    /* Left: the material (the brief, what it tests, the way through). Right, sticky: how to drive the
+       coding agent step by step, then the questions he asks after, each answer shut until tried. */
+    function body(x) {
+      var two = el("div", "ln-two lb-two"), mat = el("div", "ln-mat"), work = el("div", "ln-work");
+      if (x.url) { mat.appendChild(el("p", "", '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.url.replace("https://github.com/", "")) + "</a>")); }
+      if (x.ask) { mat.appendChild(el("h3", "lb-h", "What he says")); mat.appendChild(el("blockquote", "live-ask", inl(x.ask))); }
+      if (x.what) { mat.appendChild(el("h3", "lb-h", "The brief")); mat.appendChild(el("p", "", inl(x.what))); }
+      list(mat, "What they are testing", x.tests, "ul");
+      list(mat, "The roadmap", x.roadmap, "ol");
+      list(mat, "Traps", x.traps, "ul");
+      list(mat, "Start", x.start, "ol");
+      list(mat, "After the build", x.after, "ul");
+      if (x.guide && x.guide.length) {
+        mat.appendChild(el("h3", "lb-h", "Phase by phase"));
+        x.guide.forEach(function (ph, pi) { mat.appendChild(livePhase(x, ph, pi)); });
       }
-      (x.guide || []).forEach(function (ph, pi) { s.appendChild(livePhase(x, ph, pi)); });
+      if (x.drive && x.drive.length) {
+        work.appendChild(el("h3", "lb-h", "Driving your agent, in order"));
+        work.appendChild(el("p", "lb-note", "What a senior engineer types, one step at a time, never 'make it fast'. Each step names the constraint, the shape of the output and how to check it."));
+        var ol = el("ol", "lb-drive");
+        x.drive.forEach(function (d) {
+          var li = el("li", "");
+          li.appendChild(el("p", "lb-step", inl(d.step)));
+          li.appendChild(el("blockquote", "lb-say", inl(d.say)));
+          li.appendChild(el("p", "lb-means", "<b>It asks for:</b> " + inl(d.means)));
+          if (d.terms && d.terms.length) { li.appendChild(el("p", "lb-terms", d.terms.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join(""))); }
+          ol.appendChild(li);
+        });
+        work.appendChild(ol);
+      }
+      if (x.answers && x.answers.length) {
+        work.appendChild(el("h3", "lb-h", "What he will ask after"));
+        x.answers.forEach(function (q) {
+          work.appendChild(el("p", "lb-q", inl(q.q)));
+          var d = el("details", "say");
+          d.appendChild(el("summary", "", "Try it, then show the answer"));
+          q.a.forEach(function (t) { d.appendChild(el("p", "", inl(t))); });
+          work.appendChild(d);
+        });
+      }
+      two.appendChild(mat);
+      if (work.children.length) { two.appendChild(work); } else { two.classList.add("wide"); }
+      var wrap = el("div", "ln"); wrap.appendChild(two);
+      return wrap;
+    }
+    function row(x, meta) {
+      var d = el("details", "item ln-item lb-item"); d.id = x.anchor;
+      d.setAttribute("name", "live");
+      d.appendChild(el("summary", "", '<span class="ln-n">' + esc(x.n) + '</span><span class="ln-head"><span class="qt">' + inl(x.title) + '</span><span class="qm">' + esc(meta) + "</span></span>"));
+      d.addEventListener("toggle", function () {
+        if (!d.open) { var b = d.querySelector(".ln"); if (b) { b.remove(); } return; }
+        d.appendChild(body(x));
+        glideTo(d);
+      });
+      return d;
+    }
+    [["live-takehomes", "Coframe's take-homes", "Public on GitHub. Read what each tests; the first is the likeliest source of Friday's task.", LOOP.takehomes || [], "th-"],
+     ["live-builds", "Practice builds", "Each a repo handed over the way he would, built in a separate session while he is played in chat.", LOOP.live || [], "live-"]].forEach(function (g) {
+      if (!g[3].length) { return; }
+      var s = heading(host, g[0], g[2], g[1]);
+      var l = el("div", "ln-list");
+      g[3].forEach(function (x, i) {
+        x.anchor = g[4] + x.id; x.n = String(i + 1);
+        l.appendChild(row(x, x.lang + (x.minutes ? ", about " + x.minutes + " minutes" : "")));
+      });
+      s.appendChild(l);
     });
   }
 

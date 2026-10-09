@@ -1068,7 +1068,7 @@ for _x in LIVE:
 TAKEHOMES = [
     {"id": "agent-engineer", "title": "Agent engineer take-home: the one Friday most likely comes from",
      "url": "https://github.com/Coframe/agent-engineer-take-home", "lang": "TypeScript, Next.js 15",
-     "what": "A Next.js 15 and React 19 TV storefront: 35 TVs in `app/data/products.json` (price, size, display type, refresh rate, HDR, ports, rating, stock, delivery days, quantity available, highlights, reviews), a catalog page and a product page that ignore the URL, and two read APIs. An upstream Coframe agent adds `q=` (free text about the visitor) and optional `ids=` (products it flagged). Make the page fit the visitor, and the whole page must render in under 5 seconds. Three example visitors: a non-technical buyer who wants the biggest TV with good reviews, an enthusiast comparing three OLEDs, and an office buyer who needs five units for a conference room. Pavlo wrote every commit, so a cut-down version of this is the likeliest live task.",
+     "what": "A Next.js 15 and React 19 TV storefront: 35 TVs in `app/data/products.json` (price, size, display type, refresh rate, HDR, ports, rating, stock, delivery days, quantity available, highlights, reviews), a catalog page and a product page that ignore the URL, and two read APIs. An upstream Coframe agent adds `q=` (free text about the visitor) and optional `ids=` (products it flagged). Make the page fit the visitor, and the whole page must render in under 5 seconds. Three example visitors: a non-technical buyer who wants the biggest TV with good reviews, an enthusiast comparing three OLEDs, and an office buyer who needs five units for a conference room. Pavlo wrote every commit, so a cut-down version of this is the likeliest live task. No forks or public solutions exist.",
      "tests": ["Latency budgeting: the 5-second render is the only hard rule; asking a model to write the page blows it.",
                "Rendering: a server component reading `searchParams` (awaited in Next 15), streaming or not, no blank page and no flicker.",
                "Structured output: the model returns a small layout plan (sections, order, product ids, fields to show) and your own components render it, never model-written HTML.",
@@ -1179,3 +1179,141 @@ _LIVE_EXTRA = {
 }
 for _x in LIVE:
     _x.update(_LIVE_EXTRA.get(_x["id"], {}))
+
+
+# Driving the coding agent like a senior engineer, and the follow-ups answered. Each `drive` step is
+# what to type (`say`), what it actually asks for (`means`), and the words that carry it (`terms`).
+# Answers are in his voice; facts about alfred_ only from what is live (open-items memory).
+_DRIVE = {
+    "agent-engineer": [
+        {"step": "Map the repo before any change",
+         "say": "Read-only pass first. Map the request path for `/` and `/product/[id]`: which are server components, where `searchParams` would be read, where the catalog loads, and what an extra 2 s of server work would do to first paint. No edits yet; give me the file list and the critical path.",
+         "means": "You want a picture of the render path and where the latency budget goes, before the agent starts guessing.",
+         "terms": ["critical path", "server component", "first paint", "read-only pass"]},
+        {"step": "Fix the contract and the fallback",
+         "say": "Define a `Layout` type and a zod schema: intent, an ordered list of sections (grid, compare, bulk), product ids, fields to show, a headline. The default layout is today's catalog. Every code path must be able to return the default.",
+         "means": "The model will fill a typed plan your components render; the default is the graceful-degradation path.",
+         "terms": ["contract first", "schema-validated structured output", "graceful degradation", "default path"]},
+        {"step": "A deterministic baseline, no model",
+         "say": "Implement a rules planner: parse `q` for size, budget, display type, unit count and rating intent; treat `ids` as hints, validated against the catalog. It returns a `Layout`. Add a test per example visitor asserting the sections they should see.",
+         "means": "A working page in minutes, a latency floor, and an eval set before the model exists.",
+         "terms": ["deterministic baseline", "latency floor", "golden cases", "hints, not truth"]},
+        {"step": "The model as planner, inside a budget",
+         "say": "Add one model call as a planner, not a renderer: send a compact catalog table (id, brand, size, type, price, rating, stock), `q` and `ids`; JSON-schema structured output; hard timeout 2.5 s with AbortController; validate ids; on timeout, parse failure or empty result, fall back to the rules layout. Log which path served each request.",
+         "means": "You cap the slow, unreliable step, keep the prompt small, and make the fallback observable.",
+         "terms": ["latency budget", "hard timeout", "token budget", "fail closed to the baseline", "which path served"]},
+        {"step": "Render on the server, cache by the inputs",
+         "say": "Render the layout in the server component from `searchParams` (awaited in Next 15), reusing the existing card and spec components. Memoize the planner result by a hash of normalized `q` and sorted `ids` with a TTL. No client fetch after load.",
+         "means": "No flicker, no blank first paint, and repeat visitors are cheap.",
+         "terms": ["SSR", "no layout shift", "cache key normalization", "TTL", "memoize"]},
+        {"step": "Measure and harden",
+         "say": "Time the three example URLs cold and warm, report p50 and p95 against 5 s, and break the time down (model, render). Then try hostile input: an injection in `q`, unknown ids, a 2,000-character `q`, an empty `q`. Show me which path served each.",
+         "means": "Evidence the budget holds, and that untrusted input degrades safely.",
+         "terms": ["p50 / p95", "cold vs warm", "breakdown by stage", "adversarial inputs"]},
+    ],
+    "storefront": "agent-engineer",
+    "jobs": [
+        {"step": "Lifecycle first",
+         "say": "Read-only. Draw the job lifecycle as a state machine: where a job is claimed, where state is stored, when it is acked, what happens on worker crash and on SIGTERM during a deploy, and where PR comments are posted relative to state writes.",
+         "means": "Find where a job can be lost and where a side effect can repeat, before fixing anything.",
+         "terms": ["state machine", "claim / ack", "crash window", "SIGTERM"]},
+        {"step": "Reproduce both bugs",
+         "say": "Write failing tests first: kill a worker between claim and ack and show the job never finishes; redeliver a job after the comment was posted and show the duplicate comment.",
+         "means": "Proof of the root cause, and the regression tests for the fix.",
+         "terms": ["repro first", "failing test", "redelivery"]},
+        {"step": "Leases, not trust",
+         "say": "Replace claim-forever with a lease: claimed_until plus a heartbeat; a reaper requeues expired leases; ack only after completion; on SIGTERM stop taking work, finish or release the lease within the grace period. Claim with a compare-and-set so one worker owns a job.",
+         "means": "At-least-once delivery that never loses a job, with a single owner at a time.",
+         "terms": ["lease / visibility timeout", "heartbeat", "reaper", "graceful drain", "compare-and-set", "SKIP LOCKED"]},
+        {"step": "Idempotent side effects",
+         "say": "Give every side effect an idempotency key (job id plus step). Record intent in the same write as the state change (outbox), or upsert the PR comment by a hidden marker so a retry edits instead of posting again.",
+         "means": "Exactly-once effect on top of at-least-once delivery.",
+         "terms": ["idempotency key", "outbox", "upsert by marker", "exactly-once effect"]},
+        {"step": "Bound the retries",
+         "say": "Add an attempt counter with exponential backoff and jitter, a max attempts limit, and a dead-letter state with the last error. Make steps resumable from the last completed step.",
+         "means": "Poison jobs stop looping; long jobs don't restart from zero.",
+         "terms": ["backoff with jitter", "dead-letter", "resumable steps"]},
+        {"step": "Prove it under deploys",
+         "say": "Run the harness with deploys mid-flight and report stuck jobs, duplicate comments and p95 queue age before and after. Then list what can still go wrong.",
+         "means": "Evidence under the failure that matters, and honest limits.",
+         "terms": ["chaos run", "queue age", "residual risk"]},
+    ],
+    "experiments": [
+        {"step": "One hypothesis per symptom",
+         "say": "Read-only. For each symptom (returning visitors see a different variant, our counts exceed the customer's, the winner is found slowly) find the code responsible and state a hypothesis with the line that proves it.",
+         "means": "Root causes before fixes, one per symptom.",
+         "terms": ["hypothesis per symptom", "root cause"]},
+        {"step": "Sticky, deterministic assignment",
+         "say": "Replace random assignment with a hash of stable visitor id and experiment id onto cumulative weights. Persist the first assignment so weight changes don't move existing visitors. Add tests for distribution (within tolerance) and stickiness across weight updates.",
+         "means": "The same visitor sees the same variant, and the split is still right.",
+         "terms": ["deterministic bucketing", "sticky assignment", "salt per experiment", "distribution test"]},
+        {"step": "Clean the counting",
+         "say": "Dedupe exposures and conversions by visitor and event id, drop staging, internal and bot traffic, and attribute each conversion to the assigned variant within the attribution window. Produce a reconciliation table against the customer's numbers by day and by cause.",
+         "means": "Numbers you can defend row by row.",
+         "terms": ["dedupe", "attribution window", "reconciliation", "sample ratio mismatch"]},
+        {"step": "Allocate faster, safely",
+         "say": "Replace the fixed hourly split with Thompson sampling on a Beta posterior per variant, a uniform burn-in, and a floor per arm. Report probability to beat control and expected loss, not a p-value after peeking.",
+         "means": "Find the winner sooner without the peeking problem.",
+         "terms": ["Thompson sampling", "burn-in", "allocation floor", "expected loss", "peeking"]},
+        {"step": "Ship weights like config",
+         "say": "The hourly job writes {version, weights, computedAt} atomically and idempotently from raw events. The edge reads with a TTL, ignores older versions and keeps the last good set if the fetch fails.",
+         "means": "Safe rollout and rollback of the allocation.",
+         "terms": ["versioned config", "atomic write", "last known good", "TTL"]},
+        {"step": "Verify with the simulation",
+         "say": "Run sim.py and show flips, our count against true conversions, and the winner's share, before and after. Name the caveats: novelty effect, drift, multiple comparisons.",
+         "means": "Evidence on all three symptoms, and honest limits.",
+         "terms": ["simulation with known truth", "before / after", "caveats"]},
+    ],
+}
+
+_ANSWERS = {
+    "agent-engineer": [
+        {"q": "If the model takes six seconds one day, what does the visitor see, and how do you decide when to stop waiting?",
+         "a": ["The visitor sees the rules layout, or the default catalog. The model sits behind a hard timeout, around 2 to 2.5 seconds, picked from the 5-second page budget minus render time and some headroom, so the page never waits on it.",
+               "I'd set the timeout from measured p95 of the model call and log which path served each request. If the fallback rate climbs, that's an alert, and the fix is a smaller model, a shorter prompt, or precomputing upstream."]},
+        {"q": "How does this scale to millions of visitors: what do you cache, and what is the key?",
+         "a": ["I cache the plan, not the page: the key is a hash of normalized `q` (lowercased, trimmed, maybe bucketed into an intent) plus the sorted `ids`, with a TTL. Most visitors fall into a few hundred intents, so hit rates get high.",
+               "Better still, the upstream agent that writes `q` could request the plan ahead of time, so the request path only reads a precomputed layout. The model call moves off the critical path entirely."]},
+        {"q": "How do you know the tailored page converts better than the default, and how do you test it without a flicker?",
+         "a": ["Run it as an experiment: assign visitors deterministically on the server to tailored or default, keep the assignment sticky, and compare conversion, not clicks. That's Coframe's own product loop.",
+               "No flicker because assignment and rendering both happen on the server before the first byte; nothing swaps on the client."]},
+        {"q": "`q` is untrusted text from a URL. What can go wrong?",
+         "a": ["Prompt injection: text telling the model to ignore instructions or show something else. XSS if anything from `q` lands in the page unescaped. Very long `q` blowing the token budget, and invented product ids.",
+               "So the model only returns a schema-checked plan, ids are validated against the catalog, `q` is length-capped and never rendered raw, and anything off-schema falls back to the default."]},
+        {"q": "Where does the visitor profile come from in production, and what changes if it updates mid-session?",
+         "a": ["From the upstream agent: referral, campaign, search terms, past behaviour, condensed into `q`. In production that's an event stream, not a URL parameter.",
+               "If it updates mid-session I wouldn't re-layout the current page under the visitor; I'd apply the new plan on the next navigation and keep experiment assignment sticky so measurement stays clean."]},
+    ],
+    "storefront": "agent-engineer",
+    "jobs": [
+        {"q": "The same design on Postgres with many machines.",
+         "a": ["Jobs live in a table; a worker claims with `SELECT ... FOR UPDATE SKIP LOCKED`, sets `claimed_until`, and heartbeats; a reaper (or the next claim query) picks up rows whose lease expired. Completion and the outbox row for the side effect commit in one transaction."]},
+        {"q": "What would you still worry about?",
+         "a": ["A side effect that isn't idempotent on the other end, like a third-party API without keys; a job that's slow rather than dead, so its lease expires and two workers run it; and clock skew on lease times. So: fencing tokens or version checks on writes, leases longer than the worst normal step, and alerts on queue age and dead letters."]},
+    ],
+    "fde": [
+        {"q": "How do you avoid sync loops?",
+         "a": ["Each field has one owner. The sheet owns the team decisions; Coframe owns the status. The script only PATCHes when the status the rules compute differs from Coframe's, and only writes rows Coframe added, so a write never triggers a write back."]},
+        {"q": "Legal flips Yes to No after approval: what happens?",
+         "a": ["If the variant hasn't launched, the rules recompute and it moves back to rejected, and I log who changed what. If it already launched, I don't silently pull it: the status is terminal, so I flag it for a person, because taking a live variant down is a client decision."]},
+        {"q": "Fifty customers with different sheet layouts?",
+         "a": ["Config per customer: which columns map to which team, which values mean yes, and the rule set. The sync code stays one function; a header check fails loudly when a sheet doesn't match its config instead of writing garbage."]},
+        {"q": "Polling or webhooks, and rate limits?",
+         "a": ["For a two-hour build, polling every minute or so: simple, and it recovers from the API resetting because it reconciles by id each run. Later, an onEdit trigger in Apps Script for the sheet side and a webhook from Coframe, with polling kept as the safety net. Batch the sheet writes and back off on 429s."]},
+    ],
+    "experiments": [
+        {"q": "Hundreds of experiments and millions of visits a day.",
+         "a": ["Assignment stays a pure hash at the edge, so it scales for free. Counting moves to a streaming pipeline that dedupes by event id into per-variant aggregates, with the hourly job reading aggregates rather than raw rows. Each experiment gets its own salt so assignments are independent."]},
+        {"q": "How the edge gets new weights, and two experiments on one page.",
+         "a": ["Weights ship as versioned config: the job writes a new version atomically, the edge polls or gets a push, honours a TTL and keeps the last good set. Two experiments on one page use independent salts, or a layered design with mutually exclusive layers when they touch the same element, so effects don't confound."]},
+    ],
+}
+
+for _x in TAKEHOMES + LIVE:
+    _d = _DRIVE.get(_x["id"]); _a = _ANSWERS.get(_x["id"])
+    if isinstance(_d, str): _d = _DRIVE[_d]
+    if isinstance(_a, str): _a = _ANSWERS[_a]
+    if _d: _x["drive"] = _d
+    if _a: _x["answers"] = _a
+    _x.pop("followups", None)
+    _x.pop("forks", None)

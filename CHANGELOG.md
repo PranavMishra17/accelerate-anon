@@ -1198,3 +1198,12 @@ seconds). No public forks or solutions exist. The Live build tab now opens with 
 (agent engineer, FDE, applied science, Pavlo's messy A/B dataset): what it is, what they are testing,
 the roadmap in five or six steps, traps and likely follow-ups. Each of the three practice builds gained
 the same "what they are testing" and "the roadmap" above its guide. No charter deviation.
+
+**2026-10-09 — Coframe Live build: two panes, the agent driven in order, follow-ups answered.**
+The tab was one long page with no clear breaks. It is now two lists, Coframe's take-homes and the
+practice builds, one row each, opening in place one at a time like the Learn tab. The material is on the
+left: the brief, what they test, the roadmap, traps and the phases. The sticky right pane holds "Driving
+your agent, in order": six steps per build, each with what to type, what it asks for, and the terms that
+carry it (latency budget, hard timeout, schema-validated output, lease and heartbeat, idempotency key,
+deterministic bucketing, Thompson sampling). Below that is each likely follow-up with its answer, shut
+until tried. The "no public solutions" list is now a line in the brief. No charter deviation.
