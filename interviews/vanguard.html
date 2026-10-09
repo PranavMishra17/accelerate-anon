@@ -1553,11 +1553,24 @@ details.item > .sbody { padding-left: 0; }
       });
       s.appendChild(dl);
       (rd.notes || []).forEach(function (p) { s.appendChild(el("p", "lead", inl(p))); });
+      [["What went well", rd.well], ["Gaps, and what would have been better", rd.gaps]].forEach(function (k) {
+        if (!k[1] || !k[1].length) { return; }
+        s.appendChild(el("h3", "lb-h", esc(k[0])));
+        var l = el("ul", "mk-list");
+        k[1].forEach(function (t) { l.appendChild(el("li", "", inl(t).replace(/^([^:<]{2,60}):/, "<b>$1:</b>"))); });
+        s.appendChild(l);
+      });
+      if (rd.asked.length && (rd.well || rd.gaps)) { s.appendChild(el("h3", "lb-h", "Question by question")); }
+      var drillsAfter = rd.drills;
       rd.asked.forEach(function (x, i) {
         var body = el("div", "cv-cols pq-cols");
         var left = el("div", "cv-col cv-said"), right = el("div", "cv-col cv-say");
         panelSection(left, "What you said", (x.said || []).map(function (p) { return el("p", "", inl(p)); }));
         panelSection(left, "Worth knowing", panelList(x.notes));
+        (x.code || []).forEach(function (c) {
+          left.appendChild(el("div", "lab", inl(c.note)));
+          left.appendChild(el("pre", "cv-code", esc(c.text)));
+        });
         if (x.land) { right.appendChild(el("p", "cv-land", "<b>Land on this.</b> " + inl(x.land))); }
         if (x.keep && x.keep.length) { right.appendChild(transcript(x.keep, "For next time", "")); }
         if (x.prep) { left.appendChild(el("p", "ex-links", '<a href="' + link("prep", x.prep) + '">The prepared answer on Prep</a>')); }
@@ -1570,6 +1583,16 @@ details.item > .sbody { padding-left: 0; }
         d.addEventListener("toggle", function () { if (d.open) { glideTo(d); } });
         s.appendChild(d);
       });
+      if (drillsAfter && drillsAfter.length) {
+        s.appendChild(el("h3", "lb-h", "Drill these before the next technical round"));
+        drillsAfter.forEach(function (q) {
+          s.appendChild(el("p", "lb-q", inl(q.q)));
+          var d = el("details", "say");
+          d.appendChild(el("summary", "", "Try it, then show the answer"));
+          q.a.forEach(function (t) { d.appendChild(el("p", "", inl(t))); });
+          s.appendChild(d);
+        });
+      }
     });
   }
 

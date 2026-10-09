@@ -1207,3 +1207,12 @@ your agent, in order": six steps per build, each with what to type, what it asks
 carry it (latency budget, hard timeout, schema-validated output, lease and heartbeat, idempotency key,
 deterministic bucketing, Thompson sampling). Below that is each likely follow-up with its answer, shut
 until tried. The "no public solutions" list is now a line in the brief. No charter deviation.
+
+**2026-10-09 — Coframe round 2 recorded, with gaps and drills.**
+Pavlo's technical round was an async job-graph library in Python (code in `E:\test`, outside the repo).
+The Rounds tab now records it: the process as he described it, what went well, the gaps (expanding scope,
+not owning the generated code, guessing instead of printing, the concurrency limit, a long background
+answer, a head count that differs from round 1), each of his eight questions with what you said, the
+better answer and the lines of code he probed, and six asyncio drills with answers shut until tried.
+The Rounds renderer gained round-level `well`, `gaps` and `drills` and per-question `code`. Short quotes
+only; the full transcript is not kept in the repo. No charter deviation.
