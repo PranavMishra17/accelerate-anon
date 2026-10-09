@@ -470,3 +470,593 @@ WATCH_PLATFORM = {"title": "Agent platform: the ten that matter most",
         {"kind": "video", "req": False, "label": '10. Events are the wrong abstraction for your AI agents (Mason Egger, Temporal)', "url": "https://www.youtube.com/watch?v=KJ9eZYTWS1Y", "m": 15, "why": 'Stateful workflows against event chains: an opinion to have when he asks how you would build it.', "yt": {"id": "KJ9eZYTWS1Y", "ch": 'AI Engineer'}},
     ]}
 WATCH = [WATCH_PLATFORM, WATCH]
+
+LIVE_GUIDES = {
+ "storefront": [
+  {
+   "title": "Learn the domain: a page render inside a budget",
+   "lead": "You don't need frontend depth for this. You need the shape of a page render and a latency budget.",
+   "items": [
+    "A render is a function: visitor in, HTML string out. In a real Next.js app it is the same idea on the server (server-side rendering): fetch data, render components, send HTML.",
+    "Client-side rendering, server-side rendering, streaming: CSR ships an empty shell and JavaScript that builds the page in the browser; SSR sends finished HTML; streaming sends the shell first and fills slow parts later. Here the harness times the whole page, so ask whether streaming counts.",
+    "Why the model should not write the page: generating a page of markup token by token is slow and unsafe (anything the model writes ends up in the HTML). The usual pattern: the model returns a small layout spec (which sections, which products, in what order) and your own components render it.",
+    "The budget: the model is the slowest and least reliable part. Give it a deadline below the limit, and have a good answer ready when it misses: a fallback that still uses what you know about the visitor.",
+    "Validation: model output is untrusted. Parse it against a schema; unknown products or section types are dropped, not rendered.",
+    "Caching: many visitors say similar things; a key made from the normalised q plus the sorted ids can reuse a layout."
+   ],
+   "res": [
+    {
+     "kind": "video",
+     "req": True,
+     "label": "Server-side rendering and client-side rendering, pros and cons",
+     "url": "https://www.youtube.com/watch?v=ObrSuDYMl1s",
+     "m": 5,
+     "why": "The two ways a page gets built, in five minutes.",
+     "yt": {
+      "id": "ObrSuDYMl1s",
+      "ch": "Smoljames"
+     }
+    },
+    {
+     "kind": "video",
+     "req": True,
+     "label": "10 rendering patterns for web apps",
+     "url": "https://www.youtube.com/watch?v=Dkx5ydvtpCA",
+     "m": 7,
+     "why": "Static, SSR, streaming, islands: the vocabulary.",
+     "yt": {
+      "id": "Dkx5ydvtpCA",
+      "ch": "Beyond Fireship"
+     }
+    },
+    {
+     "kind": "video",
+     "req": True,
+     "label": "Structured outputs: specifying a JSON schema for LLM outputs",
+     "url": "https://www.youtube.com/watch?v=mIZHRqMoJec",
+     "m": 7,
+     "why": "Getting a model to return a shape you can validate.",
+     "yt": {
+      "id": "mIZHRqMoJec",
+      "ch": "VectorLab"
+     }
+    }
+   ]
+  },
+  {
+   "title": "Look around the repo, systematically",
+   "lead": "The same method works for any repo you are handed. Then answer the questions below for this one, from the code.",
+   "items": [
+    "Read the README twice: once for the ask, once for every noun in it; the nouns are the files and the constraints.",
+    "Run it before reading any code: the commands in the README. Write down what the output measures; the harness is the scoreboard you will be judged on.",
+    "Sort the files into five piles: the entry point the harness calls, the file you are meant to change, the pieces given to you, the data and contracts, and the harness or tests.",
+    "Read only the entry point, then follow one level down. Stop there.",
+    "Read the contracts: types, schemas, docs, data files. They tell you what valid looks like.",
+    "Read anything stubbed, simulated or 'flaky' to the very end. That is where an exercise hides its trap.",
+    "Write four lines before planning: what is given, what you must change, how success is measured, what can go wrong."
+   ],
+   "ordered": True,
+   "prompts": [
+    {
+     "when": "Ask Claude Code to map it (read, don't change)",
+     "text": "Map this repo for me before we change anything: the entry point the harness calls, what the harness measures and how, which file I am expected to change, which modules are given, the data and contracts, and anything stubbed or simulated (read those to the end and tell me how they misbehave). Do not edit files."
+    }
+   ]
+  },
+  {
+   "title": "Questions to answer from the code (not from Pavlo)",
+   "items": [
+    "What does `renderVisitorPage` return today, and who calls it?",
+    "How does the harness decide a page was 'tailored', and what counts as too slow?",
+    "What does the layout service return, how long can it take, and in which ways can it be wrong? (Read the stub to its last line.)",
+    "Does the layout service honour the abort signal it accepts?",
+    "Which components exist, and what does each need?",
+    "Where could the visitor's `q` end up on the page, and is it escaped?"
+   ]
+  },
+  {
+   "title": "Clarify with Pavlo",
+   "lead": "Ask the ones that change the design; skip the ones the code already answered. In mock mode, ask me.",
+   "items": [
+    "Is the 5 seconds to the first byte or to the full page?",
+    "Can I stream or render a shell first?",
+    "How reliable is the layout service in practice?",
+    "What should an empty or garbage `q` get?",
+    "May I change the layout format or add components? May I add a library like zod?",
+    "Is falling back to the default page acceptable, or should every visitor get something tailored?",
+    "Is caching across visitors allowed?"
+   ]
+  },
+  {
+   "title": "Decisions to discover",
+   "lead": "Pick an option for each before opening the strong choice. Say your reason out loud; that's what he scores.",
+   "decisions": [
+    {
+     "q": "What should the model produce?",
+     "opts": [
+      "A whole page of HTML or JSX",
+      "A layout spec that our components render",
+      "Only a reordered list of product ids"
+     ],
+     "pick": "A layout spec rendered by our components.",
+     "why": "Small, fast to generate, checkable against a schema, and safe because only trusted components touch the HTML. Ids alone lose the headline and the section choice; a whole page is slow and an injection risk."
+    },
+    {
+     "q": "How long do you wait for the layout service?",
+     "opts": [
+      "As long as it takes",
+      "About 3.5 to 4 seconds, then fall back",
+      "One second"
+     ],
+     "pick": "About 3.5 to 4 seconds, leaving headroom for rendering.",
+     "why": "One second wastes most good answers; no deadline breaks the limit. The stub ignores its abort signal, so the deadline must race the call, not wait for it to stop."
+    },
+    {
+     "q": "What happens on a timeout or invalid output?",
+     "opts": [
+      "Show an error",
+      "Render the default catalog page",
+      "Build a deterministic page from q and ids (flagged products, a comparison when q asks to compare)"
+     ],
+     "pick": "A deterministic fallback that still uses q and ids.",
+     "why": "The procurement buyer still sees their three flagged sets, the enthusiast still gets a comparison. Falling back to everything for everyone throws away what the upstream agent already knew."
+    },
+    {
+     "q": "The output parses but names an unknown product or section type. Then?",
+     "opts": [
+      "Reject the whole layout",
+      "Drop the bad parts and keep the rest",
+      "Render it as is"
+     ],
+     "pick": "Drop the bad parts; if nothing useful is left, fall back.",
+     "why": "One hallucinated id should not cost the visitor a tailored page, and nothing unvalidated should reach the renderer."
+    },
+    {
+     "q": "Caching?",
+     "opts": [
+      "None",
+      "By the exact q",
+      "By the normalised q plus sorted ids, with a time limit"
+     ],
+     "pick": "Normalised q plus sorted ids, with a TTL.",
+     "why": "Visitors phrase the same intent differently; normalising raises hits, and the TTL lets the catalog change. A cache hit also removes the model from the latency path."
+    }
+   ]
+  },
+  {
+   "title": "Build it with Claude Code",
+   "lead": "You decide, the tool types. Small asks, read every diff, run the harness yourself.",
+   "prompts": [
+    {
+     "when": "Say your plan and get it challenged",
+     "text": "My plan in three steps: (1) ... (2) ... (3) .... Push back on anything risky or missing, especially timeouts, retries and bad input. Don't write code yet."
+    },
+    {
+     "when": "Test first for the first behaviour",
+     "text": "Write a small failing test for this behaviour: when the layout service takes longer than the deadline, renderVisitorPage still returns a page built from q and ids within 5 seconds. Use the repo's existing style, run it, and show me that it fails. Don't implement yet."
+    },
+    {
+     "when": "Implement one small step",
+     "text": "Implement only step 1 of the plan. Keep the diff small (under about 60 lines), no new dependencies unless I say so, then run `npm run harness` and show me the output."
+    },
+    {
+     "when": "Review the diff with me",
+     "text": "Walk me through this diff where it matters. Then list what could go wrong with it: slow calls, timeouts, retries, races, bad input. Be specific to this code."
+    },
+    {
+     "when": "Run the scoreboard",
+     "text": "Run `npm run harness` three times and summarise the numbers. Did anything get worse?"
+    },
+    {
+     "when": "When it works: edge cases",
+     "text": "Add tests for: an empty q, a q containing <script>, an unknown id in ids, the layout service returning prose around the JSON, and a section type we don't have. Run them."
+    }
+   ]
+  },
+  {
+   "title": "Verify",
+   "items": [
+    "`npm run harness`: zero over 5 seconds, zero errors, every visitor tailored, across several runs (the stub is random).",
+    "Open `out/page.html` for each example visitor and look: does each page fit its visitor?",
+    "Try an empty q, a hostile q and an unknown id by hand with `npm run page`.",
+    "Read the final diff yourself once, top to bottom."
+   ]
+  },
+  {
+   "title": "Discuss: what he will ask after the build",
+   "items": [
+    "How would you know the tailored page is better than the default? (What is the metric, and how would you test it?)",
+    "Ten thousand requests a minute: what breaks first, and what changes?",
+    "Could a visitor's q steer the model into something harmful? What stops it?",
+    "In a real Next.js app, would you stream a shell first? What would the visitor see?",
+    "What would you log for every request?"
+   ]
+  }
+ ],
+ "jobs": [
+  {
+   "title": "Learn the domain: a job queue that survives crashes",
+   "items": [
+    "A queue in a database: a table of jobs with a status; workers claim one at a time and run it. The claim has to be atomic, or two workers take the same job.",
+    "Leases: a claim that expires unless the worker keeps renewing it (a heartbeat). When a worker dies, its job becomes claimable again.",
+    "At-least-once: in a system like this anything can run twice, so steps that change the outside world need to be safe to repeat.",
+    "Idempotency without the provider's help: check before acting (has this comment already been posted?) and record that you did it.",
+    "Checkpoints: store each step's result so a resumed job skips what already finished.",
+    "Retries: only for errors that can succeed later, with backoff, and a maximum after which the job is marked dead for a person to look at."
+   ],
+   "res": [
+    {
+     "kind": "video",
+     "req": True,
+     "label": "The SKIP LOCKED feature in Postgres",
+     "url": "https://www.youtube.com/watch?v=m6-63kpttQk",
+     "m": 4,
+     "why": "How workers claim rows without stepping on each other.",
+     "yt": {
+      "id": "m6-63kpttQk",
+      "ch": "PG Casts by Hashrocket"
+     }
+    },
+    {
+     "kind": "video",
+     "req": True,
+     "label": "Using your database as a queue: good or bad idea?",
+     "url": "https://www.youtube.com/watch?v=DOaDpHh1FsQ",
+     "m": 10,
+     "why": "The trade-offs of a table as a queue.",
+     "yt": {
+      "id": "DOaDpHh1FsQ",
+      "ch": "CodeOpinion"
+     }
+    },
+    {
+     "kind": "video",
+     "req": True,
+     "label": "Idempotency: what it is and how to implement it",
+     "url": "https://www.youtube.com/watch?v=XAccGbtl3Z8",
+     "m": 9,
+     "why": "Making a repeated step harmless.",
+     "yt": {
+      "id": "XAccGbtl3Z8",
+      "ch": "Alex Hyett"
+     }
+    }
+   ]
+  },
+  {
+   "title": "Look around the repo, systematically",
+   "items": [
+    "Read the README twice: once for the ask, once for every noun in it; the nouns are the files and the constraints.",
+    "Run it before reading any code: the commands in the README. Write down what the output measures; the harness is the scoreboard you will be judged on.",
+    "Sort the files into five piles: the entry point the harness calls, the file you are meant to change, the pieces given to you, the data and contracts, and the harness or tests.",
+    "Read only the entry point, then follow one level down. Stop there.",
+    "Read the contracts: types, schemas, docs, data files. They tell you what valid looks like.",
+    "Read anything stubbed, simulated or 'flaky' to the very end. That is where an exercise hides its trap.",
+    "Write four lines before planning: what is given, what you must change, how success is measured, what can go wrong."
+   ],
+   "ordered": True,
+   "prompts": [
+    {
+     "when": "Ask Claude Code to map it (read, don't change)",
+     "text": "Map this repo for me before we change anything: the entry point the harness calls, what the harness measures and how, which file I am expected to change, which modules are given, the data and contracts, and anything stubbed or simulated (read those to the end and tell me how they misbehave). Do not edit files."
+    }
+   ]
+  },
+  {
+   "title": "Questions to answer from the code (not from Pavlo)",
+   "items": [
+    "How does a worker pick its next job? Could two workers pick the same one?",
+    "What happens to a job whose worker is killed halfway through?",
+    "Which of the four steps change the outside world?",
+    "What does the GitHub stub do just after it records a comment?",
+    "What happens to a job when any step raises?",
+    "What exactly does the harness count, and when does it stop?"
+   ]
+  },
+  {
+   "title": "Clarify with Pavlo",
+   "items": [
+    "May I change the database schema?",
+    "Is production on SQLite or Postgres?",
+    "Does GitHub support idempotency keys? Can I read a pull request's comments?",
+    "How long do real jobs take?",
+    "Is a failed test a failed job, or a result to report?",
+    "How many retries are acceptable?"
+   ]
+  },
+  {
+   "title": "Decisions to discover",
+   "decisions": [
+    {
+     "q": "How does a worker claim a job?",
+     "opts": [
+      "SELECT a queued job, then UPDATE it",
+      "One atomic UPDATE ... WHERE status = 'queued' ... RETURNING (or a write transaction)",
+      "A lock file per job"
+     ],
+     "pick": "One atomic statement.",
+     "why": "Between a SELECT and an UPDATE another worker can read the same row. In SQLite use a write transaction or UPDATE ... RETURNING; in Postgres, SELECT ... FOR UPDATE SKIP LOCKED."
+    },
+    {
+     "q": "How does a killed worker's job come back?",
+     "opts": [
+      "It doesn't",
+      "A lease with an expiry, renewed by a heartbeat, reclaimed once it expires",
+      "Reset every running job when a worker starts"
+     ],
+     "pick": "A lease with expiry and heartbeat.",
+     "why": "Resetting at start-up steals jobs that live workers are running; a lease only frees work whose owner stopped renewing it."
+    },
+    {
+     "q": "How do you stop the double comment?",
+     "opts": [
+      "Retry less",
+      "Send an idempotency key to GitHub",
+      "Put the job id in the comment, check for it before posting, and record that it was sent"
+     ],
+     "pick": "Check before posting, and record it.",
+     "why": "GitHub takes no idempotency key, and the stub posts and then loses the response. Reading first closes the window the record alone cannot."
+    },
+    {
+     "q": "After a crash, resume or restart the job?",
+     "opts": [
+      "Restart from the first step",
+      "Store each step's result and skip finished steps"
+     ],
+     "pick": "Checkpoint and skip finished steps.",
+     "why": "It saves the model call and the test run; restarting is acceptable only if every step is safe to repeat, so say the trade-off."
+    },
+    {
+     "q": "Which failures are retried?",
+     "opts": [
+      "All of them, forever",
+      "Transient ones (timeouts, resets) with backoff and a maximum, then dead",
+      "None"
+     ],
+     "pick": "Transient, bounded, then dead.",
+     "why": "Forever hides real bugs and burns money; none turns every hiccup into a lost job."
+    }
+   ]
+  },
+  {
+   "title": "Build it with Claude Code",
+   "prompts": [
+    {
+     "when": "Say your plan and get it challenged",
+     "text": "My plan in three steps: (1) ... (2) ... (3) .... Push back on anything risky or missing, especially timeouts, retries and bad input. Don't write code yet."
+    },
+    {
+     "when": "Test first for the first behaviour",
+     "text": "Write a small failing test for this behaviour: two workers calling next_job at the same time never get the same job. Use the repo's existing style, run it, and show me that it fails. Don't implement yet."
+    },
+    {
+     "when": "Implement one small step",
+     "text": "Implement only step 1 of the plan. Keep the diff small (under about 60 lines), no new dependencies unless I say so, then run `python harness.py` and show me the output."
+    },
+    {
+     "when": "Review the diff with me",
+     "text": "Walk me through this diff where it matters. Then list what could go wrong with it: slow calls, timeouts, retries, races, bad input. Be specific to this code."
+    },
+    {
+     "when": "Run the scoreboard",
+     "text": "Run `python harness.py` three times and summarise the numbers. Did anything get worse?"
+    },
+    {
+     "when": "When it works: the hard cases",
+     "text": "Add tests for: a worker killed after post_comment but before the job is marked done, a model timeout on the first attempt, and the same job claimed after its lease expired. Run them with python -m unittest."
+    }
+   ]
+  },
+  {
+   "title": "Verify",
+   "items": [
+    "`python harness.py`: every job done, none stuck, no pull request with more than one comment, across several runs.",
+    "Kill a worker by hand mid-job and watch its job come back.",
+    "Read the final diff once yourself."
+   ]
+  },
+  {
+   "title": "Discuss: what he will ask after the build",
+   "items": [
+    "The same claim on Postgres with many machines?",
+    "A 20-minute job during a deploy: drain it or resume it?",
+    "How do you see a job that is stuck?",
+    "Workers on different machines: where does the workspace live?",
+    "When would you use a workflow engine like Temporal or Inngest instead?"
+   ]
+  }
+ ],
+ "experiments": [
+  {
+   "title": "Learn the domain: experiments, bandits, and the edge",
+   "items": [
+    "An experiment: variants A, B and C; each visitor is assigned once and keeps that variant; exposures and conversions are counted per variant.",
+    "Sticky assignment: hash the experiment id and the visitor id into a number between 0 and 1; the same input always lands in the same bucket, with no lookup. Store the first assignment too, because the weights it is compared against move.",
+    "Counting once: the hourly job may rerun on the same file, so it must remember what it already counted (event ids or files).",
+    "Thompson sampling: each variant keeps a Beta(1 + conversions, 1 + non-conversions) belief; draw one sample from each and the highest wins. Better variants win more often as evidence grows, but no variant is starved early by luck.",
+    "Edge against batch: the edge can only read what is pushed to it (here `weights.json`); the hourly job does the maths. The file between them is the contract."
+   ],
+   "res": [
+    {
+     "kind": "video",
+     "req": True,
+     "label": "Thompson sampling",
+     "url": "https://www.youtube.com/watch?v=Zgwfw3bzSmQ",
+     "m": 14,
+     "why": "The Beta belief and the draw, clearly.",
+     "yt": {
+      "id": "Zgwfw3bzSmQ",
+      "ch": "ritvikmath"
+     }
+    },
+    {
+     "kind": "video",
+     "req": True,
+     "label": "Multi-armed bandit",
+     "url": "https://www.youtube.com/watch?v=e3L4VocZnnQ",
+     "m": 12,
+     "why": "Explore against exploit, the problem Thompson sampling solves.",
+     "yt": {
+      "id": "e3L4VocZnnQ",
+      "ch": "ritvikmath"
+     }
+    },
+    {
+     "kind": "video",
+     "req": False,
+     "label": "The ultimate guide to A/B testing (Ronny Kohavi)",
+     "url": "https://www.youtube.com/watch?v=hEzpiDuYFoE",
+     "m": 84,
+     "why": "Assignment, sample ratio checks, trustworthy results; long, so skim.",
+     "yt": {
+      "id": "hEzpiDuYFoE",
+      "ch": "Lenny's Podcast"
+     }
+    }
+   ]
+  },
+  {
+   "title": "Look around the repo, systematically",
+   "items": [
+    "Read the README twice: once for the ask, once for every noun in it; the nouns are the files and the constraints.",
+    "Run it before reading any code: the commands in the README. Write down what the output measures; the harness is the scoreboard you will be judged on.",
+    "Sort the files into five piles: the entry point the harness calls, the file you are meant to change, the pieces given to you, the data and contracts, and the harness or tests.",
+    "Read only the entry point, then follow one level down. Stop there.",
+    "Read the contracts: types, schemas, docs, data files. They tell you what valid looks like.",
+    "Read anything stubbed, simulated or 'flaky' to the very end. That is where an exercise hides its trap.",
+    "Write four lines before planning: what is given, what you must change, how success is measured, what can go wrong."
+   ],
+   "ordered": True,
+   "prompts": [
+    {
+     "when": "Ask Claude Code to map it (read, don't change)",
+     "text": "Map this repo for me before we change anything: the entry point the harness calls, what the harness measures and how, which file I am expected to change, which modules are given, the data and contracts, and anything stubbed or simulated (read those to the end and tell me how they misbehave). Do not edit files."
+    }
+   ]
+  },
+  {
+   "title": "Questions to answer from the code (not from Pavlo)",
+   "items": [
+    "How does `assign.ts` choose a variant? Does a returning visitor keep theirs?",
+    "What does `update.py` do with a file it has already processed once?",
+    "How are the weights computed from the counts?",
+    "Who writes `weights.json` and who reads it?",
+    "What does `sim.py` measure, and which numbers say 'fixed'?"
+   ]
+  },
+  {
+   "title": "Clarify with Pavlo",
+   "items": [
+    "Is the visitor id stable for a returning visitor?",
+    "Can the edge keep state or call a database?",
+    "Do events carry ids?",
+    "Why does the hourly job get rerun?",
+    "What does 'find the winner sooner' mean in numbers?",
+    "May I change the weights format? Should a returning visitor ever switch variant?"
+   ]
+  },
+  {
+   "title": "Decisions to discover",
+   "decisions": [
+    {
+     "q": "How do you make assignment sticky?",
+     "opts": [
+      "Keep picking at random",
+      "Hash experiment and visitor against the current weights",
+      "Keep the first assignment (a cookie), hash only for new visitors"
+     ],
+     "pick": "Keep the first assignment; hash only new visitors.",
+     "why": "Hashing against weights that move every hour still moves returning visitors when the weights change; the stored first assignment never does."
+    },
+    {
+     "q": "How do you stop the double counting?",
+     "opts": [
+      "Make sure the job never reruns",
+      "Record processed event ids (or files) in the job's state",
+      "Recompute the totals from all the event files every run"
+     ],
+     "pick": "Record what was processed (recomputing from scratch also works).",
+     "why": "Reruns will happen. Remembering event ids makes a rerun a no-op; recomputing from every file is idempotent too but grows with history."
+    },
+    {
+     "q": "How are weights computed?",
+     "opts": [
+      "Proportional to each variant's conversion rate",
+      "Thompson sampling: the share of many draws each variant wins",
+      "Epsilon-greedy"
+     ],
+     "pick": "Thompson sampling shares.",
+     "why": "Proportional weights barely move (3.6% against 3.0% is close to a third each), so the winner never gets traffic; Thompson moves traffic as the evidence firms up."
+    },
+    {
+     "q": "What does the edge receive?",
+     "opts": [
+      "Raw counts",
+      "Posterior parameters, and the edge samples per request",
+      "Precomputed traffic shares in a versioned file"
+     ],
+     "pick": "Precomputed shares in a versioned file (parameters also defensible).",
+     "why": "The edge stays simple and fast; the maths lives in one place you can test. Sampling at the edge is fine too if you can say why."
+    },
+    {
+     "q": "Any guardrail?",
+     "opts": [
+      "None",
+      "A floor per variant while it is new",
+      "A holdout share kept at fixed weights"
+     ],
+     "pick": "A floor for new variants, and say why a holdout matters.",
+     "why": "A floor stops early bad luck starving a variant; a fixed holdout keeps an unbiased comparison and a place to run sample-ratio checks."
+    }
+   ]
+  },
+  {
+   "title": "Build it with Claude Code",
+   "prompts": [
+    {
+     "when": "Say your plan and get it challenged",
+     "text": "My plan in three steps: (1) ... (2) ... (3) .... Push back on anything risky or missing, especially timeouts, retries and bad input. Don't write code yet."
+    },
+    {
+     "when": "Test first for the first behaviour",
+     "text": "Write a small failing test for this behaviour: running update.py twice on the same hour file leaves the counts unchanged. Use the repo's existing style, run it, and show me that it fails. Don't implement yet."
+    },
+    {
+     "when": "Implement one small step",
+     "text": "Implement only step 1 of the plan. Keep the diff small (under about 60 lines), no new dependencies unless I say so, then run `python sim.py` and show me the output."
+    },
+    {
+     "when": "Review the diff with me",
+     "text": "Walk me through this diff where it matters. Then list what could go wrong with it: slow calls, timeouts, retries, races, bad input. Be specific to this code."
+    },
+    {
+     "when": "Run the scoreboard",
+     "text": "Run `python sim.py` three times and summarise the numbers. Did anything get worse?"
+    },
+    {
+     "when": "Across the two languages",
+     "text": "We are changing the contract between edge/assign.ts and optimizer/update.py. Show me the new weights.json shape first, then update the Python writer, then the TypeScript reader, and run python sim.py."
+    }
+   ]
+  },
+  {
+   "title": "Verify",
+   "items": [
+    "`python sim.py`: returning visitors seeing a different variant near 0%, counted conversions equal to real ones, and B's traffic share clearly above a third by the end.",
+    "Run it a few times; read the final diff once yourself."
+   ]
+  },
+  {
+   "title": "Discuss: what he will ask after the build",
+   "items": [
+    "Hundreds of experiments: how does the edge get new weights?",
+    "Two experiments on one page: how do you keep them independent?",
+    "Conversions that arrive a day late?",
+    "How would you check assignment is healthy (a sample ratio check)?",
+    "Cookies blocked: where does stickiness live then?"
+   ]
+  }
+ ]
+}
+for _x in LIVE:
+    _x["guide"] = LIVE_GUIDES[_x["id"]]

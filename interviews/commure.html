@@ -265,6 +265,15 @@ details.ln-item[open] > summary .qm { display: none; }
 .tl-team { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
 .tl-team th, .tl-team td { text-align: left; vertical-align: top; padding: var(--s2) var(--s3) var(--s2) 0; border-bottom: var(--hair); }
 @media (max-width: 640px) { .tl-list li { grid-template-columns: 1fr; gap: 0; } }
+.live-phase { border-top: var(--hair); padding: var(--s2) 0; }
+.live-phase > summary { cursor: pointer; font-weight: var(--w-strong); list-style: none; display: flex; gap: var(--s3); align-items: baseline; }
+.live-phase > summary::-webkit-details-marker { display: none; }
+.lp-n { color: var(--muted); font-size: var(--fs-sm); min-width: 1.2em; }
+.lp-body { padding: var(--s2) 0 var(--s3) var(--s5); }
+.lp-dec { margin: var(--s3) 0 var(--s4); }
+.lp-opts { margin: var(--s1) 0 var(--s2); padding-left: var(--s5); color: var(--soft); }
+.lp-prompt { white-space: pre-wrap; }
+.lp-copy { margin: calc(-1 * var(--s2)) 0 var(--s3); }
 .live-ask { margin: var(--s2) 0 var(--s4); padding-left: var(--s4); border-left: 2px solid var(--rule); color: var(--soft); }
 .ln-task, .ln-gate { margin: var(--s4) 0; }
 .ln-task .acts { align-items: center; }
@@ -1878,7 +1887,49 @@ details.item > .sbody { padding-left: 0; }
         x.after.forEach(function (t) { ul.appendChild(el("li", "", inl(t))); });
         s.appendChild(ul);
       }
+      (x.guide || []).forEach(function (ph, pi) { s.appendChild(livePhase(x, ph, pi)); });
     });
+  }
+
+  /* One phase of a live build's guide, folded: a lead, points, decisions with the strong pick shut
+     until he has chosen, copy-ready prompts, and resources. */
+  function livePhase(x, ph, pi) {
+    var d = el("details", "live-phase");
+    d.appendChild(el("summary", "", '<span class="lp-n">' + (pi + 1) + "</span>" + inl(ph.title)));
+    var body = el("div", "lp-body");
+    if (ph.lead) { body.appendChild(el("p", "", inl(ph.lead))); }
+    if (ph.items && ph.items.length) {
+      var list = el(ph.ordered ? "ol" : "ul", "mk-list");
+      ph.items.forEach(function (t) { list.appendChild(el("li", "", inl(t).replace(/^([^:<]{2,60}):/, "<b>$1:</b>"))); });
+      body.appendChild(list);
+    }
+    (ph.decisions || []).forEach(function (q, qi) {
+      var box = el("div", "lp-dec");
+      box.appendChild(el("p", "ln-oq", (qi + 1) + ". " + inl(q.q)));
+      var ol = el("ol", "lp-opts");
+      q.opts.forEach(function (o) { ol.appendChild(el("li", "", inl(o))); });
+      box.appendChild(ol);
+      var out = el("div", "ln-ans"), b = el("button", "btn", "I've picked one: show the strong choice");
+      b.addEventListener("click", function () {
+        b.remove();
+        out.appendChild(el("p", "", "<b>Strong choice:</b> " + inl(q.pick)));
+        out.appendChild(el("p", "", inl(q.why)));
+      });
+      box.appendChild(b); box.appendChild(out);
+      body.appendChild(box);
+    });
+    (ph.prompts || []).forEach(function (p) {
+      body.appendChild(el("div", "lab", inl(p.when)));
+      var pre = el("pre", "cv-code lp-prompt", esc(p.text));
+      var cp = el("button", "btn lp-copy", "Copy");
+      cp.addEventListener("click", function () {
+        (navigator.clipboard ? navigator.clipboard.writeText(p.text) : Promise.reject()).then(function () { cp.textContent = "Copied"; setTimeout(function () { cp.textContent = "Copy"; }, 1500); }, function () { cp.textContent = "Select and copy"; });
+      });
+      body.appendChild(pre); body.appendChild(cp);
+    });
+    if (ph.res && ph.res.length && window.Res) { var rs = Res.render(ph.res); if (rs) { body.appendChild(rs); } }
+    d.appendChild(body);
+    return d;
   }
 
   function tabMocks(host) {
