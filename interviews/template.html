@@ -642,7 +642,7 @@ details.item > .sbody { padding-left: 0; }
     { id: "design", label: "Design", show: function () { return LOOP.tables.length || LOOP.figures.length; } },
     { id: "own", label: (LOOP.own && LOOP.own.tab) || "Yours", show: function () { return !!LOOP.own; } },
     { id: "sessions", label: "Sessions", show: function () { return LOOP.sessions.length; } },
-    { id: "live", label: "Live build", show: function () { return (LOOP.live || []).length; } },
+    { id: "live", label: "Live build", show: function () { return (LOOP.live || []).length || (LOOP.takehomes || []).length; } },
     { id: "mocks", label: "Mocks", show: function () { return !!LOOP.mockHow; } }
   ].filter(function (t) { return t.show() && (!LOOP.tabs || LOOP.tabs.indexOf(t.id) >= 0); });
   var main = document.getElementById("main");
@@ -1874,10 +1874,28 @@ details.item > .sbody { padding-left: 0; }
   function tabLive(host) {
     var intro = heading(host, "live-how", "", "Live build");
     (LOOP.liveLead || []).forEach(function (p) { intro.appendChild(el("p", "lead", inl(p))); });
+    /* What a build or take-home tests, and the roadmap through it: always open, read first. */
+    function testsAndRoad(s, x) {
+      [["What they are testing", x.tests, "ul"], ["The roadmap", x.roadmap, "ol"], ["Traps", x.traps, "ul"],
+       ["What he will likely ask after", x.followups, "ul"], ["What the public solutions did", x.forks, "ul"]].forEach(function (k) {
+        if (!k[1] || !k[1].length) { return; }
+        s.appendChild(el("div", "lab", k[0]));
+        var l = el(k[2], "mk-list");
+        k[1].forEach(function (t) { l.appendChild(el("li", "", inl(t).replace(/^([^:<]{2,60}):/, "<b>$1:</b>"))); });
+        s.appendChild(l);
+      });
+    }
+    (LOOP.takehomes || []).forEach(function (x) {
+      var s = heading(host, "th-" + x.id, x.lang + (x.url ? ", Coframe's public take-home" : ""), x.title);
+      if (x.url) { s.appendChild(el("p", "lead", '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.url.replace("https://github.com/", "")) + "</a>")); }
+      if (x.what) { s.appendChild(el("p", "lead", inl(x.what))); }
+      testsAndRoad(s, x);
+    });
     LOOP.live.forEach(function (x) {
       var s = heading(host, "live-" + x.id, x.lang + ", about " + x.minutes + " minutes", x.title);
       s.appendChild(el("div", "lab", "What he says"));
       s.appendChild(el("blockquote", "live-ask", inl(x.ask)));
+      testsAndRoad(s, x);
       s.appendChild(el("div", "lab", "Start"));
       var ol = el("ol", "mk-list");
       x.start.forEach(function (t) { ol.appendChild(el("li", "", inl(t))); });
