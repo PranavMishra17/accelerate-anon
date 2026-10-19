@@ -171,7 +171,7 @@ def build(module_name):
     # served from a stale browser cache.
     import hashlib
     # The design tokens and the site badges (site/) are stamped the same way.
-    for f in [("figures", f) for f in ("icons.js", "figures.js", "notes.js", "viewer.js", "viewer.css", "figures.css")] + [("site", "tokens.css"), ("site", "nav.js"), ("site", "nav.css"), ("site", "res.js"), ("site", "res.css")] + \
+    for f in [("figures", f) for f in ("icons.js", "figures.js", "notes.js", "viewer.js", "viewer.css", "figures.css")] + [("site", "tokens.css"), ("site", "nav.js"), ("site", "nav.css"), ("site", "res.js"), ("site", "res.css"), ("site", "sheet.js"), ("site", "sheet.css")] + \
             [("private", f) for f in ("site.js", "figures.js", "notes.js")]:   # gitignored; stamped when present
         p = os.path.join(HERE, "..", *f)
         if os.path.exists(p):

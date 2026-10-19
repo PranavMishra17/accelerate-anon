@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="site/tokens.css?v=0e3b75d2">
 <link rel="stylesheet" href="site/nav.css?v=2ebfb65e">
 <link rel="stylesheet" href="site/res.css?v=a9aa3a2d">
+<link rel="stylesheet" href="site/sheet.css?v=c0b47e17">
 <script src="private/site.js"></script>
 <script src="site/nav.js?v=e86e0abd" defer></script>
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
@@ -315,16 +316,9 @@
   @media (max-width: 1200px) { #view.pg-session { display: block; max-width: 1080px; } #view.pg-session > .souter { display: none; } }
   /* Cheat sheet and key terms: last in an open step, under a hairline; the session's terms after its steps. */
   .cheat { margin-top: var(--s5); padding-top: var(--s2); border-top: 1px solid var(--rule); max-width: 860px; }
-  .cheat-list { margin: 0; padding-left: var(--s5); line-height: 1.6; }
-  .cheat-list li { margin-bottom: 2px; }
-  .kterms td { font-size: var(--fs-sm); padding: var(--s2) var(--s3); border-bottom: 1px solid var(--rule); vertical-align: top; line-height: 1.5; }
-  .kterms .kt-t { font-weight: 600; width: 22%; }
-  .kterms .kt-m { color: var(--soft); width: 28%; }
-  .kterms .kt-grp { font-weight: 600; color: var(--muted); padding-top: var(--s4); }
   .kt-session { margin: var(--s4) 0; }
   .kt-session > summary { cursor: pointer; font-size: var(--fs-sm); font-weight: 600; color: var(--muted); }
   .kt-session > summary:hover { color: var(--ink); }
-  @media (max-width: 640px) { .kterms .kt-m { display: none; } }
   .sxg { font-size: var(--fs-lg); font-weight: 600; margin: var(--s5) 0 var(--s2); }
   /* the session table: steps down, beats across; the open row's drawer below it */
   .stable { width: 100%; border-collapse: collapse; }
@@ -772,6 +766,7 @@
 <script src="data/reading.js?v=e143835e"></script>
 <script src="data/sheets.js?v=3cd31227"></script>
 <script src="site/res.js?v=c33c7564"></script>
+<script src="site/sheet.js?v=f03a0b85"></script>
 <script src="data/mcq/base.js?v=5fc7e7ac"></script>
 <script src="data/mcq/week1.js?v=8276998c"></script>
 <script src="data/mcq/week2.js?v=c99169f7"></script>
@@ -8839,20 +8834,7 @@
   function extraOf(key) { return (window.READING && window.READING[key]) || {}; }
   /* The cheat sheet and key terms for a step live in data/sheets.js, keyed the same way. */
   function sheetOf(key) { return (window.SHEETS && window.SHEETS[key]) || null; }
-  function termsTable(rows) {
-    var t = el("table", "t kterms"), hr = el("tr");
-    ["Term", "Remember it by", "What it means"].forEach(function (h) { hr.appendChild(el("th", "", h)); });
-    t.appendChild(hr);
-    rows.forEach(function (r) {
-      var tr = el("tr");
-      if (r.group) { var g = el("td", "kt-grp", r.group); g.colSpan = 3; tr.appendChild(g); t.appendChild(tr); return; }
-      var a = el("td", "kt-t"), b = el("td", "kt-m"), c = el("td", "kt-d");
-      a.innerHTML = r.t; b.innerHTML = r.mem; c.innerHTML = r.d;
-      tr.appendChild(a); tr.appendChild(b); tr.appendChild(c);
-      t.appendChild(tr);
-    });
-    return t;
-  }
+  function termsTable(rows) { return Sheet.terms(rows); }
   /* The heads of a step's points, for the outline: the words before the first colon. */
   function pointHeads(s, it) {
     var model = modelOf(s, it), pts = model && (model.pts || (Array.isArray(model) ? model : null));
@@ -9119,9 +9101,7 @@
     if (sh && ((sh.cheat && sh.cheat.length) || (sh.terms && sh.terms.length))) {
       var shb = el("div", "cheat");
       if (sh.cheat && sh.cheat.length) {
-        var cul = el("ul", "cheat-list");
-        sh.cheat.forEach(function (c) { var li = el("li"); li.innerHTML = c; cul.appendChild(li); });
-        section(shb, "Cheat sheet", cul);
+        section(shb, "Cheat sheet", Sheet.cheat(sh.cheat));
       }
       if (sh.terms && sh.terms.length) { section(shb, "Key terms", termsTable(sh.terms)); }
       dc.appendChild(shb);

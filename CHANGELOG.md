@@ -1269,3 +1269,9 @@ the home page). `tools/serve.py` now listens on both loopbacks: requests take 4 
 load 0.7 s. It also serves the local AI Engineering from Scratch clone under `/course/` and pulls it
 once at start, so `study.cmd` starts one server, not a course server and an update window as well.
 No charter deviation.
+
+**2026-10-19 — Cheat sheets and key terms drawn as a reference sheet.**
+Pranav found the bulleted list and three-column table plain. Same content, no clicks: one shared
+renderer (`site/sheet.js`, `site/sheet.css`) for the tracker and the loop pages. The cheat sheet is a
+grid with each line's head (before its first colon) in a left column and the point on the right; the
+key terms are a two-column list, term and hook on one line, definition beneath. No charter deviation.

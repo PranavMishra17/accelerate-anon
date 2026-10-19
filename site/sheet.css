@@ -1,0 +1,18 @@
+/* Cheat sheet and key terms (site/sheet.js). Tokens only; hairlines, no fills, no italic. */
+.sh-grid { display: grid; grid-template-columns: minmax(120px, 13em) minmax(0, 1fr); column-gap: var(--s4); max-width: 920px; border-top: var(--hair); }
+.sh-h, .sh-p { padding: var(--s2) 0; border-bottom: var(--hair); line-height: 1.55; }
+.sh-h { font-size: var(--fs-sm); font-weight: 600; color: var(--ink); padding-top: calc(var(--s2) + 1px); }
+.sh-p { font-size: var(--fs-md); color: var(--ink); }
+@media (max-width: 760px) { .sh-blank { display: none; } }
+.sh-terms { column-count: 2; column-gap: var(--s6); max-width: 920px; border-top: var(--hair); }
+.sh-term { break-inside: avoid; padding: var(--s2) 0 var(--s3); border-bottom: var(--hair); }
+.sh-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--s2); }
+.sh-t { font-weight: 600; color: var(--ink); }
+.sh-mem { font-size: var(--fs-sm); color: var(--muted); }
+.sh-d { margin-top: 2px; font-size: var(--fs-sm); color: var(--soft); line-height: 1.5; }
+.sh-grp { column-span: all; font-size: var(--fs-sm); font-weight: 600; color: var(--muted); padding: var(--s4) 0 var(--s1); }
+@media (max-width: 760px) {
+  .sh-grid { grid-template-columns: minmax(0, 1fr); }
+  .sh-h { border-bottom: 0; padding-bottom: 0; }
+  .sh-terms { column-count: 1; }
+}
