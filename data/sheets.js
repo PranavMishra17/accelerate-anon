@@ -1725,7 +1725,7 @@ window.SHEETS = {
         ["1 KB × 10<sup>6</sup>", "1 GB"],
         ["1 KB × 10<sup>9</sup>", "1 TB"],
         ["1 day", "86,400 s ≈ 10<sup>5</sup> s"],
-        ["10<sup>6</sup> a day", "≈ 12 a second"]] }
+        ["10<sup>6</sup> a day", "about 12 a second"]] }
     ],
     "w3a:2": [
       { rule: "Object storage keeps whole objects by key: put, get, delete, list a prefix. No query engine, no partial update." },
@@ -1738,8 +1738,8 @@ window.SHEETS = {
       { title: "The arithmetic, out loud", calc: [
         ["10 KB × 10<sup>8</sup> a day", "10<sup>12</sup> B = 1 TB a day"],
         ["1 TB × 30", "30 TB a month"],
-        ["30,000 GB × $0.02", "≈ $600 a month to hold"],
-        ["10<sup>8</sup> / 10<sup>5</sup> s", "≈ 1,000 writes a second (1,160)"],
+        ["30,000 GB × $0.02", "about $600 a month to hold"],
+        ["10<sup>8</sup> / 10<sup>5</sup> s", "about 1,000 writes a second (1,160)"],
         ["30 TB × 12", "360 TB after a year"]] },
       { title: "Retention is a decision", flow: ["hot: last 30 days, queryable", "cold tier", "delete when it stops helping"],
         note: "Keeping everything forever is still a decision, one nobody made on purpose." }
