@@ -1216,3 +1216,12 @@ answer, a head count that differs from round 1), each of his eight questions wit
 better answer and the lines of code he probed, and six asyncio drills with answers shut until tried.
 The Rounds renderer gained round-level `well`, `gaps` and `drills` and per-question `code`. Short quotes
 only; the full transcript is not kept in the repo. No charter deviation.
+
+**2026-10-18 — Week 3: a cheat sheet and key terms per step, key terms per session, and a quick panel.**
+Every step in week 3 (Storage, Matrices, Nyquist and the folded flowchart design) now opens on a cheat
+sheet, the lines that prove you know the step if they make sense read cold, and a key-terms table
+(term, a way to remember it, the definition), in the style of AI Engineering from Scratch. The session
+page shows all its steps' terms in one table above the steps, grouped by step, and on wide screens a
+sticky panel on the right lists each step with its done mark and the heads of its points; a click
+opens that step or jumps to that point. Content lives in `data/sheets.js`, keyed like progress.
+This is the structure for every week from here. No charter deviation.
