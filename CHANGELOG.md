@@ -1244,3 +1244,9 @@ drawer (a box in a box), an italic column, accent-coloured toggles and a filler 
 and key terms now come last in an open step, under a hairline, with the tracker's own section labels
 (`.sxl`) and table style (`table.t`); the session's key terms sit after its step table, folded under a
 plain muted label. No charter deviation.
+
+**2026-10-18 — A build check for the slop patterns.**
+`tools/design_lint.py` runs first in `tools/rebuild.py` and in the Pages workflow. It fails when new CSS
+adds a tinted card with a coloured rule, italic text or a font size off the six tokens, and names the
+class to reuse. The 43 existing rules that break these are grandfathered. Proved red on commit 7e02040,
+today's cheat-sheet card. No charter deviation.
