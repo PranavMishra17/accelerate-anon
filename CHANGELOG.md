@@ -1237,3 +1237,10 @@ when a session has them. No charter deviation.
 Caching, Probability and the source-filter model: every step has its cheat sheet and key terms, written
 in parallel against week 3 and checked (keys match the steps, figures recomputed, no em dashes).
 Milestone 1 is now complete: 80 steps across weeks 1 to 5. No charter deviation.
+
+**2026-10-18 — Cheat sheet and key terms moved to the end of a step, without the card.**
+Pranav called the first version AI slop: a tinted, rounded card with a coloured left rule inside the
+drawer (a box in a box), an italic column, accent-coloured toggles and a filler note. The cheat sheet
+and key terms now come last in an open step, under a hairline, with the tracker's own section labels
+(`.sxl`) and table style (`table.t`); the session's key terms sit after its step table, folded under a
+plain muted label. No charter deviation.

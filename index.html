@@ -313,21 +313,17 @@
   .so-pt { color: var(--muted); padding: 1px 0; }
   li.flash { background: var(--sunken, rgba(0,0,0,.05)); transition: background .4s; }
   @media (max-width: 1200px) { #view.pg-session { display: block; max-width: 1080px; } #view.pg-session > .souter { display: none; } }
-  /* Cheat sheet and key terms: top of an open step, and the session's table above its steps. */
-  .cheat { margin: 0 0 var(--s5); padding: var(--s4) var(--s5); background: var(--surface); border-left: 3px solid var(--tone, var(--accent)); border-radius: var(--radius); }
-  .cheat-h { font-size: var(--fs-md); margin: 0 0 2px; }
-  .cheat-note { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s2); }
+  /* Cheat sheet and key terms: last in an open step, under a hairline; the session's terms after its steps. */
+  .cheat { margin-top: var(--s5); padding-top: var(--s2); border-top: 1px solid var(--rule); max-width: 860px; }
   .cheat-list { margin: 0; padding-left: var(--s5); line-height: 1.6; }
-  .cheat-list li { margin-bottom: 3px; }
-  .kt-wrap { margin-top: var(--s3); }
-  .kt-wrap > summary { cursor: pointer; font-size: var(--fs-sm); font-weight: 600; color: var(--accent); }
-  .kt-session { margin: 0 0 var(--s4); padding-bottom: var(--s3); border-bottom: 1px solid var(--rule); }
-  .kterms { width: 100%; border-collapse: collapse; margin-top: var(--s2); font-size: var(--fs-sm); line-height: 1.5; }
-  .kterms th { text-align: left; font-weight: 600; color: var(--muted); padding: var(--s1) var(--s2); border-bottom: 1px solid var(--rule); }
-  .kterms td { padding: var(--s2); border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .cheat-list li { margin-bottom: 2px; }
+  .kterms td { font-size: var(--fs-sm); padding: var(--s2) var(--s3); border-bottom: 1px solid var(--rule); vertical-align: top; line-height: 1.5; }
   .kterms .kt-t { font-weight: 600; width: 22%; }
-  .kterms .kt-m { color: var(--soft, var(--muted)); font-style: italic; width: 28%; }
-  .kterms .kt-grp { font-weight: 600; color: var(--muted); padding-top: var(--s3); }
+  .kterms .kt-m { color: var(--soft); width: 28%; }
+  .kterms .kt-grp { font-weight: 600; color: var(--muted); padding-top: var(--s4); }
+  .kt-session { margin: var(--s4) 0; }
+  .kt-session > summary { cursor: pointer; font-size: var(--fs-sm); font-weight: 600; color: var(--muted); }
+  .kt-session > summary:hover { color: var(--ink); }
   @media (max-width: 640px) { .kterms .kt-m { display: none; } }
   .sxg { font-size: var(--fs-lg); font-weight: 600; margin: var(--s5) 0 var(--s2); }
   /* the session table: steps down, beats across; the open row's drawer below it */
@@ -8628,7 +8624,7 @@
   /* The cheat sheet and key terms for a step live in data/sheets.js, keyed the same way. */
   function sheetOf(key) { return (window.SHEETS && window.SHEETS[key]) || null; }
   function termsTable(rows) {
-    var t = el("table", "kterms"), hr = el("tr");
+    var t = el("table", "t kterms"), hr = el("tr");
     ["Term", "Remember it by", "What it means"].forEach(function (h) { hr.appendChild(el("th", "", h)); });
     t.appendChild(hr);
     rows.forEach(function (r) {
@@ -8899,29 +8895,21 @@
     }
     var dr = el("tr", "sdrawer"), dc = el("td"), grid = el("div", "sdgrid" + (work.children.length ? "" : " one"));
     dc.colSpan = 6;
-    var sh = sheetOf(key);
-    if (sh) {
-      var shb = el("div", "cheat");
-      if (sh.cheat && sh.cheat.length) {
-        shb.appendChild(el("h3", "cheat-h", "Cheat sheet"));
-        shb.appendChild(el("p", "cheat-note", "If every line makes sense when you read it cold, you know this step."));
-        var cul = el("ul", "cheat-list");
-        sh.cheat.forEach(function (c) { var li = el("li"); li.innerHTML = c; cul.appendChild(li); });
-        shb.appendChild(cul);
-      }
-      if (sh.terms && sh.terms.length) {
-        var kd = el("details", "kt-wrap");
-        kd.open = !!open[key + ":terms"];
-        kd.addEventListener("toggle", function () { open[key + ":terms"] = kd.open; });
-        kd.appendChild(el("summary", "", "Key terms (" + sh.terms.length + ")"));
-        kd.appendChild(termsTable(sh.terms));
-        shb.appendChild(kd);
-      }
-      dc.appendChild(shb);
-    }
     grid.appendChild(mat);
     if (work.children.length) { grid.appendChild(work); }
     dc.appendChild(grid);
+    /* Last in the drawer: the cheat sheet and the key terms, under a hairline, for revisiting. */
+    var sh = sheetOf(key);
+    if (sh && ((sh.cheat && sh.cheat.length) || (sh.terms && sh.terms.length))) {
+      var shb = el("div", "cheat");
+      if (sh.cheat && sh.cheat.length) {
+        var cul = el("ul", "cheat-list");
+        sh.cheat.forEach(function (c) { var li = el("li"); li.innerHTML = c; cul.appendChild(li); });
+        section(shb, "Cheat sheet", cul);
+      }
+      if (sh.terms && sh.terms.length) { section(shb, "Key terms", termsTable(sh.terms)); }
+      dc.appendChild(shb);
+    }
     dr.appendChild(dc);
     tb.appendChild(dr);
   }
@@ -8941,14 +8929,6 @@
     }
     (s.study || []).forEach(function (it, i) { addTerms(s.id + ":s" + i, "First: " + it.t); });
     s.steps.forEach(function (st, i) { addTerms(sKey(s.id, i), (i + 1) + ". " + st.t); });
-    if (nTerms) {
-      var skd = el("details", "kt-wrap kt-session"); skd.id = "terms-" + s.id;
-      skd.open = !!open[s.id + ":terms"];
-      skd.addEventListener("toggle", function () { open[s.id + ":terms"] = skd.open; });
-      skd.appendChild(el("summary", "", "Key terms for this session (" + nTerms + ")"));
-      skd.appendChild(termsTable(allTerms));
-      box.appendChild(skd);
-    }
     function group(label) { var g = el("tr", "sgrp"), c = el("td", "", label); c.colSpan = 6; g.appendChild(c); tb.appendChild(g); }
     if (s.study && s.study.length) {
       group("What to know first");
@@ -8957,6 +8937,14 @@
     }
     s.steps.forEach(function (st, i) { stepRows(tb, s, sKey(s.id, i), st, false, i); });
     box.appendChild(t);
+    if (nTerms) {
+      var skd = el("details", "kt-session"); skd.id = "terms-" + s.id;
+      skd.open = !!open[s.id + ":terms"];
+      skd.addEventListener("toggle", function () { open[s.id + ":terms"] = skd.open; });
+      skd.appendChild(el("summary", "", "Key terms for this session (" + nTerms + ")"));
+      skd.appendChild(termsTable(allTerms));
+      box.appendChild(skd);
+    }
 
     var after = el("div", "sxafter");
     /* figures a step does not already carry */
