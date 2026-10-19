@@ -774,7 +774,7 @@
 <script src="private/notes.js"></script>
 <script src="data/streams.js?v=d0b499a4"></script>
 <script src="data/reading.js?v=e143835e"></script>
-<script src="data/sheets.js?v=646e3962"></script>
+<script src="data/sheets.js?v=24954131"></script>
 <script src="site/res.js?v=c33c7564"></script>
 <script src="data/mcq/base.js?v=5fc7e7ac"></script>
 <script src="data/mcq/week1.js?v=8276998c"></script>
@@ -8935,10 +8935,12 @@
       .forEach(function (h) { hr.appendChild(el("th", h[1], h[0])); });
     hd.appendChild(hr); t.appendChild(hd); t.appendChild(tb);
     var allTerms = [], nTerms = 0;
-    s.steps.forEach(function (st, i) {
-      var sh = sheetOf(sKey(s.id, i));
-      if (sh && sh.terms && sh.terms.length) { allTerms.push({ group: (i + 1) + ". " + st.t }); allTerms = allTerms.concat(sh.terms); nTerms += sh.terms.length; }
-    });
+    function addTerms(key, label) {
+      var sh = sheetOf(key);
+      if (sh && sh.terms && sh.terms.length) { allTerms.push({ group: label }); allTerms = allTerms.concat(sh.terms); nTerms += sh.terms.length; }
+    }
+    (s.study || []).forEach(function (it, i) { addTerms(s.id + ":s" + i, "First: " + it.t); });
+    s.steps.forEach(function (st, i) { addTerms(sKey(s.id, i), (i + 1) + ". " + st.t); });
     if (nTerms) {
       var skd = el("details", "kt-wrap kt-session"); skd.id = "terms-" + s.id;
       skd.open = !!open[s.id + ":terms"];

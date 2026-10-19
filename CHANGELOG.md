@@ -1225,3 +1225,10 @@ page shows all its steps' terms in one table above the steps, grouped by step, a
 sticky panel on the right lists each step with its done mark and the heads of its points; a click
 opens that step or jumps to that point. Content lives in `data/sheets.js`, keyed like progress.
 This is the structure for every week from here. No charter deviation.
+
+**2026-10-18 — Weeks 1, 2 and 4 get the same cheat sheets and key terms.**
+Every step of weeks 1, 2 and 4, folded design sessions included (68 steps across weeks 1 to 4 in all),
+now has a cheat sheet and key terms in `data/sheets.js`, written in parallel from each step's own
+content against week 3 as the reference, then checked: every key matches a real step, no em dashes,
+and the backpropagation numbers recomputed. A session's key-terms table now also takes study items
+when a session has them. No charter deviation.
