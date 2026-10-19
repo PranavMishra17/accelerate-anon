@@ -25,8 +25,14 @@ def sessions_from_tracker(ids):
                          capture_output=True, text=True, encoding="utf-8", check=True).stdout
     data = json.loads(out)
     days = dict(ids)
+    # Each step's cheat sheet and key terms, from data/sheets.js (one home; the tracker reads it too).
+    sheets = json.loads(subprocess.run(["node", "-e", "global.window={};require(process.argv[1]);process.stdout.write(JSON.stringify(window.SHEETS))",
+                                        os.path.join(HERE, "..", "data", "sheets.js")], capture_output=True, text=True, encoding="utf-8", check=True).stdout)
     for s in data:
         s["day"] = days[s["id"]]
+        for i, st in enumerate(s.get("steps", [])):
+            if sheets.get("%s:%d" % (s["id"], i)):
+                st["sheet"] = sheets["%s:%d" % (s["id"], i)]
     return data
 
 

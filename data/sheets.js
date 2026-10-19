@@ -1523,5 +1523,178 @@ window.SHEETS = {
       { t: "Sampling artefact", mem: "The pitch, not the voice.", d: "A difference in a measure caused by how a source property samples the thing measured. With identical filters, the tilt gap between two pitches is entirely this." },
       { t: "Correlation r", mem: "Plus one: they rise together.", d: "A number from −1 to +1; near +1 the two quantities rise together. S21's r = +0.918 between F<sub>0</sub> and tilt, with the envelope slope held constant, means the axis reads pitch." }
     ]
+  },
+
+  /* ---------------------------------------------------------------- wc32 The cache code review (Mercor) */
+  "wc32:0": {
+    cheat: [
+      "Assumptions first: one process or many, threads or asyncio, cost of compute, pure or not, read-to-write ratio, staleness allowed, user input or not.",
+      "Then the same order every time: one caller, concurrency, memory, errors, staleness, visibility.",
+      "One caller: read it literally. await in a non-async function, or a set with no value, is a bug before any race.",
+      "Concurrency: two misses on one key both run compute: double cost, double side effects.",
+      "Memory: a dict that never evicts grows with every distinct key and keeps every value alive.",
+      "Errors: an exception stores nothing, so every caller retries at once; a stored failure is served forever.",
+      "Staleness: no expiry means wrong forever once the source changes.",
+      "Visibility: without hit ratio, size and timing, nobody knows if the cache helps."
+    ],
+    terms: [
+      { t: "Cache hit, cache miss", mem: "Found it, or go and get it.", d: "A hit returns a stored value; a miss means computing or fetching it from the source." },
+      { t: "Pure function", mem: "Same in, same out, nothing else touched.", d: "A function whose result depends only on its inputs and that has no side effects; only these are safe to cache without care." },
+      { t: "Side effect", mem: "Something changes outside the function.", d: "Any effect beyond the return value, such as a write, a payment or a message; running it twice does it twice." },
+      { t: "Staleness", mem: "Old, and still being served.", d: "How far a cached value may lag the source; the tolerance is a product decision, stated per kind of data." }
+    ]
+  },
+  "wc32:1": {
+    cheat: [
+      "Check-then-act is two steps: a second caller can miss between the check and the set.",
+      "In CPython one dict get or set is atomic under the GIL; check plus set is not.",
+      "One lock around everything is correct but makes every hit wait behind a slow miss.",
+      "Double-checked locking: check, take the lock only on a miss, check again, compute, store.",
+      "Per-key locks stop one slow key from blocking the others.",
+      "Single-flight: the first miss stores a future; later callers await it. Compute runs once.",
+      "asyncio: cache the Task, not the coroutine (a coroutine can be awaited once); drop the Task if it fails.",
+      "lru_cache keeps its structure safe but may call the function twice for one key.",
+      "Across hosts: set-if-absent with an expiry, or a lease; a process lock does nothing there."
+    ],
+    terms: [
+      { t: "Race condition", mem: "Two callers, one gap, wrong outcome.", d: "A bug where the result depends on how two concurrent operations interleave." },
+      { t: "Check-then-act", mem: "Looked empty, someone filled it meanwhile.", d: "Deciding on a check and acting on it later, with nothing stopping the state changing in between." },
+      { t: "Double-checked locking", mem: "Check, lock, check again.", d: "Checking without the lock, taking it only on a miss, and checking again inside before doing the work." },
+      { t: "Single-flight", mem: "One request in the air per key.", d: "Duplicate calls for the same key share the result of the one call already in flight; also called request coalescing." },
+      { t: "GIL", mem: "One Python thread runs bytecode at a time.", d: "CPython's global interpreter lock; it makes single dict operations atomic but not a sequence of them." },
+      { t: "Task (asyncio)", mem: "A coroutine already running, awaitable by many.", d: "A scheduled coroutine; any number of callers can await the same Task and get its result." }
+    ]
+  },
+  "wc32:2": {
+    cheat: [
+      "Bound the size: LRU drops least recently used, LFU least frequently used.",
+      "Bound by bytes when values vary in size.",
+      "A TTL on every entry limits staleness and clears dead keys.",
+      "Don't store an exception as a value; retry with backoff instead.",
+      "Frequent, expensive failures: cache them briefly on purpose, with a shorter TTL (negative caching).",
+      "A failed asyncio Task stays failed; remove it when it raises.",
+      "A timeout on compute releases the lock and the waiters if the call hangs.",
+      "Hit ratio = hits / (hits + misses). Evictions up and hit ratio down: the cache is too small."
+    ],
+    terms: [
+      { t: "Eviction", mem: "Full, so something has to go.", d: "Removing entries to stay within a size limit, chosen by a policy." },
+      { t: "LRU", mem: "Untouched longest, out first.", d: "Least recently used: evicts the entry whose last access is oldest." },
+      { t: "LFU", mem: "Used least often, out first.", d: "Least frequently used: evicts the entry with the fewest accesses, usually with counts that decay." },
+      { t: "TTL", mem: "A use-by date on every entry.", d: "Time to live: how long an entry stays before it expires." },
+      { t: "Negative caching", mem: "Remember the no, briefly.", d: "Storing 'not found' or a failure for a short time so repeated misses do not reach the source." },
+      { t: "Hit ratio", mem: "How often the cache answers.", d: "hits / (hits + misses); with eviction counts, it tells you whether the cache is sized right." }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- wc33 Caching under load (Mercor) */
+  "wc33:0": {
+    cheat: [
+      "Cache-aside: read the cache; on a miss, read the database and fill; on a write, update the database, then delete the key.",
+      "Delete rather than update: deletes are idempotent; concurrent updates can land out of order.",
+      "Database first, then invalidate; the other order lets a reader refill the old value.",
+      "Remaining race: reader reads old row, writer commits and deletes, reader sets old value. It stays until it expires.",
+      "TTL bounds it; a lease (token cancelled by the delete) or a version check stops it.",
+      "Read your own writes: read through to the database for the user who just wrote.",
+      "Say the tolerance: a few seconds is fine for a dashboard, never for a balance or a permission."
+    ],
+    terms: [
+      { t: "Cache-aside", mem: "The app fetches and fills.", d: "The application reads the cache, loads from the source on a miss and fills the cache; writes go to the source and invalidate the key." },
+      { t: "Invalidation", mem: "Throw the old copy away.", d: "Removing or expiring a cached entry because the source changed." },
+      { t: "Lease", mem: "A ticket to write back, cancelled by any delete.", d: "A token handed out on a miss; a set must present it, and a delete in between cancels it, so a late stale set is refused." },
+      { t: "Read-your-writes", mem: "I saved it, so I see it.", d: "The guarantee that a user's own write is visible to that user's next read." },
+      { t: "Idempotent", mem: "Twice is the same as once.", d: "An operation whose repeated application has the same effect as applying it once, like a delete." }
+    ]
+  },
+  "wc33:1": {
+    cheat: [
+      "Stampede: a hot key expires and every request misses together.",
+      "Burst size ≈ request rate × recompute time: 10 per second × 3 s = 30 recomputes.",
+      "Coalesce: one recompute per key; the rest wait.",
+      "Soft TTL serves stale and refreshes in the background; the hard TTL is the limit.",
+      "XFetch refreshes early with a probability that rises as expiry nears.",
+      "Jitter the TTL so entries filled together do not expire together.",
+      "A refresh lock needs its own expiry.",
+      "Facebook's lease throttle: one token per key per 10 s; peak database load fell from 17K/s to 1.3K/s."
+    ],
+    terms: [
+      { t: "Cache stampede", mem: "Everyone runs to the database at once.", d: "Many concurrent misses on one expired key, all recomputing it; also called a thundering herd or dogpile." },
+      { t: "Soft TTL", mem: "Past its best, still served while one refreshes.", d: "An age after which a value is refreshed in the background but still returned, until a hard TTL." },
+      { t: "Stale-while-revalidate", mem: "Answer now, update behind.", d: "Serving the old value while one request fetches the new one." },
+      { t: "TTL jitter", mem: "Shake the use-by dates.", d: "Adding a small random amount to each TTL so expiries spread out instead of arriving together." },
+      { t: "Probabilistic early expiration", mem: "Refresh early, by a coin whose odds rise.", d: "Recomputing before expiry with a probability that grows as expiry nears (XFetch), so one request refreshes ahead of the crowd." }
+    ]
+  },
+  "wc33:2": {
+    cheat: [
+      "In-process: nanoseconds, but one copy per process: N misses, N times the memory, invalidation must reach all.",
+      "Shared cache: one copy, about 0.5 ms away in the same data centre, survives deploys, has its own failures.",
+      "Two tiers: a small local cache with a short TTL in front of the shared one.",
+      "Hot key: one key saturates one node; spread it with a local tier, replicas, or key#0 to key#N.",
+      "Locks across machines: set-if-absent with an expiry, or a lease; a fencing token if a stale holder could still write.",
+      "Connections: a bounded pool, a borrow timeout, never one connection per request."
+    ],
+    terms: [
+      { t: "Local (in-process) cache", mem: "In my own memory, only mine.", d: "A cache inside one process: fastest, but duplicated in every process." },
+      { t: "Shared cache", mem: "One copy, one hop away.", d: "A separate service such as Redis or Memcached that every process reads; consistent across processes at the cost of a network call." },
+      { t: "Hot key", mem: "One key doing most of the work.", d: "A key taking a disproportionate share of traffic, enough to overload the node that holds it." },
+      { t: "Fencing token", mem: "A number that only goes up.", d: "A counter issued with a lock; the store rejects writes carrying an older number, so a holder that lost the lock cannot write." },
+      { t: "Connection pool", mem: "A fixed set of lines, borrowed and returned.", d: "A bounded set of reusable connections; borrowers wait, with a timeout, when all are in use." }
+    ]
+  },
+  "wc33:3": {
+    cheat: [
+      "Load on the source = 1 − hit ratio. At 95%, losing the cache means 1 / 0.05 = 20 times normal load.",
+      "The cache is an optimisation, not a dependency: fall back to the source through a concurrency limit, and time out the cache call.",
+      "Warm new nodes before traffic; restart cache nodes one at a time.",
+      "Negative caching with a short TTL keeps missing keys off the source.",
+      "Source down: serve stale within a cap, or fail fast with a circuit breaker.",
+      "Retries with backoff and jitter; idempotency keys on writes.",
+      "Know two numbers: the hit ratio, and the load the source survives without the cache."
+    ],
+    terms: [
+      { t: "Modal behaviour", mem: "Two modes: cached, and suddenly not.", d: "A system that behaves very differently when the cache is cold or down, because the source was sized for the cached mode." },
+      { t: "Load shedding", mem: "Drop some to save the rest.", d: "Rejecting part of the traffic on purpose so the remaining requests are served." },
+      { t: "Circuit breaker", mem: "Stop calling what keeps failing.", d: "After repeated failures, calls fail immediately for a while instead of waiting on a broken dependency." },
+      { t: "Cache warming", mem: "Fill it before the crowd arrives.", d: "Loading likely keys into a cache before it takes live traffic." },
+      { t: "Backoff with jitter", mem: "Wait longer each time, not in step.", d: "Retrying after growing, randomised delays so clients do not retry in synchronised waves." }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- wc34 Caching LLM calls (Mercor) */
+  "wc34:0": {
+    cheat: [
+      "Key = model and version, prompt version, tools, parameters, normalised input, and tenant when the answer is per-user.",
+      "Versions in the key: a prompt change is a miss, not a purge.",
+      "Temperature above 0 or an LLM judge: a cache freezes one sample. Decide if that is wanted.",
+      "Semantic cache: embedding distance under a threshold counts as a hit; more hits, and false positives.",
+      "Never share across tenants: an input that changes the answer but is not in the key leaks answers.",
+      "Prompt caching is the provider's prefix cache: tools, system, messages; exact match to the breakpoint; 5 min TTL refreshed on use.",
+      "Embeddings: key by content hash and model; re-embed only when the hash changes."
+    ],
+    terms: [
+      { t: "Response cache", mem: "Same question, saved answer.", d: "Your own store of model outputs keyed by everything that determines them." },
+      { t: "Prompt caching", mem: "The provider remembers the start of the prompt.", d: "A provider feature that reuses the processed prefix of a prompt; it saves cost and latency but does not cache the answer." },
+      { t: "Semantic cache", mem: "Close enough counts as a hit.", d: "A cache that returns a stored answer for an input whose embedding is within a threshold of a stored one." },
+      { t: "False positive (cache)", mem: "A hit with the wrong answer.", d: "A semantic match that returns an answer meant for a different question." },
+      { t: "Cache poisoning", mem: "One bad entry served to everyone.", d: "A harmful or wrong response stored under a key that others share, often because an input that changes the response is left out of the key." },
+      { t: "Content hash", mem: "A fingerprint of the text.", d: "A hash of the content used as part of a key, so a change in content means a new key." }
+    ]
+  },
+  "wc34:1": {
+    cheat: [
+      "Every alfred_ cache is per-instance memory; nothing is shared; no Redis.",
+      "Tokens: reused until minutes before expiry; per-user refresh has no lock, so two workers can refresh at once. Fix: a lease or compare-and-set.",
+      "Outlook calendar list: one in-flight request shared by concurrent callers, 30 s TTL, added after Microsoft 503s for too many concurrent calls.",
+      "Some maps expire only on read with no size cap; fix with a bounded LRU.",
+      "The attachment cache does it right: 30 minutes, at most 80 entries, nothing over 300K characters.",
+      "A deliberate negative cache: a failed subscriber lookup caches 'unknown' for 60 s and publishes everything.",
+      "Notes are re-embedded only when a chunk's content hash changes; model calls use prompt caching.",
+      "Confirm which of these you built before you name them."
+    ],
+    terms: [
+      { t: "Compare-and-set", mem: "Write only if it is still what I read.", d: "An atomic update that succeeds only if the current value matches the expected one; a safe way to refresh a shared token." },
+      { t: "Fail open", mem: "When unsure, let it through.", d: "Choosing availability on an error, here publishing every event when the lookup fails." },
+      { t: "Cold start", mem: "A fresh instance knows nothing.", d: "A new serverless instance with empty in-memory caches, so its first requests all miss." }
+    ]
   }
 };

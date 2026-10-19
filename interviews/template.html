@@ -402,6 +402,15 @@ dialog.convo { width: min(1320px, 96vw); height: min(880px, 92vh); max-width: no
 .cv-col { overflow-y: auto; padding: var(--s4) var(--s5) var(--s6); scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
 .cv-col.cv-say { scrollbar-color: var(--muted) transparent; }
 .cv-h { font-size: var(--fs-md); margin: 0 0 var(--s3); }
+.stepsheet { margin: var(--s4) 0 0; padding-top: var(--s2); border-top: var(--hair); max-width: var(--measure); }
+.stepsheet .lab { font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); margin: var(--s3) 0 var(--s1); }
+.stepsheet .mk-list li { margin-bottom: 2px; }
+table.kt { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); line-height: 1.5; }
+table.kt th { text-align: left; font-weight: var(--w-strong); color: var(--muted); padding: var(--s1) var(--s2); border-bottom: var(--hair); }
+table.kt td { padding: var(--s2); border-bottom: var(--hair); vertical-align: top; }
+table.kt .kt-t { font-weight: var(--w-strong); width: 22%; }
+table.kt .kt-m { color: var(--soft); width: 28%; }
+@media (max-width: 640px) { table.kt .kt-m { display: none; } }
 .cv-col .lab, .sbody .lab { font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); margin: var(--s4) 0 var(--s1); }
 .cv-part { font-size: var(--fs-md); margin: var(--s5) 0 var(--s1); padding-top: var(--s3); border-top: var(--hair); }
 .cv-part-lead { color: var(--soft); margin: 0 0 var(--s1); }
@@ -1879,9 +1888,33 @@ details.item > .sbody { padding-left: 0; }
     learn(left, { figs: [], read: pre.concat(isStudy ? (it.res || []) : (it.links || []), it.read || []), sdLinks: it.sdLinks });
     var say = isStudy ? it.say : it.ans;
     if (say || it.out || SAYS.test(it.t || "")) { work.appendChild(mineBox(key, promptOf(it))); }
-    if (say) { work.appendChild(sayToggle(isStudy ? "The idea, in the words you would use" : "What you would say", transcript(Array.isArray(say) ? say : [say], "", ""))); }
+    if (say) { work.appendChild(sayToggle(isStudy ? "The idea, in the words you would use" : "What you would say", transcript(Array.isArray(say) ? say : (say.pts ? [say.lead].concat(say.pts, [say.close]).filter(Boolean) : [say]), "", ""))); }
     if (!work.children.length) { work.remove(); body.classList.add("one"); }
     row.appendChild(body);
+    /* Last in the step: its cheat sheet and key terms (data/sheets.js), under a hairline. */
+    var sh = it.sheet;
+    if (sh && ((sh.cheat && sh.cheat.length) || (sh.terms && sh.terms.length))) {
+      var sx = el("div", "stepsheet");
+      if (sh.cheat && sh.cheat.length) {
+        sx.appendChild(el("div", "lab", "Cheat sheet"));
+        var cl = el("ul", "mk-list");
+        sh.cheat.forEach(function (c) { var li = el("li"); li.innerHTML = c; cl.appendChild(li); });
+        sx.appendChild(cl);
+      }
+      if (sh.terms && sh.terms.length) {
+        sx.appendChild(el("div", "lab", "Key terms"));
+        var tb = el("table", "kt"), hr = el("tr");
+        ["Term", "Remember it by", "What it means"].forEach(function (h) { hr.appendChild(el("th", "", h)); });
+        tb.appendChild(hr);
+        sh.terms.forEach(function (r) {
+          var tr = el("tr");
+          [["kt-t", r.t], ["kt-m", r.mem], ["", r.d]].forEach(function (c) { var td = el("td", c[0]); td.innerHTML = c[1]; tr.appendChild(td); });
+          tb.appendChild(tr);
+        });
+        sx.appendChild(tb);
+      }
+      row.appendChild(sx);
+    }
     return row;
   }
 

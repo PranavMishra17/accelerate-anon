@@ -1250,3 +1250,13 @@ plain muted label. No charter deviation.
 adds a tinted card with a coloured rule, italic text or a font size off the six tokens, and names the
 class to reuse. The 43 existing rules that break these are grandfathered. Proved red on commit 7e02040,
 today's cheat-sheet card. No charter deviation.
+
+**2026-10-19 — Mercor, Applied AI (Enterprise): the loop page and three caching sessions.**
+Round 2 is a 30-minute conversational screen on caching with Sophie Guo, Friday 23 October, 6 PM
+Eastern, no tools. New `interviews/mercor.py` (Overview, Prep, Sessions, Rounds, Mocks), a `LOOPS`
+entry, and wildcard sessions wc32 (the cache code review out loud, the format three candidates
+report), wc33 (stale data, stampedes, many processes, failure) and wc34 (LLM caches, and alfred_'s
+real caches read from the code). Week 5's Caching session is linked from the page as the base, not
+copied. Every new step has its cheat sheet and key terms; loop pages now show a step's sheet at its end
+(read from `data/sheets.js` by `build.py`), and the loop template reads the shaped {lead, pts, close}
+answer. Round 1 (Neel Taneja) is recorded as an outline. No charter deviation: wildcard work.

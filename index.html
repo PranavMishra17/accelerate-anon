@@ -770,7 +770,7 @@
 <script src="private/notes.js"></script>
 <script src="data/streams.js?v=d0b499a4"></script>
 <script src="data/reading.js?v=e143835e"></script>
-<script src="data/sheets.js?v=eabef1a6"></script>
+<script src="data/sheets.js?v=3cd31227"></script>
 <script src="site/res.js?v=c33c7564"></script>
 <script src="data/mcq/base.js?v=5fc7e7ac"></script>
 <script src="data/mcq/week1.js?v=8276998c"></script>
@@ -2312,6 +2312,8 @@
      The wildcard page lists them; a loop's sessions are the wildcard sessions whose
      forWhat starts with the loop's forWhat. */
   var LOOPS = [
+    { id: "mercor", name: "Mercor, Applied AI (Enterprise)", when: "Fri 23 Oct, 6 PM", forWhat: "Mercor",
+      file: "interviews/mercor.html", note: "Round 2: a 30-minute conversational screen on caching with Sophie Guo. No coding tools, no LLMs." },
     { id: "vanguard", name: "Vanguard, Conversational AI", when: "Wed 7 Oct, 3 PM", forWhat: "Vanguard",
       file: "interviews/vanguard.html", note: "Client interview with Vanguard's team, via Mphasis: conversational AI and deep NLP." },
     { id: "commure", name: "Commure, Voice Agents", when: "Mon 5 Oct", forWhat: "Commure",
@@ -2354,8 +2356,222 @@
   var WILDCARD = {
     title: "Wildcard",
     /* One line: the loop in play. Loops that have happened are parked, not described here. */
-    note: "Vanguard, conversational AI client interview (via Mphasis): Friday 2 October, 2 PM. Then Commure, Monday 5 October, and Coframe round 2, Tuesday 6 October.",
+    note: "Mercor, Applied AI (Enterprise): the caching technical screen, Friday 23 October, 6 PM Eastern.",
     sessions: [
+      {
+        id: "wc32", track: "Systems", forWhat: "Mercor, technical screen Fri 23 Oct", len: "50m", est: 50,
+        name: "The cache code review, out loud",
+        blurb: "The screen as candidates report it: a short cached function to review. Assumptions first, then each failure with an example and its fix.",
+        intro: "Mercor's caching screen, as three candidates describe it, hands you a few lines that check a cache, compute or await on a miss, and store the result, then asks what you would say in a code review. This session is that review: what you assume first, then concurrency, memory and failures, in the order the interviewer tends to probe.",
+        steps: [
+          { t: "State your assumptions, then review in a fixed order", m: 15,
+            out: "Someone hands you this function in a code review. What do you assume first, and what is wrong with it?",
+            d: "The function: cache = {}; def get(x): if x in cache: return cache[x]; v = compute(x); cache[x] = v; return v. compute is slow and sometimes fails. One reported version is JavaScript, with await inside a function that is not async and cache.set(key) with no value: bugs before any race. Say what you assume, then walk the same order every time: correctness on one caller, concurrency, memory, errors, staleness, visibility.",
+            pts: [
+              "Assumptions: one process or many; threads, asyncio or both; how slow and costly compute is; whether it is pure (same input, same output); the read-to-write ratio; how stale an answer may be; whether x comes from a user",
+              "One caller: right on a hit and on a miss? Read the code literally first. The reported JavaScript version is broken before any concurrency",
+              "Concurrency: two callers miss the same key at once and both run compute. Twice the cost, and twice the side effect if compute writes anything",
+              "Memory: the dict never evicts, so it grows with every distinct x until the process runs out, and it keeps every value alive",
+              "Errors: if compute raises, nothing is stored and every caller retries at once; if a failure value is stored, it is served forever",
+              "Staleness: nothing expires, so when the source changes the cache is wrong until the process restarts",
+              "Keys: x must be hashable and normalised; unvalidated user input lets anyone fill memory with junk keys",
+              "Visibility: no hit ratio, size or timing, so nobody can tell whether the cache helps"
+            ],
+            where: "PracHub: a candidate's report of this screen (the concurrency code review)",
+            url: "https://prachub.com/interview-experiences/mercor-software-engineer-interview-experience-a-product-focused-recruiter-screen-then-sorting-theory-and-a-concurrency-code-review",
+            ans: { lead: "I'd say what I'm assuming, then go through correctness, concurrency, memory, errors and staleness, with a concrete failure for each.",
+              pts: ["Assumptions: I'd ask whether this runs in one process or across many, threads or asyncio, how expensive compute is, and how stale an answer can be. The fixes depend on those.",
+                    "Concurrency: two requests that miss the same key at the same time both run compute, so the expensive call runs twice, and if it has side effects they happen twice.",
+                    "Memory: nothing is ever evicted, so the dict grows with every new key until the process falls over.",
+                    "Errors: if compute throws, nothing is cached and every caller hits it again at once; there's no timeout either, so a hung call holds everyone.",
+                    "Staleness and visibility: nothing expires, and there's no hit ratio or size metric, so we can't tell if it's helping."],
+              close: "Then I'd fix them in that order: make the miss run once, bound the memory, handle failures, add a TTL and metrics." } },
+          { t: "Two requests miss at once: make compute run once", m: 20,
+            out: "Two requests miss the same key at the same moment. What happens, and how do you make compute run once without slowing every hit?",
+            d: "Check, then act, is two operations, so another caller can slip in between them. A lock fixes it, but where the lock sits decides whether hits stay fast. In CPython one dict get or one dict set is atomic under the GIL; the check and the set together are not. The same race happens in asyncio, at every await.",
+            pts: [
+              "The race: A checks and misses, starts compute; B checks before A stores, misses, computes too",
+              "One lock around the whole function: correct, but every hit queues behind a miss that takes seconds. The lock is too broad",
+              "Lock only the miss and check again inside it: if hit, return; take the lock; if hit now, return; compute; store. That is double-checked locking",
+              "Per-key locks: a slow miss on one key no longer blocks a miss on another. The map of locks needs its own guard and cleanup",
+              "Share the work in flight: the first miss stores a future for x and the others wait on it. Go calls this singleflight; it is also called request coalescing",
+              "asyncio: cache the Task, not the coroutine and not only the result. A coroutine can be awaited once; a Task can be awaited by every caller. Remove it if it fails",
+              "functools.lru_cache keeps its own structure thread-safe, but its docs say the function can run more than once if a second call starts before the first finishes",
+              "Across processes or hosts, a process lock does nothing: use the shared cache's atomic set-if-absent with an expiry, or a lease, so a crashed holder cannot block the key"
+            ],
+            where: "Python docs: functools, lru_cache (the note on calls running more than once); then the discussion on caching coroutines",
+            url: "https://docs.python.org/3/library/functools.html#functools.lru_cache",
+            ans: { lead: "The check and the set aren't atomic together, so I'd lock only the miss, check again inside the lock, and share the in-flight result.",
+              pts: ["The race: both requests check, both miss, both compute. In Python a single dict operation is atomic, but check-then-set isn't.",
+                    "Lock placement: one lock around everything is correct but makes every hit wait behind a slow miss, so I'd lock only on the miss and re-check inside, double-checked locking.",
+                    "Per key: one lock per key, so a slow miss on one key doesn't block the others.",
+                    "In-flight sharing: better still, store a future for the key on the first miss and have everyone else await it. In asyncio that means caching the Task, and dropping it if it fails.",
+                    "Many processes: a process lock doesn't help across machines, so it'd be an atomic set-if-absent with an expiry in the shared cache, or a lease."],
+              close: "So compute runs once per key, hits never take a lock, and a crash can't hold a key forever." } },
+          { t: "Bound the memory, and decide what a failure caches", m: 15,
+            out: "This cache runs for a week in a busy service. What goes wrong with memory and with failures, and what do you change?",
+            d: "An unbounded cache is a slow memory leak, and a cache that stores failures turns one bad call into a week of bad answers. Bound it by count or by bytes, expire entries, and treat failures on purpose.",
+            pts: [
+              "Bound it: a maximum size and an eviction policy. LRU drops the least recently used, LFU the least frequently used; Redis approximates LRU by sampling a few keys",
+              "Bound by bytes when values vary: a thousand 1 KB entries and a thousand 10 MB entries are different caches",
+              "TTL on every entry, so staleness has a limit and dead keys leave",
+              "Do not store an exception as a value. Let the next caller retry, with backoff so a failing source is not hammered",
+              "If failures are frequent and expensive, cache them briefly on purpose: negative caching, with its own short TTL",
+              "In asyncio a failed Task stays failed: remove it from the cache when it raises, or every later caller gets the same exception",
+              "Give compute a timeout, so a hung call releases its lock or its waiters",
+              "Watch it: hit ratio = hits / (hits + misses), size, evictions, compute latency. Evictions rising while the hit ratio falls means the cache is too small"
+            ],
+            where: "Redis docs: key eviction (maxmemory, LRU against LFU, the hit ratio)",
+            url: "https://redis.io/docs/latest/develop/reference/eviction/",
+            ans: { lead: "I'd cap it, expire it, and never let one failure get cached as the answer.",
+              pts: ["Bound: a max size with LRU eviction, or by bytes if values vary a lot.",
+                    "Expiry: a TTL on everything, so stale data and dead keys age out.",
+                    "Failures: don't cache the exception; retry with backoff, and if failures are frequent, cache them briefly with a short TTL on purpose.",
+                    "Timeouts: a timeout on compute, so a hung call doesn't hold its waiters.",
+                    "Metrics: hit ratio, size and evictions, so we know if the size is right."],
+              close: "Then the cache can run for a week without becoming the incident." } }
+        ]
+      },
+
+      {
+        id: "wc33", track: "Systems", forWhat: "Mercor, technical screen Fri 23 Oct", len: "1h", est: 60,
+        name: "Caching under load: stale data, stampedes, failure",
+        blurb: "As the workload grows: the write that leaves a stale value forever, the hot key that expires, many processes, and what happens when the cache or the source fails.",
+        intro: "The brief says correctness, performance and reliability as workloads grow and requests run concurrently. Week 5 gave you placement, keys and TTL against invalidation. This session is what breaks once there are many requests, many processes and a database behind it.",
+        steps: [
+          { t: "The write that leaves a stale value cached forever", m: 15,
+            out: "With cache-aside, how can a stale value end up in the cache forever, and how do you prevent it?",
+            d: "Cache-aside: read the cache; on a miss read the database and fill the cache; on a write, update the database and remove the key. The order of those operations, and a reader that is slow, decide whether old data can win.",
+            pts: [
+              "Delete the key on a write rather than updating it: deletes are idempotent, and two concurrent updates can land in the wrong order",
+              "Write the database first, then invalidate. Invalidate first and a reader can refill the old value before the write commits",
+              "The race that remains: reader R misses and reads the old row; writer W commits and deletes the key; R then stores the old value. It stays until it expires",
+              "A TTL makes 'forever' at most one TTL",
+              "Leases, from Facebook's memcache: a miss gets a token, a delete cancels the token, and a set with a cancelled token is refused, so R's late write is dropped",
+              "Versions: store a version with the value and refuse to overwrite a newer one",
+              "Read your own writes: the user who just saved expects to see it; read through to the database for that user for a moment",
+              "Say the tolerance out loud: stale by a few seconds is fine for a dashboard, never for a balance or a permission"
+            ],
+            where: "Azure Architecture Center: cache-aside pattern; then Facebook, Scaling Memcache (NSDI 2013), section 3.2.1 Leases",
+            url: "https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside",
+            ans: { lead: "A slow reader can put an old value back after the writer deletes it; I'd bound it with a TTL and stop it with a lease or a version check.",
+              pts: ["The pattern: write the database, then delete the key. Delete, not update, because deletes are idempotent.",
+                    "The race: a reader misses and reads the old row, the writer commits and deletes, then the reader sets the old value back, and it stays.",
+                    "Bound it: a TTL means it's wrong for at most one TTL.",
+                    "Stop it: a lease, like Facebook's memcache, where the delete invalidates the reader's token so its late set is refused; or a version on the value.",
+                    "Tolerance: I'd ask how stale is acceptable; for balances or permissions I'd read from the source."],
+              close: "Order of operations plus a TTL handles most of it; leases or versions close the rest." } },
+          { t: "A hot key expires: the stampede, and how to stop it", m: 15,
+            out: "A popular key expires under heavy load. What happens to the database, and what are three ways to stop it?",
+            d: "When a hot key expires, every request misses together and goes to the source. The size of the burst is the request rate times the recompute time: 10 requests a second and a 3 second recompute give 30 recomputes of the same thing.",
+            pts: [
+              "Coalesce: one recompute per key, the rest wait for it (the single-flight from the code review)",
+              "Serve stale while one caller refreshes: a soft TTL starts a background refresh, a hard TTL is the real limit",
+              "Refresh early, at random: XFetch recomputes before expiry with a probability that rises as expiry nears, so one request refreshes ahead of the crowd",
+              "Jitter the TTL: entries filled together expire together; add a few percent at random so expiries spread out",
+              "A refresh lock needs its own expiry, or a holder that dies blocks the key",
+              "Facebook throttled with leases too: one token per key every 10 seconds, the rest wait or take a slightly stale value; peak database queries fell from 17K a second to 1.3K"
+            ],
+            where: "Vattani, Chierichetti and Lowenstein, Optimal Probabilistic Cache Stampede Prevention (VLDB 2015)",
+            url: "https://cseweb.ucsd.edu/~avattani/papers/cache_stampede.pdf",
+            ans: { lead: "Every request misses together and hits the database; I'd coalesce, serve stale while one request refreshes, and jitter the TTLs.",
+              pts: ["The burst: request rate times recompute time. Ten a second and a three-second recompute is thirty identical queries.",
+                    "Coalesce: one recompute per key; everyone else waits on it.",
+                    "Stale while refreshing: a soft TTL triggers a background refresh while the old value is still served.",
+                    "Spread expiries: jitter on TTLs, or refresh early with a probability that rises near expiry.",
+                    "Locks expire: whatever guards the refresh needs a timeout of its own."],
+              close: "The database should see one query per hot key per refresh, not one per request." } },
+          { t: "Many processes and hosts: where the cache lives", m: 15,
+            out: "The service now runs as twenty processes on five machines. What changes about the cache?",
+            d: "A cache in process memory is the fastest and the most duplicated. A shared cache is one copy behind a network hop. Most systems that grow end up with both, and the cache becomes a resource to manage like any other.",
+            pts: [
+              "In-process: nanoseconds, but twenty copies: twenty misses per key, twenty times the memory, and an invalidation has to reach all of them",
+              "Shared (Redis, Memcached): one copy, about half a millisecond away in the same data centre, survives deploys, and needs its own capacity and failure plan",
+              "Two tiers: a small local cache with a short TTL in front of the shared one, for the hottest keys",
+              "Hot key: one key takes a large share of traffic and saturates one cache node; a local tier, replicas, or splitting it into key#0 to key#N spreads it",
+              "Locks across machines: an atomic set-if-absent with an expiry, or a lease; add a fencing token if a holder that lost the lock could still write",
+              "Connections are a resource: a bounded pool, a timeout to borrow one, never a new connection per request"
+            ],
+            where: "AWS Builders' Library: caching challenges and strategies (local against external caches)",
+            url: "https://builder.aws.com/content/3K9TeXp6strMiJ4vhakpRD7BQWO/caching-challenges-and-strategies",
+            ans: { lead: "Twenty in-process caches mean twenty copies to keep in sync, so I'd move to a shared cache with a small local tier for hot keys.",
+              pts: ["Local: fastest, but every process misses separately and invalidation has to reach all of them.",
+                    "Shared: one copy, about half a millisecond away, survives deploys, but it's now a service with its own capacity and failures.",
+                    "Both: a small local cache with a short TTL in front, for hot keys.",
+                    "Locks: a process lock doesn't cross machines; set-if-absent with an expiry, or a lease.",
+                    "Resources: a bounded connection pool with a borrow timeout."],
+              close: "Which one depends on how stale each process may be, and how hot the hottest key is." } },
+          { t: "When the cache or the source fails", m: 15,
+            out: "The cache cluster restarts during peak traffic. What happens, and how should the system behave?",
+            d: "A cache changes how much traffic the source is built for. With a 95% hit ratio the database sees 5% of requests; lose the cache and it sees all of them, 1 / (1 − 0.95) = 20 times its normal load. Design for that moment.",
+            pts: [
+              "The cache is an optimisation, not a dependency: on a cache error, fall back to the source, but with a limit (a semaphore or load shedding) and a timeout on the cache call",
+              "Warm a new cache node before it takes traffic, and restart cache nodes one at a time",
+              "Negative caching: remember 'not found' briefly, with its own shorter TTL, so missing keys do not hit the source every time; DNS does this",
+              "Source down: serve stale if correctness allows, with a cap on how stale; otherwise fail fast with a circuit breaker instead of queueing",
+              "Retries with backoff and jitter, never a tight loop; an idempotency key on anything that writes",
+              "Know your two numbers: the hit ratio, and the load the source survives without the cache"
+            ],
+            where: "AWS Builders' Library, same article: the sections on modal behaviour and negative caching",
+            url: "https://builder.aws.com/content/3K9TeXp6strMiJ4vhakpRD7BQWO/caching-challenges-and-strategies",
+            ans: { lead: "At a 95% hit ratio, losing the cache sends the database twenty times its normal load, so the fallback has to be limited.",
+              pts: ["The jump: the database was sized for 5% of traffic and suddenly gets 100%.",
+                    "Fallback with a limit: go to the source on a cache failure, but through a concurrency limit, shedding the rest.",
+                    "Restarts: warm new nodes and restart one at a time.",
+                    "Source failing: serve stale within a cap, or fail fast behind a circuit breaker; retries with backoff and jitter.",
+                    "Negative caching: cache 'not found' briefly so missing keys don't hammer the source."],
+              close: "A cache should make the system faster, never the only reason it stays up." } }
+        ]
+      },
+
+      {
+        id: "wc34", track: "Systems", forWhat: "Mercor, technical screen Fri 23 Oct", len: "45m", est: 45,
+        name: "Caching LLM calls, and the caches you've run",
+        blurb: "What goes in the key when the expensive call is a model, and the real caches at alfred_ told as stories with what you would fix.",
+        intro: "Mercor Enterprise deploys agents for its customers, and your interviewer works in applied AI. Expect the snippet's compute to become a model call. This session is the key design for LLM and embedding caches, then your own caches at alfred_, so every point has a real example behind it.",
+        steps: [
+          { t: "What goes in the key for an LLM or embedding cache", m: 20,
+            out: "compute(x) is now an LLM call. What goes in the cache key, what must never be cached, and how do you invalidate when the prompt changes?",
+            d: "An LLM cache is only correct if the key holds everything that changes the answer. Two caches get confused: your own response cache, and the provider's prompt cache, which caches a prompt prefix, not an answer.",
+            pts: [
+              "Key = everything that changes the output: model and version, system prompt version, tools, parameters (temperature, max tokens), the normalised input, and the tenant or user when the answer is per-user",
+              "Invalidate by version: put the prompt and model version in the key, so a change is a miss, not a purge",
+              "Temperature above 0, or an LLM judge, gives a new sample each time; a cache freezes one. For evaluations, decide whether that is what you want",
+              "Exact against semantic: a semantic cache matches similar inputs by embedding distance and a threshold; it hits more often but can serve a wrong answer, and similar questions from two users may need different answers",
+              "Never share across tenants: anything that changes the answer but is not in the key serves one customer's answer to another; web cache poisoning is the same mistake",
+              "Provider prompt caching: the provider reuses a cached prefix (Anthropic orders it tools, system, messages; a hit needs an exact match up to the breakpoint; 5 minute TTL, refreshed on use). Stable text first, timestamps after the breakpoint",
+              "Embeddings: key by a hash of the content and the embedding model; re-embed only when the hash changes"
+            ],
+            where: "Anthropic docs: prompt caching; then GPTCache's README on semantic caching and its false positives",
+            url: "https://platform.claude.com/docs/en/build-with-claude/prompt-caching",
+            ans: { lead: "The key has to include everything that changes the answer, the model, prompt version, parameters, input and tenant, or the cache serves wrong answers fast.",
+              pts: ["The key: model and version, prompt version, tools, temperature and other parameters, the normalised input, and the tenant if the answer is per-user.",
+                    "Invalidation: versions in the key, so changing the prompt is just a miss.",
+                    "What not to cache: per-user or sensitive answers across tenants, and anything where you want a fresh sample, like an eval run at temperature above zero.",
+                    "Semantic caching: more hits, but false positives, so I'd only use it with a tight threshold and an exact-match fallback.",
+                    "Prompt caching: separately, I put the stable system prompt and tools first so the provider's prefix cache hits."],
+              close: "Exact-match on a versioned key first; semantic only where a near-miss answer is acceptable." } },
+          { t: "Your caches at alfred_, as stories", m: 25,
+            out: "Tell me about a caching problem you've dealt with in production.",
+            d: "Read from the alfred_ code on 19 October 2026 (the edge-function checkout read was last updated 7 August, so confirm anything you will name, and which of these you built yourself). Every cache below lives in one instance's memory; nothing is shared across instances, and there is no Redis. Tell each as: what it caches, the risk, the fix.",
+            pts: [
+              "Token reuse: OAuth access tokens are reused until a few minutes before expiry. Per-user mail tokens refresh with no lock, so two workers can refresh the same token at once. Fix: a per-user lease, or a compare-and-set on the stored token",
+              "Single-flight, in practice: the Outlook calendar list shares one in-flight request between concurrent callers, with a 30 second TTL, added because concurrent calls hit Microsoft's concurrency limit and came back as 503s",
+              "Unbounded maps: some per-instance maps (feature flags per user, 60 seconds; thread metadata, 5 minutes) only remove an entry when it is read again, with no size cap, so a warm instance grows. Fix: a bounded LRU",
+              "One done right: the attachment cache keeps 30 minutes, at most 80 entries, and skips anything over 300K characters",
+              "A deliberate negative cache: if the subscriber lookup fails, 'unknown' is cached for 60 seconds and every event is published. Availability over precision, on purpose",
+              "Embedding skip: notes are re-embedded only when a chunk's content hash changes",
+              "Prompt caching on the agent's model calls: stable system prompt and tools first, marked cacheable, 5 minute TTL",
+              "What is not there: no shared cache across instances. Say when you would add one: shared tokens and rate limits across instances"
+            ],
+            ans: { lead: "The one I'd tell is the Outlook calendar: concurrent requests were hitting Microsoft's concurrency limit, so we share one in-flight request between callers.",
+              pts: ["The problem: several parts of the app asked for the same user's calendar list at the same moment, and Microsoft started returning 503s for too many concurrent requests.",
+                    "The fix: the first caller makes the request and stores the promise; anyone who asks in the meantime awaits the same one, and the result is kept for 30 seconds.",
+                    "What I'd still fix: our per-user mail tokens refresh without a lock, so two workers can refresh the same token at once; I'd add a lease or a compare-and-set.",
+                    "And memory: a couple of our in-memory maps only expire on read with no size cap, so I'd make them bounded LRUs, like the attachment cache already is."],
+              close: "It's all per-instance memory today; if we needed shared tokens or rate limits across instances, that's when I'd add a shared cache." } }
+        ]
+      },
       {
         id: "wc19", track: "Systems", forWhat: "Commure, second round", len: "2h", est: 120,
         name: "How a voice call reaches an agent",
