@@ -1698,3 +1698,59 @@ window.SHEETS = {
     ]
   }
 };
+
+/* Drawn cheat sheets: `vis` blocks per step (see site/sheet.js for the kinds). A step with `vis` shows it
+   in place of its `cheat` lines. Written by hand, a session at a time. */
+(function () {
+  var V = {
+    "w3a:0": [
+      { rule: "Two ways to keep sorted keys on disk: append now and merge later, or rewrite the page where the key lives." },
+      { title: "An LSM-tree write", flow: ["write", "write-ahead log", "memtable (memory)", "flush: sorted SSTable", "compaction merges files"],
+        note: "Every step is sequential, so writes are cheap. A read checks the memtable, then SSTables newest first; a Bloom filter skips files that cannot hold the key." },
+      { title: "Which side is cheap", vs: { cols: ["LSM-tree", "B-tree"], rows: [
+        ["Writes", "cheap: sequential appends", "random I/O: find the page, rewrite it"],
+        ["Reads", "may check several files", "one walk, root to leaf, about log n pages"],
+        ["Extra writes", "compaction rewrites data", "page plus write-ahead log"],
+        ["Used by", "Cassandra, RocksDB", "Postgres, MySQL"],
+        ["Pick it for", "write-heavy, append-only", "read-heavy, with updates"]] } }
+    ],
+    "w3a:1": [
+      { title: "The latency ladder: one significant figure", ladder: [
+        ["100 ns", "memory reference", ""],
+        ["100 µs", "SSD random read", "× 1,000"],
+        ["0.5 ms", "round trip, same data centre", "× 5"],
+        ["50 ms", "object storage GET", "× 100: network plus the service's work"],
+        ["150 ms", "round trip across an ocean", ""]] },
+      { title: "Sizes and rates to do in your head", calc: [
+        ["1 KB × 10<sup>6</sup>", "1 GB"],
+        ["1 KB × 10<sup>9</sup>", "1 TB"],
+        ["1 day", "86,400 s ≈ 10<sup>5</sup> s"],
+        ["10<sup>6</sup> a day", "≈ 12 a second"]] }
+    ],
+    "w3a:2": [
+      { rule: "Object storage keeps whole objects by key: put, get, delete, list a prefix. No query engine, no partial update." },
+      { split: [["Belongs there", ["written once, never updated", "read rarely, or in bulk", "traces, logs, media, backups, checkpoints", "about 2 cents a GB-month"]],
+                ["Wrong place", ["filter or join in real time", "small, frequent updates", "transactions", "anything you must query, not fetch"]]] },
+      { title: "The usual shape", flow: ["client", "presigned URL", "object storage: the payload", "database row: key + fields you filter on"],
+        note: "Large uploads go straight from the client in parts (multipart upload), never through your servers." }
+    ],
+    "w3a:3": [
+      { title: "The arithmetic, out loud", calc: [
+        ["10 KB × 10<sup>8</sup> a day", "10<sup>12</sup> B = 1 TB a day"],
+        ["1 TB × 30", "30 TB a month"],
+        ["30,000 GB × $0.02", "≈ $600 a month to hold"],
+        ["10<sup>8</sup> / 10<sup>5</sup> s", "≈ 1,000 writes a second (1,160)"],
+        ["30 TB × 12", "360 TB after a year"]] },
+      { title: "Retention is a decision", flow: ["hot: last 30 days, queryable", "cold tier", "delete when it stops helping"],
+        note: "Keeping everything forever is still a decision, one nobody made on purpose." }
+    ],
+    "w3a:4": [
+      { rule: "Holding a terabyte a day is cheap. Querying it is where the cost hides." },
+      { split: [["With a metadata store", ["a small table: scenario, time, pass or fail, object key", "query the table first", "fetch only the objects it points to"]],
+                ["Without one", ["every question scans the objects", "a terabyte for each day you look at", "object storage has no index"]]] },
+      { title: "The answer, in order", flow: ["volume: 1 TB a day, 30 a month", "cost: about $600 a month", "where: object storage", "retention: 30 days hot", "if queried: add the index"],
+        note: "For analytics over the payloads: a columnar format (Parquet) and an engine that reads it (Athena, BigQuery)." }
+    ]
+  };
+  for (var k in V) { if (window.SHEETS[k]) { window.SHEETS[k].vis = V[k]; } }
+})();

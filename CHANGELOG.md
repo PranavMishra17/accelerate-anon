@@ -1275,3 +1275,11 @@ Pranav found the bulleted list and three-column table plain. Same content, no cl
 renderer (`site/sheet.js`, `site/sheet.css`) for the tracker and the loop pages. The cheat sheet is a
 grid with each line's head (before its first colon) in a left column and the point on the right; the
 key terms are a two-column list, term and hook on one line, definition beneath. No charter deviation.
+
+**2026-10-19 — Drawn cheat sheets (Storage first) and key terms as notes.**
+Pranav: the sheet still read as text written down. A step's cheat sheet can now be drawn from typed
+blocks in `data/sheets.js` (`vis`): a rule in large type, a flow as a stepper, a ladder of values, the
+arithmetic as aligned equations, a side-by-side comparison, a fits/breaks split, code with numbered
+pins, and timeline lanes; `site/sheet.js` draws them on the tracker and the loop pages. Week 3's
+Storage session (w3a) is drawn by hand as the reference; other steps keep their lines until drawn.
+Key terms are small notes: the term as a tag, its hook, then the definition. No charter deviation.

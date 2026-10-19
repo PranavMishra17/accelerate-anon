@@ -1890,7 +1890,7 @@ details.item > .sbody { padding-left: 0; }
     var sh = it.sheet;
     if (sh && ((sh.cheat && sh.cheat.length) || (sh.terms && sh.terms.length))) {
       var sx = el("div", "stepsheet");
-      if (sh.cheat && sh.cheat.length) { sx.appendChild(el("div", "lab", "Cheat sheet")); sx.appendChild(Sheet.cheat(sh.cheat)); }
+      if (sh.cheat && sh.cheat.length) { sx.appendChild(el("div", "lab", "Cheat sheet")); sx.appendChild(Sheet.cheat(sh)); }
       if (sh.terms && sh.terms.length) { sx.appendChild(el("div", "lab", "Key terms")); sx.appendChild(Sheet.terms(sh.terms)); }
       row.appendChild(sx);
     }

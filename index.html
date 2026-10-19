@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="site/tokens.css?v=0e3b75d2">
 <link rel="stylesheet" href="site/nav.css?v=2ebfb65e">
 <link rel="stylesheet" href="site/res.css?v=a9aa3a2d">
-<link rel="stylesheet" href="site/sheet.css?v=c0b47e17">
+<link rel="stylesheet" href="site/sheet.css?v=d815a52b">
 <script src="private/site.js"></script>
 <script src="site/nav.js?v=e86e0abd" defer></script>
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
@@ -764,9 +764,9 @@
 <script src="private/notes.js"></script>
 <script src="data/streams.js?v=d0b499a4"></script>
 <script src="data/reading.js?v=e143835e"></script>
-<script src="data/sheets.js?v=3cd31227"></script>
+<script src="data/sheets.js?v=c4520f88"></script>
 <script src="site/res.js?v=c33c7564"></script>
-<script src="site/sheet.js?v=f03a0b85"></script>
+<script src="site/sheet.js?v=6d4a631f"></script>
 <script src="data/mcq/base.js?v=5fc7e7ac"></script>
 <script src="data/mcq/week1.js?v=8276998c"></script>
 <script src="data/mcq/week2.js?v=c99169f7"></script>
@@ -9101,7 +9101,7 @@
     if (sh && ((sh.cheat && sh.cheat.length) || (sh.terms && sh.terms.length))) {
       var shb = el("div", "cheat");
       if (sh.cheat && sh.cheat.length) {
-        section(shb, "Cheat sheet", Sheet.cheat(sh.cheat));
+        section(shb, "Cheat sheet", Sheet.cheat(sh));
       }
       if (sh.terms && sh.terms.length) { section(shb, "Key terms", termsTable(sh.terms)); }
       dc.appendChild(shb);
