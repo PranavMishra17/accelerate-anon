@@ -1260,3 +1260,12 @@ real caches read from the code). Week 5's Caching session is linked from the pag
 copied. Every new step has its cheat sheet and key terms; loop pages now show a step's sheet at its end
 (read from `data/sheets.js` by `build.py`), and the loop template reads the shaped {lead, pts, close}
 answer. Round 1 (Neel Taneja) is recorded as an outline. No charter deviation: wildcard work.
+
+**2026-10-19 — The tracker no longer hangs on page loads; one server instead of two.**
+Every page took a second or two to become usable. Cause: the study server listened on 127.0.0.1
+only, browsers try ::1 first for "localhost", and each new connection waited about 300 ms for that to
+fail (measured: 264 to 308 ms over localhost against 2 ms over 127.0.0.1; DOMContentLoaded 2.0 s on
+the home page). `tools/serve.py` now listens on both loopbacks: requests take 4 to 5 ms and a cold home
+load 0.7 s. It also serves the local AI Engineering from Scratch clone under `/course/` and pulls it
+once at start, so `study.cmd` starts one server, not a course server and an update window as well.
+No charter deviation.

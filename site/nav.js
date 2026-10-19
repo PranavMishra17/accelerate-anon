@@ -92,14 +92,14 @@
   }
 })();
 
-/* AI Engineering from Scratch lessons load from raw.githubusercontent.com, which some networks block. When a
-   local copy of the course is running (study.cmd serves a clone on http://localhost:8010), lesson links open
+/* AI Engineering from Scratch lessons load from raw.githubusercontent.com, which some networks block. When the
+   study server has a local clone of the course (tools/serve.py serves it under /course/), lesson links open
    there instead: probed once at load, rewritten at click time, so every page and every rendered list is covered.
    Off on the public site. */
 (function () {
-  if (window.SITE_PUBLIC || !window.fetch) { return; }
-  var LOCAL = "http://localhost:8010/site/lesson.html", up = false;
-  fetch("http://localhost:8010/site/data.js", { mode: "no-cors", cache: "no-store" }).then(function () { up = true; }, function () {});
+  if (window.SITE_PUBLIC || !window.fetch || location.protocol === "file:") { return; }
+  var LOCAL = location.origin + "/course/site/lesson.html", up = false;
+  fetch("/course/site/data.js", { method: "HEAD", cache: "no-store" }).then(function (r) { up = r.ok; }, function () {});
   document.addEventListener("click", function (e) {
     var a = e.target && e.target.closest && e.target.closest('a[href^="https://aiengineeringfromscratch.com/lesson"]');
     if (!a || !up) { return; }

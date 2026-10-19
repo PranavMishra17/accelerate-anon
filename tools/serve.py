@@ -3,14 +3,27 @@
 python tools/serve.py [port]   (default 8000; study.cmd runs it)
 
 Python's http.server answers every request with the whole file, and browsers cannot seek in a video served that
-way. This adds byte ranges (206 Partial Content) and nothing else."""
-import os, re, subprocess, sys
+way. This adds byte ranges (206 Partial Content). It also:
+- listens on both loopbacks, 127.0.0.1 and ::1. Browsers try ::1 first for "localhost"; with only 127.0.0.1 bound,
+  every new connection waited about 300 ms for that to fail, a second or two on every page load.
+- serves a local clone of AI Engineering from Scratch under /course/ (E:/ai-engineering-from-scratch, pulled once
+  at start), so there is no second server."""
+import os, re, socket, subprocess, sys, threading
 from urllib.parse import parse_qs, urlparse
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+COURSE = os.path.normpath(os.path.join(ROOT, "..", "..", "ai-engineering-from-scratch"))
+
+
 class RangeHandler(SimpleHTTPRequestHandler):
+    def translate_path(self, path):
+        if path.startswith("/course/") and os.path.isdir(COURSE):
+            return SimpleHTTPRequestHandler.translate_path(self, path[len("/course"):]).replace(self.directory, COURSE, 1)
+        return super().translate_path(path)
+
     def do_GET(self):
         # /__reveal?f=<name>: select a video in Explorer. Only files in media/videos, by bare name.
         u = urlparse(self.path)
@@ -71,7 +84,17 @@ class RangeHandler(SimpleHTTPRequestHandler):
         super().end_headers()
 
 
+class V6Server(ThreadingHTTPServer):
+    address_family = socket.AF_INET6
+
+
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
-    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    ThreadingHTTPServer(("127.0.0.1", port), partial(RangeHandler, directory=root)).serve_forever()
+    handler = partial(RangeHandler, directory=ROOT)
+    if os.path.isdir(os.path.join(COURSE, ".git")):   # quietly bring the course clone up to date
+        subprocess.Popen(["git", "-C", COURSE, "pull", "--ff-only", "--quiet"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:   # loopback only, both families
+        threading.Thread(target=V6Server(("::1", port), handler).serve_forever, daemon=True).start()
+    except OSError:
+        pass   # no IPv6 loopback: 127.0.0.1 alone still works
+    ThreadingHTTPServer(("127.0.0.1", port), handler).serve_forever()
