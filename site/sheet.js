@@ -57,7 +57,11 @@
       t.appendChild(hr);
       b.vs.rows.forEach(function (r) {
         var tr = el("tr");
-        r.forEach(function (c, i) { tr.appendChild(el(i ? "td" : "th", "", c)); });
+        r.forEach(function (c, i) {
+          if (!i) { tr.appendChild(el("th", "", c)); return; }
+          var m = /^(yes|no)(?![a-z])[:,]?\s*(.*)$/i.exec(c);
+          tr.appendChild(el("td", "", m ? '<span class="sv-' + (m[1].toLowerCase() === "yes" ? "y" : "n") + '">' + (m[1].toLowerCase() === "yes" ? "✓" : "✕") + "</span>" + (m[2] ? '<span class="sv-why">' + m[2] + "</span>" : "") : c));
+        });
         t.appendChild(tr);
       });
       return t;
@@ -91,6 +95,16 @@
       });
       w.appendChild(notes);
       return w;
+    },
+    parts: function (b) {
+      var p = el("div", "sv-parts");
+      b.parts.forEach(function (x) {
+        var c = el("div", "sv-part" + (x[2] ? " sv-hot" : ""));
+        c.appendChild(el("b", "", x[0]));
+        if (x[1]) { c.appendChild(el("span", "", x[1])); }
+        p.appendChild(c);
+      });
+      return p;
     },
     lanes: function (b) {
       var l = el("div", "sv-lanes");

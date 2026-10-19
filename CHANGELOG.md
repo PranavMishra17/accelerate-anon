@@ -1283,3 +1283,11 @@ arithmetic as aligned equations, a side-by-side comparison, a fits/breaks split,
 pins, and timeline lanes; `site/sheet.js` draws them on the tracker and the loop pages. Week 3's
 Storage session (w3a) is drawn by hand as the reference; other steps keep their lines until drawn.
 Key terms are small notes: the term as a tag, its hook, then the definition. No charter deviation.
+
+**2026-10-19 — Mercor sessions drawn; notes in each page's own colours.**
+The key-term notes mixed a fixed yellow into the page, which went olive on the dark loop pages; they now
+tint from the page's accent in both themes. All nine Mercor steps (wc32 to wc34) are drawn: the
+snippet with each problem pinned to its line, the two-request race and the stale write as timelines,
+the fixes as a tick-and-cross comparison, the burst and the 20x load as arithmetic, the LLM cache key
+taken apart, and alfred_'s caches as a what/risk/fix grid. New block: `parts` (a key's anatomy).
+No charter deviation.

@@ -1754,3 +1754,90 @@ window.SHEETS = {
   };
   for (var k in V) { if (window.SHEETS[k]) { window.SHEETS[k].vis = V[k]; } }
 })();
+
+/* Drawn sheets for the Mercor sessions (wc32 to wc34). */
+(function () {
+  var V = {
+    "wc32:0": [
+      { rule: "Say what you assume, then walk the same order every time: one caller, concurrency, memory, errors, staleness, visibility." },
+      { title: "The snippet, with each problem pinned to its line",
+        code: "cache = {}\ndef get(x):\n    if x in cache:\n        return cache[x]\n    v = compute(x)\n    cache[x] = v\n    return v",
+        pins: [[1, "never evicts: grows with every new x, keeps every value alive"],
+               [3, "check, then act: a second caller can miss in the gap"],
+               [5, "slow and fallible: no timeout; if it raises, every caller retries at once"],
+               [6, "no expiry: once the source changes, wrong until restart"]] },
+      { title: "Ask before you judge", parts: [["process?", "one or many"], ["threads?", "or asyncio"], ["compute", "cost, pure?"], ["reads : writes", "ratio"], ["staleness", "allowed?"], ["x", "from a user?"]] }
+    ],
+    "wc32:1": [
+      { title: "The race, in time", lanes: [
+          ["A", [["check: miss", "plain"], ["compute (3 s)", "hot", "3"], ["set", "plain"]]],
+          ["B", [["check: miss", "plain", "", "48px"], ["compute again", "hot", "3"], ["set", "plain"]]]],
+        note: "B checks before A has stored. One dict get or set is atomic under the GIL; the check and the set together are not." },
+      { title: "The fixes, compared", vs: { cols: ["Correct", "Hits stay fast", "Runs once", "Across hosts"], rows: [
+          ["One lock around all", "yes", "no: hits wait behind a slow miss", "yes", "no"],
+          ["Lock the miss, check again", "yes", "yes", "yes", "no"],
+          ["Per-key lock", "yes", "yes, and keys don't block each other", "yes", "no"],
+          ["Share the in-flight future", "yes", "yes", "yes: everyone awaits one", "no"],
+          ["Set-if-absent with expiry", "yes", "yes", "yes", "yes"]] } },
+      { title: "In asyncio", code: "inflight = {}\ndef get(x):\n    if x not in inflight:\n        inflight[x] = asyncio.ensure_future(compute(x))\n    return inflight[x]   # every caller awaits the same Task",
+        pins: [[4, "cache the Task, not the coroutine: a coroutine can be awaited once"], [5, "if it fails, remove it, or every caller gets the same exception"]] }
+    ],
+    "wc32:2": [
+      { title: "A week in a busy service", split: [["Without a bound", ["memory grows until the process dies", "one failure cached is served all week", "a hung compute holds its waiters", "nobody knows the hit ratio"]],
+                ["With one", ["max size, LRU or by bytes", "TTL on every entry", "failures not cached, or briefly on purpose", "timeout on compute; metrics on hits, size, evictions"]]] },
+      { title: "Is it sized right?", calc: [["hit ratio", "hits / (hits + misses)"], ["evictions ↑, hit ratio ↓", "too small"], ["hit ratio flat, memory ↑", "too big, or keys never reused"]] }
+    ],
+    "wc33:0": [
+      { title: "How the old value wins", lanes: [
+          ["Reader", [["miss", "plain"], ["reads old row", "plain", "2"], ["", "gap", "2"], ["sets OLD value", "hot", "2"]]],
+          ["Writer", [["", "gap", "2", "40px"], ["commits new row", "done", "2"], ["deletes key", "done"]]]],
+        note: "The reader's late set lands after the delete. The stale value stays until it expires." },
+      { title: "What stops it", vs: { cols: ["What it does", "Cost"], rows: [
+          ["TTL", "'forever' becomes at most one TTL", "more misses"],
+          ["Write DB, then delete", "deletes are idempotent; order matters", "one round trip"],
+          ["Lease", "a delete cancels the reader's token; the late set is refused", "a token per miss"],
+          ["Version", "never overwrite a newer version", "a version on every value"]] } }
+    ],
+    "wc33:1": [
+      { rule: "A hot key expires and every request misses at once." },
+      { title: "How big the burst is", calc: [["burst", "request rate × recompute time"], ["10 / s × 3 s", "30 identical recomputes"], ["Facebook, with leases", "17K/s peak → 1.3K/s"]] },
+      { title: "Four ways out", flow: ["coalesce: one recompute per key", "serve stale, refresh behind (soft TTL)", "refresh early at random (XFetch)", "jitter TTLs so expiries spread"],
+        note: "Any lock that guards a refresh needs its own expiry." }
+    ],
+    "wc33:2": [
+      { title: "Where the cache lives", vs: { cols: ["In-process", "Shared (Redis)", "Both"], rows: [
+          ["Speed", "nanoseconds", "about 0.5 ms", "local hit, else shared"],
+          ["Copies", "one per process", "one", "small local + one"],
+          ["Invalidation", "must reach every process", "one place", "short local TTL"],
+          ["Survives a deploy", "no", "yes", "shared part does"],
+          ["Watch for", "N misses per key", "hot key on one node", "staleness of the local copy"]] } },
+      { title: "Locks and connections across machines", parts: [["SET key NX", "atomic set-if-absent"], ["EX 30", "the lock expires"], ["fencing token", "rejects a stale holder"], ["pool max", "bounded connections"], ["borrow timeout", "never wait forever"]] }
+    ],
+    "wc33:3": [
+      { title: "What the source suddenly sees", ladder: [["5%", "of traffic, with a 95% hit ratio", "what the database is sized for"], ["100%", "when the cache is cold or down", "1 / (1 − 0.95) = 20× the load"]] },
+      { title: "Behave on purpose", flow: ["cache error", "fall back to the source", "through a concurrency limit", "shed the rest", "serve stale if allowed"],
+        note: "Warm new cache nodes before traffic, restart them one at a time; negative-cache 'not found' briefly; retry with backoff and jitter." }
+    ],
+    "wc34:0": [
+      { title: "Anatomy of the key", parts: [["model@version", "which model"], ["prompt v7", "a change is a miss"], ["tools", "hash of definitions"], ["temp, max_tokens", "parameters"], ["normalised input", "the question"], ["tenant", "never share across", true]] },
+      { split: [["Safe to cache", ["temperature 0, versioned key", "per-tenant key for per-user answers", "embeddings keyed by content hash and model", "exact match first"]],
+                ["Careful", ["temperature above 0: freezes one sample", "LLM judge in evals: hides variance", "semantic match: false positives", "anything that changes the answer but isn't in the key"]]] },
+      { title: "Two different caches", vs: { cols: ["Your response cache", "Provider prompt caching"], rows: [
+          ["Stores", "the answer", "the processed prompt prefix"],
+          ["Hit needs", "the same key", "an exact prefix: tools, system, messages"],
+          ["Lives", "as long as you set", "about 5 minutes, refreshed on use"],
+          ["Saves", "the whole call", "input cost and latency"]] } }
+    ],
+    "wc34:1": [
+      { title: "Your caches at alfred_: what, the risk, the fix", vs: { cols: ["What it does", "Risk", "Fix or point"], rows: [
+          ["Outlook calendar", "one in-flight request shared, 30 s TTL", "it was added after Microsoft 503s", "single-flight, in production"],
+          ["Mail tokens", "reused until minutes before expiry", "two workers refresh at once, no lock", "a lease or compare-and-set"],
+          ["Per-user flag maps", "60 s TTL, expire only on read", "no size cap: grows", "a bounded LRU"],
+          ["Attachments", "30 min, at most 80, skip > 300K chars", "none", "the one done right"],
+          ["Subscriber lookup", "on failure, caches 'unknown' 60 s", "publishes everything", "fail open, on purpose"],
+          ["Notes and model calls", "re-embed only on content-hash change; prompt caching", "none", "cost and latency"]] },
+        note: "All per-instance memory; no Redis. Confirm which you built before you name them." }
+    ]
+  };
+  for (var k in V) { if (window.SHEETS[k]) { window.SHEETS[k].vis = V[k]; } }
+})();
