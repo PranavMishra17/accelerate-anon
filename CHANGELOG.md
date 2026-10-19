@@ -1232,3 +1232,8 @@ now has a cheat sheet and key terms in `data/sheets.js`, written in parallel fro
 content against week 3 as the reference, then checked: every key matches a real step, no em dashes,
 and the backpropagation numbers recomputed. A session's key-terms table now also takes study items
 when a session has them. No charter deviation.
+
+**2026-10-18 — Week 5 gets cheat sheets and key terms.**
+Caching, Probability and the source-filter model: every step has its cheat sheet and key terms, written
+in parallel against week 3 and checked (keys match the steps, figures recomputed, no em dashes).
+Milestone 1 is now complete: 80 steps across weeks 1 to 5. No charter deviation.

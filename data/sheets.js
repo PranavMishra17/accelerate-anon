@@ -1273,5 +1273,255 @@ window.SHEETS = {
       { t: "OCR error", mem: "The scan misread.", d: "A mistake in text extracted from scanned evidence, which can make a correct value look wrong or the reverse." },
       { t: "Judgment attribute", mem: "No fact to check.", d: "An attribute that depends on judgment rather than a checkable fact, so code cannot verify it by matching." }
     ]
+  },
+
+  /* ---------------------------------------------------------------- w5a Caching, then putting it together */
+  "w5a:0": {
+    cheat: [
+      "A leader takes the writes and copies them to followers, which serve reads.",
+      "The copy arrives a moment late. That delay is replication lag.",
+      "Read your own write from a lagging follower and you can get stale data, with no cache anywhere.",
+      "Read-your-writes: a user immediately sees their own write, even when reads come from a lagging replica.",
+      "Monotonic reads: a user never sees data go backwards in time. Consistent prefix reads: writes appear in the order they happened.",
+      "Eventual consistency: replicas converge if no new writes arrive. It gives no bound on how long that takes, so it cannot say how stale a read is.",
+      "A cache adds a second, independent source of staleness on top of this one.",
+      "Skip leader election, multi-leader conflicts and leaderless replication for this pass."
+    ],
+    terms: [
+      { t: "Replication lag", mem: "The copy arrives late.", d: "The delay between a write landing on the leader and that write becoming visible on a follower." },
+      { t: "Leader", mem: "The one that takes writes.", d: "The replica that accepts writes and sends them on to the followers." },
+      { t: "Follower", mem: "Reads from the copy.", d: "A replica that applies the leader's writes and serves reads, so it can be slightly behind." },
+      { t: "Read-your-writes", mem: "See what you just did.", d: "The guarantee that a user immediately sees their own write, even when reads are served from a lagging replica." },
+      { t: "Eventual consistency", mem: "Gets there, no deadline.", d: "Replicas converge given enough time with no new writes. It makes no promise about how long that takes." },
+      { t: "Monotonic reads", mem: "Time never runs backwards.", d: "A guarantee that a user who has seen newer data will not later read older data from another replica." }
+    ]
+  },
+  "w5a:1": {
+    cheat: [
+      "A cache is a copy kept close to the reader. It is staleness you choose to accept for speed.",
+      "Placement: the cache sits between the request path and whatever is expensive to recompute.",
+      "Key: exactly what makes a result reusable. User plus query, so one user's results never reach another.",
+      "Too broad a key merges requests that differ; too narrow a key never gets a hit.",
+      "TTL: a bet that staleness up to a bounded window is acceptable. It costs nothing on the write path.",
+      "Explicit invalidation: a promise, kept on every write path, to clear the entries that write affects.",
+      "Invalidation fails silently: a missed path serves wrong answers until something else clears them, and a later write path can break it unseen.",
+      "Settle in this order: placement, key, staleness window, then the invalidation rule."
+    ],
+    terms: [
+      { t: "Cache-aside", mem: "Look, miss, fetch, fill.", d: "The application checks the cache first, and on a miss reads the source and stores the result in the cache." },
+      { t: "Cache key", mem: "What counts as the same request.", d: "The value that identifies a cached entry. It decides which requests share a result." },
+      { t: "TTL", mem: "An expiry timer.", d: "Time to live: an entry is dropped after a fixed window. It bounds staleness by the clock, not by writes." },
+      { t: "Explicit invalidation", mem: "Clear it when it changes.", d: "Removing or updating cached entries as part of every write that changes the underlying data." },
+      { t: "Staleness window", mem: "How wrong, for how long.", d: "The span of time during which a cached answer may differ from the source and still be acceptable." },
+      { t: "Hot key", mem: "One entry everyone wants.", d: "A single cached key that receives a disproportionate share of requests, so it becomes a load point of its own." }
+    ]
+  },
+  "w5a:2": {
+    cheat: [
+      "Question: a memory assistant caches vector-search results. A user adds a memory. What happens to the cache?",
+      "Where it sits: in front of the vector search step.",
+      "Key: user id plus the query, so one user's results never leak into another's.",
+      "Rule: explicit invalidation, not TTL. A write for that user clears their cached searches at once.",
+      "Why not TTL: the window would let the assistant answer from a world that no longer exists. The product's promise is that it remembers.",
+      "What you give up: cache effectiveness right after every write. Write then search is a guaranteed miss.",
+      "Operating cost: every write path must honour the rule, including ones added later by someone unaware of the cache.",
+      "The tradeoff is the answer, not the fact that a cache exists."
+    ],
+    terms: [
+      { t: "Scoped invalidation", mem: "Clear one user's shelf.", d: "Invalidating only the entries belonging to the user who wrote, so the cost stays small and other users keep their hits." },
+      { t: "Guaranteed miss", mem: "Write, then search, then pay.", d: "A search that must go to the source because the write just cleared its cached result." },
+      { t: "Write path", mem: "Every door that changes data.", d: "Any code that changes the underlying data. Each one must carry out the invalidation rule." },
+      { t: "Four-part answer", mem: "Where, key, rule, cost.", d: "The shape of a cache answer: where it sits, what the key is, the invalidation rule, and what you give up." },
+      { t: "Read-your-writes (cache)", mem: "It remembers what it was told.", d: "In this answer, the guarantee that a search right after a write reflects that write. A stale cache breaks it." }
+    ]
+  },
+  "w5a:3": {
+    cheat: [
+      "This step is a performance: five minutes, out loud, no notes, no product names. The recording is the artifact.",
+      "Start with rate: units per second, size of each, and even or bursty. Bursts need headroom an average hides.",
+      "Bound the queue on purpose. An unbounded queue hides overload until memory runs out, then fails all at once.",
+      "Backpressure pushes the limit upstream so the producer slows. If it cannot, shed load deliberately.",
+      "Partition by a key you can defend, and assume skew. Real usage follows a power law, so plan for the hot partition.",
+      "At this scale a one-in-a-million failure happens about a hundred times a day. Partial failure is normal.",
+      "Retries use exponential backoff with jitter, and the operation must be idempotent. At-least-once plus idempotency gives exactly-once effects.",
+      "Size from p99, not the mean. Every primitive carries a cost: queue for memory, partitions for coordination, retries for capacity."
+    ],
+    terms: [
+      { t: "Throughput", mem: "How many per second.", d: "Units of work arriving or completing per second. A hundred million of anything is a throughput question before a storage one." },
+      { t: "Bounded queue", mem: "A queue with a ceiling.", d: "A queue with a fixed maximum size, so overload shows early instead of being absorbed silently." },
+      { t: "Backpressure", mem: "Tell the sender to slow down.", d: "Pushing the capacity limit upstream so the producer slows rather than the consumer piling up work it cannot finish." },
+      { t: "Load shedding", mem: "Drop on purpose.", d: "Deliberately refusing some work when overloaded, on your own terms, instead of letting the system fail unpredictably." },
+      { t: "Partition key and skew", mem: "Even in theory, lopsided in practice.", d: "The key that splits data across partitions. Skew is one partition carrying far more than an even share." },
+      { t: "Idempotency", mem: "Safe to do twice.", d: "An operation whose repeat has the same effect as one run, which makes retries safe." },
+      { t: "Tail latency", mem: "The slowest one percent.", d: "Latency at a high percentile such as p99. It is dominated by heavy users and made worse by their retries." }
+    ]
+  },
+  "w5a:4": {
+    cheat: [
+      "Listen back twice: once for content, once for delivery.",
+      "Content asks whether every primitive got said. Delivery asks how: filler words, order, pace.",
+      "Write exactly three sentences for next time, each a concrete change.",
+      "Cut the filler that shows under pressure first. Here that is 'so'.",
+      "Order should follow cause and effect. A skewed key often causes the saturation, so name the partition key before the queue's response.",
+      "Trim what ran long. The cost section becomes one line on the tradeoff between resilience and capacity.",
+      "A listener should be able to say back the constraint you were optimising for, not the vocabulary."
+    ],
+    terms: [
+      { t: "Filler word", mem: "The verbal crutch.", d: "A word such as 'so' used as a connector between sentences, which shows most under pressure." },
+      { t: "Content versus delivery", mem: "What, then how.", d: "Content is whether each primitive was said. Delivery is how it was said: filler, ordering and pacing." },
+      { t: "Cause-and-effect order", mem: "Say it as it fails.", d: "Ordering the answer to match how the failure happens, such as skew before the queue saturating." },
+      { t: "Time budget", mem: "Five minutes is the wall.", d: "The fixed length of the answer. A long section either pushes something out or runs past the mark." },
+      { t: "Optimised constraint", mem: "What you were protecting.", d: "The limit each choice was made for, which a listener should be able to name after the answer." }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- w5b Probability */
+  "w5b:0": {
+    cheat: [
+      "A random variable X: Ω → ℝ turns each outcome into a number. Die: X = the face showing.",
+      "A distribution is p(x) = P(X = x) ≥ 0 with Σ<sub>x</sub> p(x) = 1. Fair die: six values of 1/6.",
+      "P(A | B) = P(A ∩ B) / P(B): keep only the outcomes in B, then rescale.",
+      "Die, A = six, B = even: P(A | B) = (1/6) / (1/2) = 1/3. Three even outcomes, one of them a six.",
+      "P(B | A) = P(even | 6) = 1, so P(A | B) ≠ P(B | A). The two directions count over different groups.",
+      "P(A ∩ B) = P(A | B) · P(B) = P(B | A) · P(A): the same overlap written two ways.",
+      "Equate them and divide by P(B): P(A | B) = P(B | A) · P(A) / P(B). That is Bayes' theorem.",
+      "P(B) = P(B | A) · P(A) + P(B | ¬A) · P(¬A): B can arrive by either route, so add both."
+    ],
+    terms: [
+      { t: "Random variable", mem: "A number tagged onto each outcome.", d: "A rule X: Ω → ℝ that assigns a number to every outcome of a random process." },
+      { t: "Distribution", mem: "The list of chances that adds to one.", d: "The probabilities p(x) = P(X = x) of each value. Each is at least zero and together they sum to one." },
+      { t: "Conditional probability", mem: "Shrink the world to B, then rescale.", d: "P(A | B) = P(A ∩ B) / P(B): the share of the outcomes in B that are also in A." },
+      { t: "Base-rate fallacy", mem: "Swapping the bar and ignoring how common things are.", d: "Treating P(A | B) as if it were P(B | A). The two condition on different populations." },
+      { t: "Bayes' theorem", mem: "Conditioning written two ways.", d: "P(A | B) = P(B | A) · P(A) / P(B). It flips a conditional when you know the reverse direction." },
+      { t: "Total probability", mem: "Add every route to B.", d: "P(B) = P(B | A) P(A) + P(B | ¬A) P(¬A). It is the usual denominator in Bayes." }
+    ]
+  },
+  "w5b:1": {
+    cheat: [
+      "The question: 99% sensitive, 5% false positive rate, 1 person in 1,000 ill. Given a positive, P(ill)?",
+      "Count people, not percentages. Take 100,000: ill = 0.001 × 100,000 = 100, healthy = 99,900.",
+      "Ill group: true positives = 0.99 × 100 = 99, false negatives = 1.",
+      "Healthy group: false positives = 0.05 × 99,900 = 4,995, true negatives = 94,905.",
+      "Positive column = 99 + 4,995 = 5,094.",
+      "P(ill | +) = 99 / 5,094 ≈ 0.0194 ≈ 2%.",
+      "Bayes gives the same: (0.99 × 0.001) / (0.99 × 0.001 + 0.05 × 0.999) = 0.00099 / 0.05094 ≈ 0.0194.",
+      "Why: the healthy pool is 999 times the ill one, and the test claws back only a factor of about 20, leaving about 50 false alarms per true case."
+    ],
+    terms: [
+      { t: "Sensitivity", mem: "The share of the ill the test catches.", d: "P(+ | ill). Here 0.99, so 99 of 100 ill people test positive." },
+      { t: "False positive rate", mem: "Healthy people the test wrongly flags.", d: "P(+ | healthy). Here 0.05, which on 99,900 healthy people gives 4,995." },
+      { t: "Prevalence", mem: "How rare the thing is to begin with.", d: "The share of the population that is ill before any test. Here 1 in 1,000." },
+      { t: "Population table", mem: "Four cells of people.", d: "Ill and healthy, each split by the test result. The answer is read off the positive column." },
+      { t: "Posterior", mem: "The belief after the evidence.", d: "P(ill | +), the chance of being ill once you know the test came back positive. Here about 2%." },
+      { t: "Positive predictive value", mem: "Of those flagged, how many are real.", d: "The ill share of the positive column: true positives over all positives, 99 / 5,094." }
+    ]
+  },
+  "w5b:2": {
+    cheat: [
+      "One formula for the table: P(ill | +) = s·r / (s·r + f·(1 − r)), with r prevalence, s sensitivity, f false positive rate.",
+      "r = 1/10,000 per 100,000: 10 ill, 9.9 caught; 99,990 healthy, 4,999.5 false alarms; 9.9 / (9.9 + 4,999.5) ≈ 0.002.",
+      "Fraud 1/500, caught 90%, false alarm 2%: 200 fraud, 180 flagged; 99,800 fine, 1,996 flagged; 180 / 2,176 ≈ 0.083, about 11 of 12 flags false.",
+      "Same test (s = 0.99, f = 0.05), four prevalences: r = 0.001 gives 1.9%, 0.01 gives 17%, 0.1 gives 69%, 0.5 gives 95%.",
+      "Odds form: posterior odds = prior odds × s/f. Here 1/999 × 0.99/0.05 ≈ 0.0198, about 1 to 50.",
+      "The test multiplies odds by about 20 and no more, so the starting point decides the answer.",
+      "Break-even: s·r = f·(1 − r) ⇒ r = f / (s + f) = 0.05 / 1.04 ≈ 0.048.",
+      "Below about 4.8% prevalence, a positive from this test is more likely wrong than right."
+    ],
+    terms: [
+      { t: "Prior odds", mem: "Where you start before the test.", d: "r / (1 − r), the odds of the condition in the population. At 1 in 1,000 that is 1 to 999." },
+      { t: "Likelihood ratio", mem: "The most the test can multiply your odds.", d: "s / f, sensitivity over false positive rate. About 20 here (0.99 / 0.05 = 19.8)." },
+      { t: "Posterior odds", mem: "Prior odds times the test's factor.", d: "r/(1 − r) × s/f. It is the odds form of Bayes' theorem." },
+      { t: "Break-even prevalence", mem: "Where true and false alarms tie.", d: "r = f / (s + f), found by setting s·r = f·(1 − r). About 4.8% for this test." },
+      { t: "False alarm", mem: "A flag on something that is fine.", d: "A positive from the healthy group. When the condition is rare, false alarms outnumber real cases." },
+      { t: "Fixed test, moving base rate", mem: "Same test, different answer.", d: "With s and f held constant, the answer to P(ill | +) is set by r alone, from 1.9% at 0.001 to 95% at 0.5." }
+    ]
+  },
+  "w5b:3": {
+    cheat: [
+      "Softmax: p<sub>i</sub> = e<sup>z<sub>i</sub></sup> / Σ<sub>j</sub> e<sup>z<sub>j</sub></sup>. Exponentiate each score, divide by the total.",
+      "It is a distribution: e<sup>z</sup> > 0 gives p<sub>i</sub> > 0, and dividing by the sum gives Σ<sub>i</sub> p<sub>i</sub> = 1.",
+      "z = (2, 1, 0) ⇒ e<sup>z</sup> = (7.39, 2.72, 1.00), sum 11.11 ⇒ p = (0.665, 0.245, 0.090).",
+      "Cross-entropy with a one-hot y: L = −Σ y<sub>i</sub> log p<sub>i</sub> = −log p<sub>c</sub>, the negative log of the true class's probability.",
+      "That is negative log-likelihood, so minimising it is maximum likelihood.",
+      "L = −z<sub>c</sub> + log Σ e<sup>z<sub>j</sub></sup> ⇒ ∂L/∂z<sub>i</sub> = p<sub>i</sub> − y<sub>i</sub>. Big when wrong, small when right, nothing else multiplied in.",
+      "Squared error on softmax carries p(1 − p) factors, which go to zero as softmax saturates.",
+      "True score 0, wrong score 6: p<sub>true</sub> ≈ 0.0025. Cross-entropy pushes with ≈ −0.998, squared error with ≈ −0.0049, about 200 times weaker."
+    ],
+    terms: [
+      { t: "Softmax", mem: "Exponentiate, then normalise.", d: "Maps scores z to p<sub>i</sub> = e<sup>z<sub>i</sub></sup> / Σ<sub>j</sub> e<sup>z<sub>j</sub></sup>, entries that are positive and sum to one." },
+      { t: "Probability distribution", mem: "Non-negative, adds to one.", d: "A list of chances that are never negative and total one. That is the whole definition." },
+      { t: "One-hot label", mem: "A 1 on the right class, 0 elsewhere.", d: "The target vector y with y<sub>c</sub> = 1 for the true class c, which leaves one term in the cross-entropy sum." },
+      { t: "Cross-entropy", mem: "Surprise at the true class.", d: "L = −Σ y<sub>i</sub> log p<sub>i</sub>. With a one-hot label it is −log p<sub>c</sub>." },
+      { t: "Negative log-likelihood", mem: "Same loss, seen as fitting.", d: "−log of the probability the model gives the observed answer. Minimising it is maximum likelihood." },
+      { t: "Saturation", mem: "Output pinned near 0 or 1.", d: "When softmax is near-certain, p(1 − p) is near zero, so squared error's gradient nearly vanishes even when the model is wrong." },
+      { t: "Gradient p − y", mem: "Prediction minus target.", d: "The derivative of softmax cross-entropy with respect to the scores. Its size tracks the error directly." }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- w5c The source-filter model */
+  "w5c:0": {
+    cheat: [
+      "A voiced sound has two parts: a source (what makes it) and a filter (what shapes it).",
+      "Y(f) = E(f) · H(f): source spectrum times filter gain, frequency by frequency. Two independent factors.",
+      "Source: the vocal folds buzz at F<sub>0</sub>, so energy sits at f<sub>k</sub> = k · F<sub>0</sub>. Adult male F<sub>0</sub> is roughly 85 to 180 Hz.",
+      "Filter: the tract resonates at F<sub>n</sub> = (2n − 1) · c / (4L). With L = 17.5 cm and c = 350 m/s: 500, 1500, 2500 Hz.",
+      "On a dB scale the product is a sum: log |Y| = log |E| + log |H|, so a spectrum plot lets you read them apart.",
+      "Change the source: F<sub>0</sub> 100 → 200 Hz moves the harmonics to 200, 400, 600 Hz. The formants stay at 500, 1500, 2500.",
+      "Change the filter: L 17.5 → 15 cm lifts the formants to 583, 1750, 2917 Hz. F<sub>0</sub> does not move.",
+      "So pitch lives on the source and identity lives on the filter.",
+      "Where it bends: [s] and [f] have a noise source with no F<sub>0</sub>, and the same filter still shapes it."
+    ],
+    terms: [
+      { t: "Source", mem: "What makes the sound.", d: "The raw sound before shaping: vocal-fold vibration for vowels and nasals, or turbulence noise for sounds like [s], [f] and [sh]." },
+      { t: "Filter", mem: "What shapes the sound.", d: "The vocal tract, whose shape decides which frequencies are amplified and which are damped. It multiplies the source spectrum." },
+      { t: "F<sub>0</sub> (fundamental frequency)", mem: "The buzz rate.", d: "How many times a second the vocal folds buzz. It sets the pitch." },
+      { t: "Harmonics", mem: "Multiples of the buzz.", d: "The energy of a repeating buzz sits at F<sub>0</sub>, 2F<sub>0</sub>, 3F<sub>0</sub> and so on. They move when F<sub>0</sub> moves." },
+      { t: "Formants", mem: "The tube's loud notes.", d: "The peaks of the filter, F<sub>1</sub>, F<sub>2</sub>, F<sub>3</sub>: the frequencies the tract's shape resonates at and boosts. They move with tract shape and length, not with F<sub>0</sub>." },
+      { t: "Transfer function H(f)", mem: "Out over in, per frequency.", d: "The filter's gain at each frequency: the amplitude B at the lips divided by the amplitude A of a pure tone fed in at the glottis." },
+      { t: "Closed-open tube", mem: "Odd multiples of c/4L.", d: "A tube closed at one end and open at the other resonates at (2n − 1) · c / (4L). It is the simple model of the tract." }
+    ]
+  },
+  "w5c:1": {
+    cheat: [
+      "A measurement is clean only if it moves when its own side moves and stays put when the other side does.",
+      "f0_mean = (1/N) Σ F<sub>0</sub>(t): the mean pitch track over voiced frames. Source side; no formant enters it.",
+      "L = ½ [ c / (4F<sub>1</sub>) + 5c / (4F<sub>3</sub>) ], using F<sub>1</sub> and F<sub>3</sub> only. Filter side; F<sub>0</sub> is not in it.",
+      "Check: F<sub>1</sub> = 500, F<sub>3</sub> = 2500, c = 35 000 cm/s gives ½ (17.5 + 17.5) = 17.5 cm.",
+      "Spectral tilt is meant to read the source's shape: a least-squares slope of dB against log<sub>2</sub> f, in dB per octave.",
+      "The slope weights each bin by w<sub>i</sub> = (x<sub>i</sub> − x̄)<sup>2</sup> / Σ (x<sub>j</sub> − x̄)<sup>2</sup>. Bins far from the band's middle count most.",
+      "Linear bins crowd the top of an octave axis, so 27 bins below 500 Hz carry 43.2% of the fit. 500 Hz to 4 kHz: 27.4% over 308 bins. Above 4 kHz: 29.4% over 341 bins.",
+      "Those 27 bins hold the first F<sub>0</sub> harmonics: F<sub>0</sub> = 100 Hz puts four under 500, F<sub>0</sub> = 220 Hz puts two.",
+      "So moving F<sub>0</sub> moves 43% of the fit with the filter fixed. S21 measured r = +0.918 with F<sub>0</sub> on voices of constant envelope slope."
+    ],
+    terms: [
+      { t: "f0_mean", mem: "Source only.", d: "The mean of the pitch track over voiced frames, pitch tracked with pYIN in this project. It sits entirely on the source side." },
+      { t: "Vocal-tract length estimate", mem: "Built from F<sub>1</sub> and F<sub>3</sub>.", d: "L = ½ [ c / (4F<sub>1</sub>) + 5c / (4F<sub>3</sub>) ], with c = 35 000 cm/s. F<sub>2</sub> is left out because it swings with the vowel." },
+      { t: "Spectral tilt", mem: "Slope of the average spectrum.", d: "The least-squares slope of level in dB against frequency in octaves. It is meant to read the source's spectral shape." },
+      { t: "Least-squares slope", mem: "The line closest to all points.", d: "The slope Σ (x − x̄)(y − ȳ) / Σ (x − x̄)<sup>2</sup>, where x̄ is the mean of x. It minimises the squared vertical gaps to the points." },
+      { t: "Octave axis", mem: "A doubling is one step.", d: "x = log<sub>2</sub> f counts octaves, since an octave is a doubling of frequency." },
+      { t: "Leverage weight w<sub>i</sub>", mem: "Far from the middle pulls hardest.", d: "The share of the slope that bin i carries, set by how far its x is from x̄. The 27 bins below 500 Hz carry 43.2%." },
+      { t: "Leak across the split", mem: "A source wobble inside a filter number.", d: "A measure meant for one side that also moves when the other side changes. Source and filter vary independently, so a leaking measure cannot tell which changed." }
+    ]
+  },
+  "w5c:2": {
+    cheat: [
+      "Harmonics are samples of the envelope, taken every F<sub>0</sub> hertz. The tilt is a line fitted to whatever samples it is given.",
+      "Two voices, one filter. Harmonic level A<sub>k</sub> = |E(f<sub>k</sub>)| · |H(f<sub>k</sub>)|: same curves, different sample points.",
+      "Across 80 to 8000 Hz: N ≈ 7920 / F<sub>0</sub>, so 88 harmonics at 90 Hz and 32 at 250 Hz. That is 2.8 times fewer.",
+      "FFT bin width = 24 000 / 2048 = 11.7 Hz. Bins per harmonic: 90 Hz → 7.7, 250 Hz → 21.3.",
+      "Each harmonic fills about one bin; the rest is the floor between peaks. The higher voice has 2.8 times more floor per harmonic.",
+      "A flat floor pulls the slope toward 0 dB per octave. Real voices filter that floor too, which softens the effect.",
+      "The heavy bins (27 below 500 Hz, 43.2% of the fit) hold five harmonics for 90 Hz (90 to 450) but one for 250 Hz (250).",
+      "So tilt follows F<sub>0</sub> while the envelope stays put. S21: r = +0.918 with the envelope slope held constant.",
+      "What tilt reads is how the harmonics happen to sample the envelope, not the envelope."
+    ],
+    terms: [
+      { t: "Harmonic spacing", mem: "Neighbours are F<sub>0</sub> apart.", d: "Harmonics sit at multiples of F<sub>0</sub>, so a 90 Hz voice samples the envelope every 90 Hz and a 250 Hz voice every 250 Hz." },
+      { t: "Envelope", mem: "The curve under the peaks.", d: "The smooth shape set by source and filter together. Harmonics are samples of it, not the envelope itself." },
+      { t: "Spectral floor", mem: "Low ground between peaks.", d: "The low-energy bins between harmonics. The tilt fit sees them as well as the peaks." },
+      { t: "FFT bin width", mem: "Rate over window.", d: "Sample rate divided by n_fft: 24 000 / 2048 = 11.7 Hz at this project's settings." },
+      { t: "Sampling artefact", mem: "The pitch, not the voice.", d: "A difference in a measure caused by how a source property samples the thing measured. With identical filters, the tilt gap between two pitches is entirely this." },
+      { t: "Correlation r", mem: "Plus one: they rise together.", d: "A number from −1 to +1; near +1 the two quantities rise together. S21's r = +0.918 between F<sub>0</sub> and tilt, with the envelope slope held constant, means the axis reads pitch." }
+    ]
   }
 };
