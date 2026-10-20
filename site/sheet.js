@@ -44,9 +44,10 @@
     calc: function (b) {
       var c = el("div", "sv-calc");
       b.calc.forEach(function (r) {
+        var approx = /^\s*(≈|&asymp;)\s*/.exec(r[1]);
         c.appendChild(el("span", "sv-expr", r[0]));
-        c.appendChild(el("span", "sv-eq", "="));
-        c.appendChild(el("span", "sv-res", r[1]));
+        c.appendChild(el("span", "sv-eq", approx ? "≈" : "="));
+        c.appendChild(el("span", "sv-res", approx ? r[1].slice(approx[0].length) : r[1]));
       });
       return c;
     },

@@ -1291,3 +1291,11 @@ snippet with each problem pinned to its line, the two-request race and the stale
 the fixes as a tick-and-cross comparison, the burst and the 20x load as arithmetic, the LLM cache key
 taken apart, and alfred_'s caches as a what/risk/fix grid. New block: `parts` (a key's anatomy).
 No charter deviation.
+
+**2026-10-19 — Every milestone 1 cheat sheet drawn.**
+All 89 steps of weeks 1 to 5 and the Mercor sessions now carry `vis` blocks: each step's idea in the
+form it has (a stepper for a sequence, a ladder for numbers on a scale, worked arithmetic, a tick-and-cross
+comparison, fits-against-breaks, pinned code, timelines, a key's parts). Comparison rows read as positive
+criteria so a tick always means good; a worked result that is approximate shows the approximate sign in
+place of the equals sign. The session's step table keeps a fixed layout so it no longer runs under the
+right-hand panel. No charter deviation.

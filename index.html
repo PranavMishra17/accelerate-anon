@@ -321,7 +321,8 @@
   .kt-session > summary:hover { color: var(--ink); }
   .sxg { font-size: var(--fs-lg); font-weight: 600; margin: var(--s5) 0 var(--s2); }
   /* the session table: steps down, beats across; the open row's drawer below it */
-  .stable { width: 100%; border-collapse: collapse; }
+  .stable { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .stable thead th.c { width: 60px; }
   .stable th { font-family: var(--sans); font-size: var(--fs-xs); font-weight: 600; color: var(--muted); text-align: left;
     padding: var(--s2); border-bottom: 1px solid var(--rule); }
   .stable th.c, .stable td.c { text-align: center; width: 72px; }
@@ -764,9 +765,9 @@
 <script src="private/notes.js"></script>
 <script src="data/streams.js?v=d0b499a4"></script>
 <script src="data/reading.js?v=e143835e"></script>
-<script src="data/sheets.js?v=3a7b5d99"></script>
+<script src="data/sheets.js?v=e1ef5ca9"></script>
 <script src="site/res.js?v=c33c7564"></script>
-<script src="site/sheet.js?v=93ccc68e"></script>
+<script src="site/sheet.js?v=d5ed86a7"></script>
 <script src="data/mcq/base.js?v=5fc7e7ac"></script>
 <script src="data/mcq/week1.js?v=8276998c"></script>
 <script src="data/mcq/week2.js?v=c99169f7"></script>

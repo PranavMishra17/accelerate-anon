@@ -1841,3 +1841,744 @@ window.SHEETS = {
   };
   for (var k in V) { if (window.SHEETS[k]) { window.SHEETS[k].vis = V[k]; } }
 })();
+
+/* Drawn sheets for weeks 1 to 5 (the rest of milestone 1), drawn against w3a and the Mercor sheets. */
+(function () {
+  var V = {
+  "w1a:0": [
+    { rule: "Response time is a distribution. Describe it with percentiles, and plan from the tail." },
+    { title: "Where each number sits", ladder: [
+      ["p50", "the median", "half of requests are faster"],
+      ["p95", "95 percent beat it", "the slow tail starts here"],
+      ["p99", "99 percent beat it", "heavy users and retries live here"]] },
+    { title: "Mean against percentile", vs: { cols: ["Mean", "p99"], rows: [
+      ["Dominated by", "the bulk of fast requests", "the slowest one percent"],
+      ["Shows the tail", "no: hides it", "yes"],
+      ["Size capacity from it", "no", "yes"]] },
+      note: "An average can look healthy while the slowest requests are the ones hurting." }
+  ],
+  "w1a:1": [
+    { title: "Two different measures", vs: { cols: ["Throughput", "Latency"], rows: [
+      ["Counts", "requests completed per second", "one request, start to end"],
+      ["Says how long one waits", "no", "yes"],
+      ["Tail view", "none", "p50 and p99"]] } },
+    { title: "Bounded against unbounded queue", split: [["Bounded", ["fixed capacity", "refuses work once full", "fails early and loud"]],
+      ["Unbounded", ["no limit", "keeps absorbing work", "shows up late, as memory growth"]]] },
+    { title: "When the queue is full", flow: ["queue full", "backpressure: producer slows", "or load shedding: drop some work", "the rest stays fast"] }
+  ],
+  "w1a:2": [
+    { rule: "Unbounded fails slow and silent. Bounded fails fast and loud." },
+    { title: "How an unbounded queue dies", flow: ["arrivals above service rate", "backlog grows", "latency and memory climb", "out of memory: dies at once"],
+      note: "Throughput looks unchanged and no error rate rises, so the dashboard shows nothing until the crash." },
+    { title: "What each one tells you", vs: { cols: ["Bounded", "Unbounded"], rows: [
+      ["On overload", "rejects work when full", "accepts everything"],
+      ["Error signal", "yes: the rejection", "no: nothing until the crash"],
+      ["Visible in throughput", "no", "no: only queue depth shows it"]] },
+      note: "Watch queue depth, not only throughput." }
+  ],
+  "w1a:3": [
+    { title: "Rate and concurrency, worked", calc: [
+      ["10<sup>8</sup> a day / 10<sup>5</sup> s", "about 1,000 a second (1,200 on average)"],
+      ["peak: 3 to 10 × the average", "up to 10 thousand a second"],
+      ["10,000 a second × 200 ms", "2,000 in flight (Little's law)"],
+      ["1 in 10<sup>6</sup> failing × 10<sup>8</sup> a day", "about 100 failures a day"]] },
+    { title: "The shape of the answer", flow: ["rate first", "queue it, bounded", "split on a key", "idempotent handlers, capped retries", "dead-letter queue, per-caller limit"],
+      note: "Assume the key is skewed: the hottest partition is the ceiling for everything." }
+  ],
+  "w1a:4": [
+    { rule: "Two minutes, spoken once, no notes. No product names." },
+    { title: "The answer, in order", flow: ["rate: per second, size, bursts", "bound the queue", "backpressure or shed", "split on a key, assume skew", "idempotent, capped retries", "size from p99 and peak"],
+      note: "The same sentences hold whichever vendor is underneath." },
+    { title: "Why skew matters", split: [["Assumed uniform", ["spread evenly across machines", "adding machines adds capacity"]],
+      ["Real traffic is power-law", ["a few keys carry most load", "the hottest partition is the ceiling however many machines sit behind it"]]] }
+  ],
+  "w1b:0": [
+    { rule: "Replace the curve with something simple, then make the pieces finer. The derivative is where that settles." },
+    { title: "The method, on a circle", flow: ["slice into thin rings", "straighten each ring", "sum the rectangles", "ring width to zero", "error to zero"],
+      note: "The derivative is a limit: where the approximation settles, not a leap to an instant." },
+    { title: "Definition and shortcut", split: [["The definition", ["a limit of slope over a small step", "step size goes to zero", "learn this first"]],
+      ["The power rule", ["lowers the exponent of x<sup>n</sup> by one", "computes a derivative", "does not define it"]]] }
+  ],
+  "w1b:1": [
+    { rule: "log(ab) = log a + log b. Times becomes plus." },
+    { title: "The product rule, proved", calc: [
+      ["a = c<sup>x</sup>, b = c<sup>y</sup>", "ab = c<sup>x+y</sup>"],
+      ["log<sub>c</sub> ab", "x + y = log a + log b"]] },
+    { title: "Why likelihoods use logs", split: [["The raw product", ["thousands of small probabilities", "multiplies to zero in floating point (underflow)"]],
+      ["The sum of logs", ["no underflow", "differentiates term by term", "compare models by summed log-probabilities"]]],
+      note: "On a log vertical axis an exponential curve is a straight line." }
+  ],
+  "w1b:2": [
+    { title: "The rules, with the answers", calc: [
+      ["log<sub>2</sub> 32", "5, since 2<sup>5</sup> = 32"],
+      ["log<sub>3</sub> 1", "0, since anything to the 0 is 1"],
+      ["log 100 + log 10", "log 1000 = 3"],
+      ["log<sub>2</sub> 8 − log<sub>2</sub> 2", "log<sub>2</sub> 4 = 2"],
+      ["log<sub>5</sub> 25<sup>3</sup>", "3 × log<sub>5</sub> 25 = 3 × 2 = 6"]] },
+    { title: "Zero, one and negative exponents", calc: [
+      ["5<sup>0</sup>", "1"], ["e<sup>1</sup>", "e"], ["2<sup>−3</sup>", "1/8"]] },
+    { title: "The three log rules", vs: { cols: ["Rule"], rows: [
+      ["Product", "log(ab) = log a + log b"],
+      ["Quotient", "log(a/b) = log a − log b"],
+      ["Power", "log(a<sup>n</sup>) = n log a"]] },
+      note: "Solve all ten cold on paper first, then check." }
+  ],
+  "w1b:3": [
+    { rule: "Maximum likelihood: pick the θ that makes your data most probable. Everything else rewrites that." },
+    { title: "From likelihood to loss", flow: ["L(θ) = ∏ p(x<sub>i</sub> | θ)", "take the log: a sum, no underflow", "put a minus in front", "NLL(θ) = −Σ log p(x<sub>i</sub> | θ)", "minimise by descent"],
+      note: "Log is increasing, so the top stays at the same θ. arg max f = arg min (−f)." },
+    { title: "7 heads in 10 flips, and the scale", calc: [
+      ["L(p)", "p<sup>7</sup>(1 − p)<sup>3</sup>"],
+      ["log L", "7 log p + 3 log(1 − p)"],
+      ["d/dp log L = 7/p − 3/(1 − p) = 0", "p̂ = 0.7"],
+      ["0.01<sup>1000</sup>", "10<sup>−2000</sup>: below float64, rounds to 0"],
+      ["1000 · log 0.01", "about −4605: an ordinary number"]] }
+  ],
+  "w1c:0": [
+    { rule: "A render can pass every gate and still sound synthetic. Listening is the only check that catches it." },
+    { title: "What the demo does", flow: ["scripts/demo_script_render.py", "mint a voice from a text description", "render scripted lines, fixed identity", "listen to demo_out/audio/"] },
+    { title: "What the gates check", vs: { cols: ["Checked"], rows: [
+      ["Drift", "yes: identity"],
+      ["Consistency", "yes: identity"],
+      ["Uniqueness", "yes: identity"],
+      ["CER", "yes: intelligibility"],
+      ["Naturalness", "no: floor proposed, never enforced"]] } }
+  ],
+  "w1c:1": [
+    { title: "Two towers, one wire", flow: ["description (text)", "Tower A: encoder + mapper (learned)", "speaker vector", "Tower B: frozen acoustic LM", "audio"],
+      note: "The speaker vector is the only channel between the towers. Direction (emotion, rate) stays separate from identity." },
+    { title: "Gates before an identity is stored", parts: [["drift", ""], ["consistency", ""], ["uniqueness", ""], ["CER", ""], ["naturalness", "floor 75, never rejected", true]] },
+    { title: "What has already changed", split: [["Kept as insurance", ["a seed clip beside each vector", "an encoder change orphaned vectors once"]],
+      ["Swapped once", ["Zonos-v0.1, dead and licence-poisoned", "to Qwen3-TTS-1.7B", "only the mapper learns"]]] }
+  ],
+  "w1c:2": [
+    { rule: "Only the mapper learns. A frozen renderer stays swappable." },
+    { title: "Train the mapper or fine-tune the TTS", vs: { cols: ["Train the mapper", "Fine-tune the TTS"], rows: [
+      ["Small dataset enough", "yes", "no: paired data at base-model scale"],
+      ["Keeps general speech quality", "yes", "no: risks catastrophic forgetting"],
+      ["Renderer stays swappable", "yes", "no: tied to one checkpoint's quirks"]] } },
+    { title: "Where the learning sits", flow: ["description", "mapper: the only part trained", "speaker vector", "frozen TTS consumes it"],
+      note: "The speaker vector is the only channel through which training affects the audio." }
+  ],
+  "w2a:0": [
+    { rule: "The partition key decides what stays together and what scatters." },
+    { title: "Two ways to cut the key space", vs: { cols: ["Key range", "Hash of the key"], rows: [
+      ["Each partition owns", "a contiguous range", "whatever the hash lands on"],
+      ["Range scans", "yes: stay on one or few partitions", "no: neighbours scatter"],
+      ["Load", "no: skews, e.g. all writes to today's date", "yes: spread evenly"],
+      ["Pick it for", "range queries", "even load"]] } },
+    { title: "Rebalancing and routing", split: [
+      ["Do", ["move only a share proportional to the change", "route through any node, a routing tier, or a client that knows the map"]],
+      ["Avoid", ["hash mod N: change N and almost every key moves", "secondary index lookups: ask every partition, or keep a separate index"]]] }
+  ],
+  "w2a:1": [
+    { title: "Why a good hash still leaves a hot partition", flow: ["real usage follows a power law", "one key carries the traffic", "hash spreads the key space, not the traffic", "that partition is full, the rest idle"],
+      note: "That one partition's capacity is the ceiling for the whole system." },
+    { title: "The skew figure", ladder: [
+      ["8", "partitions", ""],
+      ["1", "tall bar", "one user carrying 4% of all events"],
+      ["7", "idle, well under the capacity line", ""]] },
+    { rule: "A hot partition is a key-choice problem, not a hash-function problem." }
+  ],
+  "w2a:2": [
+    { title: "Fan-out to 100 shards", calc: [
+      ["P(all 100 fast) = 0.99<sup>100</sup>", "e<sup>100 ln 0.99</sup> ≈ e<sup>−1.005</sup> ≈ 0.366"],
+      ["P(at least one slow) = 1 − 0.99<sup>100</sup>", "≈ 63%"],
+      ["Fan-out cut to 20: 0.99<sup>20</sup>", "≈ 0.82, so about 18% slow"]] },
+    { title: "How it builds", flow: ["one request", "split into 100 shard calls", "wait for all of them", "one slow shard makes it slow"],
+      note: "A component's one-percent tail becomes the system's typical case." },
+    { rule: "The cure is fewer things fanned out to, not faster average shards." }
+  ],
+  "w2a:3": [
+    { title: "Sharding the eval harness by scenario id", flow: ["replay", "partition key: scenario id", "all replays of a scenario on one shard", "aggregate locally"],
+      note: "Scale: a hundred million replays, more than one machine can hold or keep up with." },
+    { split: [
+      ["Why scenario id fits", ["the scenario is the natural unit of comparison", "aggregating a scenario stays local, not scattered across the cluster"]],
+      ["Where it breaks", ["one family (the happy-path conversation) a thousand times more common", "its shard is the hot partition and the ceiling for the run", "adding shards does not help: the hot key still goes to one"]] ] },
+    { title: "The fix", flow: ["find the oversized family", "hash a secondary key, e.g. replay id", "spread it over several shards", "other families stay on one shard"],
+      note: "Pay the cost of splitting only where it is needed." }
+  ],
+  "w2a:4": [
+    { rule: "Shard by user id, and one user is 4% of all traffic: that shard is the bottleneck, whatever the shard count." },
+    { title: "The change and its price", vs: { cols: ["user id alone", "user id + secondary key"], rows: [
+      ["Heavy user's writes", "no: all on one shard", "yes: spread over several shards"],
+      ["Throughput", "no: one partition's throughput", "yes: others share the load"],
+      ["Read one user's history", "yes: one lookup", "no: fan out and merge"]] },
+      note: "Secondary key: session id or a time bucket." },
+    { title: "Trade-off to state", flow: ["split the hot key", "history read fans out", "tail-latency amplification", "pick one answer, say what it costs"] }
+  ],
+  "w2b:0": [
+    { title: "The idea", parts: [
+      ["f′(x) = lim<sub>h→0</sub> [f(x + h) − f(x)] / h", "slope of the tangent at one exact point", true],
+      ["df = f′(x) dx", "a tiny nudge in becomes f′ times that nudge out"]] },
+    { title: "Rules", vs: { cols: ["Meaning"], rows: [
+      ["Power", "d/dx x<sup>n</sup> = n x<sup>n−1</sup>"],
+      ["Product", "(f·g)′ = f′g + fg′: a rectangle grows by two strips"],
+      ["Chain", "dy/dx = f′(g(x))·g′(x): scalings multiply"],
+      ["Also", "d/dx sin x = cos x, d/dx e<sup>x</sup> = e<sup>x</sup>"]] } },
+    { title: "Worked checks", calc: [
+      ["(x + dx)<sup>2</sup>", "x<sup>2</sup> + 2x·dx + dx<sup>2</sup> ⇒ 2x"],
+      ["d/dx sin(x<sup>2</sup>)", "cos(x<sup>2</sup>)·2x"],
+      ["(3.01)<sup>2</sup> = 9.0601", "change 0.0601 ≈ 2·3·0.01 = 0.06"]] }
+  ],
+  "w2b:1": [
+    { title: "Pick the rule from the outermost operation", flow: ["read the outermost operation", "name it: sum, product, quotient or power", "apply its rule", "check by nudging"] },
+    { title: "Each rule worked", calc: [
+      ["(x<sup>5</sup>)′", "5x<sup>4</sup>"],
+      ["(3x<sup>4</sup> − 2x + 7)′", "12x<sup>3</sup> − 2"],
+      ["(x<sup>3</sup> sin x)′", "3x<sup>2</sup> sin x + x<sup>3</sup> cos x"],
+      ["(f/g)′", "(f′g − fg′) / g<sup>2</sup>"],
+      ["(x<sup>2</sup>/(x + 1))′", "(x<sup>2</sup> + 2x) / (x + 1)<sup>2</sup>"]] },
+    { title: "Check at x = 1", ladder: [
+      ["0.75", "the formula", ""],
+      ["≈ 0.751", "measured slope from 1 to 1.01", "the nudge agrees"]],
+      note: "Special case: (1/g)′ = −g′/g<sup>2</sup>, which returns with the sigmoid." }
+  ],
+  "w2b:2": [
+    { title: "Reaching σ′ = σ(1 − σ)", flow: ["rewrite as (1 + e<sup>−x</sup>)<sup>−1</sup>", "chain rule: −u<sup>−2</sup> · (−e<sup>−x</sup>)", "minus signs cancel", "split the square into two factors", "σ and 1 − σ"] },
+    { title: "The algebra", calc: [
+      ["σ′(x)", "e<sup>−x</sup> / (1 + e<sup>−x</sup>)<sup>2</sup>"],
+      ["= [1/(1 + e<sup>−x</sup>)] · [e<sup>−x</sup>/(1 + e<sup>−x</sup>)]", "σ(x) · (1 − σ(x))"]] },
+    { title: "Slope along the curve", ladder: [
+      ["0.25", "σ′(0), with σ(0) = 0.5", "peak slope"],
+      ["0.0177", "σ′(4), with σ(4) ≈ 0.982", "nearly flat in the tails"]],
+      note: "The forward pass already holds σ(x), so the gradient costs one subtraction and one multiplication." }
+  ],
+  "w2b:3": [
+    { title: "The chain", flow: ["x", "u = g(x)", "y = f(u)", "dy/dx = dy/du · du/dx"],
+      note: "Evaluate the outer derivative at the inner value u, not at x." },
+    { title: "(3x + 1)<sup>2</sup> at x = 2", calc: [
+      ["u = 3x + 1", "7"],
+      ["dy/du = 2u", "14"],
+      ["du/dx", "3"],
+      ["dy/dx = 14 · 3", "42"],
+      ["check: 9x<sup>2</sup> + 6x + 1 ⇒ 18x + 6", "42"]] },
+    { title: "Longer chains", parts: [
+      ["dy/df<sub>3</sub>", "outermost link"],
+      ["df<sub>3</sub>/df<sub>2</sub>", "one ordinary derivative per link"],
+      ["df<sub>2</sub>/df<sub>1</sub>", ""],
+      ["df<sub>1</sub>/dx", "innermost link"]],
+      note: "Multiply the four. This is what autograd does: each box remembers what it saw forward, then the backward pass multiplies." }
+  ],
+  "w2c:0": [
+    { title: "Spotting it", flow: ["training loss falling", "validation loss turns upward", "stop here: memorising, not learning"],
+      note: "Falling training loss proves nothing alone." },
+    { title: "Name each fix by its mechanism", vs: { cols: ["What it does"], rows: [
+      ["L2", "shrinks every weight toward zero, never exactly"],
+      ["L1", "drives some weights to exactly zero: feature selection"],
+      ["Early stopping", "stops before there is time to fit noise"],
+      ["Dropout", "removes units at random: forces redundancy"],
+      ["More or augmented data", "more real structure, so memorising pays less"]] } }
+  ],
+  "w2c:1": [
+    { title: "First choice: early stopping", split: [
+      ["Why it goes first", ["costs nothing to add", "a held-out metric is already tracked on every run in the eval harness", "not an architecture change, not a new hyperparameter"]],
+      ["Why not the others first", ["L2 and dropout each need a guess in advance: penalty strength, drop rate", "see the overfitting once before guessing at knobs"]] ] },
+    { title: "Order of reach", flow: ["early stopping", "still not enough?", "regularisation or dropout", "or more data"],
+      note: "Dropout removes paths, L2 shrinks magnitudes, more data moves the turning point right." }
+  ],
+  "wc3:0": [
+    { title: "The ingestion path", flow: ["upload", "type detection", "parser per type", "one normalised document model"] },
+    { title: "Parser by source", vs: { cols: ["Parser"], rows: [
+      ["Native PDF", "use the text layer"],
+      ["Scan or ERP screenshot", "OCR with layout analysis"],
+      ["Spreadsheet", "read as cells, never flattened to text"],
+      ["Walkthrough recording", "transcript with timestamps"]] },
+      note: "Large documents go straight to storage by presigned upload (multipart), metadata split from the payload." }
+  ],
+  "wc3:1": [
+    { title: "What every span carries", parts: [
+      ["document", "which file"],
+      ["page", ""],
+      ["bounding box", "the region on the page", true],
+      ["timestamp", "for recordings"]],
+      note: "Derived artifacts keep a pointer back to their source spans." },
+    { split: [
+      ["Keep coordinates", ["citations can point at the exact passage", "same need in a three-hundred-page record"]],
+      ["Drop them at parse time", ["citations become impossible later", "no cleverness downstream recovers them"]] ] },
+    { rule: "The most important decision in the system: coordinates at parse time." }
+  ],
+  "wc3:2": [
+    { title: "Fixed-size chunks against structured tables", vs: { cols: ["Fixed-size chunks", "Table as an object"], rows: [
+      ["Table intact", "no: cut in half", "yes: kept whole"],
+      ["Value and header", "no: separated", "yes: header stays with the cell"],
+      ["Cite an amount", "no: vague", "yes: exact cell coordinates"]] },
+      note: "Treat screenshots as structure too, not as a flat block of text." },
+    { rule: "MetaRAG: chunking and metadata interact, and the right choice depends on the corpus." }
+  ],
+  "wc3:3": [
+    { title: "A low-confidence value", flow: ["OCR confidence per region", "an attribute test depends on the value", "low: do not trust it quietly", "insufficient, or a human check"],
+      note: "Dropping the item would bias the sample." },
+    { split: [
+      ["Say plainly", ["no OCR in production yet", "the layers on both sides of it are built"]],
+      ["Expect", ["slow on OCR specifics for a couple of weeks", "fast on everything around them"]] ] }
+  ],
+  "wc3:4": [
+    { title: "Retrieval per tenant", flow: ["one index per client engagement, never shared", "lexical + dense", "prefix metadata into the text", "rerank about forty candidates to twelve"] },
+    { title: "Why hybrid", vs: { cols: ["Lexical", "Dense"], rows: [
+      ["Exact invoice numbers, dates, amounts", "yes: matches exactly", "no: weak on exact identifiers"],
+      ["Meaning, not letters", "no: literal terms only", "yes: embedding similarity"]],
+      }, note: "Do not blend sparse and dense vectors that do not share a space." }
+  ],
+  "wc3:5": [
+    { title: "Inside the tenant boundary", parts: [
+      ["storage", "per tenant"],
+      ["encryption keys", "per tenant", true],
+      ["index and cache", "no cross-tenant sharing"],
+      ["model calls", "stay inside, or zero data retention"]] },
+    { split: [
+      ["What isolation buys", ["one client's data cannot reach another's", "a question worth asking of any vendor here"]],
+      ["What it costs or risks", ["constrains which models you can use", "prompt injection can arrive inside a user's own sources"]] ] }
+  ],
+  "wc3:6": [
+    { title: "Sizing an engagement of tens of thousands of pages", flow: ["pages in the engagement", "OCR cost and time per page", "storage per page, with coordinates", "multiply out"] },
+    { title: "Which constraint matters", vs: { cols: ["Matters?"], rows: [
+      ["Latency", "no: batch work"],
+      ["Correctness", "yes: absolutely"]] },
+      note: "Saying which constraint does not matter is as useful as saying which does." }
+  ],
+  "w3b:0": [
+    { rule: "A matrix is only where î and ĵ land. Everything else follows from that." },
+    { title: "From weights to a transformed vector", flow: ["v = x·î + y·ĵ", "A moves î and ĵ", "columns of A: Aî, Aĵ", "Av = x·(Aî) + y·(Aĵ)"],
+      note: "The row-times-column rule is this sum written out. BA means A first, then B: read right to left." },
+    { split: [["Linear", ["grid lines stay straight", "evenly spaced", "origin stays put", "A(a·u + b·w) = a·Au + b·Aw"]],
+              ["Not linear, or dependent", ["origin moves, or lines bend", "one vector inside the span of the others", "the span loses a dimension"]]] }
+  ],
+  "w3b:1": [
+    { title: "Two readings of one number", calc: [
+      ["a · b", "Σ a<sub>i</sub>b<sub>i</sub> = |a||b| cos θ"],
+      ["|a|", "√(a · a)"],
+      ["cos θ", "(a · b) / (|a||b|) = â · b̂"],
+      ["unit vectors", "|a − b|<sup>2</sup> = 2 − 2 cos θ"]] },
+    { title: "Where the score sits", ladder: [
+      ["1", "same direction", "θ = 0"],
+      ["0", "right angles", "unrelated"],
+      ["−1", "opposite", "θ = 180°"]] },
+    { rule: "Cosine looks at direction only. Normalise once on storage and the dot product is the cosine." }
+  ],
+  "w3b:2": [
+    { title: "Shapes prove the identity", calc: [
+      ["A is 4 × 3, B is 3 × 5", "AB is 4 × 5"],
+      ["(AB)<sup>T</sup>", "5 × 4 = (5 × 3)(3 × 4) = B<sup>T</sup>A<sup>T</sup>"],
+      ["A<sup>T</sup>B<sup>T</sup>", "(3 × 4)(5 × 3): does not multiply"],
+      ["(AB)<sub>ij</sub>", "Σ<sub>k</sub> A<sub>ik</sub>B<sub>kj</sub>"]] },
+    { title: "The inner sizes drop out", parts: [["(m × n)", "left"], ["n = n", "match, summed away", true], ["(n × p)", "right"], ["= (m × p)", "outer sizes remain"]] },
+    { rule: "Reverse the order: socks then shoes, undo with shoes first. (AB)<sup>−1</sup> = B<sup>−1</sup>A<sup>−1</sup>." }
+  ],
+  "w3b:3": [
+    { title: "What λ does to the eigenvector", ladder: [
+      ["λ > 1", "stretches", "stays on its line"],
+      ["0 < λ < 1", "shrinks", "stays on its line"],
+      ["λ < 0", "flips", "still on its line"],
+      ["λ = 0", "collapses to the origin", ""]] },
+    { title: "The test, under diag(2, −1)", calc: [
+      ["A(1, 0)", "(2, 0) = 2·(1, 0): eigenvector, λ = 2"],
+      ["A(0, 1)", "(0, −1) = −1·(0, 1): eigenvector, λ = −1"],
+      ["A(1, 1)", "(2, −1): not a multiple of (1, 1), so no"]] },
+    { title: "Why eigenvalues decide stability", split: [
+      ["|λ| > 1", ["A<sup>n</sup>v = λ<sup>n</sup>v grows", "direction blows up with repeats"]],
+      ["|λ| < 1", ["A<sup>n</sup>v = λ<sup>n</sup>v dies out", "as in an RNN or power iteration"]]] }
+  ],
+  "w3b:4": [
+    { title: "The one rule", parts: [["(m × n)", "left"], ["n", "inner pair: must match", true], ["(n × p)", "right"], ["(m × p)", "outer pair: the result"]] },
+    { title: "Same vectors, opposite order", vs: { cols: ["Row times column", "Column times row"], rows: [
+      ["Shape", "(1 × n)(n × 1)", "(n × 1)(1 × n)"],
+      ["Result", "1 × 1 scalar", "n × n table"],
+      ["Name", "dot product", "outer product"]] } },
+    { title: "Shape errors and layers", calc: [
+      ["(5 × 2)<sup>T</sup>(5 × 2)", "2 × 2"],
+      ["(5 × 2)(5 × 2)<sup>T</sup>", "5 × 5"],
+      ["(B, T, D) @ (D, H)", "(B, T, H): a linear layer"]],
+      note: "Reading a shape error: write both shapes, find the inner pair that does not match, decide which side to transpose." }
+  ],
+  "w3c:0": [
+    { title: "The ceiling and the fold", ladder: [
+      ["N", "readings per second", "x[n] = x(n/N)"],
+      ["N/2", "Nyquist: highest frequency held", "f<sub>Nyq</sub>"],
+      ["N − f", "where a tone above N/2 lands", "aliasing"]] },
+    { title: "At 24 kHz", calc: [
+      ["24 kHz / 2", "12 kHz ceiling"],
+      ["15 kHz tone", "24 − 15 = 9 kHz recorded"],
+      ["speech to 10 kHz", "sample at N > 2 · 10 = 20 kHz"]] },
+    { split: [["Sample rate sets", ["the ceiling", "N > 2·f<sub>max</sub>"]],
+              ["Bit depth sets", ["the noise floor", "about 6 dB a bit: 16-bit gives about 96 dB"]]] }
+  ],
+  "w3c:1": [
+    { rule: "The file stores readings, not Hz. Assume the wrong rate and every frequency scales by N<sub>assumed</sub> / N<sub>true</sub>, with no error." },
+    { title: "Wrong rate, wrong pitch", calc: [
+      ["24 kHz read as 16 kHz", "× 2/3: 1000 Hz reads as 667 Hz"],
+      ["22.05 kHz read as 44.1 kHz", "× 2"],
+      ["f<sub>Hz</sub>", "c · N"]] },
+    { title: "Rates in this project", ladder: [
+      ["24 kHz", "corpus", "ceiling 12 kHz"],
+      ["16 kHz", "WavLM", "ceiling 8 kHz"],
+      ["44.1 kHz", "MioCodec", "ceiling 22.05 kHz"],
+      ["22.05 kHz", "Sarvam", "ceiling 11.025 kHz"]] },
+    { title: "Resample by L/M", flow: ["insert zeros (L)", "low-pass at half the lower rate", "keep every M-th reading"],
+      note: "Going down discards the band above the new ceiling. Going up cannot bring it back." }
+  ],
+  "w3c:2": [
+    { title: "Resampling 24 kHz to 16 kHz", flow: ["readings", "FFT: spectrum", "low-pass: 1 below 8 kHz, 0 above", "keep every M-th reading"],
+      note: "Without the low-pass, 10 kHz would fold to 16 − 10 = 6 kHz, inside the band you keep." },
+    { title: "What the spectrum should show", split: [
+      ["Expect", ["same shape below 8 kHz", "a cliff at 8 kHz, not a slope", "nothing above"]],
+      ["Warning signs", ["energy above 8 kHz: no filter", "a mirror image below 8 kHz: aliasing", "8 to 12 kHz refilled after resampling up: impossible"]]] },
+    { title: "FFT bins", calc: [
+      ["bins at k·N/n", "1 s at 24 kHz: 1 Hz bins to 12 kHz"],
+      ["plot", "20 log<sub>10</sub>|X(f)| in dB"]] }
+  ],
+  "wc4:0": [
+    { title: "Walkthrough to flowchart", flow: ["recording", "model proposes nodes and edges + evidence", "code assembles graph", "chart rendered from graph"],
+      note: "A node without evidence is not added, so the chart cannot show a step nobody said." },
+    { title: "What a node carries", parts: [["step / actor / system / control", "the node"], ["edge", "the flow"], ["timestamp", "its evidence", true]] },
+    { rule: "A graph is data: you can validate it, query it and diff it next year." }
+  ],
+  "wc4:1": [
+    { title: "Control to risk", flow: ["control", "model suggests risk + reasoning", "person confirms", "logged: who, when, what changed", "next year's start"],
+      note: "The firm's risk taxonomy is the fixed vocabulary; the model may not invent risks." },
+    { split: [["Model does", ["proposes a mapping", "explains why"]],
+              ["Person does", ["confirms or changes it", "owns the logged decision"]]] }
+  ],
+  "wc4:2": [
+    { title: "One graph per year", flow: ["year 1 graph", "year 2 graph", "diff", "auditor looks here first"],
+      note: "Never overwrite last year: store each as a version." },
+    { title: "Where control risk concentrates", split: [
+      ["Shows up in the diff", ["a new approver", "a swapped system", "manual step where one was automated"]],
+      ["How history is kept", ["event sourcing", "change data capture", "not rows you overwrite"]]] }
+  ],
+  "wc4:3": [
+    { title: "Reviewer memory", flow: ["last year's comment", "stored as a fact + provenance", "retrieved by control", "read into this year's test"],
+      note: "Provenance is who said it, about which control, when." },
+    { split: [["Model may", ["read the notes", "use them in this year's test"]],
+              ["Model may not", ["rewrite them", "summarise them over time: that is drift"]]] }
+  ],
+  "w4a:0": [
+    { rule: "A timeout cannot tell a slow response from a lost one, so every layer has to assume the call may have happened." },
+    { title: "Where each thing lies to you", vs: { cols: ["What goes wrong", "What you do about it"], rows: [
+      ["Network", "delayed, dropped, reordered, duplicated", "timeouts; treat silence as unknown"],
+      ["Clocks", "drift and jump on resync", "never order events by wall clock"],
+      ["A node's own state", "a long pause leaves it holding a lost lock", "fencing token, rejected if stale"],
+      ["Partial failure", "part succeeds, part silently fails", "design for it as the normal case"]] } },
+    { title: "Exactly-once, honestly", flow: ["at-least-once delivery", "idempotent processing", "exactly-once effect"],
+      note: "The network alone never gives exactly-once delivery. The effect is what you can build." }
+  ],
+  "w4a:1": [
+    { title: "How a retry storm forms and stops", flow: ["service overloaded", "clients time out", "all retry at once", "more load, no recovery", "backoff + jitter spreads them"],
+      note: "Backoff alone makes every client wait the same interval, so they return in the same wave." },
+    { title: "What each fix does", vs: { cols: ["Backoff only", "Backoff + jitter"], rows: [
+      ["Wait before retry", "same interval for everyone", "random inside each window"],
+      ["Retries spread out", "no: synchronised clusters", "yes: close to a constant rate"],
+      ["Spike stays gone", "no: it re-forms round after round", "yes: it stays spread"],
+      ["Calls, 100 contending clients", "baseline", "more than half fewer"]] } }
+  ],
+  "w4a:2": [
+    { rule: "Idempotent means a repeat has no further effect: the result happens once however many times the call is made." },
+    { title: "One request, three retries", parts: [
+      ["Idempotency key", "unique, caller-provided token, not built from the parameters", true],
+      ["Same key, same parameters", "returns the original response, no new side effect"],
+      ["Same key, different parameters", "rejected as an error: mismatched intent"]] },
+    { title: "Why it matters", flow: ["at-least-once delivery: retries will happen", "idempotency: retries are harmless", "exactly-once effect"] }
+  ],
+  "w4a:3": [
+    { title: "Split the three percent by failure signature", vs: { cols: ["Fails every time", "Fails on a coin flip"], rows: [
+      ["Example", "malformed payload, scenario the harness cannot build", "timeout, transient lock"],
+      ["Retry it", "no: it burns capacity on a sure failure", "yes: backoff and jitter, small cap"],
+      ["Where it goes", "dead-letter queue, waits for a person", "retried, then dead-lettered if still failing"]] } },
+    { title: "The arithmetic", calc: [
+      ["3% × 10<sup>8</sup> replays", "3 × 10<sup>6</sup> = 3,000,000 failures to handle"]] },
+    { title: "Deduplication key", parts: [
+      ["scenario id", "the replay's identity", true],
+      ["attempt number", "stored beside it"],
+      ["effect", "a retry overwrites its own partial result, never appends a second"]] }
+  ],
+  "w4a:4": [
+    { rule: "A struggling service needs a lull to drain its backlog. Retries take that lull away." },
+    { title: "Why retries finish it off", flow: ["already at capacity", "timeouts trigger retries", "retries queue behind the same congestion", "backlog never drains", "service falls over"],
+      note: "Retries add load exactly when there is least capacity to spare." },
+    { title: "The fix, in two halves", split: [["Backoff", ["spaces out when each client returns", "slows individual clients"]],
+                                              ["Jitter", ["randomises the wait in each window", "stops every client landing on the same schedule"]]] }
+  ],
+  "w4b:0": [
+    { title: "The running example", calc: [
+      ["f(w<sub>1</sub>, w<sub>2</sub>)", "w<sub>1</sub><sup>2</sup> + 3w<sub>2</sub><sup>2</sup>"],
+      ["∂f/∂w<sub>1</sub>, ∂f/∂w<sub>2</sub>", "2w<sub>1</sub>, 6w<sub>2</sub>"],
+      ["∇f(1, 1)", "(2, 6)"],
+      ["w − 0.1 · ∇f = (1, 1) − 0.1 · (2, 6)", "(0.8, 0.4)"],
+      ["f(1, 1) = 1 + 3", "4"],
+      ["f(0.8, 0.4) = 0.64 + 0.48", "1.12"]] },
+    { title: "Why the gradient points uphill", flow: ["small step u of size ε", "f changes by ε ∇f · u", "∇f · u = |∇f| cos θ", "biggest at θ = 0: u along ∇f"],
+      note: "So ∇f is the steepest way up, and −∇f the steepest way down." },
+    { title: "Reading (2, 6)", parts: [
+      ["∂f/∂w<sub>1</sub> = 2", "f rises 2 per unit of w<sub>1</sub>"],
+      ["∂f/∂w<sub>2</sub> = 6", "f rises 6 per unit of w<sub>2</sub>: watch this one", true]] }
+  ],
+  "w4b:1": [
+    { rule: "θ ← θ − η ∇L(θ): the gradient sets the direction, η only sets the size." },
+    { title: "Parts of the rule", parts: [
+      ["θ", "the parameters being updated"],
+      ["∇L(θ)", "gradient of the loss: steepest way up"],
+      ["−", "flips it to downhill: L falls by η|g|<sup>2</sup>", true],
+      ["η", "learning rate: multiplies the gradient, nothing else"]] },
+    { title: "L = θ<sup>2</sup>, ∇L = 2θ, start at θ = 3", vs: { cols: ["η = 0.1", "η = 1.0", "η = 1.1"], rows: [
+      ["Update", "θ ← 0.8θ", "θ ← −θ", "θ ← −1.2θ"],
+      ["Path", "3, 2.4, 1.92, 1.54", "3, −3, 3", "3, −3.6, 4.32, −5.18"],
+      ["Settles at 0", "yes: steps shrink", "no: bounces between two points", "no: overshoots farther each step"]] } }
+  ],
+  "w4b:2": [
+    { title: "Backprop in plain words", flow: ["forward: input to output", "cost: one number for how wrong", "start at the output error", "hand blame back one layer", "every weight has its share"],
+      note: "An early weight's effect passes through every layer after it, so the blame has to travel backward." },
+    { title: "What each piece is", parts: [
+      ["Network", "a function with many tunable numbers"],
+      ["Cost", "how wrong it is on the training data"],
+      ["Gradient", "for each weight, how far a nudge moves the cost", true]] }
+  ],
+  "w4b:3": [
+    { title: "Forward pass: keep every number", calc: [
+      ["h = w<sub>1</sub>x = 0.5 · 2", "1.0"],
+      ["a = σ(1.0)", "≈ 0.731"],
+      ["z = w<sub>2</sub>a = 1.5 · 0.731", "≈ 1.097"],
+      ["L = (z − y)<sup>2</sup> = (1.097 − 1)<sup>2</sup>", "≈ 0.0093"]] },
+    { title: "Backward: multiply local derivatives", calc: [
+      ["dL/dz = 2(z − y) = 2(0.097)", "≈ 0.193"],
+      ["dL/dw<sub>2</sub> = 0.193 · a = 0.193 · 0.731", "≈ 0.141"],
+      ["dL/da = 0.193 · w<sub>2</sub> = 0.193 · 1.5", "≈ 0.290"],
+      ["da/dh = a(1 − a) = 0.731 · 0.269", "≈ 0.197"],
+      ["dL/dw<sub>1</sub> = 0.290 · 0.197 · 2", "≈ 0.114"]] },
+    { title: "The check", flow: ["nudge w<sub>1</sub> by 0.001", "rerun forward pass", "[L(w<sub>1</sub> + 0.001) − L(w<sub>1</sub>)] / 0.001 ≈ 0.114", "matches the chain rule"] }
+  ],
+  "w4b:4": [
+    { rule: "Backprop is the chain rule computed once, backward, with each layer's sensitivity reused." },
+    { title: "Two sentences, four moves", flow: ["L = f<sub>3</sub>(f<sub>2</sub>(f<sub>1</sub>(x))): a composition", "chain rule: product of local derivatives", "δ<sub>k−1</sub> = δ<sub>k</sub> · ∂f<sub>k</sub>/∂f<sub>k−1</sub>: reuse", "∂L/∂w<sub>k</sub> = δ<sub>k</sub> · ∂f<sub>k</sub>/∂w<sub>k</sub>"] },
+    { title: "Why backward wins", vs: { cols: ["Backward walk", "Redo per weight"], rows: [
+      ["Passes for n weights", "1", "n"],
+      ["Reuses δ", "yes: shared by every weight at that layer", "no: path product rebuilt each time"],
+      ["Cost", "a small constant times one forward pass", "n times that"]] } }
+  ],
+  "w4c:0": [
+    { title: "Where an embedding row comes from", flow: ["table E, V × d, small random numbers", "lookup: one-hot · E picks row t", "loss reaches that row", "v<sub>c</sub> ← v<sub>c</sub> − η ∂L/∂v<sub>c</sub>", "similar contexts pull rows together"],
+      note: "Only rows that were looked up get a gradient. The rest stay put that step." },
+    { title: "One update, d = 2, η = 0.5", calc: [
+      ["u<sub>o</sub> − ∑ p u = (1.0, 0.5) − (0.2, 0.1)", "(0.8, 0.4)"],
+      ["η · (0.8, 0.4)", "(0.4, 0.2)"],
+      ["v<sub>cat</sub> = (0.1, −0.2) + (0.4, 0.2)", "(0.5, 0.0)"],
+      ["v<sub>dog</sub> = (−0.3, 0.3) + (0.4, 0.2)", "(0.1, 0.5)"],
+      ["u<sub>o</sub> · v<sub>cat</sub>: 0.0 → 0.5", "higher"],
+      ["u<sub>o</sub> · v<sub>dog</sub>: −0.15 → 0.35", "higher"]] },
+    { title: "The gradient on the row", parts: [
+      ["−u<sub>o</sub>", "the true neighbour's vector"],
+      ["+ ∑ p(w | c) u<sub>w</sub>", "what the model currently believes"],
+      ["step", "toward the word that appeared, away from the ones over-favoured", true]] }
+  ],
+  "w4c:1": [
+    { rule: "V is value, not vector. The key decides how much to read; the value decides what is read." },
+    { title: "Three projections of one input", parts: [
+      ["q = x W<sup>Q</sup>", "what I am looking for"],
+      ["k = x W<sup>K</sup>", "what this position advertises"],
+      ["v = x W<sup>V</sup>", "the content carried forward", true]] },
+    { title: "Three positions, d<sub>k</sub> = 2, q = (1, 0)", calc: [
+      ["s = q · k = (2, 0, 1)", "k<sub>1</sub> = (2, 0), k<sub>2</sub> = (0, 2), k<sub>3</sub> = (1, 0)"],
+      ["α = softmax(2, 0, 1)", "≈ (0.665, 0.090, 0.245)"],
+      ["out = 0.665 · (1, 0) + 0.090 · (0, 1) + 0.245 · (1, 1)", "≈ (0.910, 0.335)"]] },
+    { title: "A dictionary made soft", flow: ["score query against every key", "softmax: weights add to 1", "blend the values by weight"] }
+  ],
+  "w4c:2": [
+    { rule: "Divide by √d<sub>k</sub> so the spread of a score stays 1 whatever d<sub>k</sub> is." },
+    { title: "Variance, step by step", calc: [
+      ["Var(q<sub>m</sub> k<sub>m</sub>) = E[q<sub>m</sub><sup>2</sup>] · E[k<sub>m</sub><sup>2</sup>]", "1 · 1 = 1"],
+      ["Var(q · k) = ∑<sub>m=1..d<sub>k</sub></sub> 1", "d<sub>k</sub>, so std = √d<sub>k</sub>"],
+      ["Var(q · k / √d<sub>k</sub>) = d<sub>k</sub> / (√d<sub>k</sub>)<sup>2</sup>", "1"]] },
+    { title: "d<sub>k</sub> = 64: std = 8", vs: { cols: ["Unscaled (16, 0, −8)", "Divided by 8: (2, 0, −1)"], rows: [
+      ["Softmax", "≈ (1.0000, 0.0000001, 0.00000000004)", "≈ (0.84, 0.11, 0.04)"],
+      ["Top weight's gradient α(1 − α)", "about 0.0000001", "0.84 · 0.16 ≈ 0.13"],
+      ["Can it still learn", "no: saturated", "yes: spread out"]] },
+      note: "A saturated softmax passes almost no gradient back." }
+  ],
+  "wc2:0": [
+    { title: "The pipeline, and who does each stage", flow: ["control definition", "test plan + attributes", "population (query)", "sample", "evidence per item", "attribute testing", "citation check", "exceptions", "drafted conclusion", "reviewer queue"] },
+    { title: "Code or model", vs: { cols: ["Code", "Model"], rows: [
+      ["Decides a fact", "yes", "no"],
+      ["Attribute testing", "no", "yes: pass, fail, insufficient"],
+      ["Narrative", "no", "yes: drafted around a fixed verdict"],
+      ["Everything else", "yes: query, sample, retrieve, verify, exceptions", "no"]] } }
+  ],
+  "wc2:1": [
+    { title: "What goes in the workpaper", parts: [
+      ["Seed", "stored, so the draw can be repeated", true],
+      ["Population query", "and its row count"],
+      ["Sample size", "from the firm's methodology table, not a prompt"],
+      ["Judgmental sample", "a human records the reason"]] },
+    { title: "Why this is code", flow: ["same query + same seed", "same items", "anyone can re-run it"],
+      note: "A deterministic, side-effect-free step can simply be re-run, so it belongs in code, not a model call." }
+  ],
+  "wc2:2": [
+    { rule: "The model selects handles. It never writes a document name or a page number." },
+    { title: "Citation as constrained selection", flow: ["chunk evidence with coordinates", "label chunks E1 to En", "model cites handles", "code resolves to coordinates, draws the box", "verifier: span contains the value"],
+      note: "Exact match for amounts, dates and IDs. If the span does not contain the value, fail closed." },
+    { title: "Generated or selected", vs: { cols: ["Model writes the reference", "Model selects a handle"], rows: [
+      ["Citations always real", "no: it can invent one", "yes: impossible to invent, not just unlikely"],
+      ["Who resolves it", "the model", "code"]] } }
+  ],
+  "wc2:3": [
+    { title: "Each attribute, three answers", vs: { cols: ["Pass", "Fail", "Insufficient"], rows: [
+      ["Meaning", "evidence supports it", "evidence contradicts it", "evidence is thin"],
+      ["Routes to", "next stage", "exceptions", "a human"],
+      ["Is it a valid result", "yes", "yes", "yes: the honest answer"]] } },
+    { title: "What a result carries", parts: [
+      ["Result", "pass, fail or insufficient", true],
+      ["Cited handles", "which evidence"],
+      ["Extracted value", "what was read"],
+      ["Rationale", "short"]] },
+    { rule: "A partial answer stated as partial beats a confident wrong one." }
+  ],
+  "wc2:4": [
+    { title: "From results to conclusion", flow: ["attribute results", "code derives exceptions", "rule over count and severity", "verdict fixed", "model drafts narrative around it"] },
+    { title: "Who controls what", split: [["Code owns", ["the exceptions", "the verdict, by a rule over count and severity"]],
+                                          ["Model cannot", ["change the verdict", "write 'operating effectively' when an exception is recorded"]]] }
+  ],
+  "wc2:5": [
+    { title: "Event sourcing, in this design", flow: ["every model call logged", "every reviewer decision logged", "append-only log of immutable facts", "workpaper = a view rebuilt from it"] },
+    { title: "What each log entry holds", parts: [
+      ["Model call", "handles seen, output, model version, prompt version"],
+      ["Reviewer decision", "including overrides", true]] },
+    { rule: "Overrides are labelled examples of exactly where the system is wrong, and they feed evaluation." }
+  ],
+  "wc2:6": [
+    { title: "The evaluation answer", flow: ["gold set from past signed workpapers", "attribute-level agreement with reviewers", "citation precision gates releases", "watch the insufficient rate", "replay on every model or prompt change"] },
+    { title: "Reading the insufficient rate", vs: { cols: ["Rising", "Falling suddenly"], rows: [
+      ["Likely cause", "evidence retrieval got worse", "the model started guessing"],
+      ["Action", "check retrieval", "check for guessed passes"]] } },
+    { title: "The deterministic gate", parts: [
+      ["Citation precision", "does the cited span contain the value", true],
+      ["Needs human labels", "no: a string and number match"]] }
+  ],
+  "wc2:7": [
+    { title: "Three likely weak points", parts: [
+      ["Retrieval misses the evidence", "no verifier can catch what was never fetched", true],
+      ["OCR errors", "scanned evidence read wrongly"],
+      ["Judgment-call controls", "attributes that are not checkable facts"]] },
+    { title: "The eight minutes", flow: ["pipeline: code vs model", "sample, citation", "three-valued results, exceptions", "reviewer loop, audit log", "evaluation", "three weakest points"] }
+  ],
+  "w5a:0": [
+    { title: "Where a stale read comes from", flow: ["write lands on the leader", "copy sent to followers", "follower applies it late", "a read hits that follower", "old data comes back"],
+      note: "No cache anywhere. The delay in the middle is replication lag." },
+    { title: "What each guarantee promises", vs: { cols: ["Promise", "Without it"], rows: [
+      ["Read-your-writes", "you see your own write at once", "no: your write seems lost"],
+      ["Monotonic reads", "never see data go backwards", "no: new then old"],
+      ["Consistent prefix", "writes appear in order", "no: effect before cause"],
+      ["Eventual consistency", "replicas converge, no deadline", "no: gives no bound on staleness"]] } },
+    { rule: "A cache adds a second, independent source of staleness on top of replication lag." }
+  ],
+  "w5a:1": [
+    { title: "Settle in this order", flow: ["placement", "key", "staleness window", "invalidation rule"] },
+    { title: "TTL or explicit invalidation", vs: { cols: ["TTL", "Explicit invalidation"], rows: [
+      ["What it is", "a bet that a bounded window is fine", "a promise kept on every write path"],
+      ["Write path", "yes: costs nothing", "no: every write must clear entries"],
+      ["Staleness", "up to the window", "none, if no path is missed"],
+      ["Fails by", "serving old answers until expiry", "silently, when a path is missed"]] } },
+    { title: "Getting the key right", split: [["Right key", ["user plus query", "one user's results never reach another"]], ["Wrong key", ["too broad: merges requests that differ", "too narrow: never gets a hit"]]] }
+  ],
+  "w5a:2": [
+    { title: "A memory assistant caches vector search: the four parts", parts: [["Where", "in front of the vector search"], ["Key", "user id plus the query"], ["Rule", "explicit invalidation, not TTL", true], ["Cost", "write, then search is a guaranteed miss"]] },
+    { title: "A user adds a memory", flow: ["write for that user", "clear their cached searches", "next search misses", "fills from the source"],
+      note: "Why not TTL: the window would answer from a world that no longer exists." },
+    { rule: "The tradeoff is the answer, not the fact that a cache exists." }
+  ],
+  "w5a:3": [
+    { title: "Five minutes, out loud, no notes", flow: ["rate: units per second, bursts", "bounded queue", "backpressure or shed load", "partition key, assume skew", "retries: backoff, jitter, idempotent", "size from p99"] },
+    { title: "Each primitive and what it costs", vs: { cols: ["Why", "Cost"], rows: [
+      ["Queue", "absorbs bursts", "memory"],
+      ["Partitions", "spread load across the key", "coordination"],
+      ["Retries", "survive partial failure", "capacity"]] } },
+    { title: "Scale turns rare into daily", calc: [["1 in 10<sup>6</sup> failure × 10<sup>8</sup> a day", "about 100 a day"]],
+      note: "At-least-once plus idempotency gives exactly-once effects." }
+  ],
+  "w5a:4": [
+    { title: "Listen back twice", flow: ["content: was every primitive said", "delivery: filler, order, pace", "write three sentences for next time"] },
+    { title: "The three fixes in this recording", split: [["Change", ["cut the filler that shows under pressure: 'so'", "name the partition key before the queue's response", "cost becomes one line: resilience against capacity"]], ["Test", ["a listener can say back the constraint you optimised for", "the vocabulary alone does not count"]]] }
+  ],
+  "w5b:0": [
+    { title: "Conditioning shrinks the world", calc: [
+      ["P(A | B) = P(A ∩ B) / P(B)", "keep B, rescale"],
+      ["die: A = six, B = even", "(1/6) / (1/2) = 1/3"],
+      ["P(B | A) = P(even | 6)", "1 ≠ 1/3"]],
+      note: "The two directions count over different groups." },
+    { title: "From the overlap to Bayes", flow: ["P(A ∩ B) = P(A | B) · P(B)", "also = P(B | A) · P(A)", "equate, divide by P(B)", "P(A | B) = P(B | A) · P(A) / P(B)"] },
+    { title: "The denominator", parts: [["P(B)", "all the ways B arrives"], ["P(B | A) · P(A)", "route through A"], ["P(B | ¬A) · P(¬A)", "route through not-A"]], note: "Add both routes: total probability." }
+  ],
+  "w5b:1": [
+    { title: "100,000 people", calc: [
+      ["ill: 0.001 × 100,000", "100"],
+      ["healthy: 100,000 − 100", "99,900"],
+      ["true positives: 0.99 × 100", "99"],
+      ["false positives: 0.05 × 99,900", "4,995"],
+      ["positive column: 99 + 4,995", "5,094"],
+      ["P(ill | +) = 99 / 5,094", "≈ 0.0194, about 2%"]] },
+    { title: "The four cells", vs: { cols: ["Positive", "Negative"], rows: [
+      ["Ill (100)", "99", "1"],
+      ["Healthy (99,900)", "4,995", "94,905"]] },
+      note: "Read the answer off the positive column." },
+    { rule: "Healthy people outnumber ill ones 999 to 1, so false alarms swamp true cases." }
+  ],
+  "w5b:2": [
+    { title: "One formula for the table", parts: [["s · r", "true positives"], ["f · (1 − r)", "false positives"], ["P(ill | +)", "s·r / (s·r + f·(1 − r))", true]], note: "r prevalence, s sensitivity, f false positive rate." },
+    { title: "Same test, s = 0.99 and f = 0.05, four prevalences", ladder: [
+      ["1.9%", "r = 0.001", ""],
+      ["17%", "r = 0.01", ""],
+      ["69%", "r = 0.1", ""],
+      ["95%", "r = 0.5", "the test is the same each time"]] },
+    { title: "Worked and break-even", calc: [
+      ["fraud 1/500: 180 / (180 + 1,996)", "180 / 2,176 ≈ 0.083"],
+      ["odds: 1/999 × 0.99/0.05", "≈ 0.0198, about 1 to 50"],
+      ["r = f / (s + f) = 0.05 / 1.04", "≈ 0.048"]],
+      note: "Below about 4.8% prevalence a positive is more likely wrong than right." }
+  ],
+  "w5b:3": [
+    { title: "Softmax, scores to chances", calc: [
+      ["p<sub>i</sub> = e<sup>z<sub>i</sub></sup> / Σ<sub>j</sub> e<sup>z<sub>j</sub></sup>", "positive, sums to 1"],
+      ["z = (2, 1, 0)", "e<sup>z</sup> = (7.39, 2.72, 1.00), sum 11.11"],
+      ["p", "(0.665, 0.245, 0.090)"]] },
+    { title: "Cross-entropy and its gradient", flow: ["one-hot y: L = −Σ y<sub>i</sub> log p<sub>i</sub>", "L = −log p<sub>c</sub>", "L = −z<sub>c</sub> + log Σ e<sup>z<sub>j</sub></sup>", "∂L/∂z<sub>i</sub> = p<sub>i</sub> − y<sub>i</sub>"],
+      note: "Minimising it is maximum likelihood." },
+    { title: "Wrong by a lot: true score 0, wrong score 6", vs: { cols: ["Push on the true score"], rows: [
+      ["Cross-entropy", "≈ −0.998"],
+      ["Squared error", "≈ −0.0049: p(1 − p) goes to zero, about 200 times weaker"]] } }
+  ],
+  "w5c:0": [
+    { title: "Two independent factors", parts: [["Y(f)", "what you hear"], ["E(f)", "source: the buzz, at k · F<sub>0</sub>"], ["H(f)", "filter: the tract, formants F<sub>n</sub>", true]], note: "On a dB scale the product is a sum, so a spectrum plot reads them apart." },
+    { title: "Move one side, the other stays", vs: { cols: ["Harmonics", "Formants"], rows: [
+      ["F<sub>0</sub> 100 → 200 Hz", "200, 400, 600 Hz", "stay at 500, 1500, 2500"],
+      ["L 17.5 → 15 cm", "do not move", "583, 1750, 2917 Hz"]] } },
+    { title: "Tract as a closed-open tube", calc: [
+      ["F<sub>n</sub> = (2n − 1) · c / (4L)", "L = 17.5 cm, c = 350 m/s"],
+      ["n = 1, 2, 3", "500, 1500, 2500 Hz"]],
+      note: "Pitch lives on the source, identity on the filter." }
+  ],
+  "w5c:1": [
+    { title: "Which side each measure reads", vs: { cols: ["Source side", "Filter side"], rows: [
+      ["f0_mean", "yes: mean pitch over voiced frames", "no: no formant enters it"],
+      ["Tract length L", "no: F<sub>0</sub> is not in it", "yes: uses F<sub>1</sub> and F<sub>3</sub> only"],
+      ["Spectral tilt", "meant to be", "it leaks: see below"]] } },
+    { title: "Check the length formula", calc: [
+      ["L = ½ [ c / (4F<sub>1</sub>) + 5c / (4F<sub>3</sub>) ]", "F<sub>1</sub> = 500, F<sub>3</sub> = 2500"],
+      ["½ (17.5 + 17.5)", "17.5 cm"]] },
+    { title: "Where the tilt fit gets its weight", ladder: [
+      ["43.2%", "below 500 Hz", "27 bins"],
+      ["27.4%", "500 Hz to 4 kHz", "308 bins"],
+      ["29.4%", "above 4 kHz", "341 bins: w<sub>i</sub> = (x<sub>i</sub> − x̄)<sup>2</sup> / Σ (x<sub>j</sub> − x̄)<sup>2</sup>"]],
+      note: "Those 27 bins hold the first F<sub>0</sub> harmonics, so moving F<sub>0</sub> moves 43% of the fit." }
+  ],
+  "w5c:2": [
+    { title: "Same filter, two pitches", vs: { cols: ["90 Hz voice", "250 Hz voice"], rows: [
+      ["Harmonics in 80 to 8000 Hz", "88", "32"],
+      ["Bins per harmonic (11.7 Hz)", "7.7", "21.3"],
+      ["Harmonics under 500 Hz", "five: 90 to 450", "one: 250"],
+      ["Floor per harmonic", "less", "2.8 times more"]] } },
+    { title: "The arithmetic", calc: [
+      ["N ≈ 7920 / F<sub>0</sub>", "88 at 90 Hz, 32 at 250 Hz"],
+      ["88 / 32", "2.8 times"],
+      ["24 000 / 2048", "11.7 Hz per bin"]] },
+    { rule: "Harmonics sample the envelope every F<sub>0</sub> hertz, so tilt reads the sampling, not the envelope." }
+  ]
+  };
+  for (var k in V) { if (window.SHEETS[k]) { window.SHEETS[k].vis = V[k]; } }
+})();
