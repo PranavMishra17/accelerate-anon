@@ -319,7 +319,7 @@
   .kt-session { margin: var(--s4) 0; }
   .kt-session > summary { cursor: pointer; font-size: var(--fs-sm); font-weight: 600; color: var(--muted); }
   .kt-session > summary:hover { color: var(--ink); }
-  .nlm-src { display: block; width: 100%; max-width: 920px; margin: var(--s2) 0; font-family: var(--mono); font-size: var(--fs-code); line-height: 1.6; color: var(--ink); background: var(--sunken); border: var(--hair); border-radius: var(--radius); padding: var(--s2) var(--s3); resize: vertical; }
+  .shead .kicker .nlm-copy { margin-left: auto; }
   .sxg { font-size: var(--fs-lg); font-weight: 600; margin: var(--s5) 0 var(--s2); }
   /* the session table: steps down, beats across; the open row's drawer below it */
   .stable { width: 100%; border-collapse: collapse; table-layout: fixed; }
@@ -8842,42 +8842,36 @@
     var model = modelOf(s, it), pts = model && (model.pts || (Array.isArray(model) ? model : null));
     return (pts || []).map(function (q) { var m = /^([^:.]{2,60}):\s/.exec(String(q)); return m ? m[1] : null; });
   }
-  /* Every outside link a session names (its steps, study items and data/reading.js), one per
-     line, to paste into NotebookLM as sources; books and the questions to ask it listed beneath. */
-  function notebookSources(s) {
-    var urls = [], books = [], asks = [], seen = {};
+  /* One button in a session's header: copies every outside link the session names (its steps,
+     study items and data/reading.js), one per line, to paste into NotebookLM's Website source.
+     One per page: NotebookLM fetches the whole page, so #anchors would add it twice. */
+  function notebookButton(s) {
+    var urls = [], seen = {};
     function walk(v) {
       if (typeof v === "string") {
-        /* one source per page: NotebookLM fetches the whole page, so #anchors would add it twice */
         var u = v.replace(/#.*$/, ""), id = u.replace(/\/$/, "");
         if (/^https?:\/\//.test(u) && !/^https?:\/\/(localhost|127\.|\[::1\])/.test(u) && !seen[id]) { seen[id] = 1; urls.push(u); }
       } else if (v && typeof v === "object") {
-        if (typeof v.book === "string" && books.indexOf(v.book) < 0) { books.push(v.book); }
         for (var k in v) { if (v.hasOwnProperty(k)) { walk(v[k]); } }
       }
     }
-    function one(key, it) { walk(it); walk(extraOf(key)); if (it.nlm) { asks.push(it.nlm); } }
-    (s.study || []).forEach(function (it, i) { one(s.id + ":s" + i, it); });
-    s.steps.forEach(function (st, i) { one(sKey(s.id, i), st); });
+    (s.study || []).forEach(function (it, i) { walk(it); walk(extraOf(s.id + ":s" + i)); });
+    s.steps.forEach(function (st, i) { walk(st); walk(extraOf(sKey(s.id, i))); });
     if (!urls.length) { return null; }
-    var d = el("details", "kt-session"); d.id = "nlm-" + s.id;
-    d.open = !!open[s.id + ":nlm"];
-    d.addEventListener("toggle", function () { open[s.id + ":nlm"] = d.open; });
-    d.appendChild(el("summary", "", "Sources for NotebookLM (" + urls.length + (urls.length === 1 ? " link)" : " links)")));
-    var ta = document.createElement("textarea");
-    ta.className = "nlm-src"; ta.readOnly = true; ta.rows = Math.min(urls.length, 12); ta.value = urls.join("\n");
-    var cp = el("button", "sec", (urls.length === 1 ? "Copy the link" : "Copy all " + urls.length + " links"));
+    var label = "Copy " + urls.length + (urls.length === 1 ? " link" : " links") + " for NotebookLM";
+    var cp = el("button", "sec nlm-copy", label);
+    cp.title = "Paste into NotebookLM: Add source, Website";
     cp.addEventListener("click", function () {
-      function done() { cp.textContent = "Copied"; setTimeout(function () { cp.textContent = (urls.length === 1 ? "Copy the link" : "Copy all " + urls.length + " links"); }, 1500); }
-      function fallback() { ta.select(); try { document.execCommand("copy"); done(); } catch (e) { cp.textContent = "Select and copy"; } }
-      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(ta.value).then(done, fallback); } else { fallback(); }
+      var text = urls.join("\n");
+      function done() { cp.textContent = "Copied"; setTimeout(function () { cp.textContent = label; }, 1500); }
+      function fallback() {
+        var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); done(); } catch (e) { cp.textContent = "Copy failed"; }
+        document.body.removeChild(ta);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
     });
-    d.appendChild(cp);
-    d.appendChild(el("p", "sm dim", "In NotebookLM: Add source, Website, paste. Videos go in the same box."));
-    d.appendChild(ta);
-    if (books.length) { d.appendChild(el("p", "sm dim", "Not links, add by hand: " + books.join("; "))); }
-    if (asks.length) { d.appendChild(el("div", "sxl", "Ask NotebookLM")); asks.forEach(function (q) { d.appendChild(el("p", "", q)); }); }
-    return d;
+    return cp;
   }
   function extraMinutes(s) {
     var m = 0;
@@ -9180,8 +9174,6 @@
       skd.appendChild(termsTable(allTerms));
       box.appendChild(skd);
     }
-    var nlmBox = notebookSources(s);
-    if (nlmBox) { box.appendChild(nlmBox); }
 
     var after = el("div", "sxafter");
     /* figures a step does not already carry */
@@ -9946,6 +9938,8 @@
     kick.appendChild(el("span", "", s.len + " planned" + (xm ? ", plus " + mins(xm) + " of optional reading" : "")));
     if (state.done[s.id]) { kick.appendChild(el("span", "posted", "Closed " + state.done[s.id])); }
     if (isFolded(s)) { kick.appendChild(el("span", "folded-note", "Folded into wildcard work on " + state.folded[s.id].at)); }
+    var nb = notebookButton(s);
+    if (nb) { kick.appendChild(nb); }
     head.appendChild(kick);
     head.appendChild(el("h1", "", s.name));
     if (s.intro || s.blurb) { head.appendChild(el("p", "intro", s.intro || s.blurb)); }

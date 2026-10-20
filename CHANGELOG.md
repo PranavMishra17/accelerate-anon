@@ -1305,3 +1305,8 @@ Each session in the tracker and on the loop pages ends with a folded block listi
 it names (steps, study items, data/reading.js), one per page with anchors dropped, and a button that
 copies them all to paste into NotebookLM's Website source. Books are listed beneath as text; the
 tracker also gathers the session's Ask NotebookLM questions there. No charter deviation.
+
+**2026-10-20 — NotebookLM sources as one button in the session header.**
+He could not find the folded block at the bottom and did not need the links shown. Now one button at
+the top of each session, tracker and loop pages ('Copy N links for NotebookLM'), copies them all;
+the block is gone. The one Ask NotebookLM question stays in its step. No charter deviation.
