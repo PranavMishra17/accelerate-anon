@@ -1299,3 +1299,9 @@ comparison, fits-against-breaks, pinned code, timelines, a key's parts). Compari
 criteria so a tick always means good; a worked result that is approximate shows the approximate sign in
 place of the equals sign. The session's step table keeps a fixed layout so it no longer runs under the
 right-hand panel. No charter deviation.
+
+**2026-10-20 — Sources for NotebookLM on every session.**
+Each session in the tracker and on the loop pages ends with a folded block listing every outside link
+it names (steps, study items, data/reading.js), one per page with anchors dropped, and a button that
+copies them all to paste into NotebookLM's Website source. Books are listed beneath as text; the
+tracker also gathers the session's Ask NotebookLM questions there. No charter deviation.
