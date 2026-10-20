@@ -149,7 +149,7 @@ def build(module_name):
     data = {
         "id": L["id"], "title": L["title"], "subtitle": L["subtitle"], "when": L["when"], "when_iso": L["when_iso"],
         "who": L["who"], "format": L["format"], "bar": L["bar"],
-        "sessions": [{k: s.get(k) for k in ("id", "name", "blurb", "intro", "len", "day", "steps", "study", "quiz", "hasTrackerQuiz", "figs")}
+        "sessions": [{k: s.get(k) for k in ("id", "name", "blurb", "intro", "len", "day", "steps", "study", "quiz", "hasTrackerQuiz", "figs", "nlm")}
                      for s in sessions],
         "scripts": getattr(m, "SCRIPTS", []), "drills": getattr(m, "DRILLS", []), "qa": getattr(m, "QA", []), "ask": getattr(m, "ASK", []), "ask3": getattr(m, "ASK_3C", []), "traps": getattr(m, "TRAPS", []),
         "tables": getattr(m, "KITARU_TABLES", []), "admire": getattr(m, "ADMIRE", ""), "kitaruLead": getattr(m, "KITARU_LEAD", ""),

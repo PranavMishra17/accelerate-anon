@@ -1310,3 +1310,14 @@ tracker also gathers the session's Ask NotebookLM questions there. No charter de
 He could not find the folded block at the bottom and did not need the links shown. Now one button at
 the top of each session, tracker and loop pages ('Copy N links for NotebookLM'), copies them all;
 the block is gone. The one Ask NotebookLM question stays in its step. No charter deviation.
+
+**2026-10-20 — NotebookLM button gathers the whole subject, not one session.**
+The caching session copied 8 links because it only read its own steps. `site/nlm.js` now adds every
+other session (plan or wildcard) that covers at least half of this session's system design
+techniques, and every Baseline topic that points at one of them: caching goes to 16, all caching
+(the Mercor caching sessions, Baseline's AWS and memcache reading). Matching by whole pattern pulled
+in noise (a SOX PDF in caching), and so did matching any one shared technique (194 links for a design
+session); the half-of-mine rule keeps each list on its subject. The Mercor sessions had no guide
+references, so they now carry them in data/reading.js (cache-aside, invalidation, hot keys, locks,
+degradation, timeouts, prompt and response caching), which also shows those guide links on the loop
+page. Loop pages get the same list at build time via interviews/extract.js. No charter deviation.

@@ -58,10 +58,21 @@ if (process.argv[2] === "--sd") {
   process.stdout.write(JSON.stringify(res));
   process.exit(0);
 }
+/* Every session in the plan and the wildcard, with its study list, and Baseline's topics, so
+   site/nlm.js gives each loop session the same NotebookLM links as the tracker's button. */
+const PLAN = eval("(" + grab("var PLAN = [") + ")");
+const ALL = PLAN.reduce((a, w) => a.concat(w.sessions), []).concat(WILDCARD.sessions.filter(x => !x.parked))
+  .map(x => Object.assign({}, x, { study: STUDY[x.id] || x.study || [] }));
+global.window = global;
+require(path.join(__dirname, "..", "site", "nlm.js"));
+require(path.join(__dirname, "..", "baseline", "base.js"));
+fs.readdirSync(path.join(__dirname, "..", "baseline", "fields")).forEach(f => require(path.join(__dirname, "..", "baseline", "fields", f)));
+const TOPICS = NLM.baselineTopics(window.BASELINE);
 const want = (process.argv[2] || "").split(",").filter(Boolean);
 const out = want.map(id => {
   const s = WILDCARD.sessions.find(x => x.id === id);
   if (!s) throw new Error("No wildcard session " + id);
-  return Object.assign({}, s, { steps: s.steps.map((x, i) => withSd(id + ":" + i, x)), study: (STUDY[id] || []).map((x, i) => withSd(id + ":s" + i, x)), figs: s.diagrams || [] });
+  const nlm = NLM.links(ALL.find(x => x.id === id) || Object.assign({}, s, { study: STUDY[id] || [] }), ALL, k => RD.READING[k], TOPICS);
+  return Object.assign({}, s, { steps: s.steps.map((x, i) => withSd(id + ":" + i, x)), study: (STUDY[id] || []).map((x, i) => withSd(id + ":s" + i, x)), figs: s.diagrams || [], nlm: nlm });
 });
 process.stdout.write(JSON.stringify(out));

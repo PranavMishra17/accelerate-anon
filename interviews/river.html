@@ -1763,11 +1763,12 @@ details.item > .sbody { padding-left: 0; }
     host.appendChild(box);
   }
 
-  /* One button by a session's title: copies every outside link the session names, one per line,
-     for NotebookLM's Website source (the tracker has the same); one per page, anchors dropped. */
+  /* One button by a session's title: copies the session's NotebookLM links (x.nlm, gathered at
+     build time by site/nlm.js exactly as the tracker's button does), one per line, for
+     NotebookLM's Website source. A session without them falls back to its own links. */
   function notebookButton(x) {
-    var urls = [], seen = {};
-    (function walk(v) {
+    var urls = x.nlm || [], seen = {};
+    if (!x.nlm) (function walk(v) {
       if (typeof v === "string") {
         var u = v.replace(/#.*$/, ""), id = u.replace(/\/$/, "");
         if (/^https?:\/\//.test(u) && !/^https?:\/\/(localhost|127\.|\[::1\])/.test(u) && !seen[id]) { seen[id] = 1; urls.push(u); }

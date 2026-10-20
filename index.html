@@ -765,9 +765,10 @@
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
 <script src="data/streams.js?v=d0b499a4"></script>
-<script src="data/reading.js?v=e143835e"></script>
+<script src="data/reading.js?v=9eb0f97e"></script>
 <script src="data/sheets.js?v=e1ef5ca9"></script>
 <script src="site/res.js?v=c33c7564"></script>
+<script src="site/nlm.js?v=2c36ecf8"></script>
 <script src="site/sheet.js?v=d5ed86a7"></script>
 <script src="data/mcq/base.js?v=5fc7e7ac"></script>
 <script src="data/mcq/week1.js?v=8276998c"></script>
@@ -8842,28 +8843,23 @@
     var model = modelOf(s, it), pts = model && (model.pts || (Array.isArray(model) ? model : null));
     return (pts || []).map(function (q) { var m = /^([^:.]{2,60}):\s/.exec(String(q)); return m ? m[1] : null; });
   }
-  /* One button in a session's header: copies every outside link the session names (its steps,
-     study items and data/reading.js), one per line, to paste into NotebookLM's Website source.
-     One per page: NotebookLM fetches the whole page, so #anchors would add it twice. */
+  /* One button in a session's header: copies every outside link for the session (site/nlm.js
+     gathers its own, and those of steps and Baseline topics on the same guide techniques), one
+     per line, to paste into NotebookLM's Website source. The count grows once Baseline loads. */
   function notebookButton(s) {
-    var urls = [], seen = {};
-    function walk(v) {
-      if (typeof v === "string") {
-        var u = v.replace(/#.*$/, ""), id = u.replace(/\/$/, "");
-        if (/^https?:\/\//.test(u) && !/^https?:\/\/(localhost|127\.|\[::1\])/.test(u) && !seen[id]) { seen[id] = 1; urls.push(u); }
-      } else if (v && typeof v === "object") {
-        for (var k in v) { if (v.hasOwnProperty(k)) { walk(v[k]); } }
-      }
+    function urls() {
+      var all = allSessions().map(function (o) { attachStudy(o.s); return o.s; });
+      return NLM.links(s, all, extraOf, NLM.baselineTopics(window.BASELINE));
     }
-    (s.study || []).forEach(function (it, i) { walk(it); walk(extraOf(s.id + ":s" + i)); });
-    s.steps.forEach(function (st, i) { walk(st); walk(extraOf(sKey(s.id, i))); });
-    if (!urls.length) { return null; }
-    var label = "Copy " + urls.length + (urls.length === 1 ? " link" : " links") + " for NotebookLM";
-    var cp = el("button", "sec nlm-copy", label);
+    var list = urls();
+    if (!list.length) { return null; }
+    function label() { return "Copy " + list.length + (list.length === 1 ? " link" : " links") + " for NotebookLM"; }
+    var cp = el("button", "sec nlm-copy", label());
     cp.title = "Paste into NotebookLM: Add source, Website";
+    loadBaseline(function () { list = urls(); if (cp.textContent !== "Copied") { cp.textContent = label(); } });
     cp.addEventListener("click", function () {
-      var text = urls.join("\n");
-      function done() { cp.textContent = "Copied"; setTimeout(function () { cp.textContent = label; }, 1500); }
+      var text = list.join("\n");
+      function done() { cp.textContent = "Copied"; setTimeout(function () { cp.textContent = label(); }, 1500); }
       function fallback() {
         var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select();
         try { document.execCommand("copy"); done(); } catch (e) { cp.textContent = "Copy failed"; }
