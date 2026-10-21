@@ -1347,3 +1347,16 @@ technical leadership; 10 years minimum), Home Depot's customer AI (Magic Apron, 
 SMS, chat and phone, voice agents in test), your intro, why Home Depot, a prepared answer on level, why
 leave and what next, each in versions to pick from; project stories (V8 for a recruiter, the eval bench in
 your words) in gitignored private/loops/homedepot.js; questions in three tiers. Page only. No charter deviation.
+
+**2026-10-21 — Mercor: a Coding tab; alfred_ caching mapped.**
+A free-form Coding tab on interviews/mercor.html, for the coding half of Friday's screen: five parts in
+order (Python and loops, threads, asyncio, failure and timing with a spoken review, four offline problems:
+Two Sum, LRU Cache, Print in Order with a bounded blocking queue, longest substring without repeats).
+Click-the-line questions (where it starts, where it waits, where the cap goes), predict-the-output, edit
+exercises in page boxes, multiple choice with I don't know, timelines, three-level hints; everything typed
+is kept in this browser (accelerate.coding.<loop>). Content in interviews/coding/<module>-*.js, injected
+and stamped by interviews/build.py; every sample run on Python 3.12. Why: he could not find where to add a
+cap and an order in async code at Commure. Also: what alfred_ caches, read from the backend code (prompt
+cache by far the largest; small in-process TTL caches; two Postgres caches; no shared cache), as a
+Caching group on the private ALFRED.html and a story on the Mercor Prep tab from gitignored
+private/loops/mercor.js. Wildcard work for a live loop. No charter deviation.

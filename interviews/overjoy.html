@@ -536,6 +536,50 @@ details.item > .sbody { padding-left: 0; }
 }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 @media (prefers-reduced-motion: reduce) { details > summary::after { transition: none; } }
+/* coding tab: parts in order, one per page; every block ends in something you do */
+.cd-parts { list-style: none; padding: 0; margin: 0 0 var(--s5); display: grid; gap: var(--s1); }
+.cd-parts a { display: flex; gap: var(--s3); align-items: baseline; color: var(--ink); }
+.cd-parts a.on { color: var(--accent); font-weight: var(--w-strong); }
+.cd-parts .cd-n { color: var(--muted); font-size: var(--fs-sm); min-width: 1.5em; }
+.cd-parts .cd-m { color: var(--muted); font-size: var(--fs-sm); margin-left: auto; white-space: nowrap; }
+.cd-sec { margin: var(--s6) 0 0; padding-top: var(--s4); border-top: var(--hair); }
+.cd-sec h3 { font-size: var(--fs-lg); margin-bottom: var(--s3); }
+.cd-blk { margin: var(--s4) 0; max-width: 860px; }
+.cd-q { font-weight: var(--w-strong); margin: 0 0 var(--s2); }
+.cd-code { margin: var(--s2) 0; background: var(--code-bg); color: var(--code-ink); border-radius: var(--radius); padding: var(--s2) 0; overflow-x: auto;
+  font-family: var(--mono); font-size: var(--fs-code); line-height: 1.6; }
+.cd-ttl { font-size: var(--fs-sm); color: var(--muted); margin-bottom: var(--s1); }
+.cd-ln { display: grid; grid-template-columns: 3em minmax(0, 1fr); white-space: pre; }
+.cd-ln .no { color: var(--code-ink); opacity: .45; text-align: right; padding-right: var(--s3); user-select: none; }
+.cd-ln .tx { padding-right: var(--s3); }
+.cd-code.asking .cd-ln { cursor: pointer; }
+.cd-code.asking .cd-ln:hover { background: rgba(127, 127, 127, .18); }
+.cd-ln.pick { background: rgba(200, 120, 90, .28); }
+.cd-ln.hit { background: rgba(110, 180, 140, .28); }
+.cd-pin { grid-column: 2; white-space: normal; font-family: var(--font); font-size: var(--fs-sm); opacity: .78; padding: 0 var(--s3) var(--s1) 0; }
+.cd-pin::before { content: "\2191  "; }
+.cd-bar { display: flex; flex-wrap: wrap; gap: var(--s2); margin: var(--s2) 0; align-items: center; }
+.cd-bar .note { font-size: var(--fs-sm); color: var(--muted); }
+.cd-why { color: var(--soft); margin: var(--s2) 0; }
+.cd-ok { color: var(--ok); font-weight: var(--w-strong); }
+.cd-no { color: var(--warn); font-weight: var(--w-strong); }
+.cd-opts { display: grid; gap: var(--s1); margin: var(--s2) 0; }
+.cd-opts button { text-align: left; border: var(--hair); background: var(--surface); color: var(--ink); border-radius: var(--radius); padding: var(--s2) var(--s3); }
+.cd-opts button.right { border-color: var(--ok); color: var(--ok); font-weight: var(--w-strong); }
+.cd-opts button.wrong { border-color: var(--warn); color: var(--warn); }
+.cd-opts button.idk { color: var(--muted); }
+textarea.cd-ta { font-family: var(--mono); font-size: var(--fs-code); line-height: 1.55; min-height: 140px; tab-size: 4; white-space: pre; overflow-x: auto; }
+textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: pre-wrap; }
+.cd-faq details { border-bottom: var(--hair); padding: var(--s2) 0; }
+.cd-faq summary { cursor: pointer; font-weight: var(--w-strong); }
+.cd-faq p { margin: var(--s2) 0 0; color: var(--soft); }
+.cd-prob dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--s1) var(--s4); font-size: var(--fs-sm); }
+.cd-prob dt { color: var(--muted); }
+.cd-ex { margin: var(--s2) 0; font-size: var(--fs-sm); }
+.cd-ex code { white-space: pre-wrap; }
+.cd-hint { margin: var(--s2) 0; padding-left: var(--s3); border-left: var(--hair); }
+.cd-nav { display: flex; justify-content: space-between; gap: var(--s3); margin-top: var(--s7); padding-top: var(--s4); border-top: var(--hair); }
+.cd-done { margin-top: var(--s5); }
 </style>
 </head>
 <body>
@@ -666,7 +710,8 @@ details.item > .sbody { padding-left: 0; }
     { id: "own", label: (LOOP.own && LOOP.own.tab) || "Yours", show: function () { return !!LOOP.own; } },
     { id: "sessions", label: "Sessions", show: function () { return LOOP.sessions.length; } },
     { id: "live", label: "Live build", show: function () { return (LOOP.live || []).length || (LOOP.takehomes || []).length; } },
-    { id: "mocks", label: "Mocks", show: function () { return !!LOOP.mockHow; } }
+    { id: "mocks", label: "Mocks", show: function () { return !!LOOP.mockHow; } },
+    { id: "coding", label: "Coding", show: function () { return !!(window.LOOP_CODING && LOOP_CODING.parts.length); } }
   ].filter(function (t) { return t.show() && (!LOOP.tabs || LOOP.tabs.indexOf(t.id) >= 0); });
   var main = document.getElementById("main");
   var side = document.getElementById("side");
@@ -833,7 +878,7 @@ details.item > .sbody { padding-left: 0; }
      understand it on the left, what to say on the dark sheet. */
   function scriptItem(x) {
     return { id: "say-" + x.id, q: x.title, short: x.short || x.title, tests: x.when, a: x.say, land: x.land, never: x.never, notes: x.notes,
-      probes: x.probes, swaps: x.swaps, variants: x.variants, vname: x.vname, learn: x.figs ? { figs: x.figs } : null,
+      probes: x.probes, swaps: x.swaps, variants: x.variants, vname: x.vname, learn: x.learn || (x.figs ? { figs: x.figs } : null),
       meta: x.length ? x.length.charAt(0).toUpperCase() + x.length.slice(1) + "." : "",
       drill: LOOP.drills.some(function (d) { return d.id === x.id; }) ? x.id : null };
   }
@@ -2109,6 +2154,247 @@ details.item > .sbody { padding-left: 0; }
     return d;
   }
 
+  /* ---------------------------------------------------------------- coding
+     A free-form refresher from interviews/coding/<module>-*.js (window.LOOP_CODING.parts): one part
+     per page, its sections down the side. Everything typed, picked or clicked is kept in this browser. */
+  var CD_KEY = "accelerate.coding." + LOOP.id;
+  function cdState() { try { return JSON.parse(localStorage.getItem(CD_KEY) || "{}") || {}; } catch (e) { return {}; } }
+  function cdSave(k, v) { var s = cdState(); s[k] = v; try { localStorage.setItem(CD_KEY, JSON.stringify(s)); } catch (e) {} }
+  function cdParts() { return (window.LOOP_CODING ? LOOP_CODING.parts : []).slice().sort(function (a, b) { return a.n - b.n; }); }
+  function cdBtn(label, fn) { var b = el("button", "btn", esc(label)); b.type = "button"; b.addEventListener("click", fn); return b; }
+  function cdArea(id, value, small) {
+    var ta = el("textarea", "cd-ta" + (small ? " small" : ""));
+    var st = cdState();
+    ta.value = st["a:" + id] != null ? st["a:" + id] : (value || "");
+    ta.spellcheck = false;
+    ta.addEventListener("input", function () { cdSave("a:" + id, ta.value); });
+    ta.addEventListener("keydown", function (e) {
+      if (e.key !== "Tab" || small) { return; }
+      e.preventDefault();
+      var a = ta.selectionStart; ta.setRangeText("    ", a, ta.selectionEnd, "end"); cdSave("a:" + id, ta.value);
+    });
+    return ta;
+  }
+  function cdPre(code) {
+    var box = el("div", "cd-code");
+    String(code).split("\n").forEach(function (t, i) {
+      var r = el("div", "cd-ln"); r.appendChild(el("span", "no", String(i + 1))); r.appendChild(el("span", "tx", esc(t) || " "));
+      box.appendChild(r);
+    });
+    return box;
+  }
+  /* Shown once asked for; the button turns into what it revealed. */
+  function cdReveal(host, label, make) {
+    var b = cdBtn(label, function () { b.replaceWith(make()); });
+    host.appendChild(b);
+  }
+  function cdCode(b) {
+    var w = el("div", "cd-blk");
+    if (b.title) { w.appendChild(el("div", "cd-ttl", inl(b.title))); }
+    var box = cdPre(b.code), rows = box.querySelectorAll(".cd-ln"), notes = b.notes || {};
+    function pins() {
+      Object.keys(notes).forEach(function (k) {
+        var r = rows[+k - 1]; if (r) { r.appendChild(el("span", "cd-pin", inl(notes[k]))); }
+      });
+    }
+    w.appendChild(box);
+    var A = b.ask;
+    if (!A) { pins(); return w; }
+    var q = el("p", "cd-q", inl(A.q)); w.insertBefore(q, box);
+    var out = el("div"); w.appendChild(out);
+    var key = "k:" + b.id;
+    function settle(pick) {
+      box.classList.remove("asking");
+      rows.forEach(function (r) { r.classList.remove("pick", "hit"); });
+      if (pick && rows[pick - 1]) { rows[pick - 1].classList.add("pick"); }
+      A.lines.forEach(function (n) { if (rows[n - 1]) { rows[n - 1].classList.add("hit"); } });
+      var ok = A.lines.indexOf(pick) >= 0;
+      out.innerHTML = "";
+      out.appendChild(el("p", "cd-why", (pick ? '<span class="' + (ok ? "cd-ok" : "cd-no") + '">' + (ok ? "Right. " : "Not that one. ") + "</span>" : "") +
+        "Line" + (A.lines.length > 1 ? "s " : " ") + A.lines.join(", ") + ". " + inl(A.why || "")));
+      if (!box.querySelector(".cd-pin")) { pins(); }
+      out.appendChild(cdBtn("Try again", function () { cdSave(key, null); out.innerHTML = ""; box.querySelectorAll(".cd-pin").forEach(function (p) { p.remove(); }); ask(); }));
+    }
+    function ask() {
+      box.classList.add("asking");
+      rows.forEach(function (r) { r.classList.remove("pick", "hit"); });
+      out.appendChild(el("p", "cd-bar", '<span class="note">Click a line. Notes appear after.</span>'));
+      var skip = cdBtn("Show me", function () { settle(0); }); out.firstChild.appendChild(skip);
+    }
+    rows.forEach(function (r, i) {
+      r.addEventListener("click", function () {
+        if (!box.classList.contains("asking")) { return; }
+        cdSave(key, i + 1); settle(i + 1);
+      });
+    });
+    var had = cdState()[key];
+    if (had != null) { settle(had); } else { ask(); }
+    return w;
+  }
+  function cdPredict(b) {
+    var w = el("div", "cd-blk");
+    if (b.code) { w.appendChild(cdPre(b.code)); }
+    w.appendChild(el("p", "cd-q", inl(b.q)));
+    w.appendChild(cdArea(b.id, "", true));
+    cdReveal(w, "Reveal", function () {
+      var r = el("div");
+      r.appendChild(el("pre", "cv-code", esc(b.answer)));
+      if (b.why) { r.appendChild(el("p", "cd-why", inl(b.why))); }
+      return r;
+    });
+    return w;
+  }
+  function cdMcq(b) {
+    var w = el("div", "cd-blk");
+    w.appendChild(el("p", "cd-q", inl(b.q)));
+    var box = el("div", "cd-opts"), why = el("div");
+    var opts = b.o.concat(["I don't know"]);
+    var btns = opts.map(function (o, i) {
+      var x = el("button", i === b.o.length ? "idk" : "", inl(o)); x.type = "button";
+      x.addEventListener("click", function () { cdSave("m:" + b.id, i); mark(i); });
+      box.appendChild(x); return x;
+    });
+    function mark(i) {
+      btns.forEach(function (x, j) { x.classList.toggle("right", j === b.a); x.classList.toggle("wrong", j === i && j !== b.a); });
+      why.innerHTML = "";
+      why.appendChild(el("p", "cd-why", '<span class="' + (i === b.a ? "cd-ok" : "cd-no") + '">' + (i === b.a ? "Right. " : "The answer is marked. ") + "</span>" + inl(b.why || "")));
+    }
+    w.appendChild(box); w.appendChild(why);
+    var had = cdState()["m:" + b.id]; if (had != null) { mark(had); }
+    return w;
+  }
+  function cdWrite(b) {
+    var w = el("div", "cd-blk");
+    w.appendChild(el("p", "cd-q", inl(b.q)));
+    var ta = cdArea(b.id, b.starter || "");
+    ta.rows = Math.min(24, Math.max(6, String(b.starter || "").split("\n").length + 2));
+    w.appendChild(ta);
+    var bar = el("div", "cd-bar"); w.appendChild(bar);
+    if (b.hint) { cdReveal(bar, "Hint", function () { return el("span", "note", inl(b.hint)); }); }
+    cdReveal(bar, "Solution", function () {
+      var r = el("div");
+      r.appendChild(cdPre(b.solution));
+      if (b.why) { r.appendChild(el("p", "cd-why", inl(b.why))); }
+      bar.after(r);
+      return el("span");
+    });
+    bar.appendChild(cdBtn("Reset to starter", function () { ta.value = b.starter || ""; cdSave("a:" + b.id, null); }));
+    return w;
+  }
+  function cdProblem(b) {
+    var w = el("div", "cd-blk cd-prob");
+    w.appendChild(el("p", "cd-why", esc(b.source) + (b.minutes ? ", about " + b.minutes + " minutes" : "") + ". " + inl(b.why || "")));
+    paras(w, String(b.statement).split("\n\n"));
+    (b.examples || []).forEach(function (x, i) {
+      w.appendChild(el("div", "cd-ex", "<strong>Example " + (i + 1) + "</strong><br><code>" + esc(x.input) + "</code> gives <code>" + esc(x.output) + "</code>" +
+        (x.note ? '<br><span class="note">' + inl(x.note) + "</span>" : "")));
+    });
+    if (b.constraints && b.constraints.length) {
+      var ul = el("ul"); b.constraints.forEach(function (c) { ul.appendChild(el("li", "", inl(c))); }); w.appendChild(ul);
+    }
+    w.appendChild(el("div", "lab", "Your solution"));
+    var ta = cdArea(b.id, b.starter || ""); ta.rows = 18; w.appendChild(ta);
+    var hints = el("div"); w.appendChild(hints);
+    var bar = el("div", "cd-bar"); w.appendChild(bar);
+    var shown = 0;
+    var hb = cdBtn("Hint 1 of " + b.hints.length, function () {
+      hints.appendChild(el("p", "cd-hint", "<strong>Hint " + (shown + 1) + ".</strong> " + inl(b.hints[shown])));
+      shown++;
+      if (shown >= b.hints.length) { hb.remove(); } else { hb.textContent = "Hint " + (shown + 1) + " of " + b.hints.length; }
+    });
+    bar.appendChild(hb);
+    bar.appendChild(cdBtn("Tests to paste", function () {
+      var r = el("div"); r.appendChild(el("div", "lab", "Paste under your solution and run it")); r.appendChild(cdPre(b.tests));
+      bar.after(r);
+    }));
+    cdReveal(bar, "Solution", function () {
+      var r = el("div");
+      r.appendChild(cdPre(b.solution));
+      if (b.complexity) { r.appendChild(el("p", "", "<strong>Cost.</strong> " + inl(b.complexity))); }
+      if (b.explain && b.explain.length) { var ol = el("ol"); b.explain.forEach(function (s) { ol.appendChild(el("li", "", inl(s))); }); r.appendChild(ol); }
+      w.appendChild(r);
+      return el("span");
+    });
+    if (b.followups && b.followups.length) {
+      w.appendChild(el("div", "lab", "What they ask next"));
+      w.appendChild(cdFaq(b.followups));
+    }
+    return w;
+  }
+  function cdFaq(items) {
+    var w = el("div", "cd-blk cd-faq");
+    items.forEach(function (x) {
+      var d = el("details"); d.appendChild(el("summary", "", inl(x.q)));
+      /* Prose is a one-line paragraph starting with a capital; consecutive code paragraphs join into one block. */
+      var code = [];
+      function flush() { if (code.length) { d.appendChild(cdPre(code.join("\n\n"))); code = []; } }
+      String(x.a).split(/\n\n/).forEach(function (c) {
+        var prose = !/\n/.test(c) && /^[A-Z"'(]/.test(c) && !/^[A-Z]\w*(\(|\s*=|\.)/.test(c) && !/^(If|For|While|With|From|Import|Class|Def)\b.*:$/.test(c);
+        if (prose) { flush(); d.appendChild(el("p", "", inl(c))); } else if (c.trim()) { code.push(c.replace(/^\n+|\n+$/g, "")); }
+      });
+      flush();
+      w.appendChild(d);
+    });
+    return w;
+  }
+  function cdBlock(b) {
+    switch (b.t) {
+      case "p": return el("p", "", inl(b.text));
+      case "list": var ul = el("ul");
+        b.items.forEach(function (s) { var m = /^([^:]{1,48}):\s(.+)$/.exec(s); ul.appendChild(el("li", "", m ? "<strong>" + inl(m[1]) + ".</strong> " + inl(m[2]) : inl(s))); });
+        return ul;
+      case "code": return cdCode(b);
+      case "predict": return cdPredict(b);
+      case "mcq": return cdMcq(b);
+      case "write": return cdWrite(b);
+      case "vis": var v = el("div", "cd-blk"); v.appendChild(Sheet.cheat({ vis: b.vis })); return v;
+      case "faq": return cdFaq(b.items);
+      case "table": var t = el("table");
+        t.innerHTML = "<thead><tr>" + b.head.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+          b.rows.map(function (r) { return "<tr>" + r.map(function (c) { return "<td>" + inl(c) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody>";
+        var tw = el("div", "cd-blk"); tw.appendChild(t); return tw;
+      case "problem": return cdProblem(b);
+    }
+    return el("span");
+  }
+  function tabCoding(host, anchor) {
+    var parts = cdParts(), st = cdState(), done = st.done || {};
+    var cur = parts.filter(function (p) { return p.id === anchor || p.sections.some(function (s) { return s.id === anchor; }); })[0] ||
+      parts.filter(function (p) { return p.id === st.last; })[0] || parts[0];
+    cdSave("last", cur.id);
+    var top = el("section", "block"); top.id = cur.id;
+    top.appendChild(el("h1", "", esc(cur.n + ". " + cur.title)));
+    top.appendChild(el("p", "hsub", "About " + cur.minutes + " minutes. " + inl(cur.lead)));
+    var ol = el("ol", "cd-parts");
+    parts.forEach(function (p) {
+      var li = el("li"), a = el("a", p === cur ? "on" : "",
+        '<span class="cd-n">' + p.n + '</span><span>' + esc(p.title) + '</span><span class="cd-m">' + (done[p.id] ? '<span class="cd-ok">&#10003;</span> ' : "") + p.minutes + " min</span>");
+      a.href = link("coding", p.id); li.appendChild(a); ol.appendChild(li);
+    });
+    top.appendChild(ol);
+    host.appendChild(top);
+    nav.push([cur.id, "Parts"]);
+    cur.sections.forEach(function (s) {
+      var sec = el("section", "cd-sec"); sec.id = s.id;
+      sec.appendChild(el("h3", "", esc(s.title)));
+      s.blocks.forEach(function (b) {
+        try { sec.appendChild(cdBlock(b)); } catch (e) { console.error("coding block", s.id, b, e); }
+      });
+      host.appendChild(sec);
+      nav.push([s.id, s.title, true, link("coding", s.id)]);
+    });
+    var i = parts.indexOf(cur), foot = el("div", "cd-nav");
+    var mk = cdBtn(done[cur.id] ? "Done. Mark not done" : "Mark this part done", function () {
+      var d = cdState().done || {}; d[cur.id] = !d[cur.id]; cdSave("done", d); route();
+    });
+    foot.appendChild(i > 0 ? el("a", "", "Previous: " + esc(parts[i - 1].title)) : el("span"));
+    foot.appendChild(mk);
+    foot.appendChild(i < parts.length - 1 ? el("a", "", "Next: " + esc(parts[i + 1].title)) : el("span"));
+    if (i > 0) { foot.firstChild.href = link("coding", parts[i - 1].id); }
+    if (i < parts.length - 1) { foot.lastChild.href = link("coding", parts[i + 1].id); }
+    host.appendChild(foot);
+  }
+
   function tabMocks(host) {
     var s = heading(host, "mock", "Run in chat", "Mock interviews");
     s.appendChild(el("p", "lead", inl(LOOP.mockHow)));
@@ -2395,6 +2681,7 @@ details.item > .sbody { padding-left: 0; }
       else if (r.tab === "sessions") { tabSessions(main, r.anchor); }
       else if (r.tab === "live") { tabLive(main); }
       else if (r.tab === "mocks") { tabMocks(main); }
+      else if (r.tab === "coding") { tabCoding(main, r.anchor); }
     } catch (err) {
       console.error("Could not draw the page", err);
       main.appendChild(el("p", "", "This page could not be drawn. The console has the details."));

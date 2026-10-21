@@ -165,7 +165,7 @@ SCRIPTS = [
 ]
 
 QA = []
-TABS = ["overview", "prep", "sessions", "rounds", "mocks"]
+TABS = ["overview", "prep", "sessions", "rounds", "mocks", "coding"]
 
 ASK_3C = [
     {"id": "sophie", "title": "For Sophie", "when": "The last two or three minutes. One or two.",
@@ -191,5 +191,5 @@ DRILLS = [
 ]
 
 MOCK_HOW = ("Say 'run the Mercor mock' in chat: Sophie's caching screen, 30 minutes, a snippet to review, no tools; critique after. "
-            "For the code version, open E:\mercor-cache-mock: mock1_review (threads, a cache with planted bugs to review) and "
+            "For the code version, open E:\\mercor-cache-mock: mock1_review (threads, a cache with planted bugs to review) and "
             "mock2_service (asyncio, a two-tier cache to navigate). The interviewer guide and your map are in private/mercor-mock, local only.")
