@@ -1381,3 +1381,9 @@ note, sessions done) and link to each page, and #/w/<id> forwards to the loop pa
 while their interview is ahead or at most 14 days behind, or undated; older ones (or archived: true) wait
 behind Show older. Why: he did not want the same sessions in two places, and the wildcard keeps rolling
 past milestone 1. The next milestone's shape is left for the week 5 review. No charter deviation.
+
+**2026-10-21 — Mercor Coding tab cut to two hours.**
+Parts 1 to 4 trimmed from about 3.5 hours to 2 (Python basics 15 minutes, threads 40, asyncio 40,
+failure and review 25) by keeping one idea per question and the click-the-line asks; the four problems
+are unchanged. Nothing deleted: the full versions are parked in interviews/coding/later/ (not loaded by the
+page). Why: too much material for the time before Friday. No charter deviation.
