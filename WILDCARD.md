@@ -62,20 +62,28 @@ progress keys its steps by id (`wc3:s2`). A session opens by id (`#/w/wc8`) or b
 (`#/w/3`); every hand-written link uses the id, because positions shift when a session is
 inserted (putting `wc18` first on 28 September sent every `#/w/<n>` link one session off).
 Parked sessions still count toward credit (the fold rule counts every closed
-wildcard session, parked or not), stay openable at their `#/w/<id>` address, and leave
-every list: the home page, the rail, the wildcard page's open list, the sheet and the
-drill. They sit under **Past loops**, folded shut on the wildcard page, with each past
-loop's page linked.
+wildcard session, parked or not) and leave every list: the home page, the sheet and the
+drill.
+
+**One home per session (since 21 Oct).** A session that belongs to a loop (its `forWhat`
+starts with the loop's `forWhat`) opens only on that loop's page, Sessions tab. The tracker
+lists loops, not sessions, and `#/w/<id>` forwards to `<loop page>#/sessions/<id>`
+(`toLoopPage`). A session tied to no loop (`wc18`, for every interview) stays in the tracker.
+
+**The rolling window.** Each `LOOPS` entry carries `date` (ISO, empty when not set). A loop
+shows while its interview is ahead, at most 14 days behind (`LOOP_WINDOW_DAYS`), or undated;
+older loops, and any marked `archived: true`, wait behind **Show older** on the wildcard page.
+The window does not change across milestones.
 
 ## What each place shows
 
 - **Home**: open wildcard sessions only (not parked, not done). With none open it reads
   "Nothing open." and links the loop in play, the first entry in `LOOPS`.
-- **Wildcard page** (`#/wild`): the loop in play on one line, then one list of open
-  sessions. Done sessions are hidden; a small "Show done (N)" toggle shows them struck
-  through. The toggle lives in memory only and is off on every load. Then the credit
-  line, Past loops (folded), and How it works (folded).
-- **Rail**: the wildcard's open count, a link to the loop in play, and its open sessions.
+- **Wildcard page** (`#/wild`): the recall bar, then one table of loops in the window (the
+  loop and its note, when, sessions done on its page), each row opening the loop's page;
+  "Show older (N)" adds the rest, struck through (in memory only, off on every load). Then
+  the credit line, the sessions tied to no loop, and How it works (folded).
+- **Rail**: one link per loop in the window, to its page.
 - **The hero**: `nextSession()` never picks a parked or done wildcard session, nor one
   whose loop date has passed.
 - **`WILDCARD.note`**: one line, the loop in play ("Mphasis, technical."). Everything

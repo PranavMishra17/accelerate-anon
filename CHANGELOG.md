@@ -1374,3 +1374,10 @@ planting; user numbers self-reported and inconsistent; privacy and model questio
 intro, why EcoGPT, an honest answer on open models and fine-tuning, why leave and what next in versions;
 project stories (V8, working memory, MockFlow) in gitignored private/loops/ecogpt.js; questions in three
 tiers. Page only. No charter deviation.
+
+**2026-10-21 — Wildcard: one home per session, a rolling window.**
+A loop's sessions now live only on its loop page; the tracker's Wildcard page and rail list loops (when,
+note, sessions done) and link to each page, and #/w/<id> forwards to the loop page's session. Loops show
+while their interview is ahead or at most 14 days behind, or undated; older ones (or archived: true) wait
+behind Show older. Why: he did not want the same sessions in two places, and the wildcard keeps rolling
+past milestone 1. The next milestone's shape is left for the week 5 review. No charter deviation.

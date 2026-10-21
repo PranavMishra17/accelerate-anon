@@ -2310,29 +2310,29 @@
      The wildcard page lists them; a loop's sessions are the wildcard sessions whose
      forWhat starts with the loop's forWhat. */
   var LOOPS = [
-    { id: "overjoy", name: "Overjoy, Product Engineer", when: "Wed 22 Oct", forWhat: "Overjoy",
+    { id: "overjoy", date: "2026-10-22", name: "Overjoy, Product Engineer", when: "Wed 22 Oct", forWhat: "Overjoy",
       file: "interviews/overjoy.html", note: "Round 1: 30 minutes with Jun Kwak, co-founder and CTO. Background, one project, what you want next." },
-    { id: "ecogpt", name: "EcoGPT, Founding Engineer", when: "Date to be set", forWhat: "EcoGPT",
+    { id: "ecogpt", date: "", name: "EcoGPT, Founding Engineer", when: "Date to be set", forWhat: "EcoGPT",
       file: "interviews/ecogpt.html", note: "Round 1: a call with Ethan Leonard, founder and CEO. Agents, memory, evals, open models, cost per message." },
-    { id: "homedepot", name: "The Home Depot, Principal Data Scientist - CX", when: "Date to be set", forWhat: "Home Depot",
+    { id: "homedepot", date: "", name: "The Home Depot, Principal Data Scientist - CX", when: "Date to be set", forWhat: "Home Depot",
       file: "interviews/homedepot.html", note: "Recruiter call with Kristen Bernal: agentic AI for customer self-service, evaluation, level." },
-    { id: "mercor", name: "Mercor, Applied AI (Enterprise)", when: "Fri 23 Oct, 6 PM", forWhat: "Mercor",
+    { id: "mercor", date: "2026-10-23", name: "Mercor, Applied AI (Enterprise)", when: "Fri 23 Oct, 6 PM", forWhat: "Mercor",
       file: "interviews/mercor.html", note: "Round 2: a 30-minute conversational screen on caching with Sophie Guo. No coding tools, no LLMs." },
-    { id: "vanguard", name: "Vanguard, Conversational AI", when: "Wed 7 Oct, 3 PM", forWhat: "Vanguard",
+    { id: "vanguard", date: "2026-10-07", name: "Vanguard, Conversational AI", when: "Wed 7 Oct, 3 PM", forWhat: "Vanguard",
       file: "interviews/vanguard.html", note: "Client interview with Vanguard's team, via Mphasis: conversational AI and deep NLP." },
-    { id: "commure", name: "Commure, Voice Agents", when: "Mon 5 Oct", forWhat: "Commure",
+    { id: "commure", date: "2026-10-05", name: "Commure, Voice Agents", when: "Mon 5 Oct", forWhat: "Commure",
       file: "interviews/commure.html", note: "Software Engineer, Voice Agents. Recruiter screen: healthcare voice, real-time, production agents." },
-    { id: "coframe", name: "Coframe, Agent Platform Engineer", when: "Fri 9 Oct, one hour", forWhat: "Coframe",
+    { id: "coframe", date: "2026-10-09", name: "Coframe, Agent Platform Engineer", when: "Fri 9 Oct, one hour", forWhat: "Coframe",
       file: "interviews/coframe.html", note: "Round 2: a technical exercise with Pavlo, the technical co-founder. Python and TypeScript, AI tools allowed, screen shared." },
-    { id: "river", name: "River, founder call", when: "date to be set", forWhat: "River",
+    { id: "river", date: "", name: "River, founder call", when: "date to be set", forWhat: "River",
       file: "interviews/river.html", note: "Founding Engineer, likely. Tarek Abillama, CEO: real-time voice and a live sales agent." },
-    { id: "raydar", name: "Raydar, Founding FDE", when: "Wed 30 Sep, morning", forWhat: "Raydar",
+    { id: "raydar", date: "2026-09-30", name: "Raydar, Founding FDE", when: "Wed 30 Sep, morning", forWhat: "Raydar",
       file: "interviews/raydar.html", note: "Happened. Founding Forward Deployed Engineer: a fifteen-minute AI screen." },
-    { id: "mphasis", name: "Mphasis, technical", when: "Mon 28 Sep", forWhat: "Mphasis",
+    { id: "mphasis", date: "2026-09-28", name: "Mphasis, technical", when: "Mon 28 Sep", forWhat: "Mphasis",
       file: "interviews/mphasis.html", note: "Happened. Agentic skills and AI fundamentals, a short coding exercise." },
-    { id: "zenml-r3", name: "ZenML round 3", when: "Mon 28 Sep, 9 AM Eastern", forWhat: "ZenML round 3",
+    { id: "zenml-r3", date: "2026-09-28", name: "ZenML round 3", when: "Mon 28 Sep, 9 AM Eastern", forWhat: "ZenML round 3",
       file: "interviews/zenml-round3.html", note: "Happened. Its page also holds everything learned about Kitaru." },
-    { id: "oxus", name: "Oxus, technical", when: "23 Sep", forWhat: "Oxus",
+    { id: "oxus", date: "2026-09-23", name: "Oxus, technical", when: "23 Sep", forWhat: "Oxus",
       file: "interviews/oxus.html", note: "Happened. Its design sessions moved into weeks 2 to 4." }
   ];
   function loopSessions(lp) {
@@ -2353,8 +2353,18 @@
     var a = document.createElement("a");
     a.className = "sub looplink";
     a.href = lp.file;
-    a.textContent = lp.name + ": open its page";
+    a.textContent = lp.name.split(",")[0];
+    a.title = lp.name + ", " + lp.when;
     return a;
+  }
+  /* The wildcard rolls: a loop shows while its interview is ahead or at most LOOP_WINDOW_DAYS
+     behind, or while it has no date; older ones, and any marked archived: true, wait behind
+     Show older. A loop's sessions live on its own page, never in the tracker too. */
+  var LOOP_WINDOW_DAYS = 14;
+  function loopShown(lp) {
+    if (lp.archived) { return false; }
+    if (!lp.date) { return true; }
+    return (todayMid() - new Date(lp.date + "T00:00:00")) / 864e5 <= LOOP_WINDOW_DAYS;
   }
 
   var WILDCARD = {
@@ -7874,27 +7884,16 @@
       }, wi === focusWeek);
     });
 
-    var open = wildOpen();
+    var railLoops = LOOPS.filter(loopShown);
     var wh = railLink("#/wild", "Wildcard", view.page === "wild");
     var wd = el("span", "num");
     var wdot = el("i", "dot done");
     wdot.style.setProperty("--tone", "var(--wild)");
     wd.appendChild(wdot);
     wh.insertBefore(wd, wh.firstChild);
-    wh.appendChild(el("span", "ct", open.length + " open"));
+    wh.appendChild(el("span", "ct", railLoops.length + " loops"));
     railGroup(side, "wc", "the wildcard", wh, function (box) {
-      var lastFor = null;
-      if (LOOPS[0]) { box.appendChild(loopLink(LOOPS[0])); }
-      open.forEach(function (x) {
-        var f = x.s.forWhat || "";
-        if (f !== lastFor) {
-          var lp = loopOf(x.s);
-          if (lp) { if (lp !== LOOPS[0]) { box.appendChild(loopLink(lp)); } }
-          else { box.appendChild(el("div", "sub", f)); }
-          lastFor = f;
-        }
-        box.appendChild(sessionItem(x.s, "wc", x.i));
-      });
+      railLoops.forEach(function (lp) { box.appendChild(loopLink(lp)); });
     }, inWild);
 
     side.appendChild(el("div", "rh", "Practice"));
@@ -10008,18 +10007,6 @@
     head.appendChild(el("p", "lede", "What a scheduled interview demands. It is not week six and it does not move the gate."));
     v.appendChild(head);
 
-    /* The loop in play, first and on one line. */
-    var cur = LOOPS[0];
-    if (cur) {
-      var ip = el("p", "inplay");
-      var ca = document.createElement("a");
-      ca.href = cur.file;
-      ca.textContent = cur.name;
-      ip.appendChild(ca);
-      ip.appendChild(document.createTextNode(", " + cur.when + ". " + cur.note));
-      v.appendChild(ip);
-    }
-
     var wcCards = cardsFor("wc");
     if (wcCards.length) {
       v.appendChild(recallBar(wcCards, "wc"));
@@ -10027,34 +10014,32 @@
       if (wcBand) { v.appendChild(wcBand); }
     }
 
-    /* One list: open sessions. Done ones hide behind a toggle, parked ones in Past loops. */
-    var open = wildOpen(), done = [];
-    WILDCARD.sessions.forEach(function (s, si) { if (!s.parked && sessionDone(s)) { done.push({ s: s, i: si }); } });
-    v.appendChild(rubric("Open", open.length ? open.length + " to do" : ""));
-    var rows = open.concat(wildShowDone ? done : []);
-    if (rows.length) {
-      var t = el("table", "t");
-      var hr = el("tr");
-      ["Session", "For", "Est.", "Steps"].forEach(function (x, i) { hr.appendChild(el("th", i >= 2 ? "r" : "", x)); });
-      t.appendChild(hr);
-      rows.forEach(function (x) {
-        var s = x.s, tr = el("tr", "clickable" + (sessionDone(s) ? " shut" : ""));
-        var td = el("td");
-        td.appendChild(document.createTextNode(s.name));
-        td.appendChild(el("span", "sub", s.blurb || ""));
-        tr.appendChild(td);
-        tr.appendChild(el("td", "", s.forWhat || ""));
-        tr.appendChild(el("td", "r", s.len));
-        tr.appendChild(el("td", "r", stepsDone(s) + " of " + s.steps.length));
-        tr.addEventListener("click", function () { go("session", "wc", x.i); });
-        t.appendChild(tr);
-      });
-      v.appendChild(t);
-    } else {
-      v.appendChild(el("p", "sm dim", "Nothing open. Sessions append here when a loop needs them."));
-    }
-    if (done.length) {
-      var tg = el("button", "linkish sm", wildShowDone ? "Hide done" : "Show done (" + done.length + ")");
+    /* One row per loop; its sessions open on its page. */
+    var shownLoops = LOOPS.filter(loopShown), older = LOOPS.filter(function (lp) { return !loopShown(lp); });
+    v.appendChild(rubric("Loops", "the last " + LOOP_WINDOW_DAYS + " days and ahead"));
+    var rows = shownLoops.concat(wildShowDone ? older : []);
+    var t = el("table", "t");
+    var hr = el("tr");
+    ["Loop", "When", "Sessions"].forEach(function (x, i) { hr.appendChild(el("th", i === 2 ? "r" : "", x)); });
+    t.appendChild(hr);
+    rows.forEach(function (lp) {
+      var mine = loopSessions(lp), fin = mine.filter(sessionDone).length;
+      var tr = el("tr", "clickable" + (loopShown(lp) ? "" : " shut"));
+      var td = el("td");
+      var a = document.createElement("a");
+      a.href = lp.file;
+      a.textContent = lp.name;
+      td.appendChild(a);
+      td.appendChild(el("span", "sub", lp.note || ""));
+      tr.appendChild(td);
+      tr.appendChild(el("td", "", lp.when));
+      tr.appendChild(el("td", "r", mine.length ? fin + " of " + mine.length + " done" : "page only"));
+      tr.addEventListener("click", function (e) { if (e.target.tagName !== "A") { location.href = lp.file; } });
+      t.appendChild(tr);
+    });
+    v.appendChild(t);
+    if (older.length) {
+      var tg = el("button", "linkish sm", wildShowDone ? "Hide older" : "Show older (" + older.length + ")");
       tg.addEventListener("click", function () { wildShowDone = !wildShowDone; draw(); });
       v.appendChild(tg);
     }
@@ -10064,42 +10049,21 @@
       foldsFree() + "</b> credit unspent, " + foldsUsed() + " of " + FOLD_CAP + " folds used."));
     v.appendChild(cr);
 
-    /* Past loops: interviews that have happened. Their sessions are parked: still counted
-       toward credit and hours, still openable at #/w/<n>, no longer what to do. */
-    var parked = [];
-    WILDCARD.sessions.forEach(function (s, si) { if (s.parked) { parked.push({ s: s, i: si }); } });
-    if (LOOPS.length > 1 || parked.length) {
-      var past = el("details", "sxs");
-      past.appendChild(el("summary", "", "Past loops" + (parked.length ? ", " + parked.length + " parked sessions" : "")));
-      var parkedList = function (xs) {
-        var ul = el("ul", "visits");
-        xs.forEach(function (x) {
-          var li = document.createElement("li");
-          var b = el("button", "linkish", (SHORT[x.s.id] || x.s.name).replace(/^(Oxus|ZenML): /, ""));
-          b.addEventListener("click", function () { go("session", "wc", x.i); });
-          li.appendChild(b);
-          li.appendChild(el("span", "w", state.done[x.s.id] ? "closed " + stampShort(state.done[x.s.id]) : "parked"));
-          ul.appendChild(li);
-        });
-        return ul;
-      };
-      LOOPS.slice(1).forEach(function (lp) {
-        var h = el("p", "pastloop");
-        var a = document.createElement("a");
-        a.href = lp.file;
-        a.textContent = lp.name;
-        h.appendChild(a);
-        h.appendChild(document.createTextNode(", " + lp.when + ". " + lp.note));
-        past.appendChild(h);
-        var mine = parked.filter(function (x) { return loopOf(x.s) === lp; });
-        if (mine.length) { past.appendChild(parkedList(mine)); }
+    /* A session for every interview belongs to no loop page, so it stays here. */
+    var loose = [];
+    WILDCARD.sessions.forEach(function (s, si) { if (!loopOf(s)) { loose.push({ s: s, i: si }); } });
+    if (loose.length) {
+      v.appendChild(rubric("For every interview", ""));
+      var ul = el("ul", "visits");
+      loose.forEach(function (x) {
+        var li = document.createElement("li");
+        var b = el("button", "linkish", x.s.name);
+        b.addEventListener("click", function () { go("session", "wc", x.i); });
+        li.appendChild(b);
+        li.appendChild(el("span", "w", sessionDone(x.s) ? "done" : x.s.len));
+        ul.appendChild(li);
       });
-      var loose = parked.filter(function (x) { return !loopOf(x.s); });
-      if (loose.length) {
-        past.appendChild(el("p", "pastloop", "Not tied to one loop"));
-        past.appendChild(parkedList(loose));
-      }
-      v.appendChild(past);
+      v.appendChild(ul);
     }
 
     var how = el("details", "sxs");
@@ -11783,6 +11747,14 @@
     try { load(); draw(); } catch (err) { console.error("Could not refresh from another tab", err); }
   });
 
+  /* One home per session: a loop's sessions open on its page, so #/w/<id> forwards there. */
+  function toLoopPage() {
+    if (view.week !== "wc") { return false; }
+    var s = WILDCARD.sessions[view.session], lp = s && loopOf(s);
+    if (!lp) { return false; }
+    location.replace(lp.file + "#/sessions/" + s.id);
+    return true;
+  }
   function draw() {
     try {
       drawNav();
@@ -11795,7 +11767,7 @@
       if (view.page === "home") { viewHome(); }
       else if (view.page === "week") { viewWeek(); }
       else if (view.page === "wild") { viewWild(); }
-      else if (view.page === "session") { viewSession(); }
+      else if (view.page === "session") { if (!toLoopPage()) { viewSession(); } }
       else if (view.page === "drill") { viewDrill(); }
       else if (view.page === "sheet") { viewSheet(); }
       else if (view.page === "dia") { viewDiaFirst(); }
