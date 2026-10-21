@@ -1339,3 +1339,11 @@ tiers: clarifying while he talks, collaborating before the end, contributing at 
 template: a script can carry versions with a picker that remembers your pick, used for every non-technical
 answer except the intro; and private project stories shown on Prep. Page only, no sessions (his call). No
 charter deviation.
+
+**2026-10-21 — Home Depot loop page.**
+interviews/homedepot.html for a recruiter call with Kristen Bernal on Principal Data Scientist - CX
+(Req189365, Atlanta, onsite): the posting from Workday (agentic self-service, evaluation, reliability,
+technical leadership; 10 years minimum), Home Depot's customer AI (Magic Apron, conversational AI across
+SMS, chat and phone, voice agents in test), your intro, why Home Depot, a prepared answer on level, why
+leave and what next, each in versions to pick from; project stories (V8 for a recruiter, the eval bench in
+your words) in gitignored private/loops/homedepot.js; questions in three tiers. Page only. No charter deviation.
