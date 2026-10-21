@@ -1330,3 +1330,12 @@ early refresh, negative caching, versioned invalidation), a bounded refresher wi
 with a breaker and idempotent orders. Why: at Commure he could not find where async code capped or ordered
 work; this practises finding it. The interviewer guide and his map are local, in private/mercor-mock. The
 Mercor page's Mocks tab points to them and gains a navigation drill. No charter deviation.
+
+**2026-10-21 — Overjoy loop page; story answers in versions.**
+interviews/overjoy.html for a 30-minute call with Jun Kwak, co-founder and CTO (Product Engineer, New York):
+the call, the company (Oversee to Overjoy, the agents, the Pydantic case study), your intro and story, your
+projects (V8, working memory, MockFlow, kept in gitignored private/loops/overjoy.js), and questions in three
+tiers: clarifying while he talks, collaborating before the end, contributing at the end. New in the loop
+template: a script can carry versions with a picker that remembers your pick, used for every non-technical
+answer except the intro; and private project stories shown on Prep. Page only, no sessions (his call). No
+charter deviation.

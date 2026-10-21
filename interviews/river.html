@@ -404,6 +404,10 @@ dialog.convo { width: min(1320px, 96vw); height: min(880px, 92vh); max-width: no
 .cv-col.cv-say { scrollbar-color: var(--muted) transparent; }
 .cv-h { font-size: var(--fs-md); margin: 0 0 var(--s3); }
 .stepsheet { margin: var(--s4) 0 0; padding-top: var(--s2); }
+.vpick { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); margin: 0 0 var(--s3); }
+.vp-lab { font-size: var(--fs-sm); color: var(--muted); font-weight: var(--w-strong); }
+.vp { font: inherit; font-size: var(--fs-sm); padding: 2px var(--s3); border: var(--hair); border-radius: var(--radius-sm); background: transparent; color: var(--soft); cursor: pointer; }
+.vp.on { color: var(--ink); border-color: var(--accent); font-weight: var(--w-strong); }
 .meta .nlm-copy { margin-left: auto; }
 .stepsheet .lab { font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); margin: var(--s3) 0 var(--s1); }
 .cv-col .lab, .sbody .lab { font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); margin: var(--s4) 0 var(--s1); }
@@ -828,13 +832,16 @@ details.item > .sbody { padding-left: 0; }
      understand it on the left, what to say on the dark sheet. */
   function scriptItem(x) {
     return { id: "say-" + x.id, q: x.title, short: x.short || x.title, tests: x.when, a: x.say, land: x.land, never: x.never, notes: x.notes,
-      probes: x.probes, swaps: x.swaps, learn: x.figs ? { figs: x.figs } : null,
+      probes: x.probes, swaps: x.swaps, variants: x.variants, vname: x.vname, learn: x.figs ? { figs: x.figs } : null,
       meta: x.length ? x.length.charAt(0).toUpperCase() + x.length.slice(1) + "." : "",
       drill: LOOP.drills.some(function (d) { return d.id === x.id; }) ? x.id : null };
   }
   function prepBanks() {
     var banks = [], story = LOOP.scripts.filter(function (x) { return x.id !== "logistics"; });
     if (story.length) { banks.push({ id: "story", title: "Your intro and story", blurb: LOOP.storyBlurb || "", items: story.map(scriptItem) }); }
+    /* Project stories about alfred_ internals live in the gitignored private/loops/<module>.js, never in the public module. */
+    var priv = window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id];
+    if (priv && priv.projects && priv.projects.length) { banks.push({ id: "projects", title: "Your projects", blurb: priv.projectsBlurb || "", items: priv.projects.map(scriptItem) }); }
     LOOP.qa.forEach(function (g, gi) { banks.push({ id: "qa-" + gi, title: g.group, blurb: g.blurb || "", items: g.items }); });
     var lg = LOOP.scripts.filter(function (x) { return x.id === "logistics"; });
     if (lg.length) { banks.push({ id: "logistics", title: "Logistics", blurb: "Your answers stay in chat; how to handle each is here.", items: lg.map(scriptItem) }); }
@@ -868,8 +875,37 @@ details.item > .sbody { padding-left: 0; }
     acts.appendChild(rv);
     if (x.drill) { acts.appendChild(el("span", "sep")); acts.appendChild(el("a", "", "Practise it aloud, timed")).href = link("prep", "drill-" + x.drill); }
     left.appendChild(acts);
-    if (x.land) { right.appendChild(el("p", "pq-land", "<b>Land on this.</b> " + inl(x.land))); }
-    if (x.a && x.a.length) { right.appendChild(transcript(x.a, "What you would say", "")); }
+    if (x.variants && x.variants.length && x.a && x.a.length) {
+      /* Versions of one answer: click between them; the one left selected is remembered as your pick. */
+      var vs = [{ name: x.vname || "A", say: x.a, land: x.land }].concat(x.variants);
+      var pk = LOOP.id + ":" + x.id, picks = {};
+      try { picks = JSON.parse(localStorage.getItem("accelerate.picks") || "{}") || {}; } catch (e) { picks = {}; }
+      var cur = Math.min(picks[pk] || 0, vs.length - 1);
+      var bar = el("div", "vpick"), body = el("div", "");
+      right.appendChild(bar); right.appendChild(body);
+      var drawV = function () {
+        bar.innerHTML = "";
+        bar.appendChild(el("span", "vp-lab", "Versions"));
+        vs.forEach(function (v, i) {
+          var b = el("button", "vp" + (i === cur ? " on" : ""), esc(v.name) + (i === cur ? ", your pick" : ""));
+          b.setAttribute("aria-pressed", i === cur ? "true" : "false");
+          b.addEventListener("click", function () {
+            cur = i; picks[pk] = i;
+            try { localStorage.setItem("accelerate.picks", JSON.stringify(picks)); } catch (e) {}
+            drawV();
+          });
+          bar.appendChild(b);
+        });
+        body.innerHTML = "";
+        var v = vs[cur];
+        if (v.land) { body.appendChild(el("p", "pq-land", "<b>Land on this.</b> " + inl(v.land))); }
+        body.appendChild(transcript(v.say, "What you would say", ""));
+      };
+      drawV();
+    } else {
+      if (x.land) { right.appendChild(el("p", "pq-land", "<b>Land on this.</b> " + inl(x.land))); }
+      if (x.a && x.a.length) { right.appendChild(transcript(x.a, "What you would say", "")); }
+    }
     if (x.swaps && x.swaps.length) {
       right.appendChild(el("div", "lab", "Lines you can swap in"));
       x.swaps.forEach(function (w) {
