@@ -1365,3 +1365,12 @@ private/loops/mercor.js. Wildcard work for a live loop. No charter deviation.
 Each section now reads as revision first (the explanation, code with its line notes showing, timelines,
 tables, FAQs) and then, under Practise, every question on it (click the line, predict, multiple choice,
 edit). His ask: material to revise before the questions. No charter deviation.
+
+**2026-10-21 — EcoGPT loop page.**
+interviews/ecogpt.html for a first call with Ethan Leonard, founder and CEO of EcoGPT, on Founding Engineer
+(Applied AI / AI Agents), referred by Azim Malik of Paraform; date to be booked. The company from its own
+pages, the App Store, a review and the skeptical press (a consumer assistant on open models that funds tree
+planting; user numbers self-reported and inconsistent; privacy and model questions), the posting, your
+intro, why EcoGPT, an honest answer on open models and fine-tuning, why leave and what next in versions;
+project stories (V8, working memory, MockFlow) in gitignored private/loops/ecogpt.js; questions in three
+tiers. Page only. No charter deviation.
