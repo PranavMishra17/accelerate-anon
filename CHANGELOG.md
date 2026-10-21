@@ -1360,3 +1360,8 @@ cap and an order in async code at Commure. Also: what alfred_ caches, read from 
 cache by far the largest; small in-process TTL caches; two Postgres caches; no shared cache), as a
 Caching group on the private ALFRED.html and a story on the Mercor Prep tab from gitignored
 private/loops/mercor.js. Wildcard work for a live loop. No charter deviation.
+
+**2026-10-21 — Mercor Coding tab: material first, then Practise.**
+Each section now reads as revision first (the explanation, code with its line notes showing, timelines,
+tables, FAQs) and then, under Practise, every question on it (click the line, predict, multiple choice,
+edit). His ask: material to revise before the questions. No charter deviation.

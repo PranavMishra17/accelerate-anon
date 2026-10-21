@@ -580,6 +580,7 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
 .cd-hint { margin: var(--s2) 0; padding-left: var(--s3); border-left: var(--hair); }
 .cd-nav { display: flex; justify-content: space-between; gap: var(--s3); margin-top: var(--s7); padding-top: var(--s4); border-top: var(--hair); }
 .cd-done { margin-top: var(--s5); }
+.lab.cd-drill { margin: var(--s6) 0 var(--s2); padding-top: var(--s3); border-top: var(--hair); font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); }
 </style>
 </head>
 <body>
@@ -2341,7 +2342,7 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     switch (b.t) {
       case "p": return el("p", "", inl(b.text));
       case "list": var ul = el("ul");
-        b.items.forEach(function (s) { var m = /^([^:]{1,48}):\s(.+)$/.exec(s); ul.appendChild(el("li", "", m ? "<strong>" + inl(m[1]) + ".</strong> " + inl(m[2]) : inl(s))); });
+        b.items.forEach(function (s) { var m = /^([^:]{1,48}):\s(.+)$/.exec(s); ul.appendChild(el("li", "", m ? "<strong>" + inl(m[1]) + ":</strong> " + inl(m[2]) : inl(s))); });
         return ul;
       case "code": return cdCode(b);
       case "predict": return cdPredict(b);
@@ -2377,9 +2378,16 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     cur.sections.forEach(function (s) {
       var sec = el("section", "cd-sec"); sec.id = s.id;
       sec.appendChild(el("h3", "", esc(s.title)));
+      /* Material first, with code notes showing; then the questions on it, under Practise. */
+      var learn = [], drill = [];
       s.blocks.forEach(function (b) {
-        try { sec.appendChild(cdBlock(b)); } catch (e) { console.error("coding block", s.id, b, e); }
+        if (b.t === "code") { learn.push(b.ask ? Object.assign({}, b, { ask: null }) : b); if (b.ask) { drill.push(b); } }
+        else if (/^(predict|mcq|write|problem)$/.test(b.t)) { drill.push(b); }
+        else { learn.push(b); }
       });
+      function put(b) { try { sec.appendChild(cdBlock(b)); } catch (e) { console.error("coding block", s.id, b, e); } }
+      learn.forEach(put);
+      if (drill.length) { sec.appendChild(el("div", "lab cd-drill", "Practise")); drill.forEach(put); }
       host.appendChild(sec);
       nav.push([s.id, s.title, true, link("coding", s.id)]);
     });
