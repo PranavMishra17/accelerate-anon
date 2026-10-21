@@ -39,7 +39,7 @@ p { margin: 0 0 var(--s3); }
 .top-in { max-width: 1180px; margin: 0 auto; padding: 0 var(--s5); height: var(--top); display: flex; align-items: center; gap: var(--s5); }
 .top .loopname { font-weight: var(--w-strong); white-space: nowrap; }
 .tabs { display: flex; gap: var(--s1); align-self: stretch; }
-.tabs a { display: flex; align-items: center; padding: 2px var(--s2) 0; color: var(--muted); border-bottom: 2px solid transparent; }
+.tabs a { display: flex; align-items: center; padding: 2px var(--s2) 0; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap; }
 .tabs a:hover { color: var(--ink); text-decoration: none; }
 .tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
 .top .grow { flex: 1; }
@@ -581,6 +581,34 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
 .cd-nav { display: flex; justify-content: space-between; gap: var(--s3); margin-top: var(--s7); padding-top: var(--s4); border-top: var(--hair); }
 .cd-done { margin-top: var(--s5); }
 .lab.cd-drill { margin: var(--s6) 0 var(--s2); padding-top: var(--s3); border-top: var(--hair); font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); }
+/* a long loop's tabs: the plan's days, the daily two, the story matrix, the loop-day card */
+.am-day { margin: var(--s4) 0; padding-top: var(--s3); border-top: var(--hair); max-width: 860px; }
+.am-day.today { border-top: 2px solid var(--accent); }
+.am-day.past .am-dh b { color: var(--muted); }
+.am-dh { display: flex; gap: var(--s3); align-items: baseline; }
+.am-dm { color: var(--muted); font-size: var(--fs-sm); font-weight: normal; }
+.am-focus { color: var(--soft); margin: var(--s1) 0 var(--s2); }
+.am-items { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+.am-it label { display: flex; gap: var(--s2); align-items: baseline; cursor: pointer; padding: 2px 0; }
+.am-it input { flex: none; }
+.am-k { flex: none; min-width: 4.5em; font-size: var(--fs-xs); color: var(--muted); font-weight: var(--w-strong); }
+.am-tx { flex: 1; }
+.am-min { color: var(--muted); font-size: var(--fs-sm); margin-left: var(--s2); }
+.am-reveal { margin: var(--s4) 0 var(--s2); padding-top: var(--s3); border-top: var(--hair); }
+.am-note { color: var(--muted); font-size: var(--fs-sm); }
+.am-mx td:first-child { white-space: nowrap; }
+.am-top { color: var(--accent); font-size: var(--fs-xs); font-weight: var(--w-strong); }
+.am-gap { color: var(--warn); }
+.am-story { padding: var(--s2) 0 var(--s3); max-width: var(--measure); }
+.am-fit { color: var(--soft); }
+.am-spend { display: block; }
+.am-cs { margin: var(--s4) 0; max-width: 860px; }
+.am-cs h3 { font-size: var(--fs-md); margin-bottom: var(--s2); }
+@media print {
+  .top, nav.side, .sn-strip, .am-noprint { display: none !important; }
+  .shell { display: block; padding: 0; }
+  body { background: #fff; color: #000; }
+}
 </style>
 </head>
 <body>
@@ -607,7 +635,7 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
 <script src="../figures/viewer.js?v=ecb99aae"></script>
 <script src="../site/res.js?v=c33c7564"></script>
 <script src="../site/sheet.js?v=d5ed86a7"></script>
-<script type="application/json" id="loop-data">{"id": "overjoy", "title": "Overjoy, Product Engineer", "subtitle": "Round 1: 30 minutes with Jun Kwak, co-founder and CTO", "when": "Wednesday 22 October, 30 minutes (book the time on Jun's Calendly)", "when_iso": "", "who": "Jun Kwak, co-founder and CTO (co-founded Overjoy with Alex Han; earlier at Google, Snap and Robinhood per one third-party review). Also on the email: Ishaan (likely Ishaan Nagpal, Head of Engineering) and Lyza Jacobo, recruiting ops.", "format": "Thirty minutes. Jun tells you about Overjoy and the engineering team, then digs into your background, one project you've worked on, and what you're looking for next. A conversation, not a technical screen.", "bar": "Can you own a feature end to end, have you built agents that do real work in production, and do you want the intensity of a small team? Lead with V8: one gate, a measured runtime win, agents and humans handing work back and forth.", "sessions": [], "scripts": [{"id": "intro", "title": "Tell me about yourself", "length": "about 45 seconds", "when": "First, almost certainly. The short one, then stop.", "probes": ["What do you own at alfred_?", "What does a founding LLM engineer do day to day?"], "say": ["I'm currently a founding LLM engineer at alfred_, where I work across AI agent reliability, memory architecture, evaluation infrastructure, and automation for a product with 5,000-plus active users. A big part of my work has been taking ambiguous problems and building the systems underneath them that make AI actually work reliably in production.", "Before that, I worked at an early-stage startup called WheelPrice and did AI research at UIC. What I enjoy most is working across the stack, understanding a real problem, and building something that solves it end to end. That's what caught my attention about Overjoy: agents that do the actual sales work, alongside people, where the result is a won account, not a feature."], "swaps": [{"when": "If he asks for one line", "line": "I build the systems under production agents: memory, evals, reliability, and the gate that decides what an agent is allowed to do."}], "land": "Production AI reliability, end to end, and why Overjoy: agents that do real work for an outcome.", "notes": ["The first paragraph and the first two sentences of the second are yours from INTRO.md, unchanged. The last sentence replaces the Mercor line: make it yours."]}, {"id": "why-overjoy", "title": "Why Overjoy?", "length": "about 30 seconds", "when": "Likely, after he describes the company.", "probes": ["What do you know about us?", "Why a small team?", "Why sales and wholesale?"], "say": ["Three things. You've already got pull: 800 brands, and the work has moved from tools for people to agents doing the work, so the hard problems are real ones, reliability, handoffs, data correctness. Second, it's agents alongside humans for an outcome, which is the part I've spent the last year on: deciding what an agent can do alone and what it has to ask a person first. And third, a small team where I'd own features end to end, across the stack."], "swaps": [{"when": "If he asks what you know", "line": "You started as Oversee, lead generation for wholesale, became Overjoy last year, and now run the whole wholesale motion for brands with a services team and agents. And from the Pydantic case study, five engineers, Pydantic AI and Logfire, and evals on production data."}, {"when": "If he asks why not a bigger company", "line": "I do my best work when I own the whole thing and can see the outcome. Here the outcome is a won account, and that's a very honest metric."}], "vname": "A", "variants": [{"name": "B, the work itself", "land": "The agent does the job; you build where it hands to a person.", "say": ["Honestly, it's the shape of the work. Your agents don't help a salesperson, they do the job: find the retailer, follow up, take the order, and someone on your team steps in where judgment matters.", "That split, what the agent does alone and what it hands to a person, is pretty much what I've spent this year building at alfred_. I'd like to do it where the result is an order on the books."]}, {"name": "C, the stage", "land": "Foundations under real pull, owned end to end, with an outcome you can read.", "say": ["I think it's the stage you're at. You're past finding the product, and now it's the foundations under it: the pipelines, the integrations, the agents that have to keep working every day for 800 brands.", "With a small team that means owning things end to end, which is how I work best. And the result is simple to read: did the brand get the account or not."]}], "land": "Real pull, agents plus humans for an outcome, and end-to-end ownership.", "notes": ["Written in your voice from the research; your INTRO.md has no Overjoy line yet. Make it yours."]}, {"id": "leave", "title": "Why leave alfred_?", "length": "about 30 seconds", "when": "If asked.", "probes": [], "say": ["I’m not looking to leave because there’s something fundamentally wrong with alfred_. The reason I'm exploring is more about the direction I want to take my career", "I've learned a lot at alfred_ and have had the opportunity to own important parts of a production AI product from the ground up. I've gradually moved beyond just building agent features and into building the systems around the agent — evaluations, observability, memory, reliability", "I'm still there and not looking to leave just for the sake of moving. I'm exploring roles where I can apply that experience to a broader range of problems, work directly with customers, and grow as an engineer who can own both the technical solution and its business outcome. Overjoy seems particularly aligned with that."], "vname": "Yours", "variants": [{"name": "B, short", "land": "From the systems around an agent to a result you can see.", "say": ["Nothing's wrong at alfred_; I've owned a lot of the production system there. What I want next is to put that to work where the agent's output is a business result I can see, an account or an order, and where I own more of the stack around it, the integrations and the data, not only the agent."]}, {"name": "C, the other side", "land": "Real customers and integrations, on a team that sells the outcome.", "say": ["I've spent the last year on the systems around the agent: the gate, memory, evals. The part I want more of is the other side of it: real customers, real integrations, and seeing the result in their numbers.", "That fits a small team selling an outcome better than where I am now."]}], "land": "Not away from alfred_; toward customers and owning the outcome.", "notes": ["Your words from INTRO.md; only the company name in the last sentence changed (it said Mercor's Enterprise team)."]}, {"id": "next", "title": "What are you looking for next?", "length": "about 45 seconds", "when": "Jun said he'll ask this. Short term, then long term.", "probes": ["Where do you want to be in a few years?", "IC or lead?"], "say": ["Short term, I want to be somewhere the agentic engineering is actually at the frontier — not a demo, but running against real stakes, where getting it wrong has weight. That's the fastest way I know to get good, seriously good, at this.", "In the first few months, I'd want to get inside the codebase and the domain fast, start pulling weight on the agent side quickly since that's where I'm strongest, and be someone the team can hand a hard, ambiguous problem to without much hand-holding.", "Long term, I want to understand this domain and this kind of engineering deeply enough that I can actually lead it — see where the real bottlenecks are, and push us toward the better one before it costs months. But I don't want that to mean stepping back from the actual work."], "vname": "A", "variants": [{"name": "B, concrete first months", "land": "Own features end to end now; call the direction later, still building.", "say": ["Short term, a team small enough that I own features end to end, where the agents run against something real every day. In the first months I'd want to get into the pipelines and integrations quickly and take one agent from good to reliable.", "Longer term, to be the person who can call the technical direction on how agents and people share the work, and still build it."]}, {"name": "C, three things", "land": "Real stakes, end-to-end ownership, people to learn from.", "say": ["Honestly, three things. Real stakes, so the agent's mistakes cost something and I have to get it right. Ownership end to end, from scoping to deploy. And people I can learn from.", "Over a few years I'd like to lead this kind of engineering, but staying hands-on."]}], "land": "Frontier agent work with real stakes now; lead it later, hands still in the code.", "notes": ["Your goals from INTRO.md. The second paragraph is your short-term text with 'the clinical domain' (written for a clinical company) changed to 'the domain' and 'agent and eval side' to 'agent side'."]}, {"id": "logistics", "title": "Logistics they may ask", "length": "a line each", "when": "Possible at the end of a founder call. Your answers are in chat, not on this page.", "probes": ["In person in New York?", "Start date?", "Work authorization?", "Compensation expectations?"], "say": [], "land": "One sentence each, then back to the work.", "notes": ["Location, relocation, start date, pay and work authorization: your answers from chat."]}], "drills": [{"id": "intro", "prompt": "Tell me about yourself.", "target": "45 seconds", "seconds": 45, "ref": "#say-intro"}, {"id": "v8", "prompt": "Tell me about a project you've worked on.", "target": "90 seconds", "seconds": 90, "ref": "#say-v8"}, {"id": "next", "prompt": "What are you looking for next?", "target": "45 seconds", "seconds": 45, "ref": "#say-next"}], "qa": [], "ask": [], "ask3": [{"id": "clarify", "title": "While he talks: clarifying", "when": "During his part on Overjoy and the team. One or two, short, on what he just said.", "why": "Shows you're mapping the system as he describes it, and gets you the facts the later questions need.", "how": ["Ask on his words, not from a list: 'when you said X, do you mean...'"], "items": [{"to": "Jun", "q": "When the agents and the services team hand work back and forth, where's the line today: does the agent stage an action for a specialist to approve, or does the specialist take over the account?", "loop": "When he mentions agents and people.", "why": "Their agents page doesn't say; it's your V8 story's home ground."}, {"to": "Jun", "q": "When you say you sell the outcome, what's the unit: accounts opened, first orders, or reorders?", "loop": "When he mentions pricing or the model.", "why": "Tells you what an agent change has to move."}, {"to": "Jun", "q": "Is Temporal running the always-on agents today, or mostly the syncs and order capture?", "loop": "When he mentions the stack.", "why": "Where durability matters to them, and where you'd start."}]}, {"id": "collab", "title": "Before the end: collaborating", "when": "When he asks if you have questions, or with about eight minutes left. Pick one.", "why": "Thinks with him about a real problem, the way you would as a teammate.", "how": ["Ask one, listen, then say in a sentence how you've handled the same thing."], "items": [{"to": "Jun", "q": "Ishaan's Pydantic write-up mentions labelling about a hundred production rows and letting the agent iterate toward a bar. When you sell the outcome, what does an agent change have to move before it ships, and how do you tell a better agent from a lucky batch of leads?", "loop": "First choice.", "why": "Your eval bench and replay story fit straight in."}, {"to": "Jun", "q": "Across Shopify, Faire, QuickBooks and Gmail, what breaks most in production: API drift, retries duplicating emails or orders, or workflow versioning? And how do you keep order capture idempotent?", "loop": "If he talks about integrations.", "why": "Your idempotency keys and intent rows from V8."}, {"to": "Jun", "q": "To get to know the product, what are some recent pain points you've solved, and some that are ongoing work?", "loop": "Safe fallback.", "why": "Your question from INTRO.md, spelling fixed."}]}, {"id": "contribute", "title": "At the end: contributing", "when": "The last two or three minutes.", "why": "About the role, the team and what's next, so you leave knowing where you'd add.", "how": ["Two at most, then close, in your words from INTRO.md: “Really appreciate you taking the time today. This was helpful — honestly, the more I hear about what the team is working on, the more excited I am about the fit. Looking forward to hearing about next steps whenever you have them.”"], "items": [{"to": "Jun", "q": "What does success look like for this role in the first 90 days?", "loop": "First.", "why": "Your question from INTRO.md."}, {"to": "Jun", "q": "How has the engineering team changed as you went from a platform to running the sales process yourselves, and how do you want it to work as it grows?", "loop": "Second.", "why": "Your culture question from INTRO.md, finished for Overjoy."}, {"to": "Jun", "q": "What does the full interview process look like from here, and the rough timeline?", "loop": "Last.", "why": "Your question from INTRO.md."}]}], "traps": [], "tables": [], "admire": "", "kitaruLead": "", "figures": [], "mockHow": "", "mocks": [], "planKicker": "Before the call", "mechTitle": "", "designLink": null, "extra": "<b>Thirty minutes of prep, in this order.<\/b> 1. Prep tab: your intro out loud with the timer (45 seconds). 2. Your projects: V8 out loud (90 seconds), then the working-memory short version. 3. Read the three tiers of questions and pick one from each. 4. Skim the Pydantic case study below: it is how their agent team works, and it is your world.", "emphasis": [], "own": null, "showUp": [["Lead with outcomes, not features.", "They sell won accounts, not software. Say what changed for users: 100% of SMS on V8, a cold boot cut by more than half, a model that can no longer confirm an action on its own."], ["Agents plus humans is their core.", "Their agents work alongside a services team. Your gate's ask verdict is exactly that handoff: the agent stages the action, a person says yes, code runs it once."], ["Their stack is your stack's cousin.", "Python and FastAPI, Postgres, Pydantic AI with Logfire, Temporal, GCP. You ran agents on Postgres queues with an eval bench and a priced ledger; say how that maps, and that you'd like to learn Temporal."], ["Want the intensity, plainly.", "The posting says it isn't a 9-to-5 and the autonomy cuts both ways. Say you want that: you already own production systems end to end."], ["Thirty minutes goes fast.", "Two or three sentences per answer, then stop. Keep five minutes for your questions."]], "prepLead": "Your intro, your projects, why Overjoy, and the questions to ask, in three tiers.", "storyBlurb": "Your intro, why Overjoy, why leave alfred_, what you want next, and logistics.", "sources": [{"label": "Overjoy: About", "url": "https://www.overjoy.ai/about", "why": "The sales department of the future: people and AI agents as one department; founders Alex Han and Jun Kwak; the team (19 listed)."}, {"label": "Overjoy: AI agents", "url": "https://www.overjoy.ai/features/ai-agents", "why": "Six agents: conversion, reorder, Faire commission tracking, order processing, live intent scoring, wholesale marketing. It does not say when a human takes over."}, {"label": "Pydantic case study: Overjoy (29 Apr 2026)", "url": "https://pydantic.dev/case-studies/overjoy", "why": "Five engineers run the stack; replaced LangChain and LangSmith with Pydantic AI and Logfire; debugging from half a day to minutes; caught a 20x cost spike; evals on production data ('I just label 100 rows')."}, {"label": "Overjoy blog: the rename from Oversee (Jan 2025)", "url": "https://blog.overjoy.ai/overjoy-announcement/", "why": "Started as Oversee, lead generation for wholesale; renamed Overjoy in January 2025 as an AI-powered CRM for consumer brands; written by Jun."}, {"label": "Overjoy blog: case studies", "url": "https://blog.overjoy.ai", "why": "Sol Soils: a two-person team opened 100 wholesale accounts without a sales rep; Musee: 84 new accounts in 9 months; Craftmix: $32K new revenue."}, {"label": "Wellfound: Senior Backend Engineer at Overjoy", "url": "https://wellfound.com/jobs/4522317-senior-backend-engineer", "why": "A sibling posting: grew 5x in 12 months; Temporal or FastAPI in production as a bonus."}], "company": ["Overjoy runs wholesale sales for small consumer brands: finding the right retailers, reaching out, closing the account and keeping it reordering, with people, AI agents and the CRM it built for that job. Founded in 2022 in New York as Oversee (lead generation for wholesale), renamed Overjoy in January 2025, now 'an AI-native sales company' that sells the outcome. 800+ brands; Simply Gum, Sol Soils, Musee and Vitruvi are named customers.", "Small and lean: about 19 people on the About page, five engineers on the stack. Backed by Bessemer, OSV and Floodgate (about $3.2M seed per a third-party source), and six customers invested. A sibling posting says it grew 5x in a year.", "How the agent team works (the Pydantic case study, April 2026): they replaced LangChain and LangSmith with Pydantic AI and Logfire, so one dashboard shows traces, token cost and eval results; debugging went from half a day to minutes; they caught an agent whose cost spiked 20x; and they improve agents by labelling about 100 production rows and letting the agent iterate toward a quality bar. That is your eval bench and your V8 ledger, in their words.", "The open question for you to probe: their agents page lists six agents and says nothing about when a human takes over. That handoff is your strongest story."], "posting": {"url": "https://www.overjoy.ai/", "lead": "Product Engineer: across the stack, close to the founders, shipping agents that find retailers, work the pipeline and capture orders alongside the services team.", "facts": [["Location", "New York City"], ["Range", "130K to 220K USD"], ["Stack", "Python/FastAPI, Postgres, React/TypeScript"], ["Agents", "Pydantic AI, Temporal"], ["Infra", "Docker, App Engine, GCP"]], "does": ["Hard problems in data pipelines, AI-driven workflows and scale.", "Features end to end across the stack, from scope to deploy.", "REST APIs for CRM, Inbox, Campaigns and Automations.", "Production agents (Pydantic AI, Temporal) that find retailers, work the pipeline and capture orders, alongside humans.", "Integrations: Shopify, Faire, WooCommerce, QuickBooks, Gmail.", "Debug production, support the customer team, shape product with the founders."], "wants": ["2+ years of software engineering.", "Own projects end to end.", "Fluent in Python/FastAPI, Postgres or React/TypeScript, keen to learn the rest.", "Clean, maintainable code, speed balanced with quality.", "Thrives early-stage: many hats, drives own roadmap."]}, "rounds": [{"title": "Round 1: call with Jun Kwak, co-founder and CTO", "when": "Wednesday 22 October 2026, 30 minutes", "who": "Jun Kwak (Ishaan and Lyza Jacobo on the invite email)", "format": "Overjoy and the engineering team, then your background, one project, and what you're looking for next.", "outcome": "Not yet held.", "notes": ["From Lyza's email: Jun 'will share more about Overjoy and the engineering team, and spend some time digging into your background, a project you've worked on, and what you're looking for next.'"], "asked": []}], "research": null, "learn": null, "tabs": ["overview", "prep", "rounds"], "live": [], "liveLead": [], "takehomes": [], "watch": null, "timeline": null}</script>
+<script type="application/json" id="loop-data">{"id": "overjoy", "title": "Overjoy, Product Engineer", "subtitle": "Round 1: 30 minutes with Jun Kwak, co-founder and CTO", "when": "Thursday 22 October, 30 minutes (book the time on Jun's Calendly)", "when_iso": "", "who": "Jun Kwak, co-founder and CTO (co-founded Overjoy with Alex Han; earlier at Google, Snap and Robinhood per one third-party review). Also on the email: Ishaan (likely Ishaan Nagpal, Head of Engineering) and Lyza Jacobo, recruiting ops.", "format": "Thirty minutes. Jun tells you about Overjoy and the engineering team, then digs into your background, one project you've worked on, and what you're looking for next. A conversation, not a technical screen.", "bar": "Can you own a feature end to end, have you built agents that do real work in production, and do you want the intensity of a small team? Lead with V8: one gate, a measured runtime win, agents and humans handing work back and forth.", "sessions": [], "scripts": [{"id": "intro", "title": "Tell me about yourself", "length": "about 45 seconds", "when": "First, almost certainly. The short one, then stop.", "probes": ["What do you own at alfred_?", "What does a founding LLM engineer do day to day?"], "say": ["I'm currently a founding LLM engineer at alfred_, where I work across AI agent reliability, memory architecture, evaluation infrastructure, and automation for a product with 5,000-plus active users. A big part of my work has been taking ambiguous problems and building the systems underneath them that make AI actually work reliably in production.", "Before that, I worked at an early-stage startup called WheelPrice and did AI research at UIC. What I enjoy most is working across the stack, understanding a real problem, and building something that solves it end to end. That's what caught my attention about Overjoy: agents that do the actual sales work, alongside people, where the result is a won account, not a feature."], "swaps": [{"when": "If he asks for one line", "line": "I build the systems under production agents: memory, evals, reliability, and the gate that decides what an agent is allowed to do."}], "land": "Production AI reliability, end to end, and why Overjoy: agents that do real work for an outcome.", "notes": ["The first paragraph and the first two sentences of the second are yours from INTRO.md, unchanged. The last sentence replaces the Mercor line: make it yours."]}, {"id": "why-overjoy", "title": "Why Overjoy?", "length": "about 30 seconds", "when": "Likely, after he describes the company.", "probes": ["What do you know about us?", "Why a small team?", "Why sales and wholesale?"], "say": ["Three things. You've already got pull: 800 brands, and the work has moved from tools for people to agents doing the work, so the hard problems are real ones, reliability, handoffs, data correctness. Second, it's agents alongside humans for an outcome, which is the part I've spent the last year on: deciding what an agent can do alone and what it has to ask a person first. And third, a small team where I'd own features end to end, across the stack."], "swaps": [{"when": "If he asks what you know", "line": "You started as Oversee, lead generation for wholesale, became Overjoy last year, and now run the whole wholesale motion for brands with a services team and agents. And from the Pydantic case study, five engineers, Pydantic AI and Logfire, and evals on production data."}, {"when": "If he asks why not a bigger company", "line": "I do my best work when I own the whole thing and can see the outcome. Here the outcome is a won account, and that's a very honest metric."}], "vname": "A", "variants": [{"name": "B, the work itself", "land": "The agent does the job; you build where it hands to a person.", "say": ["Honestly, it's the shape of the work. Your agents don't help a salesperson, they do the job: find the retailer, follow up, take the order, and someone on your team steps in where judgment matters.", "That split, what the agent does alone and what it hands to a person, is pretty much what I've spent this year building at alfred_. I'd like to do it where the result is an order on the books."]}, {"name": "C, the stage", "land": "Foundations under real pull, owned end to end, with an outcome you can read.", "say": ["I think it's the stage you're at. You're past finding the product, and now it's the foundations under it: the pipelines, the integrations, the agents that have to keep working every day for 800 brands.", "With a small team that means owning things end to end, which is how I work best. And the result is simple to read: did the brand get the account or not."]}], "land": "Real pull, agents plus humans for an outcome, and end-to-end ownership.", "notes": ["Written in your voice from the research; your INTRO.md has no Overjoy line yet. Make it yours."]}, {"id": "leave", "title": "Why leave alfred_?", "length": "about 30 seconds", "when": "If asked.", "probes": [], "say": ["I’m not looking to leave because there’s something fundamentally wrong with alfred_. The reason I'm exploring is more about the direction I want to take my career", "I've learned a lot at alfred_ and have had the opportunity to own important parts of a production AI product from the ground up. I've gradually moved beyond just building agent features and into building the systems around the agent — evaluations, observability, memory, reliability", "I'm still there and not looking to leave just for the sake of moving. I'm exploring roles where I can apply that experience to a broader range of problems, work directly with customers, and grow as an engineer who can own both the technical solution and its business outcome. Overjoy seems particularly aligned with that."], "vname": "Yours", "variants": [{"name": "B, short", "land": "From the systems around an agent to a result you can see.", "say": ["Nothing's wrong at alfred_; I've owned a lot of the production system there. What I want next is to put that to work where the agent's output is a business result I can see, an account or an order, and where I own more of the stack around it, the integrations and the data, not only the agent."]}, {"name": "C, the other side", "land": "Real customers and integrations, on a team that sells the outcome.", "say": ["I've spent the last year on the systems around the agent: the gate, memory, evals. The part I want more of is the other side of it: real customers, real integrations, and seeing the result in their numbers.", "That fits a small team selling an outcome better than where I am now."]}], "land": "Not away from alfred_; toward customers and owning the outcome.", "notes": ["Your words from INTRO.md; only the company name in the last sentence changed (it said Mercor's Enterprise team)."]}, {"id": "next", "title": "What are you looking for next?", "length": "about 45 seconds", "when": "Jun said he'll ask this. Short term, then long term.", "probes": ["Where do you want to be in a few years?", "IC or lead?"], "say": ["Short term, I want to be somewhere the agentic engineering is actually at the frontier — not a demo, but running against real stakes, where getting it wrong has weight. That's the fastest way I know to get good, seriously good, at this.", "In the first few months, I'd want to get inside the codebase and the domain fast, start pulling weight on the agent side quickly since that's where I'm strongest, and be someone the team can hand a hard, ambiguous problem to without much hand-holding.", "Long term, I want to understand this domain and this kind of engineering deeply enough that I can actually lead it — see where the real bottlenecks are, and push us toward the better one before it costs months. But I don't want that to mean stepping back from the actual work."], "vname": "A", "variants": [{"name": "B, concrete first months", "land": "Own features end to end now; call the direction later, still building.", "say": ["Short term, a team small enough that I own features end to end, where the agents run against something real every day. In the first months I'd want to get into the pipelines and integrations quickly and take one agent from good to reliable.", "Longer term, to be the person who can call the technical direction on how agents and people share the work, and still build it."]}, {"name": "C, three things", "land": "Real stakes, end-to-end ownership, people to learn from.", "say": ["Honestly, three things. Real stakes, so the agent's mistakes cost something and I have to get it right. Ownership end to end, from scoping to deploy. And people I can learn from.", "Over a few years I'd like to lead this kind of engineering, but staying hands-on."]}], "land": "Frontier agent work with real stakes now; lead it later, hands still in the code.", "notes": ["Your goals from INTRO.md. The second paragraph is your short-term text with 'the clinical domain' (written for a clinical company) changed to 'the domain' and 'agent and eval side' to 'agent side'."]}, {"id": "logistics", "title": "Logistics they may ask", "length": "a line each", "when": "Possible at the end of a founder call. Your answers are in chat, not on this page.", "probes": ["In person in New York?", "Start date?", "Work authorization?", "Compensation expectations?"], "say": [], "land": "One sentence each, then back to the work.", "notes": ["Location, relocation, start date, pay and work authorization: your answers from chat."]}], "drills": [{"id": "intro", "prompt": "Tell me about yourself.", "target": "45 seconds", "seconds": 45, "ref": "#say-intro"}, {"id": "v8", "prompt": "Tell me about a project you've worked on.", "target": "90 seconds", "seconds": 90, "ref": "#say-v8"}, {"id": "next", "prompt": "What are you looking for next?", "target": "45 seconds", "seconds": 45, "ref": "#say-next"}], "qa": [], "ask": [], "ask3": [{"id": "clarify", "title": "While he talks: clarifying", "when": "During his part on Overjoy and the team. One or two, short, on what he just said.", "why": "Shows you're mapping the system as he describes it, and gets you the facts the later questions need.", "how": ["Ask on his words, not from a list: 'when you said X, do you mean...'"], "items": [{"to": "Jun", "q": "When the agents and the services team hand work back and forth, where's the line today: does the agent stage an action for a specialist to approve, or does the specialist take over the account?", "loop": "When he mentions agents and people.", "why": "Their agents page doesn't say; it's your V8 story's home ground."}, {"to": "Jun", "q": "When you say you sell the outcome, what's the unit: accounts opened, first orders, or reorders?", "loop": "When he mentions pricing or the model.", "why": "Tells you what an agent change has to move."}, {"to": "Jun", "q": "Is Temporal running the always-on agents today, or mostly the syncs and order capture?", "loop": "When he mentions the stack.", "why": "Where durability matters to them, and where you'd start."}]}, {"id": "collab", "title": "Before the end: collaborating", "when": "When he asks if you have questions, or with about eight minutes left. Pick one.", "why": "Thinks with him about a real problem, the way you would as a teammate.", "how": ["Ask one, listen, then say in a sentence how you've handled the same thing."], "items": [{"to": "Jun", "q": "Ishaan's Pydantic write-up mentions labelling about a hundred production rows and letting the agent iterate toward a bar. When you sell the outcome, what does an agent change have to move before it ships, and how do you tell a better agent from a lucky batch of leads?", "loop": "First choice.", "why": "Your eval bench and replay story fit straight in."}, {"to": "Jun", "q": "Across Shopify, Faire, QuickBooks and Gmail, what breaks most in production: API drift, retries duplicating emails or orders, or workflow versioning? And how do you keep order capture idempotent?", "loop": "If he talks about integrations.", "why": "Your idempotency keys and intent rows from V8."}, {"to": "Jun", "q": "To get to know the product, what are some recent pain points you've solved, and some that are ongoing work?", "loop": "Safe fallback.", "why": "Your question from INTRO.md, spelling fixed."}]}, {"id": "contribute", "title": "At the end: contributing", "when": "The last two or three minutes.", "why": "About the role, the team and what's next, so you leave knowing where you'd add.", "how": ["Two at most, then close, in your words from INTRO.md: “Really appreciate you taking the time today. This was helpful — honestly, the more I hear about what the team is working on, the more excited I am about the fit. Looking forward to hearing about next steps whenever you have them.”"], "items": [{"to": "Jun", "q": "What does success look like for this role in the first 90 days?", "loop": "First.", "why": "Your question from INTRO.md."}, {"to": "Jun", "q": "How has the engineering team changed as you went from a platform to running the sales process yourselves, and how do you want it to work as it grows?", "loop": "Second.", "why": "Your culture question from INTRO.md, finished for Overjoy."}, {"to": "Jun", "q": "What does the full interview process look like from here, and the rough timeline?", "loop": "Last.", "why": "Your question from INTRO.md."}]}], "traps": [], "tables": [], "admire": "", "kitaruLead": "", "figures": [], "mockHow": "", "mocks": [], "planKicker": "Before the call", "mechTitle": "", "designLink": null, "extra": "<b>Thirty minutes of prep, in this order.<\/b> 1. Prep tab: your intro out loud with the timer (45 seconds). 2. Your projects: V8 out loud (90 seconds), then the working-memory short version. 3. Read the three tiers of questions and pick one from each. 4. Skim the Pydantic case study below: it is how their agent team works, and it is your world.", "emphasis": [], "own": null, "showUp": [["Lead with outcomes, not features.", "They sell won accounts, not software. Say what changed for users: 100% of SMS on V8, a cold boot cut by more than half, a model that can no longer confirm an action on its own."], ["Agents plus humans is their core.", "Their agents work alongside a services team. Your gate's ask verdict is exactly that handoff: the agent stages the action, a person says yes, code runs it once."], ["Their stack is your stack's cousin.", "Python and FastAPI, Postgres, Pydantic AI with Logfire, Temporal, GCP. You ran agents on Postgres queues with an eval bench and a priced ledger; say how that maps, and that you'd like to learn Temporal."], ["Want the intensity, plainly.", "The posting says it isn't a 9-to-5 and the autonomy cuts both ways. Say you want that: you already own production systems end to end."], ["Thirty minutes goes fast.", "Two or three sentences per answer, then stop. Keep five minutes for your questions."]], "prepLead": "Your intro, your projects, why Overjoy, and the questions to ask, in three tiers.", "storyBlurb": "Your intro, why Overjoy, why leave alfred_, what you want next, and logistics.", "sources": [{"label": "Overjoy: About", "url": "https://www.overjoy.ai/about", "why": "The sales department of the future: people and AI agents as one department; founders Alex Han and Jun Kwak; the team (19 listed)."}, {"label": "Overjoy: AI agents", "url": "https://www.overjoy.ai/features/ai-agents", "why": "Six agents: conversion, reorder, Faire commission tracking, order processing, live intent scoring, wholesale marketing. It does not say when a human takes over."}, {"label": "Pydantic case study: Overjoy (29 Apr 2026)", "url": "https://pydantic.dev/case-studies/overjoy", "why": "Five engineers run the stack; replaced LangChain and LangSmith with Pydantic AI and Logfire; debugging from half a day to minutes; caught a 20x cost spike; evals on production data ('I just label 100 rows')."}, {"label": "Overjoy blog: the rename from Oversee (Jan 2025)", "url": "https://blog.overjoy.ai/overjoy-announcement/", "why": "Started as Oversee, lead generation for wholesale; renamed Overjoy in January 2025 as an AI-powered CRM for consumer brands; written by Jun."}, {"label": "Overjoy blog: case studies", "url": "https://blog.overjoy.ai", "why": "Sol Soils: a two-person team opened 100 wholesale accounts without a sales rep; Musee: 84 new accounts in 9 months; Craftmix: $32K new revenue."}, {"label": "Wellfound: Senior Backend Engineer at Overjoy", "url": "https://wellfound.com/jobs/4522317-senior-backend-engineer", "why": "A sibling posting: grew 5x in 12 months; Temporal or FastAPI in production as a bonus."}], "company": ["Overjoy runs wholesale sales for small consumer brands: finding the right retailers, reaching out, closing the account and keeping it reordering, with people, AI agents and the CRM it built for that job. Founded in 2022 in New York as Oversee (lead generation for wholesale), renamed Overjoy in January 2025, now 'an AI-native sales company' that sells the outcome. 800+ brands; Simply Gum, Sol Soils, Musee and Vitruvi are named customers.", "Small and lean: about 19 people on the About page, five engineers on the stack. Backed by Bessemer, OSV and Floodgate (about $3.2M seed per a third-party source), and six customers invested. A sibling posting says it grew 5x in a year.", "How the agent team works (the Pydantic case study, April 2026): they replaced LangChain and LangSmith with Pydantic AI and Logfire, so one dashboard shows traces, token cost and eval results; debugging went from half a day to minutes; they caught an agent whose cost spiked 20x; and they improve agents by labelling about 100 production rows and letting the agent iterate toward a quality bar. That is your eval bench and your V8 ledger, in their words.", "The open question for you to probe: their agents page lists six agents and says nothing about when a human takes over. That handoff is your strongest story."], "posting": {"url": "https://www.overjoy.ai/", "lead": "Product Engineer: across the stack, close to the founders, shipping agents that find retailers, work the pipeline and capture orders alongside the services team.", "facts": [["Location", "New York City"], ["Range", "130K to 220K USD"], ["Stack", "Python/FastAPI, Postgres, React/TypeScript"], ["Agents", "Pydantic AI, Temporal"], ["Infra", "Docker, App Engine, GCP"]], "does": ["Hard problems in data pipelines, AI-driven workflows and scale.", "Features end to end across the stack, from scope to deploy.", "REST APIs for CRM, Inbox, Campaigns and Automations.", "Production agents (Pydantic AI, Temporal) that find retailers, work the pipeline and capture orders, alongside humans.", "Integrations: Shopify, Faire, WooCommerce, QuickBooks, Gmail.", "Debug production, support the customer team, shape product with the founders."], "wants": ["2+ years of software engineering.", "Own projects end to end.", "Fluent in Python/FastAPI, Postgres or React/TypeScript, keen to learn the rest.", "Clean, maintainable code, speed balanced with quality.", "Thrives early-stage: many hats, drives own roadmap."]}, "rounds": [{"title": "Round 1: call with Jun Kwak, co-founder and CTO", "when": "Thursday 22 October 2026, 30 minutes", "who": "Jun Kwak (Ishaan and Lyza Jacobo on the invite email)", "format": "Overjoy and the engineering team, then your background, one project, and what you're looking for next.", "outcome": "Not yet held.", "notes": ["From Lyza's email: Jun 'will share more about Overjoy and the engineering team, and spend some time digging into your background, a project you've worked on, and what you're looking for next.'"], "asked": []}], "research": null, "learn": null, "tabs": ["overview", "prep", "rounds"], "plan": null, "lp": null, "card": null, "live": [], "liveLead": [], "takehomes": [], "watch": null, "timeline": null}</script>
 <script>
 "use strict";
 (function () {
@@ -703,6 +731,7 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
   /* ---------------------------------------------------------------- tabs */
   var TABS = [
     { id: "overview", label: "Overview", show: function () { return true; } },
+    { id: "plan", label: "Plan", show: function () { return !!LOOP.plan; } },
     { id: "learn", label: "Learn", show: function () { return !!(LOOP.learn && LOOP.learn.modules); } },
     { id: "prep", label: "Prep", show: function () { return LOOP.scripts.length || LOOP.drills.length || LOOP.qa.length || LOOP.ask.length || (LOOP.ask3 || []).length; } },
     { id: "rounds", label: "Rounds", show: function () { return (LOOP.rounds || []).length; } },
@@ -712,8 +741,13 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     { id: "sessions", label: "Sessions", show: function () { return LOOP.sessions.length; } },
     { id: "live", label: "Live build", show: function () { return (LOOP.live || []).length || (LOOP.takehomes || []).length; } },
     { id: "mocks", label: "Mocks", show: function () { return !!LOOP.mockHow; } },
-    { id: "coding", label: "Coding", show: function () { return !!(window.LOOP_CODING && LOOP_CODING.parts.length); } }
-  ].filter(function (t) { return t.show() && (!LOOP.tabs || LOOP.tabs.indexOf(t.id) >= 0); });
+    { id: "coding", label: "Coding", show: function () { return cdParts("coding").length; } },
+    { id: "lld", label: "LLD", show: function () { return cdParts("lld").length; } },
+    { id: "daily", label: "Daily two", show: function () { return !!(window.LOOP_DAILY && LOOP_DAILY.days.length); } },
+    { id: "lp", label: "Leadership", show: function () { return !!LOOP.lp; } },
+    { id: "card", label: "Loop day", show: function () { return !!LOOP.card; } }
+  ].filter(function (t) { return t.show() && (!LOOP.tabs || LOOP.tabs.indexOf(t.id) >= 0); })
+    .sort(function (a, b) { return LOOP.tabs ? LOOP.tabs.indexOf(a.id) - LOOP.tabs.indexOf(b.id) : 0; });
   var main = document.getElementById("main");
   var side = document.getElementById("side");
   var nav = [];            /* side links for the current tab: [anchor, label, sub] */
@@ -2161,7 +2195,10 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
   var CD_KEY = "accelerate.coding." + LOOP.id;
   function cdState() { try { return JSON.parse(localStorage.getItem(CD_KEY) || "{}") || {}; } catch (e) { return {}; } }
   function cdSave(k, v) { var s = cdState(); s[k] = v; try { localStorage.setItem(CD_KEY, JSON.stringify(s)); } catch (e) {} }
-  function cdParts() { return (window.LOOP_CODING ? LOOP_CODING.parts : []).slice().sort(function (a, b) { return a.n - b.n; }); }
+  function cdParts(tab) {
+    return (window.LOOP_CODING ? LOOP_CODING.parts : []).filter(function (p) { return (p.tab || "coding") === (tab || "coding"); })
+      .sort(function (a, b) { return a.n - b.n; });
+  }
   function cdBtn(label, fn) { var b = el("button", "btn", esc(label)); b.type = "button"; b.addEventListener("click", fn); return b; }
   function cdArea(id, value, small) {
     var ta = el("textarea", "cd-ta" + (small ? " small" : ""));
@@ -2358,11 +2395,12 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     }
     return el("span");
   }
-  function tabCoding(host, anchor) {
-    var parts = cdParts(), st = cdState(), done = st.done || {};
+  function tabCoding(host, anchor, tab) {
+    tab = tab || "coding";
+    var parts = cdParts(tab), st = cdState(), done = st.done || {};
     var cur = parts.filter(function (p) { return p.id === anchor || p.sections.some(function (s) { return s.id === anchor; }); })[0] ||
-      parts.filter(function (p) { return p.id === st.last; })[0] || parts[0];
-    cdSave("last", cur.id);
+      parts.filter(function (p) { return p.id === st["last:" + tab]; })[0] || parts[0];
+    cdSave("last:" + tab, cur.id);
     var top = el("section", "block"); top.id = cur.id;
     top.appendChild(el("h1", "", esc(cur.n + ". " + cur.title)));
     top.appendChild(el("p", "hsub", "About " + cur.minutes + " minutes. " + inl(cur.lead)));
@@ -2370,7 +2408,7 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     parts.forEach(function (p) {
       var li = el("li"), a = el("a", p === cur ? "on" : "",
         '<span class="cd-n">' + p.n + '</span><span>' + esc(p.title) + '</span><span class="cd-m">' + (done[p.id] ? '<span class="cd-ok">&#10003;</span> ' : "") + p.minutes + " min</span>");
-      a.href = link("coding", p.id); li.appendChild(a); ol.appendChild(li);
+      a.href = link(tab, p.id); li.appendChild(a); ol.appendChild(li);
     });
     top.appendChild(ol);
     host.appendChild(top);
@@ -2389,7 +2427,7 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
       learn.forEach(put);
       if (drill.length) { sec.appendChild(el("div", "lab cd-drill", "Practise")); drill.forEach(put); }
       host.appendChild(sec);
-      nav.push([s.id, s.title, true, link("coding", s.id)]);
+      nav.push([s.id, s.title, true, link(tab, s.id)]);
     });
     var i = parts.indexOf(cur), foot = el("div", "cd-nav");
     var mk = cdBtn(done[cur.id] ? "Done. Mark not done" : "Mark this part done", function () {
@@ -2398,9 +2436,304 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     foot.appendChild(i > 0 ? el("a", "", "Previous: " + esc(parts[i - 1].title)) : el("span"));
     foot.appendChild(mk);
     foot.appendChild(i < parts.length - 1 ? el("a", "", "Next: " + esc(parts[i + 1].title)) : el("span"));
-    if (i > 0) { foot.firstChild.href = link("coding", parts[i - 1].id); }
-    if (i < parts.length - 1) { foot.lastChild.href = link("coding", parts[i + 1].id); }
+    if (i > 0) { foot.firstChild.href = link(tab, parts[i - 1].id); }
+    if (i < parts.length - 1) { foot.lastChild.href = link(tab, parts[i + 1].id); }
     host.appendChild(foot);
+  }
+
+  /* ---------------------------------------------------------------- a long loop's own tabs
+     Plan (LOOP.plan: weeks of days, each a checklist), Daily two (window.LOOP_DAILY: two problems a
+     day, topic hidden until solved), Leadership (LOOP.lp plus the private story bank), Loop day
+     (LOOP.card, printable). Ticks and answers live in this browser under accelerate.coding.<loop>. */
+  function isoToday() {
+    var d = new Date();
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  }
+  function dayLabel(iso) {
+    var d = new Date(iso + "T12:00:00");
+    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()] + " " + d.getDate() + " " +
+      ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getMonth()];
+  }
+  function ticks() { return cdState().ticks || {}; }
+  function setTick(k, v) { var t = ticks(); if (v) { t[k] = Date.now(); } else { delete t[k]; } cdSave("ticks", t); }
+  function tickBox(k, onChange) {
+    var c = el("input"); c.type = "checkbox"; c.checked = !!ticks()[k];
+    c.addEventListener("change", function () { setTick(k, c.checked); if (onChange) { onChange(c.checked); } });
+    return c;
+  }
+
+  function tabPlan(host) {
+    var P = LOOP.plan, today = isoToday();
+    var top = el("section", "block"); top.id = "plan-top";
+    top.appendChild(el("h1", "", esc(P.title || "The plan")));
+    if (P.lead) { top.appendChild(el("p", "lead", inl(P.lead))); }
+    if (P.split) {
+      var t = el("table");
+      t.innerHTML = "<thead><tr><th>Where the hours go</th><th>Share</th><th>Why</th></tr></thead><tbody>" +
+        P.split.map(function (r) { return "<tr><td>" + inl(r[0]) + "</td><td>" + inl(r[1]) + "</td><td>" + inl(r[2]) + "</td></tr>"; }).join("") + "</tbody>";
+      top.appendChild(t);
+    }
+    host.appendChild(top);
+    nav.push(["plan-top", "The plan"]);
+    var todayEl = null;
+    P.weeks.forEach(function (w) {
+      var sec = el("section", "block am-week"); sec.id = w.id;
+      sec.appendChild(el("h2", "", esc(w.title)));
+      if (w.note) { sec.appendChild(el("p", "hsub", inl(w.note))); }
+      w.days.forEach(function (d) {
+        var box = el("div", "am-day" + (d.date === today ? " today" : "") + (d.date < today ? " past" : "")); box.id = "day-" + d.date;
+        var head = el("div", "am-dh");
+        var count = function () {
+          var n = d.items.length, got = d.items.filter(function (_, i) { return ticks()["plan:" + d.date + ":" + i]; }).length;
+          head.innerHTML = "<b>" + esc(dayLabel(d.date)) + (d.date === today ? ", today" : "") + "</b>" +
+            '<span class="am-dm">' + esc(d.hours || "") + (n ? ", " + got + " of " + n + " done" : "") + "</span>";
+        };
+        count();
+        box.appendChild(head);
+        if (d.focus) { box.appendChild(el("p", "am-focus", inl(d.focus))); }
+        var ul = el("ul", "am-items");
+        d.items.forEach(function (it, i) {
+          var li = el("li", "am-it k-" + (it.k || "x"));
+          var lab = el("label");
+          lab.appendChild(tickBox("plan:" + d.date + ":" + i, count));
+          lab.appendChild(el("span", "am-k", esc(it.k || "")));
+          var tx = el("span", "am-tx");
+          if (it.href) { var a = el("a", "", inl(it.t)); a.href = it.href; if (/^\.\.\//.test(it.href)) { a.target = "_blank"; a.rel = "noopener"; } tx.appendChild(a); }
+          else { tx.innerHTML = inl(it.t); }
+          if (it.m) { tx.appendChild(el("span", "am-min", esc(it.m))); }
+          lab.appendChild(tx);
+          li.appendChild(lab); ul.appendChild(li);
+        });
+        box.appendChild(ul);
+        sec.appendChild(box);
+        if (d.date === today) { todayEl = box; }
+      });
+      host.appendChild(sec);
+      nav.push([w.id, w.title]);
+    });
+    if (todayEl) { requestAnimationFrame(function () { todayEl.scrollIntoView({ block: "start" }); }); }
+  }
+
+  function dailyDays() { return (window.LOOP_DAILY ? LOOP_DAILY.days : []).slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }); }
+  function tabDaily(host, anchor) {
+    var days = dailyDays(), today = isoToday();
+    var cur = days.filter(function (d) { return d.date === anchor; })[0] ||
+      days.filter(function (d) { return d.date === today; })[0] ||
+      days.filter(function (d) { return d.date > today; })[0] || days[days.length - 1];
+    var top = el("section", "block"); top.id = "daily-top";
+    top.appendChild(el("h1", "", "Day " + cur.n + ": " + esc(dayLabel(cur.date))));
+    top.appendChild(el("p", "hsub", "Two problems, 10 to 20 minutes each, no internet. Ask the clarifying questions first, out loud, then think. The topic stays hidden until you have solved it or opened the solution."));
+    host.appendChild(top);
+    nav.push(["daily-top", "This day"]);
+    cur.problems.forEach(function (p, i) {
+      var sec = el("section", "cd-sec"); sec.id = p.id;
+      sec.appendChild(el("h3", "", esc((i ? "Second: " : "First: ") + p.title) + '<span class="am-dm"> about ' + p.minutes + " min</span>"));
+      sec.appendChild(dailyProblem(p));
+      host.appendChild(sec);
+      nav.push([p.id, p.title, true, link("daily", cur.date)]);
+    });
+    var list = el("section", "block am-days"); list.id = "daily-all";
+    list.appendChild(el("h2", "", "Every day"));
+    var ol = el("ol", "cd-parts");
+    days.forEach(function (d) {
+      var solved = d.problems.filter(function (p) { return ticks()["solved:" + p.id]; }).length;
+      var a = el("a", d === cur ? "on" : "", '<span class="cd-n">' + d.n + '</span><span>' + esc(dayLabel(d.date)) + (d.date === today ? ", today" : "") +
+        '</span><span class="cd-m">' + (solved === d.problems.length ? '<span class="cd-ok">&#10003;</span> ' : solved ? solved + " of 2 " : "") + "</span>");
+      a.href = link("daily", d.date);
+      var li = el("li"); li.appendChild(a); ol.appendChild(li);
+    });
+    list.appendChild(ol);
+    host.appendChild(list);
+    nav.push(["daily-all", "Every day"]);
+  }
+  function dailyProblem(p) {
+    var w = el("div", "cd-blk cd-prob");
+    paras(w, String(p.scenario).split("\n\n"));
+    (p.examples || []).forEach(function (x, i) {
+      w.appendChild(el("div", "cd-ex", "<strong>Example " + (i + 1) + "</strong><br><code>" + esc(x.input) + "</code> gives <code>" + esc(x.output) + "</code>" +
+        (x.note ? '<br><span class="note">' + inl(x.note) + "</span>" : "")));
+    });
+    if (p.constraints && p.constraints.length) { var ul = el("ul"); p.constraints.forEach(function (c) { ul.appendChild(el("li", "", inl(c))); }); w.appendChild(ul); }
+    if (p.clarify && p.clarify.length) {
+      w.appendChild(el("div", "lab", "Ask before you solve"));
+      var cl = el("div", "cd-faq");
+      p.clarify.forEach(function (c) {
+        var d = el("details"); d.appendChild(el("summary", "", inl(c.q))); d.appendChild(el("p", "", "<strong>They say:</strong> " + inl(c.a))); cl.appendChild(d);
+      });
+      w.appendChild(cl);
+    }
+    w.appendChild(el("div", "lab", "Your solution"));
+    var ta = cdArea(p.id, p.starter || ""); ta.rows = 14; w.appendChild(ta);
+    var hints = el("div"); w.appendChild(hints);
+    var bar = el("div", "cd-bar"); w.appendChild(bar);
+    var tm = null, left = (p.minutes || 15) * 60;
+    var tb = cdBtn("Start " + (p.minutes || 15) + " minutes", function () {
+      if (tm) { clearInterval(tm); tm = null; tb.textContent = "Resume"; return; }
+      tm = setInterval(function () {
+        left--; tb.textContent = Math.floor(Math.max(left, 0) / 60) + ":" + ("0" + Math.max(left, 0) % 60).slice(-2) + (left <= 0 ? ", time" : "");
+        if (left <= 0 || !document.body.contains(tb)) { clearInterval(tm); }
+      }, 1000);
+    });
+    bar.appendChild(tb);
+    var shown = 0;
+    var hb = cdBtn("Hint 1 of " + p.hints.length, function () {
+      hints.appendChild(el("p", "cd-hint", "<strong>Hint " + (shown + 1) + ".</strong> " + inl(p.hints[shown])));
+      shown++;
+      if (shown >= p.hints.length) { hb.remove(); } else { hb.textContent = "Hint " + (shown + 1) + " of " + p.hints.length; }
+    });
+    bar.appendChild(hb);
+    bar.appendChild(cdBtn("Tests to paste", function () {
+      var r = el("div"); r.appendChild(el("div", "lab", "Paste under your solution and run it")); r.appendChild(cdPre(p.tests)); bar.after(r);
+    }));
+    var after = el("div"); w.appendChild(after);
+    function reveal() {
+      after.innerHTML = "";
+      var R = p.reveal || {};
+      after.appendChild(el("p", "am-reveal", "<strong>It was:</strong> " + esc(R.topic || "") + (R.lc ? ", " + esc(R.lc) : "") +
+        (R.pattern ? '. <a href="../CODING.html#' + esc(R.pattern) + '" target="_blank" rel="noopener">The pattern on the coding page</a>' : "") + "."));
+      after.appendChild(el("div", "lab", "Solution"));
+      after.appendChild(cdPre(p.solution));
+      if (p.complexity) { after.appendChild(el("p", "", "<strong>Cost.</strong> " + inl(p.complexity))); }
+      if (p.explain && p.explain.length) { var ol = el("ol"); p.explain.forEach(function (x) { ol.appendChild(el("li", "", inl(x))); }); after.appendChild(ol); }
+      if (p.dryrun) { after.appendChild(el("div", "lab", "Say the dry run like this")); after.appendChild(el("p", "cd-why", inl(p.dryrun))); }
+      if (p.followups && p.followups.length) { after.appendChild(el("div", "lab", "The next layers they ask")); after.appendChild(cdFaq(p.followups)); }
+    }
+    var solved = ticks()["solved:" + p.id];
+    var sb = cdBtn(solved ? "Solved. Show the solution" : "I solved it", function () { setTick("solved:" + p.id, true); reveal(); sb.remove(); gb.remove(); });
+    var gb = cdBtn("Show the solution", function () { reveal(); gb.remove(); });
+    bar.appendChild(sb); if (!solved) { bar.appendChild(gb); } else { gb = el("span"); }
+    if (p.followups && p.followups.length) {
+      w.appendChild(el("p", "am-note", "After the solution, the follow-ups are the interview: optimise, change a constraint, justify. Answer them out loud before opening each one."));
+    }
+    return w;
+  }
+
+  function tabLp(host, anchor) {
+    var L = LOOP.lp, priv = (window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id]) || {};
+    var stories = priv.stories || [], alloc = priv.allocation || [];
+    var byId = {}; stories.forEach(function (s) { byId[s.id] = s; });
+    var top = el("section", "block"); top.id = "lp-top";
+    top.appendChild(el("h1", "", "Leadership principles"));
+    if (L.lead) { top.appendChild(el("p", "lead", inl(L.lead))); }
+    if (L.rules) { var ul = el("ul"); L.rules.forEach(function (r) { var m = /^([^:]{1,40}):\s(.+)$/.exec(r); ul.appendChild(el("li", "", m ? "<strong>" + inl(m[1]) + ":</strong> " + inl(m[2]) : inl(r))); }); top.appendChild(ul); }
+    host.appendChild(top);
+    nav.push(["lp-top", "How it is graded"]);
+
+    var how = el("section", "block"); how.id = "lp-capture";
+    how.appendChild(el("h2", "", "How a story gets built"));
+    paras(how, L.capture || []);
+    host.appendChild(how);
+    nav.push(["lp-capture", "Capturing a story"]);
+
+    var mx = el("section", "block"); mx.id = "lp-matrix";
+    mx.appendChild(el("h2", "", "The matrix"));
+    mx.appendChild(el("p", "hsub", stories.length ? "Each principle and the stories that can carry it. Bold is a story's main fit. A tick marks a story captured in your words." :
+      "The story bank lives in private/loops/" + LOOP.id + ".js, which is not on this machine."));
+    var t = el("table", "am-mx");
+    var h = "<thead><tr><th>Principle</th><th>Asked as</th><th>Stories</th></tr></thead><tbody>";
+    L.principles.forEach(function (p) {
+      var fits = stories.filter(function (s) { return (s.primary || []).indexOf(p.id) >= 0 || (s.secondary || []).indexOf(p.id) >= 0; });
+      h += '<tr id="lp-' + p.id + '"><td>' + esc(p.name) + (p.top ? ' <span class="am-top">often</span>' : "") + "</td><td>" + inl((p.asks || [])[0] || "") + "</td><td>" +
+        (fits.length ? fits.map(function (s) {
+          var main = (s.primary || []).indexOf(p.id) >= 0;
+          return '<a href="' + link("lp", "story-" + s.id) + '">' + (main ? "<strong>" : "") + esc(s.short || s.title) + (main ? "</strong>" : "") + "</a>" + (s.captured ? ' <span class="cd-ok">&#10003;</span>' : "");
+        }).join(", ") : '<span class="am-gap">no story yet</span>') + "</td></tr>";
+    });
+    t.innerHTML = h + "</tbody>";
+    mx.appendChild(t);
+    host.appendChild(mx);
+    nav.push(["lp-matrix", "The matrix"]);
+
+    if (alloc.length) {
+      var al = el("section", "block"); al.id = "lp-rounds";
+      al.appendChild(el("h2", "", "Which story in which round"));
+      al.appendChild(el("p", "hsub", "Never the same story twice: interviewers compare notes. Tick a story when you have spent it on the day."));
+      var tb = el("table"); tb.innerHTML = "<thead><tr><th>Round</th><th>Lead with</th><th>Reserve</th></tr></thead>";
+      var body = el("tbody");
+      alloc.forEach(function (r) {
+        var tr = el("tr"); tr.appendChild(el("td", "", esc(r.round)));
+        [r.lead || [], r.reserve || []].forEach(function (ids) {
+          var td = el("td");
+          ids.forEach(function (id) {
+            var s = byId[id]; if (!s) { return; }
+            var lab = el("label", "am-spend"); lab.appendChild(tickBox("spent:" + id)); lab.appendChild(document.createTextNode(" " + (s.short || s.title)));
+            td.appendChild(lab);
+          });
+          tr.appendChild(td);
+        });
+        body.appendChild(tr);
+      });
+      tb.appendChild(body); al.appendChild(tb); host.appendChild(al);
+      nav.push(["lp-rounds", "Story per round"]);
+    }
+
+    var sb = el("section", "block"); sb.id = "lp-stories";
+    sb.appendChild(el("h2", "", "The story bank"));
+    host.appendChild(sb);
+    nav.push(["lp-stories", "The story bank"]);
+    stories.forEach(function (s) {
+      var d = el("details", "item"); d.id = "story-" + s.id; d.setAttribute("name", "story");
+      d.appendChild(el("summary", "", '<span class="qt">' + esc(s.title) + '</span><span class="qm">' + esc(s.where || "") + (s.captured ? ", captured" : ", to capture") + "</span>"));
+      var b = el("div", "am-story");
+      if (s.hook) { b.appendChild(el("p", "", inl(s.hook))); }
+      var fit = function (ids) { return ids.map(function (id) { var p = L.principles.filter(function (x) { return x.id === id; })[0]; return p ? p.name : id; }).join(", "); };
+      b.appendChild(el("p", "am-fit", "<strong>Carries:</strong> " + esc(fit(s.primary || [])) + ((s.secondary || []).length ? ". <strong>Also:</strong> " + esc(fit(s.secondary)) : "")));
+      if (s.probe && s.probe.length) { b.appendChild(el("div", "lab", "Where the Bar Raiser will dig")); var ul2 = el("ul"); s.probe.forEach(function (q) { ul2.appendChild(el("li", "", inl(q))); }); b.appendChild(ul2); }
+      if (s.check && s.check.length) { b.appendChild(el("div", "lab", "Check before you tell it")); var ul3 = el("ul"); s.check.forEach(function (q) { ul3.appendChild(el("li", "", inl(q))); }); b.appendChild(ul3); }
+      if (s.captured) {
+        var C = s.captured;
+        b.appendChild(el("div", "lab", "Your version, " + esc(C.date || "")));
+        b.appendChild(transcript(C.say || [], ""));
+        if (C.digs && C.digs.length) { b.appendChild(el("div", "lab", "What we dug out")); b.appendChild(cdFaq(C.digs)); }
+        if (C.differently) { b.appendChild(el("p", "", "<strong>Do differently:</strong> " + inl(C.differently))); }
+      } else {
+        b.appendChild(el("p", "am-note", "Not captured yet. In chat, say <code>capture " + esc(s.id) + "</code> and tell it the way you remember it."));
+      }
+      d.appendChild(b);
+      sb.appendChild(d);
+    });
+    if (anchor && /^story-/.test(anchor)) { var o = document.getElementById(anchor); if (o) { o.open = true; } }
+
+    var pr = el("section", "block"); pr.id = "lp-all";
+    pr.appendChild(el("h2", "", "The sixteen, in plain words"));
+    L.principles.forEach(function (p) {
+      var d = el("details", "item"); d.appendChild(el("summary", "", '<span class="qt">' + esc(p.name) + '</span><span class="qm">' + (p.top ? "asked often" : "") + "</span>"));
+      var b = el("div", "am-story");
+      b.appendChild(el("p", "", inl(p.plain)));
+      if (p.probe) { b.appendChild(el("p", "", "<strong>What they listen for:</strong> " + inl(p.probe))); }
+      if (p.asks && p.asks.length) { var ul4 = el("ul"); p.asks.forEach(function (q) { ul4.appendChild(el("li", "", inl(q))); }); b.appendChild(ul4); }
+      d.appendChild(b); pr.appendChild(d);
+    });
+    host.appendChild(pr);
+    nav.push(["lp-all", "The sixteen"]);
+  }
+
+  function tabCard(host) {
+    var C = LOOP.card, priv = (window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id]) || {};
+    var top = el("section", "block am-card"); top.id = "card";
+    top.appendChild(el("h1", "", esc(C.title || "Loop day")));
+    if (C.lead) { top.appendChild(el("p", "hsub", inl(C.lead))); }
+    var pb = cdBtn("Print this card", function () { window.print(); }); pb.className += " am-noprint"; top.appendChild(pb);
+    C.sections.forEach(function (s) {
+      var sec = el("div", "am-cs");
+      sec.appendChild(el("h3", "", esc(s.title)));
+      if (s.rows) {
+        var t = el("table"); t.innerHTML = "<tbody>" + s.rows.map(function (r) { return "<tr><td>" + inl(r[0]) + "</td><td>" + inl(r[1]) + "</td></tr>"; }).join("") + "</tbody>"; sec.appendChild(t);
+      }
+      if (s.items) { var ul = el("ul"); s.items.forEach(function (x) { ul.appendChild(el("li", "", inl(x))); }); sec.appendChild(ul); }
+      top.appendChild(sec);
+    });
+    if ((priv.allocation || []).length) {
+      var by = {}; (priv.stories || []).forEach(function (s) { by[s.id] = s; });
+      var sec = el("div", "am-cs"); sec.appendChild(el("h3", "", "Your stories, by round (cross off as you spend them)"));
+      var ul = el("ul");
+      priv.allocation.forEach(function (r) {
+        ul.appendChild(el("li", "", "<strong>" + esc(r.round) + ":</strong> " + (r.lead || []).concat(r.reserve || []).map(function (id) { return by[id] ? esc(by[id].short || by[id].title) : ""; }).filter(Boolean).join(", ")));
+      });
+      sec.appendChild(ul); top.appendChild(sec);
+    }
+    host.appendChild(top);
+    nav.push(["card", "The card"]);
   }
 
   function tabMocks(host) {
@@ -2690,6 +3023,11 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
       else if (r.tab === "live") { tabLive(main); }
       else if (r.tab === "mocks") { tabMocks(main); }
       else if (r.tab === "coding") { tabCoding(main, r.anchor); }
+      else if (r.tab === "lld") { tabCoding(main, r.anchor, "lld"); }
+      else if (r.tab === "daily") { tabDaily(main, r.anchor); }
+      else if (r.tab === "lp") { tabLp(main, r.anchor); }
+      else if (r.tab === "plan") { tabPlan(main); }
+      else if (r.tab === "card") { tabCard(main); }
     } catch (err) {
       console.error("Could not draw the page", err);
       main.appendChild(el("p", "", "This page could not be drawn. The console has the details."));

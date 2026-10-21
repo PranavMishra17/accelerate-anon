@@ -1387,3 +1387,18 @@ Parts 1 to 4 trimmed from about 3.5 hours to 2 (Python basics 15 minutes, thread
 failure and review 25) by keeping one idea per question and the click-the-line asks; the four problems
 are unchanged. Nothing deleted: the full versions are parked in interviews/coding/later/ (not loaded by the
 page). Why: too much material for the time before Friday. No charter deviation.
+
+**2026-10-21 — Amazon loop: wildcard weeks 6 and 7.**
+The Amazon SDE loop (four rounds, offered 6, 9, 10 or 11 November) gets interviews/amazon.html, which is the
+wildcard's weeks 6 and 7: a day-by-day Plan from 22 October (two to three hours a day, four or more from
+1 November, Amazon only), the Daily two (30 problems as Amazon scenarios, topic and LeetCode number hidden until
+solved, clarifying questions, three hints, a dry run, the follow-up ladder; every solution tested against a brute
+force), an LLD kit (the round itself and six designs with runnable Python and extension exercises), Leadership
+(the sixteen principles, a story matrix and a story-per-round plan; candidate stories in gitignored
+private/loops/amazon.js, captured in his words in chat, never written for him), Prep (intro, why Amazon in
+versions, the AI-tools answer, last year), and a printable Loop day card. The tracker's home leads with the plan
+until the loop. CODING.html gains concurrency and object-oriented design (tested, with behaviour checks), and a
+local-only link to the design drills. Weeks 4 and 5 stay as they are; their mathematics sessions (w4b, w5b) are
+scheduled on weekends. Also: the Overjoy call is Thursday 22 October, not Wednesday (fixed). Why: the loop he has
+worked toward for more than a year; last September Amazon displaced the plan entirely, and this keeps the plan
+alive beside it. Charter: the wildcard working as designed (interview work sprints, the weeks wait); no deviation.

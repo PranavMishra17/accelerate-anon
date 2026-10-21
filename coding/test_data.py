@@ -6,10 +6,13 @@ returns what the page says.
 A pattern's solutions and variations are defined, then each example whose input reads like keyword
 arguments (nums = [2, 7], target = 9) is called and compared with its output. AI systems topics run their
 components in order, then the end-to-end code, then each variation (needs numpy and torch).
+Then test_behaviour.py runs the concurrency and ood patterns against what their statements promise.
 """
 import ast, io, json, os, sys, inspect
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import test_behaviour
 s = io.open(os.path.join(HERE, "data.js"), encoding="utf-8").read()
 D = json.loads(s[s.index("window.CODING = ") + 16:].rstrip().rstrip(";"))
 
@@ -114,7 +117,10 @@ for p in D["patterns"]:
                 fails.append("%s: %s -> %r, page says %r" % (item["n"], e["i"], got, want))
             checked += 1
 
-print("%d code blocks ran; %d examples checked, %d not directly callable" % (ran, checked, skipped))
+checks, broken = test_behaviour.run(D)
+fails += ["behaviour: " + b for b in broken]
+
+print("%d code blocks ran; %d examples checked, %d not directly callable; %d behaviour checks" % (ran, checked, skipped, checks))
 for f in fails:
     print("MISMATCH", f)
 sys.exit(1 if fails else 0)

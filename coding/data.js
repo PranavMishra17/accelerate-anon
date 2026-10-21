@@ -21,7 +21,7 @@ window.CODING = {
   {
    "id": "techniques",
    "title": "Techniques",
-   "blurb": "Dynamic programming and backtracking."
+   "blurb": "Dynamic programming, backtracking, concurrency and object-oriented design."
   },
   {
    "id": "ai-systems",
@@ -2874,6 +2874,823 @@ window.CODING = {
    "g": "techniques"
   },
   {
+   "id": "concurrency",
+   "title": "Concurrency: threads and asyncio",
+   "group": "Techniques",
+   "ex": {
+    "i": "20 fetches of 0.1 s, at most 5 at once",
+    "o": "about 0.4 s",
+    "w": "the waits overlap; never more than 5 in flight"
+   },
+   "sheet": {
+    "spot": "Many slow calls at once, shared state, a cap on load.",
+    "move": "Lock the check and the write; cap with a Semaphore.",
+    "code": "sem = asyncio.Semaphore(5)\nasync def one(k):\n    async with sem:     # cap the call\n        return await fetch(k)\nawait asyncio.gather(*map(one, ks))",
+    "notes": [
+     "<b>Pick:</b> I/O waits, threads or asyncio; CPU work, processes (the GIL).",
+     "<b>Start and wait:</b> <code>t.start()</code> and <code>t.join()</code>; <code>pool.submit</code> and <code>f.result()</code>; <code>create_task</code> and <code>await</code>. A bare <code>fetch(k)</code> with no await never runs.",
+     "<b>Race:</b> check-then-act and <code>n += 1</code> are not atomic. In asyncio the gap is any <code>await</code> between the check and the write.",
+     "<b>Lock:</b> around the check and the write, never across slow I/O. One lock per key, so other keys do not wait. Two locks: one global order.",
+     "<b>Cap and order:</b> <code>Semaphore(n)</code> around the slow call, or a bounded <code>Queue</code> with n workers. <code>map</code> and <code>gather</code> keep input order; <code>as_completed</code> does not.",
+     "<b>Single-flight:</b> one shared Future or Task per key. <b>Stop:</b> <code>wait_for</code> for a deadline; re-raise <code>CancelledError</code>; <code>to_thread</code> for a blocking call."
+    ]
+   },
+   "vars": [
+    {
+     "n": "Thread-safe counter",
+     "ex": {
+      "i": "8 threads each call add() 1,000 times",
+      "o": "value is 8000",
+      "w": "the lock makes read, add, write one step"
+     },
+     "t": "Guard the read-modify-write with a lock; `+=` is three steps, not one.",
+     "code": "import threading\n\nclass Counter:\n    def __init__(self):\n        self.value = 0\n        self._lock = threading.Lock()\n\n    def add(self, n=1):\n        with self._lock:          # read, add and write as one step\n            self.value += n",
+     "st": {
+      "p": "`Counter` has `add(n=1)` and a `value` attribute. Many threads call `add` at the same time, and when they all finish `value` must equal everything added. `self.value += n` is a read, an add and a write, and the interpreter can switch threads between them, so two threads can read the same old value and one update is lost. Guard the three steps with a lock.",
+      "ex": [
+       {
+        "i": "8 threads each call `add()` 1,000 times",
+        "o": "`value` is 8000",
+        "why": "every update is applied once; with no lock, two threads can read the same old value and one add is lost"
+       },
+       {
+        "i": "`add(5)` called once on a new counter",
+        "o": "`value` is 5",
+        "why": "one thread, no contention: the lock costs almost nothing"
+       }
+      ],
+      "k": [
+       "any number of threads may call add",
+       "hold the lock only around the update, nothing slower"
+      ]
+     }
+    },
+    {
+     "n": "Cache that loads each key once (threads)",
+     "ex": {
+      "i": "5 threads call get('u1') at once",
+      "o": "load runs once; all 5 get its value",
+      "w": "four wait on the key's lock, then find the value"
+     },
+     "t": "Check, lock that key, check again; the slow load holds only that key's lock.",
+     "code": "import threading\n\nclass Cache:\n    def __init__(self, load):\n        self._load, self._data, self._locks = load, {}, {}\n\n    def get(self, key):\n        if key in self._data:                       # fast path: no lock\n            return self._data[key]\n        with self._locks.setdefault(key, threading.Lock()):    # one lock per key\n            if key not in self._data:               # check again: a waiter finds it loaded\n                self._data[key] = self._load(key)   # slow call holds only this key's lock\n            return self._data[key]",
+     "st": {
+      "p": "`Cache(load)` has `get(key)`. The first call for a key runs `load(key)`, which is slow; later calls return the stored value. Many threads ask at once: `load` must run once per key, and a slow load for one key must not make another key wait.",
+      "ex": [
+       {
+        "i": "5 threads call `get('u1')` together; `load` takes 0.1 s",
+        "o": "`load` runs once, all five get its value",
+        "why": "four threads wait on the lock for u1, then find the value stored"
+       },
+       {
+        "i": "3 threads call `get('a')`, `get('b')` and `get('c')`; each load takes 0.1 s",
+        "o": "about 0.1 s in total",
+        "why": "each key has its own lock, so the three loads overlap"
+       }
+      ],
+      "k": [
+       "a load that raises stores nothing; the next call tries again",
+       "the fast path for a stored key takes no lock"
+      ]
+     }
+    },
+    {
+     "n": "Results in order, or as they finish",
+     "ex": {
+      "i": "delays a 0.3 s, b 0.1 s, c 0.2 s",
+      "o": "map: a, b, c. as_completed: b, c, a",
+      "w": "map keeps input order"
+     },
+     "t": "`pool.map` yields in input order; `as_completed` yields whichever finishes first.",
+     "code": "from concurrent.futures import ThreadPoolExecutor, as_completed\n\ndef fetch_all(keys, fetch, workers=8):\n    with ThreadPoolExecutor(workers) as pool:\n        return list(pool.map(fetch, keys))                  # input order\n\ndef fetch_ready_first(keys, fetch, workers=8):\n    with ThreadPoolExecutor(workers) as pool:\n        futures = {pool.submit(fetch, k): k for k in keys}\n        return [(futures[f], f.result()) for f in as_completed(futures)]   # fastest first",
+     "st": {
+      "p": "Write `fetch_all(keys, fetch)`, which returns the results in the order of `keys`, and `fetch_ready_first(keys, fetch)`, which returns `(key, result)` pairs in the order they finish. Both use a thread pool, so the calls overlap. A worker that raises must surface its exception to the caller.",
+      "ex": [
+       {
+        "i": "keys a, b, c where `fetch` sleeps 0.3, 0.1 and 0.2 s",
+        "o": "`fetch_all` gives a, b, c; `fetch_ready_first` gives b, c, a",
+        "why": "map hands results back in submission order; as_completed in finishing order"
+       },
+       {
+        "i": "keys a, b where `fetch('b')` raises ValueError",
+        "o": "both functions raise ValueError",
+        "why": "`result()` re-raises the worker's exception in the caller"
+       }
+      ],
+      "k": [
+       "a pool of 8 workers by default",
+       "the pool is shut down when the function returns"
+      ]
+     }
+    },
+    {
+     "n": "Two locks without deadlock",
+     "ex": {
+      "i": "thread 1 moves a to b while thread 2 moves b to a",
+      "o": "both finish; the total is unchanged",
+      "w": "both take the lower id's lock first"
+     },
+     "t": "Take locks in one global order, so no thread waits on a lock held by a thread that waits on yours.",
+     "code": "import threading\n\nclass Account:\n    def __init__(self, id, balance):\n        self.id, self.balance, self.lock = id, balance, threading.Lock()\n\ndef transfer(src, dst, amount):\n    if src is dst:\n        return False\n    first, second = sorted((src, dst), key=lambda a: a.id)   # one global order\n    with first.lock, second.lock:\n        if src.balance < amount:\n            return False\n        src.balance -= amount\n        dst.balance += amount\n        return True",
+     "st": {
+      "p": "Write `transfer(src, dst, amount)` for `Account` objects that each have an `id`, a `balance` and a `lock`. It moves the money if `src` has enough and returns True, otherwise it returns False. Many threads transfer in both directions at once, so two transfers can need the same two locks. Never deadlock, and never lose or create money.",
+      "ex": [
+       {
+        "i": "`transfer(a, b, 30)` and `transfer(b, a, 10)` run at once; a holds 100 and b holds 50",
+        "o": "both return True; a ends at 80, b at 70",
+        "why": "both threads lock the lower id first, so neither waits on the other in a circle"
+       },
+       {
+        "i": "`transfer(a, b, 500)` when a holds 100",
+        "o": "False, balances unchanged",
+        "why": "the check runs inside the locks, so it sees the true balance"
+       }
+      ],
+      "k": [
+       "a transfer from an account to itself does nothing and returns False",
+       "the check and both updates happen under both locks"
+      ]
+     }
+    },
+    {
+     "n": "A bounded queue with N workers (asyncio)",
+     "ex": {
+      "i": "20 items, 3 workers, a queue of 5",
+      "o": "results in input order, at most 3 running",
+      "w": "put waits when the queue is full"
+     },
+     "t": "A bounded `Queue` is the cap and the backpressure; N workers pull from it.",
+     "code": "import asyncio\n\nasync def run_pipeline(items, work, workers=3, size=10):\n    q = asyncio.Queue(maxsize=size)\n    out = [None] * len(items)\n\n    async def worker():\n        while True:\n            i, item = await q.get()\n            try:\n                out[i] = await work(item)\n            except Exception as exc:\n                out[i] = exc                  # one bad item must not kill the worker\n            finally:\n                q.task_done()\n\n    tasks = [asyncio.create_task(worker()) for _ in range(workers)]\n    for pair in enumerate(items):\n        await q.put(pair)                     # waits when the queue is full: backpressure\n    await q.join()                            # every item has been processed\n    for t in tasks:\n        t.cancel()\n    await asyncio.gather(*tasks, return_exceptions=True)\n    return out",
+     "st": {
+      "p": "Write `async run_pipeline(items, work, workers=3, size=10)`. A producer puts the items on a bounded `asyncio.Queue`. `workers` tasks take items, `await work(item)` and store the result at the item's index. Return the list in input order. An item whose `work` raises stores the exception object and the worker carries on. When every item is done, stop the workers.",
+      "ex": [
+       {
+        "i": "`items` 0 to 5, `work` squares after a short sleep, 2 workers",
+        "o": "`[0, 1, 4, 9, 16, 25]`",
+        "why": "results are stored by index, so completion order does not matter"
+       },
+       {
+        "i": "`work` raises ValueError for item 3",
+        "o": "index 3 holds the ValueError, the rest are normal results",
+        "why": "each worker catches Exception per item and goes on"
+       }
+      ],
+      "k": [
+       "the producer waits when the queue is full",
+       "do not catch CancelledError here: cancel is how the workers are stopped"
+      ]
+     }
+    },
+    {
+     "n": "Timeout and cancellation (asyncio)",
+     "ex": {
+      "i": "fetch takes 1 s, timeout 0.05 s",
+      "o": "None; the fetch was cancelled",
+      "w": "wait_for cancels the inner work"
+     },
+     "t": "`wait_for` cancels the work on timeout; a task that catches `CancelledError` cleans up and re-raises.",
+     "code": "import asyncio\n\nasync def fetch_or_none(fetch, key, seconds):\n    try:\n        return await asyncio.wait_for(fetch(key), seconds)   # cancels fetch on timeout\n    except asyncio.TimeoutError:\n        return None\n\nasync def worker(job, log):\n    try:\n        await job()\n    except asyncio.CancelledError:\n        log.append(\"cleanup\")        # undo partial work\n        raise                        # never swallow a cancel",
+     "st": {
+      "p": "Write `async fetch_or_none(fetch, key, seconds)`: await `fetch(key)`, but give up after `seconds` and return None, leaving no work running. Then write `async worker(job, log)`: it awaits `job()`; if it is cancelled, it appends `'cleanup'` to `log` and lets the cancellation carry on.",
+      "ex": [
+       {
+        "i": "`fetch` sleeps 1 s, `seconds` is 0.05",
+        "o": "None",
+        "why": "the timeout cancels the fetch inside wait_for, so nothing keeps running"
+       },
+       {
+        "i": "a task running `worker(job, log)` is cancelled",
+        "o": "`log` is `['cleanup']` and awaiting the task raises CancelledError",
+        "why": "the handler cleans up and re-raises, so the caller still sees the cancel"
+       }
+      ],
+      "k": [
+       "never swallow CancelledError: re-raise it",
+       "a timeout is TimeoutError on Python 3.11 and up, asyncio.TimeoutError before; asyncio.TimeoutError works on both"
+      ]
+     }
+    },
+    {
+     "n": "Async retry with a timeout per try",
+     "ex": {
+      "i": "an op that raises Transient twice, then returns 'ok'",
+      "o": "'ok' on the third try",
+      "w": "waits up to 0.1 s, then up to 0.2 s"
+     },
+     "t": "Time each try out separately; back off with jitter; retry only errors that can succeed later.",
+     "code": "import asyncio, random\n\nclass Transient(Exception):\n    pass\n\nasync def call_with_retry(op, attempts=4, base=0.1, cap=1.0, per_try=0.5, sleep=asyncio.sleep):\n    for n in range(1, attempts + 1):\n        try:\n            return await asyncio.wait_for(op(), per_try)\n        except (Transient, asyncio.TimeoutError):       # retry only what can succeed later\n            if n == attempts:\n                raise\n            await sleep(random.random() * min(cap, base * 2 ** (n - 1)))   # full jitter",
+     "st": {
+      "p": "Write `async call_with_retry(op, attempts=4, base=0.1, cap=1.0, per_try=0.5, sleep=asyncio.sleep)`. It awaits `op()` with a timeout of `per_try` seconds. On `Transient` or a timeout it waits a random time up to `min(cap, base * 2**(n-1))` after try n and tries again, up to `attempts` tries, then re-raises. Any other exception is raised at once.",
+      "ex": [
+       {
+        "i": "`op` raises `Transient` twice, then returns 'ok'",
+        "o": "'ok', after 3 calls",
+        "why": "the first two failures are retried; the third try succeeds"
+       },
+       {
+        "i": "`op` raises ValueError",
+        "o": "ValueError after 1 call",
+        "why": "a bad request does not get better; retrying it only wastes time"
+       }
+      ],
+      "k": [
+       "pass sleep in, so a test does not wait",
+       "full jitter: a random wait up to the ceiling, not the ceiling itself"
+      ]
+     }
+    },
+    {
+     "n": "Blocking calls inside async code",
+     "ex": {
+      "i": "5 calls to a function that sleeps 0.1 s",
+      "o": "about 0.1 s in total",
+      "w": "to_thread runs each in a pool thread"
+     },
+     "t": "A blocking call freezes the whole loop; hand it to a thread (I/O) or a process (CPU).",
+     "code": "import asyncio, time\n\ndef blocking_read(path):              # a sync library call: it would freeze the loop\n    time.sleep(0.1)\n    return path.upper()\n\nasync def read_all(paths):\n    return await asyncio.gather(*(asyncio.to_thread(blocking_read, p) for p in paths))",
+     "st": {
+      "p": "A sync library function `blocking_read(path)` takes 0.1 s and cannot be rewritten as async. Write `async read_all(paths)` that calls it for every path so the calls overlap and the event loop stays free for other tasks. Return the results in input order.",
+      "ex": [
+       {
+        "i": "5 paths",
+        "o": "5 results in about 0.1 s",
+        "why": "five pool threads wait at the same time"
+       },
+       {
+        "i": "calling `blocking_read` directly inside a coroutine",
+        "o": "every other task stops for 0.1 s",
+        "why": "time.sleep never gives control back to the loop; asyncio.sleep does"
+       }
+      ],
+      "k": [
+       "asyncio.to_thread needs Python 3.9 or newer",
+       "CPU-bound work needs a process pool: threads share one GIL"
+      ]
+     }
+    }
+   ],
+   "spot": "Run slow calls at the same time without corrupting shared state. Four questions settle most of it: where does each thread or task <b>start</b>, where does it <b>wait</b>, what is <b>shared</b>, and what <b>caps</b> the work. <b>Signal:</b> 'fetch in parallel', 'at most N at a time', 'two requests, one load', 'make it thread-safe', or a shared dict next to a sleep or an await.",
+   "cx": "I/O waits overlap; CPU work does not (the GIL): 100 calls of 0.2 s on 10 workers take about 2 s.",
+   "tpl": "import asyncio\n\nclass Fetcher:\n    def __init__(self, fetch, limit=5):\n        self._fetch = fetch                      # async def fetch(key)\n        self._sem = asyncio.Semaphore(limit)     # cap: at most `limit` calls in flight\n        self._inflight = {}                      # key -> Task: single-flight\n        self._locks = {}                         # key -> Lock: one writer at a time\n        self.cache = {}\n\n    async def _load(self, key):\n        async with self._sem:                    # the cap wraps only the slow call\n            value = await self._fetch(key)\n        self.cache[key] = value                  # one writer for loads: the task itself\n        return value\n\n    async def get(self, key):\n        if key in self.cache:\n            return self.cache[key]\n        task = self._inflight.get(key)\n        if task is None:                         # no await between this check and the store\n            task = self._inflight[key] = asyncio.create_task(self._load(key))\n            task.add_done_callback(lambda _: self._inflight.pop(key, None))\n        return await asyncio.shield(task)        # a caller that times out must not cancel the load\n\n    async def update(self, key, change):         # read, change, write: one at a time per key\n        async with self._locks.setdefault(key, asyncio.Lock()):\n            self.cache[key] = await change(await self.get(key))",
+   "probs": [
+    {
+     "n": "Print in order (LeetCode 1114)",
+     "ex": {
+      "i": "threads call third(), second(), first()",
+      "o": "firstsecondthird",
+      "w": "second and third wait for their turn"
+     },
+     "l": "easy",
+     "task": "Make three methods run in order, whichever thread calls first.",
+     "hint": "Two Events: second waits for the first to be set, third for the second.",
+     "sol": "import threading\n\nclass Foo:\n    def __init__(self):\n        self._one, self._two = threading.Event(), threading.Event()\n\n    def first(self, print_first):\n        print_first()\n        self._one.set()\n\n    def second(self, print_second):\n        self._one.wait()          # blocks until first has printed\n        print_second()\n        self._two.set()\n\n    def third(self, print_third):\n        self._two.wait()\n        print_third()",
+     "c": "O(1) per call; each method waits once on an event, no spinning.",
+     "st": {
+      "p": "The `Foo` class has three methods, `first(print_first)`, `second(print_second)` and `third(print_third)`. Three different threads each call one of them, in any order, and each method calls the function it receives. Make the output always `first`, `second`, `third`, in that order, whichever method is called first.",
+      "ex": [
+       {
+        "i": "the threads call `third`, `second`, `first`, in that order",
+        "o": "firstsecondthird",
+        "why": "third waits for second's event, second waits for first's"
+       },
+       {
+        "i": "the threads call `first`, `second`, `third`, in that order",
+        "o": "firstsecondthird",
+        "why": "each event is already set when the next method needs it"
+       }
+      ],
+      "k": [
+       "each method is called exactly once",
+       "a method that is too early must block, not spin"
+      ]
+     }
+    },
+    {
+     "n": "Design bounded blocking queue (LeetCode 1188)",
+     "ex": {
+      "i": "capacity 2; one thread enqueues 1, 2, 3 while another dequeues three times",
+      "o": "dequeue returns 1, 2, 3",
+      "w": "the third enqueue waits for room"
+     },
+     "l": "medium",
+     "task": "A thread-safe queue that blocks when full or empty.",
+     "hint": "One Condition on one lock: wait_for the room or the item, notify_all after every change.",
+     "sol": "import threading\nfrom collections import deque\n\nclass BoundedBlockingQueue:\n    def __init__(self, capacity):\n        self._q, self._cap = deque(), capacity\n        self._cv = threading.Condition()\n\n    def enqueue(self, element):\n        with self._cv:\n            self._cv.wait_for(lambda: len(self._q) < self._cap)   # wait while full\n            self._q.append(element)\n            self._cv.notify_all()          # producers and consumers share the condition\n\n    def dequeue(self):\n        with self._cv:\n            self._cv.wait_for(lambda: self._q)                    # wait while empty\n            element = self._q.popleft()\n            self._cv.notify_all()\n            return element\n\n    def size(self):\n        with self._cv:\n            return len(self._q)",
+     "c": "O(1) per call; waiting threads sleep on the condition, they do not poll.",
+     "st": {
+      "p": "Implement `BoundedBlockingQueue(capacity)`. `enqueue(element)` adds to the back and blocks while the queue is full. `dequeue()` removes and returns the front item and blocks while the queue is empty. `size()` returns the current count. Producers and consumers run in many threads.",
+      "ex": [
+       {
+        "i": "capacity 2; one thread calls `enqueue` with 1, 2, 3 while another calls `dequeue` three times",
+        "o": "`dequeue` returns 1, 2, 3",
+        "why": "the third enqueue blocks until the first dequeue makes room"
+       },
+       {
+        "i": "`dequeue` is called on an empty queue, then another thread enqueues 7",
+        "o": "`dequeue` returns 7",
+        "why": "the caller sleeps until an item arrives"
+       }
+      ],
+      "k": [
+       "1 <= capacity",
+       "first in, first out",
+       "no busy waiting"
+      ]
+     }
+    },
+    {
+     "n": "Fizz Buzz multithreaded (LeetCode 1195)",
+     "ex": {
+      "i": "FizzBuzz(15) with four threads",
+      "o": "1 2 fizz 4 buzz fizz 7 8 fizz buzz 11 fizz 13 14 fizzbuzz",
+      "w": "each thread prints only its own numbers"
+     },
+     "l": "medium",
+     "task": "Four threads cooperate to print one sequence in order.",
+     "hint": "One shared counter under a Condition; each thread waits until the counter is its kind of number.",
+     "sol": "import threading\n\nclass FizzBuzz:\n    def __init__(self, n):\n        self.n, self.i = n, 1\n        self._cv = threading.Condition()\n\n    def _run(self, mine, emit):\n        with self._cv:\n            while True:\n                self._cv.wait_for(lambda: self.i > self.n or mine(self.i))\n                if self.i > self.n:\n                    return                 # all numbers done: every thread leaves\n                emit(self.i)\n                self.i += 1\n                self._cv.notify_all()\n\n    def fizz(self, print_fizz):\n        self._run(lambda i: i % 3 == 0 and i % 5 != 0, lambda i: print_fizz())\n\n    def buzz(self, print_buzz):\n        self._run(lambda i: i % 5 == 0 and i % 3 != 0, lambda i: print_buzz())\n\n    def fizzbuzz(self, print_fizzbuzz):\n        self._run(lambda i: i % 15 == 0, lambda i: print_fizzbuzz())\n\n    def number(self, print_number):\n        self._run(lambda i: i % 3 != 0 and i % 5 != 0, print_number)",
+     "c": "O(n) turns; notify_all wakes all four threads on each turn.",
+     "st": {
+      "p": "Four threads share one `FizzBuzz(n)` object. One calls `fizz(print_fizz)`, one `buzz(print_buzz)`, one `fizzbuzz(print_fizzbuzz)` and one `number(print_number)`. Together they print 1 to n: a multiple of 3 prints fizz, a multiple of 5 prints buzz, a multiple of both prints fizzbuzz, and any other number prints itself. Each thread prints only its own kind, in order, and returns when n is done.",
+      "ex": [
+       {
+        "i": "`FizzBuzz(15)`, the four threads started in any order",
+        "o": "1 2 fizz 4 buzz fizz 7 8 fizz buzz 11 fizz 13 14 fizzbuzz",
+        "why": "the shared counter decides whose turn it is, whatever the start order"
+       },
+       {
+        "i": "`FizzBuzz(2)`",
+        "o": "1 2",
+        "why": "the fizz, buzz and fizzbuzz threads find nothing to print and exit when the counter passes n"
+       }
+      ],
+      "k": [
+       "every thread must return once n is done",
+       "`print_number` receives the number"
+      ]
+     }
+    },
+    {
+     "n": "Building H2O (LeetCode 1117)",
+     "ex": {
+      "i": "threads arrive as H, H, H, O, O, H",
+      "o": "every group of 3 outputs has 2 H and 1 O, for example HHOHOH",
+      "w": "a semaphore per element and a barrier of three"
+     },
+     "l": "medium",
+     "task": "Release hydrogen and oxygen threads as valid water molecules.",
+     "hint": "Semaphore(2) for hydrogen, Semaphore(1) for oxygen, and a Barrier(3) where the molecule forms.",
+     "sol": "import threading\n\nclass H2O:                            # two hydrogens and one oxygen make a molecule\n    def __init__(self):\n        self._h = threading.Semaphore(2)       # at most two hydrogens in a molecule\n        self._o = threading.Semaphore(1)       # and one oxygen\n        self._barrier = threading.Barrier(3)   # the three meet before any releases\n\n    def hydrogen(self, release_hydrogen):\n        with self._h:\n            self._barrier.wait()\n            release_hydrogen()\n\n    def oxygen(self, release_oxygen):\n        with self._o:\n            self._barrier.wait()\n            release_oxygen()",
+     "c": "O(1) per call; the next molecule cannot form until this one has released.",
+     "st": {
+      "p": "`H2O` has `hydrogen(release_hydrogen)` and `oxygen(release_oxygen)`. Many threads call them in any order, and there are always twice as many hydrogen calls as oxygen calls. A thread waits until a molecule can form, then calls its release function. Every consecutive group of three outputs must be two H and one O.",
+      "ex": [
+       {
+        "i": "threads arrive as H, H, H, O, O, H",
+        "o": "HHOHOH, or any order where each group of 3 is two H and one O",
+        "why": "the barrier opens only when two hydrogens and one oxygen are all waiting"
+       },
+       {
+        "i": "one oxygen arrives long before any hydrogen",
+        "o": "it waits at the barrier",
+        "why": "no molecule forms with a missing atom"
+       }
+      ],
+      "k": [
+       "the order of the three within a molecule does not matter",
+       "a new molecule may not start releasing before the previous one is out"
+      ]
+     }
+    }
+   ],
+   "g": "techniques"
+  },
+  {
+   "id": "ood",
+   "title": "Object-oriented design",
+   "group": "Techniques",
+   "ex": {
+    "i": "4,500 cents, 10% off, then 300 off",
+    "o": "3750",
+    "w": "4500 - 450 = 4050, then 4050 - 300"
+   },
+   "sheet": {
+    "spot": "Parking lot, cart, library, elevator: write the classes.",
+    "move": "Requirements, entities, sketch, code, extensions.",
+    "code": "class Discount(ABC):   # Strategy\n    @abstractmethod\n    def apply(self, cents): ...\nclass Cart:            # takes strategies\n    def __init__(self, ds): ...",
+    "notes": [
+     "<b>The round:</b> ask, name the entities, say how they relate, sketch, code the main path, extend.",
+     "<b>Python tools:</b> <code>ABC</code> and <code>@abstractmethod</code> for a contract; <code>Protocol</code> for any object with the right methods; <code>Enum</code> for fixed choices; <code>@dataclass(frozen=True)</code> for values.",
+     "<b>SOLID:</b><br>S: one reason to change.<br>O: add by extending, not by editing.<br>L: a subtype keeps its parent's promise.<br>I: small interfaces, nothing unused.<br>D: depend on abstractions; pass them in.",
+     "<b>Patterns:</b> Strategy swaps a rule; Factory builds by name; Observer tells listeners; State changes behaviour with the state; Composite treats a tree like one node. Singleton is a hidden global that tests cannot reset: pass one object in.",
+     "<b>Money and time:</b> integer cents or <code>Decimal</code>, never float. <code>time.monotonic()</code> for durations, and inject a clock so a test can move time."
+    ]
+   },
+   "vars": [
+    {
+     "n": "Model the nouns: Enum, dataclass, ABC, Protocol",
+     "ex": {
+      "i": "Vehicle('KA01', Size.SMALL) against a compact spot",
+      "o": "fits is True",
+      "w": "a frozen dataclass is a value"
+     },
+     "t": "Each Python tool has one job: Enum for fixed choices, dataclass for values, ABC for a contract, Protocol for a shape.",
+     "code": "from abc import ABC, abstractmethod\nfrom dataclasses import dataclass\nfrom enum import Enum\nfrom typing import Protocol\n\nclass Size(Enum):\n    SMALL = 1\n    LARGE = 2\n\n@dataclass(frozen=True)\nclass Vehicle:                    # a value: compared by fields, cannot change\n    plate: str\n    size: Size\n\nclass Spot(ABC):                  # a contract; subclasses fill in the rule\n    @abstractmethod\n    def fits(self, vehicle): ...\n\nclass Compact(Spot):\n    def fits(self, vehicle):\n        return vehicle.size is Size.SMALL\n\nclass Payment(Protocol):          # any object with pay() works; no inheritance needed\n    def pay(self, cents) -> bool: ...",
+     "st": {
+      "p": "Model a parking lot's nouns in Python. A vehicle is a value, a plate and a size, that never changes after it is created. A size is one of a fixed set. A spot is a contract with a `fits` rule that each kind of spot fills in. A payment method is anything that has a `pay` method. Choose the Python tool for each: dataclass, Enum, ABC or Protocol.",
+      "ex": [
+       {
+        "i": "a small `Vehicle` and a `Compact` spot",
+        "o": "`fits` is True",
+        "why": "Compact.fits compares the vehicle's size with Size.SMALL"
+       },
+       {
+        "i": "assigning to `plate` on a `Vehicle`",
+        "o": "raises FrozenInstanceError",
+        "why": "frozen=True makes the dataclass a value that cannot change"
+       }
+      ],
+      "k": [
+       "`Spot()` itself cannot be created: it has an abstract method",
+       "a Protocol needs no base class; the type checker checks the shape"
+      ]
+     }
+    },
+    {
+     "n": "Factory: build by name",
+     "ex": {
+      "i": "make_notifier('sms')",
+      "o": "an Sms object",
+      "w": "callers pass a name, not a class"
+     },
+     "t": "A registry maps a name to a class; a new kind is one line and no caller changes.",
+     "code": "from abc import ABC, abstractmethod\n\nclass Notifier(ABC):\n    @abstractmethod\n    def send(self, to, text): ...\n\nclass Email(Notifier):\n    def send(self, to, text):\n        return \"email \" + to + \": \" + text\n\nclass Sms(Notifier):\n    def send(self, to, text):\n        return \"sms \" + to + \": \" + text\n\nNOTIFIERS = {\"email\": Email, \"sms\": Sms}      # a new kind is one more line\n\ndef make_notifier(kind):\n    try:\n        return NOTIFIERS[kind]()\n    except KeyError:\n        raise ValueError(\"unknown notifier: \" + kind) from None",
+     "st": {
+      "p": "The caller has a name from a config file or a request, such as 'email' or 'sms', not a class. Write `make_notifier(kind)` that returns the right `Notifier` and raises a clear ValueError for an unknown name. Adding a channel must not change any caller.",
+      "ex": [
+       {
+        "i": "`make_notifier('sms').send('ann', 'hi')`",
+        "o": "'sms ann: hi'",
+        "why": "the registry picks the Sms class"
+       },
+       {
+        "i": "`make_notifier('fax')`",
+        "o": "raises ValueError",
+        "why": "an unknown name fails loudly with the name in the message"
+       }
+      ],
+      "k": [
+       "no if-chain on the name: a dict lookup",
+       "the caller depends on Notifier only"
+      ]
+     }
+    },
+    {
+     "n": "Observer: tell the listeners",
+     "ex": {
+      "i": "two subscribers, then set_price(10), set_price(12)",
+      "o": "each receives 10, then 12",
+      "w": "the stock never knows who listens"
+     },
+     "t": "The subject keeps a list of callbacks and calls each on a change; it knows no listener's type.",
+     "code": "class Stock:\n    def __init__(self, price):\n        self.price, self._watchers = price, []\n\n    def subscribe(self, fn):\n        self._watchers.append(fn)\n        return lambda: self._watchers.remove(fn)       # call it to unsubscribe\n\n    def set_price(self, price):\n        self.price = price\n        for fn in list(self._watchers):                # a copy: a watcher may unsubscribe\n            fn(price)",
+     "st": {
+      "p": "A `Stock` holds a price. Other code wants to hear about every change without the stock knowing who it is. `subscribe(fn)` registers a callback and returns a function that unsubscribes it. `set_price(p)` stores the price and calls every current subscriber with it.",
+      "ex": [
+       {
+        "i": "two subscribers, then `set_price(10)` and `set_price(12)`",
+        "o": "each subscriber sees 10, then 12",
+        "why": "set_price calls every registered callback in turn"
+       },
+       {
+        "i": "a subscriber unsubscribes, then `set_price(15)`",
+        "o": "only the remaining subscriber is called",
+        "why": "the returned function removed the callback from the list"
+       }
+      ],
+      "k": [
+       "the stock holds callbacks, not listener classes",
+       "iterate over a copy so a callback can unsubscribe safely"
+      ]
+     }
+    },
+    {
+     "n": "State: behaviour changes with the state",
+     "ex": {
+      "i": "a locked turnstile gets coin(), then push(), then push()",
+      "o": "unlocked, passed, locked",
+      "w": "each state class answers the same calls"
+     },
+     "t": "Each state is a class with the same methods; the machine forwards calls and states swap themselves in.",
+     "code": "class Locked:\n    def coin(self, t):\n        t.state = Unlocked()\n        return \"unlocked\"\n\n    def push(self, t):\n        return \"locked\"\n\nclass Unlocked:\n    def coin(self, t):\n        return \"already unlocked\"\n\n    def push(self, t):\n        t.state = Locked()\n        return \"passed\"\n\nclass Turnstile:\n    def __init__(self):\n        self.state = Locked()\n\n    def coin(self):\n        return self.state.coin(self)\n\n    def push(self):\n        return self.state.push(self)",
+     "st": {
+      "p": "A turnstile starts locked. A coin unlocks it; a push while unlocked lets one person through and locks it again. A push while locked does nothing, and a coin while unlocked does nothing. Write it with one class per state and no if-chain on a state flag.",
+      "ex": [
+       {
+        "i": "`coin()`, `push()`, `push()` on a new turnstile",
+        "o": "'unlocked', 'passed', 'locked'",
+        "why": "the second push finds the turnstile locked again"
+       },
+       {
+        "i": "`coin()` twice",
+        "o": "'unlocked', 'already unlocked'",
+        "why": "an unlocked state ignores a second coin"
+       }
+      ],
+      "k": [
+       "adding a state is adding a class",
+       "a table of allowed moves is enough when states differ only in which moves are legal"
+      ]
+     }
+    },
+    {
+     "n": "Composite: a tree that answers like one node",
+     "ex": {
+      "i": "a folder holding a 10-byte file and a folder with a 5-byte file",
+      "o": "total_size() is 15",
+      "w": "a file and a folder answer the same call"
+     },
+     "t": "Leaves and containers share a method, so the caller never asks which one it holds.",
+     "code": "class File:\n    def __init__(self, name, size):\n        self.name, self.size = name, size\n\n    def total_size(self):\n        return self.size\n\nclass Folder:\n    def __init__(self, name):\n        self.name, self.children = name, []\n\n    def add(self, child):\n        self.children.append(child)\n        return self\n\n    def total_size(self):\n        return sum(c.total_size() for c in self.children)     # the same call on a file or a folder",
+     "st": {
+      "p": "A folder holds files and other folders, to any depth. Both kinds must answer `total_size()`: a file returns its size, a folder returns the sum of everything inside it. The caller must not need to check which kind it holds.",
+      "ex": [
+       {
+        "i": "a folder with a 10-byte file and a subfolder with a 5-byte file",
+        "o": "`total_size()` is 15",
+        "why": "the subfolder answers the same call the file does"
+       },
+       {
+        "i": "an empty folder",
+        "o": "`total_size()` is 0",
+        "why": "the sum of nothing is 0"
+       }
+      ],
+      "k": [
+       "no isinstance checks",
+       "the same idea fits menus, org charts and expression trees"
+      ]
+     }
+    },
+    {
+     "n": "Singleton, and what to do instead",
+     "ex": {
+      "i": "register('a', 1) into REGISTRY, and into a fresh Registry()",
+      "o": "each registry holds only its own entries",
+      "w": "a test passes its own registry"
+     },
+     "t": "A module-level object is already one instance; pass it in with a default so tests can pass a fresh one.",
+     "code": "class Registry:\n    def __init__(self):\n        self.items = {}\n\nREGISTRY = Registry()                 # a module is imported once: this is the one shared object\n\ndef register(name, item, registry=REGISTRY):     # callers use the default; tests pass their own\n    registry.items[name] = item\n    return registry",
+     "st": {
+      "p": "A `Registry` must exist once for the whole program. Show the Python way, and say why a classic `__new__` Singleton is a poor fit: it is hidden global state that a test cannot reset, and its check in `__new__` is a check-then-act race under threads. Write `register` so that a test can pass its own registry.",
+      "ex": [
+       {
+        "i": "`register('a', 1)` with the default registry",
+        "o": "`REGISTRY.items` holds a",
+        "why": "the default is the one shared object"
+       },
+       {
+        "i": "`register('a', 1, Registry())`",
+        "o": "the new registry holds a; `REGISTRY` is unchanged",
+        "why": "a test gets isolation without touching global state"
+       }
+      ],
+      "k": [
+       "no __new__ trick",
+       "hidden global state is the reason to avoid it, not style"
+      ]
+     }
+    },
+    {
+     "n": "Money and time",
+     "ex": {
+      "i": "a ticket billed per started hour, 90 minutes on a fake clock at 200 cents an hour",
+      "o": "400 cents",
+      "w": "ceil(1.5) hours, integer cents"
+     },
+     "t": "Money is integer cents, never float; time comes from a clock you pass in, so a test can move it.",
+     "code": "import math, time\nfrom dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass Money:\n    cents: int                         # integer cents: 0.1 + 0.2 never appears\n\n    def __add__(self, other):\n        return Money(self.cents + other.cents)\n\n    def __str__(self):\n        return \"%d.%02d\" % divmod(self.cents, 100)\n\nclass Clock:\n    def now(self):\n        return time.monotonic()        # durations: the wall clock can jump back\n\nclass Ticket:\n    def __init__(self, clock, rate):\n        self.clock, self.rate, self.start = clock, rate, clock.now()\n\n    def fee(self):\n        hours = max(1, math.ceil((self.clock.now() - self.start) / 3600))   # each started hour is billed\n        return Money(self.rate.cents * hours)",
+     "st": {
+      "p": "A parking ticket bills a `Money` rate for every started hour, with a minimum of one hour. Write `Money` so that amounts are exact, and `Ticket` so that a test can control the time: it reads time from a `Clock` object passed in, using the monotonic clock in production.",
+      "ex": [
+       {
+        "i": "a fake clock, a rate of 200 cents, and `fee()` after 90 minutes",
+        "o": "`Money(400)`",
+        "why": "90 minutes is 1.5 hours, rounded up to 2 hours of 200 cents"
+       },
+       {
+        "i": "`str(Money(1050))`",
+        "o": "'10.50'",
+        "why": "cents are split into whole units and the remainder only when printed"
+       }
+      ],
+      "k": [
+       "state the rounding rule out loud",
+       "Decimal is the alternative when amounts have fractions of a cent"
+      ]
+     }
+    }
+   ],
+   "spot": "Turn a vague prompt into a few small classes that work and can grow. The round has six steps: <b>requirements</b> (what must it do, what is out of scope), <b>entities</b> (the nouns), <b>relationships</b> (who owns whom), a <b>class sketch</b> (fields and methods), the <b>core code</b> for the main path, then the <b>extensions</b> the interviewer adds. <b>Signal:</b> 'design a parking lot', 'write the classes for', and no talk of scale.",
+   "cx": "Three to six classes, the main path running, extensions named. Say the trade-off of each choice.",
+   "tpl": "from abc import ABC, abstractmethod\nfrom dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass Item:\n    sku: str\n    price_cents: int                  # money is an int of cents, never a float\n    qty: int = 1\n\nclass Discount(ABC):                  # Strategy: one contract, many rules\n    @abstractmethod\n    def apply(self, total_cents):\n        \"\"\"Return the new total.\"\"\"\n\n@dataclass\nclass PercentOff(Discount):\n    percent: int\n\n    def apply(self, total_cents):\n        return total_cents - total_cents * self.percent // 100\n\n@dataclass\nclass FlatOff(Discount):\n    cents: int\n\n    def apply(self, total_cents):\n        return max(0, total_cents - self.cents)\n\nclass Cart:\n    def __init__(self, discounts=()):\n        self.items = []\n        self.discounts = list(discounts)          # injected, not built inside\n\n    def add(self, item):\n        self.items.append(item)\n\n    def total(self):\n        total = sum(i.price_cents * i.qty for i in self.items)\n        for d in self.discounts:                  # a new rule is a new class, not an edit here\n            total = d.apply(total)\n        return total",
+   "probs": [
+    {
+     "n": "Parking lot",
+     "ex": {
+      "i": "one SMALL and one LARGE spot; park two SMALL cars, then a third",
+      "o": "first gets SMALL, second gets LARGE, third gets None",
+      "w": "smallest spot that fits"
+     },
+     "l": "medium",
+     "task": "Allocate spots by size, issue tickets, bill by the started hour.",
+     "hint": "A vehicle fits a spot of its size or bigger; choose the smallest free spot that fits.",
+     "sol": "import itertools, math\nfrom dataclasses import dataclass\nfrom enum import IntEnum\n\nclass Size(IntEnum):\n    SMALL = 1\n    MEDIUM = 2\n    LARGE = 3                       # a vehicle fits a spot of its own size or bigger\n\n@dataclass(frozen=True)\nclass Vehicle:\n    plate: str\n    size: Size\n\n@dataclass\nclass Spot:\n    id: int\n    size: Size\n    vehicle: Vehicle = None\n\n@dataclass(frozen=True)\nclass Ticket:\n    id: int\n    spot_id: int\n    start: float\n\nclass ParkingLot:\n    def __init__(self, sizes, clock, rate_cents=200):\n        self.spots = [Spot(i, s) for i, s in enumerate(sizes)]\n        self.clock, self.rate = clock, rate_cents          # clock() returns seconds\n        self._ids = itertools.count(1)\n        self._open = {}                                    # ticket id -> Ticket\n\n    def park(self, vehicle):\n        free = [s for s in self.spots if s.vehicle is None and s.size >= vehicle.size]\n        if not free:\n            return None                                    # nothing fits\n        spot = min(free, key=lambda s: (s.size, s.id))     # smallest spot that fits\n        spot.vehicle = vehicle\n        ticket = Ticket(next(self._ids), spot.id, self.clock())\n        self._open[ticket.id] = ticket\n        return ticket\n\n    def leave(self, ticket_id):\n        ticket = self._open.pop(ticket_id)\n        self.spots[ticket.spot_id].vehicle = None\n        hours = max(1, math.ceil((self.clock() - ticket.start) / 3600))\n        return hours * self.rate                           # fee in cents",
+     "c": "park is O(spots); leave is O(1). A heap of free spots per size makes park O(log n).",
+     "st": {
+      "p": "Design a parking lot. It has spots of three sizes, and a vehicle can use a spot of its own size or a bigger one. `park(vehicle)` returns a ticket, or None when no spot fits. `leave(ticket_id)` frees the spot and returns the fee in cents, charging every started hour with a one-hour minimum. Pass the clock in so the fee can be tested.",
+      "ex": [
+       {
+        "i": "a lot with spots [SMALL, LARGE]; park two SMALL cars, then a third",
+        "o": "tickets for spot 0 and spot 1, then None",
+        "why": "the first takes the smallest spot that fits; the third finds none free"
+       },
+       {
+        "i": "`leave` 90 minutes after `park`, at 200 cents an hour",
+        "o": "400",
+        "why": "1.5 hours is billed as 2 started hours"
+       }
+      ],
+      "k": [
+       "sizes, spot count and rate are constructor arguments",
+       "a ticket can be used once"
+      ]
+     }
+    },
+    {
+     "n": "In-memory file system (LeetCode 588)",
+     "ex": {
+      "i": "mkdir('/a/b'), add_content('/a/b/f', 'hi'), ls('/a/b')",
+      "o": "['f']",
+      "w": "a node is a folder or a file"
+     },
+     "l": "medium",
+     "task": "ls, mkdir, add_content and read_content over a tree of folders and files.",
+     "hint": "One node type: a folder has children, a file has content. Walk the path one part at a time.",
+     "sol": "class Node:\n    def __init__(self):\n        self.children = {}            # name -> Node, for a folder\n        self.content = None           # a string, for a file\n\nclass FileSystem:\n    def __init__(self):\n        self.root = Node()\n\n    def _walk(self, path, create=False):\n        node = self.root\n        for part in [p for p in path.split(\"/\") if p]:\n            if part not in node.children:\n                if not create:\n                    raise FileNotFoundError(path)\n                node.children[part] = Node()\n            node = node.children[part]\n        return node\n\n    def ls(self, path):\n        node = self._walk(path)\n        if node.content is not None:                   # a file lists as itself\n            return [path.split(\"/\")[-1]]\n        return sorted(node.children)\n\n    def mkdir(self, path):\n        self._walk(path, create=True)\n\n    def add_content(self, path, text):\n        node = self._walk(path, create=True)\n        node.content = (node.content or \"\") + text\n\n    def read_content(self, path):\n        return self._walk(path).content",
+     "c": "O(length of the path) per call; ls adds a sort of the names.",
+     "st": {
+      "p": "Design an in-memory file system. `ls(path)` returns the sorted names inside a folder, or only the file's own name if the path is a file. `mkdir(path)` creates the folder and any missing parents. `add_content(path, text)` creates the file if needed and appends to it. `read_content(path)` returns a file's content. Paths start with '/', and '/' is the root.",
+      "ex": [
+       {
+        "i": "`mkdir('/a/b')`, `add_content('/a/b/f', 'hi')`, `ls('/a/b')`",
+        "o": "['f']",
+        "why": "the file lives in /a/b"
+       },
+       {
+        "i": "then `add_content('/a/b/f', '!')` and `read_content('/a/b/f')`",
+        "o": "'hi!'",
+        "why": "a second add appends to the content"
+       }
+      ],
+      "k": [
+       "names are unique inside a folder",
+       "a path that does not exist raises FileNotFoundError"
+      ]
+     }
+    },
+    {
+     "n": "Shopping cart with discounts",
+     "ex": {
+      "i": "4,500 cents in the cart; apply SAVE10, then TAKE3 (300 cents off, 4,000 minimum)",
+      "o": "total is 3750",
+      "w": "the minimum is checked on the subtotal"
+     },
+     "l": "medium",
+     "task": "A cart with coupons that have a minimum spend and cannot be reused.",
+     "hint": "A coupon is data: a code, a percent, a flat amount, a minimum spend. Apply in the order given.",
+     "sol": "from dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass Coupon:\n    code: str\n    percent: int = 0\n    flat_cents: int = 0\n    min_spend_cents: int = 0\n\nclass Cart:\n    def __init__(self, coupons):\n        self._coupons = {c.code: c for c in coupons}      # what the shop accepts\n        self._lines = {}                                  # sku -> [price_cents, qty]\n        self._applied = []\n\n    def add(self, sku, price_cents, qty=1):\n        line = self._lines.setdefault(sku, [price_cents, 0])\n        line[1] += qty\n\n    def subtotal(self):\n        return sum(price * qty for price, qty in self._lines.values())\n\n    def apply(self, code):\n        coupon = self._coupons.get(code)\n        if coupon is None or coupon in self._applied:\n            return False                                  # unknown, or already used\n        if self.subtotal() < coupon.min_spend_cents:\n            return False\n        self._applied.append(coupon)\n        return True\n\n    def total(self):\n        total = self.subtotal()\n        for c in self._applied:                           # in the order applied\n            total = max(0, total - total * c.percent // 100 - c.flat_cents)\n        return total",
+     "c": "O(items) for the subtotal, O(coupons) for the total.",
+     "st": {
+      "p": "Design a shopping cart. `add(sku, price_cents, qty)` adds items; adding a sku again adds to its quantity. `apply(code)` applies a coupon and returns True, or returns False if the code is unknown, already applied, or the subtotal is below the coupon's minimum spend. `total()` applies the coupons in the order they were applied, percent first and then the flat amount, and never goes below zero. All money is integer cents.",
+      "ex": [
+       {
+        "i": "4,500 cents in the cart; the shop has SAVE10 (10%) and TAKE3 (300 cents off, minimum 4,000); apply SAVE10, then TAKE3",
+        "o": "both return True; `total()` is 3750",
+        "why": "4500 - 450 = 4050, then 4050 - 300 = 3750"
+       },
+       {
+        "i": "apply SAVE10 twice",
+        "o": "True, then False",
+        "why": "a coupon cannot be reused"
+       }
+      ],
+      "k": [
+       "round percent discounts down, in the customer's disfavour, and say so",
+       "a total never goes negative"
+      ]
+     }
+    },
+    {
+     "n": "Library",
+     "ex": {
+      "i": "borrow on day 1, give back on day 20",
+      "o": "fine is 125 cents",
+      "w": "due day 15, 5 days late at 25 cents"
+     },
+     "l": "medium",
+     "task": "Books, members, loans with a limit, due dates and fines.",
+     "hint": "Track copies per book and loans per member; a due day is the borrow day plus the loan period.",
+     "sol": "from dataclasses import dataclass, field\n\nLOAN_DAYS, MAX_LOANS, FINE_PER_DAY = 14, 3, 25     # fine in cents\n\n@dataclass\nclass Member:\n    name: str\n    loans: dict = field(default_factory=dict)      # isbn -> due day\n\nclass Library:\n    def __init__(self):\n        self.copies = {}                           # isbn -> copies on the shelf\n        self.members = {}\n\n    def add_book(self, isbn, copies=1):\n        self.copies[isbn] = self.copies.get(isbn, 0) + copies\n\n    def join(self, name):\n        self.members[name] = Member(name)\n\n    def borrow(self, name, isbn, today):\n        m = self.members[name]\n        if self.copies.get(isbn, 0) == 0 or len(m.loans) >= MAX_LOANS or isbn in m.loans:\n            return False\n        self.copies[isbn] -= 1\n        m.loans[isbn] = today + LOAN_DAYS\n        return True\n\n    def give_back(self, name, isbn, today):\n        due = self.members[name].loans.pop(isbn)\n        self.copies[isbn] += 1\n        return max(0, today - due) * FINE_PER_DAY",
+     "c": "O(1) per call.",
+     "st": {
+      "p": "Design a small library. `add_book(isbn, copies)` and `join(name)` set it up. `borrow(name, isbn, today)` returns True and starts a 14-day loan, or returns False if no copy is on the shelf, the member already holds 3 books, or the member already holds this book. `give_back(name, isbn, today)` returns the copy and the fine in cents, 25 per day late. Days are whole numbers.",
+      "ex": [
+       {
+        "i": "one copy of a book; `borrow` on day 1, then `give_back` on day 20",
+        "o": "True, then 125",
+        "why": "due on day 15, so 5 days late at 25 cents"
+       },
+       {
+        "i": "a second member borrows the same single copy while it is out",
+        "o": "False",
+        "why": "no copy is on the shelf"
+       }
+      ],
+      "k": [
+       "a member holds at most 3 loans",
+       "a late fine is never negative"
+      ]
+     }
+    },
+    {
+     "n": "Elevator",
+     "ex": {
+      "i": "at floor 0, requests 5, 2 and 8",
+      "o": "stops at 2, 5, 8",
+      "w": "keep going one way, then turn around"
+     },
+     "l": "hard",
+     "task": "One elevator that serves floor requests without wasting trips.",
+     "hint": "Keep the direction while a request is ahead; turn around only when none is. Choose the scheduling rule as a Strategy if asked.",
+     "sol": "from enum import Enum\n\nclass Dir(Enum):\n    UP = 1\n    DOWN = -1\n    IDLE = 0\n\nclass Elevator:\n    def __init__(self, floors):\n        self.floors, self.floor, self.dir = floors, 0, Dir.IDLE\n        self.stops = set()                              # floors someone asked for\n\n    def request(self, floor):\n        if 0 <= floor < self.floors and floor != self.floor:\n            self.stops.add(floor)\n\n    def step(self):\n        \"\"\"One tick: move a floor. Returns the floor if the doors open there.\"\"\"\n        if not self.stops:\n            self.dir = Dir.IDLE\n            return None\n        if self.dir is Dir.IDLE:\n            nearest = min(self.stops, key=lambda f: abs(f - self.floor))\n            self.dir = Dir.UP if nearest > self.floor else Dir.DOWN\n        if not any((f - self.floor) * self.dir.value > 0 for f in self.stops):\n            self.dir = Dir.UP if self.dir is Dir.DOWN else Dir.DOWN   # nothing ahead: turn around\n        self.floor += self.dir.value\n        if self.floor in self.stops:\n            self.stops.remove(self.floor)\n            return self.floor\n        return None\n\n    def run(self):\n        visited = []\n        while self.stops:\n            f = self.step()\n            if f is not None:\n                visited.append(f)\n        return visited",
+     "c": "O(stops) per step; a sorted structure makes the 'anything ahead' check O(log n).",
+     "st": {
+      "p": "Design one elevator for a building with `floors` floors, starting at floor 0. `request(floor)` records a stop. `step()` moves one floor and returns the floor if the doors open there. The elevator keeps its direction while any requested floor is ahead of it, then turns around; when idle it heads for the nearest request. `run()` steps until no stops remain and returns the floors in the order served.",
+      "ex": [
+       {
+        "i": "at floor 0, `request(5)`, `request(2)`, `request(8)`, then `run()`",
+        "o": "[2, 5, 8]",
+        "why": "it goes up once, serving each requested floor on the way"
+       },
+       {
+        "i": "at floor 8 after that, `request(3)`, `request(9)`, then `run()`",
+        "o": "[9, 3]",
+        "why": "9 is nearest, so it goes up first and then turns down"
+       }
+      ],
+      "k": [
+       "ignore a request for the current floor or outside the building",
+       "a request made while moving is served if it is ahead, otherwise on the way back"
+      ]
+     }
+    },
+    {
+     "n": "Time-based key-value store (LeetCode 981)",
+     "ex": {
+      "i": "set('k','a',1), set('k','b',4), get('k',3), get('k',5)",
+      "o": "'a', then 'b'",
+      "w": "the latest value at or before the time"
+     },
+     "l": "medium",
+     "task": "set(key, value, time) and get(key, time) returns the value as it was at that time.",
+     "hint": "Per key, keep increasing timestamps and values side by side; bisect finds the last one at or before the time.",
+     "sol": "import bisect\n\nclass TimeMap:\n    def __init__(self):\n        self._times, self._values = {}, {}      # key -> timestamps in increasing order, values\n\n    def set(self, key, value, timestamp):\n        self._times.setdefault(key, []).append(timestamp)\n        self._values.setdefault(key, []).append(value)\n\n    def get(self, key, timestamp):\n        i = bisect.bisect_right(self._times.get(key, []), timestamp)    # entries at or before it\n        return self._values[key][i - 1] if i else \"\"",
+     "c": "set is O(1); get is O(log n) by binary search.",
+     "st": {
+      "p": "Design a time-based key-value store. `set(key, value, timestamp)` stores a value at a time. `get(key, timestamp)` returns the value set at the latest time at or before `timestamp`, or an empty string if there is none. Calls to `set` for a key arrive with increasing timestamps.",
+      "ex": [
+       {
+        "i": "`set('k', 'a', 1)`, `set('k', 'b', 4)`, then `get('k', 3)` and `get('k', 5)`",
+        "o": "'a', then 'b'",
+        "why": "at time 3 the latest set is the one at time 1; at 5 it is the one at 4"
+       },
+       {
+        "i": "`get('k', 0)` and `get('missing', 9)`",
+        "o": "'' and ''",
+        "why": "nothing was set at or before time 0, and the key does not exist"
+       }
+      ],
+      "k": [
+       "timestamps for one key are strictly increasing",
+       "O(log n) for get"
+      ]
+     }
+    }
+   ],
+   "g": "techniques"
+  },
+  {
    "id": "numpy",
    "title": "NumPy and matrix basics",
    "group": "AI systems",
@@ -4868,6 +5685,8 @@ window.CODING = {
     "dp",
     "kadane",
     "backtrack",
+    "concurrency",
+    "ood",
     "sorting",
     "tools",
     "edge",

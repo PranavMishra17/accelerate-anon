@@ -164,6 +164,7 @@ def build(module_name):
         "company": getattr(m, "COMPANY", []), "posting": getattr(m, "POSTING", None), "rounds": getattr(m, "ROUNDS", []),
         "research": research,
         "learn": learn, "tabs": getattr(m, "TABS", None),
+        "plan": getattr(m, "PLAN", None), "lp": getattr(m, "LP", None), "card": getattr(m, "CARD", None),
         "live": getattr(m, "LIVE", []), "liveLead": getattr(m, "LIVE_LEAD", []), "takehomes": getattr(m, "TAKEHOMES", []), "watch": getattr(m, "WATCH", None), "timeline": getattr(m, "TIMELINE", None),
     }
     tpl = io.open(os.path.join(HERE, "template.html"), encoding="utf-8").read()

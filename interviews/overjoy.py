@@ -1,5 +1,5 @@
 """Overjoy, Product Engineer (New York). Round 1: a 30-minute call with Jun Kwak, co-founder and CTO, on
-Wednesday 22 October 2026 (time picked on his Calendly).
+Thursday 22 October 2026 (time picked on his Calendly).
 
 Jun shares Overjoy and the engineering team, then digs into the background, one project, and what comes next.
 No technical prep beyond the story: this page is the intro, the story, the projects and the questions, kept
@@ -20,7 +20,7 @@ LOOP = {
     # #766AF0 is the violet in overjoy.ai's inline styles (read 2026-10-21); #EADDFF from the same page for dark.
     "brand": "#766AF0", "brand_dark": "#EADDFF",
     "when_iso": "",
-    "when": "Wednesday 22 October, 30 minutes (book the time on Jun's Calendly)",
+    "when": "Thursday 22 October, 30 minutes (book the time on Jun's Calendly)",
     "who": ("Jun Kwak, co-founder and CTO (co-founded Overjoy with Alex Han; earlier at Google, Snap and Robinhood per one "
             "third-party review). Also on the email: Ishaan (likely Ishaan Nagpal, Head of Engineering) and Lyza Jacobo, recruiting ops."),
     "format": ("Thirty minutes. Jun tells you about Overjoy and the engineering team, then digs into your background, one project "
@@ -96,7 +96,7 @@ POSTING = {
 
 ROUNDS = [
     {"title": "Round 1: call with Jun Kwak, co-founder and CTO",
-     "when": "Wednesday 22 October 2026, 30 minutes",
+     "when": "Thursday 22 October 2026, 30 minutes",
      "who": "Jun Kwak (Ishaan and Lyza Jacobo on the invite email)",
      "format": "Overjoy and the engineering team, then your background, one project, and what you're looking for next.",
      "outcome": "Not yet held.",

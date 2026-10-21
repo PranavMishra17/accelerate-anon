@@ -2310,7 +2310,9 @@
      The wildcard page lists them; a loop's sessions are the wildcard sessions whose
      forWhat starts with the loop's forWhat. */
   var LOOPS = [
-    { id: "overjoy", date: "2026-10-22", name: "Overjoy, Product Engineer", when: "Wed 22 Oct", forWhat: "Overjoy",
+    { id: "amazon", date: "2026-11-11", plan: true, name: "Amazon, Software Development Engineer", when: "6, 9, 10 or 11 Nov", forWhat: "Amazon",
+      file: "interviews/amazon.html", note: "Wildcard weeks 6 and 7: the day-by-day plan, two problems a day, design drills, the story bank. Four rounds." },
+    { id: "overjoy", date: "2026-10-22", name: "Overjoy, Product Engineer", when: "Thu 22 Oct", forWhat: "Overjoy",
       file: "interviews/overjoy.html", note: "Round 1: 30 minutes with Jun Kwak, co-founder and CTO. Background, one project, what you want next." },
     { id: "ecogpt", date: "", name: "EcoGPT, Founding Engineer", when: "Date to be set", forWhat: "EcoGPT",
       file: "interviews/ecogpt.html", note: "Round 1: a call with Ethan Leonard, founder and CEO. Agents, memory, evals, open models, cost per message." },
@@ -8048,6 +8050,19 @@
     var wk = currentWeek(), today = todayMid();
     hero.appendChild(el("p", "hdate", DAYNAME[today.getDay()] + " " + today.getDate() + " " +
       MONTHNAME[today.getMonth()] + ". Week " + (wk + 1) + " of " + PLAN.length + ". Next up:"));
+
+    /* A loop with its own day-by-day plan (LOOPS entry with plan: true) takes the hero until its day passes. */
+    var fl = LOOPS.filter(function (lp) { return lp.plan && lp.date && new Date(lp.date + "T23:59:59") >= today; })[0];
+    if (fl) {
+      hero.appendChild(el("h1", "next", fl.name.split(",")[0] + ": today's plan"));
+      hero.appendChild(el("p", "hsub", "Wildcard weeks 6 and 7, for the loop (" + fl.when + "). Week " + (wk + 1) + " waits where it is."));
+      var fa = el("div", "hacts"), fb = el("button", "go-big", "Open today's plan");
+      fb.addEventListener("click", function () { window.location.href = fl.file + "#/plan"; });
+      fa.appendChild(fb);
+      hero.appendChild(fa);
+      v.appendChild(hero);
+      return;
+    }
 
     if (nx) {
       hero.appendChild(el("h1", "next", nx.s.name));

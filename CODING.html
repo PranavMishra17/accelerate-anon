@@ -161,7 +161,7 @@ details.sol > pre { margin: var(--s2) 0; }
   <div class="cs-top"><b>Cheat sheet</b><div class="cs-tabs"></div><span class="hint">Click a card for examples and variations. F for full screen, Esc to close.</span><span class="grow"></span><a class="wide" href="CHEATSHEET.html">Its own page</a><button type="button" class="wide" id="cs-full">Full screen</button><button type="button" id="cs-close">Close</button></div>
   <div class="cs-grid"></div>
 </div>
-<script src="coding/data.js?v=e3770f93"></script>
+<script src="coding/data.js?v=c5ebc76c"></script>
 <script src="coding/sheet.js?v=68cb3d74"></script>
 <script>
 (function () {
@@ -231,6 +231,10 @@ details.sol > pre { margin: var(--s2) 0; }
 
   var side = document.getElementById("side"), host = document.getElementById("patterns"), tabs = document.getElementById("tabs"), qEl = document.getElementById("q");
   host.innerHTML = P.map(patHtml).join("");
+  /* local-only */
+  var ob = host.querySelector("#ood .pat-body");
+  if (ob) { ob.insertAdjacentHTML("afterbegin", '<p><a href="interviews/amazon.html#/lld">The full design drills, with code that runs: the Amazon page, LLD tab</a></p>'); }
+  /* end local-only */
   tabs.innerHTML = GROUPS.map(function (g) {
     var n = P.filter(function (p) { return groupOf(p) === g.id; }).length;
     return '<a href="#' + g.id + '" data-g="' + g.id + '">' + g.title + (n ? '<span class="n">' + n + "</span>" : "") + "</a>";

@@ -39,7 +39,7 @@ p { margin: 0 0 var(--s3); }
 .top-in { max-width: 1180px; margin: 0 auto; padding: 0 var(--s5); height: var(--top); display: flex; align-items: center; gap: var(--s5); }
 .top .loopname { font-weight: var(--w-strong); white-space: nowrap; }
 .tabs { display: flex; gap: var(--s1); align-self: stretch; }
-.tabs a { display: flex; align-items: center; padding: 2px var(--s2) 0; color: var(--muted); border-bottom: 2px solid transparent; }
+.tabs a { display: flex; align-items: center; padding: 2px var(--s2) 0; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap; }
 .tabs a:hover { color: var(--ink); text-decoration: none; }
 .tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
 .top .grow { flex: 1; }
@@ -581,6 +581,34 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
 .cd-nav { display: flex; justify-content: space-between; gap: var(--s3); margin-top: var(--s7); padding-top: var(--s4); border-top: var(--hair); }
 .cd-done { margin-top: var(--s5); }
 .lab.cd-drill { margin: var(--s6) 0 var(--s2); padding-top: var(--s3); border-top: var(--hair); font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); }
+/* a long loop's tabs: the plan's days, the daily two, the story matrix, the loop-day card */
+.am-day { margin: var(--s4) 0; padding-top: var(--s3); border-top: var(--hair); max-width: 860px; }
+.am-day.today { border-top: 2px solid var(--accent); }
+.am-day.past .am-dh b { color: var(--muted); }
+.am-dh { display: flex; gap: var(--s3); align-items: baseline; }
+.am-dm { color: var(--muted); font-size: var(--fs-sm); font-weight: normal; }
+.am-focus { color: var(--soft); margin: var(--s1) 0 var(--s2); }
+.am-items { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+.am-it label { display: flex; gap: var(--s2); align-items: baseline; cursor: pointer; padding: 2px 0; }
+.am-it input { flex: none; }
+.am-k { flex: none; min-width: 4.5em; font-size: var(--fs-xs); color: var(--muted); font-weight: var(--w-strong); }
+.am-tx { flex: 1; }
+.am-min { color: var(--muted); font-size: var(--fs-sm); margin-left: var(--s2); }
+.am-reveal { margin: var(--s4) 0 var(--s2); padding-top: var(--s3); border-top: var(--hair); }
+.am-note { color: var(--muted); font-size: var(--fs-sm); }
+.am-mx td:first-child { white-space: nowrap; }
+.am-top { color: var(--accent); font-size: var(--fs-xs); font-weight: var(--w-strong); }
+.am-gap { color: var(--warn); }
+.am-story { padding: var(--s2) 0 var(--s3); max-width: var(--measure); }
+.am-fit { color: var(--soft); }
+.am-spend { display: block; }
+.am-cs { margin: var(--s4) 0; max-width: 860px; }
+.am-cs h3 { font-size: var(--fs-md); margin-bottom: var(--s2); }
+@media print {
+  .top, nav.side, .sn-strip, .am-noprint { display: none !important; }
+  .shell { display: block; padding: 0; }
+  body { background: #fff; color: #000; }
+}
 </style>
 </head>
 <body>
@@ -607,7 +635,7 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
 <script src="../figures/viewer.js?v=ecb99aae"></script>
 <script src="../site/res.js?v=c33c7564"></script>
 <script src="../site/sheet.js?v=d5ed86a7"></script>
-<script type="application/json" id="loop-data">{"id": "ecogpt", "title": "EcoGPT, Founding Engineer", "subtitle": "Round 1: a call with Ethan Leonard, founder and CEO", "when": "Date to be set: book a slot on Ethan's cal.com (you offered 9 to 10 AM or after 12 PM ET)", "when_iso": "", "who": "Ethan Leonard, founder and CEO (his GitHub profile lists five on the team). Azim Malik of Paraform, who referred you, stays on the thread.", "format": "A first call with the founder, likely 30 minutes: what EcoGPT is building and the role, then your background and the agent work. A conversation, not a technical screen; expect product questions.", "bar": "Have you built agents beyond API calls (tools, memory, retrieval, evals) and shipped them to real users, can you own a feature from design to launch alone, and do you know what it costs to serve? Lead with V8 and working memory; have the open-model work ready.", "sessions": [], "scripts": [{"id": "intro", "title": "Tell me about yourself", "length": "about 45 seconds", "when": "First, almost certainly. The short one, then stop.", "probes": ["What do you own at alfred_?", "Which of your projects is public?"], "say": ["I'm currently a founding LLM engineer at alfred_, where I work across AI agent reliability, memory architecture, evaluation infrastructure, and automation for a product with 5,000-plus active users. A big part of my work has been taking ambiguous problems and building the systems underneath them that make AI actually work reliably in production.", "Before that, I worked at an early-stage startup called WheelPrice and did AI research at UIC. What I enjoy most is working across the stack, understanding a real problem, and building something that solves it end to end. That's what caught my attention about EcoGPT: an assistant people already use every day, where the next step is the agent itself, tools, memory and evals, at a scale where cost matters."], "swaps": [{"when": "If he asks for one line", "line": "I build the systems under production agents: memory, evals, reliability, and the gate that decides what an agent is allowed to do."}, {"when": "If he asks about public work", "line": "My research on small open models working as a team is on GitHub, and MockFlow, an AI mock-interview tool, is in my portfolio."}], "land": "Production agent systems, end to end, and why EcoGPT: the agent layer on an assistant at real scale.", "notes": ["The first paragraph and the first two sentences of the second are yours from INTRO.md, unchanged. The last sentence is new for EcoGPT: make it yours."]}, {"id": "why-ecogpt", "title": "Why EcoGPT?", "length": "about 30 seconds", "when": "Likely, after he describes the company.", "probes": ["What do you think of the product?", "Why consumer?", "Why a team this small?"], "say": ["A few things. You already have the hard part most AI startups don't: people using it every day, at a scale where every design choice shows up in cost and latency. The next step you're hiring for, agents with tools, memory and evals, is exactly what I've spent the last year building in production.", "And it's a tiny team, so I'd own whole features from design to launch, on the apps and the backend. That's how I work best."], "vname": "A", "variants": [{"name": "B, the engineering problem", "land": "Agent quality on open models, at a cost that works for a free tier.", "say": ["Honestly, the engineering problem. Making an assistant genuinely useful with memory and tools, on open models, at a cost per message that works for a free tier, is a harder and more interesting problem than doing it on the biggest model with no budget.", "That's the kind of trade-off I like owning: what to cache, what to route to a small model, what to evaluate before it ships."]}, {"name": "C, the stage", "land": "Past finding users; now the foundations under them.", "say": ["I think it's the stage. You've found the users; now it's the foundations under them, the agent layer, memory, evals, and a backend that holds as you grow.", "That's founding-engineer work in the real sense, and it's the part I've done at alfred_."]}], "swaps": [{"when": "If he asks what you think of the product", "line": "Say one thing you liked and one thing you'd change, from your own use this week. Not from the reviews."}], "land": "Real daily use, the agent layer next, and ownership on a tiny team.", "notes": ["Written in your voice from the research; INTRO.md has no EcoGPT line yet. Make it yours.", "Keep the green mission to a sentence unless he leads with it; say what you'd build, not what you believe."]}, {"id": "open-models", "title": "Have you worked with open-source models, fine-tuning or serving?", "length": "about 40 seconds", "when": "Likely; the posting lists it. Honest first, then what you have done.", "probes": ["Have you fine-tuned a model?", "Have you run GPUs in production?", "Which open models have you used?"], "say": ["In research, yes. My paper work at UIC was on small open models working as a team: Gemma and MedGemma, from half a billion to 27 billion parameters, recruited as specialist agents that deliberate. On eight medical benchmarks that got to about 77.6% accuracy and ran about 3.1 times faster than frontier models.", "On serving, at the UIC lab I put an audio model behind an API with INT8 quantization at 150 milliseconds p95. What I haven't done is run a GPU fleet in production; at alfred_ we call hosted models, and my work there is the layer that makes them cheap and reliable, prompt caching, routing, evals. That's the part I'd bring on day one, and I'd want to go deep on your serving side."], "vname": "A", "variants": [{"name": "B, shorter", "land": "Research on open models, quantized serving; no GPU fleet yet.", "say": ["Some. In research I built a multi-agent system on Gemma and MedGemma, small open models that got close to frontier accuracy at about 3.1 times the speed. And I've shipped a quantized model behind an API at 150 milliseconds p95.", "I haven't run GPUs at your scale. I'd learn that fast, and meanwhile the agent and eval layer is where I'd add from the first week."]}], "land": "Honest about the gap, concrete about what you've done.", "notes": ["From your master reference: SLM-TeamMedAgents (Gemma, MedGemma, 500M to 27B, 77.63% across 8 benchmarks, 3.1x speedup) and INT8 quantization at 150 ms p95. No production fine-tuning is on record: do not claim it."]}, {"id": "leave", "title": "Why leave alfred_?", "length": "about 30 seconds", "when": "If asked.", "probes": [], "say": ["I’m not looking to leave because there’s something fundamentally wrong with alfred_. The reason I'm exploring is more about the direction I want to take my career", "I've learned a lot at alfred_ and have had the opportunity to own important parts of a production AI product from the ground up. I've gradually moved beyond just building agent features and into building the systems around the agent — evaluations, observability, memory, reliability", "I'm still there and not looking to leave just for the sake of moving. I'm exploring roles where I can apply that experience to a broader range of problems, work directly with customers, and grow as an engineer who can own both the technical solution and its business outcome. EcoGPT seems particularly aligned with that."], "vname": "Yours", "variants": [{"name": "B, scale", "land": "From thousands of users to hundreds of thousands a day.", "say": ["Nothing's wrong at alfred_; I've owned a lot of the production system there. What I want next is the same kind of work at a much bigger scale, where the agent's memory and quality decide whether hundreds of thousands of people come back tomorrow, and where cost per message is a number I own."]}, {"name": "C, the whole product", "land": "Own the product end to end, apps and backend, with the founder.", "say": ["I've spent the last year on the systems around the agent. The part I want more of is the whole product: the app people open, the backend under it, and working directly with a founder on what to build next.", "A team of five is the most direct version of that."]}], "land": "Not away from alfred_; toward scale and owning the whole product.", "notes": ["Your words from INTRO.md; only the company name in the last sentence changed."]}, {"id": "next", "title": "What are you looking for next?", "length": "about 45 seconds", "when": "Possible. Short term, then long term.", "probes": ["Where do you want to be in a few years?", "IC or lead?"], "say": ["Short term, I want to be somewhere the agentic engineering is actually at the frontier — not a demo, but running against real stakes, where getting it wrong has weight. That's the fastest way I know to get good, seriously good, at this.", "In the first few months, I'd want to get inside the codebase and the domain fast, start pulling weight on the agent side quickly since that's where I'm strongest, and be someone the team can hand a hard, ambiguous problem to without much hand-holding.", "Long term, I want to understand this domain and this kind of engineering deeply enough that I can actually lead it — see where the real bottlenecks are, and push us toward the better one before it costs months. But I don't want that to mean stepping back from the actual work."], "vname": "A", "variants": [{"name": "B, concrete first months", "land": "Ship the first agent feature; grow into leading the engineering.", "say": ["Short term, a small team where I own features end to end and they reach a lot of people quickly. In the first months I'd want to ship the first real agent feature, memory or a tool that people actually use, with evals around it so we know it got better.", "Longer term, to lead the engineering as the team grows, still building."]}, {"name": "C, three things", "land": "Scale, ownership, and a founder to build with.", "say": ["Three things, honestly. Real scale, so my decisions show up in usage and cost. Ownership end to end. And working closely with a founder on what to build.", "Over a few years, I'd like to lead this kind of engineering, hands still in the code."]}], "land": "Frontier agent work with real stakes now; lead it later, hands still in the code.", "notes": ["Your goals from INTRO.md; the second paragraph is your short-term text with the domain left general."]}, {"id": "logistics", "title": "Logistics he may ask", "length": "a line each", "when": "Possible at the end. Your answers are in chat, not on this page.", "probes": ["In person in SoHo, five days?", "Start date?", "Work authorization?", "Compensation?"], "say": [], "land": "One sentence each, then back to the work.", "notes": ["Location, relocation, start date, pay and work authorization: your answers from chat."]}], "drills": [{"id": "intro", "prompt": "Tell me about yourself.", "target": "45 seconds", "seconds": 45, "ref": "#say-intro"}, {"id": "v8", "prompt": "Tell me about an agent system you built.", "target": "90 seconds", "seconds": 90, "ref": "#say-v8"}, {"id": "open-models", "prompt": "Have you worked with open-source models or fine-tuning?", "target": "40 seconds", "seconds": 40, "ref": "#say-open-models"}], "qa": [], "ask": [], "ask3": [{"id": "clarify", "title": "While he talks: clarifying", "when": "During his part on EcoGPT and the role. One or two, on his words.", "why": "Shows you're mapping the system as he describes it, and gets you the facts the later questions need.", "how": ["Ask on his words, not from a list: 'when you said X, do you mean...'"], "items": [{"to": "Ethan", "q": "When you say agents, what's shipped today and what's next: memory, search as a tool, actions in other apps?", "loop": "When he talks about the roadmap.", "why": "Tells you where you'd start and what exists."}, {"to": "Ethan", "q": "How do you split traffic between your own deployment in Finland and the fallback, and what decides it: load, model, cost?", "loop": "When he mentions models or infrastructure.", "why": "Serving cost is the business; this is where it's decided."}, {"to": "Ethan", "q": "Who's on the team today, and who owns the backend and the models?", "loop": "When he mentions the team.", "why": "The five on his GitHub are first names only."}]}, {"id": "collab", "title": "Before the end: collaborating", "when": "When he asks for questions, or with about eight minutes left. Pick one.", "why": "Thinks with him about a real problem, the way you would as a teammate.", "how": ["Ask one, listen, then say in a sentence how you've handled the same thing."], "items": [{"to": "Ethan", "q": "When you swap the underlying model, how do you know the new one is better for your users? Is there an eval set, or is it ratings and retention after the fact?", "loop": "First choice.", "why": "Your eval bench story fits straight in: replay real conversations before a change ships."}, {"to": "Ethan", "q": "With hundreds of thousands of free users a day, what does a message cost you, and which lever matters most: model size, caching, routing, or limits?", "loop": "If he talks about growth or cost.", "why": "Your prompt-cache numbers and the cold-start cut."}, {"to": "Ethan", "q": "Memory makes the assistant better but means storing more about people. How do you want to handle that with privacy as part of the pitch?", "loop": "If he raises privacy or memory.", "why": "Your working-memory design; asked as a product question, not a gotcha."}]}, {"id": "contribute", "title": "At the end: contributing", "when": "The last two or three minutes.", "why": "About the role and what's next, so you leave knowing where you'd add.", "how": ["Two at most, then close, in your words from INTRO.md: “Really appreciate you taking the time today. This was helpful — honestly, the more I hear about what the team is working on, the more excited I am about the fit. Looking forward to hearing about next steps whenever you have them.”"], "items": [{"to": "Ethan", "q": "What does success look like for this role in the first 90 days?", "loop": "First.", "why": "Your question from INTRO.md."}, {"to": "Ethan", "q": "What's the one thing you'd want a founding engineer to take off your plate first?", "loop": "Second.", "why": "Founder-specific; tells you the real job."}, {"to": "Ethan", "q": "What does the process look like from here, and the rough timeline?", "loop": "Last.", "why": "Your question from INTRO.md."}]}], "traps": [], "tables": [], "admire": "", "kitaruLead": "", "figures": [], "mockHow": "", "mocks": [], "planKicker": "Before the call", "mechTitle": "", "designLink": null, "extra": "<b>Twenty-five minutes of prep, in this order.<\/b> 1. Use the product for ten minutes on your phone: chat, memory, search, the trees page. 2. Prep tab: your intro out loud with the timer (45 seconds). 3. Your projects: V8 out loud, then working memory short. 4. Pick one question from each tier.", "emphasis": [], "own": null, "showUp": [["Use the product first.", "A founder of a consumer app will ask what you think of it. Have one thing you liked and one thing you'd fix, from your own use."], ["Agents beyond API calls.", "The posting says it plainly. Your proof: the V8 gate, working memory with structural anti-hallucination, the eval bench that replays real conversations."], ["Talk about cost per message.", "Hundreds of thousands of free users a day on open models makes serving cost the business. Your prompt-cache numbers and the cold-start cut are the right register."], ["Be honest on open models.", "You've worked with Gemma and MedGemma in research and quantized a model for serving; you haven't run a GPU fleet. Say that, then say how you'd learn it."], ["Founder pace.", "Small team, in person, intense. Say you want ownership end to end; you already have it."]], "prepLead": "Your intro, why EcoGPT, your projects, the open-model question, and the questions to ask, in three tiers.", "storyBlurb": "Your intro, why EcoGPT, why leave alfred_, what you want next, and logistics.", "sources": [{"label": "EcoGPT: Founding Engineer", "url": "https://ecogpt.com/careers/founding-engineer", "why": "The posting: agents, tool use, memory, retrieval, evals; latency, cost and reliability; in person in SoHo."}, {"label": "EcoGPT: About", "url": "https://ecogpt.com/about", "why": "The company's own account: a public benefit corporation, hosting in Google Cloud's Finland region, open models."}, {"label": "EcoGPT: Trees", "url": "https://ecogpt.com/trees", "why": "The tree counter (about 436K on 21 Oct) and the chats-per-tree rate."}, {"label": "EcoGPT on the App Store", "url": "https://apps.apple.com/us/app/-/id6756059656", "why": "Features, plans and reviews (4.8 from about 8.5K ratings); complaints about slow replies and limits."}, {"label": "Ethan Leonard on GitHub", "url": "https://github.com/ethan-leonard/ethan-leonard", "why": "His own profile: about 6M users and about 600K chatting daily, self-reported; the team of five by first name."}, {"label": "FelloAI: EcoGPT review", "url": "https://felloai.com/ecogpt-review/", "why": "A detailed review: free tiers with ads, Pro at about $10 a month, the stack named (Google Cloud, Cloudflare, PlanetScale, Deepgram, OpenRouter)."}, {"label": "Forklog: green AI or greenwashing?", "url": "https://forklog.com/en/ecogpt-says-it-plants-trees-for-prompts-green-ai-or-greenwashing/", "why": "The skeptical case: unnamed models, OpenRouter fallback, the redacted cloud contract, privacy limits."}, {"label": "VRT NWS (Belgium), 25 Aug 2026", "url": "https://www.vrt.be/vrtnws/nl/2026/08/25/ecogpt/", "why": "In Dutch. Journalists asked to sign an NDA before the models were named; audited monthly figures promised, no date."}], "company": ["EcoGPT is a consumer AI assistant (web, iPhone, Android) with search, images, voice and memory on Pro, that funds tree planting from use: about every 100 chats a tree, through Trees for the Future, with a counter on its site (about 436K trees on 21 Oct). Free with ads, Pro about $10 a month. It runs small open-source mixture-of-experts models (about 5 to 20B active parameters, unnamed) on Google Cloud in Finland, with OpenRouter as the fallback.", "Young and self-funded: EcoGPT, Inc. is a Delaware public benefit corporation formed in February 2026. Ethan's GitHub says about 6M users and about 600K chatting daily; the careers page says 5M+; Google Play says 1M+ downloads. The numbers are self-reported and measure different things. A team of about five, hiring a founding engineer, a chief of staff and a marketing associate, in person in SoHo.", "The hard parts, which are your opening: serving hundreds of thousands of free users a day on open models makes cost per message the business; quality against frontier models; keeping users once the green angle is familiar; and trust. The press has been skeptical (unnamed models, the fallback provider, ads that see message text while the pitch is privacy-first). The posting's agents, memory and evals would add stored user data, which sharpens the privacy question.", "Not verified: profitability, the Europe and Latin America split, Ethan's earlier roles, any co-founder. Ask rather than assume."], "posting": {"url": "https://ecogpt.com/careers/founding-engineer", "lead": "Founding Engineer, Applied AI and agents: ship features across the apps and backend, and build the agent stack (tools, memory, retrieval, evals) with the founders.", "facts": [["Location", "SoHo, New York, in person"], ["Range", "150K to 250K USD plus 1 to 3% equity"], ["Models", "Open-source mixture-of-experts, Google Cloud Finland, OpenRouter fallback"], ["Stack (reported)", "Google Cloud, Cloudflare, PlanetScale, Deepgram, Stripe"]], "does": ["Ship features across the iOS, Android and web apps and the backend.", "Build AI systems: agents, tool use, memory, retrieval; multi-agent work and MCP integrations.", "Improve model quality with evals; balance latency, cost and reliability.", "Scale the backend and database for growth; open models, fine-tuning, inference.", "Own architecture through launch, with the founders."], "wants": ["A product you shipped that people use.", "Strong full-stack or backend skills.", "Hands-on with models, ideally agents or harnesses beyond API calls.", "Product judgment and independence; projects over degrees; a public GitHub valued."]}, "rounds": [{"title": "Round 1: call with Ethan Leonard, founder and CEO", "when": "To be booked on his cal.com", "who": "Ethan Leonard (Azim Malik of Paraform on the thread)", "format": "The role and what EcoGPT is building, then your background.", "outcome": "Not yet held.", "notes": ["From Ethan's reply: he'd 'love to chat more about the role and what we're building at EcoGPT.'"], "asked": []}], "research": null, "learn": null, "tabs": ["overview", "prep", "rounds"], "live": [], "liveLead": [], "takehomes": [], "watch": null, "timeline": null}</script>
+<script type="application/json" id="loop-data">{"id": "ecogpt", "title": "EcoGPT, Founding Engineer", "subtitle": "Round 1: a call with Ethan Leonard, founder and CEO", "when": "Date to be set: book a slot on Ethan's cal.com (you offered 9 to 10 AM or after 12 PM ET)", "when_iso": "", "who": "Ethan Leonard, founder and CEO (his GitHub profile lists five on the team). Azim Malik of Paraform, who referred you, stays on the thread.", "format": "A first call with the founder, likely 30 minutes: what EcoGPT is building and the role, then your background and the agent work. A conversation, not a technical screen; expect product questions.", "bar": "Have you built agents beyond API calls (tools, memory, retrieval, evals) and shipped them to real users, can you own a feature from design to launch alone, and do you know what it costs to serve? Lead with V8 and working memory; have the open-model work ready.", "sessions": [], "scripts": [{"id": "intro", "title": "Tell me about yourself", "length": "about 45 seconds", "when": "First, almost certainly. The short one, then stop.", "probes": ["What do you own at alfred_?", "Which of your projects is public?"], "say": ["I'm currently a founding LLM engineer at alfred_, where I work across AI agent reliability, memory architecture, evaluation infrastructure, and automation for a product with 5,000-plus active users. A big part of my work has been taking ambiguous problems and building the systems underneath them that make AI actually work reliably in production.", "Before that, I worked at an early-stage startup called WheelPrice and did AI research at UIC. What I enjoy most is working across the stack, understanding a real problem, and building something that solves it end to end. That's what caught my attention about EcoGPT: an assistant people already use every day, where the next step is the agent itself, tools, memory and evals, at a scale where cost matters."], "swaps": [{"when": "If he asks for one line", "line": "I build the systems under production agents: memory, evals, reliability, and the gate that decides what an agent is allowed to do."}, {"when": "If he asks about public work", "line": "My research on small open models working as a team is on GitHub, and MockFlow, an AI mock-interview tool, is in my portfolio."}], "land": "Production agent systems, end to end, and why EcoGPT: the agent layer on an assistant at real scale.", "notes": ["The first paragraph and the first two sentences of the second are yours from INTRO.md, unchanged. The last sentence is new for EcoGPT: make it yours."]}, {"id": "why-ecogpt", "title": "Why EcoGPT?", "length": "about 30 seconds", "when": "Likely, after he describes the company.", "probes": ["What do you think of the product?", "Why consumer?", "Why a team this small?"], "say": ["A few things. You already have the hard part most AI startups don't: people using it every day, at a scale where every design choice shows up in cost and latency. The next step you're hiring for, agents with tools, memory and evals, is exactly what I've spent the last year building in production.", "And it's a tiny team, so I'd own whole features from design to launch, on the apps and the backend. That's how I work best."], "vname": "A", "variants": [{"name": "B, the engineering problem", "land": "Agent quality on open models, at a cost that works for a free tier.", "say": ["Honestly, the engineering problem. Making an assistant genuinely useful with memory and tools, on open models, at a cost per message that works for a free tier, is a harder and more interesting problem than doing it on the biggest model with no budget.", "That's the kind of trade-off I like owning: what to cache, what to route to a small model, what to evaluate before it ships."]}, {"name": "C, the stage", "land": "Past finding users; now the foundations under them.", "say": ["I think it's the stage. You've found the users; now it's the foundations under them, the agent layer, memory, evals, and a backend that holds as you grow.", "That's founding-engineer work in the real sense, and it's the part I've done at alfred_."]}], "swaps": [{"when": "If he asks what you think of the product", "line": "Say one thing you liked and one thing you'd change, from your own use this week. Not from the reviews."}], "land": "Real daily use, the agent layer next, and ownership on a tiny team.", "notes": ["Written in your voice from the research; INTRO.md has no EcoGPT line yet. Make it yours.", "Keep the green mission to a sentence unless he leads with it; say what you'd build, not what you believe."]}, {"id": "open-models", "title": "Have you worked with open-source models, fine-tuning or serving?", "length": "about 40 seconds", "when": "Likely; the posting lists it. Honest first, then what you have done.", "probes": ["Have you fine-tuned a model?", "Have you run GPUs in production?", "Which open models have you used?"], "say": ["In research, yes. My paper work at UIC was on small open models working as a team: Gemma and MedGemma, from half a billion to 27 billion parameters, recruited as specialist agents that deliberate. On eight medical benchmarks that got to about 77.6% accuracy and ran about 3.1 times faster than frontier models.", "On serving, at the UIC lab I put an audio model behind an API with INT8 quantization at 150 milliseconds p95. What I haven't done is run a GPU fleet in production; at alfred_ we call hosted models, and my work there is the layer that makes them cheap and reliable, prompt caching, routing, evals. That's the part I'd bring on day one, and I'd want to go deep on your serving side."], "vname": "A", "variants": [{"name": "B, shorter", "land": "Research on open models, quantized serving; no GPU fleet yet.", "say": ["Some. In research I built a multi-agent system on Gemma and MedGemma, small open models that got close to frontier accuracy at about 3.1 times the speed. And I've shipped a quantized model behind an API at 150 milliseconds p95.", "I haven't run GPUs at your scale. I'd learn that fast, and meanwhile the agent and eval layer is where I'd add from the first week."]}], "land": "Honest about the gap, concrete about what you've done.", "notes": ["From your master reference: SLM-TeamMedAgents (Gemma, MedGemma, 500M to 27B, 77.63% across 8 benchmarks, 3.1x speedup) and INT8 quantization at 150 ms p95. No production fine-tuning is on record: do not claim it."]}, {"id": "leave", "title": "Why leave alfred_?", "length": "about 30 seconds", "when": "If asked.", "probes": [], "say": ["I’m not looking to leave because there’s something fundamentally wrong with alfred_. The reason I'm exploring is more about the direction I want to take my career", "I've learned a lot at alfred_ and have had the opportunity to own important parts of a production AI product from the ground up. I've gradually moved beyond just building agent features and into building the systems around the agent — evaluations, observability, memory, reliability", "I'm still there and not looking to leave just for the sake of moving. I'm exploring roles where I can apply that experience to a broader range of problems, work directly with customers, and grow as an engineer who can own both the technical solution and its business outcome. EcoGPT seems particularly aligned with that."], "vname": "Yours", "variants": [{"name": "B, scale", "land": "From thousands of users to hundreds of thousands a day.", "say": ["Nothing's wrong at alfred_; I've owned a lot of the production system there. What I want next is the same kind of work at a much bigger scale, where the agent's memory and quality decide whether hundreds of thousands of people come back tomorrow, and where cost per message is a number I own."]}, {"name": "C, the whole product", "land": "Own the product end to end, apps and backend, with the founder.", "say": ["I've spent the last year on the systems around the agent. The part I want more of is the whole product: the app people open, the backend under it, and working directly with a founder on what to build next.", "A team of five is the most direct version of that."]}], "land": "Not away from alfred_; toward scale and owning the whole product.", "notes": ["Your words from INTRO.md; only the company name in the last sentence changed."]}, {"id": "next", "title": "What are you looking for next?", "length": "about 45 seconds", "when": "Possible. Short term, then long term.", "probes": ["Where do you want to be in a few years?", "IC or lead?"], "say": ["Short term, I want to be somewhere the agentic engineering is actually at the frontier — not a demo, but running against real stakes, where getting it wrong has weight. That's the fastest way I know to get good, seriously good, at this.", "In the first few months, I'd want to get inside the codebase and the domain fast, start pulling weight on the agent side quickly since that's where I'm strongest, and be someone the team can hand a hard, ambiguous problem to without much hand-holding.", "Long term, I want to understand this domain and this kind of engineering deeply enough that I can actually lead it — see where the real bottlenecks are, and push us toward the better one before it costs months. But I don't want that to mean stepping back from the actual work."], "vname": "A", "variants": [{"name": "B, concrete first months", "land": "Ship the first agent feature; grow into leading the engineering.", "say": ["Short term, a small team where I own features end to end and they reach a lot of people quickly. In the first months I'd want to ship the first real agent feature, memory or a tool that people actually use, with evals around it so we know it got better.", "Longer term, to lead the engineering as the team grows, still building."]}, {"name": "C, three things", "land": "Scale, ownership, and a founder to build with.", "say": ["Three things, honestly. Real scale, so my decisions show up in usage and cost. Ownership end to end. And working closely with a founder on what to build.", "Over a few years, I'd like to lead this kind of engineering, hands still in the code."]}], "land": "Frontier agent work with real stakes now; lead it later, hands still in the code.", "notes": ["Your goals from INTRO.md; the second paragraph is your short-term text with the domain left general."]}, {"id": "logistics", "title": "Logistics he may ask", "length": "a line each", "when": "Possible at the end. Your answers are in chat, not on this page.", "probes": ["In person in SoHo, five days?", "Start date?", "Work authorization?", "Compensation?"], "say": [], "land": "One sentence each, then back to the work.", "notes": ["Location, relocation, start date, pay and work authorization: your answers from chat."]}], "drills": [{"id": "intro", "prompt": "Tell me about yourself.", "target": "45 seconds", "seconds": 45, "ref": "#say-intro"}, {"id": "v8", "prompt": "Tell me about an agent system you built.", "target": "90 seconds", "seconds": 90, "ref": "#say-v8"}, {"id": "open-models", "prompt": "Have you worked with open-source models or fine-tuning?", "target": "40 seconds", "seconds": 40, "ref": "#say-open-models"}], "qa": [], "ask": [], "ask3": [{"id": "clarify", "title": "While he talks: clarifying", "when": "During his part on EcoGPT and the role. One or two, on his words.", "why": "Shows you're mapping the system as he describes it, and gets you the facts the later questions need.", "how": ["Ask on his words, not from a list: 'when you said X, do you mean...'"], "items": [{"to": "Ethan", "q": "When you say agents, what's shipped today and what's next: memory, search as a tool, actions in other apps?", "loop": "When he talks about the roadmap.", "why": "Tells you where you'd start and what exists."}, {"to": "Ethan", "q": "How do you split traffic between your own deployment in Finland and the fallback, and what decides it: load, model, cost?", "loop": "When he mentions models or infrastructure.", "why": "Serving cost is the business; this is where it's decided."}, {"to": "Ethan", "q": "Who's on the team today, and who owns the backend and the models?", "loop": "When he mentions the team.", "why": "The five on his GitHub are first names only."}]}, {"id": "collab", "title": "Before the end: collaborating", "when": "When he asks for questions, or with about eight minutes left. Pick one.", "why": "Thinks with him about a real problem, the way you would as a teammate.", "how": ["Ask one, listen, then say in a sentence how you've handled the same thing."], "items": [{"to": "Ethan", "q": "When you swap the underlying model, how do you know the new one is better for your users? Is there an eval set, or is it ratings and retention after the fact?", "loop": "First choice.", "why": "Your eval bench story fits straight in: replay real conversations before a change ships."}, {"to": "Ethan", "q": "With hundreds of thousands of free users a day, what does a message cost you, and which lever matters most: model size, caching, routing, or limits?", "loop": "If he talks about growth or cost.", "why": "Your prompt-cache numbers and the cold-start cut."}, {"to": "Ethan", "q": "Memory makes the assistant better but means storing more about people. How do you want to handle that with privacy as part of the pitch?", "loop": "If he raises privacy or memory.", "why": "Your working-memory design; asked as a product question, not a gotcha."}]}, {"id": "contribute", "title": "At the end: contributing", "when": "The last two or three minutes.", "why": "About the role and what's next, so you leave knowing where you'd add.", "how": ["Two at most, then close, in your words from INTRO.md: “Really appreciate you taking the time today. This was helpful — honestly, the more I hear about what the team is working on, the more excited I am about the fit. Looking forward to hearing about next steps whenever you have them.”"], "items": [{"to": "Ethan", "q": "What does success look like for this role in the first 90 days?", "loop": "First.", "why": "Your question from INTRO.md."}, {"to": "Ethan", "q": "What's the one thing you'd want a founding engineer to take off your plate first?", "loop": "Second.", "why": "Founder-specific; tells you the real job."}, {"to": "Ethan", "q": "What does the process look like from here, and the rough timeline?", "loop": "Last.", "why": "Your question from INTRO.md."}]}], "traps": [], "tables": [], "admire": "", "kitaruLead": "", "figures": [], "mockHow": "", "mocks": [], "planKicker": "Before the call", "mechTitle": "", "designLink": null, "extra": "<b>Twenty-five minutes of prep, in this order.<\/b> 1. Use the product for ten minutes on your phone: chat, memory, search, the trees page. 2. Prep tab: your intro out loud with the timer (45 seconds). 3. Your projects: V8 out loud, then working memory short. 4. Pick one question from each tier.", "emphasis": [], "own": null, "showUp": [["Use the product first.", "A founder of a consumer app will ask what you think of it. Have one thing you liked and one thing you'd fix, from your own use."], ["Agents beyond API calls.", "The posting says it plainly. Your proof: the V8 gate, working memory with structural anti-hallucination, the eval bench that replays real conversations."], ["Talk about cost per message.", "Hundreds of thousands of free users a day on open models makes serving cost the business. Your prompt-cache numbers and the cold-start cut are the right register."], ["Be honest on open models.", "You've worked with Gemma and MedGemma in research and quantized a model for serving; you haven't run a GPU fleet. Say that, then say how you'd learn it."], ["Founder pace.", "Small team, in person, intense. Say you want ownership end to end; you already have it."]], "prepLead": "Your intro, why EcoGPT, your projects, the open-model question, and the questions to ask, in three tiers.", "storyBlurb": "Your intro, why EcoGPT, why leave alfred_, what you want next, and logistics.", "sources": [{"label": "EcoGPT: Founding Engineer", "url": "https://ecogpt.com/careers/founding-engineer", "why": "The posting: agents, tool use, memory, retrieval, evals; latency, cost and reliability; in person in SoHo."}, {"label": "EcoGPT: About", "url": "https://ecogpt.com/about", "why": "The company's own account: a public benefit corporation, hosting in Google Cloud's Finland region, open models."}, {"label": "EcoGPT: Trees", "url": "https://ecogpt.com/trees", "why": "The tree counter (about 436K on 21 Oct) and the chats-per-tree rate."}, {"label": "EcoGPT on the App Store", "url": "https://apps.apple.com/us/app/-/id6756059656", "why": "Features, plans and reviews (4.8 from about 8.5K ratings); complaints about slow replies and limits."}, {"label": "Ethan Leonard on GitHub", "url": "https://github.com/ethan-leonard/ethan-leonard", "why": "His own profile: about 6M users and about 600K chatting daily, self-reported; the team of five by first name."}, {"label": "FelloAI: EcoGPT review", "url": "https://felloai.com/ecogpt-review/", "why": "A detailed review: free tiers with ads, Pro at about $10 a month, the stack named (Google Cloud, Cloudflare, PlanetScale, Deepgram, OpenRouter)."}, {"label": "Forklog: green AI or greenwashing?", "url": "https://forklog.com/en/ecogpt-says-it-plants-trees-for-prompts-green-ai-or-greenwashing/", "why": "The skeptical case: unnamed models, OpenRouter fallback, the redacted cloud contract, privacy limits."}, {"label": "VRT NWS (Belgium), 25 Aug 2026", "url": "https://www.vrt.be/vrtnws/nl/2026/08/25/ecogpt/", "why": "In Dutch. Journalists asked to sign an NDA before the models were named; audited monthly figures promised, no date."}], "company": ["EcoGPT is a consumer AI assistant (web, iPhone, Android) with search, images, voice and memory on Pro, that funds tree planting from use: about every 100 chats a tree, through Trees for the Future, with a counter on its site (about 436K trees on 21 Oct). Free with ads, Pro about $10 a month. It runs small open-source mixture-of-experts models (about 5 to 20B active parameters, unnamed) on Google Cloud in Finland, with OpenRouter as the fallback.", "Young and self-funded: EcoGPT, Inc. is a Delaware public benefit corporation formed in February 2026. Ethan's GitHub says about 6M users and about 600K chatting daily; the careers page says 5M+; Google Play says 1M+ downloads. The numbers are self-reported and measure different things. A team of about five, hiring a founding engineer, a chief of staff and a marketing associate, in person in SoHo.", "The hard parts, which are your opening: serving hundreds of thousands of free users a day on open models makes cost per message the business; quality against frontier models; keeping users once the green angle is familiar; and trust. The press has been skeptical (unnamed models, the fallback provider, ads that see message text while the pitch is privacy-first). The posting's agents, memory and evals would add stored user data, which sharpens the privacy question.", "Not verified: profitability, the Europe and Latin America split, Ethan's earlier roles, any co-founder. Ask rather than assume."], "posting": {"url": "https://ecogpt.com/careers/founding-engineer", "lead": "Founding Engineer, Applied AI and agents: ship features across the apps and backend, and build the agent stack (tools, memory, retrieval, evals) with the founders.", "facts": [["Location", "SoHo, New York, in person"], ["Range", "150K to 250K USD plus 1 to 3% equity"], ["Models", "Open-source mixture-of-experts, Google Cloud Finland, OpenRouter fallback"], ["Stack (reported)", "Google Cloud, Cloudflare, PlanetScale, Deepgram, Stripe"]], "does": ["Ship features across the iOS, Android and web apps and the backend.", "Build AI systems: agents, tool use, memory, retrieval; multi-agent work and MCP integrations.", "Improve model quality with evals; balance latency, cost and reliability.", "Scale the backend and database for growth; open models, fine-tuning, inference.", "Own architecture through launch, with the founders."], "wants": ["A product you shipped that people use.", "Strong full-stack or backend skills.", "Hands-on with models, ideally agents or harnesses beyond API calls.", "Product judgment and independence; projects over degrees; a public GitHub valued."]}, "rounds": [{"title": "Round 1: call with Ethan Leonard, founder and CEO", "when": "To be booked on his cal.com", "who": "Ethan Leonard (Azim Malik of Paraform on the thread)", "format": "The role and what EcoGPT is building, then your background.", "outcome": "Not yet held.", "notes": ["From Ethan's reply: he'd 'love to chat more about the role and what we're building at EcoGPT.'"], "asked": []}], "research": null, "learn": null, "tabs": ["overview", "prep", "rounds"], "plan": null, "lp": null, "card": null, "live": [], "liveLead": [], "takehomes": [], "watch": null, "timeline": null}</script>
 <script>
 "use strict";
 (function () {
@@ -703,6 +731,7 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
   /* ---------------------------------------------------------------- tabs */
   var TABS = [
     { id: "overview", label: "Overview", show: function () { return true; } },
+    { id: "plan", label: "Plan", show: function () { return !!LOOP.plan; } },
     { id: "learn", label: "Learn", show: function () { return !!(LOOP.learn && LOOP.learn.modules); } },
     { id: "prep", label: "Prep", show: function () { return LOOP.scripts.length || LOOP.drills.length || LOOP.qa.length || LOOP.ask.length || (LOOP.ask3 || []).length; } },
     { id: "rounds", label: "Rounds", show: function () { return (LOOP.rounds || []).length; } },
@@ -712,8 +741,13 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     { id: "sessions", label: "Sessions", show: function () { return LOOP.sessions.length; } },
     { id: "live", label: "Live build", show: function () { return (LOOP.live || []).length || (LOOP.takehomes || []).length; } },
     { id: "mocks", label: "Mocks", show: function () { return !!LOOP.mockHow; } },
-    { id: "coding", label: "Coding", show: function () { return !!(window.LOOP_CODING && LOOP_CODING.parts.length); } }
-  ].filter(function (t) { return t.show() && (!LOOP.tabs || LOOP.tabs.indexOf(t.id) >= 0); });
+    { id: "coding", label: "Coding", show: function () { return cdParts("coding").length; } },
+    { id: "lld", label: "LLD", show: function () { return cdParts("lld").length; } },
+    { id: "daily", label: "Daily two", show: function () { return !!(window.LOOP_DAILY && LOOP_DAILY.days.length); } },
+    { id: "lp", label: "Leadership", show: function () { return !!LOOP.lp; } },
+    { id: "card", label: "Loop day", show: function () { return !!LOOP.card; } }
+  ].filter(function (t) { return t.show() && (!LOOP.tabs || LOOP.tabs.indexOf(t.id) >= 0); })
+    .sort(function (a, b) { return LOOP.tabs ? LOOP.tabs.indexOf(a.id) - LOOP.tabs.indexOf(b.id) : 0; });
   var main = document.getElementById("main");
   var side = document.getElementById("side");
   var nav = [];            /* side links for the current tab: [anchor, label, sub] */
@@ -2161,7 +2195,10 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
   var CD_KEY = "accelerate.coding." + LOOP.id;
   function cdState() { try { return JSON.parse(localStorage.getItem(CD_KEY) || "{}") || {}; } catch (e) { return {}; } }
   function cdSave(k, v) { var s = cdState(); s[k] = v; try { localStorage.setItem(CD_KEY, JSON.stringify(s)); } catch (e) {} }
-  function cdParts() { return (window.LOOP_CODING ? LOOP_CODING.parts : []).slice().sort(function (a, b) { return a.n - b.n; }); }
+  function cdParts(tab) {
+    return (window.LOOP_CODING ? LOOP_CODING.parts : []).filter(function (p) { return (p.tab || "coding") === (tab || "coding"); })
+      .sort(function (a, b) { return a.n - b.n; });
+  }
   function cdBtn(label, fn) { var b = el("button", "btn", esc(label)); b.type = "button"; b.addEventListener("click", fn); return b; }
   function cdArea(id, value, small) {
     var ta = el("textarea", "cd-ta" + (small ? " small" : ""));
@@ -2358,11 +2395,12 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     }
     return el("span");
   }
-  function tabCoding(host, anchor) {
-    var parts = cdParts(), st = cdState(), done = st.done || {};
+  function tabCoding(host, anchor, tab) {
+    tab = tab || "coding";
+    var parts = cdParts(tab), st = cdState(), done = st.done || {};
     var cur = parts.filter(function (p) { return p.id === anchor || p.sections.some(function (s) { return s.id === anchor; }); })[0] ||
-      parts.filter(function (p) { return p.id === st.last; })[0] || parts[0];
-    cdSave("last", cur.id);
+      parts.filter(function (p) { return p.id === st["last:" + tab]; })[0] || parts[0];
+    cdSave("last:" + tab, cur.id);
     var top = el("section", "block"); top.id = cur.id;
     top.appendChild(el("h1", "", esc(cur.n + ". " + cur.title)));
     top.appendChild(el("p", "hsub", "About " + cur.minutes + " minutes. " + inl(cur.lead)));
@@ -2370,7 +2408,7 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     parts.forEach(function (p) {
       var li = el("li"), a = el("a", p === cur ? "on" : "",
         '<span class="cd-n">' + p.n + '</span><span>' + esc(p.title) + '</span><span class="cd-m">' + (done[p.id] ? '<span class="cd-ok">&#10003;</span> ' : "") + p.minutes + " min</span>");
-      a.href = link("coding", p.id); li.appendChild(a); ol.appendChild(li);
+      a.href = link(tab, p.id); li.appendChild(a); ol.appendChild(li);
     });
     top.appendChild(ol);
     host.appendChild(top);
@@ -2389,7 +2427,7 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
       learn.forEach(put);
       if (drill.length) { sec.appendChild(el("div", "lab cd-drill", "Practise")); drill.forEach(put); }
       host.appendChild(sec);
-      nav.push([s.id, s.title, true, link("coding", s.id)]);
+      nav.push([s.id, s.title, true, link(tab, s.id)]);
     });
     var i = parts.indexOf(cur), foot = el("div", "cd-nav");
     var mk = cdBtn(done[cur.id] ? "Done. Mark not done" : "Mark this part done", function () {
@@ -2398,9 +2436,304 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     foot.appendChild(i > 0 ? el("a", "", "Previous: " + esc(parts[i - 1].title)) : el("span"));
     foot.appendChild(mk);
     foot.appendChild(i < parts.length - 1 ? el("a", "", "Next: " + esc(parts[i + 1].title)) : el("span"));
-    if (i > 0) { foot.firstChild.href = link("coding", parts[i - 1].id); }
-    if (i < parts.length - 1) { foot.lastChild.href = link("coding", parts[i + 1].id); }
+    if (i > 0) { foot.firstChild.href = link(tab, parts[i - 1].id); }
+    if (i < parts.length - 1) { foot.lastChild.href = link(tab, parts[i + 1].id); }
     host.appendChild(foot);
+  }
+
+  /* ---------------------------------------------------------------- a long loop's own tabs
+     Plan (LOOP.plan: weeks of days, each a checklist), Daily two (window.LOOP_DAILY: two problems a
+     day, topic hidden until solved), Leadership (LOOP.lp plus the private story bank), Loop day
+     (LOOP.card, printable). Ticks and answers live in this browser under accelerate.coding.<loop>. */
+  function isoToday() {
+    var d = new Date();
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  }
+  function dayLabel(iso) {
+    var d = new Date(iso + "T12:00:00");
+    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()] + " " + d.getDate() + " " +
+      ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getMonth()];
+  }
+  function ticks() { return cdState().ticks || {}; }
+  function setTick(k, v) { var t = ticks(); if (v) { t[k] = Date.now(); } else { delete t[k]; } cdSave("ticks", t); }
+  function tickBox(k, onChange) {
+    var c = el("input"); c.type = "checkbox"; c.checked = !!ticks()[k];
+    c.addEventListener("change", function () { setTick(k, c.checked); if (onChange) { onChange(c.checked); } });
+    return c;
+  }
+
+  function tabPlan(host) {
+    var P = LOOP.plan, today = isoToday();
+    var top = el("section", "block"); top.id = "plan-top";
+    top.appendChild(el("h1", "", esc(P.title || "The plan")));
+    if (P.lead) { top.appendChild(el("p", "lead", inl(P.lead))); }
+    if (P.split) {
+      var t = el("table");
+      t.innerHTML = "<thead><tr><th>Where the hours go</th><th>Share</th><th>Why</th></tr></thead><tbody>" +
+        P.split.map(function (r) { return "<tr><td>" + inl(r[0]) + "</td><td>" + inl(r[1]) + "</td><td>" + inl(r[2]) + "</td></tr>"; }).join("") + "</tbody>";
+      top.appendChild(t);
+    }
+    host.appendChild(top);
+    nav.push(["plan-top", "The plan"]);
+    var todayEl = null;
+    P.weeks.forEach(function (w) {
+      var sec = el("section", "block am-week"); sec.id = w.id;
+      sec.appendChild(el("h2", "", esc(w.title)));
+      if (w.note) { sec.appendChild(el("p", "hsub", inl(w.note))); }
+      w.days.forEach(function (d) {
+        var box = el("div", "am-day" + (d.date === today ? " today" : "") + (d.date < today ? " past" : "")); box.id = "day-" + d.date;
+        var head = el("div", "am-dh");
+        var count = function () {
+          var n = d.items.length, got = d.items.filter(function (_, i) { return ticks()["plan:" + d.date + ":" + i]; }).length;
+          head.innerHTML = "<b>" + esc(dayLabel(d.date)) + (d.date === today ? ", today" : "") + "</b>" +
+            '<span class="am-dm">' + esc(d.hours || "") + (n ? ", " + got + " of " + n + " done" : "") + "</span>";
+        };
+        count();
+        box.appendChild(head);
+        if (d.focus) { box.appendChild(el("p", "am-focus", inl(d.focus))); }
+        var ul = el("ul", "am-items");
+        d.items.forEach(function (it, i) {
+          var li = el("li", "am-it k-" + (it.k || "x"));
+          var lab = el("label");
+          lab.appendChild(tickBox("plan:" + d.date + ":" + i, count));
+          lab.appendChild(el("span", "am-k", esc(it.k || "")));
+          var tx = el("span", "am-tx");
+          if (it.href) { var a = el("a", "", inl(it.t)); a.href = it.href; if (/^\.\.\//.test(it.href)) { a.target = "_blank"; a.rel = "noopener"; } tx.appendChild(a); }
+          else { tx.innerHTML = inl(it.t); }
+          if (it.m) { tx.appendChild(el("span", "am-min", esc(it.m))); }
+          lab.appendChild(tx);
+          li.appendChild(lab); ul.appendChild(li);
+        });
+        box.appendChild(ul);
+        sec.appendChild(box);
+        if (d.date === today) { todayEl = box; }
+      });
+      host.appendChild(sec);
+      nav.push([w.id, w.title]);
+    });
+    if (todayEl) { requestAnimationFrame(function () { todayEl.scrollIntoView({ block: "start" }); }); }
+  }
+
+  function dailyDays() { return (window.LOOP_DAILY ? LOOP_DAILY.days : []).slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }); }
+  function tabDaily(host, anchor) {
+    var days = dailyDays(), today = isoToday();
+    var cur = days.filter(function (d) { return d.date === anchor; })[0] ||
+      days.filter(function (d) { return d.date === today; })[0] ||
+      days.filter(function (d) { return d.date > today; })[0] || days[days.length - 1];
+    var top = el("section", "block"); top.id = "daily-top";
+    top.appendChild(el("h1", "", "Day " + cur.n + ": " + esc(dayLabel(cur.date))));
+    top.appendChild(el("p", "hsub", "Two problems, 10 to 20 minutes each, no internet. Ask the clarifying questions first, out loud, then think. The topic stays hidden until you have solved it or opened the solution."));
+    host.appendChild(top);
+    nav.push(["daily-top", "This day"]);
+    cur.problems.forEach(function (p, i) {
+      var sec = el("section", "cd-sec"); sec.id = p.id;
+      sec.appendChild(el("h3", "", esc((i ? "Second: " : "First: ") + p.title) + '<span class="am-dm"> about ' + p.minutes + " min</span>"));
+      sec.appendChild(dailyProblem(p));
+      host.appendChild(sec);
+      nav.push([p.id, p.title, true, link("daily", cur.date)]);
+    });
+    var list = el("section", "block am-days"); list.id = "daily-all";
+    list.appendChild(el("h2", "", "Every day"));
+    var ol = el("ol", "cd-parts");
+    days.forEach(function (d) {
+      var solved = d.problems.filter(function (p) { return ticks()["solved:" + p.id]; }).length;
+      var a = el("a", d === cur ? "on" : "", '<span class="cd-n">' + d.n + '</span><span>' + esc(dayLabel(d.date)) + (d.date === today ? ", today" : "") +
+        '</span><span class="cd-m">' + (solved === d.problems.length ? '<span class="cd-ok">&#10003;</span> ' : solved ? solved + " of 2 " : "") + "</span>");
+      a.href = link("daily", d.date);
+      var li = el("li"); li.appendChild(a); ol.appendChild(li);
+    });
+    list.appendChild(ol);
+    host.appendChild(list);
+    nav.push(["daily-all", "Every day"]);
+  }
+  function dailyProblem(p) {
+    var w = el("div", "cd-blk cd-prob");
+    paras(w, String(p.scenario).split("\n\n"));
+    (p.examples || []).forEach(function (x, i) {
+      w.appendChild(el("div", "cd-ex", "<strong>Example " + (i + 1) + "</strong><br><code>" + esc(x.input) + "</code> gives <code>" + esc(x.output) + "</code>" +
+        (x.note ? '<br><span class="note">' + inl(x.note) + "</span>" : "")));
+    });
+    if (p.constraints && p.constraints.length) { var ul = el("ul"); p.constraints.forEach(function (c) { ul.appendChild(el("li", "", inl(c))); }); w.appendChild(ul); }
+    if (p.clarify && p.clarify.length) {
+      w.appendChild(el("div", "lab", "Ask before you solve"));
+      var cl = el("div", "cd-faq");
+      p.clarify.forEach(function (c) {
+        var d = el("details"); d.appendChild(el("summary", "", inl(c.q))); d.appendChild(el("p", "", "<strong>They say:</strong> " + inl(c.a))); cl.appendChild(d);
+      });
+      w.appendChild(cl);
+    }
+    w.appendChild(el("div", "lab", "Your solution"));
+    var ta = cdArea(p.id, p.starter || ""); ta.rows = 14; w.appendChild(ta);
+    var hints = el("div"); w.appendChild(hints);
+    var bar = el("div", "cd-bar"); w.appendChild(bar);
+    var tm = null, left = (p.minutes || 15) * 60;
+    var tb = cdBtn("Start " + (p.minutes || 15) + " minutes", function () {
+      if (tm) { clearInterval(tm); tm = null; tb.textContent = "Resume"; return; }
+      tm = setInterval(function () {
+        left--; tb.textContent = Math.floor(Math.max(left, 0) / 60) + ":" + ("0" + Math.max(left, 0) % 60).slice(-2) + (left <= 0 ? ", time" : "");
+        if (left <= 0 || !document.body.contains(tb)) { clearInterval(tm); }
+      }, 1000);
+    });
+    bar.appendChild(tb);
+    var shown = 0;
+    var hb = cdBtn("Hint 1 of " + p.hints.length, function () {
+      hints.appendChild(el("p", "cd-hint", "<strong>Hint " + (shown + 1) + ".</strong> " + inl(p.hints[shown])));
+      shown++;
+      if (shown >= p.hints.length) { hb.remove(); } else { hb.textContent = "Hint " + (shown + 1) + " of " + p.hints.length; }
+    });
+    bar.appendChild(hb);
+    bar.appendChild(cdBtn("Tests to paste", function () {
+      var r = el("div"); r.appendChild(el("div", "lab", "Paste under your solution and run it")); r.appendChild(cdPre(p.tests)); bar.after(r);
+    }));
+    var after = el("div"); w.appendChild(after);
+    function reveal() {
+      after.innerHTML = "";
+      var R = p.reveal || {};
+      after.appendChild(el("p", "am-reveal", "<strong>It was:</strong> " + esc(R.topic || "") + (R.lc ? ", " + esc(R.lc) : "") +
+        (R.pattern ? '. <a href="../CODING.html#' + esc(R.pattern) + '" target="_blank" rel="noopener">The pattern on the coding page</a>' : "") + "."));
+      after.appendChild(el("div", "lab", "Solution"));
+      after.appendChild(cdPre(p.solution));
+      if (p.complexity) { after.appendChild(el("p", "", "<strong>Cost.</strong> " + inl(p.complexity))); }
+      if (p.explain && p.explain.length) { var ol = el("ol"); p.explain.forEach(function (x) { ol.appendChild(el("li", "", inl(x))); }); after.appendChild(ol); }
+      if (p.dryrun) { after.appendChild(el("div", "lab", "Say the dry run like this")); after.appendChild(el("p", "cd-why", inl(p.dryrun))); }
+      if (p.followups && p.followups.length) { after.appendChild(el("div", "lab", "The next layers they ask")); after.appendChild(cdFaq(p.followups)); }
+    }
+    var solved = ticks()["solved:" + p.id];
+    var sb = cdBtn(solved ? "Solved. Show the solution" : "I solved it", function () { setTick("solved:" + p.id, true); reveal(); sb.remove(); gb.remove(); });
+    var gb = cdBtn("Show the solution", function () { reveal(); gb.remove(); });
+    bar.appendChild(sb); if (!solved) { bar.appendChild(gb); } else { gb = el("span"); }
+    if (p.followups && p.followups.length) {
+      w.appendChild(el("p", "am-note", "After the solution, the follow-ups are the interview: optimise, change a constraint, justify. Answer them out loud before opening each one."));
+    }
+    return w;
+  }
+
+  function tabLp(host, anchor) {
+    var L = LOOP.lp, priv = (window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id]) || {};
+    var stories = priv.stories || [], alloc = priv.allocation || [];
+    var byId = {}; stories.forEach(function (s) { byId[s.id] = s; });
+    var top = el("section", "block"); top.id = "lp-top";
+    top.appendChild(el("h1", "", "Leadership principles"));
+    if (L.lead) { top.appendChild(el("p", "lead", inl(L.lead))); }
+    if (L.rules) { var ul = el("ul"); L.rules.forEach(function (r) { var m = /^([^:]{1,40}):\s(.+)$/.exec(r); ul.appendChild(el("li", "", m ? "<strong>" + inl(m[1]) + ":</strong> " + inl(m[2]) : inl(r))); }); top.appendChild(ul); }
+    host.appendChild(top);
+    nav.push(["lp-top", "How it is graded"]);
+
+    var how = el("section", "block"); how.id = "lp-capture";
+    how.appendChild(el("h2", "", "How a story gets built"));
+    paras(how, L.capture || []);
+    host.appendChild(how);
+    nav.push(["lp-capture", "Capturing a story"]);
+
+    var mx = el("section", "block"); mx.id = "lp-matrix";
+    mx.appendChild(el("h2", "", "The matrix"));
+    mx.appendChild(el("p", "hsub", stories.length ? "Each principle and the stories that can carry it. Bold is a story's main fit. A tick marks a story captured in your words." :
+      "The story bank lives in private/loops/" + LOOP.id + ".js, which is not on this machine."));
+    var t = el("table", "am-mx");
+    var h = "<thead><tr><th>Principle</th><th>Asked as</th><th>Stories</th></tr></thead><tbody>";
+    L.principles.forEach(function (p) {
+      var fits = stories.filter(function (s) { return (s.primary || []).indexOf(p.id) >= 0 || (s.secondary || []).indexOf(p.id) >= 0; });
+      h += '<tr id="lp-' + p.id + '"><td>' + esc(p.name) + (p.top ? ' <span class="am-top">often</span>' : "") + "</td><td>" + inl((p.asks || [])[0] || "") + "</td><td>" +
+        (fits.length ? fits.map(function (s) {
+          var main = (s.primary || []).indexOf(p.id) >= 0;
+          return '<a href="' + link("lp", "story-" + s.id) + '">' + (main ? "<strong>" : "") + esc(s.short || s.title) + (main ? "</strong>" : "") + "</a>" + (s.captured ? ' <span class="cd-ok">&#10003;</span>' : "");
+        }).join(", ") : '<span class="am-gap">no story yet</span>') + "</td></tr>";
+    });
+    t.innerHTML = h + "</tbody>";
+    mx.appendChild(t);
+    host.appendChild(mx);
+    nav.push(["lp-matrix", "The matrix"]);
+
+    if (alloc.length) {
+      var al = el("section", "block"); al.id = "lp-rounds";
+      al.appendChild(el("h2", "", "Which story in which round"));
+      al.appendChild(el("p", "hsub", "Never the same story twice: interviewers compare notes. Tick a story when you have spent it on the day."));
+      var tb = el("table"); tb.innerHTML = "<thead><tr><th>Round</th><th>Lead with</th><th>Reserve</th></tr></thead>";
+      var body = el("tbody");
+      alloc.forEach(function (r) {
+        var tr = el("tr"); tr.appendChild(el("td", "", esc(r.round)));
+        [r.lead || [], r.reserve || []].forEach(function (ids) {
+          var td = el("td");
+          ids.forEach(function (id) {
+            var s = byId[id]; if (!s) { return; }
+            var lab = el("label", "am-spend"); lab.appendChild(tickBox("spent:" + id)); lab.appendChild(document.createTextNode(" " + (s.short || s.title)));
+            td.appendChild(lab);
+          });
+          tr.appendChild(td);
+        });
+        body.appendChild(tr);
+      });
+      tb.appendChild(body); al.appendChild(tb); host.appendChild(al);
+      nav.push(["lp-rounds", "Story per round"]);
+    }
+
+    var sb = el("section", "block"); sb.id = "lp-stories";
+    sb.appendChild(el("h2", "", "The story bank"));
+    host.appendChild(sb);
+    nav.push(["lp-stories", "The story bank"]);
+    stories.forEach(function (s) {
+      var d = el("details", "item"); d.id = "story-" + s.id; d.setAttribute("name", "story");
+      d.appendChild(el("summary", "", '<span class="qt">' + esc(s.title) + '</span><span class="qm">' + esc(s.where || "") + (s.captured ? ", captured" : ", to capture") + "</span>"));
+      var b = el("div", "am-story");
+      if (s.hook) { b.appendChild(el("p", "", inl(s.hook))); }
+      var fit = function (ids) { return ids.map(function (id) { var p = L.principles.filter(function (x) { return x.id === id; })[0]; return p ? p.name : id; }).join(", "); };
+      b.appendChild(el("p", "am-fit", "<strong>Carries:</strong> " + esc(fit(s.primary || [])) + ((s.secondary || []).length ? ". <strong>Also:</strong> " + esc(fit(s.secondary)) : "")));
+      if (s.probe && s.probe.length) { b.appendChild(el("div", "lab", "Where the Bar Raiser will dig")); var ul2 = el("ul"); s.probe.forEach(function (q) { ul2.appendChild(el("li", "", inl(q))); }); b.appendChild(ul2); }
+      if (s.check && s.check.length) { b.appendChild(el("div", "lab", "Check before you tell it")); var ul3 = el("ul"); s.check.forEach(function (q) { ul3.appendChild(el("li", "", inl(q))); }); b.appendChild(ul3); }
+      if (s.captured) {
+        var C = s.captured;
+        b.appendChild(el("div", "lab", "Your version, " + esc(C.date || "")));
+        b.appendChild(transcript(C.say || [], ""));
+        if (C.digs && C.digs.length) { b.appendChild(el("div", "lab", "What we dug out")); b.appendChild(cdFaq(C.digs)); }
+        if (C.differently) { b.appendChild(el("p", "", "<strong>Do differently:</strong> " + inl(C.differently))); }
+      } else {
+        b.appendChild(el("p", "am-note", "Not captured yet. In chat, say <code>capture " + esc(s.id) + "</code> and tell it the way you remember it."));
+      }
+      d.appendChild(b);
+      sb.appendChild(d);
+    });
+    if (anchor && /^story-/.test(anchor)) { var o = document.getElementById(anchor); if (o) { o.open = true; } }
+
+    var pr = el("section", "block"); pr.id = "lp-all";
+    pr.appendChild(el("h2", "", "The sixteen, in plain words"));
+    L.principles.forEach(function (p) {
+      var d = el("details", "item"); d.appendChild(el("summary", "", '<span class="qt">' + esc(p.name) + '</span><span class="qm">' + (p.top ? "asked often" : "") + "</span>"));
+      var b = el("div", "am-story");
+      b.appendChild(el("p", "", inl(p.plain)));
+      if (p.probe) { b.appendChild(el("p", "", "<strong>What they listen for:</strong> " + inl(p.probe))); }
+      if (p.asks && p.asks.length) { var ul4 = el("ul"); p.asks.forEach(function (q) { ul4.appendChild(el("li", "", inl(q))); }); b.appendChild(ul4); }
+      d.appendChild(b); pr.appendChild(d);
+    });
+    host.appendChild(pr);
+    nav.push(["lp-all", "The sixteen"]);
+  }
+
+  function tabCard(host) {
+    var C = LOOP.card, priv = (window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id]) || {};
+    var top = el("section", "block am-card"); top.id = "card";
+    top.appendChild(el("h1", "", esc(C.title || "Loop day")));
+    if (C.lead) { top.appendChild(el("p", "hsub", inl(C.lead))); }
+    var pb = cdBtn("Print this card", function () { window.print(); }); pb.className += " am-noprint"; top.appendChild(pb);
+    C.sections.forEach(function (s) {
+      var sec = el("div", "am-cs");
+      sec.appendChild(el("h3", "", esc(s.title)));
+      if (s.rows) {
+        var t = el("table"); t.innerHTML = "<tbody>" + s.rows.map(function (r) { return "<tr><td>" + inl(r[0]) + "</td><td>" + inl(r[1]) + "</td></tr>"; }).join("") + "</tbody>"; sec.appendChild(t);
+      }
+      if (s.items) { var ul = el("ul"); s.items.forEach(function (x) { ul.appendChild(el("li", "", inl(x))); }); sec.appendChild(ul); }
+      top.appendChild(sec);
+    });
+    if ((priv.allocation || []).length) {
+      var by = {}; (priv.stories || []).forEach(function (s) { by[s.id] = s; });
+      var sec = el("div", "am-cs"); sec.appendChild(el("h3", "", "Your stories, by round (cross off as you spend them)"));
+      var ul = el("ul");
+      priv.allocation.forEach(function (r) {
+        ul.appendChild(el("li", "", "<strong>" + esc(r.round) + ":</strong> " + (r.lead || []).concat(r.reserve || []).map(function (id) { return by[id] ? esc(by[id].short || by[id].title) : ""; }).filter(Boolean).join(", ")));
+      });
+      sec.appendChild(ul); top.appendChild(sec);
+    }
+    host.appendChild(top);
+    nav.push(["card", "The card"]);
   }
 
   function tabMocks(host) {
@@ -2690,6 +3023,11 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
       else if (r.tab === "live") { tabLive(main); }
       else if (r.tab === "mocks") { tabMocks(main); }
       else if (r.tab === "coding") { tabCoding(main, r.anchor); }
+      else if (r.tab === "lld") { tabCoding(main, r.anchor, "lld"); }
+      else if (r.tab === "daily") { tabDaily(main, r.anchor); }
+      else if (r.tab === "lp") { tabLp(main, r.anchor); }
+      else if (r.tab === "plan") { tabPlan(main); }
+      else if (r.tab === "card") { tabCard(main); }
     } catch (err) {
       console.error("Could not draw the page", err);
       main.appendChild(el("p", "", "This page could not be drawn. The console has the details."));
