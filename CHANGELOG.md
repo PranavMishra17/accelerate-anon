@@ -1321,3 +1321,12 @@ session); the half-of-mine rule keeps each list on its subject. The Mercor sessi
 references, so they now carry them in data/reading.js (cache-aside, invalidation, hot keys, locks,
 degradation, timeouts, prompt and response caching), which also shows those guide links on the loop
 page. Loop pages get the same list at build time via interviews/extract.js. No charter deviation.
+
+**2026-10-21 — Mercor: two cache codebases to practise on.**
+E:\mercor-cache-mock (its own git repo, standard-library Python): mock1_review, a thread-pool service whose
+hand-rolled cache hides ten classic problems for the spoken review, and mock2_service, an asyncio quote
+service with a two-tier cache (LRU with a byte budget, single-flight, lease, stale-while-revalidate,
+early refresh, negative caching, versioned invalidation), a bounded refresher with per-key ordering, retries
+with a breaker and idempotent orders. Why: at Commure he could not find where async code capped or ordered
+work; this practises finding it. The interviewer guide and his map are local, in private/mercor-mock. The
+Mercor page's Mocks tab points to them and gains a navigation drill. No charter deviation.

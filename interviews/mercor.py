@@ -186,7 +186,10 @@ TRAPS = []
 DRILLS = [
     {"id": "review", "prompt": "Here's a function that caches an expensive call. What would you say in a code review?", "target": "2 minutes", "seconds": 120, "ref": "../index.html#/w/wc32"},
     {"id": "stampede", "prompt": "A hot key expires under load. What happens, and how do you stop it?", "target": "90 seconds", "seconds": 90, "ref": "../index.html#/w/wc33"},
+    {"id": "navigate", "prompt": "In mock2_service: where is concurrency capped, where is order kept, and where is the stampede stopped? Go to each line.", "target": "3 minutes", "seconds": 180, "ref": "../index.html#/w/wc33"},
     {"id": "intro", "prompt": "Tell me about yourself.", "target": "45 seconds", "seconds": 45, "ref": "#say-intro"},
 ]
 
-MOCK_HOW = "Say 'run the Mercor mock' in chat: Sophie's caching screen, 30 minutes, a snippet to review, no tools; critique after."
+MOCK_HOW = ("Say 'run the Mercor mock' in chat: Sophie's caching screen, 30 minutes, a snippet to review, no tools; critique after. "
+            "For the code version, open E:\mercor-cache-mock: mock1_review (threads, a cache with planted bugs to review) and "
+            "mock2_service (asyncio, a two-tier cache to navigate). The interviewer guide and your map are in private/mercor-mock, local only.")
