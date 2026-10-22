@@ -114,7 +114,11 @@ window.LOOP_CODING.parts.push({
       "Sounds good, thanks Sophie. **I'll reason in Python** today, it's what I use day to day.",
       "And I'll **say my assumptions out loud** as I go, so **stop me if any are off**."
      ],
-     "who": "Sophie"
+     "who": "Sophie",
+     "explain": [
+      "Why say Python now: the brief says 'resource management in your preferred language'. Naming it early means her Python questions meet your strongest language.",
+      "Why promise assumptions out loud: 'clear assumptions' is one of the four things the brief says they score. Saying it up front tells her you know the rubric."
+     ]
     },
     {
      "t": "turn",
@@ -125,6 +129,9 @@ window.LOOP_CODING.parts.push({
      "say": [],
      "avoid": "The full history. 45 seconds, then stop and let her steer.",
      "who": "Sophie",
+     "explain": [
+      "Why short: the screen is 30 minutes on caching. The intro earns the first question; the caching answer earns the round."
+     ],
      "from": "intro"
     }
    ]
@@ -258,7 +265,16 @@ window.LOOP_CODING.parts.push({
       "Then commit: 'I'll assume shared workers, a few minutes of staleness is fine for most fields, no webhooks yet.'"
      ],
      "avoid": "Jumping to Redis, or caching the model's answers, in the first minute.",
-     "who": "Sophie"
+     "who": "Sophie",
+     "explain": [
+      "Slow, expensive, must never be wrong: three different reasons to cache, each pointing at a different layer. Latency points at the ticketing API, cost at the model calls, correctness at the data each user may see.",
+      "Model calls are the cost: every agent step re-sends instructions and tools, thousands of tokens, to the model. That's where the money goes.",
+      "Ticketing API is the latency and the rate limit: 300 ms to 2 s per call, and only a few hundred calls a minute shared by all users. A cache here saves time and quota.",
+      "One employee seeing another's data: a multi-tenant agent serves many companies and many people in each. A cache shared by mistake is a data leak, the worst failure here.",
+      "Provider's prompt cache: the model provider reuses an identical prompt prefix at about a tenth of the price. Order the agent's prompt stable to volatile and it pays off with no staleness risk, since the answer is computed fresh.",
+      "Short-TTL cache of tool results: store what the ticketing API returned for a few seconds to minutes, so repeated questions don't spend calls.",
+      "Careful about caching model answers: reusing an answer is only right if every input behind it is the same. Here the inputs include live tickets, so it's rarely safe."
+     ]
     },
     {
      "t": "turn",
@@ -276,7 +292,16 @@ window.LOOP_CODING.parts.push({
       "Hash long arguments; keep the tenant id readable at the front for deletes and metrics."
      ],
      "avoid": "Keying on the URL or the ticket id alone.",
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Asked often, change slowly: the best cache candidates. A ticket's title, a user's open tickets, docs search results.",
+      "Never writes: a write must reach the source. Caching it would mean the agent thinks something happened that didn't.",
+      "Nothing the agent uses to act: if the agent closes or reassigns a ticket based on its status, it must read the live status. Acting on a stale value does real damage.",
+      "Tenant: which customer company. Two companies can have a ticket 123; without the tenant in the key they'd share an entry.",
+      "Caller's permission scope: what this user is allowed to see. A manager and an intern asking for 'my team's tickets' get different answers from the API; the key must keep them apart.",
+      "Normalised arguments: the same query written differently ('Open', 'open ') should hit the same entry. Sort, trim, lowercase before building the key.",
+      "API version: if the customer's API changes its response shape, old entries must not be read by new code."
+     ]
     },
     {
      "t": "turn",
@@ -294,7 +319,15 @@ window.LOOP_CODING.parts.push({
       "If they push on semantic caching: only for questions with no per-user context, with a high threshold, and measured against a judge."
      ],
      "avoid": "'Embed the question and return the nearest cached answer' with no word on correctness.",
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Exact-match: reuse an answer only when the whole input is byte for byte the same.",
+      "Deterministic: at temperature zero, with the same model version and the same prompt, the model gives (nearly) the same answer, so reusing it is safe.",
+      "Re-running evals: an evaluation replays the same cases many times while you change other things. Caching unchanged cases saves money and makes runs repeatable.",
+      "Semantic cache: returns a stored answer for a question that's similar, not identical, matched by embeddings. Fast and cheap, but 'is incident 41 resolved?' and 'is incident 14 resolved?' look alike and need different answers.",
+      "Confident wrong answer: the danger is that a reused answer reads as authoritative. Nobody can tell it came from someone else's question.",
+      "Same answer, cheaper prefix: the prompt cache doesn't change the output at all, only the cost of reading the prompt. That's why it's the safe win."
+     ]
     },
     {
      "t": "turn",
@@ -361,7 +394,16 @@ window.LOOP_CODING.parts.push({
       }
      ],
      "avoid": "'Add a lock.' Which lock, around what, held for how long.",
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Every request misses: the ticket wasn't cached yet, so all 200 check, find nothing, and call the API at once.",
+      "429: the HTTP status for 'too many requests'. Once the quota is spent, every other call from every user fails until it refills.",
+      "Stampede against a quota: a cache stampede normally overloads a backend; here it also burns a shared budget, so unrelated requests fail too.",
+      "Single-flight per key: the first request for a key starts the call and records it as in flight; the others find that record and wait for the same result. One call per ticket.",
+      "Shared rate limit: each worker counting its own calls doesn't work; twenty workers each think they have the whole quota. The count must live in one place.",
+      "Token bucket in Redis: a counter that refills at the allowed rate; each call takes a token, and with none left the call waits or is refused. In Redis so every worker shares one bucket.",
+      "One gateway that owns the API: the alternative, every call to the customer's API goes through one service that enforces the limit and can coalesce duplicates."
+     ]
     },
     {
      "t": "turn",
@@ -378,7 +420,14 @@ window.LOOP_CODING.parts.push({
       "If the API supports conditional requests (ETag, updated_at), revalidate cheaply instead of refetching.",
       "Split fields by how often they change; one TTL for the whole ticket is the wrong grain."
      ],
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Cached status inside its TTL: the entry said 'open' and hadn't expired yet, so it was served. The cache did exactly what it was told.",
+      "Webhooks: the ticketing system calls our endpoint when a ticket changes. On that event we delete the entry, so the next read is fresh.",
+      "Short TTL for status, longer for slow fields: status changes in minutes, a title almost never. One TTL for the whole ticket is either too stale for status or wasteful for the title.",
+      "Read through: skip the cache and ask the source, then refresh the cache with the answer. Used before any action.",
+      "'As of two minutes ago': the cache stores when it fetched the value, and the agent says it. A stale answer that says its age is honest; one that doesn't is a bug."
+     ]
     },
     {
      "t": "turn",
@@ -447,7 +496,14 @@ window.LOOP_CODING.parts.push({
        ]
       }
      ],
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Timeouts on every call: without one, a hung API holds each request open indefinitely, and requests pile up until workers run out.",
+      "Serve the last good value with its age: keep entries past their TTL (a soft TTL marks them stale, a hard TTL removes them). When the source is down, stale with a timestamp beats an error.",
+      "Circuit breaker: after repeated failures, stop calling for a while and fail fast or serve stale; then let one trial request through to see if it's back.",
+      "Cache the error as if it were data: storing a failure under the key means every user gets the failure until it expires, even after the API recovers.",
+      "Backoff and jitter: wait longer after each failure (backoff) and add a random spread (jitter), so clients don't all retry at the same instant. Without it, recovery is met by a wall of retries."
+     ]
     },
     {
      "t": "turn",
@@ -478,7 +534,15 @@ window.LOOP_CODING.parts.push({
        ]
       }
      ],
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Unbounded cache: a dict that only adds. Every new key stays forever, so memory grows with traffic until the process is killed.",
+      "In-flight map: the single-flight table of loads in progress. If an entry isn't removed when its load fails, it leaks and the key is stuck.",
+      "By bytes, not entry count: one tool result may be 1 KB, another 200 KB. A limit of 10,000 entries can mean 10 MB or 2 GB; a byte budget is what memory actually is.",
+      "Evict LRU: when full, drop the least recently used entry. Under skewed traffic the popular entries stay.",
+      "Bounded HTTP pool: a fixed number of open connections to the API; more requests wait for one to free up rather than opening thousands of sockets.",
+      "Semaphore per API: a counter that allows at most N calls in flight; the rest queue. It turns a burst into a line instead of a crash."
+     ]
     },
     {
      "t": "turn",
@@ -506,7 +570,15 @@ window.LOOP_CODING.parts.push({
        "note": "Each level absorbs most of what the next would see; invalidation must reach both."
       }
      ],
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Fairness between tenants: in one shared cache, the biggest customer's traffic fills it and evicts small customers' hot entries, so their hit rate collapses.",
+      "Namespaced by tenant: every key starts with the tenant id, so entries never collide and you can count, limit or delete per customer.",
+      "Quota each: a cap on how much of the shared cache one tenant may use.",
+      "Per-tenant delete: when a customer leaves, delete every key with their prefix. Cached customer data is still customer data.",
+      "Twenty copies and twenty cold starts: an in-process cache lives in each worker, so twenty workers hold twenty copies, and a deploy empties all of them at once.",
+      "Shared Redis tier behind a small local LRU: Redis holds one copy for all workers; a small in-process cache in front keeps the hottest keys a few seconds, saving the network hop."
+     ]
     },
     {
      "t": "turn",
@@ -518,7 +590,14 @@ window.LOOP_CODING.parts.push({
       "**Prompt structure first**: the cheapest win, and it changes no behaviour. Then the **tool-result cache with the right key and a short TTL**, plus **single-flight and a shared rate limiter**, because that's where an outage hurts. **Model-response caching last**, and only for evals.",
       "And from day one, **metrics per tenant**: hit rate, **the age of what we serve**, 429s from the customer's API. **I'd want those numbers before tuning any TTL.**"
      ],
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Prompt structure first: reordering the prompt and adding breakpoints costs a day, changes no answers, and cuts cost on every call.",
+      "Tool-result cache with the right key: the key decides correctness and safety, so it comes before any tuning.",
+      "Single-flight and a shared rate limiter: these are what keep an outage from turning into 429s for everyone.",
+      "Model-response caching last: the highest risk of wrong answers and the smallest win once the prompt cache is in place.",
+      "The age of what we serve: how old served values are, not only whether they hit. A high hit rate on stale data is a bug."
+     ]
     }
    ]
   },
@@ -553,7 +632,12 @@ window.LOOP_CODING.parts.push({
       "I'll go **correctness first, then concurrency, memory, failures, and growth**. For one process and a stable catalogue it's fine; **the problems come with concurrency, change and time.**"
      ],
      "avoid": "Listing ten bugs in the first minute.",
-     "who": "Sophie"
+     "who": "Sophie",
+     "explain": [
+      "Cache-aside: the code checks the cache, and on a miss loads from the source and stores it. The cache is beside the source, filled by the reader.",
+      "In memory, per process: a module-level dict. Each process has its own, and a restart empties it.",
+      "The order said up front: correctness, concurrency, memory, failures, growth. Saying it shows structure and lets her steer."
+     ]
     },
     {
      "t": "turn",
@@ -616,7 +700,12 @@ window.LOOP_CODING.parts.push({
        "note": "The refill reads a lagging replica and puts the old value back."
       }
      ],
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Nothing ever expires: no TTL, so the first price fetched is served until the process restarts.",
+      "The first caller's currency wins: if the service returns price in the caller's currency but the key is only the product id, the first answer is stored and served to everyone.",
+      "Serve the failure forever: if fetch returns an error object and it's stored, every later call gets the error from cache."
+     ]
     },
     {
      "t": "turn",
@@ -631,7 +720,12 @@ window.LOOP_CODING.parts.push({
      "more": [
       "Threads: a dict of Futures under a small lock. asyncio: a dict of Tasks."
      ],
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Check-then-act: the code checks 'is it in the cache?' and acts later. Between the two, other requests check too, all see a miss.",
+      "Stampede: many simultaneous misses on one key all hitting the backend.",
+      "Single-flight: one request loads, the rest wait on its result. In threads, a dict of Futures; in asyncio, a dict of Tasks."
+     ]
     },
     {
      "t": "turn",
@@ -662,7 +756,12 @@ window.LOOP_CODING.parts.push({
        ]
       }
      ],
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Serialises everything: with one lock, only one lookup runs at a time, hits included.",
+      "About five lookups a second: 1 second divided by 200 ms per call. The whole process, every product.",
+      "Never hold a lock across a network call: the lock should guard the dict for microseconds, not wait on a slow service."
+     ]
     },
     {
      "t": "turn",
@@ -674,7 +773,12 @@ window.LOOP_CODING.parts.push({
       "**The dict only grows**, so it **grows until the process is killed**. **Bound it with an LRU and a TTL**: at about **1 KB an entry, 100,000 entries is about 100 MB**.",
       "And **cap concurrent loads** with a semaphore, so a burst of misses **can't exhaust connections or threads**."
      ],
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Grows until the process is killed: every distinct product id adds an entry and none leave.",
+      "LRU and a TTL: the LRU bounds how much, the TTL bounds how old.",
+      "1 KB an entry, 100,000 entries is about 100 MB: say a number; it shows you sized it."
+     ]
     },
     {
      "t": "turn",
@@ -686,7 +790,12 @@ window.LOOP_CODING.parts.push({
       "**Timeouts**, then **serve the last good price** if a minute old is fine, retries **with backoff and jitter**, and a **breaker**. Never **cache the error**.",
       "At twenty instances it's **twenty copies and twenty cold caches** per deploy, so a **shared Redis** with a **small local cache** in front, once the numbers say so."
      ],
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Serve the last good price: keep expired entries and return them when the refresh fails, if a slightly old price is acceptable.",
+      "Breaker: stop calling a failing service for a while, then probe.",
+      "Twenty cold caches per deploy: all instances restart together and all miss together."
+     ]
     }
    ]
   },
@@ -708,7 +817,15 @@ window.LOOP_CODING.parts.push({
       "It's **I/O-bound**: waiting on the model and the API. So **asyncio** fits: thousands of waiting requests on one thread, cheaply. Threads work too, but **each waiting request holds a thread**.",
       "Either way **the race doesn't go away**: in asyncio, **check-then-set across an await** is still a race, so I'd coalesce with a **dict of Tasks**, and **shield** the shared load so one caller's timeout doesn't cancel it for everyone."
      ],
-     "who": "Sophie"
+     "who": "Sophie",
+     "explain": [
+      "I/O-bound: the time goes to waiting on the network, not computing. That's the case asyncio was built for.",
+      "asyncio: one thread runs many tasks; while one waits on the network, others run. Thousands of waiting requests cost little memory.",
+      "Each waiting request holds a thread: with threads, every blocked call parks a whole OS thread and its stack.",
+      "Check-then-set across an await: asyncio switches tasks only at an await. If the check and the set have an await between them, another task can run in the gap and also miss.",
+      "Dict of Tasks: the first caller creates a Task for the load and stores it; later callers await the same Task. A Task can be awaited many times; a bare coroutine only once.",
+      "Shield: asyncio.shield stops one caller's timeout from cancelling the shared Task that others are waiting on."
+     ]
     },
     {
      "t": "turn",
@@ -717,7 +834,11 @@ window.LOOP_CODING.parts.push({
      "say": [
       "**One get or set is atomic** in CPython; **check-then-set is not**. The race is **between** operations, so you still need a lock or a single-flight map."
      ],
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Atomic: a single dict get or set can't be interrupted halfway in CPython, so the dict itself won't corrupt.",
+      "The race is between operations: 'in' then '[]=' is two operations; another thread can run between them."
+     ]
     },
     {
      "t": "turn",
@@ -727,7 +848,13 @@ window.LOOP_CODING.parts.push({
       "It's **bounded but has no TTL**, it **doesn't coalesce** concurrent misses, and on a method it **keeps self alive**.",
       "On an **async function it caches the coroutine object**, which can only be awaited once, so the second caller gets an error."
      ],
-     "probe": true
+     "probe": true,
+     "explain": [
+      "No TTL: entries leave only when evicted by size, never by age.",
+      "Doesn't coalesce: two threads missing the same key both call the function.",
+      "Keeps self alive: on a method, the cache holds a reference to every instance it was called with, so they're never freed.",
+      "Caches the coroutine object: on an async def, lru_cache stores the coroutine, not its result; awaiting it a second time raises an error."
+     ]
     },
     {
      "t": "turn",
@@ -739,7 +866,14 @@ window.LOOP_CODING.parts.push({
       "**Hit rate per key type**, **load on the backend**, **p50 and p99**, **evictions**, and the **age of the values we serve**.",
       "The last one is the one people forget: **a 99 percent hit rate on data an hour stale** is a bug, not a win."
      ],
-     "who": "Sophie"
+     "who": "Sophie",
+     "explain": [
+      "Hit rate per key type: one overall number hides a key type that never hits.",
+      "Load on the backend: the point of the cache. If hits rise but backend load doesn't fall, something's off.",
+      "p50 and p99: typical and worst-case latency. Misses and stampedes show up in p99 first.",
+      "Evictions: how often entries are pushed out for space. High evictions mean the cache is too small for the working set.",
+      "Age of the values we serve: how stale served data is. The metric that catches a cache that's fast and wrong."
+     ]
     },
     {
      "t": "turn",
@@ -749,7 +883,12 @@ window.LOOP_CODING.parts.push({
       "**Fifty concurrent callers on one missing key**, against a fake client that **counts calls and sleeps**: assert **one call and fifty equal results**.",
       "Then make the fake fail and assert **everyone gets the error and the next request retries**."
      ],
-     "probe": true
+     "probe": true,
+     "explain": [
+      "Fake client that counts calls and sleeps: replaces the real service; the sleep widens the race window, the counter proves how many calls happened.",
+      "One call and fifty equal results: the assertion that single-flight works.",
+      "Make the fake fail: checks the failure path, everyone gets the error, and the in-flight entry is removed so the next request retries."
+     ]
     }
    ]
   },
@@ -770,7 +909,10 @@ window.LOOP_CODING.parts.push({
      "say": [
       "One thing: **the cache key is where correctness lives**. In a multi-tenant system I'd **review every key** before I'd tune a single TTL."
      ],
-     "who": "Sophie"
+     "who": "Sophie",
+     "explain": [
+      "The cache key is where correctness lives: most caching bugs (wrong currency, wrong tenant, wrong permissions) are a key missing something the value depends on."
+     ]
     },
     {
      "t": "turn",

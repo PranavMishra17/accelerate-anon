@@ -1464,3 +1464,9 @@ probes (measurement, prompt layout, five minutes or an hour, background workers,
 the inbox table cache, why no Redis, what you would fix). Every answer was checked against langllm-supabase
 origin/main and lives in the gitignored private file. `tools/serve.py` now sends `Cache-Control: no-cache`, so an
 unstamped file is revalidated on every load. No charter deviation.
+
+**22 Oct 2026: Mercor call answers explained.** He asked to keep the spoken answers as they are and explain every
+term they name (how the live agent's prompt differs from the background workers', what the config TTL caches are,
+which two Postgres tables and why only those). Every turn now carries `explain`, drawn under the dark sheet as
+'What this means', never folded; the alfred_ ones live in the gitignored private file. The private loop script is
+stamped by `build.py`. No charter deviation.
