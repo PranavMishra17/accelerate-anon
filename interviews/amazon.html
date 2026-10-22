@@ -641,8 +641,8 @@ nav.side .td a { display: inline; padding: 0; }
 .am-spend.reserve { color: var(--muted); }
 .am-reveal { margin: 0 0 var(--s3); }
 
-body[data-tab="daily"] .shell, body[data-tab="card"] .shell, body[data-tab="plan"] .shell { max-width: 1440px; }
-body[data-tab="daily"] .top-in, body[data-tab="card"] .top-in, body[data-tab="plan"] .top-in { max-width: 1440px; }
+body[data-tab="daily"] .shell, body[data-tab="card"] .shell, body[data-tab="plan"] .shell, body[data-wide] .shell { max-width: 1440px; }
+body[data-tab="daily"] .top-in, body[data-tab="card"] .top-in, body[data-tab="plan"] .top-in, body[data-wide] .top-in { max-width: 1440px; }
 body[data-tab="card"] .shell { grid-template-columns: minmax(0, 1fr); padding-bottom: var(--s5); }
 body[data-tab="card"] nav.side { display: none; }
 body[data-tab="card"] main { padding-top: var(--s4); }
@@ -2487,7 +2487,10 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
         t.innerHTML = "<thead><tr>" + b.head.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") + "</tr></thead><tbody>" +
           b.rows.map(function (r) { return "<tr>" + r.map(function (c) { return "<td>" + inl(c) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody>";
         var tw = el("div", "cd-blk"); tw.appendChild(t); return tw;
-      case "problem": return cdProblem(b);
+      case "problem": return workbench({ id: b.id, minutes: b.minutes, scenario: b.statement, examples: b.examples, constraints: b.constraints,
+        starter: b.starter, hints: b.hints, tests: b.tests, solution: b.solution, complexity: b.complexity, explain: b.explain, followups: b.followups,
+        head: "<strong>" + esc(b.source || "") + "</strong>" + (b.minutes ? ", about " + b.minutes + " minutes" : "") + (b.why ? ". " + inl(b.why) : ""),
+        reveal: { topic: b.title } });
       case "fig": var fw = el("div", "cd-blk"), fg = figNode(b.key, 0); if (fg) { fw.appendChild(fg); } return fw;
       case "res": var rw = el("div", "cd-blk"), rr = window.Res && Res.render(b.items); if (rr) { rw.appendChild(rr); } return rw;
     }
@@ -2513,7 +2516,22 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     if (cur.id === "lld-round") { var rp = resFor("patterns", "Design patterns: watch and read"); if (rp) { top.appendChild(rp); } }
     host.appendChild(top);
     nav.push([cur.id, "Parts"]);
-    cur.sections.forEach(function (s) {
+    var probOf = function (s) { return s.blocks.filter(function (b) { return b.t === "problem"; })[0]; };
+    var oneAt = cur.sections.some(probOf), secs = cur.sections, si = 0;
+    if (oneAt) {
+      document.body.setAttribute("data-wide", "1");
+      var pick = secs.filter(function (s) { return s.id === anchor; })[0] || secs.filter(function (s) { return s.id === st["sec:" + cur.id]; })[0] || secs[0];
+      si = secs.indexOf(pick); cdSave("sec:" + cur.id, pick.id);
+      var swb = el("div", "wb-switch");
+      secs.forEach(function (s, k) {
+        var pb = probOf(s), a = el("a", "wb-p" + (k === si ? " on" : ""), esc(s.title) + (pb && ticks()["solved:" + pb.id] ? ' <span class="cd-ok">&#10003;</span>' : "") +
+          (pb && pb.minutes ? '<span class="wb-pm">' + pb.minutes + " min</span>" : ""));
+        a.href = link(tab, s.id); swb.appendChild(a);
+      });
+      top.appendChild(swb);
+      secs = [pick];
+    }
+    secs.forEach(function (s) {
       var sec = el("section", "cd-sec"); sec.id = s.id;
       sec.appendChild(el("h3", "", esc(s.title)));
       /* Material first, with code notes showing; then the questions on it, under Practise. */
@@ -2533,11 +2551,19 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     var mk = cdBtn(done[cur.id] ? "Done. Mark not done" : "Mark this part done", function () {
       var d = cdState().done || {}; d[cur.id] = !d[cur.id]; cdSave("done", d); route();
     });
-    foot.appendChild(i > 0 ? el("a", "", "Previous: " + esc(parts[i - 1].title)) : el("span"));
+    /* Previous and next: the neighbouring problem inside a problem part, else the neighbouring part. */
+    var prevT = null, nextT = null;
+    if (oneAt && si > 0) { prevT = [cur.sections[si - 1].title, cur.sections[si - 1].id]; }
+    else if (i > 0) { prevT = [parts[i - 1].title, parts[i - 1].id]; }
+    if (oneAt && si < cur.sections.length - 1) { nextT = [cur.sections[si + 1].title, cur.sections[si + 1].id]; }
+    else if (i < parts.length - 1) { nextT = [parts[i + 1].title, parts[i + 1].id]; }
+    var stepLink = function (t, dir) {
+      if (!t) { return el("span"); }
+      var a = el("a", "", (dir === "prev" ? "Previous: " : "Next: ") + esc(t[0])); a.href = link(tab, t[1]); a.setAttribute("data-step", dir); return a;
+    };
+    foot.appendChild(stepLink(prevT, "prev"));
     foot.appendChild(mk);
-    foot.appendChild(i < parts.length - 1 ? el("a", "", "Next: " + esc(parts[i + 1].title)) : el("span"));
-    if (i > 0) { foot.firstChild.href = link(tab, parts[i - 1].id); foot.firstChild.setAttribute("data-step", "prev"); }
-    if (i < parts.length - 1) { foot.lastChild.href = link(tab, parts[i + 1].id); foot.lastChild.setAttribute("data-step", "next"); }
+    foot.appendChild(stepLink(nextT, "next"));
     host.appendChild(foot);
   }
 
@@ -2755,8 +2781,28 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     host.appendChild(head);
     nav.push(["daily-top", "Day " + cur.n]);
 
+    host.appendChild(workbench(p));
+    nav.push(["wb-" + p.id, p.title, true]);
+
+    var all = []; days.forEach(function (d) { d.problems.forEach(function (q, i) { all.push([d, i]); }); });
+    var at = 0; all.forEach(function (x, k) { if (x[0] === cur && x[1] === pi) { at = k; } });
+    var fn = el("div", "cd-nav");
+    var mk = function (x, dir) {
+      if (!x) { return el("span"); }
+      var a = el("a", "", (dir === "prev" ? "Previous: " : "Next: ") + esc(x[0].problems[x[1]].title));
+      a.href = "#/daily/" + x[0].date + "/" + (x[1] + 1); a.setAttribute("data-step", dir); return a;
+    };
+    fn.appendChild(mk(all[at - 1], "prev")); fn.appendChild(mk(all[at + 1], "next"));
+    host.appendChild(fn);
+  }
+
+  /* A practice problem as a workbench, used by the Daily two and by `problem` blocks in coding parts:
+     the problem left (head line, statement, examples, limits, questions to ask), your work right and
+     sticky (timer, editor, hints, tests, solved), the solution, dry run, follow-ups and a video after. */
+  function workbench(p) {
     var wb = el("div", "wb"), L = el("div", "wb-l"), R = el("div", "wb-r");
-    L.id = "wb-problem";
+    L.id = "wb-" + p.id;
+    if (p.head) { L.appendChild(el("p", "wb-lim", p.head)); }
     paras(L, String(p.scenario).split("\n\n"));
     if ((p.examples || []).length) {
       var t = el("table", "wb-ex");
@@ -2821,19 +2867,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     R.appendChild(bar2); R.appendChild(hints); R.appendChild(extra);
     if (solved) { reveal(false); }
     wb.appendChild(L); wb.appendChild(R);
-    host.appendChild(wb);
-    nav.push(["wb-problem", p.title, true]);
-
-    var all = []; days.forEach(function (d) { d.problems.forEach(function (q, i) { all.push([d, i]); }); });
-    var at = 0; all.forEach(function (x, k) { if (x[0] === cur && x[1] === pi) { at = k; } });
-    var fn = el("div", "cd-nav");
-    var mk = function (x, dir) {
-      if (!x) { return el("span"); }
-      var a = el("a", "", (dir === "prev" ? "Previous: " : "Next: ") + esc(x[0].problems[x[1]].title));
-      a.href = "#/daily/" + x[0].date + "/" + (x[1] + 1); a.setAttribute("data-step", dir); return a;
-    };
-    fn.appendChild(mk(all[at - 1], "prev")); fn.appendChild(mk(all[at + 1], "next"));
-    host.appendChild(fn);
+    return wb;
   }
 
   /* -------- Leadership */
@@ -3286,7 +3320,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     var r = parse();
     if (convo.open) { convo.close(); }
     try {
-      main.innerHTML = ""; nav = [];
+      main.innerHTML = ""; nav = []; document.body.removeAttribute("data-wide");
       if (r.tab === "overview") { tabOverview(main); }
       else if (r.tab === "prep") { tabPrep(main); }
       else if (r.tab === "rounds") { tabRounds(main); }

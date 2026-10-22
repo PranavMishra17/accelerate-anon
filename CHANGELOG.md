@@ -1423,3 +1423,10 @@ replies by voice), not an interview product. The page: what Heard is and how it 
 (engineer number one), your intro, why Heard in versions, a slot for the three pieces of product feedback they ask
 every applicant for, project stories in gitignored private/loops/heard.js (the voice agent, MockFlow, how you work
 with coding agents), and questions in three tiers. Page only. No charter deviation.
+
+**2026-10-21 — Mercor coding problems in the workbench.**
+The `problem` blocks of any loop's coding tab now render as the Amazon Daily two's workbench (problem left, timer,
+editor, hints and tests right and sticky, the solution, dry run and follow-ups after solving), and a part made of
+problems shows one at a time, with switches on top and the arrow keys stepping between them. The workbench is one
+shared function (`workbench`). The navigation principle behind the Amazon page is now his rule for every new page
+(memory note prep-page-navigation). No charter deviation.
