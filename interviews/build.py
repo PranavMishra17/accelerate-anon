@@ -179,8 +179,12 @@ def build(module_name):
             v = hashlib.sha1(io.open(p, "rb").read()).hexdigest()[:8]
             tpl = tpl.replace('../%s/%s"' % f, '../%s/%s?v=%s"' % (f + (v,)))
     # A loop's private module (gitignored) is loaded only when it exists here, so other pages ask for nothing.
-    if not os.path.exists(os.path.join(HERE, "..", "private", "loops", module_name + ".js")):
+    pl = os.path.join(HERE, "..", "private", "loops", module_name + ".js")
+    if not os.path.exists(pl):
         tpl = tpl.replace('<script src="../private/loops/{{MODULE}}.js"></script>\n', "")
+    else:
+        # Stamped like everything else, so an edited private file is never served from the browser cache.
+        tpl = tpl.replace('../private/loops/{{MODULE}}.js"', '../private/loops/{{MODULE}}.js?v=%s"' % hashlib.sha1(io.open(pl, "rb").read()).hexdigest()[:8])
     # A free-form Coding tab: every interviews/coding/<module>-*.js, in name order, stamped.
     cdir = os.path.join(HERE, "coding")
     cfiles = sorted(f for f in os.listdir(cdir) if f.startswith(module_name + "-") and f.endswith(".js")) if os.path.isdir(cdir) else []
