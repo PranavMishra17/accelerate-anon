@@ -2895,5 +2895,196 @@ DIA.sourceFilterMap = {
     }
   };
 
+  /* LLD drills (interviews/coding/amazon-lld-a.js, amazon-lld-b.js): class diagrams drawn from the
+     drills' own code, so every class name here exists there. Tones: sys = a class that does the
+     work, math = a plain record or value, req = the pattern seam, alaap = a second seam. */
+  DIA.lldRound = {
+    title: "The 45-minute LLD round, in seven steps",
+    cap: "<b>Seven steps in the same order every time, and the code gets a third of the time.</b> Steps 1 to 4 are asking and naming (14 to 17 minutes), the sketch takes 5, and the core code takes 15 with a dry run. The bar is drawn at the long end, 45 minutes. Slack goes to dry-running your code, not to new features.",
+    svg: function () {
+      var b = "", X = [0, 166, 332, 498];
+      [["clarify", "1 Clarify, elicit", "5 to 8 min"], ["use-cases", "2 Use cases", "3 min"],
+       ["entities", "3 Entities", "3 min"], ["relationships", "4 Relationships", "3 min"]].forEach(function (s, i) {
+        b += S.box({ id: s[0], x: X[i], y: 20, w: 142, h: 48, label: s[1], sub: s[2], tone: "sys" });
+        if (i) { b += S.arrow(X[i] - 22, 44, X[i] - 2, 44, {}); }
+      });
+      b += S.box({ id: "sketch", x: 498, y: 116, w: 142, h: 48, label: "5 Class sketch", sub: "5 min", tone: "math" });
+      b += S.box({ id: "core-code", x: 240, y: 116, w: 227, h: 48, label: "6 Core code", sub: "15 min, then a dry run", tone: "now" });
+      b += S.box({ id: "extend", x: 0, y: 116, w: 212, h: 48, label: "7 Extensions", sub: "5 to 8 min", tone: "req" });
+      b += S.arrow(569, 70, 569, 114, {});
+      b += S.arrow(496, 140, 469, 140, {});
+      b += S.arrow(238, 140, 214, 140, {});
+      var bar = "", x = 0, tones = ["sys", "sys", "sys", "sys", "math", "now", "req"];
+      b += S.text(0, 196, "Where the minutes go, at the long end (45)", "d-t-x");
+      [8, 3, 3, 3, 5, 15, 8].forEach(function (m, i) {
+        var w = m * 640 / 45;
+        bar += S.bar({ x: x + 1, y: 204, w: w - 2, h: 24, tone: tones[i] }) + S.text(x + w / 2, 220, String(i + 1), "d-t-s", "middle");
+        x += w;
+      });
+      b += S.node("time", bar);
+      b += S.node("slack", S.text(0, 252, "39 minutes at the short end. Slack goes to a dry run, not to features.", "d-t-s"));
+      return S.frame(640, 262, b);
+    }
+  };
+
+  DIA.lldParking = {
+    title: "Parking lot: the classes and the pricing seam",
+    cap: "<b>The lot owns levels and tickets and is handed its pricing rule from outside.</b> A lot has Levels, a Level has Spots, a Spot fits a Vehicle by Size, and enter() creates a Ticket. Pricing is the Strategy seam: the lot calls price(minutes, size) and never names Hourly, so a flat rate or a second garage needs no edit to ParkingLot. Gold marks the pattern.",
+    svg: function () {
+      var b = "";
+      b += S.tag(242, 14, "Strategy seam");
+      b += S.box({ id: "parking-lot", x: 0, y: 20, w: 170, h: 48, label: "ParkingLot", sub: "enter(), exit()", tone: "sys" });
+      b += S.box({ id: "pricing", x: 240, y: 20, w: 190, h: 48, label: "Pricing", sub: "price(minutes, size)", tone: "req" });
+      b += S.box({ id: "hourly", x: 500, y: 20, w: 140, h: 48, label: "Hourly", sub: "cents_per_hour", tone: "req" });
+      b += S.box({ id: "level", x: 0, y: 108, w: 170, h: 48, label: "Level", sub: "find(vehicle)", tone: "sys" });
+      b += S.box({ id: "ticket", x: 240, y: 108, w: 190, h: 48, label: "Ticket", sub: "id, vehicle, spot, entered", tone: "math" });
+      b += S.box({ id: "spot", x: 0, y: 196, w: 170, h: 48, label: "Spot", sub: "fits(vehicle)", tone: "sys" });
+      b += S.box({ id: "vehicle", x: 240, y: 196, w: 190, h: 48, label: "Vehicle", sub: "plate, size", tone: "math" });
+      b += S.box({ id: "size", x: 500, y: 196, w: 140, h: 48, label: "Size", sub: "SMALL, MEDIUM, LARGE", tone: "math" });
+      b += S.arrow(172, 44, 238, 44, { label: "uses" });
+      b += S.arrow(498, 44, 432, 44, { label: "is a", dash: true });
+      b += S.arrow(85, 70, 85, 106, {}) + S.text(92, 92, "has", "d-t-s");
+      b += S.arrow(85, 158, 85, 194, {}) + S.text(92, 180, "has", "d-t-s");
+      b += S.arrow(172, 60, 238, 114, {}) + S.text(224, 90, "creates", "d-t-s");
+      b += S.arrow(335, 158, 335, 194, {}) + S.text(342, 180, "has", "d-t-s");
+      b += S.arrow(238, 150, 172, 206, {}) + S.text(182, 172, "has", "d-t-s");
+      b += S.arrow(432, 220, 498, 220, { label: "has" });
+      return S.frame(640, 256, b);
+    }
+  };
+
+  DIA.lldFiles = {
+    title: "File system: Composite entries and a Filter",
+    cap: "<b>File and Directory are both Entries, and a Directory holds Entries, so the tree nests to any depth.</b> That is Composite: size() and walk() work the same on one file or on a whole folder, with no type checks. Filter is a second, smaller seam: find asks each Entry whether a Filter matches, so a new condition is a new class. Gold marks Composite, orange marks Filter.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "file-system", x: 0, y: 20, w: 170, h: 48, label: "FileSystem", sub: "resolve, find", tone: "sys" });
+      b += S.box({ id: "filter", x: 450, y: 20, w: 190, h: 48, label: "Filter", sub: "matches(entry)", tone: "alaap" });
+      b += S.box({ id: "ext", x: 450, y: 108, w: 90, h: 48, label: "Ext", sub: "ext", tone: "alaap" });
+      b += S.box({ id: "min-size", x: 550, y: 108, w: 90, h: 48, label: "MinSize", sub: "nbytes", tone: "alaap" });
+      b += S.box({ id: "directory", x: 0, y: 200, w: 170, h: 48, label: "Directory", sub: "children by name", tone: "req" });
+      b += S.box({ id: "entry", x: 240, y: 200, w: 160, h: 48, label: "Entry", sub: "size(), walk(path)", tone: "req" });
+      b += S.box({ id: "file", x: 470, y: 200, w: 170, h: 48, label: "File", sub: "nbytes", tone: "req" });
+      b += S.arrow(172, 44, 448, 44, { label: "uses" });
+      b += S.arrow(495, 106, 495, 70, { dash: true }) + S.text(501, 92, "is a", "d-t-s");
+      b += S.arrow(595, 106, 595, 70, { dash: true }) + S.text(601, 92, "is a", "d-t-s");
+      b += S.arrow(85, 70, 85, 198, {}) + S.text(92, 138, "has the root", "d-t-s");
+      b += S.arrow(172, 224, 238, 224, { label: "is a", dash: true });
+      b += S.arrow(468, 224, 402, 224, { label: "is a", dash: true });
+      b += S.arrow(85, 250, 320, 250, { curve: -44, label: "has children" });
+      return S.frame(640, 290, b);
+    }
+  };
+
+  DIA.lldCart = {
+    title: "Shopping cart: lines and the discount seam",
+    cap: "<b>The cart owns its lines and asks a Discount for the total without knowing which one it has.</b> Discount.apply(lines, total) is the Strategy seam: NoDiscount, Percent and Flat are one class each, and checkout calls apply every time, so there is no branch for 'no discount'. Money is integer cents throughout. Gold marks the pattern.",
+    svg: function () {
+      var b = "";
+      b += S.tag(252, 86, "Strategy seam");
+      b += S.box({ id: "cart", x: 0, y: 92, w: 170, h: 48, label: "Cart", sub: "add, subtotal, checkout", tone: "sys" });
+      b += S.box({ id: "line", x: 0, y: 188, w: 170, h: 48, label: "Line", sub: "item, qty", tone: "math" });
+      b += S.box({ id: "item", x: 250, y: 188, w: 170, h: 48, label: "Item", sub: "sku, name, price in cents", tone: "math" });
+      b += S.box({ id: "discount", x: 250, y: 92, w: 170, h: 48, label: "Discount", sub: "apply(lines, total)", tone: "req" });
+      b += S.box({ id: "no-discount", x: 500, y: 20, w: 140, h: 48, label: "NoDiscount", sub: "returns the total", tone: "req" });
+      b += S.box({ id: "percent", x: 500, y: 92, w: 140, h: 48, label: "Percent", sub: "pct", tone: "req" });
+      b += S.box({ id: "flat", x: 500, y: 164, w: 140, h: 48, label: "Flat", sub: "cents", tone: "req" });
+      b += S.arrow(172, 116, 248, 116, { label: "uses" });
+      b += S.arrow(85, 142, 85, 186, {}) + S.text(92, 168, "has", "d-t-s");
+      b += S.arrow(172, 212, 248, 212, { label: "has" });
+      b += S.arrow(498, 116, 422, 116, { label: "is a", dash: true });
+      b += S.arrow(498, 50, 422, 104, { dash: true });
+      b += S.arrow(498, 188, 422, 128, { dash: true });
+      return S.frame(640, 248, b);
+    }
+  };
+
+  DIA.lldLibrary = {
+    title: "Library: copies, titles and the reservation observer",
+    cap: "<b>Loans and holds attach to a copy, a reservation queues per title, and the rules live in one class.</b> Library enforces limits and fines; Reservations only decides who gets a returned copy. In the base code Reservations sets on_hold_for; the dashed subscribers are the follow-up that makes it an Observer, so telling a member by email or text never touches Library. Gold marks the pattern.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "library", x: 235, y: 20, w: 170, h: 48, label: "Library", sub: "checkout, return, reserve", tone: "sys" });
+      b += S.box({ id: "fine-for", x: 490, y: 20, w: 150, h: 48, label: "fine_for", sub: "the one fine rule", tone: "flat" });
+      b += S.box({ id: "member", x: 0, y: 108, w: 118, h: 48, label: "Member", sub: "id, kind, fines", tone: "math" });
+      b += S.box({ id: "loan", x: 174, y: 108, w: 118, h: 48, label: "Loan", sub: "item, member, due", tone: "math" });
+      b += S.box({ id: "book-item", x: 348, y: 108, w: 118, h: 48, label: "BookItem", sub: "on_hold_for", tone: "math" });
+      b += S.box({ id: "reservations", x: 522, y: 108, w: 118, h: 48, label: "Reservations", sub: "queue per title", tone: "req" });
+      b += S.box({ id: "book", x: 348, y: 196, w: 118, h: 48, label: "Book", sub: "isbn, title", tone: "math" });
+      b += S.box({ id: "subscribers", x: 522, y: 196, w: 118, h: 48, label: "subscribers", sub: "callables", tone: "req", dash: true });
+      b += S.arrow(407, 44, 488, 44, { label: "uses" });
+      b += S.arrow(255, 70, 59, 106, {}) + S.text(52, 100, "has", "d-t-s", "end");
+      b += S.arrow(290, 70, 233, 106, {}) + S.text(226, 100, "has", "d-t-s", "end");
+      b += S.arrow(350, 70, 407, 106, {}) + S.text(414, 100, "has", "d-t-s");
+      b += S.arrow(385, 70, 581, 106, {}) + S.text(588, 100, "has", "d-t-s");
+      b += S.arrow(172, 134, 120, 134, { label: "has" });
+      b += S.arrow(294, 134, 346, 134, { label: "has" });
+      b += S.arrow(520, 146, 468, 146, { label: "holds" });
+      b += S.arrow(407, 158, 407, 198, {}) + S.text(413, 182, "has", "d-t-s");
+      b += S.arrow(540, 158, 468, 212, {}) + S.text(498, 178, "per title", "d-t-s", "end");
+      b += S.arrow(581, 158, 581, 198, { dash: true }) + S.text(587, 182, "notifies", "d-t-s");
+      return S.frame(640, 256, b);
+    }
+  };
+
+  DIA.lldElevator = {
+    title: "Elevator: states and a dispatcher",
+    cap: "<b>A car's behaviour is its state, and the choice of car is a strategy.</b> Each State has one method, step(car), and decides the next state: Idle picks a stop, Moving goes one floor per tick, DoorsOpen closes and keeps going if stops remain ahead. The Controller holds the cars and a Dispatch strategy, so a new policy is a new class and Controller does not change. Gold marks State, orange marks Dispatch.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "controller", x: 0, y: 16, w: 170, h: 44, label: "Controller", sub: "hall_call, car_call, tick", tone: "sys" });
+      b += S.box({ id: "dispatch", x: 440, y: 16, w: 200, h: 44, label: "Dispatch", sub: "choose(cars, floor, direction)", tone: "alaap" });
+      b += S.box({ id: "car", x: 0, y: 96, w: 170, h: 44, label: "Car", sub: "floor, stops, state", tone: "math" });
+      b += S.box({ id: "nearest-idle", x: 440, y: 96, w: 200, h: 44, label: "NearestIdle", sub: "prefers an idle car", tone: "alaap" });
+      b += S.box({ id: "state", x: 245, y: 176, w: 150, h: 44, label: "State", sub: "step(car)", tone: "req" });
+      b += S.box({ id: "idle", x: 0, y: 256, w: 150, h: 44, label: "Idle", sub: "picks the nearest stop", tone: "req" });
+      b += S.box({ id: "moving", x: 245, y: 256, w: 150, h: 44, label: "Moving", sub: "one floor per tick", tone: "req" });
+      b += S.box({ id: "doors-open", x: 490, y: 256, w: 150, h: 44, label: "DoorsOpen", sub: "closes, then moves on", tone: "req" });
+      b += S.arrow(172, 38, 438, 38, { label: "uses" });
+      b += S.arrow(540, 94, 540, 62, { dash: true }) + S.text(547, 82, "is a", "d-t-s");
+      b += S.arrow(85, 62, 85, 94, {}) + S.text(92, 82, "has", "d-t-s");
+      b += S.arrow(172, 130, 243, 186, { label: "has" });
+      b += S.arrow(75, 254, 262, 222, { label: "is a", dash: true });
+      b += S.arrow(320, 254, 320, 222, { dash: true }) + S.text(327, 243, "is a", "d-t-s");
+      b += S.arrow(565, 254, 378, 222, { label: "is a", dash: true });
+      b += S.arrow(152, 278, 243, 278, { label: "picks a stop" });
+      b += S.arrow(397, 268, 488, 268, { label: "arrives" });
+      b += S.arrow(488, 290, 399, 290, { label: "stops ahead" });
+      b += S.arrow(565, 302, 75, 302, { curve: -44, label: "no stops ahead" });
+      return S.frame(640, 336, b);
+    }
+  };
+
+  DIA.lldKvstore = {
+    title: "Key-value cache: six layers in one class",
+    cap: "<b>One class, six layers: each layer adds one data structure and one cost you can say aloud.</b> Start from a dict, add a sorted history per key, binary search for a value at a time, insort for late writes, an OrderedDict for LRU, and a stamp with an injected clock for TTL. Each layer keeps the one below it working. The injected clock, in orange, is what makes expiry testable.",
+    svg: function () {
+      var b = "", L = [
+        ["ttl", "6 TTL", "Entry.stamp and a clock; an expired key goes when touched", "alaap"],
+        ["lru", "5 Capacity and LRU", "OrderedDict: move_to_end, popitem(last=False)", "req"],
+        ["late-writes", "4 Late writes", "insort keeps the history sorted by timestamp", "math"],
+        ["as-of", "3 Value at a time", "bisect_right on the history: get(key, at=ts)", "math"],
+        ["history", "2 History", "Entry.hist: a list of (ts, value) pairs per key", "math"],
+        ["latest", "1 Latest value", "dict: key to value", "sys"]
+      ], costs = ["", "put, get: add O(1)", "put: O(log n) + shift", "get at ts: O(log n)", "put: O(1) amortised", "put, get: O(1)"], i, y, c = "";
+      b += S.tag(0, 14, "One class, Cache");
+      for (i = 0; i < 6; i++) {
+        y = 22 + i * 60;
+        b += S.box({ id: L[i][0], x: 0, y: y, w: 470, h: 40, label: L[i][1], sub: L[i][2], tone: L[i][3] });
+        if (i) { c += S.text(490, y + 25, costs[i], "d-t-s"); }
+      }
+      c += S.tag(490, 76, "Cost");
+      b += S.node("costs", c);
+      b += S.box({ id: "clock", x: 490, y: 22, w: 150, h: 40, label: "clock()", sub: "injected parameter", tone: "alaap", dash: true });
+      b += S.arrow(488, 42, 472, 42, {});
+      var names = ["adds a stamp", "adds capacity", "adds insort", "adds bisect", "adds history"];
+      for (i = 1; i < 6; i++) {
+        y = 22 + i * 60;
+        b += S.arrow(235, y - 2, 235, y - 18, {}) + S.text(243, y - 7, names[i - 1], "d-t-s");
+      }
+      return S.frame(640, 374, b);
+    }
+  };
+
   return { S: S, DIA: DIA, slug: slug };
 })();

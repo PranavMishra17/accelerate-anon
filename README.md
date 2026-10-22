@@ -48,7 +48,9 @@ Fourteen algorithm patterns, each with how to spot it, a Python template, classi
 written out in full (two worked examples, constraints, a hint, a tested solution) and
 variations of each, plus concurrency (threads and asyncio: where work starts and waits, locks,
 caps, ordering, single-flight, timeouts) and object-oriented design (the low-level design round,
-SOLID, the patterns that come up, six classic prompts with tested solutions). An AI systems tab covers the coding that goes beyond interview puzzles:
+SOLID, the patterns that come up, six classic prompts with tested solutions). An Algorithms tab puts
+48 algorithms on one scrolling page with a sticky index: when to reach for each, the code, its cost
+and its variants, every one checked against a brute force. An AI systems tab covers the coding that goes beyond interview puzzles:
 NumPy and PyTorch basics, embeddings and vector search, RAG over a parser's output, GraphRAG,
 an agent loop, a research agent, a voice pipeline, a transformer block, a BPE tokenizer,
 evaluating model output, structured output, serving, and LoRA. Every code block runs offline

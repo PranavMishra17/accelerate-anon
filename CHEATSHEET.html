@@ -3278,20 +3278,212 @@ DIA.sourceFilterMap = {
     }
   };
 
+  /* LLD drills (interviews/coding/amazon-lld-a.js, amazon-lld-b.js): class diagrams drawn from the
+     drills' own code, so every class name here exists there. Tones: sys = a class that does the
+     work, math = a plain record or value, req = the pattern seam, alaap = a second seam. */
+  DIA.lldRound = {
+    title: "The 45-minute LLD round, in seven steps",
+    cap: "<b>Seven steps in the same order every time, and the code gets a third of the time.</b> Steps 1 to 4 are asking and naming (14 to 17 minutes), the sketch takes 5, and the core code takes 15 with a dry run. The bar is drawn at the long end, 45 minutes. Slack goes to dry-running your code, not to new features.",
+    svg: function () {
+      var b = "", X = [0, 166, 332, 498];
+      [["clarify", "1 Clarify, elicit", "5 to 8 min"], ["use-cases", "2 Use cases", "3 min"],
+       ["entities", "3 Entities", "3 min"], ["relationships", "4 Relationships", "3 min"]].forEach(function (s, i) {
+        b += S.box({ id: s[0], x: X[i], y: 20, w: 142, h: 48, label: s[1], sub: s[2], tone: "sys" });
+        if (i) { b += S.arrow(X[i] - 22, 44, X[i] - 2, 44, {}); }
+      });
+      b += S.box({ id: "sketch", x: 498, y: 116, w: 142, h: 48, label: "5 Class sketch", sub: "5 min", tone: "math" });
+      b += S.box({ id: "core-code", x: 240, y: 116, w: 227, h: 48, label: "6 Core code", sub: "15 min, then a dry run", tone: "now" });
+      b += S.box({ id: "extend", x: 0, y: 116, w: 212, h: 48, label: "7 Extensions", sub: "5 to 8 min", tone: "req" });
+      b += S.arrow(569, 70, 569, 114, {});
+      b += S.arrow(496, 140, 469, 140, {});
+      b += S.arrow(238, 140, 214, 140, {});
+      var bar = "", x = 0, tones = ["sys", "sys", "sys", "sys", "math", "now", "req"];
+      b += S.text(0, 196, "Where the minutes go, at the long end (45)", "d-t-x");
+      [8, 3, 3, 3, 5, 15, 8].forEach(function (m, i) {
+        var w = m * 640 / 45;
+        bar += S.bar({ x: x + 1, y: 204, w: w - 2, h: 24, tone: tones[i] }) + S.text(x + w / 2, 220, String(i + 1), "d-t-s", "middle");
+        x += w;
+      });
+      b += S.node("time", bar);
+      b += S.node("slack", S.text(0, 252, "39 minutes at the short end. Slack goes to a dry run, not to features.", "d-t-s"));
+      return S.frame(640, 262, b);
+    }
+  };
+
+  DIA.lldParking = {
+    title: "Parking lot: the classes and the pricing seam",
+    cap: "<b>The lot owns levels and tickets and is handed its pricing rule from outside.</b> A lot has Levels, a Level has Spots, a Spot fits a Vehicle by Size, and enter() creates a Ticket. Pricing is the Strategy seam: the lot calls price(minutes, size) and never names Hourly, so a flat rate or a second garage needs no edit to ParkingLot. Gold marks the pattern.",
+    svg: function () {
+      var b = "";
+      b += S.tag(242, 14, "Strategy seam");
+      b += S.box({ id: "parking-lot", x: 0, y: 20, w: 170, h: 48, label: "ParkingLot", sub: "enter(), exit()", tone: "sys" });
+      b += S.box({ id: "pricing", x: 240, y: 20, w: 190, h: 48, label: "Pricing", sub: "price(minutes, size)", tone: "req" });
+      b += S.box({ id: "hourly", x: 500, y: 20, w: 140, h: 48, label: "Hourly", sub: "cents_per_hour", tone: "req" });
+      b += S.box({ id: "level", x: 0, y: 108, w: 170, h: 48, label: "Level", sub: "find(vehicle)", tone: "sys" });
+      b += S.box({ id: "ticket", x: 240, y: 108, w: 190, h: 48, label: "Ticket", sub: "id, vehicle, spot, entered", tone: "math" });
+      b += S.box({ id: "spot", x: 0, y: 196, w: 170, h: 48, label: "Spot", sub: "fits(vehicle)", tone: "sys" });
+      b += S.box({ id: "vehicle", x: 240, y: 196, w: 190, h: 48, label: "Vehicle", sub: "plate, size", tone: "math" });
+      b += S.box({ id: "size", x: 500, y: 196, w: 140, h: 48, label: "Size", sub: "SMALL, MEDIUM, LARGE", tone: "math" });
+      b += S.arrow(172, 44, 238, 44, { label: "uses" });
+      b += S.arrow(498, 44, 432, 44, { label: "is a", dash: true });
+      b += S.arrow(85, 70, 85, 106, {}) + S.text(92, 92, "has", "d-t-s");
+      b += S.arrow(85, 158, 85, 194, {}) + S.text(92, 180, "has", "d-t-s");
+      b += S.arrow(172, 60, 238, 114, {}) + S.text(224, 90, "creates", "d-t-s");
+      b += S.arrow(335, 158, 335, 194, {}) + S.text(342, 180, "has", "d-t-s");
+      b += S.arrow(238, 150, 172, 206, {}) + S.text(182, 172, "has", "d-t-s");
+      b += S.arrow(432, 220, 498, 220, { label: "has" });
+      return S.frame(640, 256, b);
+    }
+  };
+
+  DIA.lldFiles = {
+    title: "File system: Composite entries and a Filter",
+    cap: "<b>File and Directory are both Entries, and a Directory holds Entries, so the tree nests to any depth.</b> That is Composite: size() and walk() work the same on one file or on a whole folder, with no type checks. Filter is a second, smaller seam: find asks each Entry whether a Filter matches, so a new condition is a new class. Gold marks Composite, orange marks Filter.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "file-system", x: 0, y: 20, w: 170, h: 48, label: "FileSystem", sub: "resolve, find", tone: "sys" });
+      b += S.box({ id: "filter", x: 450, y: 20, w: 190, h: 48, label: "Filter", sub: "matches(entry)", tone: "alaap" });
+      b += S.box({ id: "ext", x: 450, y: 108, w: 90, h: 48, label: "Ext", sub: "ext", tone: "alaap" });
+      b += S.box({ id: "min-size", x: 550, y: 108, w: 90, h: 48, label: "MinSize", sub: "nbytes", tone: "alaap" });
+      b += S.box({ id: "directory", x: 0, y: 200, w: 170, h: 48, label: "Directory", sub: "children by name", tone: "req" });
+      b += S.box({ id: "entry", x: 240, y: 200, w: 160, h: 48, label: "Entry", sub: "size(), walk(path)", tone: "req" });
+      b += S.box({ id: "file", x: 470, y: 200, w: 170, h: 48, label: "File", sub: "nbytes", tone: "req" });
+      b += S.arrow(172, 44, 448, 44, { label: "uses" });
+      b += S.arrow(495, 106, 495, 70, { dash: true }) + S.text(501, 92, "is a", "d-t-s");
+      b += S.arrow(595, 106, 595, 70, { dash: true }) + S.text(601, 92, "is a", "d-t-s");
+      b += S.arrow(85, 70, 85, 198, {}) + S.text(92, 138, "has the root", "d-t-s");
+      b += S.arrow(172, 224, 238, 224, { label: "is a", dash: true });
+      b += S.arrow(468, 224, 402, 224, { label: "is a", dash: true });
+      b += S.arrow(85, 250, 320, 250, { curve: -44, label: "has children" });
+      return S.frame(640, 290, b);
+    }
+  };
+
+  DIA.lldCart = {
+    title: "Shopping cart: lines and the discount seam",
+    cap: "<b>The cart owns its lines and asks a Discount for the total without knowing which one it has.</b> Discount.apply(lines, total) is the Strategy seam: NoDiscount, Percent and Flat are one class each, and checkout calls apply every time, so there is no branch for 'no discount'. Money is integer cents throughout. Gold marks the pattern.",
+    svg: function () {
+      var b = "";
+      b += S.tag(252, 86, "Strategy seam");
+      b += S.box({ id: "cart", x: 0, y: 92, w: 170, h: 48, label: "Cart", sub: "add, subtotal, checkout", tone: "sys" });
+      b += S.box({ id: "line", x: 0, y: 188, w: 170, h: 48, label: "Line", sub: "item, qty", tone: "math" });
+      b += S.box({ id: "item", x: 250, y: 188, w: 170, h: 48, label: "Item", sub: "sku, name, price in cents", tone: "math" });
+      b += S.box({ id: "discount", x: 250, y: 92, w: 170, h: 48, label: "Discount", sub: "apply(lines, total)", tone: "req" });
+      b += S.box({ id: "no-discount", x: 500, y: 20, w: 140, h: 48, label: "NoDiscount", sub: "returns the total", tone: "req" });
+      b += S.box({ id: "percent", x: 500, y: 92, w: 140, h: 48, label: "Percent", sub: "pct", tone: "req" });
+      b += S.box({ id: "flat", x: 500, y: 164, w: 140, h: 48, label: "Flat", sub: "cents", tone: "req" });
+      b += S.arrow(172, 116, 248, 116, { label: "uses" });
+      b += S.arrow(85, 142, 85, 186, {}) + S.text(92, 168, "has", "d-t-s");
+      b += S.arrow(172, 212, 248, 212, { label: "has" });
+      b += S.arrow(498, 116, 422, 116, { label: "is a", dash: true });
+      b += S.arrow(498, 50, 422, 104, { dash: true });
+      b += S.arrow(498, 188, 422, 128, { dash: true });
+      return S.frame(640, 248, b);
+    }
+  };
+
+  DIA.lldLibrary = {
+    title: "Library: copies, titles and the reservation observer",
+    cap: "<b>Loans and holds attach to a copy, a reservation queues per title, and the rules live in one class.</b> Library enforces limits and fines; Reservations only decides who gets a returned copy. In the base code Reservations sets on_hold_for; the dashed subscribers are the follow-up that makes it an Observer, so telling a member by email or text never touches Library. Gold marks the pattern.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "library", x: 235, y: 20, w: 170, h: 48, label: "Library", sub: "checkout, return, reserve", tone: "sys" });
+      b += S.box({ id: "fine-for", x: 490, y: 20, w: 150, h: 48, label: "fine_for", sub: "the one fine rule", tone: "flat" });
+      b += S.box({ id: "member", x: 0, y: 108, w: 118, h: 48, label: "Member", sub: "id, kind, fines", tone: "math" });
+      b += S.box({ id: "loan", x: 174, y: 108, w: 118, h: 48, label: "Loan", sub: "item, member, due", tone: "math" });
+      b += S.box({ id: "book-item", x: 348, y: 108, w: 118, h: 48, label: "BookItem", sub: "on_hold_for", tone: "math" });
+      b += S.box({ id: "reservations", x: 522, y: 108, w: 118, h: 48, label: "Reservations", sub: "queue per title", tone: "req" });
+      b += S.box({ id: "book", x: 348, y: 196, w: 118, h: 48, label: "Book", sub: "isbn, title", tone: "math" });
+      b += S.box({ id: "subscribers", x: 522, y: 196, w: 118, h: 48, label: "subscribers", sub: "callables", tone: "req", dash: true });
+      b += S.arrow(407, 44, 488, 44, { label: "uses" });
+      b += S.arrow(255, 70, 59, 106, {}) + S.text(52, 100, "has", "d-t-s", "end");
+      b += S.arrow(290, 70, 233, 106, {}) + S.text(226, 100, "has", "d-t-s", "end");
+      b += S.arrow(350, 70, 407, 106, {}) + S.text(414, 100, "has", "d-t-s");
+      b += S.arrow(385, 70, 581, 106, {}) + S.text(588, 100, "has", "d-t-s");
+      b += S.arrow(172, 134, 120, 134, { label: "has" });
+      b += S.arrow(294, 134, 346, 134, { label: "has" });
+      b += S.arrow(520, 146, 468, 146, { label: "holds" });
+      b += S.arrow(407, 158, 407, 198, {}) + S.text(413, 182, "has", "d-t-s");
+      b += S.arrow(540, 158, 468, 212, {}) + S.text(498, 178, "per title", "d-t-s", "end");
+      b += S.arrow(581, 158, 581, 198, { dash: true }) + S.text(587, 182, "notifies", "d-t-s");
+      return S.frame(640, 256, b);
+    }
+  };
+
+  DIA.lldElevator = {
+    title: "Elevator: states and a dispatcher",
+    cap: "<b>A car's behaviour is its state, and the choice of car is a strategy.</b> Each State has one method, step(car), and decides the next state: Idle picks a stop, Moving goes one floor per tick, DoorsOpen closes and keeps going if stops remain ahead. The Controller holds the cars and a Dispatch strategy, so a new policy is a new class and Controller does not change. Gold marks State, orange marks Dispatch.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "controller", x: 0, y: 16, w: 170, h: 44, label: "Controller", sub: "hall_call, car_call, tick", tone: "sys" });
+      b += S.box({ id: "dispatch", x: 440, y: 16, w: 200, h: 44, label: "Dispatch", sub: "choose(cars, floor, direction)", tone: "alaap" });
+      b += S.box({ id: "car", x: 0, y: 96, w: 170, h: 44, label: "Car", sub: "floor, stops, state", tone: "math" });
+      b += S.box({ id: "nearest-idle", x: 440, y: 96, w: 200, h: 44, label: "NearestIdle", sub: "prefers an idle car", tone: "alaap" });
+      b += S.box({ id: "state", x: 245, y: 176, w: 150, h: 44, label: "State", sub: "step(car)", tone: "req" });
+      b += S.box({ id: "idle", x: 0, y: 256, w: 150, h: 44, label: "Idle", sub: "picks the nearest stop", tone: "req" });
+      b += S.box({ id: "moving", x: 245, y: 256, w: 150, h: 44, label: "Moving", sub: "one floor per tick", tone: "req" });
+      b += S.box({ id: "doors-open", x: 490, y: 256, w: 150, h: 44, label: "DoorsOpen", sub: "closes, then moves on", tone: "req" });
+      b += S.arrow(172, 38, 438, 38, { label: "uses" });
+      b += S.arrow(540, 94, 540, 62, { dash: true }) + S.text(547, 82, "is a", "d-t-s");
+      b += S.arrow(85, 62, 85, 94, {}) + S.text(92, 82, "has", "d-t-s");
+      b += S.arrow(172, 130, 243, 186, { label: "has" });
+      b += S.arrow(75, 254, 262, 222, { label: "is a", dash: true });
+      b += S.arrow(320, 254, 320, 222, { dash: true }) + S.text(327, 243, "is a", "d-t-s");
+      b += S.arrow(565, 254, 378, 222, { label: "is a", dash: true });
+      b += S.arrow(152, 278, 243, 278, { label: "picks a stop" });
+      b += S.arrow(397, 268, 488, 268, { label: "arrives" });
+      b += S.arrow(488, 290, 399, 290, { label: "stops ahead" });
+      b += S.arrow(565, 302, 75, 302, { curve: -44, label: "no stops ahead" });
+      return S.frame(640, 336, b);
+    }
+  };
+
+  DIA.lldKvstore = {
+    title: "Key-value cache: six layers in one class",
+    cap: "<b>One class, six layers: each layer adds one data structure and one cost you can say aloud.</b> Start from a dict, add a sorted history per key, binary search for a value at a time, insort for late writes, an OrderedDict for LRU, and a stamp with an injected clock for TTL. Each layer keeps the one below it working. The injected clock, in orange, is what makes expiry testable.",
+    svg: function () {
+      var b = "", L = [
+        ["ttl", "6 TTL", "Entry.stamp and a clock; an expired key goes when touched", "alaap"],
+        ["lru", "5 Capacity and LRU", "OrderedDict: move_to_end, popitem(last=False)", "req"],
+        ["late-writes", "4 Late writes", "insort keeps the history sorted by timestamp", "math"],
+        ["as-of", "3 Value at a time", "bisect_right on the history: get(key, at=ts)", "math"],
+        ["history", "2 History", "Entry.hist: a list of (ts, value) pairs per key", "math"],
+        ["latest", "1 Latest value", "dict: key to value", "sys"]
+      ], costs = ["", "put, get: add O(1)", "put: O(log n) + shift", "get at ts: O(log n)", "put: O(1) amortised", "put, get: O(1)"], i, y, c = "";
+      b += S.tag(0, 14, "One class, Cache");
+      for (i = 0; i < 6; i++) {
+        y = 22 + i * 60;
+        b += S.box({ id: L[i][0], x: 0, y: y, w: 470, h: 40, label: L[i][1], sub: L[i][2], tone: L[i][3] });
+        if (i) { c += S.text(490, y + 25, costs[i], "d-t-s"); }
+      }
+      c += S.tag(490, 76, "Cost");
+      b += S.node("costs", c);
+      b += S.box({ id: "clock", x: 490, y: 22, w: 150, h: 40, label: "clock()", sub: "injected parameter", tone: "alaap", dash: true });
+      b += S.arrow(488, 42, 472, 42, {});
+      var names = ["adds a stamp", "adds capacity", "adds insort", "adds bisect", "adds history"];
+      for (i = 1; i < 6; i++) {
+        y = 22 + i * 60;
+        b += S.arrow(235, y - 2, 235, y - 18, {}) + S.text(243, y - 7, names[i - 1], "d-t-s");
+      }
+      return S.frame(640, 374, b);
+    }
+  };
+
   return { S: S, DIA: DIA, slug: slug };
 })();
 
 </script>
 <script>
-/* The coding page's data: patterns, AI systems topics, algorithm cards and sheet extras.
+/* The coding page's data: patterns, AI systems topics, algorithm cards, the Algorithms tab (algos) and sheet extras.
    Shared by CODING.html and CHEATSHEET.html (coding/sheet.js). Edit here; every code block is tested,
-   so add a test when you add one. */
+   so add a test when you add one. An algos item is {id, title, also, spot or card, pat, ex, code, time, space, notes, vars}:
+   a card key takes its spot from the cheat-sheet card in algo; every item needs a check in coding/test_behaviour.py. */
 window.CODING = {
  "groups": [
   {
    "id": "start",
    "title": "Start",
-   "blurb": "How to code out loud, and what each operation costs. Then a tab per group: every pattern opens to an example, a template, classic problems and their variations; every AI topic to its design, components, what to remember and what they will ask. The <a href=\"CHEATSHEET.html\">cheat sheet</a> has all of it on one screen."
+   "blurb": "How to code out loud, and what each operation costs. Then a tab per group: every pattern opens to an example, a template, classic problems and their variations; every AI topic to its design, components, what to remember and what they will ask. The Algorithms tab is one long page with every algorithm's code. The <a href=\"CHEATSHEET.html\">cheat sheet</a> has all of it on one screen."
   },
   {
    "id": "core",
@@ -3307,6 +3499,11 @@ window.CODING = {
    "id": "techniques",
    "title": "Techniques",
    "blurb": "Dynamic programming, backtracking, concurrency and object-oriented design."
+  },
+  {
+   "id": "algorithms",
+   "title": "Algorithms",
+   "blurb": "The algorithms a coding loop leans on, in Python, on one page: when to reach for each, the code, what it costs, and the variants worth knowing. Scroll it, or jump with the index."
   },
   {
    "id": "ai-systems",
@@ -8916,6 +9113,1374 @@ window.CODING = {
    ]
   }
  },
+ "algos": [
+  {
+   "id": "searching",
+   "title": "Searching",
+   "items": [
+    {
+     "id": "binary-search",
+     "title": "Binary search",
+     "also": "exact, lower bound, upper bound",
+     "spot": "Sorted input; find, first or last position; log n time asked for.",
+     "pat": "binary",
+     "ex": {
+      "i": "a = [1, 3, 5, 7, 9], x = 7",
+      "o": "3"
+     },
+     "code": "def binary_search(a, x):\n    lo, hi = 0, len(a) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if a[mid] == x:\n            return mid\n        if a[mid] < x:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1",
+     "time": "O(log n)",
+     "space": "O(1)",
+     "notes": [
+      "An exact hit uses `lo <= hi` and moves by `mid + 1` or `mid - 1`. A boundary search uses `lo < hi` and `hi = mid`. Pick one habit for each.",
+      "`bisect_left` is the lower bound and `bisect_right` the upper bound."
+     ],
+     "vars": [
+      {
+       "n": "Lower bound",
+       "t": "The first index with `a[i] >= x`, or `len(a)` if none. A half-open range `[lo, hi)`: `hi` can be the answer, so it starts at `len(a)`.",
+       "code": "def lower_bound(a, x):\n    lo, hi = 0, len(a)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if a[mid] < x:\n            lo = mid + 1\n        else:\n            hi = mid\n    return lo"
+      },
+      {
+       "n": "Upper bound",
+       "t": "The first index with `a[i] > x`. One comparison changes: `<=` instead of `<`. The count of `x` is upper minus lower.",
+       "code": "def upper_bound(a, x):\n    lo, hi = 0, len(a)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if a[mid] <= x:\n            lo = mid + 1\n        else:\n            hi = mid\n    return lo"
+      },
+      {
+       "n": "Standard library",
+       "t": "Both bounds are built in. Use them unless the interviewer asks you to write the loop.",
+       "code": "from bisect import bisect_left, bisect_right\n\ndef count_of(a, x):\n    return bisect_right(a, x) - bisect_left(a, x)"
+      }
+     ]
+    },
+    {
+     "id": "binary-search-answer",
+     "title": "Search on the answer",
+     "also": "the first value where a yes/no check turns yes",
+     "spot": "Smallest or largest value that works; minimise the maximum; a yes/no check on a guess that flips once.",
+     "pat": "binary",
+     "ex": {
+      "i": "piles = [3, 6, 7, 11], h = 8",
+      "o": "4"
+     },
+     "code": "def first_true(lo, hi, ok):\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if ok(mid):\n            hi = mid\n        else:\n            lo = mid + 1\n    return lo\n\ndef min_speed(piles, h):\n    return first_true(1, max(piles), lambda k: sum((p + k - 1) // k for p in piles) <= h)",
+     "time": "O(n log R) for a check of cost n over a range of size R",
+     "space": "O(1)",
+     "notes": [
+      "`ok(hi)` must be true before you start: the loop never tests it.",
+      "To find the largest value that works, search for the first one that fails and subtract one."
+     ],
+     "vars": [
+      {
+       "n": "Ship packages in D days",
+       "t": "Same loop. The check simulates loading with a given capacity and counts the days.",
+       "code": "# needs first_true from above\ndef ship_within_days(weights, days):\n    def ok(cap):\n        need, load = 1, 0\n        for w in weights:\n            if load + w > cap:\n                need, load = need + 1, 0\n            load += w\n        return need <= days\n    return first_true(max(weights), sum(weights), ok)"
+      },
+      {
+       "n": "Integer square root",
+       "t": "The largest `x` with `x * x <= n`: find the first `x` that fails and step back one.",
+       "code": "# needs first_true from above\ndef isqrt_floor(n):\n    return first_true(0, n + 1, lambda x: x * x > n) - 1"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "windows",
+   "title": "Pointers, windows, prefix sums",
+   "items": [
+    {
+     "id": "two-pointers",
+     "title": "Two pointers",
+     "also": "from both ends",
+     "spot": "Sorted array and a target; pairs or triples; in-place rewrite; compare from both ends.",
+     "pat": "pointers",
+     "ex": {
+      "i": "a = [2, 7, 11, 15], target = 9",
+      "o": "[0, 1]"
+     },
+     "code": "def two_sum_sorted(a, target):\n    l, r = 0, len(a) - 1\n    while l < r:\n        s = a[l] + a[r]\n        if s == target:\n            return [l, r]\n        if s < target:\n            l += 1\n        else:\n            r -= 1\n    return []",
+     "time": "O(n)",
+     "space": "O(1)",
+     "notes": [
+      "Unsorted input and one pair: a dict of seen values is O(n) without sorting."
+     ],
+     "vars": [
+      {
+       "n": "Container with most water",
+       "t": "Move the pointer at the shorter wall: the other move can only make the area smaller.",
+       "code": "def max_area(height):\n    l, r, best = 0, len(height) - 1, 0\n    while l < r:\n        best = max(best, min(height[l], height[r]) * (r - l))\n        if height[l] < height[r]:\n            l += 1\n        else:\n            r -= 1\n    return best"
+      },
+      {
+       "n": "3Sum",
+       "t": "Sort, fix one number, run the pair search on the rest, skip repeated values. O(n^2).",
+       "code": "def three_sum(nums):\n    nums = sorted(nums)\n    out = []\n    for i, x in enumerate(nums):\n        if i and x == nums[i - 1]:\n            continue\n        l, r = i + 1, len(nums) - 1\n        while l < r:\n            s = x + nums[l] + nums[r]\n            if s < 0:\n                l += 1\n            elif s > 0:\n                r -= 1\n            else:\n                out.append([x, nums[l], nums[r]])\n                l += 1\n                while l < r and nums[l] == nums[l - 1]:\n                    l += 1\n    return out"
+      },
+      {
+       "n": "Remove duplicates in place",
+       "t": "Fast and slow: `fast` reads, `slow` marks where the next kept value goes.",
+       "code": "def dedupe_sorted(a):\n    slow = 0\n    for fast in range(1, len(a)):\n        if a[fast] != a[slow]:\n            slow += 1\n            a[slow] = a[fast]\n    return slow + 1 if a else 0"
+      }
+     ]
+    },
+    {
+     "id": "window-fixed",
+     "title": "Fixed window",
+     "also": "slide by adding one and dropping one",
+     "spot": "Subarray or substring of exactly k; best, sum or count of every window of size k.",
+     "pat": "window",
+     "ex": {
+      "i": "a = [2, 1, 5, 1, 3, 2], k = 3",
+      "o": "9"
+     },
+     "code": "def max_sum_k(a, k):\n    if k > len(a):\n        return None\n    cur = best = sum(a[:k])\n    for i in range(k, len(a)):\n        cur += a[i] - a[i - k]\n        best = max(best, cur)\n    return best",
+     "time": "O(n)",
+     "space": "O(1)",
+     "vars": [
+      {
+       "n": "Maximum of every window",
+       "t": "A deque of indices whose values fall from front to back: the front is the window's maximum.",
+       "code": "from collections import deque\n\ndef window_max(a, k):\n    q, out = deque(), []\n    for i, x in enumerate(a):\n        while q and a[q[-1]] <= x:\n            q.pop()\n        q.append(i)\n        if q[0] <= i - k:\n            q.popleft()\n        if i >= k - 1:\n            out.append(a[q[0]])\n    return out"
+      },
+      {
+       "n": "Anagrams of p in s",
+       "t": "Keep a count of the window; when it equals the count of `p`, record the start.",
+       "code": "from collections import Counter\n\ndef find_anagrams(s, p):\n    need, win, out = Counter(p), Counter(), []\n    for i, c in enumerate(s):\n        win[c] += 1\n        if i >= len(p):\n            old = s[i - len(p)]\n            win[old] -= 1\n            if win[old] == 0:\n                del win[old]\n        if win == need:\n            out.append(i - len(p) + 1)\n    return out"
+      }
+     ]
+    },
+    {
+     "id": "window-variable",
+     "title": "Variable window",
+     "also": "a dict inside the window",
+     "spot": "Longest or shortest substring or subarray that meets a rule; the rule can be kept up to date as the window grows and shrinks.",
+     "pat": "window",
+     "ex": {
+      "i": "s = \"abcabcbb\"",
+      "o": "3"
+     },
+     "code": "def longest_unique(s):\n    last, l, best = {}, 0, 0\n    for r, c in enumerate(s):\n        if c in last and last[c] >= l:\n            l = last[c] + 1\n        last[c] = r\n        best = max(best, r - l + 1)\n    return best",
+     "time": "O(n)",
+     "space": "O(k) for k distinct characters",
+     "notes": [
+      "The right edge always moves. The left edge moves while the window is invalid (for a longest) or while it is still valid (for a shortest).",
+      "Keep the rule as one counter, never a rescan of the window."
+     ],
+     "vars": [
+      {
+       "n": "At most k distinct characters",
+       "t": "Count each character; shrink from the left while there are more than k kinds.",
+       "code": "def longest_k_distinct(s, k):\n    cnt, l, best = {}, 0, 0\n    for r, c in enumerate(s):\n        cnt[c] = cnt.get(c, 0) + 1\n        while len(cnt) > k:\n            cnt[s[l]] -= 1\n            if cnt[s[l]] == 0:\n                del cnt[s[l]]\n            l += 1\n        best = max(best, r - l + 1)\n    return best"
+      },
+      {
+       "n": "Minimum window substring",
+       "t": "`missing` counts the needed characters not yet covered. While it is zero, record the window and shrink.",
+       "code": "from collections import Counter\n\ndef min_window(s, t):\n    if not t:\n        return \"\"\n    need, missing = Counter(t), len(t)\n    best, l = \"\", 0\n    for r, c in enumerate(s):\n        if need[c] > 0:\n            missing -= 1\n        need[c] -= 1\n        while missing == 0:\n            if not best or r - l + 1 < len(best):\n                best = s[l:r + 1]\n            need[s[l]] += 1\n            if need[s[l]] > 0:\n                missing += 1\n            l += 1\n    return best"
+      }
+     ]
+    },
+    {
+     "id": "prefix-map",
+     "title": "Prefix sums and a map",
+     "also": "subarray sum equals k",
+     "spot": "Subarray sum equals k or is divisible by k; negatives allowed, so a window fails; count the subarrays or find the longest.",
+     "pat": "prefix",
+     "ex": {
+      "i": "nums = [1, 2, 3], k = 3",
+      "o": "2"
+     },
+     "code": "def subarray_sum(nums, k):\n    seen, total, count = {0: 1}, 0, 0\n    for x in nums:\n        total += x\n        count += seen.get(total - k, 0)\n        seen[total] = seen.get(total, 0) + 1\n    return count",
+     "time": "O(n)",
+     "space": "O(n)",
+     "notes": [
+      "Seed the map with `{0: 1}`: a prefix that equals k by itself."
+     ],
+     "vars": [
+      {
+       "n": "Range sum queries",
+       "t": "Build the prefix array once; any range sum is two lookups.",
+       "code": "from itertools import accumulate\n\ndef build_prefix(a):\n    return list(accumulate(a, initial=0))\n\ndef range_sum(prefix, l, r):\n    return prefix[r + 1] - prefix[l]"
+      },
+      {
+       "n": "Longest subarray with sum k",
+       "t": "Store the first index where each prefix sum appears; the longest span is the earliest match.",
+       "code": "def longest_sum_k(nums, k):\n    first, total, best = {0: -1}, 0, 0\n    for i, x in enumerate(nums):\n        total += x\n        if total - k in first:\n            best = max(best, i - first[total - k])\n        first.setdefault(total, i)\n    return best"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "stacks",
+   "title": "Stacks",
+   "items": [
+    {
+     "id": "brackets",
+     "title": "Balanced brackets",
+     "also": "a stack of openers",
+     "spot": "Nested pairs; the last thing opened is the first closed; undo the latest step.",
+     "pat": "stack",
+     "ex": {
+      "i": "s = \"([]{})\"",
+      "o": "True"
+     },
+     "code": "def is_valid(s):\n    pairs, stack = {\")\": \"(\", \"]\": \"[\", \"}\": \"{\"}, []\n    for c in s:\n        if c in pairs:\n            if not stack or stack.pop() != pairs[c]:\n                return False\n        else:\n            stack.append(c)\n    return not stack",
+     "time": "O(n)",
+     "space": "O(n)",
+     "notes": [
+      "Check for an empty stack before every pop."
+     ],
+     "vars": [
+      {
+       "n": "Fewest additions to balance",
+       "t": "No stack needed for one bracket type: count the unmatched openers and the closers that found none.",
+       "code": "def min_add_to_make_valid(s):\n    open_, add = 0, 0\n    for c in s:\n        if c == \"(\":\n            open_ += 1\n        elif open_:\n            open_ -= 1\n        else:\n            add += 1\n    return add + open_"
+      }
+     ]
+    },
+    {
+     "id": "monotonic-stack",
+     "title": "Monotonic stack",
+     "also": "next greater; largest rectangle",
+     "spot": "Next greater or smaller element; days until warmer; the widest span where one value is the extreme.",
+     "pat": "stack",
+     "ex": {
+      "i": "a = [2, 1, 2, 4, 3]",
+      "o": "[4, 2, 4, -1, -1]"
+     },
+     "code": "def next_greater(a):\n    res, st = [-1] * len(a), []\n    for i, x in enumerate(a):\n        while st and a[st[-1]] < x:\n            res[st.pop()] = x\n        st.append(i)\n    return res",
+     "time": "O(n): each index is pushed and popped once",
+     "space": "O(n)",
+     "notes": [
+      "Store indices, not values, when you need a distance or a width.",
+      "The stack stays sorted: decreasing for next greater, increasing for next smaller."
+     ],
+     "vars": [
+      {
+       "n": "Days until warmer",
+       "t": "The same loop, writing the distance `i - j` instead of the value.",
+       "code": "def daily_temperatures(t):\n    res, st = [0] * len(t), []\n    for i, x in enumerate(t):\n        while st and t[st[-1]] < x:\n            j = st.pop()\n            res[j] = i - j\n        st.append(i)\n    return res"
+      },
+      {
+       "n": "Largest rectangle in a histogram",
+       "t": "Pop every taller bar when a shorter one arrives; each popped bar's width reaches back to where its group started. A final 0 flushes the stack.",
+       "code": "def largest_rectangle(h):\n    st, best = [], 0\n    for i, x in enumerate(h + [0]):\n        start = i\n        while st and st[-1][1] > x:\n            j, height = st.pop()\n            best = max(best, height * (i - j))\n            start = j\n        st.append((start, x))\n    return best"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "trees",
+   "title": "Trees",
+   "items": [
+    {
+     "id": "tree-dfs",
+     "title": "Tree DFS",
+     "also": "pre, in and post order, recursive and iterative",
+     "spot": "Visit every node; a value built from the children (post-order) or passed down to them (pre-order); a BST in sorted order (in-order).",
+     "pat": "trees",
+     "ex": {
+      "i": "root = [4, 2, 6, 1, 3]",
+      "o": "[4, 2, 1, 3, 6]"
+     },
+     "code": "def preorder(root):\n    return [root.val] + preorder(root.left) + preorder(root.right) if root else []\n\ndef inorder(root):\n    return inorder(root.left) + [root.val] + inorder(root.right) if root else []\n\ndef postorder(root):\n    return postorder(root.left) + postorder(root.right) + [root.val] if root else []",
+     "time": "O(n)",
+     "space": "O(h) for the call stack, h the height",
+     "notes": [
+      "Python stops near 1,000 frames: a skewed tree of 10^5 nodes needs the iterative form.",
+      "Only the position of the node's own value changes between the three orders.",
+      "The examples use the usual `TreeNode(val, left, right)` class."
+     ],
+     "vars": [
+      {
+       "n": "In-order, iterative",
+       "t": "Walk left pushing nodes, pop one, visit it, go right.",
+       "code": "def inorder_iter(root):\n    out, st, cur = [], [], root\n    while cur or st:\n        while cur:\n            st.append(cur)\n            cur = cur.left\n        cur = st.pop()\n        out.append(cur.val)\n        cur = cur.right\n    return out"
+      },
+      {
+       "n": "Pre-order, iterative",
+       "t": "Pop, visit, push right then left so left comes off first.",
+       "code": "def preorder_iter(root):\n    out, st = [], [root]\n    while st:\n        n = st.pop()\n        if n:\n            out.append(n.val)\n            st.append(n.right)\n            st.append(n.left)\n    return out"
+      },
+      {
+       "n": "Post-order, iterative",
+       "t": "Root, right, left in a mirrored pre-order, then reverse the result.",
+       "code": "def postorder_iter(root):\n    out, st = [], [root]\n    while st:\n        n = st.pop()\n        if n:\n            out.append(n.val)\n            st.append(n.left)\n            st.append(n.right)\n    return out[::-1]"
+      }
+     ]
+    },
+    {
+     "id": "level-order",
+     "title": "Level order",
+     "also": "BFS on a tree",
+     "spot": "By level; shortest depth; right side view; anything said layer by layer.",
+     "pat": "trees",
+     "ex": {
+      "i": "root = [3, 9, 20, None, None, 15, 7]",
+      "o": "[[3], [9, 20], [15, 7]]"
+     },
+     "code": "from collections import deque\n\ndef level_order(root):\n    out, q = [], deque([root] if root else [])\n    while q:\n        out.append([n.val for n in q])\n        for _ in range(len(q)):\n            n = q.popleft()\n            if n.left:\n                q.append(n.left)\n            if n.right:\n                q.append(n.right)\n    return out",
+     "time": "O(n)",
+     "space": "O(w), w the widest level",
+     "notes": [
+      "Take `len(q)` before the inner loop: the queue grows while you drain it."
+     ],
+     "vars": [
+      {
+       "n": "Right side view",
+       "t": "The last node of each level.",
+       "code": "from collections import deque\n\ndef right_side_view(root):\n    out, q = [], deque([root] if root else [])\n    while q:\n        out.append(q[-1].val)\n        for _ in range(len(q)):\n            n = q.popleft()\n            if n.left:\n                q.append(n.left)\n            if n.right:\n                q.append(n.right)\n    return out"
+      },
+      {
+       "n": "Zigzag",
+       "t": "Reverse every second level as you collect it.",
+       "code": "from collections import deque\n\ndef zigzag(root):\n    out, q = [], deque([root] if root else [])\n    while q:\n        level = [n.val for n in q]\n        out.append(level[::-1] if len(out) % 2 else level)\n        for _ in range(len(q)):\n            n = q.popleft()\n            if n.left:\n                q.append(n.left)\n            if n.right:\n                q.append(n.right)\n    return out"
+      }
+     ]
+    },
+    {
+     "id": "validate-bst",
+     "title": "Validate a BST",
+     "also": "carry a range down",
+     "spot": "Check the search-tree rule across the whole tree, not only parent and child; every node sits inside a range.",
+     "pat": "trees",
+     "ex": {
+      "i": "root = [5, 1, 4, None, None, 3, 6]",
+      "o": "False"
+     },
+     "code": "def is_valid_bst(root, lo=float(\"-inf\"), hi=float(\"inf\")):\n    if not root:\n        return True\n    if not lo < root.val < hi:\n        return False\n    return is_valid_bst(root.left, lo, root.val) and is_valid_bst(root.right, root.val, hi)",
+     "time": "O(n)",
+     "space": "O(h)",
+     "notes": [
+      "Comparing a node only with its parent passes the example above: 3 sits in the right subtree of 5."
+     ],
+     "vars": [
+      {
+       "n": "In-order stays increasing",
+       "t": "A BST read in order is strictly increasing: compare each value with the one before it.",
+       "code": "def is_valid_bst_inorder(root):\n    st, cur, prev = [], root, float(\"-inf\")\n    while cur or st:\n        while cur:\n            st.append(cur)\n            cur = cur.left\n        cur = st.pop()\n        if cur.val <= prev:\n            return False\n        prev = cur.val\n        cur = cur.right\n    return True"
+      },
+      {
+       "n": "Kth smallest in a BST",
+       "t": "The same walk, stopping at the kth visit.",
+       "code": "def kth_smallest(root, k):\n    st, cur = [], root\n    while cur or st:\n        while cur:\n            st.append(cur)\n            cur = cur.left\n        cur = st.pop()\n        k -= 1\n        if k == 0:\n            return cur.val\n        cur = cur.right"
+      }
+     ]
+    },
+    {
+     "id": "lca",
+     "title": "Lowest common ancestor",
+     "also": "binary tree, and a BST",
+     "spot": "Closest shared ancestor of two nodes; where two paths up meet.",
+     "pat": "trees",
+     "ex": {
+      "i": "root = [3, 5, 1, 6, 2, 0, 8], p = 5, q = 1",
+      "o": "3"
+     },
+     "code": "def lca(root, p, q):\n    if not root or root is p or root is q:\n        return root\n    l, r = lca(root.left, p, q), lca(root.right, p, q)\n    return root if l and r else l or r",
+     "time": "O(n)",
+     "space": "O(h)",
+     "notes": [
+      "When `p` and `q` sit in different subtrees, the current node is the answer; otherwise pass up whichever side found something."
+     ],
+     "vars": [
+      {
+       "n": "In a BST",
+       "t": "Both smaller go left, both larger go right, otherwise this node splits them. No recursion needed.",
+       "code": "def lca_bst(root, p, q):\n    while root:\n        if p.val < root.val and q.val < root.val:\n            root = root.left\n        elif p.val > root.val and q.val > root.val:\n            root = root.right\n        else:\n            return root"
+      }
+     ]
+    },
+    {
+     "id": "serialize-tree",
+     "title": "Serialize a tree",
+     "also": "pre-order with markers, and level order",
+     "spot": "Turn a tree into a string and back; the string has to carry the nulls.",
+     "pat": "trees",
+     "ex": {
+      "i": "root = [1, 2, 3, None, None, 4, 5]",
+      "o": "\"1,2,#,#,3,4,#,#,5,#,#\""
+     },
+     "code": "def serialize(root):\n    out = []\n    def go(n):\n        if not n:\n            out.append(\"#\")\n            return\n        out.append(str(n.val))\n        go(n.left)\n        go(n.right)\n    go(root)\n    return \",\".join(out)\n\ndef deserialize(data):\n    it = iter(data.split(\",\"))\n    def go():\n        v = next(it)\n        if v == \"#\":\n            return None\n        n = TreeNode(int(v))\n        n.left = go()\n        n.right = go()\n        return n\n    return go()",
+     "time": "O(n)",
+     "space": "O(n)",
+     "notes": [
+      "Pre-order with null markers rebuilds any binary tree. In-order alone does not."
+     ],
+     "vars": [
+      {
+       "n": "Level order",
+       "t": "The format LeetCode shows. Each real node is followed by markers for both children.",
+       "code": "from collections import deque\n\ndef serialize_bfs(root):\n    out, q = [], deque([root])\n    while q:\n        n = q.popleft()\n        if n:\n            out.append(str(n.val))\n            q.append(n.left)\n            q.append(n.right)\n        else:\n            out.append(\"#\")\n    return \",\".join(out)\n\ndef deserialize_bfs(data):\n    vals = data.split(\",\")\n    if vals[0] == \"#\":\n        return None\n    root = TreeNode(int(vals[0]))\n    q, i = deque([root]), 1\n    while q:\n        n = q.popleft()\n        if vals[i] != \"#\":\n            n.left = TreeNode(int(vals[i]))\n            q.append(n.left)\n        if vals[i + 1] != \"#\":\n            n.right = TreeNode(int(vals[i + 1]))\n            q.append(n.right)\n        i += 2\n    return root"
+      }
+     ]
+    },
+    {
+     "id": "bst-edit",
+     "title": "BST insert and delete",
+     "also": "the in-order successor",
+     "spot": "Build or edit a search tree; delete a node that has two children.",
+     "pat": "trees",
+     "ex": {
+      "i": "root = [5, 3, 6, 2, 4, None, 7], key = 3",
+      "o": "[5, 4, 6, 2, None, None, 7]"
+     },
+     "code": "def bst_insert(root, val):\n    if not root:\n        return TreeNode(val)\n    if val < root.val:\n        root.left = bst_insert(root.left, val)\n    else:\n        root.right = bst_insert(root.right, val)\n    return root\n\ndef bst_delete(root, key):\n    if not root:\n        return None\n    if key < root.val:\n        root.left = bst_delete(root.left, key)\n    elif key > root.val:\n        root.right = bst_delete(root.right, key)\n    else:\n        if not root.left:\n            return root.right\n        if not root.right:\n            return root.left\n        nxt = root.right\n        while nxt.left:\n            nxt = nxt.left\n        root.val = nxt.val\n        root.right = bst_delete(root.right, nxt.val)\n    return root",
+     "time": "O(h): log n balanced, n skewed",
+     "space": "O(h) for the recursion",
+     "notes": [
+      "Two children: copy the in-order successor (the smallest value on the right) into the node, then delete that value from the right subtree."
+     ],
+     "vars": [
+      {
+       "n": "Insert, iterative",
+       "t": "Walk down to a missing child and hang the new node there.",
+       "code": "def bst_insert_iter(root, val):\n    node = TreeNode(val)\n    if not root:\n        return node\n    cur = root\n    while True:\n        if val < cur.val:\n            if not cur.left:\n                cur.left = node\n                return root\n            cur = cur.left\n        else:\n            if not cur.right:\n                cur.right = node\n                return root\n            cur = cur.right"
+      },
+      {
+       "n": "In-order successor",
+       "t": "The next larger value: the tightest ancestor whose left side you came from.",
+       "code": "def successor(root, p):\n    best = None\n    while root:\n        if p.val < root.val:\n            best = root\n            root = root.left\n        else:\n            root = root.right\n    return best"
+      }
+     ]
+    },
+    {
+     "id": "tree-height",
+     "title": "Height and diameter",
+     "also": "return one thing, record another",
+     "spot": "A number that depends on both subtrees: height, diameter, balance, best path sum.",
+     "pat": "trees",
+     "ex": {
+      "i": "root = [1, 2, 3, 4, 5]",
+      "o": "3"
+     },
+     "code": "def diameter(root):\n    best = 0\n    def height(n):\n        nonlocal best\n        if not n:\n            return 0\n        l, r = height(n.left), height(n.right)\n        best = max(best, l + r)\n        return 1 + max(l, r)\n    height(root)\n    return best",
+     "time": "O(n)",
+     "space": "O(h)",
+     "notes": [
+      "What you return to the parent (the height) and what you record (the diameter through this node) are different numbers."
+     ],
+     "vars": [
+      {
+       "n": "Maximum depth",
+       "t": "The smallest case of the same shape.",
+       "code": "def max_depth(root):\n    return 1 + max(max_depth(root.left), max_depth(root.right)) if root else 0"
+      },
+      {
+       "n": "Maximum path sum",
+       "t": "Return the best downward path; record the best path that bends at this node. Negative branches count as zero.",
+       "code": "def max_path_sum(root):\n    best = float(\"-inf\")\n    def gain(n):\n        nonlocal best\n        if not n:\n            return 0\n        l, r = max(gain(n.left), 0), max(gain(n.right), 0)\n        best = max(best, n.val + l + r)\n        return n.val + max(l, r)\n    gain(root)\n    return best"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "graphs",
+   "title": "Graphs",
+   "items": [
+    {
+     "id": "bfs",
+     "title": "BFS",
+     "also": "adjacency list, and a grid",
+     "card": "bfs",
+     "pat": "graphs",
+     "ex": {
+      "i": "g = {1: [2, 3], 2: [1], 3: [1, 4], 4: [3]}, s = 1",
+      "o": "{1: 0, 2: 1, 3: 1, 4: 2}"
+     },
+     "code": "from collections import deque\n\ndef bfs(g, s):\n    dist, q = {s: 0}, deque([s])\n    while q:\n        u = q.popleft()\n        for v in g[u]:\n            if v not in dist:\n                dist[v] = dist[u] + 1\n                q.append(v)\n    return dist",
+     "time": "O(V + E)",
+     "space": "O(V)",
+     "notes": [
+      "Mark a node when you push it, not when you pop it, or it is queued many times.",
+      "The distance dict doubles as the visited set."
+     ],
+     "vars": [
+      {
+       "n": "Shortest path on a grid",
+       "t": "The node is a cell `(r, c)` and the four neighbours are computed. 0 is open, 1 is a wall.",
+       "code": "from collections import deque\n\ndef grid_steps(grid, start, goal):\n    R, C = len(grid), len(grid[0])\n    q, seen = deque([(start, 0)]), {start}\n    while q:\n        (r, c), d = q.popleft()\n        if (r, c) == goal:\n            return d\n        for nr, nc in ((r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)):\n            if 0 <= nr < R and 0 <= nc < C and grid[nr][nc] == 0 and (nr, nc) not in seen:\n                seen.add((nr, nc))\n                q.append(((nr, nc), d + 1))\n    return -1"
+      }
+     ]
+    },
+    {
+     "id": "dfs",
+     "title": "DFS",
+     "also": "recursive, and with a stack",
+     "card": "dfs",
+     "pat": "graphs",
+     "ex": {
+      "i": "n = 5, edges = [[0, 1], [1, 2], [3, 4]]",
+      "o": "2"
+     },
+     "code": "def count_components(n, edges):\n    g = [[] for _ in range(n)]\n    for a, b in edges:\n        g[a].append(b)\n        g[b].append(a)\n    seen = set()\n    def dfs(u):\n        seen.add(u)\n        for v in g[u]:\n            if v not in seen:\n                dfs(v)\n    count = 0\n    for u in range(n):\n        if u not in seen:\n            dfs(u)\n            count += 1\n    return count",
+     "time": "O(V + E)",
+     "space": "O(V) for the seen set and the call stack",
+     "notes": [
+      "Python stops near 1,000 frames: a long path or a big grid needs the stack version.",
+      "A directed cycle shows up as reaching a node that is still on the current path."
+     ],
+     "vars": [
+      {
+       "n": "Iterative",
+       "t": "A list is the stack. Mark when you pop, since a node can be pushed more than once.",
+       "code": "def dfs_iter(g, s):\n    seen, order, st = set(), [], [s]\n    while st:\n        u = st.pop()\n        if u in seen:\n            continue\n        seen.add(u)\n        order.append(u)\n        for v in g[u]:\n            if v not in seen:\n                st.append(v)\n    return order"
+      },
+      {
+       "n": "Number of islands",
+       "t": "A grid DFS with a stack: each unvisited land cell starts a new island.",
+       "code": "def num_islands(grid):\n    R, C = len(grid), len(grid[0])\n    seen, count = set(), 0\n    def land(r, c):\n        return 0 <= r < R and 0 <= c < C and grid[r][c] == \"1\" and (r, c) not in seen\n    for r in range(R):\n        for c in range(C):\n            if land(r, c):\n                count += 1\n                seen.add((r, c))\n                st = [(r, c)]\n                while st:\n                    x, y = st.pop()\n                    for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):\n                        if land(nx, ny):\n                            seen.add((nx, ny))\n                            st.append((nx, ny))\n    return count"
+      }
+     ]
+    },
+    {
+     "id": "topological-sort",
+     "title": "Topological sort",
+     "also": "Kahn's queue, and DFS with colours",
+     "card": "topo",
+     "pat": "order",
+     "ex": {
+      "i": "n = 4, edges = [[0, 1], [0, 2], [1, 3], [2, 3]]",
+      "o": "[0, 1, 2, 3]"
+     },
+     "code": "from collections import deque\n\ndef topo_kahn(n, edges):\n    g, indeg = [[] for _ in range(n)], [0] * n\n    for a, b in edges:\n        g[a].append(b)\n        indeg[b] += 1\n    q = deque(u for u in range(n) if indeg[u] == 0)\n    order = []\n    while q:\n        u = q.popleft()\n        order.append(u)\n        for v in g[u]:\n            indeg[v] -= 1\n            if indeg[v] == 0:\n                q.append(v)\n    return order if len(order) == n else []",
+     "time": "O(V + E)",
+     "space": "O(V + E)",
+     "notes": [
+      "An edge `[a, b]` means a comes first. An empty result means a cycle.",
+      "Kahn is a BFS that only enters a node once all its prerequisites are out."
+     ],
+     "vars": [
+      {
+       "n": "DFS with colours",
+       "t": "0 is new, 1 is on the current path, 2 is finished. Meeting a 1 is a cycle. Finished nodes, reversed, are the order.",
+       "code": "def topo_dfs(n, edges):\n    g = [[] for _ in range(n)]\n    for a, b in edges:\n        g[a].append(b)\n    color, order = [0] * n, []\n    def dfs(u):\n        color[u] = 1\n        for v in g[u]:\n            if color[v] == 1 or (color[v] == 0 and not dfs(v)):\n                return False\n        color[u] = 2\n        order.append(u)\n        return True\n    for u in range(n):\n        if color[u] == 0 and not dfs(u):\n            return []\n    return order[::-1]"
+      }
+     ]
+    },
+    {
+     "id": "union-find",
+     "title": "Union-find",
+     "also": "path compression and union by rank",
+     "card": "uf",
+     "pat": "order",
+     "ex": {
+      "i": "UnionFind(4); union(0, 1); union(2, 3); union(1, 3)",
+      "o": "count == 1"
+     },
+     "code": "class UnionFind:\n    def __init__(self, n):\n        self.parent, self.rank, self.count = list(range(n)), [0] * n, n\n\n    def find(self, x):\n        if self.parent[x] != x:\n            self.parent[x] = self.find(self.parent[x])\n        return self.parent[x]\n\n    def union(self, a, b):\n        ra, rb = self.find(a), self.find(b)\n        if ra == rb:\n            return False\n        if self.rank[ra] < self.rank[rb]:\n            ra, rb = rb, ra\n        self.parent[rb] = ra\n        if self.rank[ra] == self.rank[rb]:\n            self.rank[ra] += 1\n        self.count -= 1\n        return True",
+     "time": "Nearly O(1) per call (inverse Ackermann)",
+     "space": "O(n)",
+     "notes": [
+      "`union` returning False means the two were already joined: that edge closes a cycle.",
+      "The number of groups is `n` minus the successful unions, kept here in `count`."
+     ],
+     "vars": [
+      {
+       "n": "Redundant connection",
+       "t": "The first edge whose ends are already joined. A bare `find` with path halving is enough.",
+       "code": "def redundant_connection(edges):\n    parent = list(range(len(edges) + 1))\n    def find(x):\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]\n            x = parent[x]\n        return x\n    for a, b in edges:\n        ra, rb = find(a), find(b)\n        if ra == rb:\n            return [a, b]\n        parent[ra] = rb"
+      }
+     ]
+    },
+    {
+     "id": "dijkstra",
+     "title": "Dijkstra",
+     "also": "with a heap",
+     "card": "dijkstra",
+     "pat": "order",
+     "ex": {
+      "i": "g = {\"a\": [(\"b\", 1), (\"c\", 4)], \"b\": [(\"c\", 2)], \"c\": []}, s = \"a\"",
+      "o": "{'a': 0, 'b': 1, 'c': 3}"
+     },
+     "code": "import heapq\n\ndef dijkstra(g, s):\n    dist, h = {s: 0}, [(0, s)]\n    while h:\n        d, u = heapq.heappop(h)\n        if d > dist[u]:\n            continue\n        for v, w in g[u]:\n            nd = d + w\n            if nd < dist.get(v, float(\"inf\")):\n                dist[v] = nd\n                heapq.heappush(h, (nd, v))\n    return dist",
+     "time": "O(E log V)",
+     "space": "O(V + E)",
+     "notes": [
+      "The heap is never updated, only added to. A popped entry with `d > dist[u]` is stale: skip it.",
+      "A negative edge breaks the proof. Use Bellman-Ford."
+     ],
+     "vars": [
+      {
+       "n": "Recover the path",
+       "t": "Remember the node each distance came from, then walk back from the target.",
+       "code": "import heapq\n\ndef shortest_path(g, s, t):\n    dist, prev, h = {s: 0}, {}, [(0, s)]\n    while h:\n        d, u = heapq.heappop(h)\n        if d > dist[u]:\n            continue\n        if u == t:\n            break\n        for v, w in g[u]:\n            if d + w < dist.get(v, float(\"inf\")):\n                dist[v] = d + w\n                prev[v] = u\n                heapq.heappush(h, (d + w, v))\n    if t not in dist:\n        return []\n    path = [t]\n    while path[-1] != s:\n        path.append(prev[path[-1]])\n    return path[::-1]"
+      }
+     ]
+    },
+    {
+     "id": "bellman-ford",
+     "title": "Bellman-Ford",
+     "also": "relax every edge n - 1 times",
+     "spot": "Negative edge weights; at most k edges or stops; detect a negative cycle.",
+     "pat": "order",
+     "ex": {
+      "i": "n = 4, edges = [[0, 1, 4], [0, 2, 5], [2, 1, -3], [1, 3, 2]], s = 0",
+      "o": "[0, 2, 5, 4]"
+     },
+     "code": "def bellman_ford(n, edges, s):\n    dist = [float(\"inf\")] * n\n    dist[s] = 0\n    for _ in range(n - 1):\n        for u, v, w in edges:\n            if dist[u] + w < dist[v]:\n                dist[v] = dist[u] + w\n    if any(dist[u] + w < dist[v] for u, v, w in edges):\n        return None\n    return dist",
+     "time": "O(V * E)",
+     "space": "O(V)",
+     "notes": [
+      "A path has at most n - 1 edges, so n - 1 rounds are enough. One more round that still improves something means a negative cycle."
+     ],
+     "vars": [
+      {
+       "n": "Cheapest flight within k stops",
+       "t": "k stops is k + 1 edges. Relax from a copy of last round's distances so one round adds one edge.",
+       "code": "def cheapest_within_k(n, flights, src, dst, k):\n    dist = [float(\"inf\")] * n\n    dist[src] = 0\n    for _ in range(k + 1):\n        nxt = dist[:]\n        for u, v, w in flights:\n            if dist[u] + w < nxt[v]:\n                nxt[v] = dist[u] + w\n        dist = nxt\n    return -1 if dist[dst] == float(\"inf\") else dist[dst]"
+      }
+     ]
+    },
+    {
+     "id": "multi-source-bfs",
+     "title": "Multi-source BFS",
+     "also": "start the queue with every source",
+     "spot": "Spread from many starts at once; minutes until everything is reached; distance to the nearest of several.",
+     "pat": "graphs",
+     "ex": {
+      "i": "grid = [[2, 1, 1], [1, 1, 0], [0, 1, 1]]",
+      "o": "4"
+     },
+     "code": "from collections import deque\n\ndef rotting_oranges(grid):\n    R, C = len(grid), len(grid[0])\n    q = deque((r, c) for r in range(R) for c in range(C) if grid[r][c] == 2)\n    fresh = sum(row.count(1) for row in grid)\n    minutes = 0\n    while q and fresh:\n        minutes += 1\n        for _ in range(len(q)):\n            r, c = q.popleft()\n            for nr, nc in ((r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)):\n                if 0 <= nr < R and 0 <= nc < C and grid[nr][nc] == 1:\n                    grid[nr][nc] = 2\n                    fresh -= 1\n                    q.append((nr, nc))\n    return -1 if fresh else minutes",
+     "time": "O(rows * columns)",
+     "space": "O(rows * columns)",
+     "notes": [
+      "Put every source in the queue before the first pop: they all sit at distance 0.",
+      "This version marks cells in place. Copy the grid first if the caller needs it back."
+     ],
+     "vars": [
+      {
+       "n": "Distance to the nearest 0",
+       "t": "The zeros are the sources; each 1 learns its distance from the cell that reached it.",
+       "code": "from collections import deque\n\ndef nearest_zero(mat):\n    R, C = len(mat), len(mat[0])\n    dist = [[0 if mat[r][c] == 0 else -1 for c in range(C)] for r in range(R)]\n    q = deque((r, c) for r in range(R) for c in range(C) if mat[r][c] == 0)\n    while q:\n        r, c = q.popleft()\n        for nr, nc in ((r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)):\n            if 0 <= nr < R and 0 <= nc < C and dist[nr][nc] < 0:\n                dist[nr][nc] = dist[r][c] + 1\n                q.append((nr, nc))\n    return dist"
+      }
+     ]
+    },
+    {
+     "id": "spanning-tree",
+     "title": "Minimum spanning tree",
+     "also": "Kruskal, and Prim",
+     "spot": "Connect every node at the lowest total cost; cables, roads, the cheapest links.",
+     "pat": "order",
+     "ex": {
+      "i": "n = 4, edges = [[1, 0, 1], [4, 0, 2], [3, 1, 2], [2, 2, 3]]",
+      "o": "6"
+     },
+     "code": "def kruskal(n, edges):\n    parent = list(range(n))\n    def find(x):\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]\n            x = parent[x]\n        return x\n    total, used = 0, 0\n    for w, u, v in sorted(edges):\n        ru, rv = find(u), find(v)\n        if ru != rv:\n            parent[ru] = rv\n            total += w\n            used += 1\n    return total if used == n - 1 else -1",
+     "time": "O(E log E)",
+     "space": "O(V)",
+     "notes": [
+      "Edges are `[weight, u, v]` so they sort by weight. -1 means the graph is not connected.",
+      "Kruskal suits an edge list. Prim grows from one node with a heap and suits a dense graph."
+     ],
+     "vars": [
+      {
+       "n": "Prim",
+       "t": "Grow one tree: always take the cheapest edge that reaches a new node.",
+       "code": "import heapq\n\ndef prim(n, g):\n    seen, h, total = set(), [(0, 0)], 0\n    while h and len(seen) < n:\n        w, u = heapq.heappop(h)\n        if u in seen:\n            continue\n        seen.add(u)\n        total += w\n        for w2, v in g[u]:\n            if v not in seen:\n                heapq.heappush(h, (w2, v))\n    return total if len(seen) == n else -1"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "heaps",
+   "title": "Heaps",
+   "items": [
+    {
+     "id": "heapq-basics",
+     "title": "heapq basics",
+     "also": "min-heap, max-heap, ties",
+     "spot": "You always need the smallest or largest next; repeated removal of the extreme; a priority queue.",
+     "pat": "heap",
+     "ex": {
+      "i": "nums = [5, 1, 4, 2]",
+      "o": "[1, 2, 4, 5]"
+     },
+     "code": "import heapq\n\ndef heap_sort(nums):\n    h = list(nums)\n    heapq.heapify(h)\n    return [heapq.heappop(h) for _ in range(len(h))]",
+     "time": "push and pop O(log n), heapify O(n)",
+     "space": "O(n)",
+     "notes": [
+      "`heapq` is a min-heap, and `h[0]` is the smallest. For a max-heap push `-x`.",
+      "Tuples compare left to right. Put an index second so items that cannot be compared never are."
+     ],
+     "vars": [
+      {
+       "n": "Max-heap",
+       "t": "Negate on the way in and again on the way out.",
+       "code": "import heapq\n\ndef sort_desc(nums):\n    h = [-x for x in nums]\n    heapq.heapify(h)\n    return [-heapq.heappop(h) for _ in range(len(h))]"
+      },
+      {
+       "n": "Ties",
+       "t": "Lowest priority number first; the arrival index breaks ties, so the names are never compared.",
+       "code": "import heapq\n\ndef run_tasks(tasks):\n    h = [(p, i, name) for i, (p, name) in enumerate(tasks)]\n    heapq.heapify(h)\n    return [heapq.heappop(h)[2] for _ in range(len(h))]"
+      }
+     ]
+    },
+    {
+     "id": "top-k",
+     "title": "Top k",
+     "also": "a heap of size k",
+     "spot": "Kth largest, smallest or most frequent; k is much smaller than n.",
+     "pat": "heap",
+     "ex": {
+      "i": "nums = [3, 2, 1, 5, 6, 4], k = 2",
+      "o": "5"
+     },
+     "code": "import heapq\n\ndef kth_largest(nums, k):\n    h = []\n    for x in nums:\n        heapq.heappush(h, x)\n        if len(h) > k:\n            heapq.heappop(h)\n    return h[0]",
+     "time": "O(n log k)",
+     "space": "O(k)",
+     "notes": [
+      "A min-heap of size k holds the k largest seen so far. Its root is the kth largest, the first one to be evicted.",
+      "k near n: sort instead. k = 1: a single `max`."
+     ],
+     "vars": [
+      {
+       "n": "Top k frequent",
+       "t": "Count, then keep a heap of the k highest counts.",
+       "code": "import heapq\nfrom collections import Counter\n\ndef top_k_frequent(nums, k):\n    h = []\n    for x, c in Counter(nums).items():\n        heapq.heappush(h, (c, x))\n        if len(h) > k:\n            heapq.heappop(h)\n    return [x for _, x in h]"
+      },
+      {
+       "n": "K closest points",
+       "t": "Keep the k smallest distances: a max-heap by negating the distance.",
+       "code": "import heapq\n\ndef k_closest(points, k):\n    h = []\n    for x, y in points:\n        heapq.heappush(h, (-(x * x + y * y), x, y))\n        if len(h) > k:\n            heapq.heappop(h)\n    return [[x, y] for _, x, y in h]"
+      }
+     ]
+    },
+    {
+     "id": "k-way-merge",
+     "title": "K-way merge",
+     "also": "a heap of the k heads",
+     "spot": "Merge k sorted lists, arrays or streams; the next smallest is always at one of k heads.",
+     "pat": "heap",
+     "ex": {
+      "i": "lists = [[1, 4, 5], [1, 3, 4], [2, 6]]",
+      "o": "[1, 1, 2, 3, 4, 4, 5, 6]"
+     },
+     "code": "import heapq\n\ndef merge_k_sorted(lists):\n    h = [(l[0], i, 0) for i, l in enumerate(lists) if l]\n    heapq.heapify(h)\n    out = []\n    while h:\n        v, i, j = heapq.heappop(h)\n        out.append(v)\n        if j + 1 < len(lists[i]):\n            heapq.heappush(h, (lists[i][j + 1], i, j + 1))\n    return out",
+     "time": "O(N log k) for N items in total",
+     "space": "O(k)",
+     "notes": [
+      "Push the list index next to the value so equal values never compare the lists."
+     ],
+     "vars": [
+      {
+       "n": "Linked lists",
+       "t": "The same heap holds the head of each list. Splice the smallest onto the tail.",
+       "code": "import heapq\n\ndef merge_k_lists(lists):\n    h = [(n.val, i, n) for i, n in enumerate(lists) if n]\n    heapq.heapify(h)\n    dummy = tail = ListNode()\n    while h:\n        _, i, n = heapq.heappop(h)\n        tail.next = n\n        tail = n\n        if n.next:\n            heapq.heappush(h, (n.next.val, i, n.next))\n    return dummy.next"
+      },
+      {
+       "n": "Standard library",
+       "t": "`heapq.merge` is the same idea and is lazy.",
+       "code": "import heapq\n\ndef merge_stdlib(lists):\n    return list(heapq.merge(*lists))"
+      }
+     ]
+    },
+    {
+     "id": "running-median",
+     "title": "Running median",
+     "also": "two heaps",
+     "spot": "Median of a stream; the middle moves as numbers arrive.",
+     "pat": "heap",
+     "ex": {
+      "i": "add 1, add 2, add 3, add 4; median",
+      "o": "2.5"
+     },
+     "code": "import heapq\n\nclass MedianFinder:\n    def __init__(self):\n        self.lo = []\n        self.hi = []\n\n    def add(self, x):\n        heapq.heappush(self.lo, -x)\n        heapq.heappush(self.hi, -heapq.heappop(self.lo))\n        if len(self.hi) > len(self.lo):\n            heapq.heappush(self.lo, -heapq.heappop(self.hi))\n\n    def median(self):\n        if len(self.lo) > len(self.hi):\n            return -self.lo[0]\n        return (-self.lo[0] + self.hi[0]) / 2",
+     "time": "add O(log n), median O(1)",
+     "space": "O(n)",
+     "notes": [
+      "`lo` is a max-heap (negated) holding the smaller half; `hi` is a min-heap holding the larger half. `lo` has the same size or one more.",
+      "Push through the other heap first, then rebalance: it keeps every value in the right half."
+     ],
+     "vars": [
+      {
+       "n": "Kth largest in a stream",
+       "t": "When k is fixed, one min-heap of size k is enough.",
+       "code": "import heapq\n\nclass KthLargest:\n    def __init__(self, k, nums):\n        self.k, self.h = k, []\n        for x in nums:\n            self.add(x)\n\n    def add(self, x):\n        heapq.heappush(self.h, x)\n        if len(self.h) > self.k:\n            heapq.heappop(self.h)\n        return self.h[0]"
+      }
+     ]
+    },
+    {
+     "id": "quickselect",
+     "title": "QuickSelect",
+     "also": "partition, then keep one side",
+     "spot": "Kth smallest or largest in O(n) on average, without sorting everything.",
+     "pat": "heap",
+     "ex": {
+      "i": "a = [3, 2, 1, 5, 6, 4], k = 1",
+      "o": "2"
+     },
+     "code": "import random\n\ndef quickselect(a, k):\n    a = list(a)\n    lo, hi = 0, len(a) - 1\n    while lo < hi:\n        i = random.randint(lo, hi)\n        a[i], a[hi] = a[hi], a[i]\n        pivot, p = a[hi], lo\n        for j in range(lo, hi):\n            if a[j] < pivot:\n                a[j], a[p] = a[p], a[j]\n                p += 1\n        a[p], a[hi] = a[hi], a[p]\n        if p == k:\n            return a[p]\n        if p < k:\n            lo = p + 1\n        else:\n            hi = p - 1\n    return a[lo]",
+     "time": "O(n) average, O(n^2) worst",
+     "space": "O(n) for the copy",
+     "notes": [
+      "k is zero-based. The kth largest of n is index `n - k` of the sorted order.",
+      "A random pivot avoids the quadratic case on sorted input. Many equal values: use the three-way form."
+     ],
+     "vars": [
+      {
+       "n": "Three-way partition",
+       "t": "Split into smaller, equal and larger. Equal values all land in place, so duplicates stop being a problem.",
+       "code": "import random\n\ndef quickselect_3way(a, k):\n    a = list(a)\n    lo, hi = 0, len(a) - 1\n    while lo < hi:\n        pivot = a[random.randint(lo, hi)]\n        lt, i, gt = lo, lo, hi\n        while i <= gt:\n            if a[i] < pivot:\n                a[lt], a[i] = a[i], a[lt]\n                lt += 1\n                i += 1\n            elif a[i] > pivot:\n                a[i], a[gt] = a[gt], a[i]\n                gt -= 1\n            else:\n                i += 1\n        if k < lt:\n            hi = lt - 1\n        elif k > gt:\n            lo = gt + 1\n        else:\n            return pivot\n    return a[lo]"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hash-designs",
+   "title": "Hash designs",
+   "items": [
+    {
+     "id": "lru-cache",
+     "title": "LRU cache",
+     "also": "OrderedDict, and a hash map with a doubly linked list",
+     "spot": "Evict the least recently used; get and put both O(1).",
+     "ex": {
+      "i": "capacity 2: put(1, 1), put(2, 2), get(1), put(3, 3), get(2)",
+      "o": "1, then -1"
+     },
+     "code": "from collections import OrderedDict\n\nclass LRUCache:\n    def __init__(self, capacity):\n        self.cap, self.d = capacity, OrderedDict()\n\n    def get(self, key):\n        if key not in self.d:\n            return -1\n        self.d.move_to_end(key)\n        return self.d[key]\n\n    def put(self, key, value):\n        if key in self.d:\n            self.d.move_to_end(key)\n        self.d[key] = value\n        if len(self.d) > self.cap:\n            self.d.popitem(last=False)",
+     "time": "O(1) per call",
+     "space": "O(capacity)",
+     "notes": [
+      "Every get and every put moves the key to the recent end. Evict from the other end.",
+      "Interviewers often ask for the second form: a dict to nodes plus a linked list you maintain by hand."
+     ],
+     "vars": [
+      {
+       "n": "Dict and doubly linked list",
+       "t": "The structure behind `OrderedDict`. Sentinels at both ends remove the empty-list cases.",
+       "code": "class Node:\n    def __init__(self, key=0, val=0):\n        self.key, self.val, self.prev, self.next = key, val, None, None\n\nclass LRUCacheList:\n    def __init__(self, capacity):\n        self.cap, self.map = capacity, {}\n        self.head, self.tail = Node(), Node()\n        self.head.next, self.tail.prev = self.tail, self.head\n\n    def _remove(self, n):\n        n.prev.next, n.next.prev = n.next, n.prev\n\n    def _add_front(self, n):\n        n.next, n.prev = self.head.next, self.head\n        self.head.next.prev = n\n        self.head.next = n\n\n    def get(self, key):\n        if key not in self.map:\n            return -1\n        n = self.map[key]\n        self._remove(n)\n        self._add_front(n)\n        return n.val\n\n    def put(self, key, value):\n        if key in self.map:\n            self._remove(self.map[key])\n        self.map[key] = n = Node(key, value)\n        self._add_front(n)\n        if len(self.map) > self.cap:\n            lru = self.tail.prev\n            self._remove(lru)\n            del self.map[lru.key]"
+      }
+     ]
+    },
+    {
+     "id": "time-map",
+     "title": "Time-based key-value store",
+     "also": "bisect over a sorted history",
+     "spot": "The value at or before a timestamp; versions; snapshots; a sorted history per key.",
+     "pat": "ood",
+     "ex": {
+      "i": "set(\"k\", \"a\", 1), set(\"k\", \"b\", 4); get(\"k\", 3)",
+      "o": "\"a\""
+     },
+     "code": "from bisect import bisect_right\nfrom collections import defaultdict\n\nclass TimeMap:\n    def __init__(self):\n        self.times, self.vals = defaultdict(list), defaultdict(list)\n\n    def set(self, key, value, timestamp):\n        self.times[key].append(timestamp)\n        self.vals[key].append(value)\n\n    def get(self, key, timestamp):\n        i = bisect_right(self.times[key], timestamp)\n        return self.vals[key][i - 1] if i else \"\"",
+     "time": "set O(1), get O(log n)",
+     "space": "O(total entries)",
+     "notes": [
+      "Timestamps arrive in increasing order, so each key's list is already sorted. `bisect_right` then one step back is the latest entry at or before the time."
+     ],
+     "vars": [
+      {
+       "n": "Snapshot array",
+       "t": "The same lookup, with the snapshot id as the timestamp. Only changed indexes store anything.",
+       "code": "from bisect import bisect_right\n\nclass SnapshotArray:\n    def __init__(self, n):\n        self.hist = [[(0, 0)] for _ in range(n)]\n        self.snap_id = 0\n\n    def set(self, i, val):\n        if self.hist[i][-1][0] == self.snap_id:\n            self.hist[i][-1] = (self.snap_id, val)\n        else:\n            self.hist[i].append((self.snap_id, val))\n\n    def snap(self):\n        self.snap_id += 1\n        return self.snap_id - 1\n\n    def get(self, i, snap_id):\n        j = bisect_right(self.hist[i], (snap_id, float(\"inf\"))) - 1\n        return self.hist[i][j][1]"
+      }
+     ]
+    },
+    {
+     "id": "random-set",
+     "title": "Insert, delete, random",
+     "also": "a list for picking, a dict for finding",
+     "spot": "Insert, delete and pick-at-random all in O(1).",
+     "ex": {
+      "i": "insert(1), insert(2), remove(1), get_random()",
+      "o": "2"
+     },
+     "code": "import random\n\nclass RandomizedSet:\n    def __init__(self):\n        self.items, self.pos = [], {}\n\n    def insert(self, x):\n        if x in self.pos:\n            return False\n        self.pos[x] = len(self.items)\n        self.items.append(x)\n        return True\n\n    def remove(self, x):\n        if x not in self.pos:\n            return False\n        i, last = self.pos[x], self.items[-1]\n        self.items[i] = last\n        self.pos[last] = i\n        self.items.pop()\n        del self.pos[x]\n        return True\n\n    def get_random(self):\n        return random.choice(self.items)",
+     "time": "O(1) average per call",
+     "space": "O(n)",
+     "notes": [
+      "Deleting from the middle of a list is O(n). Move the last item into the hole and pop the end instead.",
+      "Set `pos[last]` before you delete `pos[x]`: when `x` is the last item, the delete must win."
+     ],
+     "vars": []
+    }
+   ]
+  },
+  {
+   "id": "greedy",
+   "title": "Greedy",
+   "items": [
+    {
+     "id": "intervals",
+     "title": "Intervals",
+     "also": "merge, schedule, count the rooms",
+     "spot": "Overlapping ranges; merge them, count the rooms, or remove the fewest; sort first.",
+     "pat": "intervals",
+     "ex": {
+      "i": "intervals = [[1, 3], [8, 10], [2, 6]]",
+      "o": "[[1, 6], [8, 10]]"
+     },
+     "code": "def merge_intervals(intervals):\n    out = []\n    for s, e in sorted(intervals):\n        if out and s <= out[-1][1]:\n            out[-1][1] = max(out[-1][1], e)\n        else:\n            out.append([s, e])\n    return out",
+     "time": "O(n log n)",
+     "space": "O(n)",
+     "notes": [
+      "Merge and count rooms: sort by start. Keep the most non-overlapping intervals: sort by end, the one that frees up soonest."
+     ],
+     "vars": [
+      {
+       "n": "Fewest removals",
+       "t": "Interval scheduling. Sort by end and keep every interval that starts after the last kept one ends.",
+       "code": "def erase_overlap(intervals):\n    end, kept = float(\"-inf\"), 0\n    for s, e in sorted(intervals, key=lambda p: p[1]):\n        if s >= end:\n            kept += 1\n            end = e\n    return len(intervals) - kept"
+      },
+      {
+       "n": "Meeting rooms needed",
+       "t": "A min-heap of end times: reuse the room that frees up first, or open a new one.",
+       "code": "import heapq\n\ndef min_rooms(intervals):\n    h = []\n    for s, e in sorted(intervals):\n        if h and h[0] <= s:\n            heapq.heapreplace(h, e)\n        else:\n            heapq.heappush(h, e)\n    return len(h)"
+      }
+     ]
+    },
+    {
+     "id": "jump-game",
+     "title": "Jump game",
+     "also": "the furthest reach so far",
+     "spot": "Can you reach the end; fewest jumps; each cell offers a range; one pass keeping the furthest reach.",
+     "ex": {
+      "i": "nums = [2, 3, 1, 1, 4]",
+      "o": "True"
+     },
+     "code": "def can_jump(nums):\n    reach = 0\n    for i, step in enumerate(nums):\n        if i > reach:\n            return False\n        reach = max(reach, i + step)\n    return True",
+     "time": "O(n)",
+     "space": "O(1)",
+     "notes": [
+      "The greedy choice: you never need the exact path, only how far the best path could go."
+     ],
+     "vars": [
+      {
+       "n": "Fewest jumps",
+       "t": "A BFS in disguise: `end` closes the current jump's range, `far` is the furthest cell the next jump can reach.",
+       "code": "def min_jumps(nums):\n    jumps = end = far = 0\n    for i in range(len(nums) - 1):\n        far = max(far, i + nums[i])\n        if i == end:\n            jumps += 1\n            end = far\n    return jumps"
+      },
+      {
+       "n": "Gas station",
+       "t": "If total gas covers total cost a start exists. Whenever the tank goes negative, restart from the next station.",
+       "code": "def can_complete_circuit(gas, cost):\n    if sum(gas) < sum(cost):\n        return -1\n    start = tank = 0\n    for i in range(len(gas)):\n        tank += gas[i] - cost[i]\n        if tank < 0:\n            start, tank = i + 1, 0\n    return start"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dp",
+   "title": "Dynamic programming",
+   "items": [
+    {
+     "id": "dp-1d",
+     "title": "1D DP",
+     "also": "house robber, climbing stairs",
+     "spot": "The best up to i depends on the last one or two; choose or skip; count the ways to reach n.",
+     "pat": "dp",
+     "ex": {
+      "i": "nums = [2, 7, 9, 3, 1]",
+      "o": "12"
+     },
+     "code": "def rob(nums):\n    prev = cur = 0\n    for x in nums:\n        prev, cur = cur, max(cur, prev + x)\n    return cur",
+     "time": "O(n)",
+     "space": "O(1)",
+     "notes": [
+      "Write the table first: `dp[i]` is the best using the first i items. When it only looks back one or two cells, two variables replace the table."
+     ],
+     "vars": [
+      {
+       "n": "Climbing stairs",
+       "t": "Ways to reach a step are the ways to reach the two below: Fibonacci.",
+       "code": "def climb_stairs(n):\n    a, b = 1, 1\n    for _ in range(n - 1):\n        a, b = b, a + b\n    return b"
+      },
+      {
+       "n": "Decode ways",
+       "t": "A digit alone counts if it is not 0. Two digits together count if they are 10 to 26.",
+       "code": "def num_decodings(s):\n    dp = [1] + [0] * len(s)\n    for i in range(1, len(s) + 1):\n        if s[i - 1] != \"0\":\n            dp[i] += dp[i - 1]\n        if i > 1 and \"10\" <= s[i - 2:i] <= \"26\":\n            dp[i] += dp[i - 2]\n    return dp[-1]"
+      }
+     ]
+    },
+    {
+     "id": "kadane",
+     "title": "Kadane's",
+     "also": "best contiguous sum",
+     "card": "kadane",
+     "pat": "dp",
+     "ex": {
+      "i": "nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]",
+      "o": "6"
+     },
+     "code": "def max_subarray(nums):\n    best = cur = nums[0]\n    for x in nums[1:]:\n        cur = max(x, cur + x)\n        best = max(best, cur)\n    return best",
+     "time": "O(n)",
+     "space": "O(1)",
+     "notes": [
+      "`cur` is the best sum of a subarray that ends here. Extend it, or start again at `x`."
+     ],
+     "vars": [
+      {
+       "n": "Maximum product",
+       "t": "A negative flips the largest into the smallest, so track both.",
+       "code": "def max_product(nums):\n    best = hi = lo = nums[0]\n    for x in nums[1:]:\n        hi, lo = max(x, hi * x, lo * x), min(x, hi * x, lo * x)\n        best = max(best, hi)\n    return best"
+      }
+     ]
+    },
+    {
+     "id": "knapsack",
+     "title": "0/1 knapsack",
+     "also": "one row, capacity downwards",
+     "spot": "Take each item once under a limit; a subset that hits a target sum; split into two equal halves.",
+     "pat": "dp",
+     "ex": {
+      "i": "weights = [1, 3, 4, 5], values = [1, 4, 5, 7], cap = 7",
+      "o": "9"
+     },
+     "code": "def knapsack(weights, values, cap):\n    dp = [0] * (cap + 1)\n    for w, v in zip(weights, values):\n        for c in range(cap, w - 1, -1):\n            dp[c] = max(dp[c], dp[c - w] + v)\n    return dp[cap]",
+     "time": "O(n * cap)",
+     "space": "O(cap)",
+     "notes": [
+      "Loop the capacity downwards so each item is used once. Upwards lets an item repeat: that is coin change."
+     ],
+     "vars": [
+      {
+       "n": "Partition equal subset sum",
+       "t": "Can some subset reach half the total? The same loop with booleans.",
+       "code": "def can_partition(nums):\n    total = sum(nums)\n    if total % 2:\n        return False\n    half = total // 2\n    dp = [True] + [False] * half\n    for x in nums:\n        for s in range(half, x - 1, -1):\n            dp[s] = dp[s] or dp[s - x]\n    return dp[half]"
+      }
+     ]
+    },
+    {
+     "id": "coin-change",
+     "title": "Coin change",
+     "also": "unbounded, fewest coins",
+     "spot": "Fewest items, or number of ways, to make a total with unlimited reuse.",
+     "pat": "dp",
+     "ex": {
+      "i": "coins = [1, 2, 5], amount = 11",
+      "o": "3"
+     },
+     "code": "def coin_change(coins, amount):\n    INF = amount + 1\n    dp = [0] + [INF] * amount\n    for a in range(1, amount + 1):\n        for c in coins:\n            if c <= a:\n                dp[a] = min(dp[a], dp[a - c] + 1)\n    return dp[amount] if dp[amount] < INF else -1",
+     "time": "O(amount * coins)",
+     "space": "O(amount)",
+     "notes": [
+      "`dp[a]` is the fewest coins for amount a. Greedy (largest coin first) fails on coins like 1, 3, 4."
+     ],
+     "vars": [
+      {
+       "n": "Number of ways",
+       "t": "Coins on the outside counts combinations once. Swap the loops and it counts orderings instead.",
+       "code": "def coin_ways(coins, amount):\n    dp = [1] + [0] * amount\n    for c in coins:\n        for a in range(c, amount + 1):\n            dp[a] += dp[a - c]\n    return dp[amount]"
+      }
+     ]
+    },
+    {
+     "id": "lis",
+     "title": "Longest increasing subsequence",
+     "also": "n log n with bisect",
+     "spot": "Longest increasing run you can pick from a sequence, not contiguous.",
+     "pat": "dp",
+     "ex": {
+      "i": "nums = [10, 9, 2, 5, 3, 7, 101, 18]",
+      "o": "4"
+     },
+     "code": "from bisect import bisect_left\n\ndef lis(nums):\n    tails = []\n    for x in nums:\n        i = bisect_left(tails, x)\n        if i == len(tails):\n            tails.append(x)\n        else:\n            tails[i] = x\n    return len(tails)",
+     "time": "O(n log n)",
+     "space": "O(n)",
+     "notes": [
+      "`tails[i]` is the smallest possible last value of an increasing run of length i + 1. The list is sorted, so `bisect_left` finds where x belongs.",
+      "`tails` is not a real subsequence. Only its length is the answer."
+     ],
+     "vars": [
+      {
+       "n": "The O(n^2) table",
+       "t": "Easier to explain, and it lets you rebuild the subsequence itself.",
+       "code": "def lis_n2(nums):\n    dp = [1] * len(nums)\n    for i in range(len(nums)):\n        for j in range(i):\n            if nums[j] < nums[i]:\n                dp[i] = max(dp[i], dp[j] + 1)\n    return max(dp, default=0)"
+      },
+      {
+       "n": "Non-decreasing",
+       "t": "Equal values may repeat: `bisect_right` instead of `bisect_left`.",
+       "code": "from bisect import bisect_right\n\ndef lis_non_decreasing(nums):\n    tails = []\n    for x in nums:\n        i = bisect_right(tails, x)\n        if i == len(tails):\n            tails.append(x)\n        else:\n            tails[i] = x\n    return len(tails)"
+      }
+     ]
+    },
+    {
+     "id": "lcs-edit",
+     "title": "LCS and edit distance",
+     "also": "two prefixes, one table",
+     "spot": "Two strings or sequences compared; shared subsequence; fewest edits; a table indexed by both prefixes.",
+     "pat": "dp",
+     "ex": {
+      "i": "a = \"abcde\", b = \"ace\"",
+      "o": "3"
+     },
+     "code": "def lcs(a, b):\n    dp = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]\n    for i in range(1, len(a) + 1):\n        for j in range(1, len(b) + 1):\n            if a[i - 1] == b[j - 1]:\n                dp[i][j] = dp[i - 1][j - 1] + 1\n            else:\n                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])\n    return dp[-1][-1]",
+     "time": "O(m * n)",
+     "space": "O(m * n), or O(min(m, n)) for the length alone",
+     "notes": [
+      "`dp[i][j]` is the answer for the first i characters of a and the first j of b. Row 0 and column 0 are the empty prefix."
+     ],
+     "vars": [
+      {
+       "n": "Edit distance",
+       "t": "Same table. On a mismatch take one more than the best of replace, delete or insert.",
+       "code": "def edit_distance(a, b):\n    dp = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]\n    for i in range(len(a) + 1):\n        dp[i][0] = i\n    for j in range(len(b) + 1):\n        dp[0][j] = j\n    for i in range(1, len(a) + 1):\n        for j in range(1, len(b) + 1):\n            if a[i - 1] == b[j - 1]:\n                dp[i][j] = dp[i - 1][j - 1]\n            else:\n                dp[i][j] = 1 + min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1])\n    return dp[-1][-1]"
+      }
+     ]
+    },
+    {
+     "id": "word-break",
+     "title": "Word break",
+     "also": "bottom-up, and with a cache",
+     "spot": "Split a string into dictionary words; can the prefix of length i be built from a shorter good prefix.",
+     "pat": "dp",
+     "ex": {
+      "i": "s = \"leetcode\", words = [\"leet\", \"code\"]",
+      "o": "True"
+     },
+     "code": "def word_break(s, words):\n    known = set(words)\n    ok = [True] + [False] * len(s)\n    for i in range(1, len(s) + 1):\n        ok[i] = any(ok[j] and s[j:i] in known for j in range(i))\n    return ok[-1]",
+     "time": "O(n^2) splits, each slice up to n characters",
+     "space": "O(n)",
+     "notes": [
+      "`ok[i]` means `s[:i]` can be split. Try every last word `s[j:i]` that starts at a good `j`."
+     ],
+     "vars": [
+      {
+       "n": "Top-down with a cache",
+       "t": "The same recursion written the way you think it: from position i, try every word that starts there.",
+       "code": "from functools import cache\n\ndef word_break_memo(s, words):\n    known = set(words)\n    @cache\n    def can(i):\n        if i == len(s):\n            return True\n        return any(s[i:j] in known and can(j) for j in range(i + 1, len(s) + 1))\n    return can(0)"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "backtracking",
+   "title": "Backtracking",
+   "items": [
+    {
+     "id": "subsets",
+     "title": "Subsets",
+     "also": "the template: append, recurse, pop",
+     "spot": "All subsets or combinations; choose, explore, undo; n up to about 20.",
+     "pat": "backtrack",
+     "ex": {
+      "i": "nums = [1, 2, 3]",
+      "o": "[[], [1], [1, 2], [1, 2, 3], [1, 3], [2], [2, 3], [3]]"
+     },
+     "code": "def subsets(nums):\n    out, path = [], []\n    def go(start):\n        out.append(path[:])\n        for i in range(start, len(nums)):\n            path.append(nums[i])\n            go(i + 1)\n            path.pop()\n    go(0)\n    return out",
+     "time": "O(n * 2^n)",
+     "space": "O(n) for the path",
+     "notes": [
+      "Copy the path when you record it (`path[:]`), or every answer ends up as the same empty list.",
+      "Every node of the recursion is a valid subset, so record before the loop."
+     ],
+     "vars": [
+      {
+       "n": "With duplicates",
+       "t": "Sort, then skip a value that equals the one before it at the same depth.",
+       "code": "def subsets_dup(nums):\n    nums = sorted(nums)\n    out, path = [], []\n    def go(start):\n        out.append(path[:])\n        for i in range(start, len(nums)):\n            if i > start and nums[i] == nums[i - 1]:\n                continue\n            path.append(nums[i])\n            go(i + 1)\n            path.pop()\n    go(0)\n    return out"
+      },
+      {
+       "n": "Bitmask",
+       "t": "For n up to about 20 each number from 0 to 2^n - 1 is one subset.",
+       "code": "def subsets_mask(nums):\n    n = len(nums)\n    return [[nums[i] for i in range(n) if mask >> i & 1] for mask in range(1 << n)]"
+      }
+     ]
+    },
+    {
+     "id": "permutations",
+     "title": "Permutations",
+     "also": "a used flag per item",
+     "spot": "All orderings; each position tries every unused item.",
+     "pat": "backtrack",
+     "ex": {
+      "i": "nums = [1, 2, 3]",
+      "o": "[[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]"
+     },
+     "code": "def permutations(nums):\n    out, path, used = [], [], [False] * len(nums)\n    def go():\n        if len(path) == len(nums):\n            out.append(path[:])\n            return\n        for i, x in enumerate(nums):\n            if used[i]:\n                continue\n            used[i] = True\n            path.append(x)\n            go()\n            path.pop()\n            used[i] = False\n    go()\n    return out",
+     "time": "O(n * n!)",
+     "space": "O(n)",
+     "notes": [
+      "Combinations pass a start index. Permutations restart the loop at 0 and track what is used."
+     ],
+     "vars": [
+      {
+       "n": "With duplicates",
+       "t": "Sort, and skip a value equal to the previous one unless the previous one is already in the path.",
+       "code": "def permutations_dup(nums):\n    nums = sorted(nums)\n    out, path, used = [], [], [False] * len(nums)\n    def go():\n        if len(path) == len(nums):\n            out.append(path[:])\n            return\n        for i, x in enumerate(nums):\n            if used[i] or (i and x == nums[i - 1] and not used[i - 1]):\n                continue\n            used[i] = True\n            path.append(x)\n            go()\n            path.pop()\n            used[i] = False\n    go()\n    return out"
+      },
+      {
+       "n": "Standard library",
+       "t": "`itertools.permutations` gives tuples, in the same order.",
+       "code": "from itertools import permutations as perms\n\ndef permutations_stdlib(nums):\n    return [list(p) for p in perms(nums)]"
+      }
+     ]
+    },
+    {
+     "id": "combination-sum",
+     "title": "Combination sum",
+     "also": "reuse allowed",
+     "spot": "Combinations that add to a target; a number may repeat; prune once over.",
+     "pat": "backtrack",
+     "ex": {
+      "i": "candidates = [2, 3, 6, 7], target = 7",
+      "o": "[[2, 2, 3], [7]]"
+     },
+     "code": "def combination_sum(candidates, target):\n    out, path = [], []\n    def go(start, left):\n        if left == 0:\n            out.append(path[:])\n            return\n        for i in range(start, len(candidates)):\n            if candidates[i] > left:\n                continue\n            path.append(candidates[i])\n            go(i, left - candidates[i])\n            path.pop()\n    go(0, target)\n    return out",
+     "time": "Exponential; bounded by the number of answers",
+     "space": "O(target / smallest) for the path",
+     "notes": [
+      "Pass `i`, not `i + 1`, to allow a number to repeat. Sort first and `break` instead of `continue` to prune harder."
+     ],
+     "vars": [
+      {
+       "n": "Each number once, with duplicates",
+       "t": "Pass `i + 1`, sort, and skip a repeat of the value before it at the same depth.",
+       "code": "def combination_sum2(candidates, target):\n    candidates = sorted(candidates)\n    out, path = [], []\n    def go(start, left):\n        if left == 0:\n            out.append(path[:])\n            return\n        for i in range(start, len(candidates)):\n            if i > start and candidates[i] == candidates[i - 1]:\n                continue\n            if candidates[i] > left:\n                break\n            path.append(candidates[i])\n            go(i + 1, left - candidates[i])\n            path.pop()\n    go(0, target)\n    return out"
+      },
+      {
+       "n": "Generate parentheses",
+       "t": "Choices instead of a loop: add an open while fewer than n, add a close while fewer than the opens.",
+       "code": "def generate_parentheses(n):\n    out = []\n    def go(s, opened, closed):\n        if len(s) == 2 * n:\n            out.append(s)\n            return\n        if opened < n:\n            go(s + \"(\", opened + 1, closed)\n        if closed < opened:\n            go(s + \")\", opened, closed + 1)\n    go(\"\", 0, 0)\n    return out"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "strings",
+   "title": "Strings",
+   "items": [
+    {
+     "id": "kmp",
+     "title": "KMP prefix function",
+     "also": "what to do after a mismatch",
+     "spot": "Find a pattern in text in O(n + m); periods and repeats; the longest prefix that is also a suffix.",
+     "ex": {
+      "i": "p = \"abacabab\"",
+      "o": "[0, 0, 1, 0, 1, 2, 3, 2]"
+     },
+     "code": "def prefix_function(p):\n    pi, k = [0] * len(p), 0\n    for i in range(1, len(p)):\n        while k and p[i] != p[k]:\n            k = pi[k - 1]\n        if p[i] == p[k]:\n            k += 1\n        pi[i] = k\n    return pi\n\ndef kmp_search(text, p):\n    if not p:\n        return 0\n    pi, k = prefix_function(p), 0\n    for i, c in enumerate(text):\n        while k and c != p[k]:\n            k = pi[k - 1]\n        if c == p[k]:\n            k += 1\n        if k == len(p):\n            return i - k + 1\n    return -1",
+     "time": "O(n + m)",
+     "space": "O(m)",
+     "notes": [
+      "`pi[i]` is the length of the longest proper prefix of `p[:i+1]` that is also its suffix. On a mismatch, fall back to `pi[k - 1]` instead of starting over.",
+      "In an interview say `text.find(p)` first. Write KMP when asked to."
+     ],
+     "vars": [
+      {
+       "n": "Repeated pattern",
+       "t": "A string is built from a repeated block when the border leaves a length that divides it.",
+       "code": "# needs prefix_function from above\ndef repeated_pattern(s):\n    n = len(s)\n    k = prefix_function(s)[-1]\n    return k > 0 and n % (n - k) == 0"
+      }
+     ]
+    },
+    {
+     "id": "trie",
+     "title": "Trie",
+     "also": "a dict of dicts",
+     "spot": "Prefix lookups; autocomplete; many words that share starts; word search on a grid.",
+     "ex": {
+      "i": "insert(\"apple\"); search(\"app\"), starts_with(\"app\")",
+      "o": "False, True"
+     },
+     "code": "class Trie:\n    def __init__(self):\n        self.root = {}\n\n    def insert(self, word):\n        node = self.root\n        for ch in word:\n            node = node.setdefault(ch, {})\n        node[\"$\"] = True\n\n    def walk(self, s):\n        node = self.root\n        for ch in s:\n            if ch not in node:\n                return None\n            node = node[ch]\n        return node\n\n    def search(self, word):\n        node = self.walk(word)\n        return node is not None and \"$\" in node\n\n    def starts_with(self, prefix):\n        return self.walk(prefix) is not None",
+     "time": "O(L) per word of length L",
+     "space": "O(total characters)",
+     "notes": [
+      "The `$` key marks the end of a word: \"app\" is a prefix of \"apple\" without being a word."
+     ],
+     "vars": [
+      {
+       "n": "Autocomplete",
+       "t": "Walk to the prefix, then depth-first over everything below it.",
+       "code": "# needs Trie from above\ndef words_with_prefix(trie, prefix):\n    node = trie.walk(prefix)\n    out = []\n    def go(n, path):\n        for ch, child in n.items():\n            if ch == \"$\":\n                out.append(prefix + path)\n            else:\n                go(child, path + ch)\n    if node:\n        go(node, \"\")\n    return sorted(out)"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sorting",
+   "title": "Sorting",
+   "items": [
+    {
+     "id": "merge-sort",
+     "title": "Merge sort",
+     "also": "split, sort each half, merge",
+     "spot": "A stable O(n log n) sort; sorting a linked list; counting inversions while merging.",
+     "ex": {
+      "i": "a = [5, 2, 4, 7, 1, 3, 2, 6]",
+      "o": "[1, 2, 2, 3, 4, 5, 6, 7]"
+     },
+     "code": "def merge_sort(a):\n    if len(a) <= 1:\n        return a\n    m = len(a) // 2\n    l, r = merge_sort(a[:m]), merge_sort(a[m:])\n    out, i, j = [], 0, 0\n    while i < len(l) and j < len(r):\n        if l[i] <= r[j]:\n            out.append(l[i])\n            i += 1\n        else:\n            out.append(r[j])\n            j += 1\n    return out + l[i:] + r[j:]",
+     "time": "O(n log n)",
+     "space": "O(n)",
+     "notes": [
+      "Use `<=` when taking from the left half: it keeps equal values in their original order, which is what stable means.",
+      "Python's own `sorted` is Timsort, stable and O(n log n)."
+     ],
+     "vars": [
+      {
+       "n": "Count inversions",
+       "t": "Whenever the right half wins, every item left in the left half is bigger than it: add that many.",
+       "code": "def count_inversions(a):\n    def sort(a):\n        if len(a) <= 1:\n            return a, 0\n        m = len(a) // 2\n        l, x = sort(a[:m])\n        r, y = sort(a[m:])\n        out, i, j, c = [], 0, 0, x + y\n        while i < len(l) and j < len(r):\n            if l[i] <= r[j]:\n                out.append(l[i])\n                i += 1\n            else:\n                out.append(r[j])\n                j += 1\n                c += len(l) - i\n        return out + l[i:] + r[j:], c\n    return sort(a)[1]"
+      }
+     ]
+    },
+    {
+     "id": "quicksort",
+     "title": "Quicksort",
+     "also": "partition around a random pivot",
+     "spot": "An in-place sort; partition around a pivot; the same step as QuickSelect.",
+     "ex": {
+      "i": "a = [3, 6, 1, 8, 2, 9, 2]",
+      "o": "[1, 2, 2, 3, 6, 8, 9]"
+     },
+     "code": "import random\n\ndef quicksort(a, lo=0, hi=None):\n    if hi is None:\n        hi = len(a) - 1\n    if lo >= hi:\n        return a\n    i = random.randint(lo, hi)\n    a[i], a[hi] = a[hi], a[i]\n    pivot, p = a[hi], lo\n    for j in range(lo, hi):\n        if a[j] < pivot:\n            a[j], a[p] = a[p], a[j]\n            p += 1\n    a[p], a[hi] = a[hi], a[p]\n    quicksort(a, lo, p - 1)\n    quicksort(a, p + 1, hi)\n    return a",
+     "time": "O(n log n) average, O(n^2) worst",
+     "space": "O(log n) for the recursion",
+     "notes": [
+      "After the partition the pivot is in its final place. Sort the two sides.",
+      "Not stable. Many equal values make this partition degrade to O(n^2) and recurse n deep: use three-way."
+     ],
+     "vars": [
+      {
+       "n": "Three-way, one pass",
+       "t": "Sort colours: 0s to the front, 2s to the back, 1s stay. This is the three-way partition on its own.",
+       "code": "def sort_colors(a):\n    lo, i, hi = 0, 0, len(a) - 1\n    while i <= hi:\n        if a[i] == 0:\n            a[lo], a[i] = a[i], a[lo]\n            lo += 1\n            i += 1\n        elif a[i] == 2:\n            a[i], a[hi] = a[hi], a[i]\n            hi -= 1\n        else:\n            i += 1"
+      },
+      {
+       "n": "Short version",
+       "t": "Not in place, but easy to write on a whiteboard and fine with duplicates.",
+       "code": "def quicksort_short(a):\n    if len(a) <= 1:\n        return a\n    p = a[len(a) // 2]\n    return (quicksort_short([x for x in a if x < p]) + [x for x in a if x == p]\n            + quicksort_short([x for x in a if x > p]))"
+      }
+     ]
+    },
+    {
+     "id": "counting-sort",
+     "title": "Counting sort",
+     "also": "count, then write back",
+     "spot": "Values in a small known range; sort or group in O(n + k).",
+     "ex": {
+      "i": "a = [3, 1, 2, 3, 0, 1], k = 3",
+      "o": "[0, 1, 1, 2, 3, 3]"
+     },
+     "code": "def counting_sort(a, k):\n    count = [0] * (k + 1)\n    for x in a:\n        count[x] += 1\n    out = []\n    for v, c in enumerate(count):\n        out += [v] * c\n    return out",
+     "time": "O(n + k)",
+     "space": "O(k)",
+     "notes": [
+      "It beats O(n log n) only when k is about n or smaller. Ages, scores out of 100, letters."
+     ],
+     "vars": [
+      {
+       "n": "Top k frequent in O(n)",
+       "t": "Bucket by frequency: the count of a value is at most n, so the buckets are a counting sort.",
+       "code": "from collections import Counter\n\ndef top_k_frequent_bucket(nums, k):\n    buckets = [[] for _ in range(len(nums) + 1)]\n    for x, f in Counter(nums).items():\n        buckets[f].append(x)\n    out = []\n    for f in range(len(buckets) - 1, 0, -1):\n        out += buckets[f]\n        if len(out) >= k:\n            return out[:k]\n    return out"
+      }
+     ]
+    }
+   ]
+  }
+ ],
  "extra": {
   "tools": {
    "title": "Python you reach for",

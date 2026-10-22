@@ -389,30 +389,25 @@ PLAN = {
     ],
 }
 
-# ------------------------------------------------------------------ the loop-day card (printable)
+# ------------------------------------------------------------------ the loop-day card (one screen; prints on one landscape page)
 CARD = {
     "title": "Loop day",
-    "lead": "One page. Read it the night before and in each break. Print it if you like; keep it out of your eyeline in the rounds.",
-    "sections": [
-        {"title": "Every coding round, 60 minutes", "rows": [
-            ["0 to 5", "Clarify out loud: size, duplicates, empty, sorted, ties, what to return. Restate the problem in one sentence."],
-            ["5 to 10", "Say the brute force and its cost. Then the better idea, and get a nod before you code."],
-            ["10 to 35", "Code, talking. Names that read. Then dry-run a small example, line by line, out loud."],
-            ["35 to 45", "State time and space unprompted. Take the follow-ups: faster, a changed constraint, justify."],
-            ["45 to 60", "The story segment: one story you have not used today, two to three minutes, then the follow-ups."]]},
-        {"title": "The design round", "rows": [
-            ["First 5 to 8 minutes", "Actors, the two or three core use cases, scale, concurrency, money, what is out of scope. Write them down."],
-            ["Then", "Entities and relationships; a class sketch; the core code for the main use case."],
-            ["Extensions", "Say which class changes and which does not. Name a pattern only where it fits."]]},
-        {"title": "Stories", "items": [
-            "I, not we. A number in the result. One line on what you would do differently.",
-            "Situation in under 30 seconds. Stop at three minutes; the follow-ups are the point.",
-            "If you do not remember a detail, say so. Never invent one.",
-        ]},
-        {"title": "Between rounds", "items": [
-            "Stand up, water, breathe. The last round is over: each is scored on its own.",
-            "Look at the story list below and cross off what you spent.",
-            "No AI, no second screen, no notes in view.",
-        ]},
+    "lead": "Read it the night before and in each break. Keep it out of your eyeline in the rounds.",
+    "bar": [["Clarify", 5], ["Approach", 5], ["Code and dry-run", 25], ["Follow-ups", 10], ["Story", 15]],
+    "rounds": [
+        {"name": "Coding 1", "first": ["Restate the problem in one sentence.", "Ask: size, duplicates, empty, sorted, ties, what to return.",
+                                       "Say the brute force and its cost, then the better idea. Get a nod."],
+         "show": "Working code by minute 35, a dry run out loud, the cost said before they ask."},
+        {"name": "Coding 2", "first": ["Treat it as a fresh start: the last round is scored on its own.", "Clarify, then translate the Amazon story into the pattern in the first three minutes.",
+                                       "Brute force first if the better idea is not there yet."],
+         "show": "If you finish early, a harder second problem often follows. That is good news."},
+        {"name": "Design", "firstLabel": "First eight minutes", "first": ["Ask who uses it and the two or three things they must do.", "Scale, concurrency, money, persistence; what is out of scope.",
+                                       "Write the agreed requirements where they can see them."],
+         "show": "Entities, relationships, the core code; for each extension say which class changes and which does not."},
+        {"name": "Behavioral", "firstLabel": "Every story", "first": ["Situation in under 30 seconds.", "I, not we: the decision inside each action.",
+                                       "A number, then what you would do differently. Stop at three minutes."],
+         "show": "Three or four stories, each dug into for five to ten minutes. If you do not remember a detail, say so."},
     ],
+    "between": ["Stand up, water, breathe. The last round is over.", "Cross off the stories you spent.", "Read the next round's column, nothing else."],
+    "rules": ["No AI, no second screen, no notes in view.", "No silence: think out loud, even when stuck.", "Never invent a detail in a story."],
 }

@@ -703,5 +703,164 @@ window.FIG_NOTES = Object.assign(window.FIG_NOTES || {}, {
       "monitor>logs": { "t": "Back to logs", "d": "Next week's logs show whether it worked, and the loop runs again." }
     },
     "walk": ["logs", "logs>sample", "sample", "sample>label", "label", "label>taxonomy", "taxonomy", "label>cluster", "cluster", "cluster>fix", "fix", "fix>tests", "tests", "tests>canary", "canary", "canary>monitor", "monitor", "kpis", "monitor>logs"]
+  },
+  "lldRound": {
+    "nodes": {
+      "clarify": { "t": "1 Clarify and elicit", "d": "Ask before you build. Spend 5 to 8 minutes on six to eight questions, then say the scope back and get a yes: what is in and what is out. The interviewer is watching whether you ask first." },
+      "use-cases": { "t": "2 Use cases", "d": "Write three to five verbs the system must do, as short sentences, such as park a car or pay and leave. Every class you add later should serve one of them. About 3 minutes." },
+      "entities": { "t": "3 Entities", "d": "Underline the nouns that own data or a rule. Each one is a class candidate, and a noun that no use case needs does not become a class. About 3 minutes." },
+      "relationships": { "t": "4 Relationships", "d": "Decide who owns whom: has-a and uses almost every time, is-a rarely. About 3 minutes. The pattern seam, if there is one, usually shows up here." },
+      "sketch": { "t": "5 Class sketch", "d": "Write class names, fields and method signatures with no bodies, in about 5 minutes. Say the step out loud so the interviewer can steer you before you write code." },
+      "core-code": { "t": "6 Core code", "d": "Write the main flow as running Python, then dry-run it on one example. This is the longest step at about 15 minutes, a third of the round. Say what you are leaving out instead of building it." },
+      "extend": { "t": "7 Extensions", "d": "Take the follow-up they add and say which class changes and which stay the same, before you edit. It takes 5 to 8 minutes. If the main class stays, the design held." },
+      "time": { "t": "Where the minutes go", "d": "The same seven steps as a bar, drawn at the long end of 45 minutes. Core code is the widest piece. If you are 20 minutes in with a long diagram and no code, stop and write the one main flow." },
+      "slack": { "t": "Slack", "d": "The steps add up to 39 minutes at the short end and 45 at the long end. Any slack goes to dry-running your code, not to adding features." }
+    },
+    "edges": {
+      "clarify>use-cases": { "t": "The scope gives the verbs", "d": "An agreed scope tells you which verbs the system must do. Use cases come from the scope, not from your imagination." },
+      "use-cases>entities": { "t": "Verbs give you nouns", "d": "Each use case names the things it acts on. Those nouns are the class candidates." },
+      "entities>relationships": { "t": "Nouns need owners", "d": "Once you have the nouns, decide who owns whom and who only uses whom." },
+      "relationships>sketch": { "t": "Ownership becomes signatures", "d": "Each ownership line becomes a field, and each use case becomes a method signature." },
+      "sketch>core-code": { "t": "The sketch becomes running code", "d": "Pick the one main flow from the sketch and write it so it runs, then dry-run it." },
+      "core-code>extend": { "t": "Then they change the problem", "d": "The follow-up tests how much of your code has to move. Say which class changes before you edit." }
+    },
+    "walk": ["clarify", "clarify>use-cases", "use-cases", "use-cases>entities", "entities", "entities>relationships", "relationships", "relationships>sketch", "sketch", "sketch>core-code", "core-code", "core-code>extend", "extend", "time", "slack"]
+  },
+  "lldParking": {
+    "nodes": {
+      "parking-lot": { "t": "ParkingLot", "d": "The entry point, and the only class that coordinates. It holds the levels, the open tickets and a Pricing rule. enter(vehicle, now) returns a Ticket or None, and exit(ticket id, now) returns the amount owed." },
+      "level": { "t": "Level", "d": "One floor with numbered spots. find(vehicle) returns the smallest free Spot that fits, so the Level is the class that knows how to search its spots. The lot only decides which level to ask." },
+      "spot": { "t": "Spot", "d": "One parking space with a size and the vehicle in it. fits(vehicle) is true when the spot is free and the vehicle is not bigger than the spot." },
+      "vehicle": { "t": "Vehicle", "d": "A value: a plate and a Size. It has no behaviour, so Car, Motorcycle and Truck are not subclasses. Only the size differs, and the spot check uses the size." },
+      "size": { "t": "Size", "d": "An IntEnum with SMALL, MEDIUM and LARGE. Because it is ordered, the fit check is a plain comparison of the vehicle size with the spot size." },
+      "ticket": { "t": "Ticket", "d": "A record: id, vehicle, spot and the entry time. The lot keeps open tickets in a dict by id and removes one on exit." },
+      "pricing": { "t": "Pricing", "d": "The Strategy seam. One method, price(minutes, size), returns cents. The lot receives a Pricing in its constructor and calls it in exit, and it never names a concrete rule." },
+      "hourly": { "t": "Hourly", "d": "The first rule: whole hours, rounded up, at a rate in cents per hour. A flat rate, a rate by size or a second garage with its own rule is another class like this one, and ParkingLot does not change." }
+    },
+    "edges": {
+      "parking-lot>pricing": { "t": "The lot uses a rule", "d": "The lot calls pricing.price(...) in exit and nowhere else. It does not know which rule it holds, which is the point of passing the rule in." },
+      "hourly>pricing": { "t": "Hourly is a Pricing", "d": "Hourly implements price(minutes, size). Any other rule with the same method can be passed to the lot in its place." },
+      "parking-lot>level": { "t": "The lot has levels", "d": "The lot holds a list of Levels and asks each in turn for a spot until one has room." },
+      "level>spot": { "t": "A level has spots", "d": "A Level owns its Spots, so it owns the loop that finds a free one." },
+      "parking-lot>ticket": { "t": "enter creates a ticket", "d": "A successful enter marks the spot taken, builds a Ticket and stores it by id. A full lot returns None and creates nothing." },
+      "ticket>vehicle": { "t": "A ticket has a vehicle", "d": "The ticket remembers which vehicle it was issued for. exit reads its size to price the stay." },
+      "ticket>spot": { "t": "A ticket has a spot", "d": "The ticket remembers which spot to free on exit." },
+      "vehicle>size": { "t": "A vehicle has a size", "d": "The Size is the only thing about a vehicle that the rest of the design reads." }
+    },
+    "walk": ["parking-lot", "parking-lot>level", "level", "level>spot", "spot", "vehicle", "vehicle>size", "size", "parking-lot>ticket", "ticket", "ticket>vehicle", "ticket>spot", "parking-lot>pricing", "pricing", "hourly>pricing", "hourly"]
+  },
+  "lldFiles": {
+    "nodes": {
+      "file-system": { "t": "FileSystem", "d": "The one entry point. It owns the root Directory, turns a path such as /docs/notes/todo.txt into an Entry (resolve), and makes folders and files, lists and finds. Path splitting lives here because only the FileSystem holds the root." },
+      "filter": { "t": "Filter", "d": "A second, smaller seam: one method, matches(entry), returns True or False. find calls it on each Entry and knows nothing else about the condition." },
+      "ext": { "t": "Ext", "d": "A Filter that matches entries whose name ends with an extension such as .txt." },
+      "min-size": { "t": "MinSize", "d": "A Filter that matches entries of at least a given number of bytes. A Directory's size is the sum of its children, so a folder can match too." },
+      "directory": { "t": "Directory", "d": "An Entry that holds children in a dict from name to Entry. size() adds up the children, and walk() yields itself and then everything below, in sorted order." },
+      "entry": { "t": "Entry", "d": "The shared contract: size() and walk(path). A caller can ask either question of any Entry without knowing whether it is a file or a folder. That is the Composite pattern." },
+      "file": { "t": "File", "d": "The leaf. It holds its own size in bytes, size() returns it, and walk yields only itself." }
+    },
+    "edges": {
+      "file-system>filter": { "t": "find uses a filter", "d": "find(path, flt) calls flt.matches(entry) on every entry under the path. A new condition, or a combination of conditions, needs no change to FileSystem." },
+      "ext>filter": { "t": "Ext is a Filter", "d": "Ext implements matches by checking the name. It can be passed anywhere a Filter is expected." },
+      "min-size>filter": { "t": "MinSize is a Filter", "d": "MinSize implements matches by comparing size() with a number of bytes." },
+      "file-system>directory": { "t": "The system has a root", "d": "FileSystem holds one root Directory, and every path is resolved from it." },
+      "directory>entry": { "t": "A Directory is an Entry", "d": "Directory implements size() and walk(), so it can sit anywhere an Entry can." },
+      "file>entry": { "t": "A File is an Entry", "d": "File implements the same two methods, so a caller treats a file and a folder alike." },
+      "directory>entry#2": { "t": "A Directory holds Entries", "d": "The children are Entries, not Files, so a folder can contain folders to any depth. size() calls size() on each child with no type check." }
+    },
+    "walk": ["file-system", "file-system>directory", "directory", "directory>entry", "entry", "file>entry", "file", "directory>entry#2", "file-system>filter", "filter", "ext>filter", "ext", "min-size>filter", "min-size"]
+  },
+  "lldCart": {
+    "nodes": {
+      "cart": { "t": "Cart", "d": "The class the caller talks to. It owns its lines in a dict by sku and offers add, remove, subtotal and checkout(discount). checkout passes the lines and the subtotal to the discount and returns what it gives back." },
+      "line": { "t": "Line", "d": "A record: an Item and a quantity. Adding the same item again raises the quantity of the existing line." },
+      "item": { "t": "Item", "d": "A frozen value: sku, name and a price in integer cents. Money is held as cents so totals add and compare exactly, because a float cannot hold most decimal prices." },
+      "discount": { "t": "Discount", "d": "The Strategy seam: one method, apply(lines, total), returns the new total in cents. It receives the lines as well as the total because some rules, such as buy-one-get-one, depend on what was bought and not only on the sum." },
+      "no-discount": { "t": "NoDiscount", "d": "Returns the total unchanged. It is the default, so checkout has no branch for 'no discount' and always calls apply." },
+      "percent": { "t": "Percent", "d": "Takes a percentage off the total with integer arithmetic, so it rounds down and the customer never gets more than the stated percent. It rejects a value outside 0 to 100." },
+      "flat": { "t": "Flat", "d": "Takes a fixed number of cents off and never goes below zero." }
+    },
+    "edges": {
+      "cart>discount": { "t": "The cart uses a discount", "d": "checkout is the only place the cart touches a discount, and it does not know which one it was given. Swap the object and the rule changes." },
+      "cart>line": { "t": "The cart has lines", "d": "The cart owns its Lines, keyed by sku." },
+      "line>item": { "t": "A line has an item", "d": "Each Line points at one Item and counts how many." },
+      "percent>discount": { "t": "Percent is a Discount", "d": "Percent implements apply with a percentage of the total." },
+      "no-discount>discount": { "t": "NoDiscount is a Discount", "d": "NoDiscount implements apply by returning the total." },
+      "flat>discount": { "t": "Flat is a Discount", "d": "Flat implements apply with a fixed amount off." }
+    },
+    "walk": ["cart", "cart>line", "line", "line>item", "item", "cart>discount", "discount", "no-discount>discount", "no-discount", "percent>discount", "percent", "flat>discount", "flat"]
+  },
+  "lldLibrary": {
+    "nodes": {
+      "library": { "t": "Library", "d": "The one entry point and the only class that enforces rules: checkout, return, reserve and search. It keeps the books, the copies, the members and the open loans, and it owns a Reservations." },
+      "fine-for": { "t": "fine_for", "d": "The one function where the fine rule lives, 25 cents a day in the base code. A follow-up replaces it with a table of policies by member type, and return_item does not change." },
+      "member": { "t": "Member", "d": "An id, a name, a kind (adult or student) and the fines owed in cents. It does not know its loans; Library counts them when it enforces the limit." },
+      "loan": { "t": "Loan", "d": "One open loan: a copy, a member and a due date. It exists only while the copy is out." },
+      "book-item": { "t": "BookItem", "d": "One physical copy, with a barcode. Its on_hold_for field says which member may take it next, and that one field is the whole reservation hand-off." },
+      "reservations": { "t": "Reservations", "d": "A first-in-first-out queue of member ids per title. When a copy comes back it sets on_hold_for to the first member in line. It is the Observer seam: the subject that makes the event." },
+      "book": { "t": "Book", "d": "A title: isbn, title and author. It is frozen, so it can sit in a set, and every copy of the title shares it. A reservation queues per title because the member does not care which copy comes back." },
+      "subscribers": { "t": "Subscribers", "d": "The follow-up that makes Reservations an Observer: a list of callables, each called with the member id and the copy at the moment a copy is held. In Python a list of functions is the whole pattern; a Listener class would add nothing. It is not in the base code." }
+    },
+    "edges": {
+      "library>fine-for": { "t": "Library uses the fine rule", "d": "return_item asks fine_for for the amount owed and adds it to the member's fines." },
+      "library>member": { "t": "Library has members", "d": "A dict of members by id." },
+      "library>loan": { "t": "Library has loans", "d": "A dict of open loans by barcode. A copy is out exactly when its barcode is in this dict." },
+      "library>book-item": { "t": "Library has copies", "d": "A dict of BookItems by barcode." },
+      "library>reservations": { "t": "Library has a Reservations", "d": "Library tells the queue that a copy came back. It does not look inside the queue." },
+      "loan>member": { "t": "A loan has a member", "d": "Whose loan it is." },
+      "loan>book-item": { "t": "A loan has a copy", "d": "Which copy is out. A loan attaches to a copy, not to a title." },
+      "reservations>book-item": { "t": "Reservations holds a copy", "d": "on_return pops the first member in the queue and writes it to the copy's on_hold_for. The copy then waits for exactly that member." },
+      "book-item>book": { "t": "A copy has a title", "d": "Many copies share one Book." },
+      "reservations>book": { "t": "Queues are per title", "d": "The queue is keyed by isbn. Attaching it to a copy would force a pick now, and a wrong pick makes a member wait longer than needed." },
+      "reservations>subscribers": { "t": "Reservations notifies subscribers", "d": "After setting on_hold_for, on_return calls each subscriber with the member id and the copy. Reservations owns the subscribers because it makes the event, and Library does not know how a member is told." }
+    },
+    "walk": ["library", "library>member", "member", "library>loan", "loan", "loan>member", "loan>book-item", "library>book-item", "book-item", "book-item>book", "book", "library>reservations", "reservations", "reservations>book-item", "reservations>book", "reservations>subscribers", "subscribers", "library>fine-for", "fine-for"]
+  },
+  "lldElevator": {
+    "nodes": {
+      "controller": { "t": "Controller", "d": "Owns the cars and the dispatch strategy. hall_call asks the strategy which car answers and presses the button on it, car_call presses a button inside a car, and tick steps every car once, in car order." },
+      "dispatch": { "t": "Dispatch", "d": "The Strategy seam for choosing a car: choose(cars, floor, direction) returns one car. Controller calls it and does not know how the choice is made." },
+      "nearest-idle": { "t": "NearestIdle", "d": "The first policy: prefer an idle car, else any car, and take the nearest. Ties go to the lowest id, so the same calls always pick the same car." },
+      "car": { "t": "Car", "d": "Holds data and small helpers: its floor, a set of stops and its current state, with ahead, open_doors and press. It makes no decisions; its state does." },
+      "state": { "t": "State", "d": "The State seam: one method, step(car), one tick of work. Each state decides what the next state is, so a new behaviour is a new class with this method." },
+      "idle": { "t": "Idle", "d": "The only state that chooses where to go: the nearest stop, the lower floor on a tie. If the car is already there it opens the doors, otherwise it starts moving toward the stop." },
+      "moving": { "t": "Moving", "d": "Goes one floor per tick in its direction. When the car reaches a floor it must stop at, it opens the doors." },
+      "doors-open": { "t": "DoorsOpen", "d": "Remembers the direction the car arrived in. The doors stay open for one tick, then it closes, keeps the direction if stops remain ahead, and otherwise rests." }
+    },
+    "edges": {
+      "controller>dispatch": { "t": "The controller uses a strategy", "d": "hall_call hands the decision to self.strategy. Swap the object and the policy changes; Controller does not." },
+      "nearest-idle>dispatch": { "t": "NearestIdle is a Dispatch", "d": "NearestIdle implements choose, so it can be passed to Controller in place of any other Dispatch." },
+      "controller>car": { "t": "The controller has cars", "d": "A list of Cars, one per elevator." },
+      "car>state": { "t": "A car has a state", "d": "car.state is the current State. A state change is an assignment, and the next tick calls the new state's step." },
+      "idle>state": { "t": "Idle is a State", "d": "Idle implements step(car)." },
+      "moving>state": { "t": "Moving is a State", "d": "Moving implements step(car)." },
+      "doors-open>state": { "t": "DoorsOpen is a State", "d": "DoorsOpen implements step(car)." },
+      "idle>moving": { "t": "Idle starts moving", "d": "Idle picks the nearest stop and sets the car's state to up or down." },
+      "moving>doors-open": { "t": "Moving opens the doors", "d": "At a requested floor Moving opens the doors, and DoorsOpen remembers the direction the car arrived in." },
+      "doors-open>moving": { "t": "DoorsOpen keeps going", "d": "If a stop remains ahead, the car keeps its direction. If it went Idle instead, the nearest-stop rule could send it back and a rider going further would wait for a round trip." },
+      "doors-open>idle": { "t": "DoorsOpen can rest", "d": "If no stop remains ahead, the car goes Idle and the nearest-stop rule applies the next time a stop is pressed." }
+    },
+    "walk": ["controller", "controller>car", "car", "car>state", "state", "idle>state", "idle", "idle>moving", "moving>state", "moving", "moving>doors-open", "doors-open>state", "doors-open", "doors-open>moving", "doors-open>idle", "controller>dispatch", "dispatch", "nearest-idle>dispatch", "nearest-idle"]
+  },
+  "lldKvstore": {
+    "nodes": {
+      "latest": { "t": "1 Latest value", "d": "A dict from key to the latest value. put and get are O(1). It stores one value per key, so there is no history to ask about yet." },
+      "history": { "t": "2 History", "d": "Each key holds a list of (timestamp, value) pairs, appended on put. Reading the latest is still O(1), but memory grows with every write and never shrinks. In the finished file this list lives in Entry.hist." },
+      "as-of": { "t": "3 Value at a time", "d": "get(key, at=ts) uses bisect_right on the history to find the last write at or before ts, in O(log n) for n writes to that key. It is correct only while writes arrive in order." },
+      "late-writes": { "t": "4 Late writes", "d": "insort puts a late write into its sorted place, so the history stays sorted by timestamp. This removes the in-order assumption of layers 2 and 3. Finding the place is O(log n) and shifting is O(n); there is no shift when the write is in order." },
+      "lru": { "t": "5 Capacity and LRU", "d": "The dict becomes an OrderedDict ordered by use. put and get call move_to_end, and when there are more keys than the capacity, popitem(last=False) evicts the least recently used key. Both add O(1), and memory is bounded." },
+      "ttl": { "t": "6 TTL", "d": "A TTL counted from the last write. Each Entry carries a stamp read from the clock, and an expired key is deleted lazily, inside _live, when put or get touches it. Expired keys stay in memory until they are touched or evicted." },
+      "clock": { "t": "clock()", "d": "The clock is a constructor parameter that defaults to time.monotonic. The demo passes a fake one so the output is the same every run. This is the seam that makes TTL testable." },
+      "costs": { "t": "Cost per layer", "d": "What to say when they ask for the complexity at each step. Each layer adds its cost on top of the one below, and only layer 4 changes an assumption of the layers beneath it." }
+    },
+    "edges": {
+      "latest>history": { "t": "Keep it, add a list", "d": "The dict stays, and each value becomes a list of (timestamp, value) pairs." },
+      "history>as-of": { "t": "Add a search", "d": "Reads can now ask for a time, using binary search over the sorted list." },
+      "as-of>late-writes": { "t": "Allow late writes", "d": "Binary search needs a sorted list, so a write that arrives late is inserted in place instead of appended." },
+      "late-writes>lru": { "t": "Bound the size", "d": "Swap the dict for an OrderedDict and evict the least recently used key when it is over capacity." },
+      "lru>ttl": { "t": "Add a stamp", "d": "A per-key stamp and a clock let a key expire. Expiry is checked when the key is touched." },
+      "clock>ttl": { "t": "Injected, not global", "d": "The cache reads time only through the clock it was given, so expiry can be tested without waiting." }
+    },
+    "walk": ["latest", "latest>history", "history", "history>as-of", "as-of", "as-of>late-writes", "late-writes", "late-writes>lru", "lru", "lru>ttl", "ttl", "clock>ttl", "clock", "costs"]
   }
 });

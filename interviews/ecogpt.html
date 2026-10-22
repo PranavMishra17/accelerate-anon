@@ -38,7 +38,8 @@ p { margin: 0 0 var(--s3); }
 .top { position: sticky; top: 0; z-index: 30; background: var(--bg); border-bottom: var(--hair); }
 .top-in { max-width: 1180px; margin: 0 auto; padding: 0 var(--s5); height: var(--top); display: flex; align-items: center; gap: var(--s5); }
 .top .loopname { font-weight: var(--w-strong); white-space: nowrap; }
-.tabs { display: flex; gap: var(--s1); align-self: stretch; }
+.tabs { display: flex; gap: var(--s1); align-self: stretch; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.top .loopname { min-width: 0; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; }
 .tabs a { display: flex; align-items: center; padding: 2px var(--s2) 0; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap; }
 .tabs a:hover { color: var(--ink); text-decoration: none; }
 .tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
@@ -581,32 +582,122 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
 .cd-nav { display: flex; justify-content: space-between; gap: var(--s3); margin-top: var(--s7); padding-top: var(--s4); border-top: var(--hair); }
 .cd-done { margin-top: var(--s5); }
 .lab.cd-drill { margin: var(--s6) 0 var(--s2); padding-top: var(--s3); border-top: var(--hair); font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); }
-/* a long loop's tabs: the plan's days, the daily two, the story matrix, the loop-day card */
-.am-day { margin: var(--s4) 0; padding-top: var(--s3); border-top: var(--hair); max-width: 860px; }
-.am-day.today { border-top: 2px solid var(--accent); }
-.am-day.past .am-dh b { color: var(--muted); }
-.am-dh { display: flex; gap: var(--s3); align-items: baseline; }
-.am-dm { color: var(--muted); font-size: var(--fs-sm); font-weight: normal; }
-.am-focus { color: var(--soft); margin: var(--s1) 0 var(--s2); }
-.am-items { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
-.am-it label { display: flex; gap: var(--s2); align-items: baseline; cursor: pointer; padding: 2px 0; }
-.am-it input { flex: none; }
-.am-k { flex: none; min-width: 4.5em; font-size: var(--fs-xs); color: var(--muted); font-weight: var(--w-strong); }
-.am-tx { flex: 1; }
-.am-min { color: var(--muted); font-size: var(--fs-sm); margin-left: var(--s2); }
-.am-reveal { margin: var(--s4) 0 var(--s2); padding-top: var(--s3); border-top: var(--hair); }
+/* a long loop's tabs: the day's checklist on every tab, the plan calendar, the daily workbench, the loop-day card */
+.k-daily { --k: var(--cat-1); } .k-design { --k: var(--cat-2); } .k-story { --k: var(--cat-3); }
+.k-revise { --k: var(--cat-4); } .k-plan { --k: var(--cat-5); } .k-loop { --k: var(--cat-6); } .k-other { --k: var(--muted); }
+.td { font-size: var(--fs-sm); }
+.td-rail { margin-bottom: var(--s5); padding-bottom: var(--s4); border-bottom: var(--hair); }
+.td-h { display: flex; align-items: center; gap: var(--s1); margin-bottom: var(--s2); }
+.td-day { font-weight: var(--w-strong); color: var(--ink); flex: 1; white-space: nowrap; }
+.td-n { color: var(--muted); white-space: nowrap; }
+.td-arrow { border: var(--hair); background: var(--surface); color: var(--ink); border-radius: var(--radius-sm); width: 24px; height: 24px; padding: 0; line-height: 1; }
+.td-arrow:disabled { opacity: .35; cursor: default; }
+.td-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+.td-it { display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: var(--s2); align-items: baseline; padding: 3px 0 3px var(--s2); border-left: 3px solid var(--k); }
+.td-it input { margin: 0; }
+.td-it .td-t { color: var(--soft); }
+.td-it.here .td-t { color: var(--accent); font-weight: var(--w-strong); }
+.td-it .td-m { grid-column: 2; color: var(--muted); font-size: var(--fs-xs); }
+.td-switch { margin-top: var(--s3); border: 0; background: none; padding: 0; color: var(--muted); font-size: var(--fs-xs); text-decoration: underline; text-underline-offset: 3px; }
+.td-lab { color: var(--muted); font-size: var(--fs-xs); font-weight: var(--w-strong); margin: 0 0 var(--s1); }
+nav.side .td a { display: inline; padding: 0; }
+.td-bar { position: sticky; top: var(--top); z-index: 20; background: var(--bg); border-bottom: var(--hair); box-shadow: 0 4px 10px -8px rgba(0, 0, 0, .35);
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s4); padding: var(--s2) 0; margin: calc(-1 * var(--s5)) 0 var(--s5); }
+.td-bar .td-h { margin: 0; }
+.td-bar .td-list { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); }
+.td-bar .td-it { grid-template-columns: 16px auto; padding: 0 0 0 var(--s2); }
+.td-bar .td-it .td-m { display: none; }
+.td-bar .td-switch { margin: 0; }
+
+.cal { display: grid; grid-template-columns: 96px repeat(7, minmax(0, 1fr)); gap: 4px; margin: var(--s4) 0 var(--s2); max-width: 860px; }
+.cal-dh { font-size: var(--fs-xs); color: var(--muted); padding-left: var(--s1); }
+.cal-wk { font-size: var(--fs-xs); color: var(--muted); align-self: center; }
+.cal-c { position: relative; display: flex; flex-direction: column; gap: var(--s1); min-height: 58px; padding: var(--s1) var(--s2); border: var(--hair); border-radius: var(--radius); color: var(--ink); background: var(--surface); }
+.cal-c:hover { border-color: var(--accent); text-decoration: none; }
+.cal-c.past { opacity: .62; }
+.cal-c.today { border-color: var(--accent); }
+.cal-c.on { outline: 2px solid var(--accent); outline-offset: 1px; }
+.cal-d { font-size: var(--fs-xs); color: var(--muted); }
+.cal-d b { font-size: var(--fs-md); color: var(--ink); margin-right: 2px; }
+.cal-dots { display: flex; flex-wrap: wrap; gap: 3px; }
+.cal-dots i, .cal-leg i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--k); }
+.cal-dots i.got { background: var(--k); }
+.cal-ok { position: absolute; top: var(--s1); right: var(--s2); color: var(--ok); font-size: var(--fs-sm); }
+.cal-leg { display: flex; flex-wrap: wrap; gap: var(--s4); font-size: var(--fs-xs); color: var(--muted); }
+.cal-leg i { margin-right: var(--s1); vertical-align: -1px; background: var(--k); }
+.am-day { max-width: 860px; }
+.am-items { list-style: none; padding: 0; margin: var(--s3) 0; display: grid; gap: var(--s1); }
+.am-it label { display: grid; grid-template-columns: 16px 88px minmax(0, 1fr) auto; gap: var(--s3); align-items: baseline; padding: var(--s2) 0 var(--s2) var(--s3); border-left: 3px solid var(--k); border-bottom: var(--hair); cursor: pointer; }
+.am-k { font-size: var(--fs-xs); color: var(--muted); font-weight: var(--w-strong); }
+.am-min { color: var(--muted); font-size: var(--fs-sm); white-space: nowrap; }
+.am-res { margin: var(--s4) 0; }
 .am-note { color: var(--muted); font-size: var(--fs-sm); }
 .am-mx td:first-child { white-space: nowrap; }
 .am-top { color: var(--accent); font-size: var(--fs-xs); font-weight: var(--w-strong); }
 .am-gap { color: var(--warn); }
 .am-story { padding: var(--s2) 0 var(--s3); max-width: var(--measure); }
 .am-fit { color: var(--soft); }
-.am-spend { display: block; }
-.am-cs { margin: var(--s4) 0; max-width: 860px; }
-.am-cs h3 { font-size: var(--fs-md); margin-bottom: var(--s2); }
+.am-spend { display: block; padding: 2px 0; }
+.am-spend.reserve { color: var(--muted); }
+.am-reveal { margin: 0 0 var(--s3); }
+
+body[data-tab="daily"] .shell, body[data-tab="card"] .shell, body[data-tab="plan"] .shell { max-width: 1440px; }
+body[data-tab="daily"] .top-in, body[data-tab="card"] .top-in, body[data-tab="plan"] .top-in { max-width: 1440px; }
+body[data-tab="card"] .shell { grid-template-columns: minmax(0, 1fr); padding-bottom: var(--s5); }
+body[data-tab="card"] nav.side { display: none; }
+body[data-tab="card"] main { padding-top: var(--s4); }
+.wb-head h1 { margin-bottom: var(--s3); }
+.wb-days { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: var(--s3); }
+.wb-dot { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: var(--hair); color: var(--muted); font-size: var(--fs-xs); }
+.wb-dot:hover { border-color: var(--accent); text-decoration: none; }
+.wb-dot.half { border: 2px solid var(--ok); color: var(--ink); }
+.wb-dot.done { background: var(--ok); border-color: var(--ok); color: var(--bg); }
+.wb-dot.today { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+.wb-dot.on { border: 2px solid var(--accent); color: var(--accent); font-weight: var(--w-strong); }
+.wb-switch { display: flex; gap: var(--s5); border-bottom: var(--hair); }
+.wb-p { padding: var(--s2) 0; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.wb-p:hover { color: var(--ink); text-decoration: none; }
+.wb-p.on { color: var(--ink); font-weight: var(--w-strong); border-bottom-color: var(--accent); }
+.wb-pm { color: var(--muted); font-weight: normal; font-size: var(--fs-sm); margin-left: var(--s2); }
+.wb { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s6); align-items: start; margin-top: var(--s5); }
+.wb-l > p { max-width: var(--measure); }
+.wb-ex { margin: var(--s3) 0; }
+.wb-ex td:first-child { font-weight: normal; }
+.wb-ex code { white-space: pre-wrap; word-break: break-word; }
+.wb-lim { color: var(--soft); font-size: var(--fs-sm); }
+.wb-r { position: sticky; top: calc(var(--top) + var(--s4)); max-height: calc(100vh - var(--top) - var(--s6)); overflow-y: auto; padding-left: var(--s5); border-left: var(--hair); }
+.wb-bar { display: flex; align-items: center; gap: var(--s3); }
+.wb-clock { font-family: var(--mono); font-size: var(--fs-lg); font-weight: var(--w-strong); min-width: 4.5ch; }
+.wb-clock.late { color: var(--warn); }
+textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
+.wb-sol { margin-top: var(--s6); padding-top: var(--s4); border-top: var(--hair); }
+.wb-sol:empty { display: none; }
+.wb-sol h2 { font-size: var(--fs-lg); margin-bottom: var(--s2); }
+@media (max-width: 960px) { .wb { grid-template-columns: minmax(0, 1fr); } .wb-r { position: static; max-height: none; padding-left: 0; border-left: 0; } }
+
+.lc-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s1) var(--s4); }
+.lc-head h1 { margin: 0; }
+.lc-head .hsub { flex: 1; margin: 0; min-width: 260px; }
+.lc-bar { display: flex; gap: 2px; margin: var(--s1) 0 var(--s4); }
+.lc-seg { display: flex; flex-direction: column; padding: var(--s1) var(--s2) 0; border-top: 3px solid var(--accent); font-size: var(--fs-xs); color: var(--muted); min-width: 0; }
+.lc-seg b { color: var(--ink); font-size: var(--fs-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-seg.s2 { border-top-color: var(--ok); }
+.lc-seg.s4 { border-top-color: var(--cat-3); }
+.lc-rounds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s5); }
+.lc-r { padding-top: var(--s2); border-top: var(--hair); font-size: var(--fs-sm); }
+.lc-r h3 { font-size: var(--fs-md); margin-bottom: var(--s1); }
+.lc-r ol { margin: 0 0 var(--s1); padding-left: var(--s4); }
+.lc-r p { margin-bottom: var(--s2); }
+.lc-show { color: var(--soft); }
+.lc-foot { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s5); margin-top: var(--s3); padding-top: var(--s2); border-top: var(--hair); font-size: var(--fs-sm); }
+.lc-foot ul { margin: 0; padding-left: var(--s4); }
+@media (max-width: 960px) { .lc-rounds { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .lc-rounds, .lc-foot { grid-template-columns: minmax(0, 1fr); } }
 @media print {
-  .top, nav.side, .sn-strip, .am-noprint { display: none !important; }
-  .shell { display: block; padding: 0; }
+  @page { size: landscape; margin: 10mm; }
+  .top, nav.side, .sn-strip, .am-noprint, .td { display: none !important; }
+  .shell { display: block; padding: 0; max-width: none; }
+  main { padding: 0; }
   body { background: #fff; color: #000; }
 }
 </style>
@@ -627,9 +718,9 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
 <dialog id="quiz" aria-label="Quiz"></dialog>
 <dialog id="convo" class="convo" aria-label="Mock conversation"></dialog>
 <script src="../figures/icons.js?v=f5a48822"></script>
-<script src="../figures/figures.js?v=4a4d9dd0"></script>
+<script src="../figures/figures.js?v=99ab38c9"></script>
 <script src="../private/figures.js?v=38a55080"></script>
-<script src="../figures/notes.js?v=5d8dd758"></script>
+<script src="../figures/notes.js?v=feb58c75"></script>
 <script src="../private/notes.js?v=64ed8baa"></script>
 <script src="../private/loops/ecogpt.js"></script>
 <script src="../figures/viewer.js?v=ecb99aae"></script>
@@ -2392,6 +2483,8 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
           b.rows.map(function (r) { return "<tr>" + r.map(function (c) { return "<td>" + inl(c) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody>";
         var tw = el("div", "cd-blk"); tw.appendChild(t); return tw;
       case "problem": return cdProblem(b);
+      case "fig": var fw = el("div", "cd-blk"), fg = figNode(b.key, 0); if (fg) { fw.appendChild(fg); } return fw;
+      case "res": var rw = el("div", "cd-blk"), rr = window.Res && Res.render(b.items); if (rr) { rw.appendChild(rr); } return rw;
     }
     return el("span");
   }
@@ -2411,6 +2504,8 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
       a.href = link(tab, p.id); li.appendChild(a); ol.appendChild(li);
     });
     top.appendChild(ol);
+    var rs = resFor(cur.id); if (rs) { top.appendChild(rs); }
+    if (cur.id === "lld-round") { var rp = resFor("patterns", "Design patterns: watch and read"); if (rp) { top.appendChild(rp); } }
     host.appendChild(top);
     nav.push([cur.id, "Parts"]);
     cur.sections.forEach(function (s) {
@@ -2436,15 +2531,17 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     foot.appendChild(i > 0 ? el("a", "", "Previous: " + esc(parts[i - 1].title)) : el("span"));
     foot.appendChild(mk);
     foot.appendChild(i < parts.length - 1 ? el("a", "", "Next: " + esc(parts[i + 1].title)) : el("span"));
-    if (i > 0) { foot.firstChild.href = link(tab, parts[i - 1].id); }
-    if (i < parts.length - 1) { foot.lastChild.href = link(tab, parts[i + 1].id); }
+    if (i > 0) { foot.firstChild.href = link(tab, parts[i - 1].id); foot.firstChild.setAttribute("data-step", "prev"); }
+    if (i < parts.length - 1) { foot.lastChild.href = link(tab, parts[i + 1].id); foot.lastChild.setAttribute("data-step", "next"); }
     host.appendChild(foot);
   }
 
   /* ---------------------------------------------------------------- a long loop's own tabs
-     Plan (LOOP.plan: weeks of days, each a checklist), Daily two (window.LOOP_DAILY: two problems a
-     day, topic hidden until solved), Leadership (LOOP.lp plus the private story bank), Loop day
-     (LOOP.card, printable). Ticks and answers live in this browser under accelerate.coding.<loop>. */
+     Plan (LOOP.plan: weeks of days; a calendar and one day's checklist), Daily two (window.LOOP_DAILY:
+     two problems a day, topic hidden until solved, as a two-pane workbench), Leadership (LOOP.lp plus
+     the private story bank), Loop day (LOOP.card, one screen). The day's checklist also rides along on
+     every tab (todayNav), as a rail or a bar. Ticks and answers live in this browser under
+     accelerate.coding.<loop>. */
   function isoToday() {
     var d = new Date();
     return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
@@ -2461,153 +2558,280 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     c.addEventListener("change", function () { setTick(k, c.checked); if (onChange) { onChange(c.checked); } });
     return c;
   }
+  function resFor(id, label) {
+    var items = window.LOOP_RES && LOOP_RES[id];
+    if (!items || !items.length || !window.Res) { return null; }
+    var box = el("div", "am-res");
+    box.appendChild(el("div", "lab", label || "Watch and read"));
+    var r = Res.render(items); if (r) { box.appendChild(r); }
+    return box;
+  }
 
-  function tabPlan(host) {
-    var P = LOOP.plan, today = isoToday();
+  /* -------- the day's checklist, on every tab */
+  var KINDS = [["daily", "Daily two"], ["design", "Design"], ["story", "Stories"], ["revise", "Revise"], ["plan", "Milestone"], ["loop", "Loop practice"], ["other", "Other"]];
+  function planDays() {
+    var out = [];
+    (LOOP.plan ? LOOP.plan.weeks : []).forEach(function (w) { w.days.forEach(function (d) { out.push(d); }); });
+    return out;
+  }
+  function railDay() {
+    var days = planDays(), want = cdState().railDay || isoToday();
+    if (!days.length) { return null; }
+    var hit = days.filter(function (d) { return d.date === want; })[0];
+    if (hit) { return hit; }
+    if (want !== isoToday()) { hit = days.filter(function (d) { return d.date === isoToday(); })[0]; if (hit) { return hit; } }
+    return isoToday() < days[0].date ? days[0] : days[days.length - 1];
+  }
+  function itemHere(it) {
+    if (!it.href || it.href.charAt(0) !== "#") { return false; }
+    var h = location.hash || "";
+    return h === it.href || h.indexOf(it.href + "/") === 0;
+  }
+  function navMode() { return window.innerWidth <= 960 ? "bar" : (cdState().navMode || "rail"); }
+  function todayNav(mode) {
+    var d = railDay(); if (!d) { return null; }
+    var days = planDays(), i = days.indexOf(d);
+    var box = el("div", "td td-" + mode);
+    var head = el("div", "td-h");
+    var arrow = function (txt, to, label) {
+      var b = el("button", "td-arrow", txt); b.type = "button"; b.setAttribute("aria-label", label);
+      if (to < 0 || to >= days.length) { b.disabled = true; }
+      b.addEventListener("click", function () { cdSave("railDay", days[to].date); drawToday(); });
+      return b;
+    };
+    var title = el("a", "td-day", esc(dayLabel(d.date)) + (d.date === isoToday() ? ", today" : ""));
+    title.href = link("plan", d.date);
+    var count = el("span", "td-n");
+    var recount = function () {
+      var got = d.items.filter(function (_, j) { return ticks()["plan:" + d.date + ":" + j]; }).length;
+      count.textContent = got + " of " + d.items.length;
+    };
+    recount();
+    head.appendChild(arrow("‹", i - 1, "Previous day")); head.appendChild(title); head.appendChild(arrow("›", i + 1, "Next day")); head.appendChild(count);
+    box.appendChild(head);
+    var ul = el("ul", "td-list");
+    d.items.forEach(function (it, j) {
+      var li = el("li", "td-it k-" + (it.k || "other") + (itemHere(it) ? " here" : ""));
+      li.appendChild(tickBox("plan:" + d.date + ":" + j, function () { recount(); if (curTab === "plan") { route(); } }));
+      var tx;
+      if (it.href) {
+        tx = el("a", "td-t", inl(it.t)); tx.href = it.href;
+        if (/^\.\.\/|^[a-z]+\.html/.test(it.href)) { tx.target = "_blank"; tx.rel = "noopener"; tx.title = "Opens in a new tab"; }
+      } else { tx = el("span", "td-t", inl(it.t)); }
+      li.appendChild(tx);
+      if (it.m) { li.appendChild(el("span", "td-m", esc(it.m))); }
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+    if (window.innerWidth > 960) {
+      var sw = el("button", "td-switch", mode === "rail" ? "Show as a bar on top" : "Show as a rail");
+      sw.type = "button";
+      sw.addEventListener("click", function () { cdSave("navMode", mode === "rail" ? "bar" : "rail"); drawToday(); });
+      box.appendChild(sw);
+    }
+    return box;
+  }
+  /* Draw (or redraw) the checklist where the chosen mode puts it: the top of the rail, or a sticky bar
+     above the page. */
+  function drawToday() {
+    var old = document.querySelectorAll(".td"); for (var k = 0; k < old.length; k++) { old[k].remove(); }
+    var lab = side.querySelector(".td-lab"); if (lab) { lab.remove(); }
+    if (!LOOP.plan) { return; }
+    var mode = navMode(), box = todayNav(mode);
+    if (!box) { return; }
+    if (mode === "bar") { main.insertBefore(box, main.firstChild); }
+    else { side.insertBefore(el("div", "td-lab", "On this page"), side.firstChild); side.insertBefore(box, side.firstChild); }
+  }
+
+  /* -------- Plan: a calendar of the weeks, then one day */
+  function tabPlan(host, anchor) {
+    var P = LOOP.plan, today = isoToday(), days = planDays();
+    var sel = days.filter(function (d) { return d.date === anchor; })[0] || railDay();
+    if (anchor && sel && sel.date === anchor) { cdSave("railDay", anchor); }
     var top = el("section", "block"); top.id = "plan-top";
     top.appendChild(el("h1", "", esc(P.title || "The plan")));
-    if (P.lead) { top.appendChild(el("p", "lead", inl(P.lead))); }
+    if (P.lead) { top.appendChild(el("p", "hsub", inl(P.lead))); }
+    var cal = el("div", "cal");
+    var first = P.weeks[0].days[0].date;
+    cal.appendChild(el("span", "cal-wk"));
+    for (var c = 0; c < 7; c++) {
+      var dd = new Date(first + "T12:00:00"); dd.setDate(dd.getDate() + c);
+      cal.appendChild(el("span", "cal-dh", ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dd.getDay()]));
+    }
+    P.weeks.forEach(function (w) {
+      cal.appendChild(el("span", "cal-wk", esc(w.short || w.title.split(":")[0])));
+      w.days.forEach(function (d) {
+        var a = el("a", "cal-c" + (d.date === today ? " today" : "") + (sel && d.date === sel.date ? " on" : "") + (d.date < today ? " past" : ""));
+        a.href = link("plan", d.date);
+        var got = d.items.filter(function (_, j) { return ticks()["plan:" + d.date + ":" + j]; }).length;
+        a.appendChild(el("span", "cal-d", "<b>" + new Date(d.date + "T12:00:00").getDate() + "</b>" + (d.hours ? " " + esc(d.hours) : "")));
+        var dots = el("span", "cal-dots");
+        d.items.forEach(function (it, j) { dots.appendChild(el("i", "k-" + (it.k || "other") + (ticks()["plan:" + d.date + ":" + j] ? " got" : ""))); });
+        a.appendChild(dots);
+        if (d.items.length && got === d.items.length) { a.appendChild(el("span", "cal-ok", "&#10003;")); }
+        cal.appendChild(a);
+      });
+    });
+    top.appendChild(cal);
+    var leg = el("p", "cal-leg");
+    KINDS.forEach(function (k) { leg.appendChild(el("span", "", '<i class="k-' + k[0] + '"></i>' + esc(k[1]))); });
+    top.appendChild(leg);
+    host.appendChild(top);
+    nav.push(["plan-top", "The calendar"]);
+
+    if (sel) {
+      var day = el("section", "block am-day"); day.id = "plan-day";
+      var wk = P.weeks.filter(function (w) { return w.days.indexOf(sel) >= 0; })[0];
+      day.appendChild(el("h2", "", esc(dayLabel(sel.date)) + (sel.date === today ? ", today" : "")));
+      day.appendChild(el("p", "hsub", esc(wk ? wk.title : "") + (sel.hours ? ". About " + esc(sel.hours) + "." : "") + (sel.focus ? " " + inl(sel.focus) : "")));
+      var ul = el("ul", "am-items");
+      sel.items.forEach(function (it, i) {
+        var li = el("li", "am-it k-" + (it.k || "other"));
+        var lab = el("label");
+        lab.appendChild(tickBox("plan:" + sel.date + ":" + i, function () { drawToday(); }));
+        lab.appendChild(el("span", "am-k", esc((KINDS.filter(function (k) { return k[0] === it.k; })[0] || ["", ""])[1])));
+        var tx = el("span", "am-tx");
+        if (it.href) { var a = el("a", "", inl(it.t)); a.href = it.href; if (/^\.\.\/|^[a-z]+\.html/.test(it.href)) { a.target = "_blank"; a.rel = "noopener"; } tx.appendChild(a); }
+        else { tx.innerHTML = inl(it.t); }
+        lab.appendChild(tx);
+        if (it.m) { lab.appendChild(el("span", "am-min", esc(it.m))); }
+        li.appendChild(lab); ul.appendChild(li);
+      });
+      day.appendChild(ul);
+      var i = days.indexOf(sel), dn = el("div", "cd-nav");
+      var pv = el("a", "", i > 0 ? "Previous: " + esc(dayLabel(days[i - 1].date)) : ""), nx = el("a", "", i < days.length - 1 ? "Next: " + esc(dayLabel(days[i + 1].date)) : "");
+      if (i > 0) { pv.href = link("plan", days[i - 1].date); pv.setAttribute("data-step", "prev"); }
+      if (i < days.length - 1) { nx.href = link("plan", days[i + 1].date); nx.setAttribute("data-step", "next"); }
+      dn.appendChild(pv); dn.appendChild(nx); day.appendChild(dn);
+      host.appendChild(day);
+      nav.push(["plan-day", dayLabel(sel.date)]);
+    }
+
+    var more = el("section", "block"); more.id = "plan-more";
+    more.appendChild(el("h2", "", "How the hours split"));
     if (P.split) {
       var t = el("table");
-      t.innerHTML = "<thead><tr><th>Where the hours go</th><th>Share</th><th>Why</th></tr></thead><tbody>" +
+      t.innerHTML = "<thead><tr><th>Track</th><th>Share</th><th>What it is</th></tr></thead><tbody>" +
         P.split.map(function (r) { return "<tr><td>" + inl(r[0]) + "</td><td>" + inl(r[1]) + "</td><td>" + inl(r[2]) + "</td></tr>"; }).join("") + "</tbody>";
-      top.appendChild(t);
+      more.appendChild(t);
     }
-    host.appendChild(top);
-    nav.push(["plan-top", "The plan"]);
-    var todayEl = null;
-    P.weeks.forEach(function (w) {
-      var sec = el("section", "block am-week"); sec.id = w.id;
-      sec.appendChild(el("h2", "", esc(w.title)));
-      if (w.note) { sec.appendChild(el("p", "hsub", inl(w.note))); }
-      w.days.forEach(function (d) {
-        var box = el("div", "am-day" + (d.date === today ? " today" : "") + (d.date < today ? " past" : "")); box.id = "day-" + d.date;
-        var head = el("div", "am-dh");
-        var count = function () {
-          var n = d.items.length, got = d.items.filter(function (_, i) { return ticks()["plan:" + d.date + ":" + i]; }).length;
-          head.innerHTML = "<b>" + esc(dayLabel(d.date)) + (d.date === today ? ", today" : "") + "</b>" +
-            '<span class="am-dm">' + esc(d.hours || "") + (n ? ", " + got + " of " + n + " done" : "") + "</span>";
-        };
-        count();
-        box.appendChild(head);
-        if (d.focus) { box.appendChild(el("p", "am-focus", inl(d.focus))); }
-        var ul = el("ul", "am-items");
-        d.items.forEach(function (it, i) {
-          var li = el("li", "am-it k-" + (it.k || "x"));
-          var lab = el("label");
-          lab.appendChild(tickBox("plan:" + d.date + ":" + i, count));
-          lab.appendChild(el("span", "am-k", esc(it.k || "")));
-          var tx = el("span", "am-tx");
-          if (it.href) { var a = el("a", "", inl(it.t)); a.href = it.href; if (/^\.\.\//.test(it.href)) { a.target = "_blank"; a.rel = "noopener"; } tx.appendChild(a); }
-          else { tx.innerHTML = inl(it.t); }
-          if (it.m) { tx.appendChild(el("span", "am-min", esc(it.m))); }
-          lab.appendChild(tx);
-          li.appendChild(lab); ul.appendChild(li);
-        });
-        box.appendChild(ul);
-        sec.appendChild(box);
-        if (d.date === today) { todayEl = box; }
-      });
-      host.appendChild(sec);
-      nav.push([w.id, w.title]);
-    });
-    if (todayEl) { requestAnimationFrame(function () { todayEl.scrollIntoView({ block: "start" }); }); }
+    var rl = resFor("loop", "Watch: what a loop looks like"); if (rl) { more.appendChild(rl); }
+    host.appendChild(more);
+    nav.push(["plan-more", "How the hours split"]);
   }
 
+  /* -------- Daily two: one problem at a time, the problem left and your work right */
   function dailyDays() { return (window.LOOP_DAILY ? LOOP_DAILY.days : []).slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }); }
-  function tabDaily(host, anchor) {
-    var days = dailyDays(), today = isoToday();
-    var cur = days.filter(function (d) { return d.date === anchor; })[0] ||
-      days.filter(function (d) { return d.date === today; })[0] ||
-      days.filter(function (d) { return d.date > today; })[0] || days[days.length - 1];
-    var top = el("section", "block"); top.id = "daily-top";
-    top.appendChild(el("h1", "", "Day " + cur.n + ": " + esc(dayLabel(cur.date))));
-    top.appendChild(el("p", "hsub", "Two problems, 10 to 20 minutes each, no internet. Ask the clarifying questions first, out loud, then think. The topic stays hidden until you have solved it or opened the solution."));
-    host.appendChild(top);
-    nav.push(["daily-top", "This day"]);
-    cur.problems.forEach(function (p, i) {
-      var sec = el("section", "cd-sec"); sec.id = p.id;
-      sec.appendChild(el("h3", "", esc((i ? "Second: " : "First: ") + p.title) + '<span class="am-dm"> about ' + p.minutes + " min</span>"));
-      sec.appendChild(dailyProblem(p));
-      host.appendChild(sec);
-      nav.push([p.id, p.title, true, link("daily", cur.date)]);
-    });
-    var list = el("section", "block am-days"); list.id = "daily-all";
-    list.appendChild(el("h2", "", "Every day"));
-    var ol = el("ol", "cd-parts");
+  function tabDaily(host, anchor, sub) {
+    var days = dailyDays(), today = isoToday(), pi = 0;
+    var cur = days.filter(function (d) { return d.date === anchor; })[0];
+    if (!cur && anchor) { days.forEach(function (d) { d.problems.forEach(function (p, i) { if (p.id === anchor) { cur = d; pi = i; } }); }); }
+    cur = cur || days.filter(function (d) { return d.date === today; })[0] || days.filter(function (d) { return d.date > today; })[0] || days[days.length - 1];
+    if (sub === "2") { pi = 1; }
+    var p = cur.problems[pi];
+    var solvedOf = function (d) { return d.problems.filter(function (q) { return ticks()["solved:" + q.id]; }).length; };
+
+    var head = el("section", "block wb-head"); head.id = "daily-top";
+    head.appendChild(el("h1", "", "Day " + cur.n + ", " + esc(dayLabel(cur.date)) + (cur.date === today ? " (today)" : "")));
+    var dots = el("div", "wb-days");
     days.forEach(function (d) {
-      var solved = d.problems.filter(function (p) { return ticks()["solved:" + p.id]; }).length;
-      var a = el("a", d === cur ? "on" : "", '<span class="cd-n">' + d.n + '</span><span>' + esc(dayLabel(d.date)) + (d.date === today ? ", today" : "") +
-        '</span><span class="cd-m">' + (solved === d.problems.length ? '<span class="cd-ok">&#10003;</span> ' : solved ? solved + " of 2 " : "") + "</span>");
-      a.href = link("daily", d.date);
-      var li = el("li"); li.appendChild(a); ol.appendChild(li);
+      var n = solvedOf(d), a = el("a", "wb-dot" + (n === d.problems.length ? " done" : n ? " half" : "") + (d.date === today ? " today" : "") + (d === cur ? " on" : ""), String(d.n));
+      a.href = link("daily", d.date); a.title = dayLabel(d.date) + (n ? ", " + n + " of " + d.problems.length + " solved" : "");
+      dots.appendChild(a);
     });
-    list.appendChild(ol);
-    host.appendChild(list);
-    nav.push(["daily-all", "Every day"]);
-  }
-  function dailyProblem(p) {
-    var w = el("div", "cd-blk cd-prob");
-    paras(w, String(p.scenario).split("\n\n"));
-    (p.examples || []).forEach(function (x, i) {
-      w.appendChild(el("div", "cd-ex", "<strong>Example " + (i + 1) + "</strong><br><code>" + esc(x.input) + "</code> gives <code>" + esc(x.output) + "</code>" +
-        (x.note ? '<br><span class="note">' + inl(x.note) + "</span>" : "")));
+    head.appendChild(dots);
+    var sw = el("div", "wb-switch");
+    cur.problems.forEach(function (q, i) {
+      var a = el("a", "wb-p" + (i === pi ? " on" : ""), (i + 1) + ". " + esc(q.title) + (ticks()["solved:" + q.id] ? ' <span class="cd-ok">&#10003;</span>' : "") + '<span class="wb-pm">' + q.minutes + " min</span>");
+      a.href = "#/daily/" + cur.date + "/" + (i + 1);
+      sw.appendChild(a);
     });
-    if (p.constraints && p.constraints.length) { var ul = el("ul"); p.constraints.forEach(function (c) { ul.appendChild(el("li", "", inl(c))); }); w.appendChild(ul); }
-    if (p.clarify && p.clarify.length) {
-      w.appendChild(el("div", "lab", "Ask before you solve"));
-      var cl = el("div", "cd-faq");
-      p.clarify.forEach(function (c) {
-        var d = el("details"); d.appendChild(el("summary", "", inl(c.q))); d.appendChild(el("p", "", "<strong>They say:</strong> " + inl(c.a))); cl.appendChild(d);
-      });
-      w.appendChild(cl);
+    head.appendChild(sw);
+    host.appendChild(head);
+    nav.push(["daily-top", "Day " + cur.n]);
+
+    var wb = el("div", "wb"), L = el("div", "wb-l"), R = el("div", "wb-r");
+    L.id = "wb-problem";
+    paras(L, String(p.scenario).split("\n\n"));
+    if ((p.examples || []).length) {
+      var t = el("table", "wb-ex");
+      t.innerHTML = "<thead><tr><th>Input</th><th>Output</th><th>Why</th></tr></thead><tbody>" + p.examples.map(function (x) {
+        return "<tr><td><code>" + esc(x.input) + "</code></td><td><code>" + esc(x.output) + "</code></td><td>" + inl(x.note || "") + "</td></tr>";
+      }).join("") + "</tbody>";
+      L.appendChild(t);
     }
-    w.appendChild(el("div", "lab", "Your solution"));
-    var ta = cdArea(p.id, p.starter || ""); ta.rows = 14; w.appendChild(ta);
-    var hints = el("div"); w.appendChild(hints);
-    var bar = el("div", "cd-bar"); w.appendChild(bar);
+    if (p.constraints && p.constraints.length) { L.appendChild(el("p", "wb-lim", "<strong>Limits:</strong> " + p.constraints.map(inl).join("; "))); }
+    if (p.clarify && p.clarify.length) {
+      L.appendChild(el("div", "lab", "Ask before you solve"));
+      var cl = el("div", "cd-faq");
+      p.clarify.forEach(function (c) { var d = el("details"); d.appendChild(el("summary", "", inl(c.q))); d.appendChild(el("p", "", "<strong>They say:</strong> " + inl(c.a))); cl.appendChild(d); });
+      L.appendChild(cl);
+    }
+    var sol = el("div", "wb-sol"); sol.id = "wb-sol"; L.appendChild(sol);
+
     var tm = null, left = (p.minutes || 15) * 60;
-    var tb = cdBtn("Start " + (p.minutes || 15) + " minutes", function () {
+    var bar1 = el("div", "wb-bar");
+    var clock = el("span", "wb-clock", (p.minutes || 15) + ":00");
+    var tb = cdBtn("Start", function () {
       if (tm) { clearInterval(tm); tm = null; tb.textContent = "Resume"; return; }
+      tb.textContent = "Pause";
       tm = setInterval(function () {
-        left--; tb.textContent = Math.floor(Math.max(left, 0) / 60) + ":" + ("0" + Math.max(left, 0) % 60).slice(-2) + (left <= 0 ? ", time" : "");
-        if (left <= 0 || !document.body.contains(tb)) { clearInterval(tm); }
+        left--; var s = Math.max(left, 0);
+        clock.textContent = Math.floor(s / 60) + ":" + ("0" + s % 60).slice(-2);
+        if (left <= 0) { clock.classList.add("late"); }
+        if (left <= -3600 || !document.body.contains(clock)) { clearInterval(tm); }
       }, 1000);
     });
-    bar.appendChild(tb);
+    bar1.appendChild(clock); bar1.appendChild(tb);
+    R.appendChild(bar1);
+    var ta = cdArea(p.id, p.starter || ""); ta.classList.add("wb-ta"); R.appendChild(ta);
+    var hints = el("div", "wb-hints"), bar2 = el("div", "cd-bar"), extra = el("div");
     var shown = 0;
     var hb = cdBtn("Hint 1 of " + p.hints.length, function () {
       hints.appendChild(el("p", "cd-hint", "<strong>Hint " + (shown + 1) + ".</strong> " + inl(p.hints[shown])));
       shown++;
       if (shown >= p.hints.length) { hb.remove(); } else { hb.textContent = "Hint " + (shown + 1) + " of " + p.hints.length; }
     });
-    bar.appendChild(hb);
-    bar.appendChild(cdBtn("Tests to paste", function () {
-      var r = el("div"); r.appendChild(el("div", "lab", "Paste under your solution and run it")); r.appendChild(cdPre(p.tests)); bar.after(r);
-    }));
-    var after = el("div"); w.appendChild(after);
-    function reveal() {
-      after.innerHTML = "";
-      var R = p.reveal || {};
-      after.appendChild(el("p", "am-reveal", "<strong>It was:</strong> " + esc(R.topic || "") + (R.lc ? ", " + esc(R.lc) : "") +
-        (R.pattern ? '. <a href="../CODING.html#' + esc(R.pattern) + '" target="_blank" rel="noopener">The pattern on the coding page</a>' : "") + "."));
-      after.appendChild(el("div", "lab", "Solution"));
-      after.appendChild(cdPre(p.solution));
-      if (p.complexity) { after.appendChild(el("p", "", "<strong>Cost.</strong> " + inl(p.complexity))); }
-      if (p.explain && p.explain.length) { var ol = el("ol"); p.explain.forEach(function (x) { ol.appendChild(el("li", "", inl(x))); }); after.appendChild(ol); }
-      if (p.dryrun) { after.appendChild(el("div", "lab", "Say the dry run like this")); after.appendChild(el("p", "cd-why", inl(p.dryrun))); }
-      if (p.followups && p.followups.length) { after.appendChild(el("div", "lab", "The next layers they ask")); after.appendChild(cdFaq(p.followups)); }
+    bar2.appendChild(hb);
+    bar2.appendChild(cdBtn("Tests", function () { extra.innerHTML = ""; extra.appendChild(el("div", "lab", "Paste under your solution and run it")); extra.appendChild(cdPre(p.tests)); }));
+    function reveal(scroll) {
+      sol.innerHTML = "";
+      var Rv = p.reveal || {};
+      sol.appendChild(el("h2", "", "Solution"));
+      sol.appendChild(el("p", "am-reveal", "<strong>It was:</strong> " + esc(Rv.topic || "") + (Rv.lc ? ", " + esc(Rv.lc) : "") +
+        (Rv.pattern ? '. <a href="../CODING.html#' + esc(Rv.pattern) + '" target="_blank" rel="noopener">The pattern on the coding page</a>' : "") + "."));
+      sol.appendChild(cdPre(p.solution));
+      if (p.complexity) { sol.appendChild(el("p", "", "<strong>Cost.</strong> " + inl(p.complexity))); }
+      if (p.explain && p.explain.length) { var ol = el("ol"); p.explain.forEach(function (x) { ol.appendChild(el("li", "", inl(x))); }); sol.appendChild(ol); }
+      if (p.dryrun) { sol.appendChild(el("div", "lab", "Say the dry run like this")); sol.appendChild(el("p", "", inl(p.dryrun))); }
+      if (p.followups && p.followups.length) { sol.appendChild(el("div", "lab", "The next layers they ask: answer each out loud first")); sol.appendChild(cdFaq(p.followups)); }
+      var rv = resFor(p.id, "Watch the walkthrough"); if (rv) { sol.appendChild(rv); }
+      if (scroll) { sol.scrollIntoView({ block: "start" }); }
     }
-    var solved = ticks()["solved:" + p.id];
-    var sb = cdBtn(solved ? "Solved. Show the solution" : "I solved it", function () { setTick("solved:" + p.id, true); reveal(); sb.remove(); gb.remove(); });
-    var gb = cdBtn("Show the solution", function () { reveal(); gb.remove(); });
-    bar.appendChild(sb); if (!solved) { bar.appendChild(gb); } else { gb = el("span"); }
-    if (p.followups && p.followups.length) {
-      w.appendChild(el("p", "am-note", "After the solution, the follow-ups are the interview: optimise, change a constraint, justify. Answer them out loud before opening each one."));
-    }
-    return w;
+    var solved = !!ticks()["solved:" + p.id];
+    var sb = cdBtn(solved ? "Solved" : "I solved it", function () { setTick("solved:" + p.id, true); sb.textContent = "Solved"; sb.disabled = true; if (gb) { gb.remove(); } reveal(true); route(); });
+    if (solved) { sb.disabled = true; }
+    var gb = solved ? null : cdBtn("Show the solution", function () { gb.remove(); gb = null; reveal(true); });
+    bar2.appendChild(sb); if (gb) { bar2.appendChild(gb); }
+    R.appendChild(bar2); R.appendChild(hints); R.appendChild(extra);
+    if (solved) { reveal(false); }
+    wb.appendChild(L); wb.appendChild(R);
+    host.appendChild(wb);
+    nav.push(["wb-problem", p.title, true]);
+
+    var all = []; days.forEach(function (d) { d.problems.forEach(function (q, i) { all.push([d, i]); }); });
+    var at = 0; all.forEach(function (x, k) { if (x[0] === cur && x[1] === pi) { at = k; } });
+    var fn = el("div", "cd-nav");
+    var mk = function (x, dir) {
+      if (!x) { return el("span"); }
+      var a = el("a", "", (dir === "prev" ? "Previous: " : "Next: ") + esc(x[0].problems[x[1]].title));
+      a.href = "#/daily/" + x[0].date + "/" + (x[1] + 1); a.setAttribute("data-step", dir); return a;
+    };
+    fn.appendChild(mk(all[at - 1], "prev")); fn.appendChild(mk(all[at + 1], "next"));
+    host.appendChild(fn);
   }
 
+  /* -------- Leadership */
   function tabLp(host, anchor) {
     var L = LOOP.lp, priv = (window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id]) || {};
     var stories = priv.stories || [], alloc = priv.allocation || [];
@@ -2616,6 +2840,7 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     top.appendChild(el("h1", "", "Leadership principles"));
     if (L.lead) { top.appendChild(el("p", "lead", inl(L.lead))); }
     if (L.rules) { var ul = el("ul"); L.rules.forEach(function (r) { var m = /^([^:]{1,40}):\s(.+)$/.exec(r); ul.appendChild(el("li", "", m ? "<strong>" + inl(m[1]) + ":</strong> " + inl(m[2]) : inl(r))); }); top.appendChild(ul); }
+    var rl = resFor("lp"); if (rl) { top.appendChild(rl); }
     host.appendChild(top);
     nav.push(["lp-top", "How it is graded"]);
 
@@ -2635,8 +2860,8 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
       var fits = stories.filter(function (s) { return (s.primary || []).indexOf(p.id) >= 0 || (s.secondary || []).indexOf(p.id) >= 0; });
       h += '<tr id="lp-' + p.id + '"><td>' + esc(p.name) + (p.top ? ' <span class="am-top">often</span>' : "") + "</td><td>" + inl((p.asks || [])[0] || "") + "</td><td>" +
         (fits.length ? fits.map(function (s) {
-          var main = (s.primary || []).indexOf(p.id) >= 0;
-          return '<a href="' + link("lp", "story-" + s.id) + '">' + (main ? "<strong>" : "") + esc(s.short || s.title) + (main ? "</strong>" : "") + "</a>" + (s.captured ? ' <span class="cd-ok">&#10003;</span>' : "");
+          var main2 = (s.primary || []).indexOf(p.id) >= 0;
+          return '<a href="' + link("lp", "story-" + s.id) + '">' + (main2 ? "<strong>" : "") + esc(s.short || s.title) + (main2 ? "</strong>" : "") + "</a>" + (s.captured ? ' <span class="cd-ok">&#10003;</span>' : "");
         }).join(", ") : '<span class="am-gap">no story yet</span>') + "</td></tr>";
     });
     t.innerHTML = h + "</tbody>";
@@ -2708,34 +2933,78 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
     nav.push(["lp-all", "The sixteen"]);
   }
 
+  /* -------- Loop day: one screen */
   function tabCard(host) {
     var C = LOOP.card, priv = (window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id]) || {};
-    var top = el("section", "block am-card"); top.id = "card";
-    top.appendChild(el("h1", "", esc(C.title || "Loop day")));
-    if (C.lead) { top.appendChild(el("p", "hsub", inl(C.lead))); }
-    var pb = cdBtn("Print this card", function () { window.print(); }); pb.className += " am-noprint"; top.appendChild(pb);
-    C.sections.forEach(function (s) {
-      var sec = el("div", "am-cs");
-      sec.appendChild(el("h3", "", esc(s.title)));
-      if (s.rows) {
-        var t = el("table"); t.innerHTML = "<tbody>" + s.rows.map(function (r) { return "<tr><td>" + inl(r[0]) + "</td><td>" + inl(r[1]) + "</td></tr>"; }).join("") + "</tbody>"; sec.appendChild(t);
-      }
-      if (s.items) { var ul = el("ul"); s.items.forEach(function (x) { ul.appendChild(el("li", "", inl(x))); }); sec.appendChild(ul); }
-      top.appendChild(sec);
-    });
-    if ((priv.allocation || []).length) {
-      var by = {}; (priv.stories || []).forEach(function (s) { by[s.id] = s; });
-      var sec = el("div", "am-cs"); sec.appendChild(el("h3", "", "Your stories, by round (cross off as you spend them)"));
-      var ul = el("ul");
-      priv.allocation.forEach(function (r) {
-        ul.appendChild(el("li", "", "<strong>" + esc(r.round) + ":</strong> " + (r.lead || []).concat(r.reserve || []).map(function (id) { return by[id] ? esc(by[id].short || by[id].title) : ""; }).filter(Boolean).join(", ")));
+    var by = {}; (priv.stories || []).forEach(function (s) { by[s.id] = s; });
+    var box = el("section", "block lc"); box.id = "card";
+    var hd = el("div", "lc-head");
+    hd.appendChild(el("h1", "", esc(C.title || "Loop day")));
+    if (C.lead) { hd.appendChild(el("p", "hsub", inl(C.lead))); }
+    var pb = cdBtn("Print", function () { window.print(); }); pb.className += " am-noprint"; hd.appendChild(pb);
+    box.appendChild(hd);
+    if (C.bar) {
+      var total = C.bar.reduce(function (a, s) { return a + s[1]; }, 0), at = 0;
+      var bar = el("div", "lc-bar");
+      C.bar.forEach(function (s, i) {
+        var seg = el("div", "lc-seg s" + i, "<b>" + esc(s[0]) + "</b><span>" + at + " to " + (at + s[1]) + " min</span>");
+        seg.style.flex = String(s[1]); at += s[1]; bar.appendChild(seg);
       });
-      sec.appendChild(ul); top.appendChild(sec);
+      box.appendChild(el("div", "lab", "Every round: " + total + " minutes"));
+      box.appendChild(bar);
     }
-    host.appendChild(top);
+    var cols = el("div", "lc-rounds");
+    (C.rounds || []).forEach(function (r, i) {
+      var c = el("div", "lc-r");
+      c.appendChild(el("h3", "", esc(r.name)));
+      if (r.first) { c.appendChild(el("div", "lab", esc(r.firstLabel || "First minutes"))); var ol = el("ol"); r.first.forEach(function (x) { ol.appendChild(el("li", "", inl(x))); }); c.appendChild(ol); }
+      if (r.show) { c.appendChild(el("p", "lc-show", inl(r.show))); }
+      var A = (priv.allocation || [])[i];
+      if (A) {
+        c.appendChild(el("div", "lab", "Stories here"));
+        (A.lead || []).concat(A.reserve || []).forEach(function (id, j) {
+          var s = by[id]; if (!s) { return; }
+          var lab = el("label", "am-spend" + (j >= (A.lead || []).length ? " reserve" : ""));
+          lab.appendChild(tickBox("spent:" + id)); lab.appendChild(document.createTextNode(" " + (s.short || s.title) + (j >= (A.lead || []).length ? " (reserve)" : "")));
+          c.appendChild(lab);
+        });
+      }
+      cols.appendChild(c);
+    });
+    box.appendChild(cols);
+    var ft = el("div", "lc-foot");
+    [["Between rounds", C.between], ["Never", C.rules]].forEach(function (x) {
+      if (!x[1]) { return; }
+      var f = el("div"); f.appendChild(el("div", "lab", x[0])); var ul = el("ul"); x[1].forEach(function (y) { ul.appendChild(el("li", "", inl(y))); }); f.appendChild(ul); ft.appendChild(f);
+    });
+    box.appendChild(ft);
+    host.appendChild(box);
     nav.push(["card", "The card"]);
   }
 
+  /* -------- moving around: arrow keys step through parts and problems; each tab reopens where you were */
+  document.addEventListener("keydown", function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") { return; }
+    var tg = (e.target.tagName || "").toLowerCase();
+    if (tg === "input" || tg === "textarea" || tg === "select" || e.target.isContentEditable || document.querySelector("dialog[open]")) { return; }
+    var a = main.querySelector('[data-step="' + (e.key === "ArrowLeft" ? "prev" : "next") + '"]');
+    if (a && a.href) { e.preventDefault(); location.href = a.href; }
+  });
+  var POS_KEY = "accelerate.pos." + LOOP.id, POS = {};
+  try { POS = JSON.parse(sessionStorage.getItem(POS_KEY) || "{}") || {}; } catch (e) { POS = {}; }
+  var posTimer = null;
+  window.addEventListener("scroll", function () {
+    if (posTimer) { return; }
+    posTimer = setTimeout(function () {
+      posTimer = null; POS[location.hash || "#/"] = window.scrollY;
+      try { sessionStorage.setItem(POS_KEY, JSON.stringify(POS)); } catch (e) {}
+    }, 250);
+  }, { passive: true });
+  function lastHash(tab) { return (cdState().lastHash || {})[tab]; }
+  window.addEventListener("resize", function () { if (LOOP.plan && (window.innerWidth <= 960) !== (document.querySelector(".td-bar") !== null)) { drawToday(); } });
+
+  var curTab = null, restoreNext = false;
   function tabMocks(host) {
     var s = heading(host, "mock", "Run in chat", "Mock interviews");
     s.appendChild(el("p", "lead", inl(LOOP.mockHow)));
@@ -2976,13 +3245,14 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
       learnModules().forEach(function (m) { m.topics.forEach(function (t) { if ((t.was || []).indexOf(p[1]) >= 0 || t.id === p[1]) { to = t.id; } }); });
       if (to) { history.replaceState(null, "", link("learn", to)); return { tab: "learn", anchor: to }; }
     }
-    return { tab: tab, anchor: p[1] || null };
+    return { tab: tab, anchor: p[1] || null, sub: p[2] || null };
   }
   function drawTabs(current) {
     var bar = document.getElementById("tabs");
     bar.innerHTML = "";
     TABS.forEach(function (t) {
-      var a = el("a", "", esc(t.label)); a.href = link(t.id);
+      var a = el("a", "", esc(t.label)); a.href = (t.id !== current && lastHash(t.id)) || link(t.id);
+      a.addEventListener("click", function () { restoreNext = true; });
       if (t.id === current) { a.setAttribute("aria-current", "page"); }
       bar.appendChild(a);
     });
@@ -3024,18 +3294,22 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
       else if (r.tab === "mocks") { tabMocks(main); }
       else if (r.tab === "coding") { tabCoding(main, r.anchor); }
       else if (r.tab === "lld") { tabCoding(main, r.anchor, "lld"); }
-      else if (r.tab === "daily") { tabDaily(main, r.anchor); }
+      else if (r.tab === "daily") { tabDaily(main, r.anchor, r.sub); }
       else if (r.tab === "lp") { tabLp(main, r.anchor); }
-      else if (r.tab === "plan") { tabPlan(main); }
+      else if (r.tab === "plan") { tabPlan(main, r.anchor); }
       else if (r.tab === "card") { tabCard(main); }
     } catch (err) {
       console.error("Could not draw the page", err);
       main.appendChild(el("p", "", "This page could not be drawn. The console has the details."));
     }
-    drawTabs(r.tab); drawSide(r.tab); progress();
-    var key = r.tab + "/" + (r.tab === "sessions" ? r.anchor : "");
+    curTab = r.tab; document.body.setAttribute("data-tab", r.tab);
+    var lh = cdState().lastHash || {}; lh[r.tab] = location.hash; cdSave("lastHash", lh);
+    drawTabs(r.tab); drawSide(r.tab); drawToday(); progress();
+    var key = /^(daily|plan|coding|lld)$/.test(r.tab) ? location.hash : r.tab + "/" + (r.tab === "sessions" ? r.anchor : "");
     var target = r.anchor && r.tab !== "sessions" ? document.getElementById(r.anchor) : null;
-    if (target) {
+    var back = restoreNext && POS[location.hash] != null; restoreNext = false;
+    if (back) { var y = POS[location.hash]; requestAnimationFrame(function () { window.scrollTo({ top: y, behavior: "instant" }); }); }
+    else if (target) {
       if (target.tagName === "DETAILS") { target.open = true; }
       requestAnimationFrame(function () { target.scrollIntoView({ block: "start" }); });
     }

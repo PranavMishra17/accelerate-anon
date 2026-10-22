@@ -10,8 +10,8 @@
 <link rel="stylesheet" href="figures/viewer.css?v=d06369af">
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
 <script src="figures/icons.js?v=f5a48822"></script>
-<script src="figures/figures.js?v=4a4d9dd0"></script>
-<script src="figures/notes.js?v=5d8dd758" defer></script>
+<script src="figures/figures.js?v=99ab38c9"></script>
+<script src="figures/notes.js?v=feb58c75" defer></script>
 <script src="figures/viewer.js?v=ecb99aae" defer></script>
 <link rel="stylesheet" href="coding/sheet.css?v=d5d986d2">
 <link rel="stylesheet" href="site/nav.css?v=2ebfb65e">
@@ -96,6 +96,24 @@ details.sol > summary::-webkit-details-marker { display: none; }
 details.sol > summary::before { content: "\25B8"; display: inline-block; width: 14px; transition: transform .15s; }
 details.sol[open] > summary::before { transform: rotate(90deg); }
 details.sol > pre { margin: var(--s2) 0; }
+/* The Algorithms tab: one long page, every algorithm's code. Its index is nav.side (a.on marks the one in view); on a phone the
+   top bar carries a select instead. Same label rail, code and type as the other tabs. */
+#algos .ag { font-size: var(--fs-xl); line-height: var(--lh-tight); font-weight: var(--w-strong); margin: var(--s7) 0 var(--s1); scroll-margin-top: 96px; }
+#algos .ag-grp:first-of-type .ag { margin-top: var(--s5); }
+section.alg { padding: var(--s5) 0 var(--s3); border-top: var(--hair); scroll-margin-top: 96px; }
+.ag + section.alg { border-top: 0; }
+.alg h3 { font-size: var(--fs-lg); line-height: var(--lh-tight); font-weight: var(--w-strong); margin: 0 0 var(--s2); }
+.alg h3 span { font-size: var(--fs-sm); font-weight: var(--w-regular); color: var(--muted); margin-left: var(--s2); }
+.alg .cx b { color: var(--soft); }
+.alg ul.nt { margin: 0 0 var(--s3); padding-left: 22px; max-width: var(--measure); font-size: var(--fs-sm); color: var(--soft); }
+.alg ul.nt li { margin: 0 0 var(--s1); }
+.av { margin: var(--s4) 0 0; }
+.av .avn { margin: 0; max-width: var(--measure); }
+.av .avn span { color: var(--soft); font-size: var(--fs-sm); }
+.av pre { margin-top: var(--s2); }
+nav.side.dense a { padding: 2px 0; }
+nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
+.top select { display: none; font: inherit; padding: var(--s1) var(--s3); border: var(--hair); border-radius: var(--radius); background: var(--surface); color: var(--ink); min-width: 0; }
 @media (prefers-reduced-motion: reduce) { details.pat > summary .pt::before, details.sol > summary::before { transition: none; } }
 @media (max-height: 560px) { .top { position: static; } nav.side { top: 0; max-height: 100vh; } }
 @media (max-width: 820px) {
@@ -103,6 +121,8 @@ details.sol > pre { margin: var(--s2) 0; }
   nav.side { display: none; }
   .top-in { padding: var(--s2) var(--s4); gap: var(--s2) var(--s3); }
   .top input { min-width: 0; width: 100%; }
+  body.on-alg .top select { display: block; width: 100%; }
+  #algos .ag, section.alg { scroll-margin-top: 168px; }
   .tabs-in { padding: 0 var(--s2); }
   .pat-body { padding-left: 0; }
   details.pat > summary .ps { padding-left: 0; }
@@ -119,6 +139,7 @@ details.sol > pre { margin: var(--s2) 0; }
   <a href="#cheat" class="cheat-btn">Cheat sheet</a>
   <span class="grow"></span>
   <input id="q" type="search" placeholder="Search every tab, e.g. window, heap, RAG">
+  <select id="a-jump" aria-label="Jump to an algorithm"></select>
 </div><nav class="tabs"><div class="tabs-in" id="tabs"></div></nav></div>
 <div class="shell">
   <nav class="side" id="side"></nav>
@@ -155,13 +176,14 @@ details.sol > pre { margin: var(--s2) 0; }
     </section>
     </div>
     <div id="patterns"></div>
+    <div id="algos" class="hidden"></div>
   </main>
 </div>
 <div id="cheat" class="cheat" role="dialog" aria-label="Coding cheat sheet" hidden>
   <div class="cs-top"><b>Cheat sheet</b><div class="cs-tabs"></div><span class="hint">Click a card for examples and variations. F for full screen, Esc to close.</span><span class="grow"></span><a class="wide" href="CHEATSHEET.html">Its own page</a><button type="button" class="wide" id="cs-full">Full screen</button><button type="button" id="cs-close">Close</button></div>
   <div class="cs-grid"></div>
 </div>
-<script src="coding/data.js?v=c5ebc76c"></script>
+<script src="coding/data.js?v=a71fe45c"></script>
 <script src="coding/sheet.js?v=68cb3d74"></script>
 <script>
 (function () {
@@ -229,6 +251,32 @@ details.sol > pre { margin: var(--s2) 0; }
       sideBySide(p) + "</div></details>";
   }
 
+  // The Algorithms tab (D.algos): per algorithm its signal, a worked example, the code, the cost and the variants. The six
+  // that also have a cheat-sheet card (D.algo) take their signal from it, so that line lives in one place.
+  function algoHtml(a) {
+    var spot = a.spot || (D.algo[a.card] || {}).spot || "", pat = a.pat && byId[a.pat];
+    return '<section class="alg" id="alg-' + a.id + '" data-text="' + esc((a.title + " " + (a.also || "") + " " + spot + " " + a.vars.map(function (v) { return v.n; }).join(" ")).toLowerCase()) + '">' +
+      "<h3>" + esc(a.title) + (a.also ? "<span>" + esc(a.also) + "</span>" : "") + "</h3>" +
+      '<p class="spot"><b>Signal.</b> ' + spot + "</p>" +
+      (a.ex ? CS.stHtml(null, [["Example", CS.ioHtml(a.ex), "r-ex"]]) : "") +
+      "<pre><code>" + hl(a.code) + "</code></pre>" +
+      '<p class="cx"><b>Time</b> ' + a.time + ". <b>Space</b> " + a.space + "." + (pat ? ' Practise: <a href="#' + pat.id + '">' + esc(pat.title) + "</a>." : "") + "</p>" +
+      (a.notes ? '<ul class="nt">' + a.notes.map(function (n) { return li(md(n)); }).join("") + "</ul>" : "") +
+      a.vars.map(function (v) {
+        return '<div class="av"><p class="avn"><b>' + esc(v.n) + "</b> <span>" + md(v.t) + "</span></p><pre><code>" + hl(v.code) + "</code></pre></div>";
+      }).join("") + "</section>";
+  }
+  var ALGOS = D.algos || [], algoById = {}, algoCount = 0;
+  ALGOS.forEach(function (g) { g.items.forEach(function (a) { algoById[a.id] = a; algoCount++; }); });
+  var algosEl = document.getElementById("algos"), jump = document.getElementById("a-jump");
+  algosEl.innerHTML = '<p class="spot" id="alg-note">Trees use the usual <code>TreeNode(val, left, right)</code> and linked lists <code>ListNode(val, next)</code>. Every other block runs as it stands, imports included. All of it is tested.</p>' +
+    ALGOS.map(function (g) {
+      return '<div class="ag-grp"><h2 class="ag" id="ag-' + g.id + '">' + esc(g.title) + "</h2>" + g.items.map(algoHtml).join("") + "</div>";
+    }).join("");
+  jump.innerHTML = '<option value="">Jump to an algorithm</option>' + ALGOS.map(function (g) {
+    return '<optgroup label="' + esc(g.title) + '">' + g.items.map(function (a) { return '<option value="' + a.id + '">' + esc(a.title) + "</option>"; }).join("") + "</optgroup>";
+  }).join("");
+
   var side = document.getElementById("side"), host = document.getElementById("patterns"), tabs = document.getElementById("tabs"), qEl = document.getElementById("q");
   host.innerHTML = P.map(patHtml).join("");
   /* local-only */
@@ -236,7 +284,7 @@ details.sol > pre { margin: var(--s2) 0; }
   if (ob) { ob.insertAdjacentHTML("afterbegin", '<p><a href="interviews/amazon.html#/lld">The full design drills, with code that runs: the Amazon page, LLD tab</a></p>'); }
   /* end local-only */
   tabs.innerHTML = GROUPS.map(function (g) {
-    var n = P.filter(function (p) { return groupOf(p) === g.id; }).length;
+    var n = g.id === "algorithms" ? algoCount : P.filter(function (p) { return groupOf(p) === g.id; }).length;
     return '<a href="#' + g.id + '" data-g="' + g.id + '">' + g.title + (n ? '<span class="n">' + n + "</span>" : "") + "</a>";
   }).join("");
   // The done counts: after each pattern's own count, and beside each tab's number.
@@ -267,6 +315,48 @@ details.sol > pre { margin: var(--s2) 0; }
     document.getElementById("g-title").textContent = title;
     document.getElementById("g-blurb").innerHTML = blurb;
   }
+  // The Algorithms index: every algorithm under its group, the one in view marked (a.on). Built once per visit to the tab.
+  var sideFor = "", spyOn = "", lockUntil = 0;
+  function algoIndex() {
+    return ALGOS.map(function (g) {
+      return '<div class="h">' + esc(g.title) + "</div>" + g.items.map(function (a) {
+        return '<a href="#algorithms/' + a.id + '" data-a="' + a.id + '">' + esc(a.title) + "</a>";
+      }).join("");
+    }).join("");
+  }
+  // Mark the algorithm in view in the index (and the phone's select), and keep its link inside the index's own scroll.
+  function mark(id) {
+    if (spyOn === id) { return; }
+    spyOn = id;
+    var was = side.querySelector("a.on"), a = side.querySelector('a[data-a="' + id + '"]');
+    if (was) { was.classList.remove("on"); was.removeAttribute("aria-current"); }
+    jump.value = id;
+    if (!a) { return; }
+    a.classList.add("on");
+    a.setAttribute("aria-current", "location");
+    if (a.offsetTop < side.scrollTop + 24) { side.scrollTop = Math.max(0, a.offsetTop - 24); }
+    else if (a.offsetTop + a.offsetHeight > side.scrollTop + side.clientHeight - 8) { side.scrollTop = a.offsetTop + a.offsetHeight - side.clientHeight + 8; }
+  }
+  function spy() {
+    if (cur !== "algorithms" || qEl.value || Date.now() < lockUntil) { return; }
+    var secs = algosEl.querySelectorAll("section.alg"), at = secs[0];
+    for (var i = 0; i < secs.length; i++) {
+      if (secs[i].getBoundingClientRect().top <= 140) { at = secs[i]; } else { break; }
+    }
+    if (at) { mark(at.id.slice(4)); }
+  }
+  var spyTimer = 0;
+  window.addEventListener("scroll", function () {
+    if (!spyTimer) { spyTimer = setTimeout(function () { spyTimer = 0; spy(); }, 50); }
+  }, { passive: true });
+  jump.addEventListener("change", function () { if (jump.value) { location.hash = "algorithms/" + jump.value; } });
+  function showAlgo(id) {
+    var el = document.getElementById("alg-" + id);
+    el.scrollIntoView();
+    lockUntil = Date.now() + 700;
+    mark(id);
+  }
+
   function showGroup(g) {
     var gi = GROUPS.filter(function (x) { return x.id === g; })[0] || GROUPS[0];
     cur = gi.id;
@@ -275,11 +365,21 @@ details.sol > pre { margin: var(--s2) 0; }
     document.getElementById("g-start").classList.toggle("hidden", cur !== "start");
     host.querySelectorAll("details.pat").forEach(function (d) { d.classList.toggle("hidden", d.getAttribute("data-group") !== cur); });
     host.querySelectorAll("details.prob").forEach(function (d) { d.classList.remove("hidden"); });
+    algosEl.querySelectorAll(".hidden").forEach(function (x) { x.classList.remove("hidden"); });
+    algosEl.classList.toggle("hidden", cur !== "algorithms");
+    document.body.classList.toggle("on-alg", cur === "algorithms");
     setHead(cur === "start" ? "Algorithms and coding" : gi.title, gi.blurb);
-    side.innerHTML = '<div class="h">' + gi.title + "</div>" + (cur === "start"
-      ? '<a href="#how">How to code in an interview</a><a href="#bigo">Complexity cheat sheet</a>'
-      : P.filter(function (p) { return groupOf(p) === cur; }).map(function (p) { return '<a href="#' + p.id + '">' + esc(p.title) + "</a>"; }).join("")) +
-      '<div class="h">On one screen</div><a href="#cheat">Cheat sheet</a><a href="CHEATSHEET.html">Cheat sheet, its own page</a>';
+    if (sideFor !== cur) {
+      sideFor = cur;
+      spyOn = "";
+      side.classList.toggle("dense", cur === "algorithms");
+      side.innerHTML = (cur === "algorithms" ? "" : '<div class="h">' + gi.title + "</div>") + (cur === "start"
+        ? '<a href="#how">How to code in an interview</a><a href="#bigo">Complexity cheat sheet</a>'
+        : cur === "algorithms" ? algoIndex()
+        : P.filter(function (p) { return groupOf(p) === cur; }).map(function (p) { return '<a href="#' + p.id + '">' + esc(p.title) + "</a>"; }).join("")) +
+        '<div class="h">On one screen</div><a href="#cheat">Cheat sheet</a><a href="CHEATSHEET.html">Cheat sheet, its own page</a>';
+    }
+    if (cur === "algorithms") { spy(); }
   }
   qEl.addEventListener("input", function () {
     var v = qEl.value.trim().toLowerCase(), shown = 0;
@@ -296,6 +396,18 @@ details.sol > pre { margin: var(--s2) 0; }
       d.classList.toggle("hidden", !any);
       if (any) { d.open = true; shown++; }
     });
+    // The algorithms that match, under their group; the group and the page's note go when nothing in them matches.
+    var hits = 0;
+    algosEl.querySelectorAll("section.alg").forEach(function (s) {
+      var hit = s.getAttribute("data-text").indexOf(v) >= 0;
+      s.classList.toggle("hidden", !hit);
+      if (hit) { hits++; }
+    });
+    algosEl.querySelectorAll(".ag-grp").forEach(function (gr) { gr.classList.toggle("hidden", !gr.querySelector("section.alg:not(.hidden)")); });
+    document.getElementById("alg-note").classList.add("hidden");
+    algosEl.classList.toggle("hidden", !hits);
+    document.body.classList.remove("on-alg");
+    shown += hits;
     setHead("Search", shown ? "Matches from every tab." : "Nothing matches. Try a pattern or topic, like window, heap or RAG.");
   });
 
@@ -321,14 +433,17 @@ details.sol > pre { margin: var(--s2) 0; }
     else if (e.key === "f" || e.key === "F") { CS.fullScreen(); }
   });
 
-  // Routes: #cheat, #<tab>, #<pattern or topic> (opens it in its tab), #how and #bigo.
+  // Routes: #cheat, #<tab>, #<pattern or topic> (opens it in its tab), #how and #bigo, #algorithms/<algorithm> (scrolls to it).
   function route() {
-    var h = decodeURIComponent(location.hash.slice(1));
+    var h = decodeURIComponent(location.hash.slice(1)), am = /^algorithms\/(.+)$/.exec(h);
     syncCheat();
     if (h === "cheat") { return; }
     CS.closePop();
     if (qEl.value) { qEl.value = ""; }
-    if (byId[h]) {
+    if (am && algoById[am[1]]) {
+      showGroup("algorithms");
+      showAlgo(am[1]);
+    } else if (byId[h]) {
       showGroup(groupOf(byId[h]));
       var d = document.getElementById(h);
       d.open = true;

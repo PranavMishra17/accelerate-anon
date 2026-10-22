@@ -13,6 +13,10 @@ window.LOOP_CODING.parts.push({
    "title": "The 45-minute shape",
    "blocks": [
     {
+     "t": "fig",
+     "key": "lldRound"
+    },
+    {
      "t": "p",
      "text": "The object-oriented design round gives you one short prompt, such as 'design a parking lot', and about 45 minutes of the hour. Nobody expects a perfect design. They watch whether you ask before you build, keep the design small, write code that runs in your head, and stay calm when they change the problem."
     },
@@ -575,6 +579,10 @@ window.LOOP_CODING.parts.push({
    "title": "Entities and relationships",
    "blocks": [
     {
+     "t": "fig",
+     "key": "lldParking"
+    },
+    {
      "t": "p",
      "text": "Read your requirements and underline the nouns. Each noun that owns data or a rule is a class candidate. Then ask who owns whom."
     },
@@ -875,6 +883,10 @@ window.LOOP_CODING.parts.push({
    "id": "lld-files-model",
    "title": "Entities and relationships",
    "blocks": [
+    {
+     "t": "fig",
+     "key": "lldFiles"
+    },
     {
      "t": "p",
      "text": "A file and a folder look different, but a caller who asks 'how big is it?' or 'walk everything under it' does not care which one it holds. That is the Composite pattern: both are an Entry, and a folder is an Entry that contains Entries."
@@ -1177,6 +1189,10 @@ window.LOOP_CODING.parts.push({
    "id": "lld-cart-model",
    "title": "Entities and relationships",
    "blocks": [
+    {
+     "t": "fig",
+     "key": "lldCart"
+    },
     {
      "t": "p",
      "text": "A cart is a set of lines. A discount is a rule that turns a total into a smaller total. Keep those two ideas apart and the design is mostly done."

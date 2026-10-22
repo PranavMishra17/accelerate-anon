@@ -89,6 +89,10 @@ window.LOOP_CODING.parts.push({
    "title": "Entities and relationships",
    "blocks": [
     {
+     "t": "fig",
+     "key": "lldLibrary"
+    },
+    {
      "t": "p",
      "text": "Name the nouns, then decide who owns what. Two decisions carry this design. A loan and a hold attach to a **copy**, while a reservation attaches to a **title**. And the rules (limits, fines, the queue) each live in one place instead of being spread over the data classes."
     },
@@ -381,6 +385,10 @@ window.LOOP_CODING.parts.push({
    "id": "lld-elevator-entities",
    "title": "Entities and relationships: cars, states, a dispatcher",
    "blocks": [
+    {
+     "t": "fig",
+     "key": "lldElevator"
+    },
     {
      "t": "p",
      "text": "Three ideas. A **car** is a floor, a set of floors it must stop at, and a current state. A **state** decides what happens on the next tick. A **dispatcher** is a strategy that picks which car answers a hall call. A controller holds the cars and the strategy and routes the buttons."
@@ -680,6 +688,10 @@ window.LOOP_CODING.parts.push({
    "id": "lld-kvstore-shape",
    "title": "The shape: one class, six layers",
    "blocks": [
+    {
+     "t": "fig",
+     "key": "lldKvstore"
+    },
     {
      "t": "p",
      "text": "You will write one class and change it five times. Each layer swaps in a data structure, and you say its cost out loud. Know this table before you start. It is also your answer to 'what is the complexity?' at each step."

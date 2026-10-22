@@ -1402,3 +1402,16 @@ local-only link to the design drills. Weeks 4 and 5 stay as they are; their math
 scheduled on weekends. Also: the Overjoy call is Thursday 22 October, not Wednesday (fixed). Why: the loop he has
 worked toward for more than a year; last September Amazon displaced the plan entirely, and this keeps the plan
 alive beside it. Charter: the wildcard working as designed (interview work sprints, the weeks wait); no deviation.
+
+**2026-10-21 — Amazon page: navigation, the workbench, Loop day, diagrams, videos; Algorithms on the coding page.**
+His verdict on the first version: navigation that loses him, a Daily two and Loop day that looked bad, LLD
+without diagrams or videos, and no one place to skim algorithm code. Now: the day's checklist rides on every
+Amazon tab (a rail above the outline, or a sticky bar; his switch, to test both), the Plan tab is a three-week
+calendar with a dot per item plus one day's list, every tab reopens where he left it (place and scroll), and
+the arrow keys step through parts and problems. The Daily two is a workbench (the problem left, timer and editor
+right and sticky, day dots and the two problems as switches; the solution, dry run, follow-ups and a walkthrough
+video after he solves). Loop day fits one screen: the 60-minute bar, four round columns with their opening
+minutes and the stories to spend there, and between-round rules. Seven LLD class diagrams (shared figures with
+notes) and verified videos and articles per drill, per problem and for the principles. CODING.html gains an
+Algorithms tab: 48 algorithms on one page with a sticky index, each with its signal, code, cost and variants,
+checked against a brute force. No charter deviation.
