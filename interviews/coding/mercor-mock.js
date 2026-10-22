@@ -1,5 +1,5 @@
-/* Mercor caching screen, simulated: a walkthrough for the Mocks tab. Written 22 Oct 2026 from Mercor's description of
-   the screen and the candidate reports in wc32 to wc34. Conversational, no coding: code appears only as a picture. */
+/* Mercor caching screen, simulated, for the Mocks tab. 22 Oct 2026, from Mercor's description of the screen and the
+   candidate reports in wc32 to wc34. Conversational, no coding. Generated; edit the generator, not this file. */
 window.LOOP_CODING = window.LOOP_CODING || { parts: [] };
 window.LOOP_CODING.parts.push({
  "tab": "mocks",
@@ -7,122 +7,97 @@ window.LOOP_CODING.parts.push({
  "n": 1,
  "title": "Your notes, said out loud",
  "minutes": 20,
- "lead": "Every concept in your handwritten notes, as the failure it causes in tomorrow's kind of system and the one sentence you would say about it. No code tomorrow: this is the vocabulary turned into examples.",
+ "lead": "Each concept from your handwritten notes, as the failure it causes and the one line you would say.",
  "sections": [
   {
    "id": "mock-bridge-frame",
-   "title": "The system everything below refers to",
+   "title": "The system they will likely describe",
    "blocks": [
-    {
-     "t": "p",
-     "text": "Expect the screen to start from something like this, described or shown: a service that looks up prices from a slow pricing service, with an in-memory cache someone added in front. Tomorrow you reason about it; you do not write it."
-    },
     {
      "t": "code",
      "id": "mock-snippet",
-     "title": "The kind of thing they may read out or show",
-     "code": "cache = {}\n\ndef get_price(product_id):\n    if product_id in cache:\n        return cache[product_id]\n    price = pricing_client.fetch(product_id)   # about 200 ms, sometimes 2 s, sometimes fails\n    cache[product_id] = price\n    return price",
+     "title": "A cache in front of a slow pricing service (read out or shown, never written)",
+     "code": "cache = {}\n\ndef get_price(product_id):\n    if product_id in cache:\n        return cache[product_id]\n    price = pricing_client.fetch(product_id)\n    cache[product_id] = price\n    return price",
      "notes": {
-      "1": "A plain dict: no bound, no expiry, shared by every thread in the process.",
-      "4": "Check, then later set: the gap between them is where concurrent requests collide.",
-      "6": "The slow, failing call. Everything interesting happens while this line runs.",
-      "7": "Stores whatever came back, forever, under a key that may not hold everything the price depends on."
+      "1": "A plain dict: no bound, no expiry, shared by every thread.",
+      "4": "Check, then set later: concurrent requests collide in the gap.",
+      "6": "The slow, flaky call (200 ms, sometimes 2 s, sometimes fails).",
+      "7": "Stores whatever came back, forever, under a key that may be missing fields."
      }
-    },
-    {
-     "t": "vis",
-     "vis": [
-      {
-       "title": "Where the request goes",
-       "flow": [
-        "Request",
-        "Check the dict",
-        "Hit: return",
-        "Miss: call pricing (200 ms to 2 s)",
-        "Store, return"
-       ],
-       "note": "Five places to talk about: the check, the call, the store, the key, and what lives in the dict over a week."
-      }
-     ]
     }
    ]
   },
   {
-   "id": "mock-bridge-table",
-   "title": "Each note, as a failure and a sentence",
+   "id": "mock-bridge-map",
+   "title": "Concept to failure to sentence",
    "blocks": [
     {
-     "t": "table",
-     "head": [
-      "From your notes",
-      "What goes wrong here",
-      "What you say"
-     ],
+     "t": "bridge",
      "rows": [
       [
-       "Stampede (thundering herd)",
-       "A popular product's entry is missing or expires; 50 requests miss at once and all call pricing.",
-       "Coalesce: one request loads, the others wait for its result (single-flight)."
+       "Stampede",
+       "A popular entry is missing; 50 requests miss together and all call pricing.",
+       "**Coalesce:** one request loads, the rest **wait on its result**."
       ],
       [
        "Avalanche",
-       "Many entries were filled at the same moment with the same TTL and all expire together; the backend gets the whole load at once.",
-       "Add jitter to TTLs; for a shared cache going down, a circuit breaker and a limit on concurrent loads."
+       "Entries filled together with one TTL **expire together**; the backend takes all of it.",
+       "**Jitter the TTLs** and **cap concurrent loads**."
       ],
       [
-       "Penetration (invalid key)",
-       "Requests for products that do not exist always miss and always hit the backend.",
-       "Cache the 'not found' briefly (negative caching), or check a Bloom filter first."
+       "Penetration",
+       "Ids that don't exist **always miss** and always hit the backend.",
+       "Cache **'not found' briefly**, or check a **Bloom filter**."
       ],
       [
        "TTL",
-       "The dict never expires anything, so a changed price is served forever.",
-       "A TTL bounds staleness; pick it from how stale a price may be, not from a guess."
+       "Nothing expires, so a changed price is **served forever**.",
+       "A TTL **bounds staleness**; pick it from **how stale is allowed**."
       ],
       [
        "Read-after-write",
-       "An admin updates a price and immediately sees the old one.",
-       "Invalidate (delete) on write, or write-through for that path."
+       "An admin edits a price and **still sees the old one**.",
+       "**Invalidate on write** for paths that need it."
       ],
       [
-       "Replication lag / eventual consistency",
-       "Invalidate, then re-read from a replica that has not caught up: the old value goes back in.",
-       "Delete after the write commits, read the primary for that refill, or version the value."
+       "Replication lag",
+       "Delete, then refill from a **lagging replica**: the old value is back.",
+       "Refill **from the primary**, or **version** the value."
       ],
       [
        "Hot key",
-       "One product (a sale item) takes most of the traffic; its miss or its lock is the bottleneck.",
-       "Single-flight for that key, refresh before expiry, replicate it locally if shared."
+       "One sale item takes most traffic; **its miss is the outage**.",
+       "**Single-flight** plus **refresh before expiry**."
       ],
       [
-       "Eviction (LRU, LFU, FIFO)",
-       "The dict grows until the process runs out of memory.",
-       "Bound it by entries or bytes and evict LRU; say why LRU suits a power-law workload."
+       "Eviction",
+       "The dict **grows until the process dies**.",
+       "**Bound it** and evict **LRU**."
       ],
       [
-       "Small cache is enough (power law)",
-       "The team wants to cache everything.",
-       "A few percent of products take most reads; a small LRU gets most of the hit rate."
+       "Power law",
+       "'Let's cache everything.'",
+       "A **small LRU** gets **most of the hits**."
       ],
       [
        "Key design",
-       "The price depends on currency or region, but the key is only the product id.",
-       "The key must include everything the value depends on."
+       "Price depends on currency; key is only the id: **wrong currency** for some users.",
+       "The key holds **everything the value depends on**."
       ],
       [
-       "Cache-aside / read-through / write-through / write-behind",
-       "Who fills the cache and who keeps it fresh.",
-       "This code is cache-aside; write-through helps read-after-write; write-behind risks losing writes."
+       "Write patterns",
+       "Who fills and who freshens the cache.",
+       "This is **cache-aside**; **write-through** helps freshness, **write-behind** can lose writes."
       ],
       [
        "Where to cache",
-       "Four instances each have their own dict.",
-       "In-process is fastest but each copy goes stale on its own; Redis is shared but a network hop and a new failure mode."
+       "Four instances, **four separate copies**.",
+       "In-process is **fastest but drifts**; Redis is **shared but a hop and a new failure**."
       ],
       [
-       "Proactive vs reactive refresh",
-       "Every expiry costs a user a slow request.",
-       "Refresh hot keys in the background before they expire, serve stale while refreshing."
+       "Proactive refresh",
+       "Every expiry costs **one user a slow request**.",
+       "**Serve stale while one request refreshes.**"
       ]
      ]
     }
@@ -136,106 +111,78 @@ window.LOOP_CODING.parts.push({
  "n": 2,
  "title": "The call, simulated",
  "minutes": 45,
- "lead": "The screen as it would likely run: about 30 minutes, conversational, no tools. Each move has what they are really checking, your answer as beats you say in order, a picture of what happens, and the answer that loses points.",
+ "lead": "Ten moves, one at a time. Read the interviewer's line, say your answer out loud before reading the sheet, then compare.",
  "sections": [
   {
    "id": "mock-open",
-   "title": "1. The setup (first 2 minutes)",
+   "title": "Setup",
    "blocks": [
     {
-     "t": "p",
-     "text": "**Interviewer:** We have a service that needs product prices. The pricing service is slow, around 200 milliseconds, sometimes two seconds, and it sometimes fails. Someone added a cache in front of it, a dictionary keyed by product id: check it, otherwise call pricing and store the result. Talk me through what you think of it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "Checking: Do you restate and frame before diving in?",
-      "Checking: Do you name assumptions instead of guessing silently?"
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**You, out loud:**"
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Restate:** 'So it's a read-through in front of a slow, flaky dependency, in-memory, per process. Before I judge it, a few assumptions.'",
-      "**Give a plan:** 'I'll go through correctness first, then what happens under concurrent load, then memory, then failures, then what changes as it grows.'",
-      "**One honest positive:** 'For a single process with a small, stable catalogue and prices that rarely change, this is fine. The problems start with concurrency, change and time.'"
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**Avoid:** Listing ten bugs in the first minute. They want to see you structure the problem, then go deep."
+     "t": "turn",
+     "ask": "We have a service that needs product prices. The pricing service is slow, around 200 ms, sometimes 2 seconds, and it sometimes fails. Someone put a dictionary cache in front of it. Talk me through what you think.",
+     "check": [
+      "Do you frame before diving in?",
+      "Do you name assumptions out loud?"
+     ],
+     "say": [
+      "So it's a **cache-aside in front of a slow, flaky dependency**, in memory, per process.",
+      "I'll go **correctness first, then concurrency, memory, failures, and growth**. For one process and a stable catalogue it's fine; **the problems come with concurrency, change and time.**"
+     ],
+     "more": [
+      "Restate in one sentence.",
+      "Give the order you will go in.",
+      "One honest positive before the problems."
+     ],
+     "avoid": "Listing ten bugs in the first minute."
     }
    ]
   },
   {
    "id": "mock-assume",
-   "title": "2. Assumptions",
+   "title": "Assumptions",
    "blocks": [
     {
-     "t": "p",
-     "text": "**Interviewer:** What would you want to know?"
-    },
-    {
-     "t": "list",
-     "items": [
-      "Checking: Clear assumptions: this is literally what the description says they score."
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**You, out loud:**"
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Freshness:** 'How stale may a price be? Seconds, minutes? That sets the TTL.'",
-      "**Shape of reads:** 'How many products, how skewed is traffic? Usually a few products take most reads.'",
-      "**Concurrency model:** 'Threads or asyncio, how many workers, how many instances?'",
-      "**What the price depends on:** 'Only the product, or also currency, region, user tier?'",
-      "**Failure behaviour:** 'When pricing fails, is a slightly old price acceptable, or must we error?'",
-      "Then commit: 'I'll assume threads, a few instances, prices that change a few times a day, and that a price up to a minute old is fine.'"
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**Avoid:** Waiting for answers to everything. State a sensible assumption and move on; offer to revisit it."
+     "t": "turn",
+     "ask": "What would you want to know?",
+     "check": [
+      "Clear assumptions: their exact words."
+     ],
+     "say": [
+      "A few things: **how stale a price may be**, how **skewed** the traffic is, **threads or asyncio** and how many instances, and whether the price depends on **currency or region**.",
+      "I'll assume **threads, a few instances, prices that change a few times a day, and up to a minute of staleness is fine**. I can revisit any of these."
+     ],
+     "more": [
+      "Freshness sets the TTL.",
+      "Skew sets the cache size (power law).",
+      "Concurrency model sets the fix.",
+      "Dependencies of the value set the key.",
+      "Failure tolerance sets whether to serve stale."
+     ],
+     "avoid": "Waiting for every answer. State it, commit, move on."
     }
    ]
   },
   {
    "id": "mock-correct",
-   "title": "3. Correctness",
+   "title": "Correctness",
    "blocks": [
     {
-     "t": "p",
-     "text": "**Interviewer:** Leave load aside. Is it correct?"
-    },
-    {
-     "t": "list",
-     "items": [
-      "Checking: Concrete examples of failure, not adjectives."
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**You, out loud:**"
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Staleness:** 'Nothing ever expires. If a price changes at noon, we serve the old one until the process restarts. Example: a sale ends and we keep showing the sale price.'",
-      "**Key:** 'If the price depends on currency, the first caller's currency wins for everyone. A user in Europe sees a dollar price.'",
-      "**Failures:** 'If pricing returns an error object or None and we store it, we serve the failure until restart. Never cache an error by accident.'",
-      "**Shared mutable value:** 'If the value is a dict and a caller changes it, every later caller sees the change. Return copies or immutable values.'",
-      "**Fixes, in order:** a TTL from the freshness requirement; the key covers everything the value depends on; only store successful results; invalidate on write for paths that need read-after-write."
-     ]
-    },
-    {
-     "t": "vis",
+     "t": "turn",
+     "ask": "Leave load aside for now. Is it correct?",
+     "check": [
+      "Concrete examples of failure, not adjectives."
+     ],
+     "say": [
+      "Not quite. **Nothing ever expires**, so when a sale ends we **keep showing the sale price** until a restart.",
+      "The key is only the product id, so if price depends on currency, **the first caller's currency wins for everyone**. And if pricing returns an error and we store it, **we serve the failure forever**."
+     ],
+     "more": [
+      "Fix 1: a TTL from the freshness requirement.",
+      "Fix 2: the key covers everything the value depends on.",
+      "Fix 3: only store successful results.",
+      "Fix 4: invalidate on write where read-after-write matters.",
+      "Also: return copies, not a shared mutable dict."
+     ],
      "vis": [
       {
        "title": "Read-after-write with replication lag",
@@ -244,12 +191,12 @@ window.LOOP_CODING.parts.push({
          "Admin",
          [
           [
-           "write new price to primary",
+           "write to primary",
            "done",
            "2"
           ],
           [
-           "delete cache entry",
+           "delete entry",
            "done",
            "1"
           ],
@@ -269,65 +216,52 @@ window.LOOP_CODING.parts.push({
            "3"
           ],
           [
-           "miss: read replica (old value)",
+           "miss: read replica (old)",
            "hot",
            "2"
           ],
           [
-           "store old value",
+           "store old",
            "hot",
            "1"
           ]
          ]
         ]
        ],
-       "note": "Invalidate-then-refill can put the old value back if the refill reads a lagging replica. Fix: refill from the primary, delay the delete, or store a version and reject older ones."
+       "note": "The refill reads a lagging replica and puts the old value back."
       }
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**Avoid:** 'It might be stale sometimes.' Say when, for whom, and what it costs."
+     ],
+     "avoid": "'It might be stale sometimes.' Say when, for whom, and what it costs."
     }
    ]
   },
   {
    "id": "mock-concurrency",
-   "title": "4. Concurrent requests",
+   "title": "Concurrent requests",
    "blocks": [
     {
-     "t": "p",
-     "text": "**Interviewer:** Now a hundred requests for the same popular product arrive in the same second, and the entry is not there yet. What happens?"
-    },
-    {
-     "t": "list",
-     "items": [
-      "Checking: Do you see the race, explain it with a timeline, and fix it with the right granularity?"
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**You, out loud:**"
-    },
-    {
-     "t": "list",
-     "items": [
-      "**What happens:** 'All hundred check, all miss, and all call pricing. That's a stampede: the cache does nothing at exactly the moment it matters, and the slow dependency gets a hundred times the load.'",
-      "**Why:** 'Check-then-act. The check and the store are separate steps with a slow call between them.'",
-      "**Fix:** 'Single-flight: the first request for a key starts the load and records it as in flight; the others wait on that same result. One call instead of a hundred.'",
-      "**Granularity:** 'Not one global lock around the call: that serialises every product behind the slowest one. Per key, held only to register or find the in-flight load, never across the network call.'",
-      "**Failure inside single-flight:** 'If the load fails, wake the waiters with the error and remove the in-flight entry, so the next request retries. Otherwise one failure is cached forever.'",
-      "**In Python:** 'With threads, a dict of Futures or Events under a small lock. With asyncio, a dict of Tasks; awaiting the same Task is safe, a coroutine can only be awaited once.'"
-     ]
-    },
-    {
-     "t": "vis",
+     "t": "turn",
+     "ask": "A hundred requests for the same popular product arrive in the same second, and it's not cached yet. What happens?",
+     "check": [
+      "Do you see the race?",
+      "Can you fix it at the right granularity?"
+     ],
+     "say": [
+      "**All hundred check, all miss, and all call pricing.** It's check-then-act with a slow call in the gap: a **stampede**, exactly when the cache should help most.",
+      "I'd use **single-flight**: the first request **starts the load**, the other ninety-nine **wait on that same result**. **One call instead of a hundred.**"
+     ],
+     "more": [
+      "Lock only to register or find the in-flight load, **never across the network call**.",
+      "Per key, not global.",
+      "If the load fails, **wake waiters with the error and remove the in-flight entry**, so the next request retries.",
+      "Threads: a dict of Futures under a small lock. asyncio: a dict of Tasks (a Task can be awaited many times; a coroutine once)."
+     ],
      "vis": [
       {
-       "title": "Without coalescing: three requests, three calls",
+       "title": "Without coalescing",
        "lanes": [
         [
-         "Request A",
+         "A",
          [
           [
            "miss",
@@ -347,7 +281,7 @@ window.LOOP_CODING.parts.push({
          ]
         ],
         [
-         "Request B",
+         "B",
          [
           [
            "miss",
@@ -367,7 +301,7 @@ window.LOOP_CODING.parts.push({
          ]
         ],
         [
-         "Request C",
+         "C",
          [
           [
            "miss",
@@ -386,14 +320,13 @@ window.LOOP_CODING.parts.push({
           ]
          ]
         ]
-       ],
-       "note": "Every request sees the empty cache before any of them stores."
+       ]
       },
       {
-       "title": "With single-flight: one call, two waiters",
+       "title": "With single-flight",
        "lanes": [
         [
-         "Request A",
+         "A",
          [
           [
            "miss, start load",
@@ -413,7 +346,7 @@ window.LOOP_CODING.parts.push({
          ]
         ],
         [
-         "Request B",
+         "B",
          [
           [
            "miss, join A",
@@ -433,7 +366,7 @@ window.LOOP_CODING.parts.push({
          ]
         ],
         [
-         "Request C",
+         "C",
          [
           [
            "miss, join A",
@@ -454,42 +387,25 @@ window.LOOP_CODING.parts.push({
         ]
        ]
       }
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**Avoid:** 'Add a lock.' Which lock, around what, held for how long: that is the whole answer."
+     ],
+     "avoid": "'Add a lock.' Which lock, around what, held for how long: that is the answer."
     }
    ]
   },
   {
-   "id": "mock-lockfollow",
-   "title": "5. The lock follow-up",
+   "id": "mock-lock",
+   "title": "Lock scope",
    "blocks": [
     {
-     "t": "p",
-     "text": "**Interviewer:** Why not one lock around the whole function? It's simpler."
-    },
-    {
-     "t": "list",
-     "items": [
-      "Checking: Do you understand what a lock held across I/O does to throughput?"
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**You, out loud:**"
-    },
-    {
-     "t": "list",
-     "items": [
-      "'It's correct but it serialises everything. With a 200 ms call, one lock caps the whole process at five lookups a second, and one slow two-second call blocks every other product.'",
-      "'Lock to check and register, release, do the slow call outside the lock, lock again to store. Per key if contention is still high.'",
-      "'The rule I use: never hold a lock across a network call.'"
-     ]
-    },
-    {
-     "t": "vis",
+     "t": "turn",
+     "ask": "Why not put one lock around the whole function? Simpler.",
+     "check": [
+      "Do you know what a lock across I/O costs?"
+     ],
+     "say": [
+      "It's correct, but it **serialises everything**. With a 200 ms call, **one lock caps the process at about five lookups a second**, and one slow 2-second call **blocks every product**.",
+      "So: **lock to check and register, release, call outside the lock**, lock again to store. **Never hold a lock across a network call.**"
+     ],
      "vis": [
       {
        "title": "One global lock across the call",
@@ -499,109 +415,80 @@ window.LOOP_CODING.parts.push({
          "200 ms"
         ],
         [
-         "calls one at a time",
-         "5 per second for the whole process"
+         "one at a time",
+         "about 5 per second, whole process"
         ],
         [
          "one slow call",
-         "2 s with everyone waiting"
+         "2 s, everyone waits"
         ]
        ]
       }
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**Avoid:** Defending the global lock as 'simple'. Simple is fine only when you say what it costs."
+     ],
+     "avoid": "Defending it as 'simple' without saying what it costs."
     }
    ]
   },
   {
    "id": "mock-memory",
-   "title": "6. Resource management",
+   "title": "Resources",
    "blocks": [
     {
-     "t": "p",
-     "text": "**Interviewer:** This runs for a week. What happens to memory, and anything else it holds?"
-    },
-    {
-     "t": "list",
-     "items": [
-      "Checking: Resource management in your language: memory, connections, threads."
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**You, out loud:**"
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Memory:** 'The dict only grows. With a large catalogue and many currencies it can grow until the process is killed. Bound it: an LRU with a maximum size, in entries or bytes.'",
-      "**Size it:** 'If an entry is about 1 KB and we keep 100,000, that's around 100 MB per process. Fine, but say the number. Thanks to the power law, a small cache already gets most hits.'",
-      "**The in-flight map:** 'It must shrink too: remove entries when a load finishes, success or failure.'",
-      "**Connections and threads:** 'Every miss uses a connection to pricing. Cap concurrent loads with a semaphore or a bounded pool so a burst of misses can't exhaust connections or threads.'",
-      "**Python specifics:** '`functools.lru_cache` is bounded, but it has no TTL, caches per argument tuple, and on a method it keeps `self` alive. I'd use my own small LRU with a TTL, or `cachetools`.'"
-     ]
-    },
-    {
-     "t": "vis",
+     "t": "turn",
+     "ask": "This runs for a week. What happens to memory, and what else does it hold?",
+     "check": [
+      "Resource management in your language."
+     ],
+     "say": [
+      "**The dict only grows**, so with a big catalogue and several currencies it **grows until the process is killed**. I'd **bound it with an LRU and a TTL**: at about **1 KB an entry, 100,000 entries is about 100 MB** per process.",
+      "And every miss holds a connection, so I'd **cap concurrent loads** with a semaphore or a bounded pool, so a burst of misses **can't exhaust connections or threads**."
+     ],
+     "more": [
+      "The in-flight map must shrink too: remove on success and failure.",
+      "`functools.lru_cache`: bounded but **no TTL**, and on a method it **keeps self alive**.",
+      "Power law: a small LRU already gets most hits; say the number."
+     ],
      "vis": [
       {
-       "title": "A rough size",
+       "title": "Rough size",
        "calc": [
         [
-         "1 KB per entry x 100,000 entries",
+         "1 KB x 100,000",
          "about 100 MB per process"
         ],
         [
          "x 4 instances",
-         "about 400 MB in total, four separate copies"
+         "about 400 MB, four copies"
         ]
        ]
       }
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**Avoid:** 'Memory is cheap.' Unbounded growth is a crash with a delay."
+     ],
+     "avoid": "'Memory is cheap.' Unbounded growth is a crash with a delay."
     }
    ]
   },
   {
    "id": "mock-failure",
-   "title": "7. Failures",
+   "title": "Failures",
    "blocks": [
     {
-     "t": "p",
-     "text": "**Interviewer:** The pricing service goes down for two minutes. Walk me through it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "Checking: Reliability: timeouts, retries, degradation, and not making the outage worse."
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**You, out loud:**"
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Timeouts:** 'Every call needs one, shorter than the caller's budget, or requests pile up behind a hung dependency.'",
-      "**Serve stale:** 'If a price may be a minute old, keep expired entries and serve them when the refresh fails, with a cap on how stale. Users barely notice the outage.'",
-      "**Don't cache the failure by accident, but do cache it on purpose for a few seconds:** a short negative cache stops every request hammering a dead service.",
-      "**Retries:** 'Only for errors that can pass, a few attempts, exponential backoff with jitter. Retries without jitter turn recovery into a second stampede.'",
-      "**Circuit breaker:** 'After repeated failures, stop calling for a short while and serve stale or fail fast, then let one probe through.'",
-      "**When it recovers:** 'All the entries we kept failing to refresh expire together. Jittered TTLs and a cap on concurrent loads stop that avalanche.'"
-     ]
-    },
-    {
-     "t": "vis",
+     "t": "turn",
+     "ask": "Pricing goes down for two minutes. Walk me through it.",
+     "check": [
+      "Timeouts, retries, degradation, not making it worse."
+     ],
+     "say": [
+      "First, **every call needs a timeout**, or requests pile up behind a hung service. Then, if a minute-old price is fine, **keep expired entries and serve them when the refresh fails**: users barely notice.",
+      "Retries **only for errors that can pass, a few times, with backoff and jitter**; a **circuit breaker** stops us hammering it. And when it comes back, **jittered TTLs stop everything expiring at once**."
+     ],
+     "more": [
+      "Cache a failure on purpose for a few seconds (negative cache); never by accident.",
+      "Without jitter, retries arrive in waves: recovery becomes a second stampede.",
+      "Breaker: open after repeated failures, fail fast or serve stale, let one probe through."
+     ],
      "vis": [
       {
-       "title": "Retries with and without jitter",
+       "title": "Retries",
        "lanes": [
         [
          "No jitter",
@@ -612,17 +499,17 @@ window.LOOP_CODING.parts.push({
            "1"
           ],
           [
-           "all retry at 1 s",
+           "all at 1 s",
            "hot",
            "1"
           ],
           [
-           "all retry at 2 s",
+           "all at 2 s",
            "hot",
            "1"
           ],
           [
-           "all retry at 4 s",
+           "all at 4 s",
            "hot",
            "1"
           ]
@@ -637,58 +524,42 @@ window.LOOP_CODING.parts.push({
            "1"
           ],
           [
-           "retries spread over 0 to 1 s",
+           "spread 0 to 1 s",
            "done",
            "2"
           ],
           [
-           "spread over 0 to 2 s",
+           "spread 0 to 2 s",
            "done",
            "3"
           ]
          ]
         ]
-       ],
-       "note": "Synchronised retries hit the recovering service in waves."
+       ]
       }
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**Avoid:** 'Retry until it works.' Unbounded retries are how a two-minute outage becomes twenty."
+     ],
+     "avoid": "'Retry until it works.' That turns two minutes into twenty."
     }
    ]
   },
   {
    "id": "mock-scale",
-   "title": "8. As it grows",
+   "title": "Growth",
    "blocks": [
     {
-     "t": "p",
-     "text": "**Interviewer:** We go from one instance to twenty. Does your design still hold?"
-    },
-    {
-     "t": "list",
-     "items": [
-      "Checking: Do you know what changes when the cache is per process and the fleet grows?"
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**You, out loud:**"
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Twenty copies:** 'Each process has its own cache. A price change has to reach all twenty, and until each expires users see different prices depending on which instance they hit.'",
-      "**Twenty cold starts:** 'Each instance warms on its own, so a deploy is twenty stampedes.'",
-      "**Shared cache:** 'Redis gives one copy and one place to invalidate, at the cost of a network hop, a new failure mode, and coalescing that now has to work across processes: a short lock with SET NX and an expiry.'",
-      "**Two levels:** 'A small in-process cache with a short TTL for the hottest keys in front of Redis keeps the hop off the hottest path.'",
-      "**What I'd measure:** hit rate per key class, load on pricing, p99 latency, entries evicted, how stale served values are."
-     ]
-    },
-    {
-     "t": "vis",
+     "t": "turn",
+     "ask": "We go from one instance to twenty. Does it still hold?",
+     "check": [
+      "What changes when the cache is per process and the fleet grows?"
+     ],
+     "say": [
+      "Each instance has **its own copy**, so a price change has to reach **twenty caches**, and until then **users see different prices on different instances**. Every deploy is **twenty cold caches**, twenty stampedes.",
+      "That's when a **shared cache like Redis** earns its place: **one copy, one invalidation**, at the cost of a **network hop and a new failure mode**. I'd keep a **small local cache with a short TTL** in front for the hottest keys."
+     ],
+     "more": [
+      "Coalescing now has to work across processes: a short lock with SET NX and an expiry.",
+      "Measure first: hit rate, load on pricing, p99, evictions, the age of served values."
+     ],
      "vis": [
       {
        "title": "Two levels",
@@ -696,67 +567,49 @@ window.LOOP_CODING.parts.push({
         "Request",
         "Local LRU (seconds)",
         "Redis (minutes)",
-        "Pricing service"
+        "Pricing"
        ],
-       "note": "Each level absorbs most of the traffic the next would see; invalidation has to reach both."
+       "note": "Each level absorbs most of what the next would see; invalidation must reach both."
       }
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**Avoid:** Jumping to Redis in the first minute. Earn it: say what breaks with per-process caches first."
+     ],
+     "avoid": "Jumping to Redis in minute one. Earn it."
     }
    ]
   },
   {
    "id": "mock-improve",
-   "title": "9. 'What would you change first?'",
+   "title": "What first",
    "blocks": [
     {
-     "t": "p",
-     "text": "**Interviewer:** You've found a lot. If you had a day, what do you change, in what order?"
-    },
-    {
-     "t": "list",
-     "items": [
-      "Checking: Thoughtful trade-offs and priorities, not a list."
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**You, out loud:**"
-    },
-    {
-     "t": "list",
-     "items": [
-      "1. **Bound it and expire it:** an LRU with a TTL from the freshness requirement. It fixes the crash and the forever-stale value.",
-      "2. **Single-flight per key, no lock across the call:** it fixes the stampede and the throughput.",
-      "3. **Only cache successes; timeouts on the call; serve stale on failure:** it fixes the outage behaviour.",
-      "4. **Fix the key:** include currency and region.",
-      "5. **Then measure** before Redis: hit rate and load on pricing tell us whether a shared cache is worth its cost.",
-      "Close: 'The trade-off I keep making is freshness against load on pricing, and the TTL is where that's decided, so I'd make it explicit and per data type.'"
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**Avoid:** Proposing everything at once with no order."
+     "t": "turn",
+     "ask": "You've found a lot. If you had a day, what do you change, in what order?",
+     "check": [
+      "Trade-offs and priorities, not a list."
+     ],
+     "say": [
+      "**First, bound and expire it**: an LRU with a TTL, which fixes the crash and the forever-stale price. **Second, single-flight per key** with no lock across the call. **Third, timeouts and serve-stale** for outages. Then fix the key, and **measure before reaching for Redis**.",
+      "The trade-off I keep making is **freshness against load on pricing**, and **the TTL is where that's decided**, so I'd make it explicit, per data type."
+     ],
+     "avoid": "Proposing everything at once with no order."
     }
    ]
   },
   {
    "id": "mock-close",
-   "title": "10. Your questions (last 3 minutes)",
+   "title": "Your questions",
    "blocks": [
     {
-     "t": "p",
-     "text": "Ask one or two; they are on your Prep tab too."
-    },
-    {
-     "t": "list",
-     "items": [
-      "'Where does caching bite you most at Mercor today: staleness, cost of model calls, or load on a dependency?'",
-      "'How does the Enterprise team handle caching for model calls: responses, embeddings, or the provider's prompt cache?'",
-      "'What does the next round look like?'"
+     "t": "turn",
+     "ask": "We have a few minutes. Any questions for me?",
+     "check": [
+      "Interest in their real problems."
+     ],
+     "say": [
+      "**Where does caching bite you most at Mercor today**: staleness, the cost of model calls, or load on a dependency?",
+      "And how does the Enterprise team **cache model calls**: responses, embeddings, or the provider's prompt cache?"
+     ],
+     "more": [
+      "Last: 'What does the next round look like?'"
      ]
     }
    ]
@@ -767,57 +620,92 @@ window.LOOP_CODING.parts.push({
  "tab": "mocks",
  "id": "mock-curve",
  "n": 3,
- "title": "Curveballs, short answers",
+ "title": "Curveballs",
  "minutes": 15,
- "lead": "Questions that may come in between. Say each answer in about 20 seconds.",
+ "lead": "Questions that may come in between. Twenty seconds each.",
  "sections": [
   {
-   "id": "mock-curve-faq",
+   "id": "mock-curve-all",
    "title": "If they ask",
    "blocks": [
     {
-     "t": "faq",
-     "items": [
-      {
-       "q": "Make it async. What changes?",
-       "a": "One thread, so no data race on the dict itself, but check-then-act across an `await` is still a race: two tasks both miss. Coalesce with a dict of Tasks; protect the shared load with `shield` so one caller's timeout doesn't cancel it for everyone; never put a blocking call inside async code without `to_thread`."
-      },
-      {
-       "q": "Is a Python dict thread-safe?",
-       "a": "A single get or set is atomic in CPython because of the GIL; check-then-set is not. The race is between operations, not inside one."
-      },
-      {
-       "q": "Single-flight or stale-while-revalidate?",
-       "a": "Single-flight stops the herd on a miss; stale-while-revalidate stops users waiting on an expiry by serving the old value while one request refreshes. For hot keys I'd use both."
-      },
-      {
-       "q": "LRU or LFU?",
-       "a": "LRU is cheap and fits most skewed workloads; LFU protects long-term popular keys from a scan of one-off keys but needs ageing. Start with LRU, measure."
-      },
-      {
-       "q": "How do you choose the TTL?",
-       "a": "From the business: how stale may this be, and what does a miss cost. Short for prices, long for product names. Add jitter so entries don't expire together."
-      },
-      {
-       "q": "Cache-aside or write-through?",
-       "a": "Cache-aside is simple and only caches what's read; write-through keeps the cache fresh on writes but caches things nobody reads and adds write latency. For read-after-write on a few paths, invalidate on write."
-      },
-      {
-       "q": "How would you test the stampede fix?",
-       "a": "Start fifty threads on the same missing key with a fake pricing client that counts calls and sleeps; assert one call and fifty identical results. Then make the fake fail and assert the next request retries."
-      },
-      {
-       "q": "What about caching LLM calls?",
-       "a": "Two different things: our own response cache, keyed on everything that changes the answer (model, prompt, parameters, the user's data), and the provider's prompt cache, which caches the prompt prefix. I've worked on the second in production; it's on my Prep tab."
-      },
-      {
-       "q": "Where do you put the cache metrics?",
-       "a": "Hits, misses, loads in flight, evictions, errors, and the age of values served, per key class. The age of served values is the one people forget."
-      },
-      {
-       "q": "What's cache penetration and how do you stop it?",
-       "a": "Requests for keys that never exist always reach the backend. Cache 'not found' for a short TTL, or check a Bloom filter of existing ids first."
-      }
+     "t": "turn",
+     "ask": "Make it async. What changes?",
+     "check": [],
+     "say": [
+      "**One thread, so no data race on the dict**, but **check-then-act across an await is still a race**. Coalesce with a **dict of Tasks**, and **shield** the shared load so one caller's timeout doesn't cancel it for everyone."
+     ]
+    },
+    {
+     "t": "turn",
+     "ask": "Is a Python dict thread-safe?",
+     "check": [],
+     "say": [
+      "**One get or set is atomic** in CPython; **check-then-set is not**. The race is **between** operations."
+     ]
+    },
+    {
+     "t": "turn",
+     "ask": "Single-flight or stale-while-revalidate?",
+     "check": [],
+     "say": [
+      "Single-flight stops the herd **on a miss**; stale-while-revalidate stops users waiting **on an expiry**. For hot keys, **both**."
+     ]
+    },
+    {
+     "t": "turn",
+     "ask": "LRU or LFU?",
+     "check": [],
+     "say": [
+      "**LRU is cheap and fits skewed traffic**; LFU protects long-term favourites from one-off scans but needs ageing. **Start LRU, measure.**"
+     ]
+    },
+    {
+     "t": "turn",
+     "ask": "How do you pick the TTL?",
+     "check": [],
+     "say": [
+      "From **how stale is allowed** and **what a miss costs**: short for prices, long for names. **Add jitter.**"
+     ]
+    },
+    {
+     "t": "turn",
+     "ask": "Cache-aside or write-through?",
+     "check": [],
+     "say": [
+      "Cache-aside **caches only what's read**; write-through **keeps it fresh** but caches unread data and slows writes. For a few read-after-write paths, **invalidate on write**."
+     ]
+    },
+    {
+     "t": "turn",
+     "ask": "How would you test the stampede fix?",
+     "check": [],
+     "say": [
+      "**Fifty threads on one missing key**, a fake client that **counts calls and sleeps**: assert **one call, fifty equal results**. Then make it fail and assert **the next request retries**."
+     ]
+    },
+    {
+     "t": "turn",
+     "ask": "What about caching LLM calls?",
+     "check": [],
+     "say": [
+      "Two things: **our own response cache**, keyed on **everything that changes the answer**, and **the provider's prompt cache** on the prompt prefix. **I've run the second in production.**"
+     ]
+    },
+    {
+     "t": "turn",
+     "ask": "Which metrics?",
+     "check": [],
+     "say": [
+      "Hits, misses, loads in flight, evictions, errors, and **the age of values served**: the one people forget."
+     ]
+    },
+    {
+     "t": "turn",
+     "ask": "What is cache penetration?",
+     "check": [],
+     "say": [
+      "Keys that **never exist always reach the backend**. Cache **'not found' briefly**, or a **Bloom filter** of real ids."
      ]
     }
    ]
@@ -828,51 +716,51 @@ window.LOOP_CODING.parts.push({
  "tab": "mocks",
  "id": "mock-plan",
  "n": 4,
- "title": "How it is scored, and your next 3 hours",
+ "title": "How it is scored, and your plan",
  "minutes": 10,
- "lead": "What a strong screen looks like against Mercor's own words, and how to spend the time before 6 PM tomorrow.",
+ "lead": "Mercor's own words, what earns them, and how to spend the hours before 6 PM tomorrow.",
  "sections": [
   {
    "id": "mock-score",
    "title": "Their words, and what earns them",
    "blocks": [
     {
-     "t": "table",
+     "t": "bridge",
      "head": [
       "They said",
-      "Strong",
-      "Weak"
+      "Weak",
+      "Strong"
      ],
      "rows": [
       [
        "Clear assumptions",
-       "States three or four and commits to them out loud",
-       "Asks endless questions, or none"
+       "Asks endless questions, or none.",
+       "States **three or four** and **commits** out loud."
       ],
       [
-       "Concrete examples of potential failures",
-       "'A hundred requests miss at once and all call pricing'",
-       "'There could be race conditions'"
+       "Concrete failures",
+       "'There could be race conditions.'",
+       "'**A hundred requests miss at once and all call pricing.**'"
       ],
       [
        "Correctness, performance, reliability",
-       "Covers all three, in an order said up front",
-       "Only performance"
+       "Only performance.",
+       "**All three, in an order said up front.**"
       ],
       [
-       "As workloads grow and requests run concurrently",
-       "Stampede, lock scope, per-process copies, coalescing across instances",
-       "Jumps to Redis with no reason"
+       "Growth and concurrency",
+       "Jumps to Redis with no reason.",
+       "**Stampede, lock scope, per-process copies**, then shared cache."
       ],
       [
-       "Thoughtful tradeoffs when proposing improvements",
-       "Each fix with its cost, in a priority order",
-       "A list of every fix at once"
+       "Trade-offs in improvements",
+       "Every fix at once.",
+       "**Each fix with its cost, in priority order.**"
       ],
       [
-       "Resource management in your language",
-       "Bounded memory, connection caps, timeouts, Python specifics (GIL, lru_cache, asyncio)",
-       "'Memory is cheap'"
+       "Resources in your language",
+       "'Memory is cheap.'",
+       "**Bounded memory, connection caps, timeouts**, Python specifics."
       ]
      ]
     }
@@ -880,40 +768,40 @@ window.LOOP_CODING.parts.push({
   },
   {
    "id": "mock-hours",
-   "title": "The next 3 hours",
+   "title": "Your plan",
    "blocks": [
     {
-     "t": "table",
+     "t": "bridge",
      "head": [
       "When",
       "What",
-      "How long"
+      "Time"
      ],
      "rows": [
       [
        "Today",
-       "Read this walkthrough once, part 1 then part 2",
-       "60 min"
+       "Read part 1, then part 2 one move at a time",
+       "**60 min**"
       ],
       [
        "Today",
-       "Say part 2's answers out loud, one section at a time, without looking; then check",
-       "45 min"
+       "Part 2 again: **say each answer before opening the sheet**",
+       "**45 min**"
       ],
       [
        "Today",
-       "Open `E:\\mercor-cache-mock\\mock1_review`, find the bugs out loud, timed 15 minutes",
-       "20 min"
+       "Find the bugs in `E:\\mercor-cache-mock\\mock1_review` out loud, timed",
+       "**20 min**"
       ],
       [
        "Tomorrow morning",
-       "Say 'run the Mercor mock' in chat: a live 30-minute screen, critique after",
-       "45 min"
+       "Say **'run the Mercor mock'** in chat: live, 30 minutes, critique after",
+       "**45 min**"
       ],
       [
-       "Tomorrow, an hour before",
-       "Reread part 4's table and the curveballs; nothing new",
-       "15 min"
+       "An hour before",
+       "Reread this part and the curveballs. **Nothing new.**",
+       "**15 min**"
       ]
      ]
     }

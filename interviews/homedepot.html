@@ -369,7 +369,7 @@ details.pq.rev > summary .qt::before { content: ""; display: inline-block; width
 
 /* the turn list: one row per turn, on the page and in the panel's rail */
 main .turns { list-style: none; margin: var(--s4) 0 0; padding: 0; border-top: var(--hair); max-width: none; }
-.turn { display: grid; grid-template-columns: 24px 14px minmax(0, 1fr) auto; align-items: baseline; gap: var(--s1); width: 100%; text-align: left;
+.turn { max-width: 1180px; display: grid; grid-template-columns: 24px 14px minmax(0, 1fr) auto; align-items: baseline; gap: var(--s1); width: 100%; text-align: left;
   background: none; border: 0; border-bottom: var(--hair); padding: var(--s2) var(--s1); color: var(--ink); }
 .turn:hover .tl { color: var(--accent); }
 .turn .n { color: var(--muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
@@ -546,6 +546,46 @@ details.item > .sbody { padding-left: 0; }
 .cd-sec { margin: var(--s6) 0 0; padding-top: var(--s4); border-top: var(--hair); }
 .cd-sec h3 { font-size: var(--fs-lg); margin-bottom: var(--s3); }
 .cd-blk { margin: var(--s4) 0; max-width: 860px; }
+/* A mock turn: the interviewer left, what you say right on the dark sheet, the follow-ups folded under it. */
+.turn { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: var(--s6); margin: var(--s4) 0 var(--s6); align-items: start; }
+.turn + .turn { border-top: var(--hair); padding-top: var(--s5); }
+.turn-who { font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); margin-bottom: var(--s2); }
+.turn-ask { font-size: var(--fs-lg); line-height: 1.45; margin: 0 0 var(--s4); }
+.turn-chk { list-style: none; padding: 0; margin: 0 0 var(--s4); font-size: var(--fs-sm); color: var(--muted); }
+.turn-chk li { padding-left: var(--s4); position: relative; margin: var(--s1) 0; }
+.turn-chk li::before { content: ""; position: absolute; left: 0; top: .6em; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.turn-avoid { font-size: var(--fs-sm); margin: 0; }
+.turn-avoid strong { color: var(--warn); }
+.say-sheet { background: var(--ink); color: var(--bg); border-radius: var(--radius-lg); padding: var(--s4) var(--s5); }
+.say-sheet p { margin: 0; font-size: var(--fs-md); line-height: 1.6; }
+.say-sheet p + p { margin-top: var(--s3); }
+.say-sheet strong { color: inherit; font-weight: var(--w-strong); box-shadow: inset 0 -.38em color-mix(in srgb, var(--accent) 55%, transparent); }
+.say-sheet .turn-who { color: color-mix(in srgb, var(--bg) 70%, transparent); }
+.say-hidden { cursor: pointer; text-align: left; width: 100%; border: 0; font: inherit; color: color-mix(in srgb, var(--bg) 70%, transparent); }
+.turn-more { margin-top: var(--s3); }
+.turn-more > summary { cursor: pointer; font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--accent); }
+.turn-more ul { margin: var(--s2) 0 0; padding-left: var(--s5); font-size: var(--fs-sm); }
+.turn-vis { margin-top: var(--s3); }
+.turn-quick { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); margin: var(--s3) 0; }
+.turn-quick .turn-ask { font-size: var(--fs-md); font-weight: var(--w-strong); margin: 0; }
+.say-mode { display: flex; gap: var(--s2); align-items: center; font-size: var(--fs-sm); color: var(--muted); margin: var(--s3) 0; }
+.say-mode button { font: inherit; padding: var(--s1) var(--s3); border: var(--hair); border-radius: 999px; background: transparent; color: inherit; cursor: pointer; }
+.say-mode button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+/* Notes to what you say: a row per concept, three columns. */
+.bridge { display: grid; grid-template-columns: minmax(8rem, 1fr) minmax(0, 2.2fr) minmax(0, 2.4fr); max-width: 1100px; margin: var(--s4) 0; font-size: var(--fs-sm); }
+.bridge > div { padding: var(--s3) var(--s3) var(--s3) 0; border-top: var(--hair); }
+.bridge .bh { font-weight: var(--w-strong); color: var(--muted); border-top: 0; }
+.bridge .bc { font-weight: var(--w-strong); font-size: var(--fs-md); }
+.bridge .bf { color: var(--muted); }
+.bridge .bs { font-size: var(--fs-md); }
+.bridge .bs strong { box-shadow: inset 0 -.38em var(--accent-soft); }
+@media (max-width: 900px) {
+  .turn, .turn-quick { grid-template-columns: 1fr; gap: var(--s3); }
+  .bridge { grid-template-columns: 1fr; }
+  .bridge .bh { display: none; }
+  .bridge > div { border-top: 0; padding: var(--s1) 0; }
+  .bridge .bc { border-top: var(--hair); padding-top: var(--s3); }
+}
 .cd-q { font-weight: var(--w-strong); margin: 0 0 var(--s2); }
 .cd-code { margin: var(--s2) 0; background: var(--code-bg); color: var(--code-ink); border-radius: var(--radius); padding: var(--s2) 0; overflow-x: auto;
   font-family: var(--mono); font-size: var(--fs-code); line-height: 1.6; }
@@ -2467,8 +2507,50 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     });
     return w;
   }
+  /* Mock turns. Answers are shown, or hidden until clicked ("Try first"); the choice is kept per page. */
+  function sayHidden() { return cdState().tryFirst === true; }
+  function cdTurn(b) {
+    var quick = !(b.check && b.check.length) && !b.more && !b.vis && !b.avoid;
+    var w = el("div", "turn" + (quick ? " turn-quick" : "")), L = el("div"), R = el("div");
+    if (!quick) { L.appendChild(el("div", "turn-who", "Interviewer")); }
+    L.appendChild(el("p", "turn-ask", inl(b.ask)));
+    if (b.check && b.check.length) {
+      var ck = el("ul", "turn-chk"); b.check.forEach(function (c) { ck.appendChild(el("li", "", inl(c))); }); L.appendChild(ck);
+    }
+    if (b.avoid) { L.appendChild(el("p", "turn-avoid", "<strong>Avoid:</strong> " + inl(b.avoid))); }
+    var sheet = el("div", "say-sheet");
+    var fill = function () {
+      sheet.innerHTML = "";
+      if (!quick) { sheet.appendChild(el("div", "turn-who", "You")); }
+      b.say.forEach(function (p) { sheet.appendChild(el("p", "", inl(p))); });
+    };
+    if (sayHidden()) {
+      var bt = el("button", "say-hidden", "Say it out loud first. Click to see the answer.");
+      bt.type = "button"; bt.onclick = fill; sheet.appendChild(bt);
+    } else { fill(); }
+    R.appendChild(sheet);
+    if (b.more && b.more.length) {
+      var d = el("details", "turn-more"), ul = el("ul");
+      d.appendChild(el("summary", "", "If they push"));
+      b.more.forEach(function (m) { ul.appendChild(el("li", "", inl(m))); });
+      d.appendChild(ul); R.appendChild(d);
+    }
+    if (b.vis) { var v = el("div", "turn-vis"); v.appendChild(Sheet.cheat({ vis: b.vis })); R.appendChild(v); }
+    w.appendChild(L); w.appendChild(R);
+    return w;
+  }
+  function cdBridge(b) {
+    var g = el("div", "bridge");
+    (b.head || ["Concept", "What breaks", "Say"]).forEach(function (h) { g.appendChild(el("div", "bh", esc(h))); });
+    b.rows.forEach(function (r) {
+      g.appendChild(el("div", "bc", inl(r[0]))); g.appendChild(el("div", "bf", inl(r[1]))); g.appendChild(el("div", "bs", inl(r[2])));
+    });
+    return g;
+  }
   function cdBlock(b) {
     switch (b.t) {
+      case "turn": return cdTurn(b);
+      case "bridge": return cdBridge(b);
       case "p": return el("p", "", inl(b.text));
       case "list": var ul = el("ul");
         b.items.forEach(function (s) { var m = /^([^:]{1,48}):\s(.+)$/.exec(s); ul.appendChild(el("li", "", m ? "<strong>" + inl(m[1]) + ":</strong> " + inl(m[2]) : inl(s))); });
@@ -2513,14 +2595,23 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     host.appendChild(top);
     nav.push([cur.id, "Parts"]);
     var probOf = function (s) { return s.blocks.filter(function (b) { return b.t === "problem"; })[0]; };
-    var oneAt = cur.sections.some(probOf), secs = cur.sections, si = 0;
+    var isTurns = cur.sections.length > 1 && cur.sections.every(function (s) { return s.blocks.some(function (b) { return b.t === "turn"; }); });
+    var oneAt = cur.sections.some(probOf) || isTurns, secs = cur.sections, si = 0;
+    if (cur.sections.some(function (s) { return s.blocks.some(function (b) { return b.t === "turn"; }); })) {
+      var sm = el("div", "say-mode", "<span>Answers</span>");
+      [["Shown", false], ["Try first", true]].forEach(function (o) {
+        var bt = el("button", sayHidden() === o[1] ? "on" : "", o[0]); bt.type = "button";
+        bt.onclick = function () { cdSave("tryFirst", o[1]); route(); }; sm.appendChild(bt);
+      });
+      top.appendChild(sm);
+    }
     if (oneAt) {
       document.body.setAttribute("data-wide", "1");
       var pick = secs.filter(function (s) { return s.id === anchor; })[0] || secs.filter(function (s) { return s.id === st["sec:" + cur.id]; })[0] || secs[0];
       si = secs.indexOf(pick); cdSave("sec:" + cur.id, pick.id);
       var swb = el("div", "wb-switch");
       secs.forEach(function (s, k) {
-        var pb = probOf(s), a = el("a", "wb-p" + (k === si ? " on" : ""), esc(s.title) + (pb && ticks()["solved:" + pb.id] ? ' <span class="cd-ok">&#10003;</span>' : "") +
+        var pb = probOf(s), a = el("a", "wb-p" + (k === si ? " on" : ""), (isTurns ? (k + 1) + ". " : "") + esc(s.title) + (pb && ticks()["solved:" + pb.id] ? ' <span class="cd-ok">&#10003;</span>' : "") +
           (pb && pb.minutes ? '<span class="wb-pm">' + pb.minutes + " min</span>" : ""));
         a.href = link(tab, s.id); swb.appendChild(a);
       });

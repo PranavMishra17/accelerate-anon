@@ -1440,3 +1440,10 @@ management, failures, growth, what to change first, his questions), each with wh
 answer as spoken beats, a timeline or picture, and the answer to avoid; curveballs; how Mercor's own words get
 scored; and a 3-hour plan ending in a live mock. Conversational, no code (the screen has no coding tools). Mock
 parts use the coding-part renderer with tab "mocks". No charter deviation.
+
+**22 Oct 2026: Mercor mock reads as a conversation.** He found the simulated call "like textbook".
+Each move is now a `turn`: the interviewer's line and what they check on the left, and on the right a dark
+sheet with the two or three sentences to say out loud, the key words bold and underlined. Beats fold under
+"If they push", with the picture below. The call steps one move at a time (numbered switches, arrow keys).
+An Answers switch (Shown or Try first) hides every answer until clicked. The notes table is now a
+three-column grid, and the curveballs are question and answer pairs. No charter deviation.
