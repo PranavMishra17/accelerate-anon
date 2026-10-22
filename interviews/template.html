@@ -563,6 +563,9 @@ details.item > .sbody { padding-left: 0; }
 .say-sheet .turn-who { color: color-mix(in srgb, var(--bg) 70%, transparent); }
 .say-hidden { cursor: pointer; text-align: left; width: 100%; border: 0; font: inherit; color: color-mix(in srgb, var(--bg) 70%, transparent); }
 .turn-more { margin-top: var(--s3); }
+.turn-probe { padding-left: var(--s5); border-left: 2px solid var(--accent-soft); }
+.turn + .turn-probe { border-top: 0; padding-top: 0; }
+.turn-src { font-size: var(--fs-sm); margin-top: var(--s3); color: color-mix(in srgb, var(--bg) 70%, transparent); }
 .turn-more > summary { cursor: pointer; font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--accent); }
 .turn-more ul { margin: var(--s2) 0 0; padding-left: var(--s5); font-size: var(--fs-sm); }
 .turn-vis { margin-top: var(--s3); }
@@ -2509,10 +2512,24 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   }
   /* Mock turns. Answers are shown, or hidden until clicked ("Try first"); the choice is kept per page. */
   function sayHidden() { return cdState().tryFirst === true; }
+  /* A turn's answer can come from elsewhere: `from` a Prep script (his words), `fromAsk` a questions-to-ask group,
+     or `priv` the gitignored private/loops/<loop>.js (`turns[key]`), for answers about alfred_ internals. */
+  function turnSay(b) {
+    var r = { say: b.say || [], more: b.more };
+    if (b.from) { var sc = LOOP.scripts.filter(function (x) { return x.id === b.from; })[0]; if (sc) { r.say = sc.say; r.src = "Your words, from Prep."; } }
+    if (b.fromAsk) { var g = (LOOP.ask3 || []).filter(function (x) { return x.id === b.fromAsk; })[0]; if (g) { r.say = g.items.map(function (x) { return x.q; }); r.src = "Your questions, from Prep. One or two."; } }
+    if (b.priv) {
+      var pv = ((window.LOOP_PRIVATE && LOOP_PRIVATE[LOOP.id]) || {}).turns || {};
+      if (pv[b.priv]) { r.say = pv[b.priv].say; r.more = pv[b.priv].more || r.more; }
+      else { r.say = ["Your answer lives in private/loops/" + LOOP.id + ".js, which is not on this machine."]; r.more = null; }
+    }
+    return r;
+  }
   function cdTurn(b) {
-    var quick = !(b.check && b.check.length) && !b.more && !b.vis && !b.avoid;
-    var w = el("div", "turn" + (quick ? " turn-quick" : "")), L = el("div"), R = el("div");
-    if (!quick) { L.appendChild(el("div", "turn-who", "Interviewer")); }
+    var ts = turnSay(b);
+    var quick = !(b.check && b.check.length) && !ts.more && !b.vis && !b.avoid && !b.probe && !b.who;
+    var w = el("div", "turn" + (quick ? " turn-quick" : "") + (b.probe ? " turn-probe" : "")), L = el("div"), R = el("div");
+    if (!quick) { L.appendChild(el("div", "turn-who", b.probe ? "Probe" : esc(b.who || "Interviewer"))); }
     L.appendChild(el("p", "turn-ask", inl(b.ask)));
     if (b.check && b.check.length) {
       var ck = el("ul", "turn-chk"); b.check.forEach(function (c) { ck.appendChild(el("li", "", inl(c))); }); L.appendChild(ck);
@@ -2522,17 +2539,18 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     var fill = function () {
       sheet.innerHTML = "";
       if (!quick) { sheet.appendChild(el("div", "turn-who", "You")); }
-      b.say.forEach(function (p) { sheet.appendChild(el("p", "", inl(p))); });
+      ts.say.forEach(function (p) { sheet.appendChild(el("p", "", inl(p))); });
+      if (ts.src) { sheet.appendChild(el("div", "turn-src", ts.src)); }
     };
     if (sayHidden()) {
       var bt = el("button", "say-hidden", "Say it out loud first. Click to see the answer.");
       bt.type = "button"; bt.onclick = fill; sheet.appendChild(bt);
     } else { fill(); }
     R.appendChild(sheet);
-    if (b.more && b.more.length) {
+    if (ts.more && ts.more.length) {
       var d = el("details", "turn-more"), ul = el("ul");
       d.appendChild(el("summary", "", "If they push"));
-      b.more.forEach(function (m) { ul.appendChild(el("li", "", inl(m))); });
+      ts.more.forEach(function (m) { ul.appendChild(el("li", "", inl(m))); });
       d.appendChild(ul); R.appendChild(d);
     }
     if (b.vis) { var v = el("div", "turn-vis"); v.appendChild(Sheet.cheat({ vis: b.vis })); R.appendChild(v); }

@@ -1447,3 +1447,13 @@ sheet with the two or three sentences to say out loud, the key words bold and un
 "If they push", with the picture below. The call steps one move at a time (numbered switches, arrow keys).
 An Answers switch (Shown or Try first) hides every answer until clicked. The notes table is now a
 three-column grid, and the curveballs are question and answer pairs. No charter deviation.
+
+**22 Oct 2026: Mercor call simulated as the real thirty minutes.** He expects the call to open with
+introductions, go to his own caching work with probes, then a scenario from Mercor's world, then other questions,
+then wrap-up. The call is now six phases, one at a time: Opening (Sophie's framing, his intro pulled from Prep),
+Your caching work (five turns; the answers about alfred_ come from the gitignored private file through a new
+`priv` key), A Mercor scenario (an internal support agent on a rate-limited ticketing API: approach, key and
+tenant safety, LLM response caching, a stampede against a quota, staleness, an outage, memory, growth to two
+hundred tenants, what first), If she shows code instead, Python and proof, and Wrap-up (his questions and
+closing pulled from Prep and INTRO.md). Probes sit indented under their question. Turns can take `from`,
+`fromAsk` and `priv`. No charter deviation.
