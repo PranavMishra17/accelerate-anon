@@ -1457,3 +1457,10 @@ tenant safety, LLM response caching, a stampede against a quota, staleness, an o
 hundred tenants, what first), If she shows code instead, Python and proof, and Wrap-up (his questions and
 closing pulled from Prep and INTRO.md). Probes sit indented under their question. Turns can take `from`,
 `fromAsk` and `priv`. No charter deviation.
+
+**22 Oct 2026: Mercor 'Your caching work' made honest and complete.** He saw the answers missing (a stale browser
+cache of the unstamped private file) and asked that the answers say only what exists. The phase now has eight
+probes (measurement, prompt layout, five minutes or an hour, background workers, agent cold start and the warm pool,
+the inbox table cache, why no Redis, what you would fix). Every answer was checked against langllm-supabase
+origin/main and lives in the gitignored private file. `tools/serve.py` now sends `Cache-Control: no-cache`, so an
+unstamped file is revalidated on every load. No charter deviation.

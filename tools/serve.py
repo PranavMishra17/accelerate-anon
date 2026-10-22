@@ -81,6 +81,8 @@ class RangeHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
         if not self.headers.get("Range"):
             self.send_header("Accept-Ranges", "bytes")
+        # Unstamped files (private/*.js) must never come from the browser cache: revalidate every load.
+        self.send_header("Cache-Control", "no-cache")
         super().end_headers()
 
 

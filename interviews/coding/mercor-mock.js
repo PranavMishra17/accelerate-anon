@@ -135,7 +135,7 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "p",
-     "text": "**Minutes 4 to 10.** She starts from what you have done, then probes two or three times. Lead with the one that matters most, give a number, and be honest about what is missing."
+     "text": "**Minutes 4 to 12.** Certain to come. She starts from what you have done, then probes two to four times; eight likely probes below. Frame it honestly (no classic cache layer; the caching that matters is the prompt cache), give a number, and name what is missing before she does."
     },
     {
      "t": "turn",
@@ -161,13 +161,45 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "turn",
-     "ask": "What breaks a prompt cache?",
+     "ask": "What breaks a prompt cache? How is your prompt laid out?",
      "check": [
       "Do you understand the mechanism, not only the feature?"
      ],
      "say": [],
      "probe": true,
      "priv": "exp-break"
+    },
+    {
+     "t": "turn",
+     "ask": "How did you choose between five minutes and an hour?",
+     "check": [
+      "Trade-offs with numbers.",
+      "Do you know when not to cache?"
+     ],
+     "say": [],
+     "probe": true,
+     "priv": "exp-ttl"
+    },
+    {
+     "t": "turn",
+     "ask": "You mentioned background workers. What do they cache?",
+     "check": [
+      "Breadth: is this one trick or a practice?"
+     ],
+     "say": [],
+     "probe": true,
+     "priv": "exp-workers"
+    },
+    {
+     "t": "turn",
+     "ask": "What about the agent itself: loading its code, cold starts?",
+     "check": [
+      "Performance beyond data caching.",
+      "Resource management in a long-lived process."
+     ],
+     "say": [],
+     "probe": true,
+     "priv": "exp-v8"
     },
     {
      "t": "turn",
@@ -189,6 +221,16 @@ window.LOOP_CODING.parts.push({
      "say": [],
      "probe": true,
      "priv": "exp-redis"
+    },
+    {
+     "t": "turn",
+     "ask": "If you went back, what would you fix?",
+     "check": [
+      "Self-critique: do you know your system's weak spots?"
+     ],
+     "say": [],
+     "probe": true,
+     "priv": "exp-gaps"
     }
    ]
   },
