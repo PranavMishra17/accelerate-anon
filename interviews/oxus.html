@@ -581,6 +581,7 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
 .cd-hint { margin: var(--s2) 0; padding-left: var(--s3); border-left: var(--hair); }
 .cd-nav { display: flex; justify-content: space-between; gap: var(--s3); margin-top: var(--s7); padding-top: var(--s4); border-top: var(--hair); }
 .cd-done { margin-top: var(--s5); }
+.cd-nav + section.block { margin-top: var(--s7); }
 .lab.cd-drill { margin: var(--s6) 0 var(--s2); padding-top: var(--s3); border-top: var(--hair); font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); }
 /* a long loop's tabs: the day's checklist on every tab, the plan calendar, the daily workbench, the loop-day card */
 .k-daily { --k: var(--cat-1); } .k-design { --k: var(--cat-2); } .k-story { --k: var(--cat-3); }
@@ -3324,7 +3325,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       else if (r.tab === "own") { tabOwn(main); }
       else if (r.tab === "sessions") { tabSessions(main, r.anchor); }
       else if (r.tab === "live") { tabLive(main); }
-      else if (r.tab === "mocks") { tabMocks(main); }
+      else if (r.tab === "mocks") { if (cdParts("mocks").length) { tabCoding(main, r.anchor, "mocks"); } tabMocks(main); }
       else if (r.tab === "coding") { tabCoding(main, r.anchor); }
       else if (r.tab === "lld") { tabCoding(main, r.anchor, "lld"); }
       else if (r.tab === "daily") { tabDaily(main, r.anchor, r.sub); }

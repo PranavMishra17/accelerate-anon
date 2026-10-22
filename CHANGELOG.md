@@ -1430,3 +1430,13 @@ editor, hints and tests right and sticky, the solution, dry run and follow-ups a
 problems shows one at a time, with switches on top and the arrow keys stepping between them. The workbench is one
 shared function (`workbench`). The navigation principle behind the Amazon page is now his rule for every new page
 (memory note prep-page-navigation). No charter deviation.
+
+**2026-10-22 — Mercor: the screen, simulated.**
+The Mocks tab now opens to a walkthrough of tomorrow's caching screen, read rather than played: his handwritten
+caching notes turned into failures and sentences for the screen's kind of system (stampede, avalanche,
+penetration, TTL, read-after-write, replication lag, hot keys, eviction, key design, write patterns, where to
+cache), then the call move by move (setup, assumptions, correctness, concurrent requests, lock scope, resource
+management, failures, growth, what to change first, his questions), each with what the interviewer checks, his
+answer as spoken beats, a timeline or picture, and the answer to avoid; curveballs; how Mercor's own words get
+scored; and a 3-hour plan ending in a live mock. Conversational, no code (the screen has no coding tools). Mock
+parts use the coding-part renderer with tab "mocks". No charter deviation.
