@@ -1415,3 +1415,11 @@ minutes and the stories to spend there, and between-round rules. Seven LLD class
 notes) and verified videos and articles per drill, per problem and for the principles. CODING.html gains an
 Algorithms tab: 48 algorithms on one page with a sticky index, each with its signal, code, cost and variants,
 checked against a brute force. No charter deviation.
+
+**2026-10-21 — Heard loop page.**
+interviews/heard.html for a first chat with Kelly Sun, founder of Heard, on Thursday 22 October; Heard found him
+through MockFlow-AI on GitHub. Heard is a voice layer for coding agents (Claude Code and Codex narrated aloud,
+replies by voice), not an interview product. The page: what Heard is and how it decides what to say, the posting
+(engineer number one), your intro, why Heard in versions, a slot for the three pieces of product feedback they ask
+every applicant for, project stories in gitignored private/loops/heard.js (the voice agent, MockFlow, how you work
+with coding agents), and questions in three tiers. Page only. No charter deviation.
