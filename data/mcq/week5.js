@@ -384,3 +384,37 @@ MCQ.add("w5c:2", [
     why: "Pitch differs between the groups, and pitch moves measured tilt on its own. Until f0 is controlled, the difference cannot be credited to the filter.",
     pair: "true-envelope-vs-measured-tilt" }
 ]);
+
+/* w5d: low-level design foundations (23 Oct 2026). */
+MCQ.add("w5d:0", [
+  { q: "An interviewer says 'design a parking lot' and wants code by the end. Which zoom level is this?",
+    o: ["High-level: services, stores and queues", "Low-level: classes inside one program, and code that runs", "Capacity planning", "Database schema design only", "API gateway design"],
+    a: 1, why: "A design that ends in running code for one program is low-level design: responsibilities split across classes, not work split across machines.", pair: "hld-vs-lld" },
+  { q: "Which of these belongs in a low-level answer and not a high-level one?",
+    o: ["The partition key", "Replication lag", "An abstract Payment class with pay(amount)", "A queue between two services", "A cache in front of the database"],
+    a: 2, why: "The other four are about machines and data movement. A class with a method contract is the unit of low-level design.", pair: "hld-vs-lld" }
+]);
+MCQ.add("w5d:1", [
+  { q: "The prompt is 'design a coffee-shop order system'. What should the first five minutes be?",
+    o: ["Write the Order class", "Draw every pattern that might apply", "Ask who acts, what it must do, what can change and whether money is involved, then say the scope back", "Pick a database", "Estimate orders per second"],
+    a: 2, why: "The prompt is thin on purpose. The questions set the scope and are scored; saying it back turns guesses into an agreement.", pair: "elicit" },
+  { q: "You learn an order can be cancelled until the barista starts it. What does that change?",
+    o: ["Nothing", "The order needs a status, and actions depend on it", "Payment must be refunded in floats", "A Singleton is needed", "Orders must be stored in a queue"],
+    a: 1, why: "An action allowed only in some statuses means the order has states, a candidate for an Enum or the State pattern.", pair: "elicit" }
+]);
+MCQ.add("w5d:2", [
+  { q: "Card and cash payments both 'pay an amount'. What is the cleanest model?",
+    o: ["One Payment class with if type == 'card'", "An abstract Payment with pay(amount_cents); CardPayment and CashPayment implement it", "Order inherits from Payment", "A global pay() function with flags", "A Singleton PaymentManager"],
+    a: 1, why: "The variants are truly interchangeable, so an abstract base class is the one justified is-a: a new payment type is a new class and the order code never changes.", pair: "has-a-is-a" },
+  { q: "An Order holds its line items. Which relationship is that?",
+    o: ["is-a", "has-a (composition)", "uses", "inherits", "none"],
+    a: 1, why: "The order owns its lines and their lifetime: composition. 'Uses' is a call without ownership; 'is-a' would mean an order is a kind of line.", pair: "has-a-is-a" }
+]);
+MCQ.add("w5d:3", [
+  { q: "A loyalty discount is added. Which design follows open-closed?",
+    o: ["Edit total() to add an elif", "A pricing strategy the order calls; the loyalty discount is a new class", "Subclass Order as LoyaltyOrder", "A global DISCOUNT flag", "Copy total() into a new method"],
+    a: 1, why: "Open-closed: add a class, do not edit working code. Subclassing Order per discount multiplies classes along the wrong axis.", pair: "patterns" },
+  { q: "Why is Singleton usually refused in a design round?",
+    o: ["Python cannot do it", "It hides a global dependency and makes tests share state; passing one object in costs nothing", "It is slow", "It breaks inheritance", "It needs a database"],
+    a: 1, why: "One instance is easy without the pattern. Its cost, hidden coupling and shared test state, is why naming and refusing it scores well.", pair: "patterns" }
+]);

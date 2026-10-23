@@ -290,6 +290,27 @@ is right: vocal folds make a buzz at F0, the vocal tract is a tube that resonate
 change the buzz and it is the same person, change the tube and it is someone else.
 Everything Alaap measures sits on this split.
 
+### Session D — Systems: low-level design, the foundations
+
+Added 23 October, at Pranav's request, ahead of the Amazon loop (9 and 10 November), whose
+four rounds include an object-oriented design round. Everything above is high-level design:
+boxes across machines. This session zooms into one box: the classes inside one service,
+what each owns, how they call each other, and code that runs. Cover: what low-level design
+is against high-level design; the seven steps of the round; eliciting requirements when none
+are given; composition, inheritance, abstract base classes, Enum and dataclass; SOLID as five
+checks on a split; and the five patterns that come up, each with its reason and its cost.
+
+**Read** the Amazon page's LLD tab, part 1 (How the LLD round runs), which is this session's
+material; the coding page's object-oriented design topic as a second view.
+
+**Do.** For a coffee-shop order system: the questions you would ask, the scope said back, a
+class sketch with every relationship named, and the pattern you would use and the one you
+would refuse, said out loud.
+
+This is the only low-level design in milestone 1. The drills (parking lot, file system,
+cart, library, elevator, key-value store) stay on the Amazon page; milestone 2 starts from
+both.
+
 ---
 
 # The gate

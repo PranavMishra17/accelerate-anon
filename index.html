@@ -765,8 +765,8 @@
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
 <script src="data/streams.js?v=d0b499a4"></script>
-<script src="data/reading.js?v=9eb0f97e"></script>
-<script src="data/sheets.js?v=e1ef5ca9"></script>
+<script src="data/reading.js?v=a099e29f"></script>
+<script src="data/sheets.js?v=468d86a7"></script>
 <script src="site/res.js?v=c33c7564"></script>
 <script src="site/nlm.js?v=2c36ecf8"></script>
 <script src="site/sheet.js?v=d5ed86a7"></script>
@@ -775,7 +775,7 @@
 <script src="data/mcq/week2.js?v=c99169f7"></script>
 <script src="data/mcq/week3.js?v=bef66b75"></script>
 <script src="data/mcq/week4.js?v=71bc9d98"></script>
-<script src="data/mcq/week5.js?v=45a8e78b"></script>
+<script src="data/mcq/week5.js?v=d4776689"></script>
 <script>
 (function () {
   "use strict";
@@ -789,7 +789,7 @@
     w2a: "Partitioning", w2b: "Derivatives", w2c: "Overfitting",
     w3a: "Storage", w3b: "Matrices", w3c: "Nyquist",
     w4a: "Failure", w4b: "Gradients", w4c: "Attention",
-    w5a: "Caching", w5b: "Probability", w5c: "Source\u2013filter",
+    w5a: "Caching", w5b: "Probability", w5c: "Source\u2013filter", w5d: "LLD basics",
     wc1: "Oxus: design frame", wc2: "Design: control-testing agent", wc3: "Design: evidence ingestion",
     wc4: "Design: flowchart, yearly base", wc13: "ZenML: your bench story", wc14: "ZenML: the critique, fixed", wc15: "ZenML: Kitaru internals", wc16: "ZenML: design replay evals", wc17: "ZenML: backend depth", wc5: "Oxus: past work, deep", wc6: "Oxus: mock and sleep",
     wc7: "ZenML: new room", wc8: "ZenML: side effects", wc9: "ZenML: multi-turn",
@@ -2298,6 +2298,76 @@
               m: 15,
               out: "one or two sentences connecting f0 to harmonic spacing: a higher f0 means fewer, more widely spaced harmonics sampling the same envelope, which reads as flatter tilt even though the true envelope has not changed",
               ans: {"lead": "A 250 Hz voice reads a flatter tilt because the tilt is a line fitted to the harmonics and the floor between them, and a higher F0 samples the same envelope more coarsely.", "pts": ["Harmonics are samples: they sit at multiples of F0, so the envelope is read every 90 Hz for one voice and every 250 Hz for the other.", "Fewer of them: across 80 to 8000 Hz that is about 88 harmonics against 32, 2.8 times fewer, so each harmonic has 2.8 times more bins in the floor beside it.", "A flat floor pulls the slope flat: in S21's first test the floor was flat noise, so more of it dragged the fit toward 0 dB per octave. Real voices filter that floor too, which softens the effect.", "Weight on the lowest bins: 27 bins below 500 Hz carry 43.2% of the fit. A 90 Hz voice puts five harmonics there and a 250 Hz voice puts one, so the heaviest part of the fit sees different data.", "Measured: with the envelope slope held constant by construction, tilt still tracked F0 at r = +0.918."], "close": "So the tilt reads flatter for the higher voice although the filter has not changed: it reads how the harmonics happen to sample the envelope."} }
+          ]
+        },
+        {
+          id: "w5d", track: "Systems", len: "1h 15m", est: 75,
+          name: "Low-level design: the foundations",
+          blurb: "The same design habits, zoomed into one service: classes, what each owns, and code that runs.",
+          intro: "Everything so far was high-level design: boxes across machines, and what fails between them. Low-level design zooms into one box. It is the first of the LLD sessions; the drills live on the Amazon page, and the next milestone picks up from both.",
+          diagrams: ["lldRound"],
+          steps: [
+            { t: "What low-level design is, against the design you have been doing",
+              close: [
+                { k: "why", q: "Why does a low-level design round end in running code, when a high-level round ends in a diagram?", a: "Because the question is different: high-level design asks how work spreads across machines and survives failure, and a diagram can show that. Low-level design asks how responsibilities split inside one program, and the only proof that the split works is code that runs one example end to end." },
+                { k: "short", q: "Name one thing you would say in a high-level answer that has no place in a low-level one, and one the other way round.", a: "High-level: the partition key, a queue between services, replication lag. Low-level: which class owns the price, an abstract base class for payment, a method signature. Neither belongs in the other's answer." },
+                { k: "order", q: "Put the seven steps of the round in order.",
+                  items: ["Core code, then a dry run", "Use cases", "Clarify and elicit requirements", "Class sketch", "Extensions", "Entities", "Relationships"],
+                  a: "Clarify and elicit requirements, use cases, entities, relationships, class sketch, core code with a dry run, extensions." },
+                { k: "figure", q: "In the round figure, which step takes the most minutes, and why that one?", a: "The core code, about 15 of the 45 minutes: it is the part that shows the design works, and the interviewer reads it line by line." }
+              ],
+              d: "High-level design draws boxes across machines: caches, shards, queues, and what fails between them. Low-level design zooms into one of those boxes: the classes inside one service, what each one owns, how they call each other, and code that runs. The habits carry over: requirements first, name the trade-off, say what you leave out.",
+              m: 15,
+              where: "Amazon page, LLD tab → How the LLD round runs → The 45-minute shape, and the round figure on this page",
+              out: "one paragraph: what a low-level round asks you to produce that a high-level round does not, then the seven steps in order from memory",
+              skip: "The drills on the Amazon page: this session is the base they build on",
+              ans: {"lead": "Low-level design is the inside of one service: the classes, what each owns, how they talk, and code that runs, where high-level design was boxes across machines.", "pts": ["What changes: the unit is a class, not a machine; the failure you design against is a bad split of responsibilities, not a dead node.", "What stays: requirements first, a stated trade-off for every choice, and saying what you leave out.", "The output: a class sketch and core code that runs one example, not a box diagram.", "The seven steps: clarify, use cases, entities, relationships, class sketch, core code with a dry run, extensions.", "The time: about a third of the round goes to core code; questions and naming take most of the rest."], "close": "So the same discipline as the milestone's systems work, one zoom level down, with code as the proof."} },
+            { t: "Requirements first: what to ask when none are given",
+              close: [
+                { k: "why", q: "Why ask questions at all, when the prompt seems clear enough to start coding?", a: "Because the prompt is deliberately thin: what you ask decides the scope, and an interviewer scores the questions. Building before asking means designing for a problem you guessed, then rewriting when the real one appears." },
+                { k: "short", q: "For a coffee-shop order system, give three questions you would ask and why each changes the design.", a: "Who acts (a customer and a barista, or also a manager): it decides the actors and their methods. Can an order change after it is placed: it decides whether order needs states. Are there discounts or loyalty points: it decides whether pricing is its own strategy." },
+                { k: "why", q: "Why say the scope back before you sketch anything?", a: "It turns your guesses into an agreement. If the interviewer meant something else, you hear it now, at minute five, not at minute thirty with half the code written." }
+              ],
+              d: "The prompt is short on purpose. Five to eight questions turn it into a scope: who uses it, the three or four things it must do, how big it gets, whether two people act on the same thing at once, whether it survives a restart, and whether money is involved. Then you say the scope back and get a yes.",
+              m: 15,
+              where: "Amazon page, LLD tab → How the LLD round runs → Eliciting requirements when none are given",
+              out: "for a coffee-shop order system: the seven questions you would ask, then the scope said back in three sentences, what is in and what is out",
+              ans: {"lead": "I would ask who uses it, what it must do, and what can change, then say the scope back before drawing anything.", "pts": ["Actors: a customer places and pays, a barista makes and marks ready. A manager changing the menu is out unless they say so.", "Use cases: place an order, pay, make it, mark it ready, collect it.", "Change: can an order be cancelled or edited after it is placed, and until when? That decides whether the order needs states.", "Money: are prices per size, with discounts or loyalty? That decides whether pricing is its own strategy. Money in integer cents.", "Concurrency and persistence: can two baristas pick the same order? Does it survive a restart, or is in-memory fine for the round?"], "close": "Then the scope in three sentences, with what I am leaving out, and a yes before I sketch."} },
+            { t: "Objects and relationships: the Python on the board",
+              think: ["Which nouns own data or a rule? Those are the class candidates: order, line item, menu item, payment.", "For each link, is it has-a, uses, or is-a? Most are has-a; is-a needs a reason.", "Where is there a family of variants that will grow, such as payment types? That is where an abstract base class goes.", "Which values are a fixed set, such as order status or cup size? That is an Enum."],
+              close: [
+                { k: "why", q: "Why prefer composition (has-a) over inheritance (is-a) by default?", a: "Composition lets you swap a part without touching the class that holds it, and it keeps classes small. Inheritance ties the child to every detail of the parent, so a change in the parent can break every child, and deep trees get hard to follow." },
+                { k: "short", q: "When is inheritance the right call?", a: "When the children really are substitutable for the parent and share its contract, such as card and cash payments that both 'pay an amount': then an abstract base class with one method each child implements is cleaner than flags." },
+                { k: "why", q: "What does an abstract base class buy you in an interview that a plain class with an if-chain does not?", a: "A place to add the next variant without editing working code: a new payment type is a new subclass, and the order code that calls pay() never changes. An if-chain grows with every variant and every branch is a chance to break the old ones." }
+              ],
+              d: "Five Python tools cover nearly every design: an abstract base class for a family of variants, an Enum for a fixed set of values, a dataclass for plain data, composition to give a class its parts, and a Protocol when you only care what methods something has. The relationships are has-a, uses, and is-a, in roughly that order of how often you need them.",
+              m: 20,
+              where: "Amazon page, LLD tab → How the LLD round runs → Python OOP you need on the board; then the coding page, Techniques → Object-oriented design, for the same tools in a worked prompt",
+              out: "a class sketch for the coffee-shop system, names, fields and method signatures with no bodies, and has-a, uses or is-a written on every link",
+              ans: {"lead": "Order has line items and a status; payment is a small family behind one interface; prices are integer cents.", "pts": ["MenuItem: a dataclass with a name and a price per size in cents.", "OrderLine: a dataclass with a menu item, a size (an Enum) and a quantity. Order has-a list of them.", "Order: lines, a status (an Enum: placed, making, ready, collected, cancelled), total(), and methods that move the status.", "Payment: an abstract base class with pay(amount_cents); CardPayment and CashPayment are its children, the one is-a in the design.", "Barista uses Order: it calls start() and ready(), and owns no order."], "close": "One is-a, where the variants are truly interchangeable; everything else is has-a or uses."} },
+            { t: "SOLID and five patterns, each with its reason and its cost",
+              close: [
+                { k: "why", q: "Why say the cost of a pattern, not only its name?", a: "Because every pattern adds classes and indirection. Naming the cost shows you chose it for this problem, and it is what separates a design from a pattern catalogue." },
+                { k: "short", q: "In the coffee-shop system, which pattern would you use for the order's status, and which would you refuse? Say choice, reason, cost.", a: "State for the order, if each status allows different actions: cancel only before making, collect only when ready; the cost is a class per state, worth it once there are four or more. I would refuse Singleton for the shop: it hides a global and makes testing harder, and passing one shop object in costs nothing." },
+                { k: "why", q: "What does open-closed mean in practice, in one example?", a: "Adding a new discount type should mean adding a class, not editing the order's total() method. If pricing is a strategy the order calls, a loyalty discount is one new class and the working code stays untouched." },
+                { k: "short", q: "Name the five patterns that come up most, with one use each.", a: "Strategy: interchangeable pricing or discount rules. Factory: build the right payment from a type. Observer: tell the customer when the order is ready. State: an order or a machine whose actions depend on its status. Singleton: rarely, and usually refused." }
+              ],
+              d: "SOLID is five checks on a split, not five things to recite: one reason to change per class, add instead of edit, children usable wherever the parent is, small interfaces, and depend on the abstraction. Five patterns cover nearly every round: Strategy, Factory, Observer, State and, mostly to refuse, Singleton. Each comes with a reason to use it and a case where it is too much.",
+              m: 25,
+              where: "Amazon page, LLD tab → How the LLD round runs → SOLID, one line each, then The patterns that actually come up, then How to talk",
+              out: "said out loud for the coffee-shop system, about 90 seconds: the one pattern you would use and the one you would refuse, each as choice, reason and cost",
+              ans: {"lead": "I would use State for the order and a Strategy for pricing, and refuse a Singleton for the shop.", "pts": ["State: each status allows different actions, cancel before making, collect only when ready. A class per state keeps those rules out of one long if-chain; the cost is more classes, worth it here.", "Strategy for pricing: discounts and loyalty vary and will grow. The order calls price(lines) on a strategy, so a new discount is a new class: open-closed in one line.", "Observer, maybe: notifying the customer when the order is ready. Worth it only if more than one thing listens.", "Refused, Singleton: a global shop hides dependencies and makes tests share state. Pass one shop object in.", "SOLID as the check: one reason to change per class, and every new variant added as a class, not as an edit to working code."], "close": "The pattern is the means; the reason and the cost are the answer."} }
+          ],
+          quiz: [
+            { q: "What does a low-level design round produce that a high-level round does not?",
+              o: ["A box diagram across machines", "Classes with clear responsibilities, and code that runs one example", "A capacity estimate", "A list of technologies"], a: 1,
+              why: "High-level design shows how work spreads across machines. Low-level design shows how responsibilities split inside one program, and running code is the proof." },
+            { q: "A discount type is added. Which design keeps working code untouched?",
+              o: ["An if-chain in total()", "A pricing strategy the order calls, with the new discount as a new class", "A global flag", "Subclassing Order for each discount"], a: 1,
+              why: "Open-closed: add a class instead of editing the order. Subclassing Order per discount multiplies classes along the wrong axis." },
+            { q: "When is a Singleton the right call in an interview design?",
+              o: ["For any manager class", "Rarely: it hides a global and makes tests share state; passing one object in usually costs nothing", "Always for the main system class", "Whenever there is one physical thing"], a: 1,
+              why: "One instance is easy to get without a Singleton. The pattern's cost, hidden coupling and shared state in tests, is why it is usually refused." }
           ]
         }
       ]

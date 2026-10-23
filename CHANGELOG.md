@@ -1492,3 +1492,13 @@ asyncio and the event loop; processes; mixing them, with a symptom-to-fix table)
 eight code blocks that run against fakes (including a process pool under spawn and an eval runner mixing asyncio
 with a process pool), and a 'What to say' sheet per part. One source, `coding/concurrency/`, drawn by both pages.
 Examples are generic (his choice), no alfred_ claims. No charter deviation.
+
+**23 Oct 2026: low-level design enters milestone 1 as one session (w5d).** Re-plan at his request. All of
+milestone 1's systems work is high-level design; the Amazon loop (9 and 10 Nov) has an object-oriented design round.
+Week 5 gains Session D, 'Low-level design: the foundations' (Systems, 75 minutes, four steps: what LLD is against
+HLD, eliciting requirements, objects and relationships, SOLID and five patterns), in the canonical format with cheat
+sheets, terms, reading and multiple choice, practised on a coffee-shop order system that no Amazon drill uses. Its
+material is the Amazon page's LLD part 1, linked, not copied; the Amazon plan's 22 Oct item now points at w5d so it
+is done once. The drills stay on the Amazon page; milestone 2's re-plan starts from both. Deviation: milestone 1 grows
+by 75 minutes for a topic the charter's first milestone did not name, to put the Amazon prep in the canonical
+record.

@@ -2582,3 +2582,84 @@ window.SHEETS = {
   };
   for (var k in V) { if (window.SHEETS[k]) { window.SHEETS[k].vis = V[k]; } }
 })();
+
+/* ---------------------------------------------------------------- w5d Low-level design: the foundations (23 Oct 2026) */
+(function () {
+  var S = window.SHEETS = window.SHEETS || {};
+  S["w5d:0"] = {
+    cheat: ["High-level: boxes across machines (cache, shard, queue) and what fails between them.",
+            "Low-level: one box opened up: classes, what each owns, how they call each other, code that runs.",
+            "Same habits: requirements first, a trade-off for every choice, say what you leave out.",
+            "Seven steps: clarify, use cases, entities, relationships, class sketch, core code with a dry run, extensions.",
+            "Core code gets about a third of the 45 minutes; the interviewer reads it line by line."],
+    terms: [
+      { t: "Low-level design (LLD)", mem: "Inside one service.", d: "The classes of one program: their responsibilities, relationships and interfaces, shown in code that runs." },
+      { t: "High-level design (HLD)", mem: "Across machines.", d: "How work spreads over services, stores and queues, and how it survives failure. The milestone's systems work so far." },
+      { t: "Responsibility", mem: "What a class is for.", d: "The one job a class owns, data and the rules about it. A split is good when each change touches one class." },
+      { t: "Dry run", mem: "Run it in your head, out loud.", d: "Walking one example through the code line by line, saying the values, when there is no run button." }],
+    vis: [
+      { title: "Two zoom levels", vs: { cols: ["High-level design", "Low-level design"], rows: [
+        ["Unit", "a service, a store, a queue", "a class"],
+        ["Fails by", "a dead node, a hot partition", "a bad split of responsibilities"],
+        ["Output", "a box diagram and numbers", "a class sketch and running code"]] } },
+      { title: "The round", flow: ["Clarify", "Use cases", "Entities", "Relationships", "Class sketch", "Core code", "Extensions"], note: "Core code is about a third of the time." }]
+  };
+  S["w5d:1"] = {
+    cheat: ["The prompt is thin on purpose: your questions set the scope, and they are scored.",
+            "Ask: actors, three or four use cases, scale, concurrent actions, persistence, money, failure.",
+            "Each answer changes the design: an order that can change needs states; discounts need a pricing strategy.",
+            "Money in integer cents, never floats.",
+            "Say the scope back in three sentences, what is in and out, and get a yes before sketching."],
+    terms: [
+      { t: "Eliciting", mem: "Drawing out what they want.", d: "Asking the questions that turn a one-line prompt into an agreed scope." },
+      { t: "Actor", mem: "Who acts.", d: "A person or system that uses the design: a customer, a barista, an admin." },
+      { t: "Use case", mem: "A verb it must do.", d: "One thing the system does for an actor, written as a short sentence: place an order, mark it ready." },
+      { t: "Scope", mem: "In and out, agreed.", d: "The use cases you will build and the ones you leave out, said back and confirmed." }],
+    vis: [
+      { title: "Question to design decision", vs: { cols: ["Ask", "Changes"], rows: [
+        ["Actors", "Who acts?", "the classes with methods"],
+        ["Change after placing", "Can an order be edited or cancelled?", "whether order needs states"],
+        ["Money", "Discounts, loyalty?", "a pricing strategy; cents"],
+        ["Concurrency", "Can two baristas take one order?", "a claim step or a lock"]] } },
+      { rule: "Say the scope back before you sketch." }]
+  };
+  S["w5d:2"] = {
+    cheat: ["Nouns that own data or a rule are class candidates; nouns no use case needs are not.",
+            "has-a (composition) by default; uses for a call without ownership; is-a only when children are truly interchangeable.",
+            "Abstract base class: a family of variants behind one method, so a new variant is a new class.",
+            "Enum for a fixed set of values (status, size); dataclass for plain data.",
+            "Protocol when you only care which methods something has."],
+    terms: [
+      { t: "Composition (has-a)", mem: "Built from parts.", d: "A class holds other objects as fields and delegates to them. Parts can be swapped without touching the holder." },
+      { t: "Inheritance (is-a)", mem: "A kind of the parent.", d: "A child class that can be used wherever the parent is. Ties the child to the parent's details." },
+      { t: "Abstract base class", mem: "A contract with no body.", d: "abc.ABC with @abstractmethod: it names the methods every child must implement and cannot be built itself." },
+      { t: "Enum", mem: "A fixed set of names.", d: "Named values such as OrderStatus.READY, instead of loose strings that can be misspelled." },
+      { t: "dataclass", mem: "Plain data, less typing.", d: "@dataclass writes __init__, repr and equality from the field list." }],
+    vis: [
+      { title: "Coffee-shop sketch", parts: [["Order", "has-a lines, a status Enum, total()"], ["OrderLine", "has-a MenuItem, a size, a quantity"], ["Payment", "abstract: pay(amount_cents)", true], ["Card, Cash", "is-a Payment"], ["Barista", "uses Order"]] },
+      { title: "Which relationship", vs: { cols: ["Use it when"], rows: [
+        ["has-a", "the class owns the part and its lifetime"], ["uses", "it calls something it does not own"], ["is-a", "the child works anywhere the parent does"]] } }]
+  };
+  S["w5d:3"] = {
+    cheat: ["SOLID is five checks on a split: one reason to change, add not edit, substitutable children, small interfaces, depend on the abstraction.",
+            "Strategy: interchangeable rules (pricing, discounts). Cost: one more class per rule.",
+            "Factory: build the right variant from a type. State: actions depend on status. Observer: tell listeners when something happens.",
+            "Singleton: mostly refuse; it hides a global and makes tests share state.",
+            "Say choice, reason, cost for every pattern; name what you leave out."],
+    terms: [
+      { t: "Single responsibility", mem: "One reason to change.", d: "Each class changes for one kind of reason, so a change touches one place." },
+      { t: "Open-closed", mem: "Add, don't edit.", d: "New behaviour arrives as a new class; working code is not edited." },
+      { t: "Liskov substitution", mem: "Children are drop-ins.", d: "Anywhere the parent works, every child works too, without surprises." },
+      { t: "Dependency inversion", mem: "Depend on the contract.", d: "High-level code calls an abstraction (Payment), not a concrete class (CardPayment)." },
+      { t: "State pattern", mem: "Behaviour follows status.", d: "Each status is a class that decides which actions are allowed, instead of one long if-chain." },
+      { t: "Strategy pattern", mem: "Swap the rule.", d: "A family of interchangeable algorithms behind one method, chosen at run time." }],
+    vis: [
+      { title: "Five patterns", vs: { cols: ["Use it when", "Too much when"], rows: [
+        ["Strategy", "rules vary and will grow", "there is one rule"],
+        ["Factory", "the type is chosen at run time", "there is one type"],
+        ["State", "actions depend on status, four or more", "two statuses and a boolean"],
+        ["Observer", "several things react to one event", "one caller would do"],
+        ["Singleton", "almost never", "nearly always"]] } },
+      { rule: "The pattern is the means; the reason and the cost are the answer." }]
+  };
+})();

@@ -321,7 +321,7 @@ PLAN = {
         {"id": "week6", "title": "Week 6: shake off the rust", "note": "Two to three hours a day. Overjoy on Thursday and the Mercor screen on Friday share these days.",
          "days": [
              _d("2026-10-22", "2 h", "Overjoy call today. Start small and start daily.",
-                DAILY("2026-10-22"), LLD("lld-round", "LLD: how the design round runs", "30 min"),
+                DAILY("2026-10-22"), ("design", "LLD foundations: do it as w5d in the plan (it reads this page's part 1), then tick both", "../index.html#/s/w5d", "75 min"),
                 ("story", "Read the Leadership tab: the rules and the sixteen", "#/lp", "20 min"),
                 ("other", "Mercor: the coding problems you started", "mercor.html#/coding/problems", "40 min")),
              _d("2026-10-23", "1.5 h", "Mercor screen at 6 PM Eastern. Keep Amazon light today.",
