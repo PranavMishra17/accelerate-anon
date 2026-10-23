@@ -1502,3 +1502,11 @@ material is the Amazon page's LLD part 1, linked, not copied; the Amazon plan's 
 is done once. The drills stay on the Amazon page; milestone 2's re-plan starts from both. Deviation: milestone 1 grows
 by 75 minutes for a topic the charter's first milestone did not name, to put the Amazon prep in the canonical
 record.
+
+**23 Oct 2026: w5d gets its videos and articles, and the rebuild now enforces them.** He caught that the new LLD
+session had only links to his own pages, while every canonical session carries outside videos and articles; he has
+had to point this out before. Each w5d step now has two checked YouTube videos (Required, Optional) and one or two
+articles (Hello Interview's LLD in a hurry, delivery framework, OOP concepts and design principles; the Python abc
+docs; Refactoring Guru's State). New `data/check_steps.js`, in `tools/rebuild.py`: every milestone step needs an
+outside resource (video, article or book) and every milestone session a video and an article, or the rebuild
+fails; it fails on the w5d of this morning and passes now. No charter deviation.
