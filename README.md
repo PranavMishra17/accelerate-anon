@@ -48,7 +48,9 @@ Fourteen algorithm patterns, each with how to spot it, a Python template, classi
 written out in full (two worked examples, constraints, a hint, a tested solution) and
 variations of each, plus concurrency (threads and asyncio: where work starts and waits, locks,
 caps, ordering, single-flight, timeouts) and object-oriented design (the low-level design round,
-SOLID, the patterns that come up, six classic prompts with tested solutions). An Algorithms tab puts
+SOLID, the patterns that come up, six classic prompts with tested solutions). A Concurrency tab sets threads, asyncio and
+processes side by side (when to use which, five diagrams, tested code, pitfalls, what to say); it is generated from
+`coding/concurrency/` and also drawn as the Concurrency tab on the Mercor loop page. An Algorithms tab puts
 48 algorithms on one scrolling page with a sticky index: when to reach for each, the code, its cost
 and its variants, every one checked against a brute force. An AI systems tab covers the coding that goes beyond interview puzzles:
 NumPy and PyTorch basics, embeddings and vector search, RAG over a parser's output, GraphRAG,

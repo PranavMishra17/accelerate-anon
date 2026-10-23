@@ -3469,6 +3469,118 @@ DIA.sourceFilterMap = {
     }
   };
 
+  /* ---- Concurrency (coding/concurrency.js): five models, the GIL, the event loop, a process pool, the choice. */
+  DIA.concModels = {
+    title: "Same three tasks, four ways",
+    cap: "<b>Threads and asyncio overlap waiting; only processes overlap computing.</b> Each task is drawn as three lanes (A, B, C). Blue is Python running, outlined is waiting on the network. When the tasks mostly wait, threads and asyncio finish in about the time of one task; when they compute, only processes are faster, because the GIL lets one thread run Python at a time.",
+    svg: function () {
+      var b = "", U = 27, X0 = 112;
+      function seg(y, s, e, tone) { return S.bar({ x: X0 + s * U + 1, y: y, w: (e - s) * U - 2, h: 8, tone: tone }); }
+      function row(id, label, sub, y, lanes) {
+        var m = S.text(0, y + 11, label, "d-t-x") + S.text(0, y + 24, sub, "d-t-s");
+        lanes.forEach(function (lane, i) { lane.forEach(function (p) { m += seg(y + i * 9, p[0], p[1], p[2]); }); });
+        return S.node(id, m);
+      }
+      var C = "sys", Wt = "flat";
+      b += S.text(0, 12, "Three tasks that mostly wait (an API call each)", "d-t-x");
+      b += row("io-seq", "Sequential", "18 units", 22, [[[0, 1, C], [1, 5, Wt], [5, 6, C]], [[6, 7, C], [7, 11, Wt], [11, 12, C]], [[12, 13, C], [13, 17, Wt], [17, 18, C]]]);
+      b += row("io-thr", "Threads", "8: waits overlap", 56, [[[0, 1, C], [1, 5, Wt], [5, 6, C]], [[1, 2, C], [2, 6, Wt], [6, 7, C]], [[2, 3, C], [3, 7, Wt], [7, 8, C]]]);
+      b += row("io-async", "asyncio", "8: one thread", 90, [[[0, 1, C], [1, 5, Wt], [5, 6, C]], [[1, 2, C], [2, 6, Wt], [6, 7, C]], [[2, 3, C], [3, 7, Wt], [7, 8, C]]]);
+      b += row("io-proc", "Processes", "6, plus start-up", 124, [[[0, 1, C], [1, 5, Wt], [5, 6, C]], [[0, 1, C], [1, 5, Wt], [5, 6, C]], [[0, 1, C], [1, 5, Wt], [5, 6, C]]]);
+      b += S.text(0, 178, "Three tasks that compute (pure Python)", "d-t-x");
+      b += row("cpu-seq", "Sequential", "15 units", 188, [[[0, 5, C]], [[5, 10, C]], [[10, 15, C]]]);
+      var sl = [[], [], []];
+      for (var t = 0; t < 15; t++) { sl[t % 3].push([t, t + 1, C]); }
+      b += row("cpu-thr", "Threads", "15: the GIL takes turns", 222, sl);
+      b += row("cpu-async", "asyncio", "15: no awaits, no switching", 256, [[[0, 5, C]], [[5, 10, C]], [[10, 15, C]]]);
+      b += row("cpu-proc", "Processes", "5: one core each", 290, [[[0, 5, C]], [[0, 5, C]], [[0, 5, C]]]);
+      return S.frame(640, 322, b);
+    }
+  };
+
+  DIA.concGil = {
+    title: "Two threads and the GIL",
+    cap: "<b>A thread must hold the GIL to run Python, and gives it up when it waits.</b> Thread 1 runs, then blocks on a network call and releases the lock; thread 2 runs in that gap. When both want to compute, the holder is asked to hand over every 5 ms, so they take turns instead of running together.",
+    svg: function () {
+      var b = "", U = 43, X0 = 110;
+      function seg(y, s, e, tone, t) {
+        return S.bar({ x: X0 + s * U + 1, y: y, w: (e - s) * U - 2, h: 26, tone: tone }) + S.text(X0 + (s + e) / 2 * U, y + 17, t, "d-t-s", "middle");
+      }
+      b += S.node("t1", S.text(0, 34, "Thread 1", "d-t-x") + seg(16, 0, 2, "sys", "runs") + seg(16, 2, 6, "flat", "network wait") +
+        seg(16, 6, 8, "sys", "runs") + seg(16, 8, 10, "req", "wants GIL") + seg(16, 10, 12, "sys", "runs"));
+      b += S.node("t2", S.text(0, 76, "Thread 2", "d-t-x") + seg(58, 0, 2, "req", "wants GIL") + seg(58, 2, 4, "sys", "runs") +
+        seg(58, 4, 8, "flat", "network wait") + seg(58, 8, 10, "sys", "runs") + seg(58, 10, 12, "flat", "wait"));
+      b += S.node("gil", S.text(0, 128, "GIL held by", "d-t-x") + seg(110, 0, 2, "math", "1") + seg(110, 2, 4, "math", "2") +
+        seg(110, 4, 6, "flat", "nobody") + seg(110, 6, 8, "math", "1") + seg(110, 8, 10, "math", "2") + seg(110, 10, 12, "math", "1"));
+      b += S.node("rule", S.text(0, 170, "Waiting releases the GIL. Computing keeps it, handed over every 5 ms (sys.getswitchinterval()).", "d-t-s"));
+      return S.frame(640, 182, b);
+    }
+  };
+
+  DIA.concLoop = {
+    title: "The asyncio event loop",
+    cap: "<b>One thread runs one task at a time, until that task awaits.</b> At an await the task parks and the loop runs the next ready one; when the OS reports its socket ready, it joins the queue again. A blocking call inside a task never reaches an await, so every other task stops with it.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "run", x: 0, y: 20, w: 200, h: 56, label: "Run one task", sub: "until its next await", tone: "now" });
+      b += S.box({ id: "parked", x: 440, y: 20, w: 200, h: 56, label: "Parked tasks", sub: "waiting on a socket or timer", tone: "flat" });
+      b += S.box({ id: "os", x: 440, y: 150, w: 200, h: 56, label: "OS selector", sub: "reports what is ready", tone: "sys" });
+      b += S.box({ id: "ready", x: 0, y: 150, w: 200, h: 56, label: "Ready queue", sub: "tasks that can run now", tone: "sys" });
+      b += S.box({ id: "block", x: 225, y: 92, w: 190, h: 44, label: "A blocking call", sub: "time.sleep, requests, a CPU loop", tone: "req" });
+      b += S.arrow(202, 40, 438, 40, { label: "await I/O" });
+      b += S.arrow(540, 78, 540, 148, { label: "socket ready" });
+      b += S.arrow(438, 178, 202, 178, { label: "back in line" });
+      b += S.arrow(100, 148, 100, 78, { label: "next" });
+      b += S.node("stall", S.text(320, 160, "freezes the whole loop", "d-t-s", "middle"));
+      return S.frame(640, 220, b);
+    }
+  };
+
+  DIA.concPool = {
+    title: "A process pool",
+    cap: "<b>Each worker is a separate Python with its own memory and its own GIL, so they compute in parallel.</b> The price is paid at the borders: starting the processes, and pickling every argument out and every result back. Send small things (ids, paths) and do big work inside.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "main", x: 0, y: 92, w: 170, h: 60, label: "Main process", sub: "your script", tone: "sys" });
+      [["w1", 10], ["w2", 92], ["w3", 174]].forEach(function (w, i) {
+        b += S.box({ id: w[0], x: 430, y: w[1], w: 210, h: 60, label: "Worker " + (i + 1), sub: "own memory, own GIL, a core", tone: "math" });
+      });
+      b += S.arrow(172, 108, 428, 40, { id: "main>w1" });
+      b += S.arrow(172, 122, 428, 122, { id: "main>w2" });
+      b += S.arrow(172, 136, 428, 204, { id: "main>w3" });
+      b += S.node("pickle", S.text(300, 96, "pickle args out,", "d-t-s", "middle") + S.text(300, 150, "pickle results back", "d-t-s", "middle"));
+      b += S.node("cost", S.text(0, 262, "Costs: start-up per process, pickling both ways, memory times the number of workers.", "d-t-s"));
+      return S.frame(640, 274, b);
+    }
+  };
+
+  DIA.concDecide = {
+    title: "Which one: waiting or computing?",
+    cap: "<b>Ask where the time goes, then pick.</b> Waiting on the network: asyncio when the libraries are async, threads when they block. Computing: processes for Python code, threads only when the work is inside C code that releases the GIL. Past one machine: a queue with workers.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "where", x: 180, y: 0, w: 280, h: 46, label: "Where does the time go?", tone: "flat" });
+      b += S.box({ id: "waiting", x: 20, y: 78, w: 260, h: 46, label: "Waiting", sub: "network, disk, a database", tone: "sys" });
+      b += S.box({ id: "computing", x: 360, y: 78, w: 260, h: 46, label: "Computing", sub: "parsing, scoring, math", tone: "math" });
+      b += S.box({ id: "q-async", x: 0, y: 156, w: 300, h: 46, label: "Async libraries, many calls?", tone: "flat" });
+      b += S.box({ id: "q-c", x: 340, y: 156, w: 300, h: 46, label: "Inside NumPy, PyTorch, C code?", tone: "flat" });
+      b += S.box({ id: "asyncio", x: 0, y: 236, w: 145, h: 52, label: "asyncio", sub: "+ a Semaphore", tone: "math" });
+      b += S.box({ id: "threads", x: 155, y: 236, w: 145, h: 52, label: "Threads", sub: "a pool, or to_thread", tone: "math" });
+      b += S.box({ id: "threads-c", x: 340, y: 236, w: 145, h: 52, label: "Threads work", sub: "C releases the GIL", tone: "math" });
+      b += S.box({ id: "processes", x: 495, y: 236, w: 145, h: 52, label: "Processes", sub: "a process pool", tone: "math" });
+      b += S.arrow(260, 48, 170, 76, { id: "where>waiting" });
+      b += S.arrow(380, 48, 470, 76, { id: "where>computing" });
+      b += S.arrow(150, 126, 150, 154, { id: "waiting>q-async" });
+      b += S.arrow(490, 126, 490, 154, { id: "computing>q-c" });
+      b += S.arrow(70, 204, 70, 234, { label: "yes", id: "q-async>asyncio" });
+      b += S.arrow(230, 204, 230, 234, { label: "no", id: "q-async>threads" });
+      b += S.arrow(410, 204, 410, 234, { label: "yes", id: "q-c>threads-c" });
+      b += S.arrow(570, 204, 570, 234, { label: "no", id: "q-c>processes" });
+      b += S.node("machines", S.text(0, 318, "More work than one machine can do: a queue (SQS, Celery, Postgres SKIP LOCKED) and workers.", "d-t-s"));
+      return S.frame(640, 330, b);
+    }
+  };
+
   return { S: S, DIA: DIA, slug: slug };
 })();
 

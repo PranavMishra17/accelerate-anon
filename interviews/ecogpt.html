@@ -766,9 +766,9 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
 <dialog id="quiz" aria-label="Quiz"></dialog>
 <dialog id="convo" class="convo" aria-label="Mock conversation"></dialog>
 <script src="../figures/icons.js?v=f5a48822"></script>
-<script src="../figures/figures.js?v=99ab38c9"></script>
+<script src="../figures/figures.js?v=730ef59c"></script>
 <script src="../private/figures.js?v=38a55080"></script>
-<script src="../figures/notes.js?v=feb58c75"></script>
+<script src="../figures/notes.js?v=288db369"></script>
 <script src="../private/notes.js?v=64ed8baa"></script>
 <script src="../private/loops/ecogpt.js?v=c3a3be09"></script>
 <script src="../figures/viewer.js?v=ecb99aae"></script>
@@ -882,6 +882,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     { id: "mocks", label: "Mocks", show: function () { return !!LOOP.mockHow; } },
     { id: "coding", label: "Coding", show: function () { return cdParts("coding").length; } },
     { id: "lld", label: "LLD", show: function () { return cdParts("lld").length; } },
+    { id: "concurrency", label: "Concurrency", show: function () { return cdParts("concurrency").length; } },
     { id: "daily", label: "Daily two", show: function () { return !!(window.LOOP_DAILY && LOOP_DAILY.days.length); } },
     { id: "lp", label: "Leadership", show: function () { return !!LOOP.lp; } },
     { id: "card", label: "Loop day", show: function () { return !!LOOP.card; } }
@@ -2335,7 +2336,8 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   function cdState() { try { return JSON.parse(localStorage.getItem(CD_KEY) || "{}") || {}; } catch (e) { return {}; } }
   function cdSave(k, v) { var s = cdState(); s[k] = v; try { localStorage.setItem(CD_KEY, JSON.stringify(s)); } catch (e) {} }
   function cdParts(tab) {
-    return (window.LOOP_CODING ? LOOP_CODING.parts : []).filter(function (p) { return (p.tab || "coding") === (tab || "coding"); })
+    /* Shared guides (coding/concurrency.js) bring their own parts, tagged with their tab. */
+    return (window.LOOP_CODING ? LOOP_CODING.parts : []).concat(window.CONCURRENCY ? CONCURRENCY.parts : []).filter(function (p) { return (p.tab || "coding") === (tab || "coding"); })
       .sort(function (a, b) { return a.n - b.n; });
   }
   function cdBtn(label, fn) { var b = el("button", "btn", esc(label)); b.type = "button"; b.addEventListener("click", fn); return b; }
@@ -2581,6 +2583,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   function cdBlock(b) {
     switch (b.t) {
       case "turn": return cdTurn(b);
+      case "say": var sy = el("div", "say-sheet cd-blk"); b.lines.forEach(function (x) { sy.appendChild(el("p", "", inl(x))); }); return sy;
       case "bridge": return cdBridge(b);
       case "p": return el("p", "", inl(b.text));
       case "list": var ul = el("ul");
@@ -3451,6 +3454,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       else if (r.tab === "mocks") { if (cdParts("mocks").length) { tabCoding(main, r.anchor, "mocks"); } tabMocks(main); }
       else if (r.tab === "coding") { tabCoding(main, r.anchor); }
       else if (r.tab === "lld") { tabCoding(main, r.anchor, "lld"); }
+      else if (r.tab === "concurrency") { tabCoding(main, r.anchor, "concurrency"); }
       else if (r.tab === "daily") { tabDaily(main, r.anchor, r.sub); }
       else if (r.tab === "lp") { tabLp(main, r.anchor); }
       else if (r.tab === "plan") { tabPlan(main, r.anchor); }

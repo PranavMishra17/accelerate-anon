@@ -188,7 +188,9 @@ def build(module_name):
     # A free-form Coding tab: every interviews/coding/<module>-*.js, in name order, stamped.
     cdir = os.path.join(HERE, "coding")
     cfiles = sorted(f for f in os.listdir(cdir) if f.startswith(module_name + "-") and f.endswith(".js")) if os.path.isdir(cdir) else []
-    tpl = tpl.replace("{{CODING}}", "".join('<script src="coding/%s?v=%s"></script>\n' % (f, hashlib.sha1(io.open(os.path.join(cdir, f), "rb").read()).hexdigest()[:8]) for f in cfiles))
+    shared = getattr(m, "SHARED_JS", [])   # guides from elsewhere in the repo, e.g. coding/concurrency.js
+    tpl = tpl.replace("{{CODING}}", "".join('<script src="coding/%s?v=%s"></script>\n' % (f, hashlib.sha1(io.open(os.path.join(cdir, f), "rb").read()).hexdigest()[:8]) for f in cfiles) +
+                      "".join('<script src="../%s?v=%s"></script>\n' % (f, hashlib.sha1(io.open(os.path.join(HERE, "..", f), "rb").read()).hexdigest()[:8]) for f in shared))
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     page = tpl.replace("{{DATA}}", blob).replace("{{TITLE}}", L["title"]).replace("{{MODULE}}", module_name)
     out = os.path.join(HERE, module_name.replace("_", "-") + ".html")

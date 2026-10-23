@@ -165,7 +165,8 @@ SCRIPTS = [
 ]
 
 QA = []
-TABS = ["overview", "prep", "sessions", "rounds", "mocks", "coding"]
+TABS = ["overview", "prep", "sessions", "rounds", "mocks", "coding", "concurrency"]
+SHARED_JS = ["coding/concurrency.js"]   # the Concurrency tab, shared with CODING.html
 
 ASK_3C = [
     {"id": "sophie", "title": "For Sophie", "when": "The last two or three minutes. One or two.",

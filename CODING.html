@@ -10,8 +10,8 @@
 <link rel="stylesheet" href="figures/viewer.css?v=d06369af">
 <link rel="stylesheet" href="figures/figures.css?v=c43bcf1c">
 <script src="figures/icons.js?v=f5a48822"></script>
-<script src="figures/figures.js?v=99ab38c9"></script>
-<script src="figures/notes.js?v=feb58c75" defer></script>
+<script src="figures/figures.js?v=730ef59c"></script>
+<script src="figures/notes.js?v=288db369" defer></script>
 <script src="figures/viewer.js?v=ecb99aae" defer></script>
 <link rel="stylesheet" href="coding/sheet.css?v=d5d986d2">
 <link rel="stylesheet" href="site/nav.css?v=2ebfb65e">
@@ -98,6 +98,18 @@ details.sol[open] > summary::before { transform: rotate(90deg); }
 details.sol > pre { margin: var(--s2) 0; }
 /* The Algorithms tab: one long page, every algorithm's code. Its index is nav.side (a.on marks the one in view); on a phone the
    top bar carries a select instead. Same label rail, code and type as the other tabs. */
+#conc .cc-part { margin: 0 0 var(--s7); scroll-margin-top: 96px; }
+#conc h2 { font-size: var(--fs-xl); margin: var(--s6) 0 var(--s1); }
+#conc h3 { font-size: var(--fs-lg); margin: var(--s6) 0 var(--s2); scroll-margin-top: 96px; }
+#conc h4.cc-ct { font-size: var(--fs-md); margin: var(--s4) 0 var(--s2); }
+#conc p, #conc ul { max-width: var(--measure); }
+#conc li { margin: 0 0 var(--s1); }
+#conc .cc-tw { overflow-x: auto; margin: var(--s3) 0; }
+#conc table { min-width: 560px; }
+#conc .cc-say { background: var(--ink); color: var(--bg); border-radius: var(--radius-lg, 10px); padding: var(--s4) var(--s5); margin: var(--s4) 0; max-width: var(--measure); }
+#conc .cc-say p { margin: 0; } #conc .cc-say p + p { margin-top: var(--s3); }
+#conc .cc-say .cc-sh { font-size: var(--fs-sm); font-weight: var(--w-strong); opacity: .72; margin-bottom: var(--s2); }
+#conc .cc-say code { background: transparent; color: inherit; }
 #algos .ag { font-size: var(--fs-xl); line-height: var(--lh-tight); font-weight: var(--w-strong); margin: var(--s7) 0 var(--s1); scroll-margin-top: 96px; }
 #algos .ag-grp:first-of-type .ag { margin-top: var(--s5); }
 section.alg { padding: var(--s5) 0 var(--s3); border-top: var(--hair); scroll-margin-top: 96px; }
@@ -177,19 +189,27 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
     </div>
     <div id="patterns"></div>
     <div id="algos" class="hidden"></div>
+    <div id="conc" class="hidden"></div>
   </main>
 </div>
 <div id="cheat" class="cheat" role="dialog" aria-label="Coding cheat sheet" hidden>
   <div class="cs-top"><b>Cheat sheet</b><div class="cs-tabs"></div><span class="hint">Click a card for examples and variations. F for full screen, Esc to close.</span><span class="grow"></span><a class="wide" href="CHEATSHEET.html">Its own page</a><button type="button" class="wide" id="cs-full">Full screen</button><button type="button" id="cs-close">Close</button></div>
   <div class="cs-grid"></div>
 </div>
+<script src="coding/concurrency.js?v=657528be"></script>
 <script src="coding/data.js?v=a71fe45c"></script>
 <script src="coding/sheet.js?v=68cb3d74"></script>
 <script>
 (function () {
   "use strict";
   var D = window.CODING, CS = window.CS, esc = CS.esc, md = CS.md, hl = CS.hl, byId = CS.byId;
-  var GROUPS = D.groups, P = D.patterns;
+  var GROUPS = D.groups.slice(), P = D.patterns;
+  // The Concurrency tab comes from coding/concurrency.js (shared with the loop pages' Concurrency tab), after Techniques.
+  var CC = (window.CONCURRENCY || {}).parts || [];
+  if (CC.length) {
+    GROUPS.splice(GROUPS.map(function (g) { return g.id; }).indexOf("techniques") + 1, 0,
+      { id: "conc", title: "Concurrency", blurb: "Threads, asyncio and processes side by side: what each is, when to use which, the code, the pitfalls, and what to say." });
+  }
   function groupOf(p) { return p.g; }
   function li(t) { return "<li>" + t + "</li>"; }
   function sideBySide(p) { return '<p class="side-by-side"><a href="#cheat" data-pop="' + p.id + '">See it side by side: notes and code</a></p>'; }
@@ -283,8 +303,33 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
   var ob = host.querySelector("#ood .pat-body");
   if (ob) { ob.insertAdjacentHTML("afterbegin", '<p><a href="interviews/amazon.html#/lld">The full design drills, with code that runs: the Amazon page, LLD tab</a></p>'); }
   /* end local-only */
+  var concEl = document.getElementById("conc");
+  (function () {
+    function mdb(t) { return md(t).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>"); }
+    function block(b) {
+      if (b.t === "p") { return "<p>" + mdb(b.text) + "</p>"; }
+      if (b.t === "list") {
+        return "<ul>" + b.items.map(function (x) {
+          var m = /^([^:]{1,48}):\s([\s\S]+)$/.exec(x);
+          return li(m ? "<strong>" + mdb(m[1]) + ":</strong> " + mdb(m[2]) : mdb(x));
+        }).join("") + "</ul>";
+      }
+      if (b.t === "table") {
+        return '<div class="cc-tw"><table><tr>' + b.head.map(function (h) { return "<th>" + mdb(h) + "</th>"; }).join("") + "</tr>" +
+          b.rows.map(function (r) { return "<tr>" + r.map(function (c) { return "<td>" + mdb(c) + "</td>"; }).join("") + "</tr>"; }).join("") + "</table></div>";
+      }
+      if (b.t === "code") { return '<h4 class="cc-ct">' + mdb(b.title) + "</h4><pre><code>" + hl(b.code) + "</code></pre>"; }
+      if (b.t === "fig") { return CS.figHtml(b.key); }
+      if (b.t === "say") { return '<div class="cc-say"><div class="cc-sh">What to say</div>' + b.lines.map(function (x) { return "<p>" + mdb(x) + "</p>"; }).join("") + "</div>"; }
+      return "";
+    }
+    concEl.innerHTML = CC.map(function (p) {
+      return '<section class="cc-part" id="cc-' + p.id + '"><h2>' + p.n + ". " + esc(p.title) + '</h2><p class="spot">About ' + p.minutes + " minutes. " + mdb(p.lead) + "</p>" +
+        p.sections.map(function (sc) { return '<h3 id="cc-' + sc.id + '">' + esc(sc.title) + "</h3>" + sc.blocks.map(block).join(""); }).join("") + "</section>";
+    }).join("");
+  }());
   tabs.innerHTML = GROUPS.map(function (g) {
-    var n = g.id === "algorithms" ? algoCount : P.filter(function (p) { return groupOf(p) === g.id; }).length;
+    var n = g.id === "algorithms" ? algoCount : g.id === "conc" ? CC.length : P.filter(function (p) { return groupOf(p) === g.id; }).length;
     return '<a href="#' + g.id + '" data-g="' + g.id + '">' + g.title + (n ? '<span class="n">' + n + "</span>" : "") + "</a>";
   }).join("");
   // The done counts: after each pattern's own count, and beside each tab's number.
@@ -367,6 +412,7 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
     host.querySelectorAll("details.prob").forEach(function (d) { d.classList.remove("hidden"); });
     algosEl.querySelectorAll(".hidden").forEach(function (x) { x.classList.remove("hidden"); });
     algosEl.classList.toggle("hidden", cur !== "algorithms");
+    concEl.classList.toggle("hidden", cur !== "conc");
     document.body.classList.toggle("on-alg", cur === "algorithms");
     setHead(cur === "start" ? "Algorithms and coding" : gi.title, gi.blurb);
     if (sideFor !== cur) {
@@ -376,6 +422,7 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
       side.innerHTML = (cur === "algorithms" ? "" : '<div class="h">' + gi.title + "</div>") + (cur === "start"
         ? '<a href="#how">How to code in an interview</a><a href="#bigo">Complexity cheat sheet</a>'
         : cur === "algorithms" ? algoIndex()
+        : cur === "conc" ? CC.map(function (p) { return '<a href="#conc/' + p.id + '">' + p.n + ". " + esc(p.title) + "</a>"; }).join("")
         : P.filter(function (p) { return groupOf(p) === cur; }).map(function (p) { return '<a href="#' + p.id + '">' + esc(p.title) + "</a>"; }).join("")) +
         '<div class="h">On one screen</div><a href="#cheat">Cheat sheet</a><a href="CHEATSHEET.html">Cheat sheet, its own page</a>';
     }
@@ -386,6 +433,7 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
     if (!v) { showGroup(cur); return; }
     tabs.classList.add("dim");
     document.getElementById("g-start").classList.add("hidden");
+    concEl.classList.add("hidden");
     host.querySelectorAll("details.pat").forEach(function (d) {
       var p = byId[d.id], whole = (p.title + " " + p.sheet.spot).toLowerCase().indexOf(v) >= 0, any = whole;
       d.querySelectorAll("details.prob").forEach(function (x) {
@@ -435,12 +483,15 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
 
   // Routes: #cheat, #<tab>, #<pattern or topic> (opens it in its tab), #how and #bigo, #algorithms/<algorithm> (scrolls to it).
   function route() {
-    var h = decodeURIComponent(location.hash.slice(1)), am = /^algorithms\/(.+)$/.exec(h);
+    var h = decodeURIComponent(location.hash.slice(1)), am = /^algorithms\/(.+)$/.exec(h), cm = /^conc\/(.+)$/.exec(h);
     syncCheat();
     if (h === "cheat") { return; }
     CS.closePop();
     if (qEl.value) { qEl.value = ""; }
-    if (am && algoById[am[1]]) {
+    if (cm && document.getElementById("cc-" + cm[1])) {
+      showGroup("conc");
+      document.getElementById("cc-" + cm[1]).scrollIntoView();
+    } else if (am && algoById[am[1]]) {
       showGroup("algorithms");
       showAlgo(am[1]);
     } else if (byId[h]) {

@@ -1484,3 +1484,11 @@ invalidate on write, and the stampede test. Every snippet runs against fakes in
 `interviews/coding/mercor_mock/mercor_code.py`. The scenario's opening answer gains the request path, the measurements
 to take first and the freshness trade-off, with a flow of the layers. The generator moved from a scratch file into
 `interviews/coding/mercor_mock/` and runs in `tools/rebuild.py`. No charter deviation.
+
+**23 Oct 2026: a concurrency guide, on CODING.html and the Mercor page.** He asked for one page that makes
+threads, multithreading, asyncio, processes and multiprocessing clear: when to use each, applications, pitfalls,
+diagrams, and how they show up at an AI company. Five parts (side by side and which one; threads and the GIL;
+asyncio and the event loop; processes; mixing them, with a symptom-to-fix table), five shared figures with notes,
+eight code blocks that run against fakes (including a process pool under spawn and an eval runner mixing asyncio
+with a process pool), and a 'What to say' sheet per part. One source, `coding/concurrency/`, drawn by both pages.
+Examples are generic (his choice), no alfred_ claims. No charter deviation.

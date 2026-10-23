@@ -862,5 +862,49 @@ window.FIG_NOTES = Object.assign(window.FIG_NOTES || {}, {
       "clock>ttl": { "t": "Injected, not global", "d": "The cache reads time only through the clock it was given, so expiry can be tested without waiting." }
     },
     "walk": ["latest", "latest>history", "history", "history>as-of", "as-of", "as-of>late-writes", "late-writes", "late-writes>lru", "lru", "lru>ttl", "ttl", "clock>ttl", "clock", "costs"]
-  }
+  },
+  "concModels": {"nodes": {
+    "io-seq": {"d": "One task after another: 18 units, most of it spent waiting on the network. The CPU is idle while each call is in flight."},
+    "io-thr": {"d": "Threads start the next task while the first waits, so the waits overlap: about 8 units. The dark bits still never overlap, because only one thread runs Python at a time."},
+    "io-async": {"d": "asyncio gets the same overlap with one thread: each task parks at its await and the loop runs the next. Cheaper than threads, and it scales to thousands of waits."},
+    "io-proc": {"d": "Processes overlap everything, but each costs start-up time and memory. For work that mostly waits, that cost buys little over threads or asyncio."},
+    "cpu-seq": {"d": "Three tasks of pure Python computation, one after another: 15 units."},
+    "cpu-thr": {"d": "Threads take turns holding the GIL, so the total is still 15 units, a little worse with switching. This is why threads do not speed up Python computation."},
+    "cpu-async": {"d": "asyncio only switches at an await. A task that computes never awaits, so the tasks run one after another and block everything else meanwhile."},
+    "cpu-proc": {"d": "Each process has its own interpreter and GIL on its own core: about 5 units with three cores. The only way to parallelise pure Python before free-threaded builds."}},
+    "walk": ["io-seq", "io-thr", "io-async", "io-proc", "cpu-seq", "cpu-thr", "cpu-async", "cpu-proc"]},
+  "concGil": {"nodes": {
+    "t1": {"d": "Thread 1 runs Python while holding the GIL, releases it during its network wait, and later has to wait for the GIL when thread 2 holds it."},
+    "t2": {"d": "Thread 2 waits for the GIL at the start, runs during thread 1's network wait, and gets a turn when thread 1 is asked to hand over."},
+    "gil": {"d": "The global interpreter lock: one owner at a time. 'Nobody' is the stretch where both threads wait on the network, which is why threads still help I/O-bound work."},
+    "rule": {"d": "The two rules: a blocking I/O call releases the GIL; a thread computing keeps it until the interpreter asks it to switch, every 5 ms by default."}},
+    "walk": ["t1", "t2", "gil", "rule"]},
+  "concLoop": {"edges": {"run>parked": {"d": "The task reached an await on I/O: it parks and gives the thread back to the loop."}, "parked>os": {"d": "Its socket is registered with the OS, which watches all of them at once."}, "os>ready": {"d": "When the OS reports the socket ready, the task goes back in line."}, "ready>run": {"d": "The loop takes the next ready task and runs it until its next await."}}, "nodes": {
+    "run": {"d": "The loop runs exactly one task at a time, on one thread, until that task reaches an await on something not ready yet."},
+    "parked": {"d": "Tasks waiting on a socket, a timer or a lock. They cost almost nothing: a few kilobytes each, so tens of thousands are fine."},
+    "os": {"d": "The operating system's selector (epoll, kqueue, IOCP) watches every socket and tells the loop which are ready, in one call."},
+    "ready": {"d": "Tasks whose wait is over, lined up to run. Order is roughly first come, first served."},
+    "block": {"d": "A call that blocks without awaiting (time.sleep, requests.get, a long CPU loop) holds the only thread, so no other task runs until it returns."},
+    "stall": {"d": "The symptom: every request's latency jumps together. The fix is await asyncio.sleep, an async client, or asyncio.to_thread for blocking libraries."}},
+    "walk": ["run", "parked", "os", "ready", "block", "stall"]},
+  "concPool": {"edges": {"main>w1": {"d": "Arguments are pickled and sent to a worker; the result is pickled back."}, "main>w2": {"d": "The pool hands out work as workers free up; map with a chunksize sends items in batches to cut the per-item overhead."}, "main>w3": {"d": "Each worker runs independently on its own core."}}, "nodes": {
+    "main": {"d": "Your script. It hands work to the pool and collects results; on Windows and macOS each worker starts by re-importing this file, so it needs the __main__ guard."},
+    "w1": {"d": "A separate Python process: its own memory and its own GIL, so it computes truly in parallel with the others."},
+    "w2": {"d": "Workers default to one per CPU core. More than that only adds switching."},
+    "w3": {"d": "Globals are per process: a worker cannot see the main process's variables after it starts, unless they are passed in or shared on purpose."},
+    "pickle": {"d": "Every argument and result is serialised with pickle to cross the process border. Big objects make this the bottleneck: send ids or file paths, not the data."},
+    "cost": {"d": "The three costs to weigh: start-up (tens of milliseconds each), pickling both ways, and memory multiplied by the number of workers."}},
+    "walk": ["main", "w1", "pickle", "w2", "w3", "cost"]},
+  "concDecide": {"edges": {"where>waiting": {"d": "Mostly idle CPU while calls are in flight."}, "where>computing": {"d": "The CPU is busy the whole time."}, "waiting>q-async": {"d": "Next: what kind of libraries you call, and how many calls."}, "computing>q-c": {"d": "Next: is the hot loop Python or C?"}, "q-async>asyncio": {"d": "Async clients and many calls: asyncio."}, "q-async>threads": {"d": "Blocking libraries: a thread pool, or to_thread from async code."}, "q-c>threads-c": {"d": "C code that releases the GIL can run in parallel threads."}, "q-c>processes": {"d": "Pure Python computation needs processes to use more than one core."}}, "nodes": {
+    "where": {"d": "The one question that decides it: is the time spent waiting for something outside, or computing?"},
+    "waiting": {"d": "I/O-bound: API calls, database queries, file and network reads. The CPU is mostly idle."},
+    "computing": {"d": "CPU-bound: parsing, tokenising, scoring, image work. The CPU is busy the whole time."},
+    "q-async": {"d": "Are there async clients for what you call (httpx, asyncpg, the model SDK's async client), and many calls at once?"},
+    "q-c": {"d": "Is the heavy work inside a C extension (NumPy, PyTorch, hashlib) that releases the GIL while it runs?"},
+    "asyncio": {"d": "asyncio with a Semaphore to cap how many run at once: the best fit for many network waits."},
+    "threads": {"d": "A ThreadPoolExecutor, or asyncio.to_thread from async code, for blocking libraries. A few dozen threads at most."},
+    "threads-c": {"d": "Threads can run C-level work in parallel because the extension releases the GIL. Measure before relying on it."},
+    "processes": {"d": "A ProcessPoolExecutor: one worker per core, small arguments, results pickled back."},
+    "machines": {"d": "Beyond one machine, concurrency becomes distribution: a queue holds the jobs and workers on many machines claim them."}},
+    "walk": ["where", "waiting", "q-async", "asyncio", "threads", "computing", "q-c", "threads-c", "processes", "machines"]}
 });
