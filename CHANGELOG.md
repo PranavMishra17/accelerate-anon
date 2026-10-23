@@ -1470,3 +1470,8 @@ term they name (how the live agent's prompt differs from the background workers'
 which two Postgres tables and why only those). Every turn now carries `explain`, drawn under the dark sheet as
 'What this means', never folded; the alfred_ ones live in the gitignored private file. The private loop script is
 stamped by `build.py`. No charter deviation.
+
+**22 Oct 2026: Amazon loop dates set.** Amazon scheduled the loop for Monday 9 and Tuesday 10 November, on Zoom with
+LiveCode. The page's dates, rounds and format follow; the loop week now has two full days (5 and 6 Nov), a calm
+weekend, a light Sunday, then the two loop days; 11 Nov is gone. The scheduling email says GenAI-tools experience
+may come up, so two examples are practised on 5 Nov. No charter deviation.

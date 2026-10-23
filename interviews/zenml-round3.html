@@ -563,6 +563,10 @@ details.item > .sbody { padding-left: 0; }
 .say-sheet .turn-who { color: color-mix(in srgb, var(--bg) 70%, transparent); }
 .say-hidden { cursor: pointer; text-align: left; width: 100%; border: 0; font: inherit; color: color-mix(in srgb, var(--bg) 70%, transparent); }
 .turn-more { margin-top: var(--s3); }
+.turn-exp { margin-top: var(--s4); }
+.turn-exp-h { font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); margin-bottom: var(--s2); }
+.turn-exp ul { margin: 0; padding-left: var(--s5); }
+.turn-exp li { margin: 0 0 var(--s2); line-height: 1.55; }
 .turn-probe { padding-left: var(--s5); border-left: 2px solid var(--accent-soft); }
 .turn + .turn-probe { border-top: 0; padding-top: 0; }
 .turn-src { font-size: var(--fs-sm); margin-top: var(--s3); color: color-mix(in srgb, var(--bg) 70%, transparent); }
@@ -2514,12 +2518,12 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   /* A turn's answer can come from elsewhere: `from` a Prep script (his words), `fromAsk` a questions-to-ask group,
      or `priv` the gitignored private/loops/<loop>.js (`turns[key]`), for answers about alfred_ internals. */
   function turnSay(b) {
-    var r = { say: b.say || [], more: b.more };
+    var r = { say: b.say || [], more: b.more, explain: b.explain };
     if (b.from) { var sc = LOOP.scripts.filter(function (x) { return x.id === b.from; })[0]; if (sc) { r.say = sc.say; r.src = "Your words, from Prep."; } }
     if (b.fromAsk) { var g = (LOOP.ask3 || []).filter(function (x) { return x.id === b.fromAsk; })[0]; if (g) { r.say = g.items.map(function (x) { return x.q; }); r.src = "Your questions, from Prep. One or two."; } }
     if (b.priv) {
       var pv = ((window.LOOP_PRIVATE && LOOP_PRIVATE[LOOP.id]) || {}).turns || {};
-      if (pv[b.priv]) { r.say = pv[b.priv].say; r.more = pv[b.priv].more || r.more; }
+      if (pv[b.priv]) { r.say = pv[b.priv].say; r.more = pv[b.priv].more || r.more; r.explain = pv[b.priv].explain || r.explain; }
       else { r.say = ["Your answer lives in private/loops/" + LOOP.id + ".js, which is not on this machine."]; r.more = null; }
     }
     return r;
@@ -2546,6 +2550,13 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       bt.type = "button"; bt.onclick = fill; sheet.appendChild(bt);
     } else { fill(); }
     R.appendChild(sheet);
+    /* What each part of the answer means: shown, never folded, so the words never outrun the understanding. */
+    if (ts.explain && ts.explain.length) {
+      var ex = el("div", "turn-exp"), xl = el("ul");
+      ex.appendChild(el("div", "turn-exp-h", "What this means"));
+      ts.explain.forEach(function (x) { var m = /^([^:]{1,60}):\s([\s\S]+)$/.exec(x); xl.appendChild(el("li", "", m ? "<strong>" + inl(m[1]) + ":</strong> " + inl(m[2]) : inl(x))); });
+      ex.appendChild(xl); R.appendChild(ex);
+    }
     if (ts.more && ts.more.length) {
       var d = el("details", "turn-more"), ul = el("ul");
       d.appendChild(el("summary", "", "If they push"));

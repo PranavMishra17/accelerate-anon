@@ -1,6 +1,6 @@
 """Amazon, Software Development Engineer (new grad, L4 shape), via Amazon Student Programs. The loop: four 60-minute
 virtual rounds (2 coding, 1 object-oriented design, 1 behavioral / Bar Raiser), in a window from 2 November 2026; you
-offered 6, 9, 10 or 11 November on 21 October. Last year (2025) you cleared this pipeline's three-round loop.
+offered 6, 9, 10 or 11 November on 21 October; on 22 October they scheduled Monday 9 and Tuesday 10 November. Last year (2025) you cleared this pipeline's three-round loop.
 
 This page is the wildcard's weeks 6 and 7: the day-by-day plan (Plan), two problems a day with the topic hidden (Daily
 two, from interviews/coding/amazon-daily-*.js), the object-oriented design kit (LLD, from amazon-lld-*.js), the
@@ -17,13 +17,13 @@ LOOP = {
     "id": "amazon",
     "title": "Amazon, Software Development Engineer",
     "company": "Amazon",
-    "subtitle": "The loop: four rounds, from early November",
+    "subtitle": "The loop: four rounds, Monday 9 and Tuesday 10 November",
     # #FF9900 is Amazon's orange (its logo smile); a lighter tone for dark mode.
     "brand": "#FF9900", "brand_dark": "#FFB84D",
-    "when_iso": "2026-11-06",
-    "when": "You offered 6, 9, 10 or 11 November, 9 AM to 5 PM Eastern; one day or two in a row (to be confirmed)",
+    "when_iso": "2026-11-09",
+    "when": "Monday 9 and Tuesday 10 November 2026, on Zoom with LiveCode; exact times confirmed no later than two business days before",
     "who": "Four interviewers, one of them a Bar Raiser from outside the team (Amazon does not say which). Scheduling through Amazon Student Programs.",
-    "format": ("Four 60-minute rounds on Chime with a shared editor, often with no way to run code: two coding rounds, one "
+    "format": ("Four 60-minute rounds on Zoom, coding in Amazon LiveCode (the interviewer sees the editor live, no screen share), often with no way to run code: two coding rounds, one "
                "object-oriented design round, one behavioral round. Leadership principle questions in every round. No AI tools."),
     "bar": ("A medium solved to working, dry-run code in 25 to 30 minutes while talking, then two more layers of follow-up; "
             "a design you can extend without rewriting; and eight deep, true stories that survive five layers of why."),
@@ -75,7 +75,7 @@ POSTING = {
     "url": "https://www.amazon.jobs/content/en/how-we-hire",
     "label": "Amazon: how we hire",
     "lead": "Software Development Engineer, new grad, through Amazon Student Programs: the L4 (SDE I) loop.",
-    "facts": [["Rounds", "4 x 60 minutes, virtual, Chime and a shared editor"], ["Coding", "2 rounds, medium with harder follow-ups"],
+    "facts": [["Rounds", "4 x 60 minutes over 9 and 10 November, Zoom and LiveCode"], ["Coding", "2 rounds, medium with harder follow-ups"],
               ["Design", "1 object-oriented design round"], ["Behavioral", "1 round, plus LP in every round"], ["AI tools", "Not allowed"]],
     "does": [
         "Solve medium problems in a shared editor, talking, and dry-run them without running code.",
@@ -91,11 +91,13 @@ POSTING = {
 
 ROUNDS = [
     {"title": "2026 loop: four rounds",
-     "when": "Offered 6, 9, 10 or 11 November 2026",
+     "when": "Monday 9 and Tuesday 10 November 2026 (scheduled 22 October; times to come)",
      "who": "Four interviewers, one a Bar Raiser",
      "format": "Coding, coding, object-oriented design, behavioral. LP in every round.",
      "outcome": "Not yet held.",
-     "notes": ["From the invitation: GenAI tools not allowed unless explicitly permitted."],
+     "notes": ["From the invitation: GenAI tools not allowed unless explicitly permitted.",
+               "From the scheduling email (22 Oct): you may be asked about your experience with GenAI tools. Prepare a few examples: the situation, what went well, what you would do differently, and how it changed your outcome or speed.",
+               "Zoom on the device you will use (camera, headphones); a waiting room of up to 10 minutes. LiveCode: open the link from the email, wait for the interviewer to open the session, refresh; turn the ad blocker off."],
      "asked": []},
     {"title": "2025 loop: three rounds",
      "when": "2025",
@@ -368,23 +370,23 @@ PLAN = {
                 ("loop", "Self-run loop: two coding rounds of 45 minutes (from the coding page), one design (a drill you have not redone), 45 minutes of stories, back to back, in a plain editor", "../CODING.html", "3 h"),
                 ("loop", "Write down what broke; nothing new after today", "", "15 min")),
          ]},
-        {"id": "loopweek", "title": "The loop week", "note": "Your loop is on one of 6, 9, 10 or 11 November. Light days before it; warm days between.",
+        {"id": "loopweek", "title": "The loop week", "note": "Your loop is Monday 9 and Tuesday 10 November. Two full days, a calm weekend, a light Sunday, then two rounds a day.",
          "days": [
-             _d("2026-11-05", "2 h", "The day before the window. Light only.",
-                DAILY("2026-11-05"), ("loop", "Read the Loop day card and the coding page's cheat sheet", "#/card", "30 min"),
-                ("loop", "Test Chime and the shared editor; set up the room, water, a clock", "", "20 min"), ("loop", "Sleep early", "", "")),
-             _d("2026-11-06", "", "Loop day if it is the 6th. Otherwise keep warm.",
-                ("loop", "If the loop is today: the Loop day card, nothing else", "#/card", ""),
-                ("revise", "If not: redo two daily problems you found hardest", "#/daily", "40 min"),
-                ("design", "If not: one design from a blank page", "#/lld", "40 min"), ("story", "If not: two stories aloud", "#/lp/lp-rounds", "20 min")),
+             _d("2026-11-05", "3 h", "Four days out. Sharp, not new.",
+                DAILY("2026-11-05"), ("revise", "Redo two daily problems you found hardest", "#/daily", "40 min"),
+                ("design", "One design from a blank page", "#/lld", "40 min"), ("story", "Two GenAI-tools examples aloud: situation, what went well, what you'd change, the effect", "#/lp/lp-rounds", "30 min")),
+             _d("2026-11-06", "3 h", "Three days out. Last full day.",
+                ("revise", "Two mediums out loud, timed, in a plain editor", "../CODING.html", "60 min"), ("design", "One design from a blank page", "#/lld", "40 min"),
+                ("story", "Three stories aloud with their follow-ups", "#/lp/lp-rounds", "30 min"),
+                ("loop", "Install Zoom on the interview device; open the LiveCode link with the ad blocker off", "", "15 min")),
              _d("2026-11-07", "2 h", "Weekend: keep warm, do not cram.",
                 ("revise", "Redo two daily problems you found hardest", "#/daily", "40 min"), ("design", "One design from a blank page", "#/lld", "40 min"),
                 ("story", "Two stories aloud with their follow-ups", "#/lp/lp-rounds", "30 min")),
-             _d("2026-11-08", "1.5 h", "Light. The loop may be tomorrow.",
+             _d("2026-11-08", "1.5 h", "Light. The loop is tomorrow.",
                 ("loop", "Read the Loop day card", "#/card", "20 min"), ("revise", "One medium, out loud", "../CODING.html", "30 min"), ("loop", "Sleep early", "", "")),
-             _d("2026-11-09", "", "Possible loop day.", ("loop", "If the loop is today: the Loop day card", "#/card", "")),
-             _d("2026-11-10", "", "Possible loop day.", ("loop", "If the loop is today: the Loop day card", "#/card", "")),
-             _d("2026-11-11", "", "Possible loop day.", ("loop", "If the loop is today: the Loop day card", "#/card", "")),
+             _d("2026-11-09", "", "Loop day 1.", ("loop", "The Loop day card, nothing new", "#/card", ""),
+                ("loop", "Tonight: rest; reread the card and two stories you have not told yet", "#/card", "20 min"), ("loop", "Sleep early", "", "")),
+             _d("2026-11-10", "", "Loop day 2.", ("loop", "The Loop day card, nothing new", "#/card", "")),
          ]},
     ],
 }
