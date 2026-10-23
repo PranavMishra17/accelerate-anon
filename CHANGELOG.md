@@ -1526,3 +1526,8 @@ week, reviews and the gate all follow, because they read PLAN. Session links are
 breaks no link. Cut at his request: the header tagline, week focus lines, session blurbs, the track tag in the rail,
 page ledes that explained the page, map hints, and the rail's keyboard note. No charter deviation: the plan's
 order becomes his to change; the weeks still close in sequence.
+
+**23 Oct 2026: Mercor round 2 recorded.** Held with Sophie Guo. On the Rounds tab: the worst-sort warm-up (the
+intended answer was bogosort, expected O(n · n!), unbounded worst case), the cache-aside snippet and its follow-ups
+(write-heavy data, races), and his questions, each with what he said and what to keep. The simulated call on the
+Mocks tab points to it. No charter deviation.

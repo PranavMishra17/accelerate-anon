@@ -94,7 +94,7 @@ window.LOOP_CODING.parts.push({
  "n": 2,
  "title": "The call, simulated",
  "minutes": 75,
- "lead": "The thirty minutes as they will likely run: opening, your caching work, a scenario from Mercor's world with probes, Python and proof, wrap-up. One phase at a time.",
+ "lead": "Held on 23 October: what was actually asked, what you said and what to keep is on the Rounds tab. The thirty minutes as they were expected to run: opening, your caching work, a scenario from Mercor's world with probes, Python and proof, wrap-up. One phase at a time.",
  "sections": [
   {
    "id": "mock-open",
