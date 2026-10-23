@@ -134,17 +134,11 @@ Candidates found so far, to confirm one by one:
 
 ## What is left for you
 
-1. **alfred_'s safety gate.** Your master reference and resume say the Execution Decision
-   Layer sorts each action into five verdicts by deterministic risk scoring. The alfred_
-   code on `origin/main` has no risk score: a code floor (sends and irreversible deletes
-   always confirm) plus the preferences you write in plain text, applied by the agent. The
-   pages now follow the code. Is the five-verdict layer an earlier version, the take-home,
-   or somewhere the code search missed?
-2. **Mphasis.** Did the round on 28 September happen? If so, park it (`LOOPS` and
+1. **Mphasis.** Did the round on 28 September happen? If so, park it (`LOOPS` and
    `WILDCARD.md`) and the wildcard has no loop in play.
-3. **`progress/`.** Nothing was ever committed there, and the repo is public. Keep the
+2. **`progress/`.** Nothing was ever committed there, and the repo is public. Keep the
    folder, or remove it and change the README line to "keep the export somewhere private"?
-4. **`STUDY-LIST.md`.** Removed, 29 Sep, on Pranav's word. It is a generated copy of `#/sheet/wc` and reads "Nothing open".
+3. **`STUDY-LIST.md`.** Removed, 29 Sep, on Pranav's word. It is a generated copy of `#/sheet/wc` and reads "Nothing open".
    Keep it, or remove it and use the sheet's copy-as-markdown when needed?
-5. **Six or twelve.** `MILESTONE-1.md` says six requeue items are what the milestone exists
+4. **Six or twelve.** `MILESTONE-1.md` says six requeue items are what the milestone exists
    to clear; `REQUEUE.md` has twelve. Which six, or all twelve? Due before 26 October.

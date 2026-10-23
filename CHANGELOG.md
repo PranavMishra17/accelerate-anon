@@ -590,8 +590,8 @@ Following `REVAMP.md` and the phase 6 audit. Wildcard sessions now open by id
 link uses the id: putting `wc18` first on 28 September had sent twelve links in the guide
 and the figure notes one session off. alfred_'s facts were checked against its code on
 `origin/main` and fixed everywhere they were told: the agent loop is a LangGraph graph with
-alfred_'s own tools node, 12 steps on SMS and 50 on the web; there is no risk score (a code
-floor confirms sends and irreversible deletes); the rules matcher cut cost about 30 percent,
+alfred_'s own tools node, 12 steps on SMS and 50 on the web; a code
+floor confirms sends and irreversible deletes; the rules matcher cut cost about 30 percent,
 not 40; triage runs on Gemini 3.1 Flash Lite with a dial for an OpenAI cohort; EmailEngine
 runs on Railway. `ALFRED.html` is now the one home for your own system: the ZenML page's
 alfred_ tab keeps only the comparison with Kitaru, and the Mphasis page links to it. This
@@ -916,9 +916,8 @@ Each topic is learned, checked (five options, I don't know, a guess flag), expla
 a model answer and self-rated, then said; each gets Know, Partly or Not yet, and a map of squares
 shows where he stands. 'Test me' runs the weakest questions first. Old Prep links from the
 tracker land on the topic that absorbed them. Overview gains a One page view of fifteen points,
-from his banking copilot handbook. His alfred_ agent read the alfred_ code: there is no risk score,
-decision layer, verdict enum, trained classifier or NER, and the verdict gate was removed on 3
-August. His story and work answers now describe what is live and what he built (the first pass
+from his banking copilot handbook. His alfred_ agent read the alfred_ code: there is no trained classifier or NER.
+His story and work answers now describe what is live and what he built (the first pass
 and its guards, entity resolution in chat, the confirm flow and code floors, the grounding guards,
 the failure scanner); the code-level detail sits in a private, gitignored module with its own
 quiz. `vanguard.py` went from 1,270 lines to 273. The interview moved to Wednesday 7 October,
@@ -1510,3 +1509,20 @@ articles (Hello Interview's LLD in a hurry, delivery framework, OOP concepts and
 docs; Refactoring Guru's State). New `data/check_steps.js`, in `tools/rebuild.py`: every milestone step needs an
 outside resource (video, article or book) and every milestone session a video and an article, or the rebuild
 fails; it fails on the w5d of this morning and passes now. No charter deviation.
+
+**23 Oct 2026: a gating mechanism once attributed to him at alfred_ is removed everywhere.** He said he never built
+it and it must never be mentioned again. Removed with its whole mechanism (the five verdicts, risk scoring, the
+take-home story): from the tracker, the loop pages and their sources, the private pages, the roadmap docs, his master
+reference, resume and application prompts and job-search profile. wc5's step on it and its quiz question are deleted;
+saved ticks on wc5's later steps move up once on load. The system design guide's generic policy-gate technique and
+email-agent design stay: they are design material, not a claim about his work.
+
+**23 Oct 2026: sessions can be moved, and the tracker loses its taglines.** Right-click (or long-press, or the
+context-menu key) a session in the rail or on a week page to move it up or down, to any week, or to the next
+milestone; drag it in the rail onto a session or a week; Alt+Up and Alt+Down move the focused one; a toast and
+Ctrl+Z undo any move. The order is `state.layout`, saved with progress (so export, import and other tabs carry it);
+PLAN as written stays the default and 'Restore the planned order' returns to it. Progress bars, counts, the current
+week, reviews and the gate all follow, because they read PLAN. Session links are now by id (#/s/w5a), so a move
+breaks no link. Cut at his request: the header tagline, week focus lines, session blurbs, the track tag in the rail,
+page ledes that explained the page, map hints, and the rail's keyboard note. No charter deviation: the plan's
+order becomes his to change; the weeks still close in sequence.

@@ -852,7 +852,7 @@ QA = [
     {"group": "Backend depth", "blurb": "Idempotency, failures, grants and providers, compact; then two big design questions with their own boards: rebuilding and scaling your harness, and Kitaru with worlds and multi-turn.", "items": [
         {"q": "A side-effecting tool call fails halfway. What happens?", "short": "A side effect fails halfway", "tests": "Idempotency and crash windows.",
          "a": ["You can't get exactly-once against a third-party API you don't control, so the goal is exactly-once logical effect: at-least-once delivery with effects that are safe to repeat.",
-               "We write the intent to a tool-execution ledger before the call, so there's a record even if the process dies mid-flight; the anti-fabrication guards read the same ledger. Side-effecting actions sit behind a confirm verdict with a bounded undo window.",
+               "We write the intent to a tool-execution ledger before the call, so there's a record even if the process dies mid-flight; the anti-fabrication guards read the same ledger.",
                "If the send succeeded but the response timed out, look the effect up at the provider before retrying blind. The real design work is where the idempotency key lives."],
          "land": "Intent first, a key, reconcile before retry.",
          "notes": ["Classify first: read, idempotent write, non-idempotent write, external effect.", "On a forked replay, a write that misses fails closed."],

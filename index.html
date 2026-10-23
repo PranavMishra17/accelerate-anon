@@ -88,7 +88,32 @@
   .side .ri:hover { color: var(--ink); background: var(--sunken); }
   .side .ri.on { color: var(--ink); font-weight: 600; background: var(--accent-soft); box-shadow: inset 2px 0 0 var(--accent); }
   .side .ri .nm { flex: 1; min-width: 0; }
-  .side .ri .ri-tag { flex: none; font-size: var(--fs-xs); color: var(--muted); margin-left: var(--s2); }
+  .side .ri.ss[draggable="true"] { cursor: grab; }
+  .side .ri.lift { opacity: .45; }
+  .side .ri.drop-b { box-shadow: inset 0 2px 0 var(--accent); }
+  .side .ri.drop-a { box-shadow: inset 0 -2px 0 var(--accent); }
+  .side .rrow.drop-in .ri { background: var(--accent-soft); color: var(--ink); }
+  .side button.ri { border: 0; background: none; font: inherit; color: var(--muted); text-align: left; cursor: pointer; }
+  .side .ri.later .nm { color: var(--muted); }
+  .mvm { position: fixed; z-index: 60; min-width: 232px; max-width: 320px; padding: var(--s1) 0; background: var(--bg);
+    border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: 0 6px 24px color-mix(in srgb, var(--ink) 14%, transparent); }
+  .mvm .mvi { display: block; width: 100%; padding: 6px var(--s3); border: 0; background: none; font: inherit; font-size: var(--fs-sm);
+    color: var(--ink); text-align: left; cursor: pointer; }
+  .mvm .mvi:hover:not([disabled]), .mvm .mvi:focus-visible { background: var(--sunken); outline: none; }
+  .mvm .mvi[disabled] { color: var(--muted); cursor: default; }
+  .mvm .mvi[aria-current] { font-weight: 600; color: var(--accent); }
+  .mvm .mvi.quiet { color: var(--muted); }
+  .mvm .mvw { display: flex; gap: var(--s2); }
+  .mvm .mvw .num { width: 12px; flex: none; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .mvm .mvs { height: 1px; margin: var(--s1) 0; background: var(--rule); }
+  .toast { position: fixed; z-index: 61; left: 50%; bottom: var(--s5); transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+    display: flex; align-items: center; gap: var(--s4); padding: var(--s2) var(--s2) var(--s2) var(--s4); background: var(--ink); color: var(--bg);
+    border-radius: var(--radius); font-size: var(--fs-sm); transition: opacity .15s, transform .15s; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .toast button { border: 0; background: none; color: inherit; font: inherit; font-weight: 600; padding: var(--s1) var(--s3); cursor: pointer;
+    border-radius: var(--radius-sm); }
+  .toast button:hover, .toast button:focus-visible { background: color-mix(in srgb, var(--bg) 16%, transparent); outline: none; }
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
   .side .ri .ct { flex: none; font-size: var(--fs-xs); color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
   .side .ri .num { flex: none; width: 12px; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
   .side .ri.now .num { color: var(--accent); font-weight: 600; }
@@ -745,7 +770,6 @@
   <a class="brand" href="#/" aria-label="Accelerate, overview">
     <img src="brand/accelerate.svg" width="24" height="24" alt="">
     <span class="word">Accelerate</span>
-    <span class="mission">Milestone 1, Primitives. 21 September to 25 October 2026.</span>
   </a>
   <span class="grow"></span>
   <nav class="sn-top" data-site-nav data-here="tracker" id="barnav"></nav>
@@ -3119,7 +3143,7 @@
               "Around the tasks: dialogue state (what has been collected so far), safety and evaluation; for voice, ASR and TTS at each end",
               "Classic platforms: Dialogflow CX, Lex, CLU, Rasa, Kore.ai and Cognigy are classification plus labelling plus a state machine",
               "LLM-first stacks: one model folds understanding and generation together, but classifiers and embeddings still sit in front as routers and guards because they are fast and cheap",
-              "Your system: alfred_'s 'Inbound message (SMS/web) routed through intent classification → decision layer → callable tools', this map in miniature"
+              "Your system: alfred_'s 'Inbound message (SMS/web) routed through intent classification → callable tools', this map in miniature"
             ],
             links: [
               { label: "Baseline: the map of NLP and conversational AI", url: "BASELINE.html#/nlp" },
@@ -3626,21 +3650,18 @@
               "Explicit: a yes-or-no check reserved for irreversible or costly actions, deleting data, completing a transaction, sending a message, names and addresses",
               "Confidence in Lex: it returns a transcription confidence and up to three alternative transcriptions; its docs suggest reprompting when confidence is low and checking close candidates (John against Juan) against a database",
               "Confidence in Cognigy: above the confidence threshold (default 0.4) the intent is accepted; between that and the reconfirmation threshold (default 0.2) the bot asks 'did you mean X?'; below it nothing is found",
-              "alfred_ decision layer: 'every candidate action classified into five verdicts (SILENT / NOTIFY / CONFIRM / CLARIFY / REFUSE) via deterministic risk scoring, not LLM-as-judge', the same policy in code",
               "alfred_ voice agent: drafts, reads back, confirms and sends once"
             ],
             links: [
               { label: "Baseline, NLP: conversation design", url: "BASELINE.html#/nlp/conversation-design" },
               { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" },
-              { label: "Vanguard prep: explicit or implicit confirmation", url: "interviews/vanguard.html#/prep/q-explicit-or-implicit-confirmation-when-do-you-use-which" },
-              { label: "Vanguard prep: the decision layer at alfred_", url: "interviews/vanguard.html#/prep/q-tell-me-about-the-decision-layer-at-alfred" }
+              { label: "Vanguard prep: explicit or implicit confirmation", url: "interviews/vanguard.html#/prep/q-explicit-or-implicit-confirmation-when-do-you-use-which" }
             ],
             ans: [
               "Implicit by default: it keeps the flow and lets the user correct",
               "Explicit before irreversible or costly actions: payments, deletions, names, addresses, sending messages",
               "Raise it when ASR or NLU confidence is low, even for ordinary slots",
-              "Confirm in proportion to the cost of being wrong times the chance of being wrong",
-              "alfred_ makes this call per action in code: SILENT, NOTIFY, CONFIRM, CLARIFY or REFUSE"
+              "Confirm in proportion to the cost of being wrong times the chance of being wrong"
             ],
             close: [
               { k: "short", q: "A caller says a name and ASR returns John and Juan with close scores. What do you do?", a: "Use the N-best list: check both against the database, and if both exist, ask a short closed question or have them spell it. Confirm the chosen value before acting on it." }
@@ -3887,7 +3908,7 @@
               "RAG for FAQ: retrieval over a curated knowledge base replaces dozens of FAQ intents, grounded and cited; keep an intent for 'needs a transaction' so retrieval never answers account-specific questions",
               "Guardrails: NeMo Guardrails defines input, dialog, retrieval, execution and output rails; OWASP's 2025 top 10 for LLM apps names prompt injection, sensitive information disclosure, excessive agency, system prompt leakage, misinformation and unbounded consumption",
               "Adding an LLM safely: to a Dialogflow bot, start with generative fallback or retrieval-backed FAQ, keep transactions in flows, build a golden test set and a judge rubric first, and run it in shadow or on a small experiment share",
-              "Your own: alfred_ routes through intent classification, a decision layer and tools, and a deterministic three-stage matcher in front of the LLM cut per-user LLM cost ~30%"
+              "Your own: alfred_ routes through intent classification and tools, and a deterministic three-stage matcher in front of the LLM cut per-user LLM cost ~30%"
             ],
             links: [
               { label: "Baseline, AI: RAG", url: "BASELINE.html#/ai/rag" },
@@ -3912,7 +3933,7 @@
         id: "wc30", track: "Interview", forWhat: "Vanguard, Wed 7 Oct", len: "55m", est: 55,
         name: "Error analysis and production improvements",
         blurb: "Per-intent metrics and the confusion matrix, mining misses, transcript review, testing and simulation, KPIs that tell the truth, experiments and release; then your own work and where you have not worked.",
-        intro: "Error analysis and production improvement is where you are strongest: alfred_ runs a production-failure scanner over real conversations, and every action passes a deterministic decision layer. This session gives that work the enterprise names (confusion matrix, failure taxonomy, containment, experiments) and ends with the bridge from your system to theirs, including what you have not used.",
+        intro: "Error analysis and production improvement is where you are strongest: alfred_ runs a production-failure scanner over real conversations. This session gives that work the enterprise names (confusion matrix, failure taxonomy, containment, experiments) and ends with the bridge from your system to theirs, including what you have not used.",
         steps: [
           { t: "Per-intent metrics and the confusion matrix", m: 9,
             out: "Two intents keep getting confused. What do you do",
@@ -4064,9 +4085,8 @@
             out: "Tell me about error analysis and production improvement you have done on a conversational system",
             d: "Say your work in their words, then say plainly where you have not worked. Bridge once, and keep the whole answer to two minutes.",
             pts: [
-              "alfred_ pipeline: 'Inbound message (SMS/web) routed through intent classification → decision layer → callable tools', for 5,000+ active users",
+              "alfred_ pipeline: 'Inbound message (SMS/web) routed through intent classification → callable tools', for 5,000+ active users",
               "Failure scanner: scans real production conversations, classifies genuine failures against expected behaviour, and auto-promotes real bugs for triage; transcript review and the failure taxonomy, automated",
-              "Decision layer: 'every candidate action classified into five verdicts (SILENT / NOTIFY / CONFIRM / CLARIFY / REFUSE) via deterministic risk scoring, not LLM-as-judge', the confirmation policy of a virtual assistant, in code",
               "Three-stage matcher: deterministic, in front of the LLM, it 'cut per-user LLM cost ~30%', the hybrid routing pattern",
               "Voice eval harness: runs 34 scenarios and names a winning configuration only if it passes every gate (session wc23)",
               "MockFlow-AI: 'FSM-driven stage progression' where the 'LLM must call transition_stage()'; deterministic flow, LLM understanding, the same split as Rasa CALM",
@@ -4081,14 +4101,13 @@
               { label: "Vanguard prep: improving an assistant from production data", url: "interviews/vanguard.html#/prep/q-tell-me-about-a-time-you-improved-an-assistant-from-producti" }
             ],
             ans: [
-              "alfred_: 'intent classification → decision layer → callable tools', for 5,000+ active users",
+              "alfred_: 'intent classification → callable tools', for 5,000+ active users",
               "A production-failure scanner reads real conversations, separates genuine failures from expected behaviour, and promotes real bugs to triage",
-              "Every action gets one of five verdicts, SILENT, NOTIFY, CONFIRM, CLARIFY or REFUSE, by deterministic risk scoring, not LLM-as-judge",
               "A deterministic three-stage matcher in front of the LLM cut per-user LLM cost ~30%",
               "Plainly: I have not built on Dialogflow CX, Lex or Cognigy; the loop is the same, and I would start from their confusion matrix, no-match by page and a transcript sample"
             ],
             close: [
-              { k: "short", q: "The interviewer asks whether you have used Dialogflow CX. What do you say?", a: "Not on that platform. Then the bridge: I have built the same loop, intent routing, a decision layer, failure scanning on real conversations, and I know how CX models it: flows of pages, route groups, numbered no-match handlers, test cases and experiments." }
+              { k: "short", q: "The interviewer asks whether you have used Dialogflow CX. What do you say?", a: "Not on that platform. Then the bridge: I have built the same loop, intent routing and failure scanning on real conversations, and I know how CX models it: flows of pages, route groups, numbered no-match handlers, test cases and experiments." }
             ] }
         ]
       },
@@ -4247,8 +4266,7 @@
             out: "Why are you a fit for this team, given you have not worked in financial services",
             d: "Map your own work to their situation in under two minutes, then name plainly what you have not done. Every number and phrase comes from your master reference.",
             pts: [
-              "alfred_ routing: 'Inbound message (SMS/web) routed through intent classification → decision layer → callable tools', for 5,000+ active users",
-              "Five verdicts: 'every candidate action classified into five verdicts (SILENT / NOTIFY / CONFIRM / CLARIFY / REFUSE) via deterministic risk scoring, not LLM-as-judge'; the same idea as a deterministic no-advice route",
+              "alfred_ routing: 'Inbound message (SMS/web) routed through intent classification → callable tools', for 5,000+ active users",
               "Failure scanner: 'scans real production conversations, classifies genuine failures vs. expected behavior, auto-promotes real bugs for triage'; the review loop a quality or compliance team runs by hand",
               "Strict IDs: the working-memory pipeline made 'a whole class of hallucination structurally impossible, not probabilistically reduced'",
               "MetaRAG: IEEE CAI 2026, '82.5% precision' against a 73.3% baseline, '0.925 Hit Rate@10', '25% hallucination reduction'; retrieval measured on its own",
@@ -4263,8 +4281,7 @@
               { label: "Guide: enterprise virtual assistant, deep dives", url: "SYSTEM%20DESIGN.html#/designs/virtual-assistant/deepdives" }
             ],
             ans: [
-              "alfred_: intent classification, a decision layer and callable tools, for 5,000+ active users",
-              "Every action gets one of five verdicts by deterministic risk scoring, not LLM-as-judge: the shape of a no-advice route",
+              "alfred_: intent classification and callable tools, for 5,000+ active users",
               "A production-failure scanner finds genuine failures in real conversations and promotes them to triage",
               "MetaRAG: 82.5% precision, 0.925 Hit Rate@10, 25% hallucination reduction, with retrieval measured on its own",
               "Plainly: no enterprise NLU platform and no regulated finance yet; I would learn their controls first and build inside them"
@@ -4967,12 +4984,11 @@
             ] },
           { t: "A side-effecting call fails halfway", m: 15,
             sd: [{ v: "email-agent", a: "deepdives", why: "Exactly-once side effects for an agent whose effect is an email." }],
-            d: "Exactly-once against a third party you do not control does not exist; the goal is at-least-once delivery with effects safe to repeat. Write the intent to a tool-execution ledger before the call, so a crash mid-flight leaves a record; the same ledger is what anti-fabrication reads, so the agent cannot claim an action with no row. Side-effecting actions sit behind a confirm verdict with a bounded undo window. The design work is where the idempotency key lives. Send-succeeded-but-timed-out: reconcile by looking the effect up at the provider rather than retrying blind.",
+            d: "Exactly-once against a third party you do not control does not exist; the goal is at-least-once delivery with effects safe to repeat. Write the intent to a tool-execution ledger before the call, so a crash mid-flight leaves a record; the same ledger is what anti-fabrication reads, so the agent cannot claim an action with no row. The design work is where the idempotency key lives. Send-succeeded-but-timed-out: reconcile by looking the effect up at the provider rather than retrying blind.",
             ans: [
               "At-least-once plus idempotent effects; exactly-once does not exist against a third party",
               "Write intent to the ledger before the call",
               "The ledger also grounds anti-fabrication",
-              "Confirm verdict and a bounded undo window for side effects",
               "Timed out after success: reconcile at the provider before retrying"
             ],
             close: [
@@ -4980,7 +4996,7 @@
               { k: "short", q: "What do you do when the send succeeded but the response timed out?", a: "Look the effect up at the provider, keyed by the idempotency key, before retrying." }
             ] },
           { t: "The queue, and polling to events", m: 12,
-            d: "If the pending-obligations queue is a Postgres table with a periodic drain, say exactly that; it is respectable at your scale. Where it strains: concurrent claiming, answered by FOR UPDATE SKIP LOCKED; and a cron drain's worst-case latency is the interval. That is the notification story: about ninety seconds down to about three by triggering on the event, with cron demoted to a backstop. Say the backstop explicitly; it shows you kept a safety net.",
+            d: "If a queue is a Postgres table with a periodic drain, say exactly that; it is respectable at your scale. Where it strains: concurrent claiming, answered by FOR UPDATE SKIP LOCKED; and a cron drain's worst-case latency is the interval. That is the notification story: about ninety seconds down to about three by triggering on the event, with cron demoted to a backstop. Say the backstop explicitly; it shows you kept a safety net.",
             ans: [
               "Honest: a Postgres table with a drain",
               "Strain: concurrent claiming, fixed with SKIP LOCKED",
@@ -5179,9 +5195,6 @@
           { t: "Memory system: two minutes, then the follow-ups",
             sd: [{ v: "alfred", a: "hld", why: "Your own system, drawn: the stores and paths the follow-ups will probe." }],
             d: "Two-minute version from your prep, section F question 1. Then the follow-ups: how candidates are generated for the menu; what an opaque handle actually is; what happens when the right candidate is not in the menu, which should be an abstention rather than a best guess; how the ground-truth audit loop graded briefs against live inboxes. Number to use: fabricated-recall and false-confirmation incidents down eighty percent." },
-          { t: "Decision layer: why deterministic risk scoring",
-            sd: [{ v: "email-agent", a: "deepdives", why: "Verdicts from deterministic risk scoring, argued as a deep dive." }, { v: "alfred", a: "deepdives", why: "How alfred_ does action safety without a risk score: the contrast to have ready." }],
-            d: "What the features are, how the five verdicts map to thresholds, and which error is worse — a false silent, where the agent acted and should have asked, or a false confirm, where it asked needlessly. The answer is that false silent is worse because it is a side effect the user did not approve, and the thresholds are tuned asymmetrically for that reason. Then the line from your prep: a model asked to judge itself gives you a plausible explanation, not the actual reason." },
           { t: "Eval harness, reframed for audit",
             sd: [{ v: "overview", a: "pattern-grounding", why: "Eval gates and shadow runs: the vocabulary to frame the harness in." }],
             d: "Use the two-minute bench story from the ZenML critique, and end on completeness: because you own the snapshot, a case can assert that every event in a window appears in the output. That is checking against ground truth you hold, which is exactly what a control test is." },
@@ -5194,9 +5207,6 @@
           { q: "In your memory system, what should happen when the correct candidate is not in the menu?",
             o: ["The model picks the closest one", "The model writes a new ID", "Abstain, and say nothing rather than something false", "Fall back to the raw email"], a: 2,
             why: "The whole design is that the model cannot introduce facts. Picking the closest wrong candidate would reintroduce fabrication by another route." },
-          { q: "In the decision layer, which error is worse?",
-            o: ["Asking for confirmation unnecessarily", "Acting silently when it should have asked", "They are equally bad", "Refusing a valid request"], a: 1,
-            why: "A false silent is an unapproved side effect. A false confirm is friction. Thresholds are tuned asymmetrically because of that." },
           { q: "Why did prefix injection beat blending sparse and dense vectors in MetaRAG?",
             o: ["It was faster", "The two vector spaces are not aligned, so a weighted blend mixes incomparable quantities", "Sparse vectors were too large", "The corpus was too small"], a: 1,
             why: "Putting metadata into the text before encoding lets one encoder handle both in one space." }
@@ -6168,7 +6178,7 @@
             ] },
           { a: "Say your own two versions of this out loud", m: 3,
             out: "both named in one breath: the silver standard in MetaRAG, the replay bench in production, and what ground truth each one is missing",
-            ans: "In MetaRAG I built a silver-standard pseudo-ground-truth from cross-encoder reranking, because human annotation over nine configurations and a six-thousand-page corpus was not feasible; it is missing true human relevance judgments, so I scoped every claim as a relative comparison rather than an absolute number. In production, the eval harness replays real traces against fixture-driven scenarios and scores tool-calling and decision-layer output; it is missing a labelled correct answer for every case, so completeness against the snapshot I actually own is what stands in for ground truth. Both are the same move: build the best proxy you can, characterise exactly how it is biased, and only make the claims the proxy can support." }
+            ans: "In MetaRAG I built a silver-standard pseudo-ground-truth from cross-encoder reranking, because human annotation over nine configurations and a six-thousand-page corpus was not feasible; it is missing true human relevance judgments, so I scoped every claim as a relative comparison rather than an absolute number. In production, the eval harness replays real traces against fixture-driven scenarios and scores tool-calling output; it is missing a labelled correct answer for every case, so completeness against the snapshot I actually own is what stands in for ground truth. Both are the same move: build the best proxy you can, characterise exactly how it is biased, and only make the claims the proxy can support." }
         ] },
       { t: "Your own MetaRAG paper, methods and limitations",
         close: [
@@ -6795,6 +6805,36 @@
   WILDCARD.sessions.forEach(attachStudy);
   PLAN.forEach(function (w) { w.sessions.forEach(attachStudy); });
 
+  /* ---------------------------------------------------------------- layout: where each session sits
+     PLAN as written is the default. Pranav can move a session to another place or week, or defer it to the
+     next milestone; his order is state.layout = { weeks: [[ids]], next: [ids] }, saved with his progress (so
+     export, import and other tabs carry it). Progress is keyed by session id, so a move changes nothing else.
+     A session added to PLAN later lands in its written week. */
+  var HOME = PLAN.map(function (w) { return w.sessions.slice(); });
+  var NEXT = [];
+  function applyLayout(L) {
+    var all = {}, placed = {}, weeks = HOME.map(function () { return []; });
+    HOME.forEach(function (ss) { ss.forEach(function (x) { all[x.id] = x; }); });
+    NEXT = [];
+    if (L && L.weeks) {
+      L.weeks.forEach(function (ids, wi) {
+        if (!weeks[wi]) { return; }
+        (ids || []).forEach(function (id) { if (all[id] && !placed[id]) { weeks[wi].push(all[id]); placed[id] = true; } });
+      });
+      (L.next || []).forEach(function (id) { if (all[id] && !placed[id]) { NEXT.push(all[id]); placed[id] = true; } });
+    }
+    HOME.forEach(function (ss, wi) { ss.forEach(function (x) { if (!placed[x.id]) { weeks[wi].push(x); } }); });
+    PLAN.forEach(function (w, wi) { w.sessions = weeks[wi]; });
+  }
+  function layoutNow() {
+    return { weeks: PLAN.map(function (w) { return w.sessions.map(function (x) { return x.id; }); }),
+             next: NEXT.map(function (x) { return x.id; }) };
+  }
+  function layoutCustom() {
+    var L = layoutNow();
+    return L.next.length > 0 || L.weeks.some(function (ids, wi) { return ids.join() !== HOME[wi].map(function (x) { return x.id; }).join(); });
+  }
+
   var RELATED = {
     w1a: [
       { id: "w4a", why: "Overload from the client side: retries and backoff." },
@@ -6849,8 +6889,6 @@
       a: "Every citation downstream depends on pointing back to an exact document, page and location. Once that link is discarded at parse time, no amount of cleverness later \u2014 better retrieval, better prompts \u2014 can reconstruct it, because the information no longer exists anywhere in the system." },
     wc4: { q: "Explain why the flowchart should be rendered by code from a graph rather than drawn directly by the model.",
       a: "A model asked to draw a chart can include a step nobody actually described, because nothing forces its output to trace back to evidence. A graph built only from nodes that carry a cited timestamp cannot contain a step that was never said, which is what makes the chart trustworthy rather than merely plausible." },
-    wc5: { q: "In the memory system's decision layer, explain why a false silent is treated as worse than a false confirm, and what that does to the thresholds.",
-      a: "A false silent means the agent took an action the user never approved, an unapproved side effect that already happened. A false confirm only costs a moment of friction. Because the two failures are not equally bad, the thresholds are tuned asymmetrically, erring toward asking rather than acting when the signal is unclear." },
     wc7: { q: "State the two-minute bench story headline first, then explain why leading with mechanism rather than the numbers matters in this room.",
       a: "We run the real agent against a frozen snapshot of the user's world, swapping only the outbound provider call. Leading with mechanism shows judgement about what makes a replay trustworthy; leading with the case count invites a mechanism question you have not answered yet, in front of the people deciding whether to trust it." },
     wc8: { q: "Explain why a forked replay that issues a refund the recording never saw should not simply pass through to the live payment provider by default.",
@@ -7153,7 +7191,7 @@
         why: "Two problems a week, permanently, so it never has to be rebuilt again." },
       { id: "ostool-start", label: "The open-source tool", col: "m3", lane: "sys",
         sessions: [], needs: ["spoken", "invalidation"],
-        why: "The eval harness, decision layer or memory system, generalised out of the product and made usable by strangers." },
+        why: "The eval harness or memory system, generalised out of the product and made usable by strangers." },
 
       /* ---- Beyond, parked ---- */
       { id: "ostool-done", label: "The tool, finished", col: "beyond", lane: "sys",
@@ -7247,6 +7285,24 @@
           state.livery = p.livery || "base";
           state.mcq = (p.mcq && typeof p.mcq === "object" && !(p.mcq instanceof Array)) ? p.mcq : {};
           state.backlog = (p.backlog && p.backlog.saved) ? p.backlog : { saved: [], done: {} };
+          state.layout = (p.layout && p.layout.weeks) ? p.layout : null;
+          state.migrated = p.migrated || {};
+          /* 23 Oct 2026: wc5's second step was deleted; its later steps move up one. */
+          if (!state.migrated.wc5step1) {
+            ["steps", "answers", "recall", "clock"].forEach(function (k) {
+              var o = state[k], out = {};
+              if (!o || typeof o !== "object") { return; }
+              Object.keys(o).forEach(function (key) {
+                var m = /^wc5:(\d+)$/.exec(key);
+                if (!m) { out[key] = o[key]; return; }
+                var n = +m[1];
+                if (n === 1) { return; }
+                out["wc5:" + (n > 1 ? n - 1 : n)] = o[key];
+              });
+              state[k] = out;
+            });
+            state.migrated.wc5step1 = true;
+          }
           Object.keys(state.quiz).forEach(function (qid) {
             if (!state.quizHistory[qid] && state.quiz[qid]) { state.quizHistory[qid] = [state.quiz[qid]]; }
           });
@@ -7256,6 +7312,7 @@
       storageOk = false;
       console.error("Could not read saved progress. Running in memory only.", err);
     }
+    applyLayout(state.layout);
   }
   function save() {
     if (!storageOk) { return; }
@@ -7798,7 +7855,8 @@
     if (page === "dia") { return "#/dia/" + week + "/" + (session + 1); }
     if (page === "sheet") { return "#/sheet/" + week; }
     if (page === "session") {
-      return week === "wc" ? "#/w/" + WILDCARD.sessions[session].id : "#/s/" + (week + 1) + "/" + (session + 1);
+      if (week === "wc") { return "#/w/" + WILDCARD.sessions[session].id; }
+      return PLAN[week] && PLAN[week].sessions[session] ? "#/s/" + PLAN[week].sessions[session].id : "#/s/" + (week + 1) + "/" + (session + 1);
     }
     return "#/" + page;
   }
@@ -7900,8 +7958,8 @@
     var on = view.page === "session" && view.week === w && view.session === i;
     var a = railLink(hashFor("session", w, i), (SHORT[s.id] || s.name).replace(/^(Oxus|ZenML): /, ""), on, "ss");
     a.insertBefore(dotFor(s), a.firstChild);
-    a.appendChild(el("span", "ri-tag", teaches(s)));
     a.title = s.name + ", " + teaches(s).toLowerCase() + (sessionClosed(s) ? ", closed" : "");
+    if (w !== "wc") { movable(a, s); }
     return a;
   }
   function closeRail() {
@@ -7956,7 +8014,27 @@
       railGroup(side, "w" + wi, "week " + (wi + 1), head, function (box) {
         w.sessions.forEach(function (s, si) { box.appendChild(sessionItem(s, wi, si)); });
       }, wi === focusWeek);
+      side.querySelector('[data-k="w' + wi + '"]').parentNode.setAttribute("data-week", String(wi));
     });
+    if (NEXT.length) {
+      var nh = el("span", "ri");
+      nh.appendChild(el("span", "num", "2"));
+      nh.appendChild(el("span", "nm", "Next milestone"));
+      nh.appendChild(el("span", "ct", String(NEXT.length)));
+      railGroup(side, "next", "the next milestone", nh, function (box) {
+        NEXT.forEach(function (s) {
+          var it = el("button", "ri ss later");
+          it.type = "button";
+          it.appendChild(dotFor(s));
+          it.appendChild(el("span", "nm", SHORT[s.id] || s.name));
+          it.title = s.name;
+          it.addEventListener("click", function (e) { var r = it.getBoundingClientRect(); openMoveMenu(s, r.left + 24, r.bottom); e.preventDefault(); });
+          movable(it, s);
+          box.appendChild(it);
+        });
+      }, true);
+      side.querySelector('[data-k="next"]').parentNode.setAttribute("data-week", "next");
+    }
 
     var railLoops = LOOPS.filter(loopShown);
     var wh = railLink("#/wild", "Wildcard", view.page === "wild");
@@ -7982,7 +8060,6 @@
     side.appendChild(railLink("#/charter", "Charter", view.page === "charter"));
     side.appendChild(railLink("#/protocol", "Protocol", view.page === "protocol"));
     side.appendChild(railLink("#/map", "The work ahead", view.page === "map" || view.page === "ahead"));
-    side.appendChild(htm("div", "rail-keys", "Left and right arrows move between sessions. Escape goes up a level. Slash searches."));
     side.scrollTop = top;
   }
 
@@ -8138,7 +8215,7 @@
 
     if (nx) {
       hero.appendChild(el("h1", "next", nx.s.name));
-      var why = nx.s.blurb || "";
+      var why = "";
       if (nx.wild) {
         var when = loopDate(nx.s), diff = when ? Math.round((when - today) / 864e5) : null;
         /* A session for every interview has no date in its forWhat. */
@@ -8404,7 +8481,6 @@
     var bound = PLAN.map(function (w, wi) { return wi; }).filter(weekBound);
     var head = el("div", "shead");
     head.appendChild(el("h1", "", "The book"));
-    head.appendChild(el("p", "lede", "Each week binds here once all its sessions are closed: one compact page per week, the idea of every step in a line, anything you rated Missed marked. Print it and each week lands on its own sheet."));
     v.appendChild(head);
     if (!bound.length) {
       var wi = currentWeek(), left = PLAN[wi].sessions.filter(function (s) { return !sessionClosed(s); }).length;
@@ -8434,7 +8510,7 @@
     var head = el("div", "shead");
     head.appendChild(el("h1", "", "The sky"));
     var xs = allSessions(), lit = xs.filter(function (x) { return sessionClosed(x.s); }).length;
-    head.appendChild(el("p", "lede", lit + " of " + xs.length + " stars lit. Each week is a constellation; dashed lines join sessions that share an idea. Select a star to open its session."));
+    head.appendChild(el("p", "lede", lit + " of " + xs.length + " stars lit."));
     v.appendChild(head);
     var W = 980, H = 500, pos = {};
     var wl = WILDCARD.sessions.filter(function (s) { return !s.parked; });
@@ -8783,7 +8859,6 @@
         tr.appendChild(el("td", "", String(wi + 1)));
         var td = el("td");
         td.appendChild(document.createTextNode(s.name));
-        td.appendChild(el("span", "sub", s.blurb || ""));
         tr.appendChild(td);
         var tt = el("td");
         var sw = el("span", "swatch");
@@ -8817,12 +8892,12 @@
   function sessionRow(s, w, i) {
     var a = el("a", "srow" + (sessionClosed(s) ? " closed" : ""));
     a.href = hashFor("session", w, i);
+    movable(a, s);
     a.style.setProperty("--tone", "var(--" + tone(s.track) + ")");
     var total = s.steps.length + studyLen(s), dn = stepsDone(s) + studyDone(s);
     a.appendChild(dotFor(s));
     var body = el("div", "");
     body.appendChild(el("div", "srn", s.name));
-    if (s.blurb) { body.appendChild(el("div", "srw", s.blurb)); }
     var meta = [teaches(s), s.len, dn + " of " + total + " steps done"];
     if (state.done[s.id]) { meta.push("closed " + state.done[s.id]); }
     else if (isFolded(s)) { meta.push("folded into wildcard work"); }
@@ -8836,7 +8911,6 @@
     var w = PLAN[view.week];
     var head = el("header", "shead");
     head.appendChild(el("h1", "", "Week " + (view.week + 1) + ". " + w.title));
-    head.appendChild(el("p", "lede", w.focus));
     var est = w.sessions.reduce(function (a, s) { return a + (s.est || 0); }, 0);
     head.appendChild(el("p", "wmeta", "Planned " + range(view.week) + ", " + mins(est) + " across " + w.sessions.length +
       " sessions. " + weekProgress(view.week) + "."));
@@ -9069,7 +9143,7 @@
     lb.setAttribute("for", id);
     var ta = document.createElement("textarea");
     ta.id = id;
-    ta.placeholder = "Your answer. Say it, then type or dictate it here (Win+H). Optional; saved as you go.";
+    ta.placeholder = "Your answer";
     var rec = state.answers[key];
     ta.value = rec && rec.text ? rec.text : "";
     var st = el("div", "mine-st", rec && rec.at ? "Saved " + rec.at : "");
@@ -9421,7 +9495,7 @@
       qs.forEach(function (_, k) { dots.appendChild(el("i", k < i ? "got" : (k === i ? "on" : ""))); });
       box.appendChild(dots);
       box.appendChild(el("div", "wbq-q", q.q));
-      var ta = document.createElement("textarea"); ta.placeholder = "Your answer. Win+H to dictate.";
+      var ta = document.createElement("textarea"); ta.placeholder = "Your answer";
       box.appendChild(ta);
       var row = el("div", "wbq-row");
       var rv = el("button", "wb-btn primary", "Show the answer");
@@ -9700,7 +9774,7 @@
       t.appendChild(el("b", "", LVL[lv]));
       t.appendChild(document.createTextNode("."));
     } else {
-      t.textContent = "See what you already know: " + nq + (nq === 1 ? " question" : " questions") + ", before the material. Optional.";
+      t.textContent = nq + (nq === 1 ? " question" : " questions");
     }
     row.appendChild(t);
     var open1 = openRun("judge", key), meta = { mode: "judge", scope: key, title: stepTitle(key) };
@@ -10091,7 +10165,6 @@
     var head = el("header", "shead toned");
     head.style.setProperty("--tone", "var(--wild)");
     head.appendChild(el("h1", "", "Wildcard"));
-    head.appendChild(el("p", "lede", "What a scheduled interview demands. It is not week six and it does not move the gate."));
     v.appendChild(head);
 
     var wcCards = cardsFor("wc");
@@ -10182,7 +10255,6 @@
     save();
     var v = document.getElementById("view");
     v.appendChild(el("h1", "", "Requeue"));
-    v.appendChild(el("p", "lede", "Open items, drawn from the September calibration plus anything set aside since. Nothing here gets deleted, only answered. Stopping defers; it does not erase."));
 
     var reqAll = REQUEUE.concat(state.requeue.added);
     var reqOpenItems = reqAll.filter(function (q) { return !state.requeue.answered[q.id]; });
@@ -10245,7 +10317,6 @@
   function viewProtocol() {
     var v = document.getElementById("view");
     v.appendChild(el("h1", "", "Protocol"));
-    v.appendChild(el("p", "lede", "The curriculum is the easy part. This is what decides whether it survives a normal month."));
 
     v.appendChild(rubric("Week states, derived"));
     v.appendChild(el("p", "", "You do not declare these. A session closes when its steps are ticked and its quiz is passed. All three closed is Green. Two closed is Amber, the normal shape of a busy week. Any one is Red, and a Red week counts as unbroken, because continuity is what is being protected rather than the hours."));
@@ -10506,7 +10577,6 @@
   function viewAhead() {
     var v = document.getElementById("view");
     v.appendChild(el("h1", "", "What comes after"));
-    v.appendChild(el("p", "lede", "Detail decays with distance on purpose. Planning week fourteen today would be writing fiction about a version of you that does not exist yet."));
     v.appendChild(rubric("Milestone 1, Primitives", "now"));
     v.appendChild(aheadStages(1));
     v.appendChild(rubric("Milestone 2, Mechanism", "planned, not scheduled"));
@@ -10523,7 +10593,6 @@
   function viewData() {
     var v = document.getElementById("view");
     v.appendChild(el("h1", "", "Data"));
-    v.appendChild(el("p", "lede", "Progress lives in this browser. Export before switching machines and keep the file beside the repo."));
     if (!storageOk) {
       v.appendChild(el("p", "warn", "This browser is refusing to save. Progress survives until the tab closes. Export before you leave."));
     }
@@ -10562,11 +10631,11 @@
           var cacts = el("div", "row-act");
           var doReplace = el("button", "sec", "Replace with file");
           doReplace.addEventListener("click", function () {
-            importReplace(p); save(); draw();
+            importReplace(p); applyLayout(state.layout); save(); draw();
           });
           var doMerge = el("button", "sec", "Merge with file");
           doMerge.addEventListener("click", function () {
-            importMerge(p); save(); draw();
+            importMerge(p); applyLayout(state.layout); save(); draw();
           });
           var doCancel = el("button", "sec", "Cancel");
           doCancel.addEventListener("click", function () { importBox.innerHTML = ""; });
@@ -10706,8 +10775,6 @@
       v.appendChild(drillNav(scope));
       return;
     }
-    v.appendChild(el("p", "lede", "Say the answer out loud before you turn the card. Rate yourself honestly. " +
-      "The point of this is to find the things you ticked and cannot actually say, so cold cards come first."));
 
     if (drill.scope !== scope || !drill.order) {
       drill.scope = scope; drill.order = coldSort(all); drill.i = 0; drill.flip = false;
@@ -10799,8 +10866,6 @@
     var sessions = scopeSessions(scope);
 
     v.appendChild(el("h1", "", "Sheet"));
-    v.appendChild(el("p", "lede", "Everything in " + scopeName(scope) +
-      " on one printable page. No checkboxes, no links, no laptop. Read it on the morning."));
 
     var acts = el("div", "row-act noprint");
     var pr = el("button", "act", "Print");
@@ -10900,7 +10965,6 @@
       v.appendChild(diaNav(scope));
       return;
     }
-    v.appendChild(el("p", "lede", "Read the drawing before the words. Say out loud what it shows, then reveal the title and the caption."));
 
     if (diaWalk.scope !== scope || diaWalk.entry !== view.session || !diaWalk.keys) {
       diaWalk.scope = scope; diaWalk.entry = view.session;
@@ -10985,8 +11049,6 @@
   function viewWritten() {
     var v = document.getElementById("view");
     v.appendChild(el("h1", "", "Written work"));
-    v.appendChild(el("p", "lede",
-      "Every answer kept so far, in the order the plan reaches it. The prompt sits above each one so it stands on its own."));
     var groups = groupedWritten();
     var total = 0, words = 0, last = "";
     groups.forEach(function (g) {
@@ -11116,7 +11178,6 @@
   function viewResources() {
     var v = document.getElementById("view");
     v.appendChild(el("h1", "", "Resources"));
-    v.appendChild(el("p", "lede", "Every link the plan points at, which sessions use it, and what you have opened."));
 
     var idx = resourceIndex();
     var web = dedupeByUrl(idx.entries);
@@ -11216,7 +11277,6 @@
   function viewSearch() {
     var v = document.getElementById("view");
     v.appendChild(el("h1", "", "Search"));
-    v.appendChild(el("p", "lede", "Sessions, study terms, steps, quiz, the requeue and your own answers. Plain text, no ranking."));
 
     var input = document.createElement("input");
     input.type = "text";
@@ -11720,7 +11780,6 @@
     box.innerHTML = "";
     var L = mapLayout();
     if (!id || !L.by[id]) {
-      box.appendChild(el("span", "dim", "Hover a node to see what it buys and what it needs first. Click one with sessions to open it."));
       return;
     }
     var n = L.by[id], st = mapNodeState(n);
@@ -11809,15 +11868,12 @@
         s.appendChild(document.createTextNode(t[1]));
         lg.appendChild(s);
       });
-    var s2 = el("span", "dim", "Later milestones are faint because the plan is genuinely vaguer out there.");
-    lg.appendChild(s2);
     return lg;
   }
 
   function viewMap() {
     var v = document.getElementById("view");
     v.appendChild(el("h1", "", "The work ahead"));
-    v.appendChild(el("p", "lede", "Every milestone through 2027 in one picture. Time runs downward, one band per milestone; each column is a track, and a line means the lower thing needs the upper thing first."));
     v.appendChild(mapLegend());
     v.appendChild(mapPanel("tall"));
     var more = el("p", "morelinks");
@@ -11827,6 +11883,226 @@
     more.appendChild(ah);
     v.appendChild(more);
   }
+
+
+  /* ---------------------------------------------------------------- moving sessions
+     Right-click (or long-press, or the context-menu key) a session in the rail or on a week page for the move
+     menu; drag one in the rail onto another session or a week; Alt+Up and Alt+Down move the focused one. Every
+     move can be undone from its toast or with Ctrl+Z. */
+  var layoutUndo = [];
+  function placeById(id) {
+    for (var wi = 0; wi < PLAN.length; wi++) { var i = byId(PLAN[wi].sessions, id); if (i >= 0) { return { w: wi, i: i }; } }
+    var n = byId(NEXT, id);
+    return n >= 0 ? { w: "next", i: n } : null;
+  }
+  function commitLayout(L, msg) {
+    var here = view.page === "session" && view.week !== "wc" && PLAN[view.week] ? PLAN[view.week].sessions[view.session] : null;
+    layoutUndo.push(layoutNow());
+    if (layoutUndo.length > 50) { layoutUndo.shift(); }
+    applyLayout(L);
+    state.layout = layoutCustom() ? layoutNow() : null;
+    save();
+    if (here) {
+      var at = placeById(here.id);
+      if (at && at.w !== "next") { view.week = at.w; view.session = at.i; }
+      else { view = { page: "week", week: Math.min(view.week, PLAN.length - 1), session: 0 }; }
+      try { history.replaceState(null, "", hashFor(view.page, view.week, view.session)); } catch (e) { /* file:// */ }
+    } else if (view.page === "week" && !PLAN[view.week]) { view.week = 0; }
+    draw();
+    if (msg) { toast(msg, layoutUndo.length ? undoLayout : null); }
+  }
+  function undoLayout() {
+    if (!layoutUndo.length) { return; }
+    var L = layoutUndo.pop();
+    var keep = layoutUndo.slice();
+    commitLayout(L, "");
+    layoutUndo = keep;
+    toast("Move undone", null);
+  }
+  function weekName(w) { return w === "next" ? "the next milestone" : "week " + (w + 1); }
+  /* Put session id at week w (a number or "next"), index i (default: the end). */
+  function moveTo(id, w, i) {
+    var L = layoutNow(), from = placeById(id);
+    if (!from) { return; }
+    var lists = L.weeks.concat([L.next]), src = from.w === "next" ? L.next : L.weeks[from.w];
+    src.splice(from.i, 1);
+    var dst = w === "next" ? L.next : L.weeks[w];
+    if (i === undefined || i > dst.length) { i = dst.length; }
+    if (from.w === w && i > from.i) { i -= 1; }
+    if (from.w === w && i === from.i) { return; }
+    dst.splice(Math.max(0, i), 0, id);
+    var s = sessionByIdAny(id);
+    commitLayout(L, (SHORT[id] || (s && s.name) || id) + (w === from.w ? " moved" : " moved to " + weekName(w)));
+    lists = null;
+  }
+  function sessionByIdAny(id) {
+    var at = placeById(id);
+    return !at ? null : at.w === "next" ? NEXT[at.i] : PLAN[at.w].sessions[at.i];
+  }
+  /* One step up or down through the whole plan: past the top of a week it joins the end of the one before. */
+  function nudge(id, d) {
+    var at = placeById(id);
+    if (!at || at.w === "next") { return; }
+    var len = PLAN[at.w].sessions.length;
+    if (d < 0 && at.i > 0) { moveTo(id, at.w, at.i - 1); }
+    else if (d > 0 && at.i < len - 1) { moveTo(id, at.w, at.i + 2); }
+    else if (d < 0 && at.w > 0) { moveTo(id, at.w - 1); }
+    else if (d > 0 && at.w < PLAN.length - 1) { moveTo(id, at.w + 1, 0); }
+  }
+
+  /* The menu. */
+  var moveMenu = null;
+  function closeMoveMenu() {
+    if (!moveMenu) { return; }
+    var m = moveMenu, back = m._back;
+    moveMenu = null;
+    if (m.parentNode) { m.parentNode.removeChild(m); }
+    if (back && back.focus) { try { back.focus(); } catch (e) { /* gone */ } }
+  }
+  function openMoveMenu(s, x, y, back) {
+    closeMoveMenu();
+    var at = placeById(s.id);
+    if (!at) { return; }
+    var m = el("div", "mvm");
+    m.setAttribute("role", "menu");
+    m.setAttribute("aria-label", "Move " + s.name);
+    m._back = back || document.activeElement;
+    function item(label, fn, on, cls) {
+      var b = el("button", "mvi" + (cls ? " " + cls : ""));
+      b.type = "button";
+      b.setAttribute("role", "menuitem");
+      if (typeof label === "string") { b.textContent = label; } else { b.appendChild(label); }
+      if (on === false) { b.disabled = true; }
+      b.addEventListener("click", function () { closeMoveMenu(); fn(); });
+      m.appendChild(b);
+      return b;
+    }
+    function sep() { m.appendChild(el("div", "mvs")); }
+    if (at.w !== "next") {
+      var len = PLAN[at.w].sessions.length;
+      item("Move up", function () { nudge(s.id, -1); }, at.w > 0 || at.i > 0);
+      item("Move down", function () { nudge(s.id, 1); }, at.w < PLAN.length - 1 || at.i < len - 1);
+      sep();
+    }
+    PLAN.forEach(function (w, wi) {
+      var lab = el("span", "mvw");
+      lab.appendChild(el("span", "num", String(wi + 1)));
+      lab.appendChild(el("span", "", w.title));
+      var b = item(lab, function () { moveTo(s.id, wi); }, at.w !== wi);
+      if (at.w === wi) { b.setAttribute("aria-current", "true"); }
+    });
+    sep();
+    item("Next milestone", function () { moveTo(s.id, "next"); }, at.w !== "next");
+    if (layoutCustom()) { sep(); item("Restore the planned order", function () { commitLayout({ weeks: HOME.map(function (ss) { return ss.map(function (z) { return z.id; }); }), next: [] }, "Planned order restored"); }, true, "quiet"); }
+    document.body.appendChild(m);
+    var r = m.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight;
+    m.style.left = Math.max(8, Math.min(x, vw - r.width - 8)) + "px";
+    m.style.top = Math.max(8, Math.min(y, vh - r.height - 8)) + "px";
+    moveMenu = m;
+    var first = m.querySelector(".mvi:not([disabled])");
+    if (first) { first.focus(); }
+    m.addEventListener("keydown", function (e) {
+      var its = [].slice.call(m.querySelectorAll(".mvi:not([disabled])")), k = its.indexOf(document.activeElement);
+      if (e.key === "ArrowDown") { its[(k + 1) % its.length].focus(); e.preventDefault(); }
+      else if (e.key === "ArrowUp") { its[(k - 1 + its.length) % its.length].focus(); e.preventDefault(); }
+      else if (e.key === "Escape" || e.key === "Tab") { closeMoveMenu(); e.preventDefault(); }
+    });
+  }
+  document.addEventListener("mousedown", function (e) { if (moveMenu && !moveMenu.contains(e.target)) { closeMoveMenu(); } }, true);
+  window.addEventListener("resize", closeMoveMenu);
+  window.addEventListener("hashchange", closeMoveMenu);
+  document.addEventListener("scroll", function (e) { if (moveMenu && !moveMenu.contains(e.target)) { closeMoveMenu(); } }, true);
+
+  /* A session element that can be moved: the menu on right-click, dragging in the rail, Alt+arrows. */
+  var dragId = null;
+  function movable(a, s) {
+    a.setAttribute("data-sid", s.id);
+    a.addEventListener("contextmenu", function (e) {
+      e.preventDefault();
+      var r = a.getBoundingClientRect();
+      openMoveMenu(s, e.clientX || r.left + 24, e.clientY || r.bottom, a);
+    });
+    a.addEventListener("keydown", function (e) {
+      if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+        e.preventDefault();
+        nudge(s.id, e.key === "ArrowUp" ? -1 : 1);
+        var again = document.querySelector('#side [data-sid="' + s.id + '"]');
+        if (again) { again.focus(); }
+      }
+    });
+    if (!a.closest || a.className.indexOf("ri") < 0) { return; }
+    a.draggable = true;
+    a.addEventListener("dragstart", function (e) {
+      dragId = s.id;
+      try { e.dataTransfer.setData("text/plain", s.id); e.dataTransfer.effectAllowed = "move"; } catch (err) { /* old browser */ }
+      document.body.classList.add("dragging");
+      a.classList.add("lift");
+    });
+    a.addEventListener("dragend", function () { dragId = null; dropClear(); document.body.classList.remove("dragging"); a.classList.remove("lift"); });
+  }
+  function dropClear() {
+    [].forEach.call(document.querySelectorAll("#side .drop-b, #side .drop-a, #side .drop-in"), function (x) { x.classList.remove("drop-b", "drop-a", "drop-in"); });
+  }
+  /* Where a drop over the rail would land: before or after a session, or at the end of a week. */
+  function dropAt(e) {
+    var t = e.target.closest ? e.target.closest("#side [data-sid], #side [data-week]") : null;
+    if (!t) { return null; }
+    if (t.hasAttribute("data-week")) {
+      var w = t.getAttribute("data-week");
+      return { el: t, cls: "drop-in", w: w === "next" ? "next" : +w };
+    }
+    var at = placeById(t.getAttribute("data-sid"));
+    if (!at) { return null; }
+    var r = t.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+    return { el: t, cls: after ? "drop-a" : "drop-b", w: at.w, i: at.i + (after ? 1 : 0) };
+  }
+  (function () {
+    var side = document.getElementById("side");
+    if (!side) { return; }
+    side.addEventListener("dragover", function (e) {
+      if (!dragId) { return; }
+      var d = dropAt(e);
+      dropClear();
+      if (!d) { return; }
+      e.preventDefault();
+      try { e.dataTransfer.dropEffect = "move"; } catch (err) { /* old browser */ }
+      d.el.classList.add(d.cls);
+    });
+    side.addEventListener("dragleave", function (e) { if (!side.contains(e.relatedTarget)) { dropClear(); } });
+    side.addEventListener("drop", function (e) {
+      if (!dragId) { return; }
+      var d = dropAt(e), id = dragId;
+      e.preventDefault();
+      dropClear();
+      if (d) { moveTo(id, d.w, d.i); }
+    });
+  }());
+
+  /* A toast for each move, with Undo. */
+  var toastTimer = null;
+  function toast(msg, undo) {
+    var t = document.getElementById("toast");
+    if (!t) { t = el("div", "toast"); t.id = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+    t.innerHTML = "";
+    t.appendChild(el("span", "", msg));
+    if (undo) {
+      var b = el("button", "", "Undo");
+      b.type = "button";
+      b.addEventListener("click", function () { t.classList.remove("on"); undo(); });
+      t.appendChild(b);
+    }
+    t.classList.add("on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("on"); }, 6000);
+  }
+  document.addEventListener("keydown", function (e) {
+    var tag = (e.target && e.target.tagName) || "";
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === "z" || e.key === "Z") && layoutUndo.length &&
+        tag !== "INPUT" && tag !== "TEXTAREA" && !(e.target && e.target.isContentEditable)) {
+      e.preventDefault();
+      undoLayout();
+    }
+  });
 
   /* A loop page writes the same progress store; pick its ticks up live. */
   window.addEventListener("storage", function (e) {

@@ -211,8 +211,8 @@ SCRIPTS = [
                {"when": "If they ask about a classic platform", "line": "Not in production. The concepts map closely: a page with a form in Dialogflow CX is a stage with required slots, and a route is a transition. I'd want a week with their taxonomy and their transcripts."},
                {"when": "If they ask about voice", "line": "I own alfred_'s voice agent, phone and web. In MockFlow-AI the pipeline was Deepgram Nova-2 for speech and Silero for voice activity."}],
      "land": "A first pass that answers or escalates, entity resolution in chat, a confirm flow in code and a failure scanner in production; stages driven by tools in voice; TF-IDF weighted embeddings in research.",
-     "notes": ["Checked against the alfred_ code on 2 October 2026 by your alfred_ agent: what is live is the first pass with its guards, entity resolution in chat, the confirm flow with code floors and idempotency, the grounding guards, and the failure scanner. The verdict gate (policyGate) was removed on 3 August; talk only about what is live.",
-               "There is no risk score, no five verdicts and no trained intent classifier in the code today. The full map, with what is an LLM and what is code, is in the private alfred_ module on the Learn tab.",
+     "notes": ["Checked against the alfred_ code on 2 October 2026 by your alfred_ agent: what is live is the first pass with its guards, entity resolution in chat, the confirm flow with code floors and idempotency, the grounding guards, and the failure scanner. Talk only about what is live.",
+               "There is no trained intent classifier in the code today. The full map, with what is an LLM and what is code, is in the private alfred_ module on the Learn tab.",
                "The fitment line is worded as on the Coframe page; there is no more detail in your master reference, so don't add any."],
      "never": ["Don't call alfred_'s classifier 'Dialogflow-like' or name a platform you haven't used."]},
 
