@@ -14,6 +14,7 @@ LOOPS = [f[:-3] for f in sorted(os.listdir(os.path.join(ROOT, "interviews")))
          if f.endswith(".py") and f not in ("build.py", "hub.py") and not f.startswith("_")]
 
 steps = [["python", "tools/design_lint.py"], ["node", "figures/check.js"], ["node", "baseline/check.js"], ["node", "baseline/quiz/check.js"], ["node", "data/mcq/check.js"],["python", "coding/test_data.py"], ["python", "figures/stamp.py"]]
+steps += [["python", "interviews/coding/mercor_mock/mercor_code.py"], ["python", "interviews/coding/mercor_mock/gen.py"]]   # mock code runs, then the mock is regenerated
 steps += [["python", "interviews/build.py", m] for m in LOOPS]
 steps += [["python", "projects/build.py"]]
 steps.append(["python", "interviews/hub.py"])   # INTERVIEWS.html, after the loop pages

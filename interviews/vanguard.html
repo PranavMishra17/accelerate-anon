@@ -2557,6 +2557,8 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       ts.explain.forEach(function (x) { var m = /^([^:]{1,60}):\s([\s\S]+)$/.exec(x); xl.appendChild(el("li", "", m ? "<strong>" + inl(m[1]) + ":</strong> " + inl(m[2]) : inl(x))); });
       ex.appendChild(xl); R.appendChild(ex);
     }
+    /* The better code, when the answer has one: annotated, under the explanation. */
+    if (b.code) { R.appendChild(cdCode({ title: b.code.title, code: b.code.code, notes: b.code.notes })); }
     if (ts.more && ts.more.length) {
       var d = el("details", "turn-more"), ul = el("ul");
       d.appendChild(el("summary", "", "If they push"));

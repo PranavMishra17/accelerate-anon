@@ -776,7 +776,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
 <script src="coding/mercor-3-asyncio.js?v=492e019c"></script>
 <script src="coding/mercor-4-failure.js?v=ecd936bc"></script>
 <script src="coding/mercor-5-problems.js?v=f352c097"></script>
-<script src="coding/mercor-mock.js?v=faf1af53"></script>
+<script src="coding/mercor-mock.js?v=b032b94c"></script>
 <script src="../figures/viewer.js?v=ecb99aae"></script>
 <script src="../site/res.js?v=c33c7564"></script>
 <script src="../site/sheet.js?v=d5ed86a7"></script>
@@ -2564,6 +2564,8 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       ts.explain.forEach(function (x) { var m = /^([^:]{1,60}):\s([\s\S]+)$/.exec(x); xl.appendChild(el("li", "", m ? "<strong>" + inl(m[1]) + ":</strong> " + inl(m[2]) : inl(x))); });
       ex.appendChild(xl); R.appendChild(ex);
     }
+    /* The better code, when the answer has one: annotated, under the explanation. */
+    if (b.code) { R.appendChild(cdCode({ title: b.code.title, code: b.code.code, notes: b.code.notes })); }
     if (ts.more && ts.more.length) {
       var d = el("details", "turn-more"), ul = el("ul");
       d.appendChild(el("summary", "", "If they push"));

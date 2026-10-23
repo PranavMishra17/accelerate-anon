@@ -1475,3 +1475,12 @@ stamped by `build.py`. No charter deviation.
 LiveCode. The page's dates, rounds and format follow; the loop week now has two full days (5 and 6 Nov), a calm
 weekend, a light Sunday, then the two loop days; 11 Nov is gone. The scheduling email says GenAI-tools experience
 may come up, so two examples are practised on 5 Nov. No charter deviation.
+
+**23 Oct 2026: Mercor code answers carry the better code; the scenario opening says more.** In "If she shows
+code instead", each answer now shows the improved code under its explanation (the full key and a TTL, single-flight
+with threads, the global lock to avoid, a bounded LRU with a load cap, stale-on-error with jittered retries), and five
+turns were added: asyncio with shielded tasks, the avalanche and TTL jitter, penetration and a negative cache,
+invalidate on write, and the stampede test. Every snippet runs against fakes in
+`interviews/coding/mercor_mock/mercor_code.py`. The scenario's opening answer gains the request path, the measurements
+to take first and the freshness trade-off, with a flow of the layers. The generator moved from a scratch file into
+`interviews/coding/mercor_mock/` and runs in `tools/rebuild.py`. No charter deviation.
