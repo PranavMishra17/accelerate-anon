@@ -616,6 +616,33 @@ details.item > .sbody { padding-left: 0; }
 .cd-opts button.right { border-color: var(--ok); color: var(--ok); font-weight: var(--w-strong); }
 .cd-opts button.wrong { border-color: var(--warn); color: var(--warn); }
 .cd-opts button.idk { color: var(--muted); }
+/* Python colours (light and dark), shared by code blocks and the editor. */
+.py-k { color: #a626a4; } .py-s { color: #50a14f; } .py-c { color: #8a8a8a; } .py-n { color: #986801; }
+.py-f { color: #4078f2; } .py-b { color: #0184bc; } .py-d { color: #c18401; } .py-sf { color: #e45649; }
+/* The editor: Amazon LiveCode's plain look, a white page, a grey gutter, monospace, no chrome. */
+.lc { --lc-bg: #ffffff; --lc-ink: #1f2328; --lc-gut: #f6f8fa; --lc-gut-ink: #8c959f; --lc-line: #d0d7de;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); margin-top: var(--s2); background: var(--lc-bg); color: var(--lc-ink);
+  border: 1px solid var(--lc-line); border-radius: var(--radius); overflow: hidden; height: 360px;
+  font-family: var(--mono); font-size: var(--fs-code); line-height: 1.6; }
+.lc.wb-ta { height: 52vh; }
+.lc:focus-within { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.lc-gut { min-width: 3.2em; padding: var(--s3) var(--s2) var(--s3) var(--s3); background: var(--lc-gut); color: var(--lc-gut-ink); text-align: right;
+  white-space: pre; overflow: hidden; user-select: none; border-right: 1px solid var(--lc-line); }
+.lc-body { position: relative; overflow: hidden; height: 100%; }
+.lc-view, .lc-ta { margin: 0; padding: var(--s3); border: 0; font: inherit; line-height: inherit; tab-size: 4; white-space: pre; letter-spacing: 0;
+  word-wrap: normal; overflow-wrap: normal; box-sizing: border-box; }
+.lc-view { position: absolute; inset: 0; overflow: hidden; pointer-events: none; color: var(--lc-ink); background: transparent; }
+.lc-ta { position: relative; display: block; width: 100%; height: 100%; resize: none; outline: none; overflow: auto;
+  background: transparent; color: transparent; caret-color: var(--lc-ink); -webkit-text-fill-color: transparent; }
+.lc-ta::selection { background: rgba(9, 105, 218, .22); -webkit-text-fill-color: transparent; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .lc { --lc-bg: #1e1e1e; --lc-ink: #d4d4d4; --lc-gut: #252526; --lc-gut-ink: #6e7681; --lc-line: #3c3c3c; } }
+:root[data-theme="dark"] .lc { --lc-bg: #1e1e1e; --lc-ink: #d4d4d4; --lc-gut: #252526; --lc-gut-ink: #6e7681; --lc-line: #3c3c3c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .py-k { color: #c678dd; } :root:not([data-theme="light"]) .py-s { color: #98c379; }
+  :root:not([data-theme="light"]) .py-c { color: #7f848e; } :root:not([data-theme="light"]) .py-n { color: #d19a66; } :root:not([data-theme="light"]) .py-f { color: #61afef; }
+  :root:not([data-theme="light"]) .py-b { color: #56b6c2; } :root:not([data-theme="light"]) .py-d { color: #e5c07b; } :root:not([data-theme="light"]) .py-sf { color: #e06c75; } }
+:root[data-theme="dark"] .py-k { color: #c678dd; } :root[data-theme="dark"] .py-s { color: #98c379; } :root[data-theme="dark"] .py-c { color: #7f848e; }
+:root[data-theme="dark"] .py-n { color: #d19a66; } :root[data-theme="dark"] .py-f { color: #61afef; } :root[data-theme="dark"] .py-b { color: #56b6c2; }
+:root[data-theme="dark"] .py-d { color: #e5c07b; } :root[data-theme="dark"] .py-sf { color: #e06c75; }
 textarea.cd-ta { font-family: var(--mono); font-size: var(--fs-code); line-height: 1.55; min-height: 140px; tab-size: 4; white-space: pre; overflow-x: auto; }
 textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: pre-wrap; }
 .cd-faq details { border-bottom: var(--hair); padding: var(--s2) 0; }
@@ -2348,7 +2375,90 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       .sort(function (a, b) { return a.n - b.n; });
   }
   function cdBtn(label, fn) { var b = el("button", "btn", esc(label)); b.type = "button"; b.addEventListener("click", fn); return b; }
+  /* Python, coloured: one tokenizer for every code block and for the editor, so what you type looks like what you
+     read. Returns one HTML string per line; a token that spans lines (a triple-quoted string) is closed and reopened
+     at each line break. */
+  var PY_KW = /^(False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield|match|case)$/;
+  var PY_BI = /^(print|len|range|enumerate|zip|map|filter|sorted|reversed|min|max|sum|abs|any|all|int|str|float|list|dict|set|tuple|bool|isinstance|super|object|open|iter|next|hash|type|frozenset|bytes|round|divmod|pow|ord|chr|heapq|collections|deque|defaultdict|Counter|OrderedDict|bisect|math|functools|itertools|asyncio|threading|Exception|ValueError|KeyError|TypeError|IndexError|RuntimeError|StopIteration|NotImplementedError)$/;
+  var PY_TOK = /(#[^\n]*)|([rbfuRBFU]{0,2}"""[\s\S]*?(?:"""|$)|[rbfuRBFU]{0,2}'''[\s\S]*?(?:'''|$))|([rbfuRBFU]{0,2}"(?:\\.|[^"\\\n])*"?|[rbfuRBFU]{0,2}'(?:\\.|[^'\\\n])*'?)|(@[A-Za-z_][\w.]*)|(\b\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?j?\b)|([A-Za-z_]\w*)|(\n)|([^\S\n]+|[^\s\w])/g;
+  function hlPy(code) {
+    var out = "", m, prev = "", cls;
+    function wrap(t, c) {
+      return t.split("\n").map(function (x) { return x && c ? '<span class="py-' + c + '">' + esc(x) + "</span>" : esc(x); }).join("\n");
+    }
+    PY_TOK.lastIndex = 0;
+    code = String(code || "");
+    while ((m = PY_TOK.exec(code)) !== null) {
+      if (m[0] === "") { PY_TOK.lastIndex++; continue; }
+      cls = m[1] ? "c" : (m[2] || m[3]) ? "s" : m[4] ? "d" : m[5] ? "n" : null;
+      if (m[6]) {
+        cls = (prev === "def" || prev === "class") ? "f" : PY_KW.test(m[6]) ? "k" : (m[6] === "self" || m[6] === "cls") ? "sf" : PY_BI.test(m[6]) ? "b" : null;
+        prev = m[6];
+      } else if (!m[7] && !/^\s+$/.test(m[0])) { prev = ""; }
+      out += wrap(m[0], cls);
+    }
+    return out.split("\n");
+  }
+  /* A plain editor in the spirit of Amazon LiveCode: line numbers, colour as you type, indentation that keeps up
+     (Tab and Shift+Tab, Enter keeps the indent and adds one after a colon, Backspace in the indent removes a level),
+     no autocomplete, nothing that runs. Exposes value and rows like the textarea it replaces. */
+  function cdEditor(id, value) {
+    var wrap = el("div", "lc"), gut = el("div", "lc-gut"), body = el("div", "lc-body");
+    var view = el("pre", "lc-view"), ta = el("textarea", "lc-ta");
+    view.setAttribute("aria-hidden", "true");
+    gut.setAttribute("aria-hidden", "true");
+    ta.spellcheck = false;
+    ["autocomplete", "autocorrect", "autocapitalize"].forEach(function (k) { ta.setAttribute(k, "off"); });
+    ta.setAttribute("aria-label", "Code editor, Python");
+    var st = cdState();
+    ta.value = st["a:" + id] != null ? st["a:" + id] : (value || "");
+    body.appendChild(view); body.appendChild(ta);
+    wrap.appendChild(gut); wrap.appendChild(body);
+    function sync() { view.scrollTop = ta.scrollTop; view.scrollLeft = ta.scrollLeft; gut.scrollTop = ta.scrollTop; }
+    function paint() {
+      var lines = hlPy(ta.value);
+      view.innerHTML = lines.join("\n") + "\n ";
+      gut.textContent = lines.map(function (x, i) { return i + 1; }).join("\n") + "\n ";
+      sync();
+    }
+    function put(text, a, b) {
+      ta.focus();
+      ta.setSelectionRange(a, b);
+      if (!document.execCommand || !document.execCommand("insertText", false, text)) {   /* keeps Ctrl+Z where supported */
+        ta.setRangeText(text, a, b, "end");
+        ta.dispatchEvent(new Event("input"));
+      }
+    }
+    ta.addEventListener("input", function () { cdSave("a:" + id, ta.value); paint(); });
+    ta.addEventListener("scroll", sync);
+    ta.addEventListener("keydown", function (e) {
+      var v = ta.value, a = ta.selectionStart, b = ta.selectionEnd;
+      var ls = v.lastIndexOf("\n", a - 1) + 1, line = v.slice(ls, a), ind = /^[ ]*/.exec(line)[0];
+      if (e.key === "Tab") {
+        e.preventDefault();
+        var le = v.indexOf("\n", b - (b > a && v[b - 1] === "\n" ? 1 : 0)); if (le < 0) { le = v.length; }
+        var multi = v.slice(a, b).indexOf("\n") >= 0;
+        if (!multi && !e.shiftKey) { put("    ", a, b); return; }
+        var block = v.slice(ls, le).split("\n"), out = block.map(function (x) {
+          return e.shiftKey ? x.replace(/^ {1,4}/, "") : (x ? "    " + x : x);
+        }).join("\n");
+        put(out, ls, le);
+        ta.setSelectionRange(ls, ls + out.length);
+      } else if (e.key === "Enter" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        put("\n" + ind + (/:\s*(#.*)?$/.test(line) ? "    " : ""), a, b);
+      } else if (e.key === "Backspace" && a === b && a > ls && /^ +$/.test(line) && line.length % 4 === 0) {
+        e.preventDefault();
+        put("", a - 4, a);
+      }
+    });
+    Object.defineProperty(wrap, "value", { get: function () { return ta.value; }, set: function (x) { ta.value = x; paint(); } });
+    Object.defineProperty(wrap, "rows", { set: function (n) { body.style.height = wrap.style.height = "calc(" + n + " * 1.6em + 2 * var(--s3))"; } });
+    paint();
+    return wrap;
+  }
   function cdArea(id, value, small) {
+    if (!small) { return cdEditor(id, value); }
     var ta = el("textarea", "cd-ta" + (small ? " small" : ""));
     var st = cdState();
     ta.value = st["a:" + id] != null ? st["a:" + id] : (value || "");
@@ -2363,8 +2473,8 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   }
   function cdPre(code) {
     var box = el("div", "cd-code");
-    String(code).split("\n").forEach(function (t, i) {
-      var r = el("div", "cd-ln"); r.appendChild(el("span", "no", String(i + 1))); r.appendChild(el("span", "tx", esc(t) || " "));
+    hlPy(code).forEach(function (t, i) {
+      var r = el("div", "cd-ln"); r.appendChild(el("span", "no", String(i + 1))); r.appendChild(el("span", "tx", t || " "));
       box.appendChild(r);
     });
     return box;

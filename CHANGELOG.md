@@ -1531,3 +1531,11 @@ order becomes his to change; the weeks still close in sequence.
 intended answer was bogosort, expected O(n · n!), unbounded worst case), the cache-aside snippet and its follow-ups
 (write-heavy data, races), and his questions, each with what he said and what to keep. The simulated call on the
 Mocks tab points to it. No charter deviation.
+
+**23 Oct 2026: Loop pages get a LiveCode-style editor.**
+Every answer box on a loop page's Coding, Daily two and LLD tabs is now a plain code
+editor in the style of Amazon LiveCode: a white page, line numbers, Python colouring,
+Tab and Shift+Tab indent, Enter keeps the indent (and adds one after a colon), no
+autocomplete and no run. Read-only code blocks use the same colours (`hlPy` in
+`interviews/template.html`). Why: practise on the surface the Amazon rounds use.
+LiveCode's exact look is not public; matched from descriptions. No charter deviation.
