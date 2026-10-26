@@ -92,6 +92,11 @@ details.ask > summary .pn { font-weight: var(--w-regular); }
 .pb .st { --bleed: var(--s4); }
 details.sol { border-top: var(--hair); padding-top: 10px; }
 details.sol > summary { list-style: none; cursor: pointer; display: inline-block; color: var(--accent); font-size: var(--fs-sm); font-weight: var(--w-strong); }
+details.sol > summary a.ext { margin-left: var(--s4); font-weight: var(--w-regular); }
+details.prob > summary .dif { font-size: var(--fs-xs); white-space: nowrap; min-width: 4.5em; text-align: right; }
+details.prob > summary .pl + .dif { margin-left: var(--s2); }
+details.prob > summary .pn + .dif { margin-left: auto; }
+.dif.d-easy { color: var(--ok); } .dif.d-medium { color: var(--muted); } .dif.d-hard { color: var(--warn); }
 details.sol > summary::-webkit-details-marker { display: none; }
 details.sol > summary::before { content: "\25B8"; display: inline-block; width: 14px; transition: transform .15s; }
 details.sol[open] > summary::before { transform: rotate(90deg); }
@@ -197,7 +202,7 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
   <div class="cs-grid"></div>
 </div>
 <script src="coding/concurrency.js?v=657528be"></script>
-<script src="coding/data.js?v=a71fe45c"></script>
+<script src="coding/data.js?v=20b39f54"></script>
 <script src="coding/sheet.js?v=68cb3d74"></script>
 <script>
 (function () {
@@ -216,15 +221,29 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
 
   // A problem or variation: the parts on a label rail (statement, examples, constraints, hint or what changes),
   // then the code, shut until you have tried.
+  // Difficulty and outside links for a problem or variation, from D.lc.
+  function lcOf(p, q) { return (D.lc || {})[p.id + "/" + q.n] || {}; }
+  function difHtml(e, fallback) {
+    var d = e.d || fallback;
+    return d ? '<span class="dif d-' + esc(d) + '">' + esc(d.charAt(0).toUpperCase() + d.slice(1)) + "</span>" : "";
+  }
+  function linksHtml(e) {
+    var h = "";
+    if (e.lc) { h += '<a class="ext" target="_blank" rel="noopener" href="https://leetcode.com/problems/' + esc(e.lc) + '/">LeetCode</a>'; }
+    if (e.yt) { h += '<a class="ext" target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=' + esc(e.yt[0]) + '">Video, ' + esc(e.yt[1]) + ", " + e.yt[2] + " min</a>"; }
+    return h;
+  }
   function probHtml(p, q) {
+    var e = lcOf(p, q);
     return '<details class="prob" data-text="' + esc((p.title + " " + q.n + " " + q.task).toLowerCase()) + '"><summary>' + tick(p.id + "/" + q.n, q.n) + '<span class="pn">' + esc(q.n) +
-      '</span><span class="pl">' + esc(q.l) + '</span></summary><div class="pb">' + CS.partsHtml(q, [["Hint", esc(q.hint)]]) +
-      '<details class="sol"><summary>Show the solution</summary><pre><code>' + hl(q.sol) + '</code></pre><p class="cx">' + esc(q.c) + "</p></details></div></details>";
+      '</span>' + difHtml(e, q.l) + '</summary><div class="pb">' + CS.partsHtml(q, [["Hint", esc(q.hint)]]) +
+      '<details class="sol"><summary>Show the solution' + linksHtml(e) + '</summary><pre><code>' + hl(q.sol) + '</code></pre><p class="cx">' + esc(q.c) + "</p></details></div></details>";
   }
   function varHtml(p, v) {
+    var e = lcOf(p, v);
     return '<details class="prob var" data-text="' + esc((p.title + " " + v.n + " " + v.t).toLowerCase()) + '"><summary>' + tick(p.id + "/v/" + v.n, v.n) + '<span class="pn">' + esc(v.n) +
-      '</span><span class="pl">variation</span></summary><div class="pb">' + CS.partsHtml(v, [["What changes", md(v.t)]]) +
-      '<details class="sol"><summary>Show the code</summary><pre><code>' + hl(v.code) + "</code></pre></details></div></details>";
+      '</span><span class="pl">variation</span>' + difHtml(e) + '</summary><div class="pb">' + CS.partsHtml(v, [["What changes", md(v.t)]]) +
+      '<details class="sol"><summary>Show the code' + linksHtml(e) + '</summary><pre><code>' + hl(v.code) + "</code></pre></details></div></details>";
   }
   // Visitor progress: which problems and variations this browser has ticked. Keys are
   // "<pattern>/<problem>" and "<pattern>/v/<variation>"; the landing page counts them.

@@ -1539,3 +1539,8 @@ Tab and Shift+Tab indent, Enter keeps the indent (and adds one after a colon), n
 autocomplete and no run. Read-only code blocks use the same colours (`hlPy` in
 `interviews/template.html`). Why: practise on the surface the Amazon rounds use.
 LiveCode's exact look is not public; matched from descriptions. No charter deviation.
+
+**25 Oct 2026: Coding page problems tagged and linked.** Every problem and variation on CODING.html now shows
+Easy, Medium or Hard, and where it is the same as or close to a LeetCode problem (88 of 146), links to it and to a
+solution video beside Show the code. Videos are NeetCode where he has one (75 of 88), otherwise another channel,
+each matched by its LeetCode number. Data in `coding/data.js` under `lc`. No charter deviation.
