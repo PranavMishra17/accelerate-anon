@@ -733,6 +733,42 @@ nav.side .td a { display: inline; padding: 0; }
 .am-say { margin: var(--s2) 0 var(--s2); padding: var(--s3) var(--s4); }
 .am-say p { margin: 0; line-height: 1.6; }
 .am-tx { margin-top: var(--s2); }
+.stv-row { display: block; width: 100%; text-align: left; background: none; border: 0; border-bottom: var(--hair); padding: var(--s3) var(--s2); cursor: pointer; color: inherit; font: inherit; }
+.stv-row:hover { background: var(--accent-soft); }
+.stv-rq { display: block; font-weight: var(--w-strong); }
+.stv-rs { display: block; color: var(--muted); font-size: var(--fs-sm); margin-top: 2px; }
+dialog.st-view { width: min(1320px, 96vw); height: min(900px, 94vh); max-width: none; max-height: none; overflow: hidden; }
+.stv { display: flex; flex-direction: column; height: 100%; }
+.stv-head { padding: var(--s4) 110px var(--s3) var(--s5); border-bottom: var(--hair); flex: none; }
+.stv-meta { font-size: var(--fs-sm); color: var(--muted); }
+.stv-meta span { margin-left: var(--s3); }
+.stv-q { font-size: var(--fs-xl); line-height: var(--lh-tight); margin: var(--s2) 0 var(--s2); max-width: 60em; }
+.stv-also { margin: 0; padding-left: var(--s4); color: var(--soft); font-size: var(--fs-sm); }
+.stv-nav { display: flex; align-items: center; gap: var(--s3); margin-top: var(--s3); }
+.stv-pos { color: var(--muted); font-size: var(--fs-sm); }
+.stv-cols { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s3); flex: 1; min-height: 0; padding: var(--s3) var(--s4) var(--s4); }
+.stv-ans { margin-top: 0; }
+.stv-time { font-size: var(--fs-sm); opacity: .7; }
+.stv-rem { margin: var(--s2) 0 var(--s2); padding: 0 0 var(--s3) 1.4em; border-bottom: 1px solid color-mix(in srgb, var(--bg) 25%, transparent); font-size: var(--fs-sm); columns: 2; column-gap: var(--s5); }
+.stv-k { font-size: var(--fs-xs); opacity: .55; margin: var(--s4) 0 var(--s1); }
+.stv-p { margin: 0 0 var(--s2); font-size: var(--fs-md); line-height: 1.65; }
+.stv-ans strong, .stv-fa strong { font-weight: var(--w-strong); box-shadow: inset 0 -.38em color-mix(in srgb, var(--accent) 45%, transparent); }
+.stv-tx { margin-top: var(--s2); }
+.stv-ans .transcript { background: transparent; color: inherit; padding: 0; margin: var(--s2) 0 0; }
+.stv-f { border-bottom: var(--hair); padding: var(--s2) 0; }
+.stv-f summary { cursor: pointer; font-weight: var(--w-strong); }
+.stv-why { display: block; font-weight: var(--w-regular); color: var(--muted); font-size: var(--fs-sm); }
+.stv-fa { background: var(--ink); color: var(--bg); border-radius: var(--radius-lg); padding: var(--s3) var(--s4); margin: var(--s2) 0; }
+.stv-fa p { margin: 0; line-height: 1.6; }
+@media (max-width: 760px) {
+  dialog.st-view { width: 100vw; height: 100vh; max-height: none; border-radius: 0; }
+  .stv { display: block; height: 100%; overflow-y: auto; }
+  .stv-head { padding: var(--s4) 96px var(--s3) var(--s3); }
+  .stv-cols { display: block; padding: var(--s3); }
+  .stv-cols .cv-col { overflow: visible; }
+  .stv-fu { margin-top: var(--s3); }
+  .stv-rem { columns: 1; }
+}
 .am-spend.reserve { color: var(--muted); }
 .am-reveal { margin: 0 0 var(--s3); }
 
@@ -817,7 +853,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
 <script src="../private/figures.js?v=0bdbc163"></script>
 <script src="../figures/notes.js?v=288db369"></script>
 <script src="../private/notes.js?v=23086437"></script>
-<script src="../private/loops/amazon.js?v=2b4cc063"></script>
+<script src="../private/loops/amazon.js?v=a7a9da06"></script>
 <script src="coding/amazon-daily-a.js?v=415d9715"></script>
 <script src="coding/amazon-daily-b.js?v=8adbda6c"></script>
 <script src="coding/amazon-lld-a.js?v=f934d642"></script>
@@ -3167,7 +3203,11 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       "The story bank lives in private/loops/" + LOOP.id + ".js, which is not on this machine."));
     var t = el("table", "am-mx");
     var h = "<thead><tr><th>Hub</th><th>Asked as</th><th>Stories</th></tr></thead><tbody>";
-    var slink = function (s) { return '<a href="' + link("lp", "story-" + s.id) + '">' + esc(s.short || s.title) + "</a>"; };
+    var order = [];
+    hubs.forEach(function (hb) { stories.forEach(function (s) { if (s.hub === hb.id) { order.push(s); } }); });
+    var hubName = function (id) { var hb = hubs.filter(function (x) { return x.id === id; })[0]; return hb ? hb.name : ""; };
+    var openAt = function (id) { for (var i = 0; i < order.length; i++) { if (order[i].id === id) { openStory(order, i, hubName); return; } } };
+    var slink = function (s) { return '<a href="' + link("lp", "story-" + s.id) + '" data-story="' + esc(s.id) + '">' + esc(s.short || s.title) + "</a>"; };
     hubs.forEach(function (hb) {
       var lead = stories.filter(function (s) { return s.hub === hb.id; });
       var also = stories.filter(function (s) { return s.hub !== hb.id && (s.also || []).indexOf(hb.id) >= 0; });
@@ -3177,60 +3217,28 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
         (also.length ? '<span class="am-also">Also: ' + also.map(slink).join(", ") + "</span>" : "") + "</td></tr>";
     });
     t.innerHTML = h + "</tbody>";
+    t.addEventListener("click", function (e) { var a = e.target.closest("a[data-story]"); if (a) { e.preventDefault(); openAt(a.getAttribute("data-story")); } });
     mx.appendChild(t);
     host.appendChild(mx);
     nav.push(["lp-matrix", "The matrix"]);
 
     var sb = el("section", "block"); sb.id = "lp-stories";
     sb.appendChild(el("h2", "", "The story bank"));
-    sb.appendChild(el("p", "hsub", "By hub. A story opens to the answer to say in about two minutes, what to make sure they hear, and the follow-ups. Your own telling is one click further down."));
+    sb.appendChild(el("p", "hsub", "Each line is a question and the story that answers it. Open one: the question on top, your answer on the left, the follow-ups on the right. Left and right arrows move between stories."));
     host.appendChild(sb);
     nav.push(["lp-stories", "The story bank"]);
     hubs.forEach(function (hb) {
-      var rows = stories.filter(function (s) { return s.hub === hb.id; });
+      var rows = order.filter(function (s) { return s.hub === hb.id; });
       if (!rows.length) { return; }
       sb.appendChild(el("h3", "am-hub", esc(hb.name)));
       rows.forEach(function (s) {
-        var d = el("details", "item"); d.id = "story-" + s.id; d.setAttribute("name", "story");
-        d.appendChild(el("summary", "", '<span class="qt">' + esc(s.title) + '</span><span class="qm">' + esc(s.where || "") + "</span>"));
-        var b = el("div", "am-story");
-        if (s.hook) { b.appendChild(el("p", "am-hook", inl(s.hook))); }
-        b.appendChild(el("p", "am-fit", "<strong>Carries:</strong> " + esc((s.primary || []).map(pname).join(", ")) + ((s.secondary || []).length ? ". <strong>Also:</strong> " + esc(s.secondary.map(pname).join(", ")) : "")));
-        var S = s.star;
-        if (S) {
-          b.appendChild(el("div", "lab", "Say it, in about " + esc(s.time || "2 minutes")));
-          var box = el("div", "transcript am-star");
-          var part = function (k, txt, cls) { if (txt) { box.appendChild(el("p", cls || "", (k ? '<strong class="am-k">' + esc(k) + "</strong> " : "") + inl(txt))); } };
-          part("Situation", S.s); part("Task", S.t);
-          (S.a || []).forEach(function (x, i) { part(i ? "" : "Action", x, "am-beat"); });
-          part("Result", S.r); part("What I learned", S.l);
-          b.appendChild(box);
-        } else if (!s.captured) {
-          b.appendChild(el("p", "am-note", "Not written yet. In chat, say <code>capture " + esc(s.id) + "</code> and tell it the way you remember it."));
-        }
-        if (s.land && s.land.length) { b.appendChild(el("div", "lab", "Make sure they hear")); var ul = el("ul"); s.land.forEach(function (x) { ul.appendChild(el("li", "", inl(x))); }); b.appendChild(ul); }
-        if (s.follow && s.follow.length) {
-          b.appendChild(el("div", "lab", "Follow-ups they may ask"));
-          var fq = el("div", "am-fu");
-          s.follow.forEach(function (f) {
-            var fd = el("details"); fd.appendChild(el("summary", "", inl(f.q) + (f.why ? '<span class="am-why">' + inl(f.why) + "</span>" : "")));
-            if (f.a) { var sa = el("div", "transcript am-say"); sa.appendChild(el("p", "", inl(f.a))); fd.appendChild(sa); }
-            else { fd.appendChild(el("p", "am-note", "Yours to answer: tell it in chat and it goes here.")); }
-            fq.appendChild(fd);
-          });
-          b.appendChild(fq);
-        }
-        if (s.captured && s.captured.say) {
-          var C = s.captured, tw = el("div", "am-tx"); tw.hidden = true;
-          tw.appendChild(transcript(C.say, "Your words, " + (C.date || "")));
-          var tb = cdBtn("View your transcript", function () { tw.hidden = !tw.hidden; tb.textContent = tw.hidden ? "View your transcript" : "Hide your transcript"; });
-          b.appendChild(tb); b.appendChild(tw);
-        }
-        d.appendChild(b);
-        sb.appendChild(d);
+        var r = el("button", "stv-row"); r.id = "story-" + s.id;
+        r.innerHTML = '<span class="stv-rq">' + inl((s.asks || [])[0] || s.title) + '</span><span class="stv-rs">' + esc(s.title) + ", " + esc(s.where || "") + "</span>";
+        r.addEventListener("click", function () { openAt(s.id); });
+        sb.appendChild(r);
       });
     });
-    if (anchor && /^story-/.test(anchor)) { var o = document.getElementById(anchor); if (o) { o.open = true; } }
+    if (anchor && /^story-/.test(anchor)) { openAt(anchor.slice(6)); }
 
     var pr = el("section", "block"); pr.id = "lp-all";
     pr.appendChild(el("h2", "", "The sixteen, in plain words"));
@@ -3392,9 +3400,69 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     return [u];
   }
   /* o: { title, sub, label, count, row(i) -> html for the rail, draw(i, pane), start } */
+  /* One story per screen: the question on top, the answer to say on the left, the follow-ups on the right. */
+  function openStory(list, start, hubName) {
+    var cur = start;
+    convo.innerHTML = ""; convo.className = "convo st-view";
+    convo.setAttribute("aria-label", "Story");
+    var close = el("button", "cv-close", "Close"); close.addEventListener("click", function () { convo.close(); });
+    var shell = el("div", "stv");
+    convo.appendChild(close); convo.appendChild(shell);
+    function show(n) {
+      cur = n; var s = list[n]; shell.innerHTML = "";
+      var head = el("header", "stv-head");
+      head.appendChild(el("div", "stv-meta", esc(hubName(s.hub)) + '<span>' + esc(s.title) + ", " + esc(s.where || "") + "</span>"));
+      var asks = s.asks || [];
+      head.appendChild(el("h2", "stv-q", inl(asks[0] || s.title)));
+      if (asks.length > 1) { var al = el("ul", "stv-also"); asks.slice(1).forEach(function (q) { al.appendChild(el("li", "", inl(q))); }); head.appendChild(al); }
+      var nv = el("div", "stv-nav");
+      var pv = cdBtn("Previous", function () { show(cur - 1); }), nx = cdBtn("Next", function () { show(cur + 1); });
+      pv.disabled = n === 0; nx.disabled = n === list.length - 1;
+      nv.appendChild(pv); nv.appendChild(el("span", "stv-pos", (n + 1) + " of " + list.length)); nv.appendChild(nx);
+      head.appendChild(nv);
+      shell.appendChild(head);
+      var cols = el("div", "stv-cols");
+      var L = el("div", "cv-col cv-say stv-ans"), R = el("div", "cv-col stv-fu");
+      if (s.star && s.star.length) {
+        L.appendChild(el("div", "stv-time", "Say it in " + esc(s.time || "about 3 minutes")));
+        if (s.remember && s.remember.length) { var ol = el("ol", "stv-rem"); s.remember.forEach(function (x) { ol.appendChild(el("li", "", inl(x))); }); L.appendChild(ol); }
+        s.star.forEach(function (p, j) {
+          if (!j || s.star[j - 1].k !== p.k) { L.appendChild(el("div", "stv-k", esc(p.k))); }
+          L.appendChild(el("p", "stv-p", inl(p.say)));
+        });
+      } else {
+        L.appendChild(el("p", "stv-p", "Not written yet. In chat, say <code>capture " + esc(s.id) + "</code> and tell it the way you remember it."));
+      }
+      if (s.captured && s.captured.say) {
+        var tw = el("div", "stv-tx"); tw.hidden = true;
+        tw.appendChild(transcript(s.captured.say, "Your words, " + (s.captured.date || "")));
+        var tb = cdBtn("View your transcript", function () { tw.hidden = !tw.hidden; tb.textContent = tw.hidden ? "View your transcript" : "Hide your transcript"; });
+        L.appendChild(tb); L.appendChild(tw);
+      }
+      R.appendChild(el("h3", "cv-h", "Follow-ups they may ask"));
+      (s.follow || []).forEach(function (f) {
+        var d = el("details", "stv-f"); d.setAttribute("name", "fu-" + s.id);
+        d.appendChild(el("summary", "", inl(f.q) + (f.why ? '<span class="stv-why">' + inl(f.why) + "</span>" : "")));
+        if (f.a) { var fa = el("div", "stv-fa"); fa.appendChild(el("p", "", inl(f.a))); d.appendChild(fa); }
+        else { d.appendChild(el("p", "am-note", "Yours to answer: tell it in chat and it goes here.")); }
+        R.appendChild(d);
+      });
+      cols.appendChild(L); cols.appendChild(R);
+      shell.appendChild(cols);
+      L.scrollTop = 0; R.scrollTop = 0; shell.scrollTop = 0;
+    }
+    convo.onkeydown = function (e) {
+      if (e.key === "ArrowRight" && cur < list.length - 1) { e.preventDefault(); show(cur + 1); }
+      else if (e.key === "ArrowLeft" && cur > 0) { e.preventDefault(); show(cur - 1); }
+    };
+    show(cur);
+    try { convo.showModal(); } catch (err) { convo.setAttribute("open", ""); }
+    close.focus();
+  }
+
   function openPanel(o) {
     var cur = o.start || 0;
-    convo.innerHTML = "";
+    convo.innerHTML = ""; convo.className = "convo";
     convo.setAttribute("aria-label", o.label || o.title);
     var shell = el("div", "cv");
     var rail = el("nav", "cv-rail");
