@@ -225,7 +225,7 @@ LP = {
     ],
     "capture": [
         "The stories are not written for you. You tell each one to me in chat, the way you remember it; I record that version as the truth, then ask the follow-ups a Bar Raiser would (what exactly did you do, why that, who disagreed, what was the number, what would you change), and we add what that digs out.",
-        "To start one, say `capture` and the story's id (for example `capture notify`). The page then shows your version, what we dug out, and the do-differently line. Facts you are unsure of stay marked until you confirm them.",
+        "To start one, say `capture` and the story's id (for example `capture blog`). The page then shows your version, what we dug out, and the do-differently line. Facts you are unsure of stay marked until you confirm them.",
     ],
     "principles": [
         {"id": "cust", "name": "Customer Obsession", "top": True,
@@ -303,7 +303,7 @@ def _d(date, hours, focus, *items):
 DAILY = lambda date: ("daily", "The daily two", "#/daily/" + date, "35 min")
 CODE = lambda pid, label, m="20 min": ("revise", "Coding page: " + label, "../CODING.html#" + pid, m)
 LLD = lambda pid, label, m="40 min": ("design", label, "#/lld/" + pid, m)
-CAP = lambda sid, label, m="30 min, in chat": ("story", "Capture: " + label, "#/lp/story-" + sid, m)
+CAP = lambda sid, label, m="30 min, in chat": ("story", "Story: " + label, "#/lp/story-" + sid, m)
 MATH = lambda sid, label, m="45 min": ("plan", label, "../index.html#/s/" + sid, m)
 
 PLAN = {
@@ -325,7 +325,7 @@ PLAN = {
                 ("story", "Read the Leadership tab: the rules and the sixteen", "#/lp", "20 min"),
                 ("other", "Mercor: the coding problems you started", "mercor.html#/coding/problems", "40 min")),
              _d("2026-10-23", "1.5 h", "Mercor screen at 6 PM Eastern. Keep Amazon light today.",
-                DAILY("2026-10-23"), CODE("trees", "trees"), CAP("notify", "the 90 seconds to 3 seconds story")),
+                DAILY("2026-10-23"), CODE("trees", "trees"), CAP("precision", "the notification precision fix")),
              _d("2026-10-24", "3 h", "First full day. Trees and the first design.",
                 DAILY("2026-10-24"), LLD("lld-parking", "LLD: parking lot"), CODE("heap", "heaps"),
                 MATH("w4b", "Week 4 mathematics: gradients and descent, first half")),
@@ -336,8 +336,8 @@ PLAN = {
                 DAILY("2026-10-26"), LLD("lld-cart", "LLD: shopping cart with discounts"), CAP("wm", "working memory"),
                 CODE("graphs", "graphs")),
              _d("2026-10-27", "2.5 h", "Backbone and a failure, the two stories people dodge.",
-                DAILY("2026-10-27"), CODE("order", "topological order"), CAP("advisor", "disagreeing with your advisor"),
-                CAP("yesbind", "the seven patches (a failure)")),
+                DAILY("2026-10-27"), CODE("order", "topological order"), CAP("teammed", "TeamMedAgents: building from scratch"),
+                CAP("catalog", "correcting your own numbers (a failure)")),
              _d("2026-10-28", "2.5 h", "The cache, layered, which ties to week 5's systems session.",
                 DAILY("2026-10-28"), LLD("lld-kvstore", "LLD: a key-value cache in layers"), CAP("leak", "the data leak you caught"),
                 MATH("w5a", "Optional: week 5 systems, caching (pairs with the cache drill)", "45 min")),
@@ -345,17 +345,17 @@ PLAN = {
         {"id": "week7", "title": "Week 7: depth, then speed", "note": "Two to three hours until 31 October; four or more from 1 November, Amazon only.",
          "days": [
              _d("2026-10-29", "2.5 h", "Stacks and the elevator.",
-                DAILY("2026-10-29"), LLD("lld-elevator", "LLD: elevator system"), CODE("stack", "stacks"), CAP("cold", "why every turn booted cold")),
+                DAILY("2026-10-29"), LLD("lld-elevator", "LLD: elevator system"), CODE("stack", "stacks"), CAP("memjobs", "the duplicate-jobs bug")),
              _d("2026-10-30", "3 h", "Library, and the second mathematics session.",
-                DAILY("2026-10-30"), LLD("lld-library", "LLD: library management", "35 min"), CAP("rules", "the rules matcher cost cut"),
+                DAILY("2026-10-30"), LLD("lld-library", "LLD: library management", "35 min"), CAP("funnel", "the email rules funnel"),
                 MATH("w5b", "Week 5 mathematics: probability, first half")),
              _d("2026-10-31", "3 h", "Redo from blank: the first test of speed.",
                 DAILY("2026-10-31"), ("design", "LLD from a blank page: parking lot, timed", "#/lld/lld-parking", "35 min"),
-                MATH("w5b", "Week 5 mathematics: probability, second half"), CAP("wpcms", "WheelPrice: 1.5 s to 300 ms")),
+                MATH("w5b", "Week 5 mathematics: probability, second half"), CAP("blog", "the WheelPrice blog")),
              _d("2026-11-01", "4 h", "From today, Amazon only.",
                 DAILY("2026-11-01"), CODE("dp", "dynamic programming", "30 min"),
                 ("design", "LLD from a blank page: file system and cart, timed", "#/lld/lld-files", "70 min"),
-                CAP("mentor", "helping a teammate grow"), CODE("concurrency", "concurrency, for design follow-ups"),
+                CAP("weekend", "the savings were weekends"), CAP("metarag", "MetaRAG redone for research"), CODE("concurrency", "concurrency, for design follow-ups"),
                 ("story", "Resume walk-through: every project survives ten minutes of why", "#/lp/lp-stories", "30 min")),
              _d("2026-11-02", "4 h", "The loop window opens. Practise as if it were today.",
                 DAILY("2026-11-02"), ("loop", "Two mediums from the coding page, 25 minutes each, out loud, no running code", "../CODING.html", "60 min"),
@@ -363,7 +363,7 @@ PLAN = {
                 ("story", "Fix the story-per-round plan; tell four stories aloud, 3 minutes each", "#/lp/lp-rounds", "60 min")),
              _d("2026-11-03", "4 h", "Follow-up depth everywhere.",
                 DAILY("2026-11-03"), ("design", "LLD from a blank page: elevator and library", "#/lld/lld-elevator", "70 min"),
-                CODE("graphs", "graphs and heaps again", "40 min"),
+                CODE("graphs", "graphs and heaps again", "40 min"), CAP("eval", "eval onto production"), CAP("mockflow", "MockFlow-AI"),
                 ("story", "Bar Raiser drill: five layers of why on three stories", "#/lp/lp-matrix", "60 min")),
              _d("2026-11-04", "4.5 h", "The full loop, alone, timed.",
                 DAILY("2026-11-04"),

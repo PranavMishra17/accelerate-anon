@@ -1544,3 +1544,8 @@ LiveCode's exact look is not public; matched from descriptions. No charter devia
 Easy, Medium or Hard, and where it is the same as or close to a LeetCode problem (88 of 146), links to it and to a
 solution video beside Show the code. Videos are NeetCode where he has one (79 of 88), otherwise another channel,
 each matched by its LeetCode number. Data in `coding/data.js` under `lc`. No charter deviation.
+
+**28 Oct 2026: Amazon story plan rebuilt around his own stories.** He told eight stories in his words (TeamMedAgents,
+the WheelPrice blog, MetaRAG, MockFlow-AI, and four from alfred_). They are now the anchors of the 16 picks; the
+Leadership tab's story bank (private) and the Plan tab's story tasks point at the new set. Hire and Develop the Best
+and Earth's Best Employer have no story yet. No charter deviation.
