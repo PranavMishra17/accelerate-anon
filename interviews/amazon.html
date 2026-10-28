@@ -707,7 +707,10 @@ nav.side .td a { display: inline; padding: 0; }
 .am-min { color: var(--muted); font-size: var(--fs-sm); white-space: nowrap; }
 .am-res { margin: var(--s4) 0; }
 .am-note { color: var(--muted); font-size: var(--fs-sm); }
-.am-mx td:first-child { white-space: nowrap; }
+.am-mx { width: 100%; table-layout: fixed; }
+.am-mx th:nth-child(1) { width: 24%; } .am-mx th:nth-child(2) { width: 46%; } .am-mx th:nth-child(3) { width: 30%; }
+.am-mx td { overflow-wrap: break-word; }
+@media (max-width: 640px) { .am-mx, .am-mx tbody, .am-mx tr, .am-mx td { display: block; width: auto; } .am-mx thead { display: none; } .am-mx tr { padding: var(--s3) 0; border-bottom: var(--hair); } .am-mx td { padding: var(--s1) 0; border: 0; } }
 .am-top { color: var(--accent); font-size: var(--fs-xs); font-weight: var(--w-strong); }
 .am-gap { color: var(--warn); }
 .am-story { padding: var(--s2) 0 var(--s3); max-width: var(--measure); }
@@ -3168,7 +3171,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     hubs.forEach(function (hb) {
       var lead = stories.filter(function (s) { return s.hub === hb.id; });
       var also = stories.filter(function (s) { return s.hub !== hb.id && (s.also || []).indexOf(hb.id) >= 0; });
-      h += '<tr id="lp-hub-' + hb.id + '"><td><strong>' + esc(hb.name) + '</strong><span class="am-lps">' + esc(hb.lps.map(pname).join(", ")) + "</span></td><td><ul>" +
+      h += '<tr id="lp-hub-' + hb.id + '"><td><strong>' + esc(hb.name) + '</strong><span class="am-lps">' + hb.lps.map(function (x) { return esc(pname(x)); }).join("<br>") + "</span></td><td><ul>" +
         (hb.asks || []).map(function (q) { return "<li>" + inl(q) + "</li>"; }).join("") + "</ul></td><td>" +
         (lead.length ? '<span class="am-lead">' + lead.map(slink).join("<br>") + "</span>" : '<span class="am-gap">no story yet</span>') +
         (also.length ? '<span class="am-also">Also: ' + also.map(slink).join(", ") + "</span>" : "") + "</td></tr>";
