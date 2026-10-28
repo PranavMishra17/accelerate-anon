@@ -1549,3 +1549,11 @@ each matched by its LeetCode number. Data in `coding/data.js` under `lc`. No cha
 the WheelPrice blog, MetaRAG, MockFlow-AI, and four from alfred_). They are now the anchors of the 16 picks; the
 Leadership tab's story bank (private) and the Plan tab's story tasks point at the new set. Hire and Develop the Best
 and Earth's Best Employer have no story yet. No charter deviation.
+
+**28 Oct 2026: Leadership tab rebuilt around the eight hubs.** The matrix is now the eight hubs (their principles,
+how they are asked, the lead stories and the others that can carry them); the per-round story plan is gone, since any
+round can ask anything. Each story opens to a two-minute STAR answer on the light sheet, what to make sure they hear,
+and Bar Raiser follow-ups with answers where his work supplies them (the rest are his to answer); his own telling sits
+behind View your transcript. A How they dig section and nine checked Bar Raiser resources were added, drawing on an
+internal Amazon interviewer worksheet he shared. The STAR answers were written at his request from his telling and his
+work. No charter deviation.
