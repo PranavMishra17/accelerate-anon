@@ -31,13 +31,13 @@ LOOP = {
             "GenAI answers drawn from what you built; a design you can extend without rewriting; and eight deep, true stories that survive five layers of why."),
     "plan_kicker": "The next two weeks",
     "extra": ("<b>Start with the Plan tab: it says what to do today.</b> Every day has the daily two (35 minutes), a problem "
-              "reported from a 2026 loop, two GenAI questions, and a story or a design. Two to three hours a day until 31 October, "
+              "reported from a 2026 loop, a module of the GenAI tab, and a story or a design. Two to three hours a day until 31 October, "
               "four or more from 1 November."),
 }
 
 SESSION_IDS = []
 
-PREP_LEAD = "Your intro, why Amazon, the AI-tools answer, last year; then the GenAI round, question by question; then the questions to ask. The stories are on the Leadership tab."
+PREP_LEAD = "Your intro, why Amazon, the AI-tools answer, last year, and the questions to ask. The GenAI round has its own tab; the stories are on Leadership."
 
 SHOW_UP = [
     ("Think out loud from the first second.", "Silence is the most reported way to fail a coding round. Say the brute force, get a nod, then improve. A 2026 candidate froze for five minutes, coded the brute force, found the better answer late, and still got the offer."),
@@ -194,191 +194,8 @@ SCRIPTS = [
      "notes": ["Location, start date, work authorization: your answers from chat."]},
 ]
 
-QA = [
-    {"group": "The GenAI round", "blurb": ("Reported in 2026 SDE I loops as a full round or part of one: leadership questions, then GenAI concepts "
-                                          "(hallucinations, RAG, checking AI output), then a LeetCode problem. Talk, not code: answer from what you built."),
-     "items": [
-        {"id": "g-halluc", "q": "What is a hallucination, and why do LLMs hallucinate?", "tests": "That you know the mechanism, not the buzzword.",
-         "probes": ["Does a bigger model fix it?", "Is temperature zero enough?"],
-         "parts": [{"title": "What it is", "items": [
-             "A hallucination is fluent output that is not supported by the input or by fact: an invented citation, an API that does not exist, a wrong number said with confidence.",
-             "The model predicts the next likely token. Nothing in that objective checks truth, so when it lacks the fact it still produces the most plausible-sounding one.",
-             "Causes you can name: the fact is missing or stale in training data, the context is missing or too long to use well, the question pushes it to answer instead of abstain, and decoding picks a likely but wrong path."]},
-             {"title": "What does not fix it", "items": [
-                 "Temperature zero makes it repeatable, not right: it returns the same wrong answer every time.",
-                 "A bigger model hallucinates less often, not never. The fix is in the system around it."]}],
-         "learn": {"read": [{"url": "../CODING.html#rag", "label": "Coding page: RAG", "why": "Grounding, built and tested."}]},
-         "land": "It predicts plausible text, not true text; the fix is in the system around it.",
-         "a": ["A hallucination is when the model says something fluent and confident that isn't supported by what it was given or by fact. The reason is pretty much built in: it's trained to predict the next likely token, and nothing in that checks truth. So when it doesn't have the fact, it still gives you the most plausible-sounding one.",
-               "In practice it shows up when the fact isn't in its training data or its context, when the context is so long it doesn't use it well, or when the question pushes it to answer instead of saying it doesn't know. Turning temperature to zero doesn't fix it, it makes it consistently wrong. So I treat it as a system problem: give it the facts, constrain what it can say, and check the output."]},
-
-        {"id": "g-reduce", "q": "How would you reduce hallucinations in a production system?", "tests": "Engineering, not prompt tweaks.",
-         "probes": ["How do you know it worked?", "What do you do when retrieval finds nothing?"],
-         "parts": [{"title": "The layers, cheapest first", "items": [
-             "Ground it: retrieve the facts (RAG) or call a tool, and tell the model to answer only from them.",
-             "Constrain it: structured output with a schema, and let the model choose from options you give it rather than type ids or numbers itself.",
-             "Check it: validate the output in code (does the id exist, does the number match the source), then a second model or a rule for what code cannot check.",
-             "Let it abstain: an explicit 'not found' path is better than a confident guess.",
-             "Measure it: an eval set of real failures, run before every change."]}],
-         "notes": ["Your numbers: MetaRAG cut hallucinations about 20% against baseline RAG; at alfred_ the eval harness replays production scenarios across 12 failure classes every night."],
-         "learn": {"read": [{"url": "../CODING.html#structured", "label": "Coding page: structured output", "why": "Schemas and validation, tested."},
-                            {"url": "../CODING.html#evals", "label": "Coding page: evals", "why": "How an eval set is built and scored."}]},
-         "land": "Ground it, constrain it, check it in code, let it say 'not found', and measure.",
-         "a": ["I think of it in layers, cheapest first. First, ground it: give the model the facts through retrieval or a tool call, and tell it to answer only from those. Second, constrain it: structured output with a schema, and where it can, have the model pick from options we give it instead of typing an id or a number itself, because that's exactly where it makes things up.",
-               "Third, check it in code: does that id exist, does that number match the source. And give it a real way out, 'I couldn't find this', because a confident guess is worse than no answer. Last, measure it. At alfred_ I built the eval harness from scratch, it replays production scenarios every night across 12 failure classes, so a change that brings a hallucination back gets caught before users see it. In my MetaRAG research, better retrieval alone cut hallucinations about 20% against baseline RAG."]},
-
-        {"id": "g-rag", "q": "Explain RAG. When would you use it instead of fine-tuning?", "tests": "The pipeline and the trade-off.",
-         "probes": ["What goes wrong in a RAG pipeline?", "How do you chunk documents?"],
-         "parts": [{"title": "The pipeline", "items": [
-             "Offline: split documents into chunks, embed each chunk, store the vectors (often with keyword indexes and metadata).",
-             "Online: embed the question, retrieve the top-k chunks, optionally rerank them with a cross-encoder, and put them in the prompt with the instruction to answer from them and cite.",
-             "Why it helps: the facts come from your data at question time, so they can be private, fresh, and cited."]},
-             {"title": "RAG or fine-tuning", "items": [
-                 "RAG for knowledge: facts that change, private documents, answers that need a source.",
-                 "Fine-tuning for behaviour: a format, a tone, a narrow task done cheaper by a smaller model.",
-                 "They combine: fine-tune for the style, retrieve for the facts."]}],
-         "learn": {"read": [{"url": "../CODING.html#rag", "label": "Coding page: RAG", "why": "Chunk, embed, retrieve, answer, in code."}]},
-         "land": "RAG for facts that change or need a source; fine-tuning for behaviour.",
-         "a": ["RAG is retrieval-augmented generation. Offline, you split your documents into chunks, embed them and store them. When a question comes in, you embed it, pull back the most relevant chunks, often rerank them, and give them to the model with the instruction to answer from them and cite them. So the facts come from your data at question time, not from what the model memorised.",
-               "I'd use RAG when the knowledge changes, is private, or the answer needs a source. Fine-tuning is for behaviour: a format, a tone, or getting a smaller model to do one narrow task well. My MetaRAG paper was on the retrieval side: we used an LLM to generate metadata for enterprise documents and combined it with the content in the embeddings, plus cross-encoder reranking. Best setup hit about 82.5% precision against 73.3% for content-only."]},
-
-        {"id": "g-ragdebug", "q": "Your RAG system gives wrong answers. How do you find out why?", "tests": "Dive Deep on a GenAI system.",
-         "probes": ["How would you measure retrieval on its own?", "What if the right chunk is retrieved and the answer is still wrong?"],
-         "parts": [{"title": "Split the failure in two", "items": [
-             "Retrieval: was the chunk with the answer in the top-k? Measure it with a labelled set: precision, Hit@k, NDCG.",
-             "Generation: the chunk was there, and the model still got it wrong, ignored it, or mixed it with memory.",
-             "Fixes differ: chunking, embeddings, metadata, hybrid keyword search and reranking for retrieval; the prompt, the context order and length, or a stronger model for generation."]}],
-         "notes": ["MetaRAG ran nine configurations because one setup cannot tell you how chunking and embedding choices interact. Full metadata scored 0.699 NDCG against 0.615 content-only; a small metadata weight, around 10%, helped and more hurt."],
-         "land": "First ask whether the right chunk came back; then fix retrieval or generation, not both blind.",
-         "a": ["First I split it in two: was it retrieval or generation? I take the failing questions and check whether the chunk with the answer was in the top-k at all. If it wasn't, it's a retrieval problem, and no prompt will fix it. If it was there and the model still got it wrong, it's generation.",
-               "For retrieval you need a labelled set so you can measure it, precision, Hit at k, NDCG, and then you try chunking, embeddings, metadata, hybrid keyword search, reranking. That's what my MetaRAG work was: nine configurations measured against each other. One thing we found was that a small weight on metadata, around 10%, helped everywhere, and more than that hurt. For generation, it's usually the prompt, too much context, or the order of the chunks. The point is to measure each half separately instead of tweaking the prompt and hoping."]},
-
-        {"id": "g-validate", "q": "How do you validate AI output before you trust it?", "tests": "Thoughtful, not blind, use of AI. The AUTA report names this topic.",
-         "probes": ["How do you validate generated code before you trust it?", "Can you trust an LLM judge?"],
-         "parts": [{"title": "From hardest check to softest", "items": [
-             "Code checks first: schema validation, ids that must exist, numbers that must match the source, tests that must pass.",
-             "Then a judge for what code cannot check (is this reply on topic, is this claim supported): a second model or a rubric.",
-             "Then calibrate the judge against people: a small human-labelled gold set and an agreement number (Cohen's kappa).",
-             "And for consequential output, a human approves before it takes effect."]}],
-         "notes": ["MockFlow-AI: an LLM-as-judge hiring verdict, evidence-cited scoring on 5 competencies, the final verdict computed deterministically, calibrated against a 50-item human gold set at weighted kappa 0.82."],
-         "land": "Code checks what it can, a calibrated judge checks the rest, people approve what matters.",
-         "a": ["Whatever can be checked in code, I check in code: the output matches a schema, the ids it mentions exist, the numbers match the source, and for code, the tests pass and I've read the diff. That catches the cheap failures without trusting anything.",
-               "For the things code can't decide, like whether a claim is actually supported, I use a judge, a second model with a rubric, but I don't trust the judge either until I've measured it against people. In MockFlow-AI I built an LLM-as-judge for interview verdicts: it had to cite evidence for each of five competencies, the final verdict was computed deterministically from those scores, and I calibrated it against a 50-item human gold set, weighted kappa 0.82. And anything with real consequences gets a human approval before it happens."]},
-
-        {"id": "g-eval", "q": "How do you know a prompt or model change made things better?", "tests": "Evaluation, your strongest area.",
-         "probes": ["Where do eval cases come from?", "How do you compare two models fairly?"],
-         "parts": [{"title": "Evaluate it like a product", "items": [
-             "An eval set built from real cases, especially real failures: every bug becomes a test case.",
-             "Score with deterministic checks where you can and an LLM judge where you cannot.",
-             "Run the old and new version on the same set and compare per case, not only the average.",
-             "For a model swap: run it in shadow on real traffic, blind-judge the disagreements, and roll out gradually."]}],
-         "notes": ["alfred_: production-scenario replay, hybrid deterministic plus LLM-as-judge scoring, 12 failure classes, nightly."],
-         "learn": {"read": [{"url": "../CODING.html#evals", "label": "Coding page: evals", "why": "An eval set, scorers and a comparison, tested."}]},
-         "land": "Real failures become test cases; compare old and new on the same set before shipping.",
-         "a": ["Not by trying a few examples and feeling good about it. I built the eval harness at alfred_ from scratch: it replays real production scenarios every night and scores them with deterministic checks plus an LLM judge, across 12 failure classes. Every real bug a user hits becomes a case the next version has to pass.",
-               "So a prompt or model change runs against that set before it ships, and I compare per case, which ones got better and which got worse, not only the average. For a model swap I'd go further: run the new model in shadow on real traffic, have a judge compare the disagreements blind, and only then roll it out gradually. That's pretty much the difference between a demo and a product."]},
-
-        {"id": "g-limits", "q": "What are the limits of LLMs you design around?", "tests": "Judgment about when to use one.",
-         "probes": ["How do you keep the cost down?", "When would you not use an LLM at all?"],
-         "parts": [{"title": "Five limits", "items": [
-             "Truth: no built-in check on facts (see hallucinations).",
-             "Non-determinism: the same input can give different output, so tests need tolerance and fixed seeds where possible.",
-             "Context: finite, and quality drops on very long inputs; retrieval beats stuffing everything in.",
-             "Cost and latency: every call costs money and hundreds of milliseconds; put deterministic code in front and call the model only where it adds value.",
-             "Trust: text it reads can carry instructions (prompt injection), so treat retrieved content as data and give tools the least access they need."]}],
-         "land": "Call the model only where code can't decide; everything else is code.",
-         "a": ["The big ones for me are truth, cost and determinism. It has no built-in check on facts, so anything it says that matters gets grounded or checked. It's not deterministic, so tests need to allow for variation. And every call costs money and latency, so I try to call it only where it actually adds value.",
-               "A good example from alfred_: a rules feature first called the model on every incoming email, which got expensive fast. We changed it so cheap deterministic checks handle what code can decide, and only the genuinely semantic cases go to the model. Same feature, a fraction of the calls. The other limit I always keep in mind is that text the model reads can contain instructions, so anything retrieved is treated as data, and tools only get the access they need."]},
-
-        {"id": "g-prompt", "q": "What actually works in prompt engineering?", "tests": "Practical habits, not tricks.",
-         "probes": ["What are the limits of prompt engineering?", "Few-shot or zero-shot?", "How do you get reliable JSON?"],
-         "parts": [{"title": "What moves results", "items": [
-             "Be specific about the task, the audience and the output format; say what to do when the answer is not there.",
-             "Give it the data rather than hoping it knows; put instructions before the long context or repeat them after.",
-             "Two or three examples of the exact output you want beat a paragraph of description.",
-             "Ask for structured output against a schema, and validate it.",
-             "Treat prompts as code: versioned, and changed only with an eval run."]}],
-         "land": "Specific task, the data given, examples, a schema, and an eval run for every change.",
-         "a": ["Honestly, most of it is being specific. Say exactly what the task is, what format you want, and what to do when the answer isn't there, because if you don't give it a way out, it'll make something up. Give it the data instead of hoping it knows. And two or three examples of the exact output beat a paragraph describing it.",
-               "For anything a program consumes, I ask for structured output against a schema and validate it in code. And I treat prompts like code: they're versioned, and I don't change one without running the eval set, because a prompt change that fixes one case quietly breaks three others more often than you'd think."]},
-
-        {"id": "g-agent", "q": "What is an AI agent, and when would you not use one?", "tests": "That you can say no to the hype.",
-         "probes": ["How would you take a feature from start to finish using agents?", "How do you stop an agent looping forever?", "How do you check what an agent did?"],
-         "parts": [{"title": "What it is", "items": [
-             "An agent is a model in a loop: it decides the next step, calls a tool, reads the result, and repeats until done.",
-             "It earns its cost when the steps cannot be known in advance. When they can, a fixed workflow is cheaper, faster and easier to test.",
-             "Guard rails you name: a step and cost budget, tools with the least access, a stop condition, and logs of every step for replay."]}],
-         "learn": {"read": [{"url": "../CODING.html#agent", "label": "Coding page: agent loop", "why": "The loop, tools and budgets, in code."}]},
-         "land": "An agent for open-ended steps; a fixed workflow whenever the steps are known.",
-         "a": ["An agent is a model in a loop: it decides what to do next, calls a tool, looks at the result, and keeps going until it's done. That's powerful when you can't know the steps in advance, like a research task or an open-ended request.",
-               "But if you can write the steps down, I'd write them down. A fixed workflow with a model call in one or two places is cheaper, faster and much easier to test than an agent deciding everything. When I do use an agent, it gets a budget on steps and cost, tools with only the access they need, a clear stop condition, and every step logged so we can replay it when something goes wrong. In my TeamMedAgents research, small models working as a team with trust-weighted voting and tool-augmented retrieval matched frontier accuracy, 77.6% across 8 benchmarks, at 3.1 times the speed: structure did more than size."]},
-
-        {"id": "g-integrate", "q": "How would you add AI to an existing product?", "tests": "Customer Obsession: start from the problem. Reported in a 2026 SDE I round.",
-         "probes": ["How would you measure success?", "What would you ship first?"],
-         "parts": [{"title": "Work backwards", "items": [
-             "Start from a customer problem that is slow, repetitive or hard to search, not from the model.",
-             "Ask whether code or search solves it first; use the model where judgment on language is needed.",
-             "Build the eval set before the feature, ship to a small group behind a flag, measure the outcome the customer cares about.",
-             "Keep a fallback: when the model fails or is slow, the product still works."]}],
-         "land": "Customer problem first, eval set before the feature, small rollout with a fallback.",
-         "a": ["I'd start from the customer, not the model: where are people spending time on something repetitive, or struggling to find something? Then I'd ask whether plain code or search solves it first, and use the model only where you actually need judgment on language.",
-               "Before building, I'd collect real examples and turn them into an eval set, so we know what good looks like. Then ship it to a small group behind a flag, with a fallback so the product still works when the model is slow or wrong, and measure the outcome the customer cares about. At WheelPrice the customer assistant answered from our verified product data through tools, never from the model's memory, because a wrong fitment answer costs the customer money."]},
-
-        {"id": "g-defs", "q": "Quick definitions: tokens, embeddings, a vector database, the context window, temperature, MCP.",
-         "tests": "Reported in a 2026 intern round as one-line questions. Say each in a sentence, then stop.",
-         "probes": ["Why do tokens matter for cost?", "Why not keep vectors in Postgres?"],
-         "parts": [{"title": "One sentence each", "items": [
-             "Token: the unit the model reads and writes, roughly three quarters of a word; cost, speed and the context limit are all counted in tokens.",
-             "Embedding: a list of numbers for a piece of text, placed so that texts with similar meaning sit close together.",
-             "Vector database: a store that finds the nearest embeddings to a query fast (approximate nearest-neighbour search), usually with metadata filters. Postgres with pgvector does this too at moderate scale.",
-             "Context window: the most tokens the model can take in one call, prompt and answer together.",
-             "Temperature: how random the sampling is; low for extraction and code, higher for brainstorming.",
-             "MCP (Model Context Protocol): an open standard for connecting a model to tools and data sources through one interface, so each tool is written once."]}],
-         "learn": {"read": [{"url": "../CODING.html#embed", "label": "Coding page: embeddings", "why": "Embeddings and nearest-neighbour search, in code."},
-                            {"url": "../CODING.html#bpe", "label": "Coding page: tokenizer", "why": "How text becomes tokens."}]},
-         "land": "One sentence each, with why it matters."},
-
-        {"id": "g-incident", "q": "A production incident, one hour to fix, AI tools allowed. How do you work?",
-         "tests": "Reported in a 2026 hiring-manager round: debugging under pressure without leaning on AI.",
-         "probes": ["What would you ask the AI, and what would you not?", "When do you roll back instead of fixing forward?"],
-         "parts": [{"title": "Order of moves", "items": [
-             "Stop the bleeding first: roll back or turn the feature flag off if a recent change is the likely cause.",
-             "Scope it from evidence: when it started, what changed then, who is affected, from logs and metrics.",
-             "Use AI where it is fast and checkable: summarising a long log, explaining an unfamiliar stack trace, drafting a query. Verify each answer against the system.",
-             "Do not let it decide: the cause, the fix and the rollout stay yours; one change at a time, measured.",
-             "After: a write-up and a test or alert so it cannot happen silently again."]}],
-         "land": "Mitigate first, evidence over guesses, AI for checkable grunt work, the decisions stay yours.",
-         "a": ["First I'd stop the damage: if something shipped recently, roll it back or turn the flag off, and fix forward later. Then scope it from evidence, when it started, what changed at that time, who's affected, from the logs and metrics, not from a guess.",
-               "I'd use AI for the parts that are fast to check: summarising a huge log, explaining a stack trace in code I don't know, drafting a query. But every answer gets checked against the real system, because under pressure is exactly when a confident wrong answer costs the most. The cause and the fix stay my call, one change at a time. Afterwards, a short write-up and an alert or a test so it can't fail silently again. I learned that one the hard way at alfred_, with crons that were failing behind green dashboards."]},
-
-        {"id": "g-tool-wrong", "q": "Tell me about a time a GenAI tool got something wrong, and what you did.",
-         "tests": "From Amazon's scheduling email: situation, what went well, what you would do differently, the effect.",
-         "probes": ["How did you notice?", "What do you do differently now?"],
-         "parts": [{"title": "The shape (2 minutes)", "items": [
-             "Situation: the tool, the task, why you used it.",
-             "What went wrong, and how you caught it: the check you ran, not luck.",
-             "What you did: verified, redid, changed how you use it.",
-             "Effect: time saved or lost, and the habit you kept."]},
-             {"title": "Candidates from your work", "items": [
-                 "A deep research run where a second, checking pass refuted 17 of 18 claims from the first: you judged it unusable and now ask for sources.",
-                 "A coding agent that reported a test passing or a function existing when it did not: you ask for the command and its output."]}],
-         "notes": ["Yours to tell. In chat, say <code>capture genai-wrong</code> and tell it the way you remember it; it goes in verbatim."],
-         "land": "You caught it with a check, not luck, and changed how you use the tool."},
-
-        {"id": "g-tool-win", "q": "Tell me about a time a GenAI tool made you faster.",
-         "tests": "From Amazon's scheduling email: the outcome or speed, and what you would change.",
-         "probes": ["What did you still do yourself?", "Would you trust it on production code?"],
-         "parts": [{"title": "The shape (2 minutes)", "items": [
-             "Situation and the task the tool took on (well specified: a migration, tests, a refactor already decided).",
-             "What you kept: the design, the review, the check against real data.",
-             "Effect with a number: hours saved, how much shipped.",
-             "What you would do differently."]}],
-         "notes": ["Yours to tell. In chat, say <code>capture genai-win</code>; it goes in verbatim. The general answer is on this tab: How do you use AI tools in your development work?"],
-         "land": "The tool took the well-specified part; you kept the design and the checking."},
-    ]},
-]
-
-TABS = ["overview", "plan", "daily", "lld", "lp", "prep", "rounds", "card"]
+QA = []  # the GenAI round lives on the GenAI tab: interviews/amazon.learn.json
+TABS = ["overview", "plan", "daily", "learn", "lld", "lp", "prep", "rounds", "card"]
 
 ASK_3C = [
     {"id": "clarify", "title": "In the round: clarifying", "when": "At the start of every problem and design. Short, on the problem.",
@@ -570,7 +387,7 @@ LLD = lambda pid, label, m="40 min": ("design", label, "#/lld/" + pid, m)
 CAP = lambda sid, label, m="30 min, in chat": ("story", "Story: " + label, "#/lp/story-" + sid, m)
 MATH = lambda sid, label, m="45 min": ("plan", label, "../index.html#/s/" + sid, m)
 # GenAI round questions on Prep, and the problems reported from 2026 loops (LeetCode slugs checked 29 Oct; 277 is paid, 997 is the free twin).
-GQ = lambda ids, label, m="30 min": ("genai", "GenAI: " + label, "#/prep/" + ids, m)
+GQ = lambda mod, label, m="45 min": ("genai", "GenAI tab: " + label, "#/learn/m-" + mod, m)
 LC = lambda slug, label, m="25 min": ("revise", "Reported in 2026: " + label, "https://leetcode.com/problems/" + slug + "/", m)
 
 PLAN = {
@@ -581,7 +398,7 @@ PLAN = {
     "split": [
         ["Coding", "about 45%", "The daily two, the problems reported from 2026 loops, and pattern revision on the coding page."],
         ["Leadership stories", "about 20%", "One story most days, then drilled under follow-ups. They come up in every round."],
-        ["GenAI", "about 15%", "Two questions from the GenAI round on Prep each day, out loud; two tool-use stories in your words."],
+        ["GenAI", "about 15%", "One module of the GenAI tab a day, in order; two tool-use stories in your words."],
         ["Object-oriented design", "about 15%", "Four drills from a blank page with their extension follow-ups; one evening of HLD-lite as insurance."],
         ["The full loop", "about 5%", "One self-run loop, timed, in a plain editor with no running code."],
     ],
@@ -610,38 +427,39 @@ PLAN = {
                 DAILY("2026-10-28"), LLD("lld-kvstore", "LLD: a key-value cache in layers"), CAP("leak", "the data leak you caught"),
                 MATH("w5a", "Optional: week 5 systems, caching (pairs with the cache drill)", "45 min")),
          ]},
-        {"id": "week7", "title": "Week 7: depth, then speed", "note": "Re-planned 29 Oct from 2026 reports: GenAI every day, the reported problems, four designs instead of seven. Two to three hours until 31 October; four or more from 1 November.",
+        {"id": "week7", "title": "Week 7: depth, then speed", "note": "Re-planned 29 Oct from 2026 reports: a GenAI module a day, the reported problems, four designs instead of seven. Two to three hours until 31 October; four or more from 1 November.",
          "days": [
              _d("2026-10-29", "3 h", "Re-plan day: the reported problems and the GenAI round begin.",
                 DAILY("2026-10-29"), LC("next-permutation", "Next Permutation (31)"), CODE("stack", "stacks"),
-                GQ("g-halluc", "hallucinations, and how you reduce them (two questions)"), CAP("memjobs", "the duplicate-jobs bug"),
+                GQ("llm", "module 1, how LLMs work (five topics)", "50 min"), CAP("memjobs", "the duplicate-jobs bug"),
                 ("other", "Ask the recruiter which the fourth round is: object-oriented design, system design or GenAI (the line is in chat)", "", "5 min")),
              _d("2026-10-30", "3 h", "Graph order, RAG, and the second mathematics session.",
                 DAILY("2026-10-30"), LC("course-schedule-ii", "Course Schedule II (210), the order itself"),
-                GQ("g-rag", "RAG, and debugging a RAG system (two questions)"), CAP("funnel", "the email rules funnel"),
+                GQ("prompt", "module 2, prompting and structured output", "40 min"), CAP("funnel", "the email rules funnel"),
                 MATH("w5b", "Week 5 mathematics: probability, first half")),
              _d("2026-10-31", "3 h", "Redo from blank: the first test of speed.",
                 DAILY("2026-10-31"), ("design", "LLD from a blank page: parking lot, timed", "#/lld/lld-parking", "35 min"),
                 LC("find-the-town-judge", "the celebrity problem: Find the Town Judge (997), then the two-pointer celebrity elimination", "20 min"),
-                MATH("w5b", "Week 5 mathematics: probability, second half"), CAP("blog", "the WheelPrice blog")),
+                MATH("w5b", "Week 5 mathematics: probability, second half"), CAP("blog", "the WheelPrice blog"),
+                GQ("rag", "module 3, embeddings and RAG", "50 min")),
              _d("2026-11-01", "4 h", "From today, Amazon only.",
                 DAILY("2026-11-01"), CODE("dp", "dynamic programming", "30 min"), LC("domino-and-tromino-tiling", "Domino and Tromino Tiling (790)", "30 min"),
                 ("design", "LLD from a blank page: file system with no requirements given, then the cart with discounts", "#/lld/lld-files", "70 min"),
-                GQ("g-validate", "checking AI output, and knowing a change is better (two questions)"),
+                GQ("agent", "module 4, agents and tools"),
                 CAP("weekend", "the savings were weekends"), CAP("metarag", "MetaRAG redone for research"),
-                ("genai", "GenAI: tell me a time a tool got it wrong, in chat (capture genai-wrong)", "#/prep/g-tool-wrong", "20 min, in chat")),
+                ("genai", "GenAI: tell me a time a tool got it wrong, in chat (capture genai-wrong)", "#/learn/g-tool-wrong", "20 min, in chat")),
              _d("2026-11-02", "4 h", "The loop window opens. Practise as if it were today.",
                 DAILY("2026-11-02"), LC("all-nodes-distance-k-in-binary-tree", "All Nodes Distance K (863), out loud, no running code"),
                 LC("search-in-rotated-sorted-array", "Search in Rotated Sorted Array (33), out loud"),
                 ("design", "LLD from a blank page: the cache in layers (LRU)", "#/lld/lld-kvstore", "40 min"),
-                GQ("g-limits", "LLM limits, prompts and agents (three questions)", "40 min"),
+                GQ("eval", "module 5, evaluation and validation, your strongest"),
                 ("story", "Resume walk-through: every project survives ten minutes of why", "#/lp/lp-stories", "30 min"),
-                ("genai", "GenAI: a time a tool made you faster, in chat (capture genai-win)", "#/prep/g-tool-win", "20 min, in chat")),
+                ("genai", "GenAI: a time a tool made you faster, in chat (capture genai-win)", "#/learn/g-tool-win", "20 min, in chat")),
              _d("2026-11-03", "4 h", "Follow-up depth everywhere, and one HLD-lite evening.",
                 DAILY("2026-11-03"), LC("insert-interval", "Insert Interval (57), the follow-up to merge intervals"), CODE("heap", "heaps: merge k sorted lists", "20 min"),
                 ("design", "Extension follow-ups on the four designs: a new vehicle type, a new discount type, a second garage; say which class changes", "#/lld", "45 min"),
                 ("design", "HLD-lite: TinyURL at API, data model and cache level, then what breaks at 10x", "https://www.hellointerview.com/learn/system-design/problem-breakdowns/bitly", "30 min"),
-                GQ("g-integrate", "adding AI to a product, quick definitions, an incident with AI allowed (three questions)", "40 min"),
+                GQ("prod", "module 6, production", "50 min"),
                 CAP("eval", "eval onto production"), CAP("mockflow", "MockFlow-AI")),
              _d("2026-11-04", "4.5 h", "The full loop, alone, timed.",
                 DAILY("2026-11-04"),
@@ -654,11 +472,11 @@ PLAN = {
              _d("2026-11-05", "3 h", "Four days out. Sharp, not new.",
                 DAILY("2026-11-05"), ("revise", "Redo two problems you found hardest (daily two or reported)", "#/daily", "40 min"),
                 ("design", "One design from a blank page", "#/lld", "40 min"),
-                ("genai", "GenAI: your two tool-use stories aloud, then any four questions, two minutes each", "#/prep/g-tool-wrong", "40 min")),
+                ("genai", "GenAI tab: module 7, fine-tuning; then your two tool-use stories aloud", "#/learn/m-ft", "40 min")),
              _d("2026-11-06", "3 h", "Three days out. Last full day.",
                 ("revise", "Two mediums out loud, timed, in a plain editor", "../CODING.html", "60 min"), ("design", "One design from a blank page", "#/lld", "40 min"),
                 ("story", "Three stories aloud with their follow-ups", "#/lp/lp-stories", "30 min"),
-                GQ("g-reduce", "four questions aloud, two minutes each", "20 min"),
+                ("genai", "GenAI tab: Test me on everything, then explain your two weakest topics aloud", "#/learn", "30 min"),
                 ("loop", "Install Zoom on the interview device; open the LiveCode link with the ad blocker off", "", "15 min")),
              _d("2026-11-07", "2 h", "Weekend: keep warm, do not cram.",
                 ("revise", "Redo two problems you found hardest", "#/daily", "40 min"), ("design", "One design from a blank page", "#/lld", "40 min"),

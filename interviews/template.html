@@ -954,7 +954,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   var TABS = [
     { id: "overview", label: "Overview", show: function () { return true; } },
     { id: "plan", label: "Plan", show: function () { return !!LOOP.plan; } },
-    { id: "learn", label: "Learn", show: function () { return !!(LOOP.learn && LOOP.learn.modules); } },
+    { id: "learn", label: (LOOP.learn && LOOP.learn.label) || "Learn", show: function () { return !!(LOOP.learn && LOOP.learn.modules); } },
     { id: "prep", label: "Prep", show: function () { return LOOP.scripts.length || LOOP.drills.length || LOOP.qa.length || LOOP.ask.length || (LOOP.ask3 || []).length; } },
     { id: "rounds", label: "Rounds", show: function () { return (LOOP.rounds || []).length; } },
     { id: "research", label: "Research", show: function () { return !!LOOP.research; } },
@@ -1590,6 +1590,9 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     (t.figs || []).forEach(function (k) { var f = figNode(k, 0); if (f) { host.appendChild(f); } });
     if (t.design) { host.appendChild(designFrame(t.design)); }
     panelSection(host, "In production", panelList(t.production));
+    /* What you built on this topic: the public lines, then any kept in the gitignored private file. */
+    var pv0 = window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id], mine = (t.mine || []).concat((pv0 && pv0.mine && pv0.mine[t.id]) || []);
+    panelSection(host, "From your work", panelList(mine));
     (t.code || []).forEach(function (c) {
       if (!c.src) { return; }
       var d = el("details", "ln-code");
@@ -1601,6 +1604,13 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     if (host !== mat) { solutionGate(mat, t, host); }
     if (t.res && window.Res) { var rs = Res.render(t.res); if (rs) { mat.appendChild(el("div", "lab", "Watch and read")); mat.appendChild(rs); } }
     else { learn(mat, { read: t.read || [] }); }
+    /* Where the same topic lives elsewhere in Accelerate: the field atlas, the coding page, the guide, a session. */
+    if (t.links && t.links.length) {
+      mat.appendChild(el("div", "lab", "In Accelerate"));
+      var lk = el("ul", "reading");
+      t.links.forEach(function (q) { lk.appendChild(el("li", "", '<a href="' + esc(q.url) + '" target="_blank" rel="noopener">' + inl(q.label) + "</a>" + (q.why ? '<span class="why">' + inl(q.why) + "</span>" : ""))); });
+      mat.appendChild(lk);
+    }
 
     /* your work: check yourself */
     /* check yourself: the topic's questions one at a time in the pop-up, as Judge first on Accelerate */
@@ -1771,7 +1781,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   var learnKeys = null;
   function tabLearn(host, anchor) {
     var L = LOOP.learn || {};
-    var s = heading(host, "learn", "", "Learn");
+    var s = heading(host, "learn", "", L.label || "Learn");
     if (L.lead) { s.appendChild(el("p", "lead", inl(L.lead))); }
     s.appendChild(el("div", "lab", "Where you stand"));
     mapHost = el("div", "lmap-host"); s.appendChild(mapHost); drawMap();

@@ -1578,3 +1578,13 @@ Permutation, Course Schedule II, the celebrity problem, Domino and Tromino Tilin
 Sorted Array, Insert Interval), two GenAI questions a day, four designs from a blank page with extension follow-ups
 instead of seven, and one HLD-lite evening. Week 5 mathematics stays on 30 and 31 October, at his choice. No charter
 deviation: the wildcard carries interview prep by design.
+
+**2026-10-29: Amazon page gets a GenAI tab, his strongest round, as one path.**
+Eight modules, thirty topics, in order: how LLMs work, prompting and structured output, embeddings and RAG, agents
+and tools, evaluation and validation, production, fine-tuning, and his two GenAI tool-use stories (his to tell).
+Each topic teaches first (points, a shared figure), names documented production examples, says what he built on it
+(resume-level facts in the public file, alfred_ detail in the gitignored private file), links two checked videos and
+one or two checked articles, ties to Accelerate (Baseline, the coding page, the guide, tracker sessions), then a
+multiple-choice check, an open question and what he would say. The twelve GenAI questions moved off Prep into the
+tab (one home), and the plan gives a module a day from 29 October. Built on the Learn tab: it now takes a label,
+`mine` and `links` per topic, and private `mine` lines. No charter deviation.
