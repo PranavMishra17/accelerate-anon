@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 BASELINE = ROOT / "tools" / "design_lint_baseline.json"
-SKIP = {"_site", "archive", "node_modules", ".claude", "private"}
+SKIP = {"_site", "archive", "node_modules", ".claude", "private", ".fleet"}
 FIX = {
     "card": "no tinted card with a coloured rule (DESIGN.md 5, 9): separate with a hairline (border-top: 1px solid var(--rule)) and label with the page's own small muted label (.sxl in the tracker, .lab on loop pages)",
     "italic": "no italic (one style per section): use colour (var(--soft) or var(--muted)) or weight 600",

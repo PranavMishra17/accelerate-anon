@@ -39,11 +39,35 @@
   function row(label, html, cls) {
     return '<div class="r' + (cls ? " " + cls : "") + '"><div class="rl">' + label + '</div><div class="rv">' + html + "</div></div>";
   }
-  // A full statement: the problem, two worked examples, constraints; then the extra parts ([label, html] pairs).
-  function stHtml(st, extra) {
+  // The empty signature to fill in, read from the solution: top-level functions, and classes with their methods.
+  // Names starting with one underscore are helpers and stay out; a class with no methods (a plain record) too.
+  function stubOf(code) {
+    var parts = [], cls = null;
+    String(code || "").split("\n").forEach(function (l) {
+      if (/^class \w/.test(l)) { cls = { head: l, defs: [] }; parts.push(cls); }
+      else if (/^(async )?def (?!_)\w+\(/.test(l)) { cls = null; parts.push({ head: l + "\n    pass" }); }
+      else if (cls && /^    (async )?def (?!_(?!_))\w+\(/.test(l)) { cls.defs.push(l + "\n        pass"); }
+      else if (/^\S/.test(l) && l.charAt(0) !== "@") { cls = null; }
+    });
+    return parts.filter(function (p) { return !p.defs || p.defs.length; })
+      .map(function (p) { return p.defs ? p.head + "\n" + p.defs.join("\n\n") : p.head; }).join("\n\n");
+  }
+  // A hint stays shut until asked for.
+  function hintRow(html) { return ["Hint", '<details class="hint-d"><summary>Show the hint</summary><p>' + html + "</p></details>"]; }
+  // The solution: an optional slower first idea, the main solution and its cost, an optional standard-library version.
+  function solHtml(q, code, c) {
+    var h = "";
+    if (q.first) { h += '<p class="sol-l">' + esc(q.first.label) + "</p><pre><code>" + hl(q.first.code) + '</code></pre><p class="cx">' + md(q.first.note) + '</p><p class="sol-l">Better</p>'; }
+    h += "<pre><code>" + hl(code) + "</code></pre>" + (c ? '<p class="cx">' + esc(c) + "</p>" : "");
+    if (q.alt) { h += '<p class="sol-l">With the standard library</p><pre><code>' + hl(q.alt.code) + '</code></pre><p class="cx">' + md(q.alt.note) + "</p>"; }
+    return h;
+  }
+  // A full statement: the problem and the empty function to fill in, two worked examples, constraints; then the extra parts ([label, html] pairs).
+  function stHtml(st, extra, stub) {
     var h = "";
     if (st) {
-      h += row("Problem", String(st.p).split(/\n\s*\n/).map(function (x) { return "<p>" + md(x) + "</p>"; }).join(""));
+      h += row("Problem", String(st.p).split(/\n\s*\n/).map(function (x) { return "<p>" + md(x) + "</p>"; }).join("") +
+        (stub ? '<pre class="stub"><code>' + hl(stub) + "</code></pre>" : ""));
       h += (st.ex || []).map(function (e, i) { return row("Example " + (i + 1), ioHtml(e), "r-ex"); }).join("");
       if (st.k && st.k.length) { h += row("Constraints", "<ul>" + st.k.map(function (k) { return li(md(k)); }).join("") + "</ul>"); }
     }
@@ -53,7 +77,7 @@
   // A problem or variation: its statement, or, without one, its task and its one example; then the extra parts.
   function partsHtml(q, extra) {
     var rows = q.st ? [] : [q.task && ["Problem", "<p>" + md(q.task) + "</p>"], q.ex && ["Example", ioHtml(q.ex), "r-ex"]];
-    return stHtml(q.st, rows.filter(Boolean).concat(extra || []));
+    return stHtml(q.st, rows.filter(Boolean).concat(extra || []), q.st ? stubOf(q.sol || q.code) : "");
   }
   // A shared figure from figures/figures.js, when the page loads the registry.
   function figHtml(key) {
@@ -175,8 +199,8 @@
         "<h4>Variations</h4>" + p.vars.map(function (v, i) { return btn(1 + p.parts.length + i); }).join("");
     } else {
       items = [{ kind: "The template", n: "Template", ex: p.ex, t: p.sheet.move ? "<b>The move.</b> " + p.sheet.move : p.sheet.spot, th: true, code: p.tpl, c: p.cx }]
-        .concat(p.probs.map(function (q) { return { kind: "Classic problem", n: q.n, ex: q.ex, task: q.task, st: q.st, hint: q.hint, code: q.sol, c: q.c }; }))
-        .concat(p.vars.map(function (v) { return { kind: "Variation", n: v.n, ex: v.ex, chg: v.t, st: v.st, code: v.code }; }));
+        .concat(p.probs.map(function (q) { return { kind: "Classic problem", n: q.n, ex: q.ex, task: q.task, st: q.st, hint: q.hint, code: q.sol, c: q.c, first: q.first, alt: q.alt }; }))
+        .concat(p.vars.map(function (v) { return { kind: "Variation", n: v.n, ex: v.ex, chg: v.t, st: v.st, code: v.code, first: v.first, alt: v.alt }; }));
       h += '<h4>Nuances</h4><ul class="nu">' + p.sheet.notes.map(li).join("") + li(esc(p.cx)) + "</ul>" +
         "<h4>The core</h4>" + btn(0) +
         "<h4>Classic problems</h4>" + p.probs.map(function (q, i) { return btn(1 + i); }).join("") +
@@ -207,12 +231,12 @@
   function pick(i) {
     at = Math.max(0, Math.min(items.length - 1, i));
     var it = items[at], extra = [];
-    if (it.hint) { extra.push(["Hint", esc(it.hint)]); }
-    if (it.chg) { extra.push(["What changes", md(it.chg)]); }
+    if (it.hint) { extra.push(hintRow(md(it.hint))); }
+    if (it.chg) { extra.push(it.st ? hintRow(md(it.chg)) : ["What changes", md(it.chg)]); }
     popR.innerHTML = "<h3>" + esc(it.n) + (it.kind.toLowerCase().indexOf(it.n.toLowerCase()) < 0 ?'<span class="pr-kind">' + it.kind.toLowerCase() + "</span>" : "") + "</h3>" +
       (it.t ? '<p class="pr-t">' + (it.th ? it.t : md(it.t)) + "</p>" : "") + partsHtml(it, extra) +
       (it.hld ? '<ol class="nu">' + it.hld.map(function (x) { return li(md(x)); }).join("") + "</ol>" : "") +
-      (it.fig ? figHtml(it.fig) : "") + (it.code ? "<pre><code>" + hl(it.code) + "</code></pre>" : "") + (it.c ? '<p class="cx">' + esc(it.c) + "</p>" : "");
+      (it.fig ? figHtml(it.fig) : "") + (it.code ? solHtml(it, it.code, it.c) : it.c ? '<p class="cx">' + esc(it.c) + "</p>" : "");
     popL.querySelectorAll(".pi").forEach(function (b) { b.classList.toggle("on", +b.getAttribute("data-i") === at); });
     var on = popL.querySelector(".pi.on");
     if (on && on.scrollIntoView) { on.scrollIntoView({ block: "nearest" }); }
@@ -247,6 +271,6 @@
     try { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { document.exitFullscreen(); } } catch (e) { /* not supported */ }
   }
 
-  var CS = window.CS = { data: D, byId: byId, esc: esc, md: md, hl: hl, exLine: exLine, ioHtml: ioHtml, stHtml: stHtml, partsHtml: partsHtml, figHtml: figHtml, cardHtml: cardHtml,
+  var CS = window.CS = { data: D, byId: byId, esc: esc, md: md, hl: hl, exLine: exLine, ioHtml: ioHtml, stHtml: stHtml, partsHtml: partsHtml, hintRow: hintRow, solHtml: solHtml, figHtml: figHtml, cardHtml: cardHtml,
     mountSheet: mountSheet, openPop: openPop, closePop: closePop, popOpen: popOpen, fullScreen: fullScreen, pageBase: "", onPopClose: null };
 }());

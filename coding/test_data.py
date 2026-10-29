@@ -99,9 +99,12 @@ for p in D["patterns"]:
             exec(v["code"], dict(g))
         ran += len(p["parts"]) + 1 + len(p["vars"])
         continue
-    for item in p["probs"] + p["vars"]:
+    # The main solution, and the slower first idea and the standard-library version when there are.
+    runs = [(item, item.get("sol") or item["code"]) for item in p["probs"] + p["vars"]]
+    runs += [(item, item[x]["code"]) for item in p["probs"] + p["vars"] for x in ("first", "alt") if item.get(x)]
+    for item, code in runs:
         g = {"ListNode": ListNode, "__name__": "p"}
-        exec(item.get("sol") or item["code"], g)
+        exec(code, g)
         ran += 1
         fns = [v for k, v in g.items() if inspect.isfunction(v) and v.__module__ == "p" and not k.startswith("_")]
         for e in (item.get("st") or {}).get("ex", []):

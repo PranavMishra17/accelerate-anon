@@ -13,7 +13,7 @@
 <script src="figures/figures.js?v=730ef59c"></script>
 <script src="figures/notes.js?v=288db369" defer></script>
 <script src="figures/viewer.js?v=ecb99aae" defer></script>
-<link rel="stylesheet" href="coding/sheet.css?v=d5d986d2">
+<link rel="stylesheet" href="coding/sheet.css?v=e7ac69b0">
 <link rel="stylesheet" href="site/nav.css?v=2ebfb65e">
 <script src="private/site.js"></script>
 <script src="site/nav.js?v=e86e0abd" defer></script>
@@ -202,8 +202,8 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
   <div class="cs-grid"></div>
 </div>
 <script src="coding/concurrency.js?v=657528be"></script>
-<script src="coding/data.js?v=20b39f54"></script>
-<script src="coding/sheet.js?v=68cb3d74"></script>
+<script src="coding/data.js?v=7473f15d"></script>
+<script src="coding/sheet.js?v=44693eb2"></script>
 <script>
 (function () {
   "use strict";
@@ -236,14 +236,14 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
   function probHtml(p, q) {
     var e = lcOf(p, q);
     return '<details class="prob" data-text="' + esc((p.title + " " + q.n + " " + q.task).toLowerCase()) + '"><summary>' + tick(p.id + "/" + q.n, q.n) + '<span class="pn">' + esc(q.n) +
-      '</span>' + difHtml(e, q.l) + '</summary><div class="pb">' + CS.partsHtml(q, [["Hint", esc(q.hint)]]) +
-      '<details class="sol"><summary>Show the solution' + linksHtml(e) + '</summary><pre><code>' + hl(q.sol) + '</code></pre><p class="cx">' + esc(q.c) + "</p></details></div></details>";
+      '</span>' + difHtml(e, q.l) + '</summary><div class="pb">' + CS.partsHtml(q, [CS.hintRow(md(q.hint))]) +
+      '<details class="sol"><summary>Show the solution' + linksHtml(e) + "</summary>" + CS.solHtml(q, q.sol, q.c) + "</details></div></details>";
   }
   function varHtml(p, v) {
     var e = lcOf(p, v);
     return '<details class="prob var" data-text="' + esc((p.title + " " + v.n + " " + v.t).toLowerCase()) + '"><summary>' + tick(p.id + "/v/" + v.n, v.n) + '<span class="pn">' + esc(v.n) +
-      '</span><span class="pl">variation</span>' + difHtml(e) + '</summary><div class="pb">' + CS.partsHtml(v, [["What changes", md(v.t)]]) +
-      '<details class="sol"><summary>Show the code' + linksHtml(e) + '</summary><pre><code>' + hl(v.code) + "</code></pre></details></div></details>";
+      '</span><span class="pl">variation</span>' + difHtml(e) + '</summary><div class="pb">' + CS.partsHtml(v, [v.st ? CS.hintRow(md(v.t)) : ["What changes", md(v.t)]]) +
+      '<details class="sol"><summary>Show the code' + linksHtml(e) + "</summary>" + CS.solHtml(v, v.code) + "</details></div></details>";
   }
   // Visitor progress: which problems and variations this browser has ticked. Keys are
   // "<pattern>/<problem>" and "<pattern>/v/<variation>"; the landing page counts them.

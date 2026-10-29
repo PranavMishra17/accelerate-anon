@@ -64,15 +64,15 @@ window.CODING = {
       "o": "True",
       "w": "1 appears twice"
      },
-     "t": "A set instead of a dict; stop at the first repeat.",
-     "code": "def contains_duplicate(nums):\n    seen = set()\n    for x in nums:\n        if x in seen:\n            return True\n        seen.add(x)\n    return False",
+     "t": "You only need to know whether a value was seen before, not where. Which structure answers that quickly, and when can you stop?",
+     "code": "def contains_duplicate(nums):\n    seen = set()  # every value met so far\n    for x in nums:\n        if x in seen:\n            return True  # x came earlier, so it appears twice\n        seen.add(x)\n    return False  # we got through the list without a repeat",
      "st": {
-      "p": "Write `contains_duplicate(nums)`. It receives a list of integers and returns True if any value appears at least twice, and False if every value is distinct. An empty list returns False.",
+      "p": "Given a list of integers `nums`, return True if any value appears at least twice, and False if every value is distinct.\n\nAn empty list returns False.",
       "ex": [
        {
         "i": "nums = [1, 2, 3, 1]",
         "o": "True",
-        "why": "1 appears at index 0 and index 3"
+        "why": "1 appears at index 0 and again at index 3"
        },
        {
         "i": "nums = []",
@@ -93,20 +93,20 @@ window.CODING = {
       "o": "True",
       "w": "same letters, same counts"
      },
-     "t": "Compare two Counters.",
-     "code": "from collections import Counter\n\ndef is_anagram(s, t):\n    return Counter(s) == Counter(t)",
+     "t": "If t is a rearrangement of s, how do the letter counts of the two strings compare?",
+     "code": "def is_anagram(s, t):\n    if len(s) != len(t):\n        return False  # different lengths can never match\n    counts = {}  # letter -> how many more times s has it than t\n    for a, b in zip(s, t):\n        counts[a] = counts.get(a, 0) + 1\n        counts[b] = counts.get(b, 0) - 1\n    # Anagrams use every letter equally often, so every balance is back to zero\n    for n in counts.values():\n        if n != 0:\n            return False\n    return True",
      "st": {
-      "p": "Write `is_anagram(s, t)`. It receives two strings and returns True if `t` is an anagram of `s`, meaning both use exactly the same characters the same number of times, and False otherwise. Comparison is case-sensitive, so 'A' and 'a' are different characters. Strings of different lengths can never be anagrams.",
+      "p": "Given two strings `s` and `t`, return True if `t` is an anagram of `s`, and False otherwise.\n\nAn anagram uses exactly the same characters the same number of times. Comparison is case-sensitive, so 'A' and 'a' are different characters.",
       "ex": [
        {
         "i": "s = \"anagram\", t = \"nagaram\"",
         "o": "True",
-        "why": "both strings use the same seven letters with the same counts"
+        "why": "both strings use the same letters with the same counts"
        },
        {
         "i": "s = \"aacc\", t = \"ccac\"",
         "o": "False",
-        "why": "s has two a's and two c's, but t has one a and three c's, same length, different counts"
+        "why": "s has two a's and two c's, but t has one a and three c's: same length, different counts"
        }
       ],
       "k": [
@@ -114,6 +114,10 @@ window.CODING = {
        "s and t contain letters (any case)",
        "strings of different lengths are never anagrams"
       ]
+     },
+     "alt": {
+      "note": "Same idea in one line: `Counter` builds the letter counts for both strings and compares them.",
+      "code": "from collections import Counter\n\ndef is_anagram(s, t):\n    return Counter(s) == Counter(t)"
      }
     },
     {
@@ -123,10 +127,10 @@ window.CODING = {
       "o": "[1, 2]",
       "w": "the two most common"
      },
-     "t": "Count, then take the k largest counts.",
-     "code": "from collections import Counter\n\ndef top_k_frequent(nums, k):\n    return [x for x, _ in Counter(nums).most_common(k)]",
+     "t": "Count how often each value appears, then order the values by that count. What does a stable sort do with equal counts?",
+     "code": "def top_k_frequent(nums, k):\n    counts = {}  # value -> how many times it appears (keys stay in first-seen order)\n    for x in nums:\n        counts[x] = counts.get(x, 0) + 1\n    # sorted is stable: values with equal counts keep their first-seen order\n    values = sorted(counts, key=lambda v: -counts[v])\n    return values[:k]  # the k most frequent",
      "st": {
-      "p": "Write `top_k_frequent(nums, k)`. It receives a list of integers and an integer `k`, and returns a list of the `k` most frequent values, ordered from most frequent to least. When counts tie, the value that appeared first in `nums` comes first. `k` never exceeds the number of distinct values.",
+      "p": "Given a list of integers `nums` and an integer `k`, return the `k` most frequent values, from most frequent to least frequent.\n\nWhen two values appear equally often, the one that appeared first in `nums` comes first. `k` never exceeds the number of distinct values.",
       "ex": [
        {
         "i": "nums = [1, 1, 1, 2, 2, 3], k = 2",
@@ -136,7 +140,7 @@ window.CODING = {
        {
         "i": "nums = [1, 2, 3], k = 2",
         "o": "[1, 2]",
-        "why": "all three values appear once, so the tie is broken by first appearance and only the first two are kept"
+        "why": "all three values appear once, so ties go by first appearance and the first two are kept"
        }
       ],
       "k": [
@@ -144,6 +148,10 @@ window.CODING = {
        "k <= number of distinct values in nums",
        "ties broken by first-seen order"
       ]
+     },
+     "alt": {
+      "note": "Same result in one line: `Counter` does the counting and `most_common(k)` returns the k biggest, ties in first-seen order.",
+      "code": "from collections import Counter\n\ndef top_k_frequent(nums, k):\n    return [x for x, _ in Counter(nums).most_common(k)]"
      }
     },
     {
@@ -153,20 +161,20 @@ window.CODING = {
       "o": "0",
       "w": "\"l\" appears once"
      },
-     "t": "Count first, then a second pass finds the first count of 1.",
-     "code": "from collections import Counter\n\ndef first_uniq(s):\n    cnt = Counter(s)\n    for i, c in enumerate(s):\n        if cnt[c] == 1:\n            return i\n    return -1",
+     "t": "A character is unique only if it appears once in the whole string. What must you know about every letter before you can answer for the first one?",
+     "code": "def first_uniq(s):\n    counts = {}  # character -> how many times it appears in s\n    for c in s:\n        counts[c] = counts.get(c, 0) + 1\n    # Walk left to right so the first character with a count of 1 wins\n    for i, c in enumerate(s):\n        if counts[c] == 1:\n            return i\n    return -1  # every character repeats, or s is empty",
      "st": {
-      "p": "Write `first_uniq(s)`. It receives a string and returns the index of the first character that appears exactly once in the whole string. If no character appears exactly once (including an empty string), it returns -1.",
+      "p": "Given a string `s`, return the index of the first character that appears exactly once in `s`.\n\nIf no character appears exactly once, including when `s` is empty, return -1.",
       "ex": [
        {
         "i": "s = \"leetcode\"",
         "o": "0",
-        "why": "'l' at index 0 is the first character that appears only once"
+        "why": "'l' at index 0 appears only once"
        },
        {
         "i": "s = \"aabb\"",
         "o": "-1",
-        "why": "every character in the string appears twice"
+        "why": "every character appears twice"
        }
       ],
       "k": [
@@ -174,6 +182,10 @@ window.CODING = {
        "s contains lowercase English letters",
        "returns -1 when no character is unique"
       ]
+     },
+     "alt": {
+      "note": "Same counts in one line: `Counter` builds the dictionary for you.",
+      "code": "from collections import Counter\n\ndef first_uniq(s):\n    cnt = Counter(s)\n    for i, c in enumerate(s):\n        if cnt[c] == 1:\n            return i\n    return -1"
      }
     }
    ],
@@ -190,11 +202,11 @@ window.CODING = {
      },
      "l": "easy",
      "task": "Return indices of two numbers that add up to target.",
-     "hint": "Store each number's index; look up target minus the current number.",
-     "sol": "def two_sum(nums, target):\n    seen = {}\n    for i, x in enumerate(nums):\n        if target - x in seen:\n            return [seen[target - x], i]\n        seen[x] = i\n    return []",
-     "c": "O(n) time, O(n) space.",
+     "hint": "For each number, the partner you need is target minus it. How could you check in O(1) whether you have already seen that partner?",
+     "sol": "def two_sum(nums, target):\n    seen = {}  # value -> the index where we saw it\n    for i, x in enumerate(nums):\n        need = target - x  # the partner that would complete the pair\n        if need in seen:\n            # The partner came earlier, so its index goes first\n            return [seen[need], i]\n        seen[x] = i  # remember x for the numbers after it\n    return []",
+     "c": "O(n) time: one dictionary look-up per number. O(n) space for the dictionary.",
      "st": {
-      "p": "Write `two_sum(nums, target)`. It receives a list of integers `nums` and an integer `target`, and returns a list of the two indices whose values add up to `target`. Exactly one valid pair exists, and the same index cannot be used twice. Return the earlier index first.",
+      "p": "Given a list of integers `nums` and an integer `target`, return the indices of the two numbers that add up to `target`.\n\nExactly one pair adds up to `target`, and you may not use the same index twice. Return the smaller index first.",
       "ex": [
        {
         "i": "nums = [2, 7, 11, 15], target = 9",
@@ -204,15 +216,20 @@ window.CODING = {
        {
         "i": "nums = [3, 2, 4], target = 6",
         "o": "[1, 2]",
-        "why": "nums[1] + nums[2] = 2 + 4 = 6, the first pair found is not at the start of the array"
+        "why": "2 + 4 = 6; the pair does not have to include index 0"
        }
       ],
       "k": [
        "2 <= len(nums) <= 10^4",
        "-10^9 <= nums[i], target <= 10^9",
        "exactly one valid pair exists",
-       "runs in O(n) time"
+       "Aim for O(n) time"
       ]
+     },
+     "first": {
+      "label": "First idea, O(n^2)",
+      "note": "Try every pair. It works, but for each number it rescans the rest of the list. What if we remembered the numbers we have already passed?",
+      "code": "def two_sum(nums, target):\n    # Try every pair (i, j) with i before j\n    for i in range(len(nums)):\n        for j in range(i + 1, len(nums)):\n            if nums[i] + nums[j] == target:\n                return [i, j]\n    return []  # never reached: a pair always exists"
      }
     },
     {
@@ -224,21 +241,21 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Group words that are anagrams of each other.",
-     "hint": "Anagrams share the same sorted letters: use that as the key.",
-     "sol": "from collections import defaultdict\n\ndef group_anagrams(words):\n    groups = defaultdict(list)\n    for w in words:\n        groups[\"\".join(sorted(w))].append(w)\n    return list(groups.values())",
-     "c": "O(n k log k) for n words of length k.",
+     "hint": "Two anagrams look identical once their letters are put in order. Could that sorted form be a label that every word of a group shares?",
+     "sol": "def group_anagrams(words):\n    groups = {}  # sorted letters -> the words that have those letters\n    for w in words:\n        # Anagrams all sort to the same string, so it works as their label\n        key = \"\".join(sorted(w))\n        if key not in groups:\n            groups[key] = []\n        groups[key].append(w)\n    # A dict keeps insertion order, so groups come out by first appearance\n    return list(groups.values())",
+     "c": "O(n k log k) time for n words of length k: each word is sorted once. O(n k) space for the groups.",
      "st": {
-      "p": "Write `group_anagrams(words)`. It receives a list of lowercase strings and returns a list of groups, where each group holds words that are anagrams of one another. A word belongs to exactly one group. The order of groups follows each group's first appearance in `words`, and the order of words inside a group follows the input order too, so the output is fully determined by the input.",
+      "p": "Given a list of lowercase strings `words`, group together the words that are anagrams of each other and return the groups.\n\nEvery word belongs to exactly one group. Groups are listed in the order of their first word in `words`, and the words inside a group keep their input order.",
       "ex": [
        {
         "i": "words = [\"eat\", \"tea\", \"tan\", \"ate\", \"nat\", \"bat\"]",
         "o": "[[\"eat\", \"tea\", \"ate\"], [\"tan\", \"nat\"], [\"bat\"]]",
-        "why": "eat/tea/ate share the same letters, tan/nat share the same letters, bat is alone"
+        "why": "eat, tea and ate use the same letters; tan and nat use the same letters; bat is alone"
        },
        {
         "i": "words = [\"ab\", \"ba\", \"a\"]",
         "o": "[[\"ab\", \"ba\"], [\"a\"]]",
-        "why": "ab and ba are anagrams of each other; a has no match"
+        "why": "ab and ba are anagrams; a has no partner"
        }
       ],
       "k": [
@@ -247,6 +264,10 @@ window.CODING = {
        "words contain lowercase English letters only",
        "group and within-group order matches first appearance in the input"
       ]
+     },
+     "alt": {
+      "note": "Same grouping with `defaultdict(list)`: a missing key starts as an empty list, so the `if` is not needed.",
+      "code": "from collections import defaultdict\n\ndef group_anagrams(words):\n    groups = defaultdict(list)\n    for w in words:\n        groups[\"\".join(sorted(w))].append(w)\n    return list(groups.values())"
      }
     },
     {
@@ -258,28 +279,28 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Length of the longest run of consecutive integers, in O(n).",
-     "hint": "Put everything in a set; only start counting from numbers with no left neighbour.",
-     "sol": "def longest_consecutive(nums):\n    s, best = set(nums), 0\n    for x in s:\n        if x - 1 not in s:            # x starts a run\n            y = x\n            while y + 1 in s:\n                y += 1\n            best = max(best, y - x + 1)\n    return best",
-     "c": "O(n): each number is visited in at most one run.",
+     "hint": "Sorting would cost O(n log n). If you could test in O(1) whether x + 1 is present, which numbers are worth starting a count from, so that no run is counted twice?",
+     "sol": "def longest_consecutive(nums):\n    s = set(nums)  # a set: quick membership test, and repeats vanish\n    best = 0\n    for x in s:\n        # x starts a run only if x - 1 is missing\n        if x - 1 not in s:\n            y = x\n            # Walk up the run one number at a time\n            while y + 1 in s:\n                y += 1\n            best = max(best, y - x + 1)  # the run is x..y\n    return best",
+     "c": "O(n) time: the inner walk only starts at the first number of a run, so each number is visited at most twice. O(n) space for the set.",
      "st": {
-      "p": "Write `longest_consecutive(nums)`. It receives a list of integers (duplicates allowed, order irrelevant) and returns the length of the longest run of consecutive integers that appears anywhere among them. An empty list returns 0. The solution must run in O(n) time, so sorting first is not allowed.",
+      "p": "Given a list of integers `nums`, return the length of the longest run of consecutive integers (such as 3, 4, 5) among its values.\n\nThe values do not have to sit next to each other in the list, and a repeated value counts once. An empty list returns 0.",
       "ex": [
        {
         "i": "nums = [100, 4, 200, 1, 3, 2]",
         "o": "4",
-        "why": "1, 2, 3, 4 form the longest run"
+        "why": "1, 2, 3 and 4 form the longest run"
        },
        {
         "i": "nums = [1, 2, 2, 3]",
         "o": "3",
-        "why": "the run is 1, 2, 3; the repeated 2 does not extend it"
+        "why": "the run is 1, 2, 3; the repeated 2 does not make it longer"
        }
       ],
       "k": [
        "0 <= len(nums) <= 10^5",
        "-10^9 <= nums[i] <= 10^9",
        "duplicates do not count twice toward a run's length",
-       "must run in O(n) time"
+       "Aim for O(n) time"
       ]
      }
     }
@@ -313,10 +334,10 @@ window.CODING = {
       "o": "1",
       "w": "-2 + 0 + 3"
      },
-     "t": "Build the prefix once; every query is one subtraction.",
-     "code": "class RangeSum:\n    def __init__(self, nums):\n        self.pre = [0]\n        for x in nums:\n            self.pre.append(self.pre[-1] + x)\n\n    def sum(self, i, j):  # inclusive\n        return self.pre[j + 1] - self.pre[i]",
+     "t": "You will be asked about the same list many times. If you stored the running total up to each position, what would one query cost?",
+     "code": "class RangeSum:\n    def __init__(self, nums):\n        # pre[i] = sum of the first i numbers, so pre[0] = 0\n        self.pre = [0]\n        for x in nums:\n            self.pre.append(self.pre[-1] + x)\n\n    def sum(self, i, j):  # inclusive\n        # Total up to and including j, minus the total before i\n        return self.pre[j + 1] - self.pre[i]",
      "st": {
-      "p": "Implement a class `RangeSum`. `RangeSum(nums)` builds it once from a list of integers, in O(n) time. Its method `sum(i, j)` returns the sum of `nums[i..j]` inclusive, answered in O(1) regardless of how many times it is called. `nums` is never modified after construction, and `i <= j` always holds.",
+      "p": "Design a class `RangeSum`. `RangeSum(nums)` is built once from a list of integers. Its method `sum(i, j)` returns the sum of `nums[i..j]`, both ends included.\n\n`nums` never changes after it is built, and `i <= j` always holds. Aim for O(n) to build and O(1) per query.",
       "ex": [
        {
         "i": "nums = [-2, 0, 3, -5, 2, -1]; ops: RangeSum(nums), sum(0, 2)",
@@ -344,27 +365,27 @@ window.CODING = {
       "o": "[24, 12, 8, 6]",
       "w": "no division allowed"
      },
-     "t": "Prefix products from the left, then suffix products from the right.",
-     "code": "def product_except_self(nums):\n    out = [1] * len(nums)\n    left = 1\n    for i in range(len(nums)):\n        out[i] = left              # product of everything before i\n        left *= nums[i]\n    right = 1\n    for i in range(len(nums) - 1, -1, -1):\n        out[i] *= right            # times everything after i\n        right *= nums[i]\n    return out",
+     "t": "The product of everything except nums[i] is the product on its left times the product on its right. Can you build each side in its own sweep?",
+     "code": "def product_except_self(nums):\n    out = [1] * len(nums)  # out[i] will hold the product of all the others\n    # Left to right: out[i] gets the product of everything before i\n    left = 1  # product of the numbers to the left of i\n    for i in range(len(nums)):\n        out[i] = left\n        left *= nums[i]\n    # Right to left: multiply in the product of everything after i\n    right = 1  # product of the numbers to the right of i\n    for i in range(len(nums) - 1, -1, -1):\n        out[i] *= right\n        right *= nums[i]\n    return out",
      "st": {
-      "p": "Write `product_except_self(nums)`. It receives a list of at least two integers and returns a new list where each position holds the product of every other element, without using division. It must run in O(n) time using only a constant amount of extra space beyond the output list.",
+      "p": "Given a list of integers `nums`, return a list where position `i` holds the product of every element of `nums` except `nums[i]`.\n\nDo not use division. Aim for O(n) time and O(1) extra space beyond the output list.",
       "ex": [
        {
         "i": "nums = [1, 2, 3, 4]",
         "o": "[24, 12, 8, 6]",
-        "why": "each output position multiplies together the other three values"
+        "why": "each position multiplies the other three values, for example 2 * 3 * 4 = 24"
        },
        {
         "i": "nums = [1, 0, 3]",
         "o": "[0, 3, 0]",
-        "why": "the zero at index 1 makes every product that excludes it zero, and the product excluding the zero itself is 1 * 3 = 3"
+        "why": "index 1 leaves out the zero, so its product is 1 * 3 = 3; the other two products include the zero"
        }
       ],
       "k": [
        "2 <= len(nums) <= 10^5",
        "-30 <= nums[i] <= 30",
        "no division allowed",
-       "runs in O(n) time"
+       "Aim for O(n) time"
       ]
      }
     },
@@ -375,20 +396,20 @@ window.CODING = {
       "o": "2",
       "w": "[0, 1] or [1, 0]"
      },
-     "t": "Count 0 as -1; a repeated prefix means a zero-sum stretch. Store the first index of each prefix.",
-     "code": "def find_max_length(nums):\n    first, run, best = {0: -1}, 0, 0\n    for i, x in enumerate(nums):\n        run += 1 if x else -1\n        if run in first:\n            best = max(best, i - first[run])\n        else:\n            first[run] = i\n    return best",
+     "t": "Score each 0 as -1 and each 1 as +1, so a balanced stretch scores 0. When does the running score return to a value it has had before, and which earlier index is the best one to remember?",
+     "code": "def find_max_length(nums):\n    # first: running score -> the first index where we reached it\n    first = {0: -1}  # score 0 before the list starts (index -1)\n    run = 0  # +1 for each 1, -1 for each 0\n    best = 0\n    for i, x in enumerate(nums):\n        if x == 1:\n            run += 1\n        else:\n            run -= 1\n        if run in first:\n            # Same score as before: the stretch in between has equal 0s and 1s\n            best = max(best, i - first[run])\n        else:\n            first[run] = i  # keep the earliest index, so stretches come out longest\n    return best",
      "st": {
-      "p": "Write `find_max_length(nums)`. It receives a list containing only 0s and 1s and returns the length of the longest contiguous subarray that has an equal count of 0s and 1s. If no such subarray exists (other than the empty one), it returns 0.",
+      "p": "Given a list `nums` that contains only 0s and 1s, return the length of the longest contiguous subarray with an equal number of 0s and 1s.\n\nIf there is no such subarray, return 0.",
       "ex": [
        {
         "i": "nums = [0, 1, 0]",
         "o": "2",
-        "why": "[0, 1] (or equivalently [1, 0]) has one 0 and one 1"
+        "why": "[0, 1] has one 0 and one 1, and so does [1, 0]"
        },
        {
         "i": "nums = [0, 0, 1, 1]",
         "o": "4",
-        "why": "the whole array has two 0s and two 1s"
+        "why": "the whole list has two 0s and two 1s"
        }
       ],
       "k": [
@@ -405,10 +426,10 @@ window.CODING = {
       "o": "7",
       "w": "sums like 5, 0, -5"
      },
-     "t": "Count prefixes by run % k instead of by run.",
-     "code": "from collections import Counter\n\ndef subarrays_div_by_k(nums, k):\n    seen, run, count = Counter({0: 1}), 0, 0\n    for x in nums:\n        run = (run + x) % k\n        count += seen[run]\n        seen[run] += 1\n    return count",
+     "t": "Two running totals that leave the same remainder after dividing by k differ by a multiple of k. What should you count as you go?",
+     "code": "def subarrays_div_by_k(nums, k):\n    # seen: remainder -> how many times the running total has left it\n    seen = {0: 1}  # the empty start has remainder 0\n    run = 0  # running total, kept modulo k\n    count = 0\n    for x in nums:\n        run = (run + x) % k  # Python's % is never negative when k is positive\n        # Each earlier total with this remainder leaves a stretch divisible by k\n        count += seen.get(run, 0)\n        seen[run] = seen.get(run, 0) + 1\n    return count",
      "st": {
-      "p": "Write `subarrays_div_by_k(nums, k)`. It receives a list of integers, which may include negative numbers, and a positive integer `k`. It returns the count of contiguous subarrays whose sum is divisible by `k` (a sum of 0 counts).",
+      "p": "Given a list of integers `nums` and a positive integer `k`, return the number of contiguous subarrays whose sum is divisible by `k`.\n\n`nums` may contain negative numbers. A sum of 0 counts as divisible.",
       "ex": [
        {
         "i": "nums = [4, 5, 0, -2, -3, 1], k = 5",
@@ -418,14 +439,14 @@ window.CODING = {
        {
         "i": "nums = [5, 0, 0], k = 5",
         "o": "6",
-        "why": "every one of the six contiguous subarrays here sums to 0, 5, or 10, all divisible by 5"
+        "why": "every one of the six subarrays sums to 0, 5 or 10, all divisible by 5"
        }
       ],
       "k": [
        "1 <= len(nums) <= 3*10^4",
        "-10^4 <= nums[i] <= 10^4",
        "2 <= k <= 10^4",
-       "runs in O(n) time"
+       "Aim for O(n) time"
       ]
      }
     }
@@ -443,29 +464,38 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Count contiguous subarrays summing to k (numbers can be negative).",
-     "hint": "A running sum; count how often running - k has been seen.",
-     "sol": "from collections import Counter\n\ndef subarray_sum(nums, k):\n    seen, run, count = Counter({0: 1}), 0, 0  # prefix 0 seen once: a run from index 0\n    for x in nums:\n        run += x\n        count += seen[run - k]  # every earlier prefix p with run - p == k\n        seen[run] += 1\n    return count",
-     "c": "O(n) time and space.",
+     "hint": "A subarray from i to j adds up to k exactly when the running total at j minus the running total before i is k. As you go, how many earlier running totals equal the current one minus k?",
+     "sol": "def subarray_sum(nums, k):\n    # seen: running total -> how many times we have had that total so far\n    seen = {0: 1}  # the empty start, so a subarray beginning at index 0 can count\n    run = 0  # sum of nums up to the current position\n    count = 0\n    for x in nums:\n        run += x\n        # A subarray ending here adds up to k for every earlier total equal to run - k\n        count += seen.get(run - k, 0)\n        seen[run] = seen.get(run, 0) + 1\n    return count",
+     "c": "O(n) time: one dictionary look-up and update per number. O(n) space for the totals.",
      "st": {
-      "p": "Write `subarray_sum(nums, k)`. It receives a list of integers, which may include negative numbers, and an integer `k`. It returns the count of contiguous subarrays whose elements sum to exactly `k`. The same subarray is counted once even if other subarrays overlap it; two subarrays with the same sum but different start or end positions both count. The solution should run in O(n) time.",
+      "p": "Given a list of integers `nums` and an integer `k`, return the number of contiguous subarrays whose elements add up to `k`.\n\n`nums` may contain negative numbers. Subarrays are counted by position: two subarrays with the same values at different places both count.",
       "ex": [
        {
         "i": "nums = [1, 1, 1], k = 2",
         "o": "2",
-        "why": "nums[0:2] and nums[1:3] both sum to 2"
+        "why": "nums[0:2] and nums[1:3] both add up to 2"
        },
        {
         "i": "nums = [1, -1, 0], k = 0",
         "o": "3",
-        "why": "the subarrays [1, -1], [1, -1, 0], and [0] each sum to 0"
+        "why": "[1, -1], [1, -1, 0] and [0] each add up to 0"
        }
       ],
       "k": [
        "1 <= len(nums) <= 2*10^4",
        "-1000 <= nums[i] <= 1000",
        "k can be negative, zero, or positive",
-       "runs in O(n) time"
+       "Aim for O(n) time"
       ]
+     },
+     "first": {
+      "label": "First idea, O(n^2)",
+      "note": "Try every start and extend the end, adding as you go. Each start redoes work the others share: a subarray sum is the difference of two running totals, so could you count earlier totals instead?",
+      "code": "def subarray_sum(nums, k):\n    count = 0\n    # Try every start, and extend the end one element at a time\n    for start in range(len(nums)):\n        total = 0  # sum of nums[start..end]\n        for end in range(start, len(nums)):\n            total += nums[end]\n            # Negative numbers mean the total can come back to k, so never stop early\n            if total == k:\n                count += 1\n    return count"
+     },
+     "alt": {
+      "note": "Same idea with `Counter`: a missing key counts as 0, so no `.get` is needed.",
+      "code": "from collections import Counter\n\ndef subarray_sum(nums, k):\n    seen, run, count = Counter({0: 1}), 0, 0\n    for x in nums:\n        run += x\n        count += seen[run - k]\n        seen[run] += 1\n    return count"
      }
     }
    ],
@@ -497,15 +527,15 @@ window.CODING = {
       "o": "3, array starts [1, 2, 3]",
       "w": "sorted input"
      },
-     "t": "Same direction: a slow write pointer and a fast read pointer.",
-     "code": "def remove_duplicates(nums):\n    w = 0\n    for x in nums:\n        if w == 0 or x != nums[w - 1]:\n            nums[w] = x\n            w += 1\n    return w",
+     "t": "Keep a write position behind your read position. When is a number new enough to be written?",
+     "code": "def remove_duplicates(nums):\n    w = 0  # next slot to write; nums[:w] holds the distinct values so far\n    for x in nums:\n        # The list is sorted, so x is new when it differs from the last value kept\n        if w == 0 or x != nums[w - 1]:\n            nums[w] = x\n            w += 1\n    return w  # how many distinct values",
      "st": {
-      "p": "Write `remove_duplicates(nums)`. It receives a list `nums` that is already sorted in non-decreasing order, rewrites it in place so that the first positions hold each distinct value once in order, and returns the count of distinct values. What ends up in the remaining positions past that count does not matter.",
+      "p": "Given a list `nums` sorted in non-decreasing order, remove the duplicates in place so that each distinct value appears once at the front of the list, and return the number of distinct values.\n\nWhat is left in the positions after that count does not matter.",
       "ex": [
        {
         "i": "nums = [1, 1, 2, 2, 3]",
         "o": "3, array starts [1, 2, 3]",
-        "why": "there are three distinct values: 1, 2, 3"
+        "why": "there are three distinct values: 1, 2 and 3"
        },
        {
         "i": "nums = [2, 2, 2, 2]",
@@ -528,10 +558,10 @@ window.CODING = {
       "o": "[1, 3, 12, 0, 0]",
       "w": "order kept"
      },
-     "t": "Write the non-zeros forward, then fill the rest with zeros.",
-     "code": "def move_zeroes(nums):\n    w = 0\n    for x in nums:\n        if x != 0:\n            nums[w] = x\n            w += 1\n    for i in range(w, len(nums)):\n        nums[i] = 0\n    return nums",
+     "t": "Where should the next non-zero value go? What is left to fill once all of them are in place?",
+     "code": "def move_zeroes(nums):\n    w = 0  # next slot for a non-zero value\n    for x in nums:\n        if x != 0:\n            nums[w] = x  # copy non-zeros forward, keeping their order\n            w += 1\n    # Everything from w onward is left over, so fill it with zeros\n    for i in range(w, len(nums)):\n        nums[i] = 0\n    return nums",
      "st": {
-      "p": "Write `move_zeroes(nums)`. It receives a list of integers, moves every zero to the end of the list while keeping the relative order of the non-zero values unchanged, and returns the same list modified in place.",
+      "p": "Given a list of integers `nums`, move all the zeros to the end while keeping the order of the non-zero values, and return the list.\n\nChange `nums` in place, without building a second list.",
       "ex": [
        {
         "i": "nums = [0, 1, 0, 3, 12]",
@@ -541,7 +571,7 @@ window.CODING = {
        {
         "i": "nums = [0, 0, 0]",
         "o": "[0, 0, 0]",
-        "why": "there are no non-zero values to move, so the list is unchanged"
+        "why": "there are no non-zero values, so the list stays the same"
        }
       ],
       "k": [
@@ -558,20 +588,20 @@ window.CODING = {
       "o": "6",
       "w": "units of water held"
      },
-     "t": "Move the lower side inward; the water there is its best height so far minus its height.",
-     "code": "def trap(h):\n    l, r, lmax, rmax, water = 0, len(h) - 1, 0, 0, 0\n    while l < r:\n        if h[l] < h[r]:            # the left wall decides\n            lmax = max(lmax, h[l])\n            water += lmax - h[l]\n            l += 1\n        else:\n            rmax = max(rmax, h[r])\n            water += rmax - h[r]\n            r -= 1\n    return water",
+     "t": "The water above a bar depends on the tallest bar on each side. If you look at both ends of the list, which side already has its answer?",
+     "code": "def trap(h):\n    l = 0  # left end\n    r = len(h) - 1  # right end\n    lmax = 0  # tallest bar seen so far from the left\n    rmax = 0  # tallest bar seen so far from the right\n    water = 0\n    while l < r:\n        if h[l] < h[r]:\n            # The right side has a wall at least as tall as anything on the left,\n            # so the left's best wall (lmax) sets the water level above h[l]\n            lmax = max(lmax, h[l])\n            water += lmax - h[l]\n            l += 1\n        else:\n            # Mirror image: the right's best wall sets the level above h[r]\n            rmax = max(rmax, h[r])\n            water += rmax - h[r]\n            r -= 1\n    return water",
      "st": {
-      "p": "Write `trap(h)`. It receives a list of non-negative bar heights, one unit wide each, and returns the total units of water that rain would trap between the bars. A bar can only hold water up to the shorter of the tallest bar to its left and the tallest bar to its right.",
+      "p": "Given a list `h` of non-negative bar heights, each bar one unit wide, return how many units of water the bars hold after rain.\n\nWater sits above a bar up to the height of the shorter of the tallest bar to its left and the tallest bar to its right.",
       "ex": [
        {
         "i": "h = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]",
         "o": "6",
-        "why": "the dips between the taller bars collect 6 units of water in total"
+        "why": "the dips between the taller bars hold 6 units of water in total"
        },
        {
         "i": "h = [5, 4, 3, 2, 1]",
         "o": "0",
-        "why": "the terrain only slopes downward, so no dip can hold water"
+        "why": "the heights only go down, so no dip can hold water"
        }
       ],
       "k": [
@@ -579,6 +609,11 @@ window.CODING = {
        "0 <= h[i] <= 10^5",
        "returns 0 when the terrain traps no water"
       ]
+     },
+     "first": {
+      "label": "First idea, O(n^2)",
+      "note": "For each bar, look left and right for the tallest wall. That rescans the list for every bar. Could you know the tallest wall on each side without searching for it every time?",
+      "code": "def trap(h):\n    water = 0\n    for i in range(len(h)):\n        # Tallest wall on each side of bar i (bar i itself counts)\n        left_wall = max(h[:i + 1])\n        right_wall = max(h[i:])\n        # Water above bar i fills up to the shorter wall\n        water += min(left_wall, right_wall) - h[i]\n    return water"
      }
     }
    ],
@@ -595,16 +630,16 @@ window.CODING = {
      },
      "l": "easy",
      "task": "Is a string a palindrome, ignoring case and non-alphanumerics?",
-     "hint": "Pointers from both ends, skipping non-alphanumerics.",
-     "sol": "def is_palindrome(s):\n    l, r = 0, len(s) - 1\n    while l < r:\n        if not s[l].isalnum():\n            l += 1\n        elif not s[r].isalnum():\n            r -= 1\n        elif s[l].lower() != s[r].lower():\n            return False\n        else:\n            l, r = l + 1, r - 1\n    return True",
-     "c": "O(n) time, O(1) space.",
+     "hint": "Compare the first and last characters that count, then move inward. What do you do when one of them is a space or punctuation?",
+     "sol": "def is_palindrome(s):\n    l = 0  # left end\n    r = len(s) - 1  # right end\n    while l < r:\n        if not s[l].isalnum():\n            l += 1  # skip punctuation or a space on the left\n        elif not s[r].isalnum():\n            r -= 1  # same on the right\n        elif s[l].lower() != s[r].lower():\n            return False  # a mirrored pair that differs\n        else:\n            # This pair matches, so look at the next pair in\n            l += 1\n            r -= 1\n    return True",
+     "c": "O(n) time: each character is looked at once. O(1) extra space.",
      "st": {
-      "p": "Write `is_palindrome(s)`. It receives a string and returns True if the string reads the same forwards and backwards once punctuation and spaces are removed and letters are treated as lowercase, and False otherwise. A string with no letters or digits at all counts as a palindrome.",
+      "p": "Given a string `s`, return True if it reads the same forwards and backwards after you ignore case and everything that is not a letter or a digit, and False otherwise.\n\nA string with no letters or digits counts as a palindrome.",
       "ex": [
        {
         "i": "s = \"A man, a plan, a canal: Panama\"",
         "o": "True",
-        "why": "ignoring punctuation, spaces, and case, it reads amanaplanacanalpanama both ways"
+        "why": "ignoring punctuation, spaces and case, it reads amanaplanacanalpanama both ways"
        },
        {
         "i": "s = \"race a car\"",
@@ -628,11 +663,11 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Max area between two lines.",
-     "hint": "Start wide; always move the shorter line inward.",
-     "sol": "def max_area(h):\n    l, r, best = 0, len(h) - 1, 0\n    while l < r:\n        best = max(best, (r - l) * min(h[l], h[r]))\n        if h[l] < h[r]:\n            l += 1\n        else:\n            r -= 1\n    return best",
-     "c": "O(n).",
+     "hint": "The widest pair has the biggest width. To beat it with a narrower pair, what has to happen to the shorter bar?",
+     "sol": "def max_area(h):\n    l = 0  # left bar\n    r = len(h) - 1  # right bar: start as wide as possible\n    best = 0\n    while l < r:\n        # Water is limited by the shorter bar; the width is the gap between them\n        best = max(best, (r - l) * min(h[l], h[r]))\n        # Moving the taller bar inward shrinks the width and cannot raise the\n        # limit, so the only move that can help is to drop the shorter bar\n        if h[l] < h[r]:\n            l += 1\n        else:\n            r -= 1\n    return best",
+     "c": "O(n) time: each step moves one end inward, so there are at most n steps. O(1) space.",
      "st": {
-      "p": "Write `max_area(h)`. It receives a list of non-negative bar heights, where each bar sits one unit apart, and returns the largest amount of water two of the bars can trap between them. The area between two bars is the distance between their indices times the shorter bar's height.",
+      "p": "Given a list `h` of non-negative bar heights, where neighbouring bars are one unit apart, return the largest amount of water that two of the bars can hold between them.\n\nThe water between two bars is the distance between their indices times the height of the shorter bar.",
       "ex": [
        {
         "i": "h = [1, 8, 6, 2, 5, 4, 8, 3, 7]",
@@ -647,8 +682,14 @@ window.CODING = {
       ],
       "k": [
        "2 <= len(h) <= 10^5",
-       "0 <= h[i] <= 10^4"
+       "0 <= h[i] <= 10^4",
+       "Aim for O(n) time"
       ]
+     },
+     "first": {
+      "label": "First idea, O(n^2)",
+      "note": "Try every pair of bars. Most pairs can never win: starting from the widest pair, which bar can you safely give up on, and why?",
+      "code": "def max_area(h):\n    best = 0\n    # Try every pair of bars (i, j) with i left of j\n    for i in range(len(h)):\n        for j in range(i + 1, len(h)):\n            area = (j - i) * min(h[i], h[j])  # width times the shorter bar\n            best = max(best, area)\n    return best"
      }
     },
     {
@@ -660,16 +701,16 @@ window.CODING = {
      },
      "l": "medium",
      "task": "All unique triplets summing to zero.",
-     "hint": "Sort; fix one number; two pointers on the rest; skip duplicates.",
-     "sol": "def three_sum(nums):\n    nums.sort()\n    out = []\n    for i in range(len(nums) - 2):\n        if i and nums[i] == nums[i - 1]:  # skip a duplicate anchor\n            continue\n        l, r = i + 1, len(nums) - 1\n        while l < r:\n            s = nums[i] + nums[l] + nums[r]\n            if s < 0:\n                l += 1\n            elif s > 0:\n                r -= 1\n            else:\n                out.append([nums[i], nums[l], nums[r]])\n                l += 1\n                while l < r and nums[l] == nums[l - 1]:  # skip a duplicate middle\n                    l += 1\n    return out",
-     "c": "O(n^2) time.",
+     "hint": "Fixing one number turns this into Two Sum on the rest. If the list is sorted, how can two ends close in on the target, and how do you avoid reporting repeats?",
+     "sol": "def three_sum(nums):\n    nums.sort()  # sorted order lets two ends close in on a target sum\n    out = []\n    for i in range(len(nums) - 2):\n        # Skip a repeated first number so the same triplet is not reported twice\n        if i and nums[i] == nums[i - 1]:\n            continue\n        # With nums[i] fixed, look after it for two numbers that add up to -nums[i]\n        l, r = i + 1, len(nums) - 1\n        while l < r:\n            s = nums[i] + nums[l] + nums[r]\n            if s < 0:\n                l += 1  # too small: we need a bigger number\n            elif s > 0:\n                r -= 1  # too big: we need a smaller number\n            else:\n                out.append([nums[i], nums[l], nums[r]])\n                l += 1\n                # Skip repeats of the middle number we just used\n                while l < r and nums[l] == nums[l - 1]:\n                    l += 1\n    return out",
+     "c": "O(n^2) time: n choices for the first number, each with one linear sweep. O(1) extra space besides the output.",
      "st": {
-      "p": "Write `three_sum(nums)`. It receives a list of integers and returns every unique triplet of values (as three-element lists) that sums to zero. Each triplet's three values are listed low to high, no triplet is repeated even if it can be formed from different index combinations, and a value cannot be reused within the same triplet unless it appears more than once in `nums`.",
+      "p": "Given a list of integers `nums`, return all unique triplets of values that add up to 0.\n\nEach triplet is listed from low to high and the triplets come in increasing order. No triplet appears twice, even if it can be made from different positions, and a value can be used more than once in a triplet only if it appears that many times in `nums`.",
       "ex": [
        {
         "i": "nums = [-1, 0, 1, 2, -1, -4]",
         "o": "[[-1, -1, 2], [-1, 0, 1]]",
-        "why": "those are the only two combinations of three values that sum to zero, with duplicates collapsed"
+        "why": "these are the only two sets of three values that add up to 0, with repeats merged"
        },
        {
         "i": "nums = [0, 1, 1]",
@@ -681,7 +722,7 @@ window.CODING = {
        "3 <= len(nums) <= 3000",
        "-10^5 <= nums[i] <= 10^5",
        "duplicate triplets are reported only once",
-       "runs in O(n^2) time"
+       "Aim for O(n^2) time"
       ]
      }
     }
@@ -714,20 +755,20 @@ window.CODING = {
       "o": "2",
       "w": "[4, 3]"
      },
-     "t": "Shrink while the window is valid, and record the minimum as you shrink.",
-     "code": "def min_subarray_len(target, nums):\n    l = total = 0\n    best = float('inf')\n    for r, x in enumerate(nums):\n        total += x\n        while total >= target:\n            best = min(best, r - l + 1)\n            total -= nums[l]\n            l += 1\n    return 0 if best == float('inf') else best",
+     "t": "All numbers are positive, so adding one grows the sum and removing one shrinks it. Once the sum reaches target, how do you find the shortest stretch that ends here?",
+     "code": "def min_subarray_len(target, nums):\n    l = 0  # start of the current stretch\n    total = 0  # sum of nums[l..r]\n    best = len(nums) + 1  # longer than any real answer: \"none found yet\"\n    for r, x in enumerate(nums):\n        total += x  # extend the stretch to the right\n        # While the stretch is big enough, record it, then try dropping from the left\n        while total >= target:\n            best = min(best, r - l + 1)\n            total -= nums[l]\n            l += 1\n    # No stretch ever reached target\n    if best == len(nums) + 1:\n        return 0\n    return best",
      "st": {
-      "p": "Write `min_subarray_len(target, nums)`. It receives a positive `target` and a list of positive integers, and returns the length of the shortest contiguous subarray whose sum is at least `target`. If no subarray reaches `target`, it returns 0.",
+      "p": "Given a positive integer `target` and a list `nums` of positive integers, return the length of the shortest contiguous subarray whose sum is at least `target`.\n\nIf no subarray reaches `target`, return 0.",
       "ex": [
        {
         "i": "target = 7, nums = [2, 3, 1, 2, 4, 3]",
         "o": "2",
-        "why": "[4, 3] sums to 7 in two elements, shorter than any other qualifying run"
+        "why": "[4, 3] adds up to 7 using two elements, shorter than any other that reaches it"
        },
        {
         "i": "target = 100, nums = [1, 2, 3]",
         "o": "0",
-        "why": "the whole array only sums to 6, never reaching 100"
+        "why": "the whole list only adds up to 6, never reaching 100"
        }
       ],
       "k": [
@@ -745,20 +786,20 @@ window.CODING = {
       "o": "4",
       "w": "\"AABA\" -> \"AAAA\""
      },
-     "t": "Valid while window length minus its most common count is at most k.",
-     "code": "from collections import Counter\n\ndef character_replacement(s, k):\n    cnt, l, top, best = Counter(), 0, 0, 0\n    for r, c in enumerate(s):\n        cnt[c] += 1\n        top = max(top, cnt[c])\n        while (r - l + 1) - top > k:   # more than k letters to change\n            cnt[s[l]] -= 1\n            l += 1\n        best = max(best, r - l + 1)\n    return best",
+     "t": "A stretch can become one letter when its length minus the count of its most common letter is at most k. When that fails, which end of the stretch should move?",
+     "code": "def character_replacement(s, k):\n    counts = {}  # letter -> how many times it appears in the stretch s[l..r]\n    l = 0\n    top = 0  # highest count any one letter has reached in a stretch so far\n    best = 0\n    for r, c in enumerate(s):\n        counts[c] = counts.get(c, 0) + 1\n        top = max(top, counts[c])  # never lowered: a smaller top cannot give a longer answer\n        # Letters to change = stretch length minus the most common letter's count.\n        # If that is more than k, drop the leftmost letter\n        while (r - l + 1) - top > k:\n            counts[s[l]] -= 1\n            l += 1\n        best = max(best, r - l + 1)\n    return best",
      "st": {
-      "p": "Write `character_replacement(s, k)`. It receives a string of uppercase letters and an integer `k`, and returns the length of the longest substring obtainable by changing at most `k` characters of that substring so every character in it matches. Characters outside the chosen substring are left alone.",
+      "p": "Given a string `s` of uppercase letters and an integer `k`, return the length of the longest substring that can be turned into one repeated letter by changing at most `k` of its characters.\n\nCharacters outside the chosen substring are not touched.",
       "ex": [
        {
         "i": "s = \"AABABBA\", k = 1",
         "o": "4",
-        "why": "\"AABA\" needs only one change (the middle B to A) to become all A's"
+        "why": "\"AABA\" needs one change (the B to an A) to become all A's"
        },
        {
         "i": "s = \"ABAB\", k = 0",
         "o": "1",
-        "why": "with no replacements allowed, no two adjacent characters already match, so the best run is a single character"
+        "why": "with k = 0 no two neighbouring characters match, so the best is a single character"
        }
       ],
       "k": [
@@ -775,20 +816,20 @@ window.CODING = {
       "o": "True",
       "w": "\"ba\" is in s2"
      },
-     "t": "A fixed window of len(s1); compare letter counts as it slides.",
-     "code": "from collections import Counter\n\ndef check_inclusion(s1, s2):\n    need, win, k = Counter(s1), Counter(), len(s1)\n    for r, c in enumerate(s2):\n        win[c] += 1\n        if r >= k:                       # drop the letter leaving the window\n            out = s2[r - k]\n            win[out] -= 1\n            if win[out] == 0:\n                del win[out]\n        if win == need:\n            return True\n    return False",
+     "t": "A match must be a stretch of s2 that is exactly len(s1) long. How do its letter counts change when the stretch moves one step?",
+     "code": "def check_inclusion(s1, s2):\n    k = len(s1)\n    need = {}  # letter -> how many times s1 has it\n    for c in s1:\n        need[c] = need.get(c, 0) + 1\n    win = {}  # letter -> how many times the current stretch of s2 has it\n    for r, c in enumerate(s2):\n        win[c] = win.get(c, 0) + 1  # the new letter enters on the right\n        if r >= k:\n            # The stretch is now k + 1 long, so the oldest letter leaves on the left\n            out = s2[r - k]\n            win[out] -= 1\n            if win[out] == 0:\n                del win[out]  # drop empty entries so equal counts mean equal dicts\n        if win == need:\n            return True  # the stretch has exactly the letters of s1\n    return False",
      "st": {
-      "p": "Write `check_inclusion(s1, s2)`. It receives two strings and returns True if some contiguous substring of `s2` is a rearrangement (uses exactly the same letters, same counts) of `s1`, and False otherwise.",
+      "p": "Given two strings `s1` and `s2`, return True if `s2` contains a substring that is a rearrangement of `s1`, and False otherwise.\n\nA rearrangement uses exactly the same letters with the same counts.",
       "ex": [
        {
         "i": "s1 = \"ab\", s2 = \"eidbaooo\"",
         "o": "True",
-        "why": "the substring \"ba\" inside s2 uses the same letters as \"ab\""
+        "why": "the substring \"ba\" inside s2 uses the letters of \"ab\""
        },
        {
         "i": "s1 = \"ab\", s2 = \"eidboaoo\"",
         "o": "False",
-        "why": "no two adjacent characters in s2 form the letters a and b together"
+        "why": "no two neighbouring characters in s2 are the letters a and b together"
        }
       ],
       "k": [
@@ -811,11 +852,11 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Length of the longest substring with all distinct characters.",
-     "hint": "Remember each character's last index; jump the left edge past a repeat.",
-     "sol": "def length_of_longest_substring(s):\n    last, left, best = {}, 0, 0\n    for right, ch in enumerate(s):\n        if ch in last and last[ch] >= left:  # a repeat inside the window\n            left = last[ch] + 1  # jump past it\n        last[ch] = right\n        best = max(best, right - left + 1)\n    return best",
-     "c": "O(n) time, O(alphabet) space.",
+     "hint": "When the next character already appears in your current stretch, where must the stretch begin from now on? What would you need to remember to know that at once?",
+     "sol": "def length_of_longest_substring(s):\n    last = {}  # character -> the index where we last saw it\n    left = 0  # start of the current stretch with no repeats\n    best = 0\n    for right, ch in enumerate(s):\n        # ch is already inside the stretch (a copy before left is out of it),\n        # so the stretch must now start just after that copy\n        if ch in last and last[ch] >= left:\n            left = last[ch] + 1\n        last[ch] = right\n        best = max(best, right - left + 1)  # the stretch is s[left..right]\n    return best",
+     "c": "O(n) time: each character is visited once. O(k) space for the dictionary, k being the number of distinct characters.",
      "st": {
-      "p": "Write `length_of_longest_substring(s)`. It receives a string and returns the length of the longest contiguous substring in which every character is distinct. An empty string returns 0.",
+      "p": "Given a string `s`, return the length of the longest substring that has no repeated character.\n\nA substring is a contiguous stretch of `s`. An empty string returns 0.",
       "ex": [
        {
         "i": "s = \"abcabcbb\"",
@@ -833,6 +874,11 @@ window.CODING = {
        "s consists of printable characters",
        "returns 0 for an empty string"
       ]
+     },
+     "first": {
+      "label": "First idea, O(n^2)",
+      "note": "From every start, extend until a character repeats. Each new start rebuilds work the last one already did. When a repeat shows up, how far does the start really have to move?",
+      "code": "def length_of_longest_substring(s):\n    best = 0\n    # Try every start, and extend the end until a character repeats\n    for start in range(len(s)):\n        seen = set()  # characters in s[start..end]\n        for end in range(start, len(s)):\n            if s[end] in seen:\n                break  # a repeat: no longer substring begins at this start\n            seen.add(s[end])\n            best = max(best, end - start + 1)\n    return best"
      }
     },
     {
@@ -844,16 +890,16 @@ window.CODING = {
      },
      "l": "easy",
      "task": "Largest sum of any k consecutive numbers.",
-     "hint": "Add the new element, subtract the one leaving.",
-     "sol": "def max_window_sum(nums, k):\n    cur = best = sum(nums[:k])\n    for i in range(k, len(nums)):\n        cur += nums[i] - nums[i - k]\n        best = max(best, cur)\n    return best",
-     "c": "O(n).",
+     "hint": "Two neighbouring groups of k numbers share k - 1 of them. How does the sum change when the group moves one step?",
+     "sol": "def max_window_sum(nums, k):\n    cur = sum(nums[:k])  # sum of the first k numbers\n    best = cur  # largest sum seen so far\n    for i in range(k, len(nums)):\n        # Move one step: nums[i] enters on the right, nums[i - k] leaves on the left\n        cur += nums[i] - nums[i - k]\n        best = max(best, cur)\n    return best",
+     "c": "O(n) time: each step adds one number and removes one. O(1) space.",
      "st": {
-      "p": "Write `max_window_sum(nums, k)`. It receives a list of integers and an integer `k`, and returns the largest sum of any `k` consecutive elements. `k` never exceeds the length of `nums`.",
+      "p": "Given a list of integers `nums` and an integer `k`, return the largest sum of any `k` consecutive elements.\n\n`k` never exceeds the length of `nums`.",
       "ex": [
        {
         "i": "nums = [1, 4, 2, 10, 23, 3, 1, 0, 20], k = 4",
         "o": "39",
-        "why": "the window [4, 2, 10, 23] sums to 39, the highest of any 4 consecutive elements"
+        "why": "4, 2, 10 and 23 add up to 39, the highest of any four in a row"
        },
        {
         "i": "nums = [1, 2, 3], k = 3",
@@ -896,10 +942,10 @@ window.CODING = {
       "o": "[4, 2, 4, -1, -1]",
       "w": "the next bigger value, or -1"
      },
-     "t": "Record the value that pops an index, not the distance.",
-     "code": "def next_greater(nums):\n    out, st = [-1] * len(nums), []\n    for i, x in enumerate(nums):\n        while st and nums[st[-1]] < x:\n            out[st.pop()] = x\n        st.append(i)\n    return out",
+     "t": "This is the daily temperatures idea, but you store the greater value itself instead of the distance. What do you write when a waiting index is settled?",
+     "code": "def next_greater(nums):\n    out = [-1] * len(nums)  # stays -1 if nothing greater ever appears\n    waiting = []  # indices whose next greater value has not appeared yet\n    for i, x in enumerate(nums):\n        # x is the next greater value for every smaller waiting value\n        while waiting and nums[waiting[-1]] < x:\n            j = waiting.pop()\n            out[j] = x  # store the value itself, not the distance\n        waiting.append(i)\n    return out",
      "st": {
-      "p": "Write `next_greater(nums)`. It receives a list of integers and returns a list of the same length where each position holds the next value to its right that is strictly greater, or -1 if no such value exists.",
+      "p": "Given a list `nums` of integers, return a list of the same length where each position holds the next value to its right that is strictly greater than it, or -1 if there is none.",
       "ex": [
        {
         "i": "nums = [2, 1, 2, 4, 3]",
@@ -915,7 +961,8 @@ window.CODING = {
       "k": [
        "1 <= len(nums) <= 10^5",
        "-10^9 <= nums[i] <= 10^9",
-       "-1 marks no greater value to the right"
+       "-1 marks no greater value to the right",
+       "Aim for O(n) time"
       ]
      }
     },
@@ -926,10 +973,10 @@ window.CODING = {
       "o": "3",
       "w": "min in O(1) after any pop"
      },
-     "t": "Push each value with the minimum so far.",
-     "code": "class MinStack:\n    def __init__(self):\n        self.st = []                     # (value, min so far)\n\n    def push(self, x):\n        low = min(x, self.st[-1][1]) if self.st else x\n        self.st.append((x, low))\n\n    def pop(self):\n        self.st.pop()\n\n    def get_min(self):\n        return self.st[-1][1]",
+     "t": "When you push x, what is the smallest value in the stack at that moment? That answer stays true until x is popped, so where could you keep it?",
+     "code": "class MinStack:\n    def __init__(self):\n        # Each entry is (value, smallest value in the stack up to and including it)\n        self.items = []\n\n    def push(self, x):\n        if len(self.items) == 0:\n            smallest = x  # the first value is the minimum so far\n        else:\n            smallest = self.items[-1][1]  # the minimum before this push\n            if x < smallest:\n                smallest = x\n        self.items.append((x, smallest))\n\n    def pop(self):\n        # The minimum stored under it goes away with it\n        self.items.pop()\n\n    def get_min(self):\n        # The top entry always knows the minimum of the whole stack\n        return self.items[-1][1]",
      "st": {
-      "p": "Implement a class `MinStack` with three methods: `push(x)` pushes a value, `pop()` removes the most recently pushed value, and `get_min()` returns the current minimum value in the stack in O(1) time. `pop` and `get_min` are never called on an empty stack.",
+      "p": "Design a stack that supports pushing, popping and reading the minimum value, all in O(1) time.\n\nImplement the class `MinStack` with `push(x)`, which pushes a value; `pop()`, which removes the most recently pushed value; and `get_min()`, which returns the smallest value currently in the stack. `pop` and `get_min` are never called on an empty stack.",
       "ex": [
        {
         "i": "ops: push(5), push(3), push(7), get_min()",
@@ -939,14 +986,14 @@ window.CODING = {
        {
         "i": "ops: push(2), push(2), pop(), get_min()",
         "o": "2",
-        "why": "after popping one of the two 2s, the remaining stack still has a 2 as its minimum"
+        "why": "after removing one of the two 2s, the other 2 is still in the stack and is the smallest"
        }
       ],
       "k": [
        "at most 3*10^4 total calls",
        "-10^5 <= x <= 10^5",
        "get_min and pop are never called on an empty stack",
-       "get_min runs in O(1) time"
+       "every method runs in O(1) time"
       ]
      }
     },
@@ -957,10 +1004,10 @@ window.CODING = {
       "o": "9",
       "w": "(2 + 1) * 3"
      },
-     "t": "Numbers push; an operator pops two and pushes the result.",
-     "code": "def eval_rpn(tokens):\n    st = []\n    for t in tokens:\n        if t in {\"+\", \"-\", \"*\", \"/\"}:\n            b, a = st.pop(), st.pop()    # order matters for - and /\n            if t == \"+\": st.append(a + b)\n            elif t == \"-\": st.append(a - b)\n            elif t == \"*\": st.append(a * b)\n            else: st.append(int(a / b))  # truncate toward zero\n        else:\n            st.append(int(t))\n    return st[0]",
+     "t": "Numbers wait until an operator needs them. Which two waiting numbers does an operator take, and does the order matter for - and /?",
+     "code": "def eval_rpn(tokens):\n    values = []  # numbers that are waiting for an operator\n    for tok in tokens:\n        if tok in (\"+\", \"-\", \"*\", \"/\"):\n            # The right operand was pushed last, so it comes off first\n            b = values.pop()\n            a = values.pop()\n            if tok == \"+\":\n                r = a + b\n            elif tok == \"-\":\n                r = a - b\n            elif tok == \"*\":\n                r = a * b\n            else:\n                # Divide the sizes, then restore the sign: this truncates toward zero\n                r = abs(a) // abs(b)\n                if (a < 0) != (b < 0):\n                    r = -r\n            values.append(r)  # the result waits for the next operator\n        else:\n            values.append(int(tok))\n    return values[0]  # one value is left: the whole expression",
      "st": {
-      "p": "Write `eval_rpn(tokens)`. It receives a list of string tokens representing an expression in reverse Polish (postfix) notation, using integers and the operators +, -, *, /, and returns the integer result. Division truncates toward zero rather than flooring.",
+      "p": "Given a list of string `tokens` holding an arithmetic expression in reverse Polish notation, return its integer value.\n\nEach token is an integer or one of the operators `+`, `-`, `*`, `/`. An operator applies to the two values that came right before it. Division truncates toward zero rather than rounding down.",
       "ex": [
        {
         "i": "tokens = [\"2\", \"1\", \"+\", \"3\", \"*\"]",
@@ -987,27 +1034,33 @@ window.CODING = {
       "o": "10",
       "w": "bars 5 and 6, width 2"
      },
-     "t": "An increasing stack; a lower bar closes every taller rectangle before it.",
-     "code": "def largest_rectangle(h):\n    st, best = [], 0                     # (start index, height)\n    for i, x in enumerate(h + [0]):      # the 0 flushes the stack\n        start = i\n        while st and st[-1][1] > x:\n            j, y = st.pop()\n            best = max(best, y * (i - j))\n            start = j                    # x can extend back to j\n        st.append((start, x))\n    return best",
+     "t": "A rectangle is as tall as its shortest bar. For each bar, how far can a rectangle of that bar's height stretch left and right, and what ends the stretch?",
+     "code": "def largest_rectangle(h):\n    best = 0\n    # open: (leftmost index its height reaches, height), heights rising bottom to top\n    open_bars = []\n    # The extra 0 at the end is lower than every bar, so it closes all that remain\n    for i, x in enumerate(h + [0]):\n        start = i\n        # A lower bar x ends every taller rectangle that is still open\n        while open_bars and open_bars[-1][1] > x:\n            j, height = open_bars.pop()\n            # This rectangle ran from j to i - 1 at the given height\n            area = height * (i - j)\n            if area > best:\n                best = area\n            start = j  # x is at least this tall, so x reaches back to j\n        open_bars.append((start, x))\n    return best",
      "st": {
-      "p": "Write `largest_rectangle(h)`. It receives a list of non-negative bar heights, each one unit wide and standing side by side, and returns the area of the largest rectangle that fits entirely under the bars.",
+      "p": "Given a list `h` of non-negative integers, the heights of bars that stand side by side and are one unit wide, return the area of the largest rectangle that fits entirely inside the bars.",
       "ex": [
        {
         "i": "h = [2, 1, 5, 6, 2, 3]",
         "o": "10",
-        "why": "the bars of height 5 and 6 together give a rectangle of width 2 and height 5"
+        "why": "bars 5 and 6 side by side give a rectangle of width 2 and height 5, area 10"
        },
        {
         "i": "h = [3, 3, 3]",
         "o": "9",
-        "why": "all three bars share height 3, so the full width 3 times height 3 rectangle fits"
+        "why": "all three bars have height 3, so the whole width of 3 times height 3 fits"
        }
       ],
       "k": [
        "1 <= len(h) <= 10^5",
        "0 <= h[i] <= 10^4",
-       "bars are contiguous and one unit wide"
+       "bars are contiguous and one unit wide",
+       "Aim for O(n) time"
       ]
+     },
+     "first": {
+      "label": "First idea, O(n^2)",
+      "note": "Try every left edge and extend to the right, keeping the lowest bar seen. It works, but it redoes the same stretches for every start. What if a bar's rectangle was settled the moment a lower bar arrives?",
+      "code": "def largest_rectangle(h):\n    best = 0\n    for i in range(len(h)):\n        low = h[i]  # the lowest bar between i and j\n        for j in range(i, len(h)):\n            if h[j] < low:\n                low = h[j]\n            area = low * (j - i + 1)  # a rectangle from i to j, as tall as the lowest bar\n            if area > best:\n                best = area\n    return best"
      }
     }
    ],
@@ -1024,11 +1077,11 @@ window.CODING = {
      },
      "l": "easy",
      "task": "Are the brackets balanced and correctly nested?",
-     "hint": "Push openers; on a closer, the top must be its match.",
-     "sol": "def is_valid(s):\n    pairs, stack = {')': '(', ']': '[', '}': '{'}, []\n    for ch in s:\n        if ch in pairs:\n            if not stack or stack.pop() != pairs[ch]:\n                return False\n        else:\n            stack.append(ch)\n    return not stack",
-     "c": "O(n).",
+     "hint": "The bracket you meet in a closer has to pair with the latest opener still open. Where could you keep the openers so the latest one is the easiest to reach?",
+     "sol": "def is_valid(s):\n    # Each closer maps to the opener it must match\n    pairs = {')': '(', ']': '[', '}': '{'}\n    stack = []  # openers seen so far that are still waiting to be closed\n    for ch in s:\n        if ch in pairs:\n            # A closer: the latest open bracket must be its partner\n            if len(stack) == 0:\n                return False  # nothing is open, so this closer has no partner\n            top = stack.pop()\n            if top != pairs[ch]:\n                return False  # wrong type, e.g. ( closed by ]\n        else:\n            stack.append(ch)  # an opener: wait for its closer\n    # Anything left over was opened and never closed\n    return len(stack) == 0",
+     "c": "O(n) time: each character is pushed and popped at most once. O(n) space for the stack.",
      "st": {
-      "p": "Write `is_valid(s)`. It receives a string made only of the characters `(`, `)`, `[`, `]`, `{`, `}` and returns True if every closing bracket matches the type of the most recently unclosed opening bracket, with every opener eventually closed, and False otherwise. An empty string is valid.",
+      "p": "Given a string `s` made only of the characters `(`, `)`, `[`, `]`, `{` and `}`, return `True` if the brackets are balanced and correctly nested, and `False` otherwise.\n\nEvery closing bracket must match the type of the most recent opening bracket that is still unclosed, and every opening bracket must get closed. An empty string is valid.",
       "ex": [
        {
         "i": "s = \"()[]{}\"",
@@ -1057,11 +1110,11 @@ window.CODING = {
      },
      "l": "medium",
      "task": "For each day, how many days until a warmer one?",
-     "hint": "A monotonic stack of indices waiting for a warmer day.",
-     "sol": "def daily_temperatures(t):\n    out, stack = [0] * len(t), []  # stack: indices still waiting for a warmer day\n    for i, x in enumerate(t):\n        while stack and t[stack[-1]] < x:  # x is the warmer day they waited for\n            j = stack.pop()\n            out[j] = i - j\n        stack.append(i)\n    return out",
-     "c": "O(n).",
+     "hint": "A day is still waiting until something warmer shows up. When a warm day arrives, which waiting days does it answer, and where would you keep the waiting ones?",
+     "sol": "def daily_temperatures(t):\n    out = [0] * len(t)  # 0 stays if no warmer day ever comes\n    waiting = []  # indices of days still waiting for a warmer day\n    for i, x in enumerate(t):\n        # Day i is warmer than every waiting day colder than x\n        while waiting and t[waiting[-1]] < x:\n            j = waiting.pop()\n            out[j] = i - j  # day j waited from j until today\n        waiting.append(i)  # today now waits for its own warmer day\n    return out",
+     "c": "O(n) time: every index is pushed once and popped at most once. O(n) space for the stack.",
      "st": {
-      "p": "Write `daily_temperatures(t)`. It receives a list of daily temperatures and returns a list of the same length where each position holds how many days until a strictly warmer day occurs; if no warmer day ever comes, that position is 0.",
+      "p": "Given a list `t` of daily temperatures, return a list `answer` of the same length where `answer[i]` is the number of days you have to wait after day `i` to get a strictly warmer temperature.\n\nIf no warmer day ever comes, `answer[i]` is 0.",
       "ex": [
        {
         "i": "t = [73, 74, 75, 71, 69, 72, 76, 73]",
@@ -1077,8 +1130,13 @@ window.CODING = {
       "k": [
        "1 <= len(t) <= 10^5",
        "30 <= t[i] <= 100",
-       "0 marks a day with no future warmer day"
+       "Aim for O(n) time"
       ]
+     },
+     "first": {
+      "label": "First idea, O(n^2)",
+      "note": "For each day, scan ahead until a warmer one appears. It works, but a long cold stretch gets rescanned again and again. What if the days still waiting for an answer could be settled together when a warm day arrives?",
+      "code": "def daily_temperatures(t):\n    out = [0] * len(t)\n    for i in range(len(t)):\n        # Look right from day i for the first warmer day\n        for j in range(i + 1, len(t)):\n            if t[j] > t[i]:\n                out[i] = j - i\n                break  # the first warmer day is the answer\n    return out"
      }
     }
    ],
@@ -1111,10 +1169,10 @@ window.CODING = {
       "o": "[3, 4]",
       "w": "the range of 8s"
      },
-     "t": "bisect_left for the first, bisect_right minus one for the last.",
-     "code": "from bisect import bisect_left, bisect_right\n\ndef search_range(nums, t):\n    l = bisect_left(nums, t)\n    if l == len(nums) or nums[l] != t:\n        return [-1, -1]\n    return [l, bisect_right(nums, t) - 1]",
+     "t": "Finding any 8 is not enough. How would you find the first index holding a value that is 8 or more? The last 8 sits right before the first value of 9 or more.",
+     "code": "def search_range(nums, t):\n    # lower(x): the first index whose value is >= x (len(nums) if there is none)\n    def lower(x):\n        lo, hi = 0, len(nums)\n        while lo < hi:\n            mid = (lo + hi) // 2\n            if nums[mid] >= x:\n                hi = mid  # mid might be the first one, so keep it\n            else:\n                lo = mid + 1  # mid is too small, drop it\n        return lo\n\n    first = lower(t)\n    if first == len(nums) or nums[first] != t:\n        return [-1, -1]  # t is not in the list\n    # Values are integers, so the first index of t + 1 comes right after the last t\n    last = lower(t + 1) - 1\n    return [first, last]",
      "st": {
-      "p": "Write `search_range(nums, t)`. It receives a list sorted in non-decreasing order, which may contain duplicates, and a target `t`. It returns a two-element list `[first, last]` giving the first and last index where `t` occurs, or `[-1, -1]` if `t` does not appear. It must run in O(log n) time.",
+      "p": "Given a list `nums` sorted in non-decreasing order, which may contain duplicates, and a value `t`, return `[first, last]`, the first and last index where `t` occurs, or `[-1, -1]` if `t` does not appear.\n\nAim for O(log n) time.",
       "ex": [
        {
         "i": "nums = [5, 7, 7, 8, 8, 10], target = 8",
@@ -1131,8 +1189,17 @@ window.CODING = {
        "0 <= len(nums) <= 10^5",
        "nums is sorted in non-decreasing order and may contain duplicates",
        "-10^9 <= nums[i], t <= 10^9",
-       "runs in O(log n) time"
+       "Aim for O(log n) time"
       ]
+     },
+     "first": {
+      "label": "First idea, O(n)",
+      "note": "Scan the whole list and note where t first and last appears. It works, but it ignores that the list is sorted. Where could you look to find the start of the run of t without walking to it?",
+      "code": "def search_range(nums, t):\n    first, last = -1, -1\n    for i in range(len(nums)):\n        if nums[i] == t:\n            if first == -1:\n                first = i  # the first time we meet t\n            last = i  # keeps moving right while t keeps appearing\n    return [first, last]"
+     },
+     "alt": {
+      "note": "Same idea with the library: `bisect_left` is `lower(t)` and `bisect_right` is `lower(t + 1)`.",
+      "code": "from bisect import bisect_left, bisect_right\n\ndef search_range(nums, t):\n    first = bisect_left(nums, t)\n    if first == len(nums) or nums[first] != t:\n        return [-1, -1]\n    return [first, bisect_right(nums, t) - 1]"
      }
     },
     {
@@ -1142,10 +1209,10 @@ window.CODING = {
       "o": "1",
       "w": "where the rotation starts"
      },
-     "t": "Compare mid with hi: bigger means the drop is to the right.",
-     "code": "def find_min(nums):\n    lo, hi = 0, len(nums) - 1\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] > nums[hi]:\n            lo = mid + 1\n        else:\n            hi = mid\n    return nums[lo]",
+     "t": "Compare the middle value with the last one. If the middle is bigger, where must the drop in the list be, and what if it is smaller?",
+     "code": "def find_min(nums):\n    lo, hi = 0, len(nums) - 1  # the minimum is somewhere in nums[lo..hi]\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] > nums[hi]:\n            # mid is bigger than the end, so the drop is to the right of mid\n            lo = mid + 1\n        else:\n            # mid is smaller than the end, so mid could be the minimum itself\n            hi = mid\n    return nums[lo]  # the range has shrunk to one index",
      "st": {
-      "p": "Write `find_min(nums)`. It receives a list of unique integers that was sorted ascending and then rotated at an unknown pivot, and returns the minimum value in the list. It must run in O(log n) time.",
+      "p": "Given a list `nums` of unique integers that was sorted ascending and then rotated at an unknown pivot, return the smallest value in the list.\n\nAim for O(log n) time.",
       "ex": [
        {
         "i": "nums = [3, 4, 5, 1, 2]",
@@ -1155,13 +1222,13 @@ window.CODING = {
        {
         "i": "nums = [1, 2, 3, 4, 5]",
         "o": "1",
-        "why": "the array happens not to be rotated, so the minimum is the first element"
+        "why": "the list is not actually rotated, so the smallest value is the first one"
        }
       ],
       "k": [
        "1 <= len(nums) <= 5000",
        "all values in nums are unique",
-       "runs in O(log n) time"
+       "Aim for O(log n) time"
       ]
      }
     },
@@ -1172,10 +1239,10 @@ window.CODING = {
       "o": "4",
       "w": "slowest eating speed that finishes in 8 hours"
      },
-     "t": "Search the speed, not the array: if a speed works, every faster one does.",
-     "code": "def min_eating_speed(piles, h):\n    lo, hi = 1, max(piles)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        hours = sum((p + mid - 1) // mid for p in piles)   # ceil(p / mid)\n        if hours <= h:\n            hi = mid\n        else:\n            lo = mid + 1\n    return lo",
+     "t": "Speeds are ordered: if a speed finishes in time, every faster speed does too. Can you test one speed quickly, and use that test to cut the range of speeds in half?",
+     "code": "def min_eating_speed(piles, h):\n    # hours_needed(k): total hours to finish every pile at speed k\n    def hours_needed(k):\n        total = 0\n        for p in piles:\n            total += (p + k - 1) // k  # ceil(p / k) using whole numbers\n        return total\n\n    # The answer is between 1 and the biggest pile (that speed does one pile per hour)\n    lo, hi = 1, max(piles)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if hours_needed(mid) <= h:\n            hi = mid  # fast enough, but a slower speed might work too\n        else:\n            lo = mid + 1  # too slow, and so is everything below mid\n    return lo",
      "st": {
-      "p": "Write `min_eating_speed(piles, h)`. It receives a list of banana pile sizes and an integer `h` for the number of hours available. Eating at a constant integer speed of `k` bananas per hour, finishing pile `p` takes `ceil(p / k)` hours (a partially eaten pile still costs a full hour before moving on). It returns the smallest integer speed `k` that lets every pile be eaten within `h` hours total.",
+      "p": "Given a list `piles` of banana pile sizes and an integer `h`, return the smallest whole eating speed `k`, in bananas per hour, that lets you finish every pile within `h` hours.\n\nAt speed `k`, a pile of `p` bananas takes `ceil(p / k)` hours, because a partly eaten pile still uses up the whole hour. Piles are eaten one at a time.",
       "ex": [
        {
         "i": "piles = [3, 6, 7, 11], h = 8",
@@ -1185,15 +1252,20 @@ window.CODING = {
        {
         "i": "piles = [30, 11, 23, 4, 20], h = 5",
         "o": "30",
-        "why": "with only one hour per pile on average, the speed must cover the largest pile, 30, in a single hour"
+        "why": "there is only one hour per pile on average, so the speed must cover the largest pile, 30, in a single hour"
        }
       ],
       "k": [
        "1 <= len(piles) <= 10^4",
        "1 <= piles[i] <= 10^9",
        "len(piles) <= h <= 10^9",
-       "runs in O(n log(max(piles))) time"
+       "Aim for O(n log(max(piles))) time"
       ]
+     },
+     "first": {
+      "label": "First idea, O(n * max(piles))",
+      "note": "Try speed 1, 2, 3, and so on until one finishes in time. It is correct, but piles can be 10^9, so that is far too many tries. Speeds are ordered, so can one test rule out half of them at once?",
+      "code": "def min_eating_speed(piles, h):\n    # Try every speed from slowest to fastest; the first that fits is the smallest\n    for k in range(1, max(piles) + 1):\n        total = 0\n        for p in piles:\n            total += (p + k - 1) // k  # ceil(p / k) using whole numbers\n        if total <= h:\n            return k\n    return max(piles)  # never reached: the biggest pile as the speed always fits"
      }
     }
    ],
@@ -1210,11 +1282,11 @@ window.CODING = {
      },
      "l": "easy",
      "task": "Index of target, or -1.",
-     "hint": "Classic halving.",
-     "sol": "def search(nums, target):\n    lo, hi = 0, len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1",
-     "c": "O(log n).",
+     "hint": "Look at the middle value. If it is too small, which half can you throw away, and what if it is too big?",
+     "sol": "def search(nums, target):\n    lo, hi = 0, len(nums) - 1  # target can only be in nums[lo..hi]\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[mid] < target:\n            lo = mid + 1  # mid and everything left of it are too small\n        else:\n            hi = mid - 1  # mid and everything right of it are too big\n    return -1  # the range emptied without finding target",
+     "c": "O(log n) time: each step halves the range. O(1) space.",
      "st": {
-      "p": "Write `search(nums, target)`. It receives a list of distinct integers sorted in ascending order and a target value, and returns the index of `target` in the list, or -1 if it is not present. It must run in O(log n) time.",
+      "p": "Given a list `nums` of distinct integers sorted in ascending order and an integer `target`, return the index of `target` in the list, or -1 if it is not there.\n\nAim for O(log n) time.",
       "ex": [
        {
         "i": "nums = [-1, 0, 3, 5, 9, 12], target = 9",
@@ -1231,8 +1303,12 @@ window.CODING = {
        "1 <= len(nums) <= 10^4",
        "nums is sorted ascending with all distinct values",
        "-10^4 <= nums[i], target <= 10^4",
-       "runs in O(log n) time"
+       "Aim for O(log n) time"
       ]
+     },
+     "alt": {
+      "note": "Same search with the library: `bisect_left` finds where target would go, then we check that it is really there.",
+      "code": "from bisect import bisect_left\n\ndef search(nums, target):\n    i = bisect_left(nums, target)\n    if i < len(nums) and nums[i] == target:\n        return i\n    return -1"
      }
     },
     {
@@ -1244,11 +1320,11 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Find target in a sorted array that was rotated.",
-     "hint": "One half is always sorted; check whether the target is in it.",
-     "sol": "def search_rotated(nums, target):\n    lo, hi = 0, len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[lo] <= nums[mid]:                  # left half sorted\n            if nums[lo] <= target < nums[mid]:\n                hi = mid - 1\n            else:\n                lo = mid + 1\n        else:                                      # right half sorted\n            if nums[mid] < target <= nums[hi]:\n                lo = mid + 1\n            else:\n                hi = mid - 1\n    return -1",
-     "c": "O(log n).",
+     "hint": "Cut the list at the middle. Is at least one of the two halves still in plain sorted order, and how can you tell whether the target lies inside it?",
+     "sol": "def search_rotated(nums, target):\n    lo, hi = 0, len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[lo] <= nums[mid]:\n            # The left half is in order, so we can test the target against its ends\n            if nums[lo] <= target < nums[mid]:\n                hi = mid - 1  # target is inside the ordered left half\n            else:\n                lo = mid + 1  # it must be in the other half\n        else:\n            # The right half is in order\n            if nums[mid] < target <= nums[hi]:\n                lo = mid + 1  # target is inside the ordered right half\n            else:\n                hi = mid - 1\n    return -1",
+     "c": "O(log n) time: each step discards half of the range. O(1) space.",
      "st": {
-      "p": "Write `search_rotated(nums, target)`. It receives a list that was originally sorted ascending with all distinct values, then rotated at some unknown pivot, and a target value. It returns the index of `target`, or -1 if it is not present, in O(log n) time.",
+      "p": "Given a list `nums` of distinct integers that was sorted ascending and then rotated at an unknown pivot, and an integer `target`, return the index of `target`, or -1 if it is not there.\n\nAim for O(log n) time.",
       "ex": [
        {
         "i": "nums = [4, 5, 6, 7, 0, 1, 2], target = 0",
@@ -1264,8 +1340,8 @@ window.CODING = {
       "k": [
        "1 <= len(nums) <= 5000",
        "all values in nums are unique",
-       "the array is sorted ascending then rotated at an unknown pivot",
-       "runs in O(log n) time"
+       "the list was sorted ascending, then rotated at an unknown pivot",
+       "Aim for O(log n) time"
       ]
      }
     }
@@ -1298,25 +1374,25 @@ window.CODING = {
       "o": "3",
       "w": "slow is halfway when fast ends"
      },
-     "t": "Slow moves one, fast moves two.",
-     "code": "def middle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow, fast = slow.next, fast.next.next\n    return slow",
+     "t": "Move one pointer one step and another two steps at a time. Where is the slow one when the fast one runs out?",
+     "code": "def middle(head):\n    # Both pointers start at the head\n    slow = fast = head\n    # fast moves two steps for every one step of slow,\n    # so when fast reaches the end, slow is halfway\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n    # Even length: fast stops on None, which leaves slow on the second middle\n    return slow",
      "st": {
-      "p": "`middle` receives the `head` of a linked list and returns the middle node. For an even-length list it returns the second of the two middle nodes, since the fast pointer reaches the end first. Use a slow pointer and a fast pointer that moves twice as fast.",
+      "p": "Given the `head` of a singly linked list, return its middle node.\n\nIf the list has an even number of nodes, it has two middle nodes: return the second one.",
       "ex": [
        {
         "i": "head = [1, 2, 3, 4, 5]",
         "o": "3",
-        "why": "slow lands exactly on the middle of an odd-length list"
+        "why": "five nodes, so the third one is the middle"
        },
        {
         "i": "head = [1, 2, 3, 4, 5, 6]",
         "o": "4",
-        "why": "fast runs out first, leaving slow on the later of the two middles"
+        "why": "six nodes: the two middles are 3 and 4, and the second is returned"
        }
       ],
       "k": [
-       "O(n) time, one pass",
-       "O(1) space"
+       "1 <= number of nodes <= 100",
+       "Aim for O(n) time and O(1) extra space"
       ]
      }
     },
@@ -1327,10 +1403,10 @@ window.CODING = {
       "o": "1 -> 2 -> 3 -> 5",
       "w": "4 is gone"
      },
-     "t": "A dummy head, and fast starts n + 1 ahead so slow stops before the target.",
-     "code": "def remove_nth_from_end(head, n):\n    dummy = ListNode(0, head)\n    fast = slow = dummy\n    for _ in range(n + 1):\n        fast = fast.next\n    while fast:\n        fast, slow = fast.next, slow.next\n    slow.next = slow.next.next\n    return dummy.next",
+     "t": "If one pointer is exactly n nodes ahead of another, where is the second one when the first falls off the end? Which node do you need to stand on to cut the target out?",
+     "code": "def remove_nth_from_end(head, n):\n    # A placeholder before head, so removing the first node needs no special case\n    dummy = ListNode(0, head)\n    fast = dummy\n    slow = dummy\n    # Put fast n + 1 nodes ahead of slow\n    for _ in range(n + 1):\n        fast = fast.next\n    # Move both until fast falls off the end; the gap between them stays n + 1\n    while fast:\n        fast = fast.next\n        slow = slow.next\n    # slow now stands just before the nth node from the end: skip over that node\n    slow.next = slow.next.next\n    return dummy.next",
      "st": {
-      "p": "`remove_nth_from_end` receives the `head` of a linked list and an integer `n`, and returns the head after removing the nth node counting from the end. Use a dummy node before `head` so removing the true head needs no special case, and advance a fast pointer n + 1 steps ahead of a slow pointer before moving both.",
+      "p": "Given the `head` of a linked list and an integer `n`, remove the nth node counting from the end of the list, and return the head of the result.\n\nThe list may have only one node, and removing the first node must work too.",
       "ex": [
        {
         "i": "head = [1, 2, 3, 4, 5], n = 2",
@@ -1344,9 +1420,9 @@ window.CODING = {
        }
       ],
       "k": [
-       "n is always within the list's length",
-       "O(n) time, single pass",
-       "O(1) space"
+       "`n` is always within the length of the list",
+       "Aim for O(n) time in a single walk",
+       "Aim for O(1) extra space"
       ]
      }
     },
@@ -1357,10 +1433,10 @@ window.CODING = {
       "o": "the node 2",
       "w": "the entry point"
      },
-     "t": "After they meet, restart one pointer at the head; step both by one; they meet at the entry.",
-     "code": "def cycle_start(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow, fast = slow.next, fast.next.next\n        if slow is fast:\n            slow = head\n            while slow is not fast:\n                slow, fast = slow.next, fast.next\n            return slow\n    return None",
+     "t": "First find a node inside the loop with a fast and a slow runner. Then restart one of them at the head and move both one step at a time: where do they meet?",
+     "code": "def cycle_start(head):\n    slow = head\n    fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n        if slow is fast:\n            # They met inside the loop. The distance from the head to the loop\n            # start equals the distance from here to the start (going around),\n            # so two walkers one step apart in speed meet exactly at the start\n            slow = head\n            while slow is not fast:\n                slow = slow.next\n                fast = fast.next\n            return slow\n    return None  # fast reached the end, so there is no loop",
      "st": {
-      "p": "`cycle_start` receives the `head` of a linked list and returns the node where a cycle begins, or `None` if the list has no cycle. First find a meeting point with slow and fast pointers, then restart one pointer at `head`; advancing both one step at a time, they meet exactly at the entry node.",
+      "p": "Given the `head` of a linked list, return the node where a cycle begins, or `None` if the list has no cycle.",
       "ex": [
        {
         "i": "head = [3, 2, 0, -4], with the tail's `next` pointed back at the node holding 2",
@@ -1370,12 +1446,12 @@ window.CODING = {
        {
         "i": "head = [1, 2, 3]",
         "o": "None",
-        "why": "the list has no cycle"
+        "why": "the list ends at None, so it has no cycle"
        }
       ],
       "k": [
-       "O(n) time",
-       "O(1) space, no visited set"
+       "Aim for O(n) time",
+       "Aim for O(1) extra space"
       ]
      }
     }
@@ -1393,27 +1469,26 @@ window.CODING = {
      },
      "l": "easy",
      "task": "Reverse it in place.",
-     "hint": "Three pointers: prev, current, next.",
-     "sol": "def reverse(head):\n    prev = None\n    while head:\n        head.next, prev, head = prev, head, head.next\n    return prev",
-     "c": "O(n), O(1) space.",
+     "hint": "Each node must end up pointing at the node that used to be before it. As you walk the list, what do you need to remember so you do not lose the rest?",
+     "sol": "def reverse(head):\n    prev = None  # the part already reversed; it starts empty\n    cur = head  # the next node to turn around\n    while cur:\n        nxt = cur.next  # save the rest of the list before we cut the link\n        cur.next = prev  # turn this node back to point at the reversed part\n        prev = cur  # the reversed part now starts at cur\n        cur = nxt  # move on to the saved rest\n    return prev  # prev is the old last node, the new head",
+     "c": "O(n) time: each node is visited once. O(1) space: only a few references.",
      "st": {
-      "p": "The function `reverse` receives the `head` of a singly linked list and returns the head of the reversed list. Walk the list once, redirecting each node's `next` pointer to the node before it. An empty list (`head` is `None`) returns `None`.",
+      "p": "Given the `head` of a singly linked list, reverse the list and return the new head.\n\nAn empty list (`head` is `None`) returns `None`.",
       "ex": [
        {
         "i": "head = [1, 2, 3, 4, 5]",
         "o": "[5, 4, 3, 2, 1]",
-        "why": "each pointer flips to point at the previous node"
+        "why": "the same nodes, now in the opposite order"
        },
        {
         "i": "head = []",
         "o": "[]",
-        "why": "an empty list stays empty, nothing to reverse"
+        "why": "an empty list stays empty, there is nothing to reverse"
        }
       ],
       "k": [
-       "O(n) time",
-       "O(1) extra space, only pointers",
-       "n can be 0"
+       "0 <= number of nodes <= 5000",
+       "Aim for O(n) time and O(1) extra space"
       ]
      }
     },
@@ -1426,26 +1501,26 @@ window.CODING = {
      },
      "l": "easy",
      "task": "Does the list loop?",
-     "hint": "Fast and slow pointers meet if there's a cycle.",
-     "sol": "def has_cycle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow, fast = slow.next, fast.next.next\n        if slow is fast:  # fast can only lap slow inside a loop\n            return True\n    return False",
-     "c": "O(n), O(1).",
+     "hint": "Picture two runners on a track where one runs twice as fast. What happens if the track is a loop, and what if it has an end?",
+     "sol": "def has_cycle(head):\n    slow = head  # moves one node per step\n    fast = head  # moves two nodes per step\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n        # Inside a loop the faster one gains a node each step, so it must meet slow\n        if slow is fast:\n            return True\n    return False  # fast reached the end of the list, so there is no loop",
+     "c": "O(n) time: fast either hits the end or meets slow within a few laps. O(1) space.",
      "st": {
-      "p": "`has_cycle` receives the `head` of a linked list and returns `True` if the list loops back on itself, `False` if it ends in `None`. Use a slow pointer and a fast pointer moving one and two nodes at a time; they meet only if a cycle exists.",
+      "p": "Given the `head` of a linked list, return `True` if the list has a cycle, meaning some node's `next` points back to an earlier node, and `False` if the list ends at `None`.",
       "ex": [
        {
         "i": "head = [1, 2, 3]",
         "o": "False",
-        "why": "the list ends cleanly"
+        "why": "the list ends cleanly at None"
        },
        {
         "i": "head = [1, 2, 3], with the tail's `next` pointed back at the node holding 2",
         "o": "True",
-        "why": "the fast pointer laps the slow pointer inside the loop"
+        "why": "the tail points back to the node holding 2, so the list loops forever"
        }
       ],
       "k": [
-       "O(n) time",
-       "O(1) space, no visited set"
+       "Aim for O(n) time",
+       "Aim for O(1) extra space"
       ]
      }
     },
@@ -1458,26 +1533,26 @@ window.CODING = {
      },
      "l": "easy",
      "task": "Merge into one sorted list.",
-     "hint": "A dummy head; attach the smaller node each time.",
-     "sol": "def merge_two(a, b):\n    dummy = tail = ListNode()\n    while a and b:\n        if a.val <= b.val:\n            tail.next, a = a, a.next\n        else:\n            tail.next, b = b, b.next\n        tail = tail.next\n    tail.next = a or b\n    return dummy.next",
-     "c": "O(n + m).",
+     "hint": "At every step the next node of the merged list is the smaller of the two heads. How could a placeholder node at the front save you from special-casing the first node?",
+     "sol": "def merge_two(a, b):\n    head = ListNode()  # a placeholder in front, so the first real node is not special\n    tail = head  # the last node of the merged list so far\n    while a and b:\n        # Take the smaller front node; on a tie take a's\n        if a.val <= b.val:\n            tail.next = a\n            a = a.next\n        else:\n            tail.next = b\n            b = b.next\n        tail = tail.next\n    # One list ran out; what is left of the other is already sorted\n    if a:\n        tail.next = a\n    else:\n        tail.next = b\n    return head.next  # skip the placeholder",
+     "c": "O(n + m) time: each node is attached once. O(1) space: nodes are reused.",
      "st": {
-      "p": "`merge_two` receives the heads of two already-sorted linked lists, `a` and `b`, and returns the head of one merged sorted list built from their nodes. Use a dummy head and attach whichever node has the smaller value, then attach whatever is left of the other list once one runs out. Either input can be empty.",
+      "p": "Given the heads `a` and `b` of two sorted singly linked lists, merge them into one sorted list by joining their existing nodes, and return its head.\n\nWhen two values are equal, the node from `a` comes first. Either list can be empty.",
       "ex": [
        {
         "i": "a = [1, 2, 4], b = [1, 3, 4]",
         "o": "[1, 1, 2, 3, 4, 4]",
-        "why": "on a tie, list a's node is attached first"
+        "why": "the two 1s are equal, so the node from a comes first"
        },
        {
         "i": "a = [], b = [0]",
         "o": "[0]",
-        "why": "an empty list passes the other list through unchanged"
+        "why": "an empty list leaves the other list as it is"
        }
       ],
       "k": [
-       "O(n + m) time for lists of length n and m",
-       "O(1) extra space beyond the merged nodes"
+       "Aim for O(n + m) time for lists of length n and m",
+       "Aim for O(1) extra space beyond the merged nodes"
       ]
      }
     }
@@ -1511,25 +1586,25 @@ window.CODING = {
       "o": "[4, 7, 2]",
       "w": "mirror every level"
      },
-     "t": "Swap the children, recursively.",
-     "code": "def invert(n):\n    if n:\n        n.left, n.right = invert(n.right), invert(n.left)\n    return n",
+     "t": "If you could invert each child's subtree, what would you do with the two results to finish this node?",
+     "code": "def invert(n):\n    if not n:\n        return None  # nothing to swap in an empty tree\n    # Invert both subtrees first\n    left = invert(n.left)\n    right = invert(n.right)\n    # Then put them back in swapped places\n    n.left = right\n    n.right = left\n    return n",
      "st": {
-      "p": "`invert` receives the `root` of a binary tree and returns the same tree with every node's left and right children swapped, recursively. An empty tree returns `None` unchanged.",
+      "p": "Given the `root` of a binary tree, invert it by swapping the left and right children of every node, and return its root.\n\nAn empty tree returns `None`.",
       "ex": [
        {
         "i": "root = [4, 2, 7, 1, 3, 6, 9]",
         "o": "[4, 7, 2, 9, 6, 3, 1]",
-        "why": "every left and right pair is mirrored, level by level"
+        "why": "every left and right pair is mirrored, at every level"
        },
        {
         "i": "root = []",
         "o": "[]",
-        "why": "nothing to swap"
+        "why": "there is nothing to swap"
        }
       ],
       "k": [
-       "O(n) time, visits every node once",
-       "O(h) recursion stack"
+       "Aim for O(n) time",
+       "O(h) extra space for a tree of height h"
       ]
      }
     },
@@ -1540,27 +1615,32 @@ window.CODING = {
       "o": "6",
       "w": "the split point"
      },
-     "t": "Both smaller: go left. Both larger: go right. Otherwise you are at it.",
-     "code": "def lca_bst(root, p, q):\n    while root:\n        if p < root.val and q < root.val:\n            root = root.left\n        elif p > root.val and q > root.val:\n            root = root.right\n        else:\n            return root",
+     "t": "In a search tree, the values tell you which way to go. When do `p` and `q` stay together on the same side, and what does it mean when they do not?",
+     "code": "def lca_bst(root, p, q):\n    node = root\n    while node:\n        if p < node.val and q < node.val:\n            node = node.left  # both values are smaller, so both are on the left\n        elif p > node.val and q > node.val:\n            node = node.right  # both are larger, so both are on the right\n        else:\n            # They split here (or one of them is this node): nothing lower holds both\n            return node\n    return None  # never reached: p and q exist in the tree",
      "st": {
-      "p": "`lca_bst` receives the `root` of a binary search tree and two values `p` and `q` that both exist in it, and returns the node where their paths from the root first split. If both values are smaller than the current node, move left; if both are larger, move right; otherwise the current node is the answer, including when one value is an ancestor of the other.",
+      "p": "Given the `root` of a binary search tree and two values `p` and `q` that both exist in it, return the lowest node that has both values in its subtree.\n\nA node counts as part of its own subtree, so if one value sits under the other, the upper one is the answer.",
       "ex": [
        {
         "i": "root = [6, 2, 8, 0, 4, 7, 9], p = 2, q = 8",
         "o": "the node holding 6",
-        "why": "2 and 8 fall on opposite sides of 6"
+        "why": "2 and 8 are on opposite sides of 6, and 6 is the lowest node above both"
        },
        {
         "i": "root = [6, 2, 8, 0, 4, 7, 9], p = 2, q = 4",
         "o": "the node holding 2",
-        "why": "4 sits under 2, so 2 is its own ancestor here"
+        "why": "4 is in the subtree of 2, and a node counts as its own ancestor"
        }
       ],
       "k": [
-       "p and q both exist in the tree",
-       "O(h) time for a tree of height h",
-       "O(1) space, no recursion"
+       "`p` and `q` both exist in the tree",
+       "Aim for O(h) time for a tree of height h",
+       "Aim for O(1) extra space"
       ]
+     },
+     "first": {
+      "label": "First idea, O(h) time and space",
+      "note": "Write down the path from the root to p and the path to q, then take the last node the two paths share. It works, but it stores two paths and walks each one twice. The paths are the same until the split, so can you spot the split while walking down once?",
+      "code": "def lca_bst(root, p, q):\n    # path_to(v): the nodes from the root down to the node holding v\n    def path_to(v):\n        path = []\n        node = root\n        while node:\n            path.append(node)\n            if v == node.val:\n                break\n            if v < node.val:\n                node = node.left\n            else:\n                node = node.right\n        return path\n\n    path_p = path_to(p)\n    path_q = path_to(q)\n    # The paths share a prefix; the last shared node is the answer\n    answer = root\n    for a, b in zip(path_p, path_q):\n        if a is b:\n            answer = a\n        else:\n            break\n    return answer"
      }
     },
     {
@@ -1570,10 +1650,10 @@ window.CODING = {
       "o": "3",
       "w": "4 -> 2 -> 1 -> 3, three edges"
      },
-     "t": "Return height up; at each node the best path through it is left + right.",
-     "code": "def diameter(root):\n    best = 0\n    def height(n):\n        nonlocal best\n        if not n:\n            return 0\n        l, r = height(n.left), height(n.right)\n        best = max(best, l + r)          # the longest path through n\n        return 1 + max(l, r)\n    height(root)\n    return best",
+     "t": "The longest path that bends at a node goes down its left side and down its right side. If every node reported its height, how would you get that length at each node?",
+     "code": "def diameter(root):\n    best = 0  # the longest path seen so far, in edges\n\n    # height(n): the number of nodes on the longest path from n down to a leaf\n    def height(n):\n        nonlocal best\n        if not n:\n            return 0\n        left = height(n.left)\n        right = height(n.right)\n        # The longest path bending at n uses the deepest left and the deepest right\n        if left + right > best:\n            best = left + right\n        return 1 + max(left, right)  # n's own height, passed up to its parent\n\n    height(root)\n    return best",
      "st": {
-      "p": "`diameter` receives the `root` of a binary tree and returns the number of edges on the longest path between any two nodes, which may or may not pass through the root. While computing each subtree's height, track the best left-height-plus-right-height seen at any node. A single node or empty tree has diameter 0.",
+      "p": "Given the `root` of a binary tree, return its diameter: the number of edges on the longest path between any two nodes.\n\nThe path may or may not pass through the root. A tree with one node, or none, has diameter 0.",
       "ex": [
        {
         "i": "root = [1, 2, 3, 4, 5]",
@@ -1587,8 +1667,8 @@ window.CODING = {
        }
       ],
       "k": [
-       "O(n) time, one pass computing heights bottom-up",
-       "O(h) recursion stack"
+       "Aim for O(n) time",
+       "O(h) extra space for a tree of height h"
       ]
      }
     },
@@ -1599,10 +1679,10 @@ window.CODING = {
       "o": "[1, 3, 4]",
       "w": "the last node of each level"
      },
-     "t": "Level-order BFS; keep the last node of each level.",
-     "code": "from collections import deque\n\ndef right_view(root):\n    out, q = [], deque([root] if root else [])\n    while q:\n        out.append(q[-1].val)            # rightmost of this level\n        for _ in range(len(q)):\n            n = q.popleft()\n            if n.left:\n                q.append(n.left)\n            if n.right:\n                q.append(n.right)\n    return out",
+     "t": "Which node on a level hides all the others from the right? How do you know you are at the last node of a level?",
+     "code": "from collections import deque  # deque: a queue with O(1) pops from the front\n\ndef right_view(root):\n    out = []\n    queue = deque()\n    if root:\n        queue.append(root)\n    while queue:\n        # The queue holds one level in left-to-right order, so its last node is seen\n        out.append(queue[-1].val)\n        # Visit the whole level, queueing the children for the next one\n        for _ in range(len(queue)):\n            node = queue.popleft()\n            if node.left:\n                queue.append(node.left)\n            if node.right:\n                queue.append(node.right)\n    return out",
      "st": {
-      "p": "`right_view` receives the `root` of a binary tree and returns the values visible when looking at the tree from the right side, top to bottom: one value per level, the rightmost node on that level. An empty tree returns an empty list. Use a level-order pass and keep the last node processed on each level.",
+      "p": "Given the `root` of a binary tree, return the values you would see standing on its right side and looking at it, from top to bottom.\n\nThat is the rightmost node of each level. An empty tree returns an empty list.",
       "ex": [
        {
         "i": "root = [1, 2, 3, None, 5, None, 4]",
@@ -1612,11 +1692,12 @@ window.CODING = {
        {
         "i": "root = [1, 2, 3]",
         "o": "[1, 3]",
-        "why": "a full level always shows its rightmost node"
+        "why": "on a full level, the rightmost node is the one you see"
        }
       ],
       "k": [
-       "O(n) time and O(n) space for the queue and output"
+       "Aim for O(n) time",
+       "O(n) space for the queue and the output"
       ]
      }
     }
@@ -1634,11 +1715,11 @@ window.CODING = {
      },
      "l": "easy",
      "task": "Depth of a binary tree.",
-     "hint": "1 plus the deeper child.",
-     "sol": "def max_depth(node):\n    if not node:\n        return 0\n    return 1 + max(max_depth(node.left), max_depth(node.right))",
-     "c": "O(n).",
+     "hint": "How deep is a tree in terms of how deep its two subtrees are?",
+     "sol": "def max_depth(node):\n    if not node:\n        return 0  # an empty tree has depth 0\n    # The deeper side decides the depth; add 1 for this node itself\n    left = max_depth(node.left)\n    right = max_depth(node.right)\n    if left > right:\n        return 1 + left\n    return 1 + right",
+     "c": "O(n) time: every node is visited once. O(h) space for the call stack, h being the height.",
      "st": {
-      "p": "`max_depth` receives the `root` of a binary tree and returns the number of nodes on the longest path from root to a leaf. An empty tree (`root` is `None`) has depth 0. Recurse into both children and take one plus the deeper side.",
+      "p": "Given the `root` of a binary tree, return its maximum depth: the number of nodes on the longest path from the root down to a leaf.\n\nAn empty tree (`root` is `None`) has depth 0.",
       "ex": [
        {
         "i": "root = [3, 9, 20, None, None, 15, 7]",
@@ -1652,8 +1733,8 @@ window.CODING = {
        }
       ],
       "k": [
-       "O(n) time, visits every node once",
-       "O(h) recursion stack for a tree of height h"
+       "Aim for O(n) time",
+       "O(h) extra space for a tree of height h"
       ]
      }
     },
@@ -1666,11 +1747,11 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Values level by level.",
-     "hint": "BFS with a queue, one level per loop.",
-     "sol": "from collections import deque\n\ndef level_order(root):\n    if not root:\n        return []\n    out, q = [], deque([root])\n    while q:\n        level = []\n        for _ in range(len(q)):\n            n = q.popleft()\n            level.append(n.val)\n            q.extend(c for c in (n.left, n.right) if c)\n        out.append(level)\n    return out",
-     "c": "O(n).",
+     "hint": "You need to finish one level before touching the next. How can you know where one level ends in a line of waiting nodes?",
+     "sol": "from collections import deque  # deque: a queue with O(1) pops from the front\n\ndef level_order(root):\n    if not root:\n        return []\n    out = []\n    queue = deque([root])  # nodes waiting to be visited, oldest first\n    while queue:\n        level = []\n        # Right now the queue holds exactly one level, so take that many nodes\n        for _ in range(len(queue)):\n            node = queue.popleft()\n            level.append(node.val)\n            # Their children join the back and form the next level\n            if node.left:\n                queue.append(node.left)\n            if node.right:\n                queue.append(node.right)\n        out.append(level)\n    return out",
+     "c": "O(n) time: each node is queued and dequeued once. O(n) space for the queue and the output.",
      "st": {
-      "p": "`level_order` receives the `root` of a binary tree and returns a list of lists, one per level, each holding that level's node values left to right. An empty tree returns an empty list. Use a queue and process one full level per loop iteration.",
+      "p": "Given the `root` of a binary tree, return its values level by level, from left to right, as a list of lists with one inner list per level.\n\nAn empty tree returns an empty list.",
       "ex": [
        {
         "i": "root = [3, 9, 20, None, None, 15, 7]",
@@ -1684,7 +1765,8 @@ window.CODING = {
        }
       ],
       "k": [
-       "O(n) time and O(n) space for the output and queue"
+       "Aim for O(n) time",
+       "O(n) space for the output"
       ]
      }
     },
@@ -1697,11 +1779,11 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Is it a valid binary search tree?",
-     "hint": "Pass the allowed range down, not just parent comparisons.",
-     "sol": "def is_bst(node, lo=float('-inf'), hi=float('inf')):\n    if not node:\n        return True\n    if not (lo < node.val < hi):  # every ancestor bounds it, not only the parent\n        return False\n    return is_bst(node.left, lo, node.val) and is_bst(node.right, node.val, hi)",
-     "c": "O(n).",
+     "hint": "Comparing a node with its parent is not enough. What range of values is allowed at a node, and how does that range narrow as you go down?",
+     "sol": "def is_bst(node, lo=float('-inf'), hi=float('inf')):\n    if not node:\n        return True  # an empty tree is fine\n    # The value must fall strictly inside the range set by all its ancestors\n    if not (lo < node.val < hi):\n        return False\n    # Going left, this value becomes the new upper limit; going right, the lower\n    left_ok = is_bst(node.left, lo, node.val)\n    right_ok = is_bst(node.right, node.val, hi)\n    return left_ok and right_ok",
+     "c": "O(n) time: every node is checked once. O(h) space for the call stack.",
      "st": {
-      "p": "`is_bst` receives the `root` of a binary tree and returns `True` if it is a valid binary search tree, `False` otherwise. A node is valid only if its value falls strictly between the lower and upper bounds inherited from every ancestor, not its direct parent. An empty tree is valid.",
+      "p": "Given the `root` of a binary tree, return `True` if it is a valid binary search tree, and `False` otherwise.\n\nIn a valid one, every node is larger than everything in its left subtree and smaller than everything in its right subtree, with no equal values. An empty tree is valid.",
       "ex": [
        {
         "i": "root = [2, 1, 3]",
@@ -1711,12 +1793,12 @@ window.CODING = {
        {
         "i": "root = [5, 1, 4, None, None, 3, 6]",
         "o": "False",
-        "why": "3 sits under 5 in the tree but is smaller than the bound 5 imposes on that side"
+        "why": "3 sits in the right subtree of 5, so it would have to be larger than 5, but it is smaller"
        }
       ],
       "k": [
-       "O(n) time, one pass with bounds carried down",
-       "O(h) recursion stack"
+       "Aim for O(n) time",
+       "O(h) extra space for a tree of height h"
       ]
      }
     }
@@ -1749,15 +1831,15 @@ window.CODING = {
       "o": "4",
       "w": "minutes until every orange is rotten"
      },
-     "t": "Start the queue with every source at once; each BFS level is one minute.",
-     "code": "from collections import deque\n\ndef oranges_rotting(g):\n    R, C = len(g), len(g[0])\n    q = deque((r, c) for r in range(R) for c in range(C) if g[r][c] == 2)\n    fresh = sum(row.count(1) for row in g)\n    mins = 0\n    while q and fresh:\n        for _ in range(len(q)):          # one minute\n            r, c = q.popleft()\n            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n                nr, nc = r + dr, c + dc\n                if 0 <= nr < R and 0 <= nc < C and g[nr][nc] == 1:\n                    g[nr][nc] = 2\n                    fresh -= 1\n                    q.append((nr, nc))\n        mins += 1\n    return -1 if fresh else mins",
+     "t": "All the rotten oranges spread at the same moment. What if they all start in the queue together, and each round of the queue is one minute?",
+     "code": "from collections import deque\n\ndef oranges_rotting(grid):\n    rows, cols = len(grid), len(grid[0])\n    # deque: a queue with O(1) pops from the front\n    q = deque()  # rotten oranges whose neighbours we have not rotted yet\n    fresh = 0    # fresh oranges still waiting\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == 2:\n                q.append((r, c))\n            elif grid[r][c] == 1:\n                fresh += 1\n\n    minutes = 0\n    while q and fresh > 0:\n        # Everything in the queue right now rots its neighbours in the same minute\n        for _ in range(len(q)):\n            r, c = q.popleft()\n            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n                nr, nc = r + dr, c + dc\n                if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 1:\n                    grid[nr][nc] = 2  # now rotten, and it will rot its own neighbours next minute\n                    fresh -= 1\n                    q.append((nr, nc))\n        minutes += 1\n\n    # Fresh oranges left over could not be reached from any rotten one\n    if fresh > 0:\n        return -1\n    return minutes",
      "st": {
-      "p": "`oranges_rotting` receives a grid where 0 is an empty cell, 1 is a fresh orange, and 2 is a rotten orange, and returns the number of minutes until no fresh orange remains, or -1 if some fresh orange can never be reached. Start a BFS from every rotten orange at once, since they all rot their neighbors simultaneously; each full round of the queue is one minute.",
+      "p": "Given a grid `grid` where 0 is an empty cell, 1 is a fresh orange and 2 is a rotten orange, return the number of minutes until no fresh orange is left.\n\nEvery minute, each fresh orange that is up, down, left or right of a rotten orange becomes rotten. Return -1 if some fresh orange can never rot.",
       "ex": [
        {
         "i": "grid = [[2, 1, 1], [1, 1, 0], [0, 1, 1]]",
         "o": "4",
-        "why": "the farthest fresh orange takes four minutes to rot"
+        "why": "the farthest fresh orange, in the bottom-right corner, takes four minutes to rot"
        },
        {
         "i": "grid = [[0, 2]]",
@@ -1766,8 +1848,8 @@ window.CODING = {
        }
       ],
       "k": [
-       "grid dimensions bound the BFS to O(rows x cols) time",
-       "returns -1 only when a fresh orange stays unreachable"
+       "grid has at least one row and one column",
+       "Aim for O(rows x cols) time"
       ]
      }
     },
@@ -1778,10 +1860,10 @@ window.CODING = {
       "o": "2",
       "w": "{0, 1, 2} and {3, 4}"
      },
-     "t": "Build an adjacency list; one DFS per unseen node counts one component.",
-     "code": "from collections import defaultdict\n\ndef count_components(n, edges):\n    g = defaultdict(list)\n    for a, b in edges:\n        g[a].append(b)\n        g[b].append(a)\n    seen, count = set(), 0\n    for s in range(n):\n        if s in seen:\n            continue\n        count += 1\n        stack = [s]\n        seen.add(s)\n        while stack:\n            u = stack.pop()\n            for v in g[u]:\n                if v not in seen:\n                    seen.add(v)\n                    stack.append(v)\n    return count",
+     "t": "Build a list of neighbours for each node. Starting from a node nobody has reached yet, how many other nodes can you walk to?",
+     "code": "def count_components(n, edges):\n    # neighbours[u]: the nodes joined to u by an edge (an edge works both ways)\n    neighbours = [[] for _ in range(n)]\n    for a, b in edges:\n        neighbours[a].append(b)\n        neighbours[b].append(a)\n\n    seen = set()  # nodes already assigned to a component\n    count = 0\n    for start in range(n):\n        if start in seen:\n            continue\n        # A node nobody reached before: a new component. Visit everything it connects to.\n        count += 1\n        seen.add(start)\n        stack = [start]  # nodes found but whose neighbours we have not looked at\n        while stack:\n            u = stack.pop()\n            for v in neighbours[u]:\n                if v not in seen:\n                    seen.add(v)\n                    stack.append(v)\n    return count",
      "st": {
-      "p": "`count_components` receives an integer `n` (nodes numbered 0 to n - 1) and a list of undirected `edges`, and returns how many separate connected groups the nodes form. Build an adjacency list, then run one DFS from each node not yet visited; each such DFS accounts for one component. A node with no edges is its own component.",
+      "p": "Given `n` nodes numbered 0 to n - 1 and a list `edges` of undirected connections `[a, b]`, return the number of connected components.\n\nTwo nodes are in the same component if you can walk from one to the other along edges. A node with no edges is a component by itself.",
       "ex": [
        {
         "i": "n = 5, edges = [[0, 1], [1, 2], [3, 4]]",
@@ -1791,12 +1873,12 @@ window.CODING = {
        {
         "i": "n = 3, edges = []",
         "o": "3",
-        "why": "with no edges every node is its own component"
+        "why": "with no edges every node is a component by itself"
        }
       ],
       "k": [
-       "O(n + e) time for n nodes and e edges",
-       "node ids run from 0 to n - 1"
+       "node ids run from 0 to n - 1",
+       "Aim for O(n + e) time for n nodes and e edges"
       ]
      }
     },
@@ -1807,10 +1889,10 @@ window.CODING = {
       "o": "5",
       "w": "hit, hot, dot, dog, cog"
      },
-     "t": "The nodes are words; neighbours differ by one letter; BFS gives the fewest steps.",
-     "code": "from collections import deque\n\ndef ladder_length(begin, end, words):\n    words = set(words)\n    q, seen = deque([(begin, 1)]), {begin}\n    while q:\n        w, d = q.popleft()\n        if w == end:\n            return d\n        for i in range(len(w)):\n            for ch in \"abcdefghijklmnopqrstuvwxyz\":\n                nw = w[:i] + ch + w[i + 1:]\n                if nw in words and nw not in seen:\n                    seen.add(nw)\n                    q.append((nw, d + 1))\n    return 0",
+     "t": "Think of each word as a place and each one-letter change as a road. Which search reaches the nearest places first?",
+     "code": "from collections import deque\n\ndef ladder_length(begin, end, words):\n    allowed = set(words)  # a set makes \"is this a real word?\" an O(1) check\n    # deque: a queue with O(1) pops from the front\n    q = deque([(begin, 1)])  # (word, how many words in the chain so far)\n    seen = {begin}  # words already queued, so no word is queued twice\n    while q:\n        word, length = q.popleft()\n        if word == end:\n            return length  # the first time we reach end is by the shortest chain\n        # Try changing each position to each letter\n        for i in range(len(word)):\n            for ch in \"abcdefghijklmnopqrstuvwxyz\":\n                nxt = word[:i] + ch + word[i + 1:]\n                if nxt in allowed and nxt not in seen:\n                    seen.add(nxt)\n                    q.append((nxt, length + 1))\n    return 0  # the queue ran dry without reaching end",
      "st": {
-      "p": "`ladder_length` receives a `begin` word, an `end` word, and a list of allowed `words`, and returns the fewest steps to turn `begin` into `end` by changing one letter at a time, where every intermediate word must appear in `words`. Return 0 if no such sequence exists, including when `end` itself is not in `words`. Treat each word as a graph node and BFS gives the shortest sequence.",
+      "p": "Given a `begin` word, an `end` word and a list of allowed `words`, return the number of words in the shortest chain from `begin` to `end`, counting both ends.\n\nEach step changes exactly one letter, and every word after `begin` must be in `words`. Return 0 if there is no such chain, including when `end` is not in `words`.",
       "ex": [
        {
         "i": "begin = 'hit', end = 'cog', words = ['hot', 'dot', 'dog', 'lot', 'log', 'cog']",
@@ -1825,7 +1907,7 @@ window.CODING = {
       ],
       "k": [
        "all words have the same length",
-       "O(w x 26 x L) time for w words of length L in the worst case"
+       "Aim for O(w x 26 x L) time for w words of length L"
       ]
      }
     }
@@ -1843,16 +1925,16 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Count groups of connected '1's in a grid.",
-     "hint": "For each unvisited land cell, flood-fill it and count one.",
-     "sol": "def num_islands(grid):\n    rows, cols, count = len(grid), len(grid[0]), 0\n    def sink(r, c):\n        if 0 <= r < rows and 0 <= c < cols and grid[r][c] == '1':\n            grid[r][c] = '0'\n            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n                sink(r + dr, c + dc)\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == '1':\n                count += 1\n                sink(r, c)\n    return count",
-     "c": "O(rows x cols).",
+     "hint": "Once you find one land cell, how could you make sure every other cell of that island is never counted again?",
+     "sol": "def num_islands(grid):\n    rows, cols = len(grid), len(grid[0])\n    count = 0  # islands found so far\n\n    def sink(r, c):\n        # Stop at the edge of the grid, at water, and at land we already sank\n        if r < 0 or r >= rows or c < 0 or c >= cols or grid[r][c] != '1':\n            return\n        grid[r][c] = '0'  # turn it to water so this cell is never counted twice\n        # The neighbours on land belong to the same island\n        sink(r + 1, c)\n        sink(r - 1, c)\n        sink(r, c + 1)\n        sink(r, c - 1)\n\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == '1':\n                # Land we have not seen yet: a new island, so sink all of it\n                count += 1\n                sink(r, c)\n    return count",
+     "c": "O(rows x cols) time: every cell is sunk once and looked at a few times. O(rows x cols) space for the call stack in the worst case.",
      "st": {
-      "p": "`num_islands` receives a grid of `'1'` (land) and `'0'` (water) characters, given as a list of lists so cells can be marked visited in place, and returns the count of separate land masses. Land cells connect up, down, left and right, not diagonally. Flood-fill and clear each island's cells as you count it so it is never counted twice.",
+      "p": "Given a `grid` of `'1'` (land) and `'0'` (water) characters, stored as a list of lists, return the number of islands.\n\nAn island is a group of land cells joined up, down, left or right, not diagonally.",
       "ex": [
        {
         "i": "grid = [['1','1','0','0','0'], ['1','1','0','0','0'], ['0','0','1','0','0'], ['0','0','0','1','1']]",
         "o": "3",
-        "why": "three groups of connected land cells"
+        "why": "three groups of connected land cells: the top-left block, the middle cell and the bottom-right pair"
        },
        {
         "i": "grid = [['0']]",
@@ -1861,8 +1943,8 @@ window.CODING = {
        }
       ],
       "k": [
-       "O(rows x cols) time, each cell visited once",
-       "grid has at least one row and one column"
+       "grid has at least one row and one column",
+       "Aim for O(rows x cols) time"
       ]
      }
     }
@@ -1896,15 +1978,15 @@ window.CODING = {
       "o": "[0, 1, 2, 3]",
       "w": "any valid order"
      },
-     "t": "Same Kahn loop; append each course as you pop it; empty if a cycle.",
-     "code": "from collections import deque, defaultdict\n\ndef find_order(n, prereqs):\n    g, indeg = defaultdict(list), [0] * n\n    for c, p in prereqs:\n        g[p].append(c)\n        indeg[c] += 1\n    q = deque(i for i in range(n) if indeg[i] == 0)\n    order = []\n    while q:\n        u = q.popleft()\n        order.append(u)\n        for v in g[u]:\n            indeg[v] -= 1\n            if indeg[v] == 0:\n                q.append(v)\n    return order if len(order) == n else []",
+     "t": "A course can be taken once everything it needs is taken. In what order do courses become available, and what does it mean if some never do?",
+     "code": "from collections import deque\n\ndef find_order(n, prereqs):\n    unlocks = [[] for _ in range(n)]  # unlocks[p]: courses that need p first\n    waiting = [0] * n                 # waiting[c]: prerequisites of c not yet taken\n    for course, pre in prereqs:\n        unlocks[pre].append(course)\n        waiting[course] += 1\n\n    # deque: a queue with O(1) pops from the front\n    q = deque()  # courses that can be taken right now\n    for c in range(n):\n        if waiting[c] == 0:\n            q.append(c)\n\n    order = []  # courses in the order we take them\n    while q:\n        u = q.popleft()\n        order.append(u)\n        # u is taken, so each course that needed it has one blocker fewer\n        for v in unlocks[u]:\n            waiting[v] -= 1\n            if waiting[v] == 0:\n                q.append(v)\n\n    # Fewer than n means some courses sit on a cycle and were never freed\n    if len(order) < n:\n        return []\n    return order",
      "st": {
-      "p": "`find_order` receives an integer `n` and a list of `prereqs` pairs `[course, prereq]`, and returns one valid order to take all n courses, or an empty list if the prerequisites contain a cycle. It runs the same indegree-zero queue as course scheduling, appending each course to the result as it is taken. Any order consistent with the prerequisites is accepted.",
+      "p": "Given `n` courses numbered 0 to n - 1 and a list `prereqs` of pairs `[course, prereq]`, meaning `prereq` must be taken before `course`, return one order in which you can take all the courses. Return an empty list if that is impossible.\n\nAny order that respects every prerequisite is accepted.",
       "ex": [
        {
         "i": "n = 4, prereqs = [[1, 0], [2, 0], [3, 1], [3, 2]]",
         "o": "[0, 1, 2, 3]",
-        "why": "0 unlocks 1 and 2, which both unlock 3; any order respecting prerequisites is accepted"
+        "why": "0 unlocks 1 and 2, which both unlock 3"
        },
        {
         "i": "n = 2, prereqs = [[1, 0], [0, 1]]",
@@ -1913,9 +1995,9 @@ window.CODING = {
        }
       ],
       "k": [
-       "O(n + e) time",
        "course ids run from 0 to n - 1",
-       "any valid order is accepted, not only the one shown"
+       "any valid order is accepted, not only the one shown",
+       "Aim for O(n + e) time"
       ]
      }
     },
@@ -1926,25 +2008,26 @@ window.CODING = {
       "o": "[2, 3]",
       "w": "the edge that closes a loop"
      },
-     "t": "The first edge whose two ends already share a root.",
-     "code": "def redundant_connection(edges):\n    parent = list(range(len(edges) + 1))\n    def find(x):\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]   # path halving\n            x = parent[x]\n        return x\n    for a, b in edges:\n        ra, rb = find(a), find(b)\n        if ra == rb:\n            return [a, b]\n        parent[ra] = rb",
+     "t": "Add the edges one at a time and track which nodes are already connected. What does it mean when both ends of a new edge are in the same group?",
+     "code": "def redundant_connection(edges):\n    # parent[x]: a node in x's group that is closer to the group's leader;\n    # the leader is the node that is its own parent. Everyone starts alone.\n    parent = list(range(len(edges) + 1))\n\n    def find(x):\n        # Walk up to the leader of x's group\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]  # shortcut: skip a level so later walks are shorter\n            x = parent[x]\n        return x\n\n    for a, b in edges:\n        ra, rb = find(a), find(b)\n        if ra == rb:\n            # a and b were already connected, so this edge closes a loop\n            return [a, b]\n        parent[ra] = rb  # join the two groups\n    return []  # never reached: one edge always closes a loop",
      "st": {
-      "p": "`redundant_connection` receives a list of `edges` for a graph that started as a tree and had exactly one extra edge added, and returns the edge that can be removed to make it a tree again. Process edges in order with union-find; the first edge whose two endpoints already share a root is the one that closes a cycle.",
+      "p": "Given a list of `edges` `[a, b]` for an undirected graph on nodes 1 to n that was a tree before one extra edge was added, return the edge that can be removed to make it a tree again.\n\nIf several edges could be removed, return the one that appears last in `edges`.",
       "ex": [
        {
         "i": "edges = [[1, 2], [1, 3], [2, 3]]",
         "o": "[2, 3]",
-        "why": "1 and 2 are already connected through 1-2 and 1-3 before this edge arrives"
+        "why": "2 and 3 are already linked through node 1, so this edge closes a loop"
        },
        {
         "i": "edges = [[1, 2], [2, 3], [3, 4], [1, 4], [1, 5]]",
         "o": "[1, 4]",
-        "why": "1 and 4 are already connected through 1-2-3-4 before this edge arrives"
+        "why": "1 and 4 are already linked through 1-2-3-4, so this edge closes a loop"
        }
       ],
       "k": [
-       "exactly one redundant edge exists",
-       "close to O(1) amortized per union-find operation"
+       "exactly one extra edge was added",
+       "nodes are numbered 1 to len(edges)",
+       "Aim for close to O(n) time"
       ]
      }
     },
@@ -1955,10 +2038,10 @@ window.CODING = {
       "o": "2",
       "w": "the last node hears at time 2"
      },
-     "t": "Dijkstra from the source; the answer is the largest distance, or -1 if any node is unreachable.",
-     "code": "import heapq\nfrom collections import defaultdict\n\ndef network_delay(times, n, k):\n    g = defaultdict(list)\n    for u, v, w in times:\n        g[u].append((v, w))\n    dist, heap = {}, [(0, k)]\n    while heap:\n        d, u = heapq.heappop(heap)\n        if u in dist:                    # already settled with a shorter path\n            continue\n        dist[u] = d\n        for v, w in g[u]:\n            if v not in dist:\n                heapq.heappush(heap, (d + w, v))\n    return max(dist.values()) if len(dist) == n else -1",
+     "t": "You need the earliest time the signal reaches each node. Once you have those, which one decides when the whole network has the signal?",
+     "code": "import heapq  # heapq: a min-heap kept inside a plain list, so the smallest entry pops first\n\ndef network_delay(times, n, k):\n    out = [[] for _ in range(n + 1)]  # out[u]: (v, w) pairs for edges leaving u\n    for u, v, w in times:\n        out[u].append((v, w))\n\n    dist = {}  # node -> earliest time the signal arrives; set once, when finalised\n    heap = [(0, k)]  # (arrival time, node): the earliest arrival pops first\n    while heap:\n        d, u = heapq.heappop(heap)\n        if u in dist:  # u was already reached by an earlier signal\n            continue\n        dist[u] = d\n        for v, w in out[u]:\n            if v not in dist:\n                heapq.heappush(heap, (d + w, v))\n\n    # The last node to hear the signal decides the delay, if every node heard it\n    if len(dist) < n:\n        return -1\n    return max(dist.values())",
      "st": {
-      "p": "`network_delay` receives a list of directed `times` edges `[source, target, weight]`, a node count `n` (nodes numbered 1 to n), and a starting node `k`, and returns how long it takes for a signal sent from `k` to reach every node, or -1 if some node is unreachable. Run Dijkstra from `k`; the answer is the largest of the settled distances, but only once all n nodes have been reached.",
+      "p": "Given a list `times` of directed edges `[source, target, weight]`, the number of nodes `n` (numbered 1 to n) and a start node `k`, return how long it takes for a signal sent from `k` to reach every node, or -1 if some node is never reached.\n\nThe weight of an edge is the time the signal needs to travel along it. The signal leaves a node along all of its edges at once.",
       "ex": [
        {
         "i": "times = [[2, 1, 1], [2, 3, 1], [3, 4, 1]], n = 4, k = 2",
@@ -1973,7 +2056,7 @@ window.CODING = {
       ],
       "k": [
        "all weights are non-negative",
-       "O(e log v) time"
+       "Aim for O(e log v) time"
       ]
      }
     },
@@ -1984,24 +2067,24 @@ window.CODING = {
       "o": "700",
       "w": "the stop limit changes the answer"
      },
-     "t": "Bellman-Ford for k + 1 rounds, relaxing from a copy so one round is one more edge.",
-     "code": "def cheapest_flights(n, flights, src, dst, k):\n    cost = [float('inf')] * n\n    cost[src] = 0\n    for _ in range(k + 1):\n        nxt = cost[:]                    # from the copy: one more edge per round\n        for u, v, w in flights:\n            if cost[u] + w < nxt[v]:\n                nxt[v] = cost[u] + w\n        cost = nxt\n    return -1 if cost[dst] == float('inf') else cost[dst]",
+     "t": "A trip with k stops uses at most k + 1 flights. How could you improve the best known price to each city by allowing one more flight at a time?",
+     "code": "def cheapest_flights(n, flights, src, dst, k):\n    inf = float('inf')\n    # cost[city]: cheapest price found so far to reach city using the flights allowed so far\n    cost = [inf] * n\n    cost[src] = 0\n    # k stops means at most k + 1 flights, so allow one more flight each round\n    for _ in range(k + 1):\n        nxt = cost[:]  # build the new round from a copy, so a flight added now is not reused this round\n        for u, v, w in flights:\n            if cost[u] + w < nxt[v]:\n                nxt[v] = cost[u] + w\n        cost = nxt\n    if cost[dst] == inf:\n        return -1  # dst cannot be reached within k stops\n    return cost[dst]",
      "st": {
-      "p": "`cheapest_flights` receives a node count `n`, a list of `flights` `[source, target, price]`, a `src`, a `dst`, and a maximum number of stops `k`, and returns the cheapest total price from `src` to `dst` using at most k stops, or -1 if no such route exists. Run k + 1 rounds of Bellman-Ford relaxation from a copy of the cost array each round, since each round can only add one more edge to a path.",
+      "p": "Given `n` cities numbered 0 to n - 1, a list of one-way `flights` `[source, target, price]`, a start city `src`, a destination `dst` and an integer `k`, return the cheapest total price to get from `src` to `dst` with at most `k` stops, or -1 if no such trip exists.\n\nA stop is a city you pass through between `src` and `dst`.",
       "ex": [
        {
         "i": "n = 3, flights = [[0, 1, 100], [1, 2, 100], [0, 2, 500]], src = 0, dst = 2, k = 1",
         "o": "200",
-        "why": "one stop at 1 allows the two cheap legs, 100 + 100"
+        "why": "one stop at city 1 allows the two cheap flights, 100 + 100"
        },
        {
         "i": "n = 3, flights = [[0, 1, 100], [1, 2, 100], [0, 2, 500]], src = 0, dst = 2, k = 0",
         "o": "500",
-        "why": "zero stops forces the direct, pricier edge"
+        "why": "zero stops forces the direct, pricier flight"
        }
       ],
       "k": [
-       "O(k x e) time for e flights and k stops"
+       "Aim for O(k x e) time for e flights"
       ]
      }
     }
@@ -2019,11 +2102,11 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Can all courses be finished given prerequisite pairs?",
-     "hint": "Kahn's algorithm: repeatedly take courses with no remaining prerequisites.",
-     "sol": "from collections import deque, defaultdict\n\ndef can_finish(n, prereqs):\n    graph, indeg = defaultdict(list), [0] * n\n    for course, pre in prereqs:\n        graph[pre].append(course)\n        indeg[course] += 1\n    q = deque(i for i in range(n) if indeg[i] == 0)  # no prerequisites left\n    done = 0\n    while q:\n        u = q.popleft()\n        done += 1\n        for v in graph[u]:\n            indeg[v] -= 1\n            if indeg[v] == 0:\n                q.append(v)\n    return done == n  # a cycle never reaches indegree 0",
-     "c": "O(V + E).",
+     "hint": "A course with no prerequisites left can be taken right now. What does taking it do for the courses waiting on it, and what happens to courses stuck in a cycle?",
+     "sol": "from collections import deque\n\ndef can_finish(n, prereqs):\n    unlocks = [[] for _ in range(n)]  # unlocks[p]: courses that need p first\n    waiting = [0] * n                 # waiting[c]: prerequisites of c not yet taken\n    for course, pre in prereqs:\n        unlocks[pre].append(course)\n        waiting[course] += 1\n\n    # deque: a queue with O(1) pops from the front\n    q = deque()  # courses that can be taken right now\n    for c in range(n):\n        if waiting[c] == 0:\n            q.append(c)\n\n    taken = 0\n    while q:\n        u = q.popleft()\n        taken += 1\n        # Taking u removes one blocker from every course that needed it\n        for v in unlocks[u]:\n            waiting[v] -= 1\n            if waiting[v] == 0:\n                q.append(v)\n\n    # Courses on a cycle wait for each other forever, so they are never taken\n    return taken == n",
+     "c": "O(V + E) time: each course and each prerequisite pair is handled once. O(V + E) space for the lists.",
      "st": {
-      "p": "`can_finish` receives an integer `n` (courses numbered 0 to n - 1) and a list of `prereqs` pairs `[course, prereq]`, and returns `True` if every course can be completed, `False` if the prerequisites contain a cycle. Repeatedly take courses whose prerequisites are all satisfied (indegree 0); if fewer than n courses can ever be taken this way, a cycle is blocking the rest.",
+      "p": "Given `n` courses numbered 0 to n - 1 and a list `prereqs` of pairs `[course, prereq]`, meaning `prereq` must be taken before `course`, return `True` if you can take every course, otherwise `False`.",
       "ex": [
        {
         "i": "n = 2, prereqs = [[1, 0]]",
@@ -2033,12 +2116,12 @@ window.CODING = {
        {
         "i": "n = 2, prereqs = [[1, 0], [0, 1]]",
         "o": "False",
-        "why": "0 needs 1 and 1 needs 0, a cycle"
+        "why": "0 needs 1 and 1 needs 0, so neither can go first"
        }
       ],
       "k": [
-       "O(n + e) time for n courses and e prerequisite pairs",
-       "course ids run from 0 to n - 1"
+       "course ids run from 0 to n - 1",
+       "Aim for O(n + e) time for n courses and e prerequisite pairs"
       ]
      }
     },
@@ -2051,11 +2134,11 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Cheapest cost from a source to every node, non-negative weights.",
-     "hint": "A min-heap of (cost, node); skip stale entries.",
-     "sol": "import heapq\n\ndef dijkstra(graph, src):          # graph: {u: [(v, w), ...]}\n    dist = {src: 0}\n    heap = [(0, src)]\n    while heap:\n        d, u = heapq.heappop(heap)\n        if d > dist.get(u, float('inf')):  # stale entry: a shorter path won already\n            continue\n        for v, w in graph.get(u, []):\n            nd = d + w\n            if nd < dist.get(v, float('inf')):\n                dist[v] = nd\n                heapq.heappush(heap, (nd, v))\n    return dist",
-     "c": "O(E log V).",
+     "hint": "With no negative weights, the closest node you have not finished can never be improved later. How could you always pick that node next?",
+     "sol": "import heapq  # heapq: a min-heap kept inside a plain list, so the smallest entry pops first\n\ndef dijkstra(graph, src):\n    dist = {src: 0}  # node -> cheapest distance found so far\n    heap = [(0, src)]  # (distance, node): the closest unexplored node pops first\n    while heap:\n        d, u = heapq.heappop(heap)\n        # An older, longer entry for u: a shorter route was already recorded\n        if d > dist[u]:\n            continue\n        for v, w in graph.get(u, []):\n            new_dist = d + w  # cost of reaching v by going through u\n            # First route to v, or a cheaper one than we knew\n            if v not in dist or new_dist < dist[v]:\n                dist[v] = new_dist\n                heapq.heappush(heap, (new_dist, v))\n    return dist",
+     "c": "O(E log V) time: each edge can push one heap entry, and each push or pop costs O(log). O(V + E) space.",
      "st": {
-      "p": "`dijkstra` receives a `graph` mapping each node to a list of `(neighbor, weight)` pairs, all weights non-negative, and a `src` node, and returns a dictionary of the cheapest distance from `src` to every node it can reach. A node with no path from `src` is left out of the result entirely. Use a min-heap keyed by distance and skip any popped entry already beaten by a shorter recorded distance.",
+      "p": "Given a directed weighted `graph`, a dict mapping each node to a list of `(neighbor, weight)` pairs, and a start node `src`, return a dict of the cheapest total distance from `src` to every node it can reach.\n\nAll weights are non-negative. A node that cannot be reached from `src` is left out of the result.",
       "ex": [
        {
         "i": "graph = {'a': [('b', 1), ('c', 4)], 'b': [('c', 2)]}, src = 'a'",
@@ -2070,7 +2153,7 @@ window.CODING = {
       ],
       "k": [
        "all edge weights are non-negative",
-       "O(e log v) time for v nodes and e edges"
+       "Aim for O(e log v) time for v nodes and e edges"
       ]
      }
     }
@@ -2103,26 +2186,30 @@ window.CODING = {
       "o": "[[-2, 2]]",
       "w": "distance 8 beats 10"
      },
-     "t": "Same top k, keyed by squared distance; no square root needed.",
-     "code": "import heapq\n\ndef k_closest(points, k):\n    return heapq.nsmallest(k, points, key=lambda p: p[0] ** 2 + p[1] ** 2)",
+     "t": "Only the k closest points matter. Which point would you want to find fastest, to throw it out when a closer one arrives?",
+     "code": "import heapq  # heapq: a min-heap kept inside a plain list, so the smallest entry pops first\n\ndef k_closest(points, k):\n    # Keep the k closest so far. Entries are (-squared distance, -index): negating\n    # makes the farthest point the smallest entry, so it is the first one to pop.\n    heap = []\n    for i in range(len(points)):\n        x, y = points[i]\n        d = x * x + y * y  # squared distance orders points like the real one, no square root needed\n        if len(heap) < k:\n            heapq.heappush(heap, (-d, -i))\n        elif -d > heap[0][0]:\n            # Closer than the farthest point we are keeping: swap it out\n            heapq.heapreplace(heap, (-d, -i))\n\n    # Popping gives the farthest first, so reverse to get nearest first\n    result = []\n    while heap:\n        neg_d, neg_i = heapq.heappop(heap)\n        result.append(points[-neg_i])\n    result.reverse()\n    return result",
      "st": {
-      "p": "`k_closest` receives a list of 2D `points` and an integer `k`, and returns the k points closest to the origin, ordered by increasing distance. Compare squared distance instead of true distance, since it avoids a square root and preserves the same ordering.",
+      "p": "Given a list of 2D `points` `[x, y]` and an integer `k`, return the `k` points closest to the origin (0, 0), nearest first.\n\nIf two points are the same distance away, the one that appears earlier in `points` comes first.",
       "ex": [
        {
         "i": "points = [[1, 3], [-2, 2]], k = 1",
         "o": "[[-2, 2]]",
-        "why": "squared distance 8 beats squared distance 10"
+        "why": "(-2, 2) is closer than (1, 3): squared distance 8 against 10"
        },
        {
         "i": "points = [[3, 3], [5, -1], [-2, 4]], k = 2",
         "o": "[[3, 3], [-2, 4]]",
-        "why": "squared distances 18 and 20 both beat 26"
+        "why": "(3, 3) and (-2, 4) are at squared distance 18 and 20, both closer than (5, -1) at 26"
        }
       ],
       "k": [
        "1 <= k <= len(points)",
-       "O(n log k) time"
+       "Aim for O(n log k) time"
       ]
+     },
+     "alt": {
+      "note": "Same answer in one line: `heapq.nsmallest` runs the keep-the-k-smallest loop for you.",
+      "code": "import heapq\n\ndef k_closest(points, k):\n    return heapq.nsmallest(k, points, key=lambda p: p[0] ** 2 + p[1] ** 2)"
      }
     },
     {
@@ -2132,26 +2219,31 @@ window.CODING = {
       "o": "medians 1, 1.5, 2",
       "w": "after each add"
      },
-     "t": "Two heaps: a max-heap for the lower half, a min-heap for the upper half.",
-     "code": "import heapq\n\nclass MedianFinder:\n    def __init__(self):\n        self.lo, self.hi = [], []        # lo holds negatives: a max-heap\n\n    def add(self, x):\n        heapq.heappush(self.lo, -x)\n        heapq.heappush(self.hi, -heapq.heappop(self.lo))\n        if len(self.hi) > len(self.lo):  # keep lo the same size or one bigger\n            heapq.heappush(self.lo, -heapq.heappop(self.hi))\n\n    def median(self):\n        if len(self.lo) > len(self.hi):\n            return -self.lo[0]\n        return (-self.lo[0] + self.hi[0]) / 2",
+     "t": "The median sits between the smaller half and the larger half. What if you kept each half so that its edge, the half's largest or smallest value, is quick to read?",
+     "code": "import heapq  # heapq: a min-heap kept inside a plain list, so the smallest entry pops first\n\nclass MedianFinder:\n    def __init__(self):\n        # lo: the smaller half, stored as negatives so its smallest entry is the\n        #     largest real value (a max-heap)\n        # hi: the larger half, a plain min-heap\n        self.lo = []\n        self.hi = []\n\n    def add(self, x):\n        # Send x through lo, then move lo's largest value up to hi,\n        # so every value in lo stays <= every value in hi\n        heapq.heappush(self.lo, -x)\n        biggest_low = -heapq.heappop(self.lo)\n        heapq.heappush(self.hi, biggest_low)\n        # Keep lo the same size as hi, or one bigger\n        if len(self.hi) > len(self.lo):\n            smallest_high = heapq.heappop(self.hi)\n            heapq.heappush(self.lo, -smallest_high)\n\n    def median(self):\n        # Odd count: lo has the extra value, and its top is the middle\n        if len(self.lo) > len(self.hi):\n            return -self.lo[0]\n        # Even count: the middle is between the two tops\n        return (-self.lo[0] + self.hi[0]) / 2",
      "st": {
-      "p": "The `MedianFinder` class supports `add(x)`, which inserts a number, and `median()`, which returns the median of every number inserted so far. Keep a max-heap for the lower half of the values and a min-heap for the upper half, rebalancing after each add so their sizes never differ by more than one; the median comes from the top of one or both heaps.",
+      "p": "Design a class `MedianFinder` with `add(x)`, which adds a number to the collection, and `median()`, which returns the median of all numbers added so far.\n\nThe median is the middle value in sorted order, or the average of the two middle values when the count is even. `add` is called before the first `median`.",
       "ex": [
        {
         "i": "add(1), add(2), add(3), reading `median()` after each add",
         "o": "1, 1.5, 2",
-        "why": "the two halves rebalance to keep the median at the boundary"
+        "why": "after 1, 2, 3 the middle value is 1, then 1.5, then 2"
        },
        {
         "i": "add(5), add(2), add(8), add(1), reading `median()` after each add",
         "o": "5, 3.5, 5, 3.5",
-        "why": "with an even count the median averages the two middle values"
+        "why": "with an even count the median is the average of the two middle values"
        }
       ],
       "k": [
        "add() is called before the first median()",
-       "O(log n) time per add, O(1) time per median call"
+       "Aim for O(log n) per add and O(1) per median"
       ]
+     },
+     "first": {
+      "label": "First idea, O(n) per add",
+      "note": "Keep one sorted list and read the middle. Every add shifts up to n values, though the median only needs the middle. What if you kept only the two halves, with their edges easy to reach?",
+      "code": "class MedianFinder:\n    def __init__(self):\n        self.nums = []  # all numbers so far, always in sorted order\n\n    def add(self, x):\n        # Walk from the left to find where x belongs\n        i = 0\n        while i < len(self.nums) and self.nums[i] < x:\n            i += 1\n        self.nums.insert(i, x)  # inserting shifts everything after i\n\n    def median(self):\n        n = len(self.nums)\n        mid = n // 2\n        # Odd count: the middle element. Even count: average the two middle ones.\n        if n % 2 == 1:\n            return self.nums[mid]\n        return (self.nums[mid - 1] + self.nums[mid]) / 2"
      }
     },
     {
@@ -2161,10 +2253,10 @@ window.CODING = {
       "o": "[\"i\", \"love\"]",
       "w": "ties broken alphabetically"
      },
-     "t": "Count, then top k by (-count, word).",
-     "code": "import heapq\nfrom collections import Counter\n\ndef top_k_words(words, k):\n    cnt = Counter(words)\n    return heapq.nsmallest(k, cnt, key=lambda w: (-cnt[w], w))",
+     "t": "First count each word. Then how could you order the words so that the answer comes out first, highest count first and alphabetical on ties?",
+     "code": "import heapq  # heapq: a min-heap kept inside a plain list, so the smallest entry pops first\n\ndef top_k_words(words, k):\n    counts = {}  # word -> how many times it appears\n    for w in words:\n        counts[w] = counts.get(w, 0) + 1\n\n    # Entries are (-count, word). Python compares tuples left to right, so the smallest\n    # entry has the highest count, and among equal counts the alphabetically first word.\n    heap = []\n    for w in counts:\n        heap.append((-counts[w], w))\n    heapq.heapify(heap)\n\n    # The k smallest entries are the answer, already in the required order\n    result = []\n    for _ in range(k):\n        neg_count, w = heapq.heappop(heap)\n        result.append(w)\n    return result",
      "st": {
-      "p": "`top_k_words` receives a list of `words` and an integer `k`, and returns the k most frequent words, ties broken alphabetically. Count occurrences, then take the k smallest by the key `(-count, word)`, which sorts by highest count first and alphabetically within a tied count.",
+      "p": "Given a list of strings `words` and an integer `k`, return the `k` most frequent words.\n\nOrder the answer from the highest frequency to the lowest. Words with the same frequency are ordered alphabetically.",
       "ex": [
        {
         "i": "words = ['i', 'love', 'code', 'i', 'love', 'coding'], k = 2",
@@ -2174,13 +2266,17 @@ window.CODING = {
        {
         "i": "words = ['a', 'b', 'c'], k = 2",
         "o": "['a', 'b']",
-        "why": "all three tie at one occurrence, so alphabetical order breaks the tie"
+        "why": "all three words appear once, so alphabetical order picks 'a' and 'b'"
        }
       ],
       "k": [
        "1 <= k <= number of distinct words",
-       "O(n log k) time"
+       "Aim for O(n log n) time"
       ]
+     },
+     "alt": {
+      "note": "Same counts in one line each: `Counter` builds the counts and `nsmallest` picks the k best by the same key.",
+      "code": "import heapq\nfrom collections import Counter\n\ndef top_k_words(words, k):\n    cnt = Counter(words)\n    return heapq.nsmallest(k, cnt, key=lambda w: (-cnt[w], w))"
      }
     }
    ],
@@ -2197,11 +2293,11 @@ window.CODING = {
      },
      "l": "medium",
      "task": "The kth largest in an unsorted array.",
-     "hint": "A min-heap of size k.",
-     "sol": "import heapq\n\ndef kth_largest(nums, k):\n    heap = nums[:k]\n    heapq.heapify(heap)\n    for x in nums[k:]:\n        if x > heap[0]:\n            heapq.heapreplace(heap, x)\n    return heap[0]",
-     "c": "O(n log k).",
+     "hint": "Only the k biggest numbers matter. What could you keep while scanning so that the smallest of them is always easy to find?",
+     "sol": "import heapq  # heapq: a min-heap kept inside a plain list, so heap[0] is the smallest\n\ndef kth_largest(nums, k):\n    # Start with the first k numbers as the \"k largest so far\"\n    heap = nums[:k]\n    heapq.heapify(heap)  # rearrange the list so heap[0] is the smallest\n    for x in nums[k:]:\n        # x beats the smallest of the current k largest, so it takes its place\n        if x > heap[0]:\n            heapq.heapreplace(heap, x)  # pop the smallest and push x in one step\n    # The smallest of the k largest is exactly the kth largest\n    return heap[0]",
+     "c": "O(n log k) time: each number costs at most one heap update of size k. O(k) space for the heap.",
      "st": {
-      "p": "`kth_largest` receives an unsorted list `nums` and an integer `k`, and returns the kth largest value, counting duplicates by position rather than by distinct value. Keep a min-heap of the k largest values seen so far; anything smaller than the heap's minimum can be discarded right away.",
+      "p": "Given an unsorted list of integers `nums` and an integer `k`, return the kth largest element.\n\nIt is the kth largest in sorted order, not the kth distinct value, so duplicates count.",
       "ex": [
        {
         "i": "nums = [3, 2, 1, 5, 6, 4], k = 2",
@@ -2216,8 +2312,13 @@ window.CODING = {
       ],
       "k": [
        "1 <= k <= len(nums)",
-       "O(n log k) time, O(k) space"
+       "Aim for O(n log k) time and O(k) space"
       ]
+     },
+     "first": {
+      "label": "First idea, O(n log n)",
+      "note": "Sort everything and read off position k. It works, but it orders all n numbers when only the top k matter. What if you only kept the k largest as you scan?",
+      "code": "def kth_largest(nums, k):\n    # Sort from largest to smallest\n    ordered = sorted(nums, reverse=True)\n    # Position 0 is the largest, so the kth largest is at index k - 1\n    return ordered[k - 1]"
      }
     },
     {
@@ -2229,16 +2330,16 @@ window.CODING = {
      },
      "l": "hard",
      "task": "Merge k sorted Python lists into one.",
-     "hint": "A heap of (value, list index, position).",
-     "sol": "import heapq\n\ndef merge_k(lists):\n    # (value, list, position); list breaks ties\n    heap = [(lst[0], i, 0) for i, lst in enumerate(lists) if lst]\n    heapq.heapify(heap)\n    out = []\n    while heap:\n        val, i, j = heapq.heappop(heap)\n        out.append(val)\n        if j + 1 < len(lists[i]):\n            heapq.heappush(heap, (lists[i][j + 1], i, j + 1))\n    return out",
-     "c": "O(N log k) for N total items.",
+     "hint": "The smallest value left anywhere must be at the front of one of the k lists. What could you keep so that finding the smallest of those k fronts is cheap?",
+     "sol": "import heapq  # heapq: a min-heap kept inside a plain list, so the smallest entry pops first\n\ndef merge_k(lists):\n    # One candidate per list: its front value, as (value, which list, position in it).\n    # On equal values the list number breaks the tie, so entries always compare.\n    heap = []\n    for i in range(len(lists)):\n        if lists[i]:\n            heap.append((lists[i][0], i, 0))\n    heapq.heapify(heap)\n\n    out = []\n    while heap:\n        # The smallest front value is the smallest value left anywhere\n        val, i, j = heapq.heappop(heap)\n        out.append(val)\n        # Replace it with the next value from the same list, if it has one\n        if j + 1 < len(lists[i]):\n            heapq.heappush(heap, (lists[i][j + 1], i, j + 1))\n    return out",
+     "c": "O(N log k) time: each of the N values is pushed and popped once on a heap of at most k entries. O(k) space for the heap.",
      "st": {
-      "p": "`merge_k` receives a list of k already-sorted Python lists and returns one sorted list containing all of their values. Keep a heap of one candidate value per input list, always popping the smallest and pushing that list's next value in its place. Any input list, or the whole input, can be empty.",
+      "p": "Given a list `lists` of k lists that are each sorted in ascending order, return one sorted list holding all of their values.\n\nAny of the lists, or `lists` itself, can be empty.",
       "ex": [
        {
         "i": "lists = [[1, 4, 5], [1, 3, 4], [2, 6]]",
         "o": "[1, 1, 2, 3, 4, 4, 5, 6]",
-        "why": "the heap always yields the smallest value across all three lists"
+        "why": "each step takes the smallest front value across the three lists"
        },
        {
         "i": "lists = [[]]",
@@ -2247,9 +2348,14 @@ window.CODING = {
        }
       ],
       "k": [
-       "O(N log k) time for N total items across k lists",
-       "O(k) heap size"
+       "Aim for O(N log k) time for N total values across k lists",
+       "O(k) extra space besides the output"
       ]
+     },
+     "first": {
+      "label": "First idea, O(N log N)",
+      "note": "Put every value in one list and sort it. This ignores that each list is already sorted. The smallest left is always at the front of one list: could you track only those k fronts?",
+      "code": "def merge_k(lists):\n    everything = []\n    # Gather every value from every list\n    for lst in lists:\n        for x in lst:\n            everything.append(x)\n    # Sort the lot from scratch, as if the input had no order\n    everything.sort()\n    return everything"
      }
     }
    ],
@@ -2281,15 +2387,15 @@ window.CODING = {
       "o": "[[1, 5], [6, 9]]",
       "w": "already sorted"
      },
-     "t": "Copy what ends before it, merge what overlaps it, copy the rest.",
-     "code": "def insert(ivs, new):\n    out, i, n = [], 0, len(ivs)\n    while i < n and ivs[i][1] < new[0]:\n        out.append(ivs[i])\n        i += 1\n    s, e = new\n    while i < n and ivs[i][0] <= e:\n        s, e = min(s, ivs[i][0]), max(e, ivs[i][1])\n        i += 1\n    out.append([s, e])\n    return out + ivs[i:]",
+     "t": "Intervals that end before the new one starts stay put. Which others touch it, and what are the start and end of the combined interval?",
+     "code": "def insert(ivs, new):\n    out = []\n    i, n = 0, len(ivs)\n\n    # 1. Intervals that end before new starts stay exactly as they are\n    while i < n and ivs[i][1] < new[0]:\n        out.append(ivs[i])\n        i += 1\n\n    # 2. Intervals that start by the time new ends overlap it: stretch new to cover them\n    start, end = new[0], new[1]\n    while i < n and ivs[i][0] <= end:\n        start = min(start, ivs[i][0])\n        end = max(end, ivs[i][1])\n        i += 1\n    out.append([start, end])  # the merged interval goes in its sorted place\n\n    # 3. Whatever is left starts after new ends, so copy it unchanged\n    return out + ivs[i:]",
      "st": {
-      "p": "`insert` receives a list of non-overlapping intervals `ivs` already sorted by start time, plus one `new` interval, and returns the intervals after inserting `new` and merging any overlaps it creates. Copy over intervals ending before `new` starts, merge every interval that overlaps `new` into a single expanded interval, then copy the rest.",
+      "p": "Given a list `ivs` of non-overlapping `[start, end]` intervals sorted by start, and a new interval `new`, return the list with `new` added.\n\nMerge any intervals that overlap, so the result is still sorted and non-overlapping. Intervals that only touch at an endpoint count as overlapping.",
       "ex": [
        {
         "i": "ivs = [[1, 3], [6, 9]], new = [2, 5]",
         "o": "[[1, 5], [6, 9]]",
-        "why": "[2, 5] overlaps [1, 3] and absorbs it"
+        "why": "[2, 5] overlaps [1, 3], so they merge into [1, 5]"
        },
        {
         "i": "ivs = [[1, 5]], new = [6, 8]",
@@ -2298,8 +2404,8 @@ window.CODING = {
        }
       ],
       "k": [
-       "ivs is sorted and non-overlapping on input",
-       "O(n) time, one pass"
+       "ivs is sorted and has no overlaps",
+       "Aim for O(n) time"
       ]
      }
     },
@@ -2310,10 +2416,10 @@ window.CODING = {
       "o": "False",
       "w": "5 starts before 30 ends"
      },
-     "t": "Sort; any start before the previous end is a clash.",
-     "code": "def can_attend(ivs):\n    ivs = sorted(ivs)\n    return all(ivs[i][0] >= ivs[i - 1][1] for i in range(1, len(ivs)))",
+     "t": "If you list the meetings by start time, which neighbouring pair would tell you there is a clash?",
+     "code": "def can_attend(meetings):\n    ordered = sorted(meetings)  # earliest start first\n    for i in range(1, len(ordered)):\n        # This meeting starts before the one just before it ends: a clash\n        if ordered[i][0] < ordered[i - 1][1]:\n            return False\n    # Every meeting starts after the previous one ended\n    return True",
      "st": {
-      "p": "`can_attend` receives a list of `[start, end]` meeting intervals and returns `True` if one person could attend all of them without any overlap, `False` otherwise. Sort by start time and check that each meeting starts no earlier than the previous one ends; back-to-back meetings, where one starts exactly when the last ends, are allowed.",
+      "p": "Given a list `meetings` of `[start, end]` meeting times, return `True` if one person could attend every meeting, otherwise `False`.\n\nMeetings that touch, where one starts exactly when another ends, do not clash.",
       "ex": [
        {
         "i": "meetings = [[0, 30], [5, 10]]",
@@ -2323,11 +2429,11 @@ window.CODING = {
        {
         "i": "meetings = [[7, 10], [2, 4]]",
         "o": "True",
-        "why": "sorted by start, [2, 4] ends before [7, 10] begins"
+        "why": "[2, 4] ends before [7, 10] begins, so they never overlap"
        }
       ],
       "k": [
-       "O(n log n) time for the sort"
+       "Aim for O(n log n) time"
       ]
      }
     },
@@ -2338,10 +2444,10 @@ window.CODING = {
       "o": "1",
       "w": "remove [1, 3]"
      },
-     "t": "Sort by end; keep whatever ends first, count the rest. Greedy.",
-     "code": "def erase_overlap(ivs):\n    end, removed = float('-inf'), 0\n    for s, e in sorted(ivs, key=lambda x: x[1]):\n        if s >= end:\n            end = e\n        else:\n            removed += 1\n    return removed",
+     "t": "When two intervals clash, which one leaves more room for the rest? Think about which one ends sooner.",
+     "code": "def erase_overlap(ivs):\n    last_end = float('-inf')  # end of the last interval we chose to keep\n    removed = 0\n    # Look at intervals in order of when they end\n    for s, e in sorted(ivs, key=lambda x: x[1]):\n        if s >= last_end:\n            # No clash with the last kept interval: keep this one\n            last_end = e\n        else:\n            # It clashes with one that ends no later, so removing this one costs least\n            removed += 1\n    return removed",
      "st": {
-      "p": "`erase_overlap` receives a list of `[start, end]` intervals and returns the minimum number of intervals to remove so none of the remaining ones overlap. Sort by end time and greedily keep whichever interval ends earliest at each step, counting as removed any interval that starts before the last kept interval ends.",
+      "p": "Given a list `ivs` of `[start, end]` intervals, return the minimum number of intervals to remove so that none of the remaining ones overlap.\n\nIntervals that only touch at an endpoint, like [1, 2] and [2, 3], do not overlap.",
       "ex": [
        {
         "i": "ivs = [[1, 2], [2, 3], [3, 4], [1, 3]]",
@@ -2355,7 +2461,7 @@ window.CODING = {
        }
       ],
       "k": [
-       "O(n log n) time for the sort"
+       "Aim for O(n log n) time"
       ]
      }
     }
@@ -2373,16 +2479,16 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Minimum number of rooms for all meetings.",
-     "hint": "Sort by start; a min-heap of end times; reuse a room when the earliest ends first.",
-     "sol": "import heapq\n\ndef min_rooms(meetings):\n    ends = []\n    for start, end in sorted(meetings):\n        if ends and ends[0] <= start:\n            heapq.heapreplace(ends, end)   # reuse the room that frees first\n        else:\n            heapq.heappush(ends, end)\n    return len(ends)",
-     "c": "O(n log n).",
+     "hint": "When a meeting starts, you only need to know whether some room has already been freed. What could you keep so the earliest-freed room is quick to find?",
+     "sol": "import heapq  # heapq: a min-heap kept inside a plain list, so ends[0] is the smallest\n\ndef min_rooms(meetings):\n    ends = []  # end time of the last meeting in each room; ends[0] frees up first\n    for start, end in sorted(meetings):  # take meetings in order of start time\n        if ends and ends[0] <= start:\n            # The room that frees first is free by now: reuse it\n            heapq.heapreplace(ends, end)  # pop its old end time, push the new one\n        else:\n            # Every room is still busy: open a new one\n            heapq.heappush(ends, end)\n    # One entry per room we ever had to open\n    return len(ends)",
+     "c": "O(n log n) time: sorting, then one heap update per meeting. O(n) space for the heap.",
      "st": {
-      "p": "`min_rooms` receives a list of `[start, end]` meeting intervals and returns the minimum number of rooms needed so no two overlapping meetings share a room. Sort meetings by start time and track room end times in a min-heap; reuse the room that frees earliest when it frees before the next meeting starts, otherwise open a new room.",
+      "p": "Given a list of `[start, end]` times in `meetings`, return the minimum number of rooms needed to hold all the meetings.\n\nTwo meetings overlap if one starts before the other ends. A meeting that starts exactly when another ends can use the same room.",
       "ex": [
        {
         "i": "meetings = [[0, 30], [5, 10], [15, 20]]",
         "o": "2",
-        "why": "[5, 10] and [15, 20] both need a room while [0, 30] is still going"
+        "why": "[5, 10] and [15, 20] each overlap [0, 30], so a second room is needed"
        },
        {
         "i": "meetings = [[7, 10], [2, 4]]",
@@ -2391,8 +2497,13 @@ window.CODING = {
        }
       ],
       "k": [
-       "O(n log n) time for the sort and heap operations"
+       "Aim for O(n log n) time"
       ]
+     },
+     "first": {
+      "label": "First idea, O(n^2)",
+      "note": "The busiest moment is when some meeting starts, so count how many meetings are running at each start. It works, but every count rescans all meetings. What if you handled meetings in start order and remembered only when each room frees up?",
+      "code": "def min_rooms(meetings):\n    most = 0  # the highest number of meetings running at once\n    for start, end in meetings:\n        # Count the meetings that are running at this meeting's start time\n        running = 0\n        for s, e in meetings:\n            if s <= start < e:\n                running += 1\n        if running > most:\n            most = running\n    return most"
      }
     }
    ],
@@ -2425,25 +2536,25 @@ window.CODING = {
       "o": "6",
       "w": "[4, -1, 2, 1]"
      },
-     "t": "The state is the best sum ending here: extend the run or restart at x. O(n), O(1).",
-     "code": "def max_subarray(nums):\n    best = cur = nums[0]\n    for x in nums[1:]:\n        cur = max(x, cur + x)     # extend the run, or restart at x\n        best = max(best, cur)\n    return best",
+     "t": "For each position, ask for the best sum of a run that ends there. Is it better to extend the run before it, or to start a new run at this number?",
+     "code": "def max_subarray(nums):\n    # cur: best sum of a run that ends at the current element\n    # best: best sum seen for any run so far\n    best = cur = nums[0]\n    for x in nums[1:]:\n        # a run ending at x either extends the run before it, or starts fresh at x\n        cur = max(x, cur + x)\n        best = max(best, cur)\n    return best",
      "st": {
-      "p": "Write `max_subarray(nums)` that returns the largest possible sum of a contiguous subarray of `nums`. Assume `nums` has at least one element; a single-element array returns that element even if it is negative.",
+      "p": "Given an integer list `nums`, return the largest sum of any non-empty run of neighbouring elements.\n\nA single element counts as a run, so a list holding one negative number returns that number.",
       "ex": [
        {
-        "i": "max_subarray([-2, 1, -3, 4, -1, 2, 1, -5, 4])",
+        "i": "nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]",
         "o": "6",
-        "why": "the subarray [4, -1, 2, 1] has the largest sum"
+        "why": "the run [4, -1, 2, 1] adds up to 6, the largest of any run"
        },
        {
-        "i": "max_subarray([-5])",
+        "i": "nums = [-5]",
         "o": "-5",
-        "why": "edge case: a single negative element is still the best, and only, subarray"
+        "why": "edge case: the only run is [-5], so it is also the best"
        }
       ],
       "k": [
-       "O(n) time, O(1) space",
-       "nums has at least one element"
+       "nums has at least one element",
+       "Aim for O(n) time and O(1) extra space"
       ]
      }
     },
@@ -2454,26 +2565,35 @@ window.CODING = {
       "o": "4",
       "w": "2, 3, 7, 18"
      },
-     "t": "Keep the smallest tail for each length; bisect places each number. O(n log n).",
-     "code": "from bisect import bisect_left\n\ndef lis(nums):\n    tails = []                           # tails[i]: smallest end of a run of length i + 1\n    for x in nums:\n        i = bisect_left(tails, x)\n        if i == len(tails):\n            tails.append(x)\n        else:\n            tails[i] = x\n    return len(tails)",
+     "t": "For each length, keep the smallest number that can end an increasing run of that length. Where does a new number x fit among those ends, and which one does it replace?",
+     "code": "def lis(nums):\n    # tails[k]: the smallest number that can end an increasing run of length k + 1\n    # tails stays sorted, so the place for a new number can be found by halving\n    tails = []\n    for x in nums:\n        # find the first position whose tail is >= x\n        lo, hi = 0, len(tails)\n        while lo < hi:\n            mid = (lo + hi) // 2\n            if tails[mid] < x:\n                lo = mid + 1  # x is bigger than this tail, so the place is further right\n            else:\n                hi = mid  # this tail could be the place, so keep it in range\n        if lo == len(tails):\n            tails.append(x)  # x is bigger than every tail: it makes a longer run\n        else:\n            tails[lo] = x  # x is a smaller end for runs of length lo + 1\n    return len(tails)",
      "st": {
-      "p": "Write `lis(nums)` that returns the length of the longest strictly increasing subsequence of `nums`. The subsequence does not have to be contiguous. Your solution should not fall back on the slower quadratic approach.",
+      "p": "Given an integer list `nums`, return the length of its longest strictly increasing subsequence.\n\nA subsequence keeps the original order but may skip elements, so it does not have to be contiguous. An empty list has length 0.",
       "ex": [
        {
-        "i": "lis([10, 9, 2, 5, 3, 7, 101, 18])",
+        "i": "nums = [10, 9, 2, 5, 3, 7, 101, 18]",
         "o": "4",
-        "why": "2, 3, 7, 18 is strictly increasing and is the longest such run"
+        "why": "2, 3, 7, 18 is strictly increasing, and no longer one exists"
        },
        {
-        "i": "lis([])",
+        "i": "nums = []",
         "o": "0",
         "why": "edge case: an empty list has no subsequence at all"
        }
       ],
       "k": [
-       "O(n log n) time",
+       "Aim for O(n log n) time",
        "O(n) space"
       ]
+     },
+     "first": {
+      "label": "First idea, O(n^2)",
+      "note": "For each number, look back at every earlier number and extend the best run that ends below it. That is a full scan per number. Do you need the best run ending at each earlier number, or only the smallest end for each length?",
+      "code": "def lis(nums):\n    # best[i]: length of the longest increasing run that ends at nums[i]\n    best = []\n    for i in range(len(nums)):\n        best.append(1)  # nums[i] alone is a run of length 1\n        for j in range(i):\n            if nums[j] < nums[i]:\n                # nums[i] can extend the run that ends at nums[j]\n                best[i] = max(best[i], best[j] + 1)\n    if not best:\n        return 0\n    return max(best)"
+     },
+     "alt": {
+      "note": "Same idea with the library: `bisect_left` finds the place of `x` in `tails` for you.",
+      "code": "from bisect import bisect_left\n\ndef lis(nums):\n    tails = []\n    for x in nums:\n        i = bisect_left(tails, x)\n        if i == len(tails):\n            tails.append(x)\n        else:\n            tails[i] = x\n    return len(tails)"
      }
     },
     {
@@ -2483,25 +2603,25 @@ window.CODING = {
       "o": "28",
       "w": "moves right or down only"
      },
-     "t": "Each cell is paths from above plus paths from the left; one row is enough.",
-     "code": "def unique_paths(m, n):\n    row = [1] * n\n    for _ in range(1, m):\n        for j in range(1, n):\n            row[j] += row[j - 1]         # above (old row[j]) + left\n    return row[-1]",
+     "t": "A cell can only be entered from above or from the left. How do the path counts of those two neighbours combine, and how much of the grid do you need to keep?",
+     "code": "def unique_paths(m, n):\n    # row[j]: number of paths to column j of the row we are on\n    row = [1] * n  # top row: only one path, all moves to the right\n    for _ in range(1, m):\n        for j in range(1, n):\n            # row[j] still holds the count from the cell above; row[j - 1] is the cell to the left\n            row[j] = row[j] + row[j - 1]\n    return row[n - 1]",
      "st": {
-      "p": "A robot sits at the top-left corner of an `m` by `n` grid and can only move right or down. Write `unique_paths(m, n)` that returns how many distinct paths reach the bottom-right corner. A 1 by 1 grid means the robot starts where it needs to end.",
+      "p": "A robot starts in the top-left corner of a grid with `m` rows and `n` columns and wants to reach the bottom-right corner. Return the number of distinct paths it can take if it moves only right or down, one cell at a time.\n\nA 1 by 1 grid has one path, since the robot starts where it needs to end.",
       "ex": [
        {
-        "i": "unique_paths(3, 7)",
+        "i": "m = 3, n = 7",
         "o": "28",
         "why": "3 rows and 7 columns give 28 right-or-down paths"
        },
        {
-        "i": "unique_paths(1, 1)",
+        "i": "m = 1, n = 1",
         "o": "1",
         "why": "edge case: a single cell needs no moves, so there is exactly one path"
        }
       ],
       "k": [
-       "O(m x n) time",
-       "O(n) space if only one row is kept"
+       "m, n >= 1",
+       "Aim for O(m x n) time and O(n) space"
       ]
      }
     },
@@ -2512,24 +2632,24 @@ window.CODING = {
       "o": "True",
       "w": "\"leet\" + \"code\""
      },
-     "t": "ok[i] means s[:i] can be split; try every last word.",
-     "code": "def word_break(s, words):\n    words = set(words)\n    ok = [True] + [False] * len(s)\n    for i in range(1, len(s) + 1):\n        ok[i] = any(ok[j] and s[j:i] in words for j in range(i))\n    return ok[-1]",
+     "t": "A prefix can be split if it ends in a word and what comes before that word can also be split. How would you record that for every prefix length?",
+     "code": "def word_break(s, words):\n    word_set = set(words)  # a set answers \"is this a word?\" quickly\n    # ok[i]: can the first i characters of s be split into words?\n    ok = [True] + [False] * len(s)  # zero characters need no words\n    for i in range(1, len(s) + 1):\n        for j in range(i):\n            # s[:j] can be split and s[j:i] is a word, so s[:i] can be split\n            if ok[j] and s[j:i] in word_set:\n                ok[i] = True\n                break  # one way is enough\n    return ok[len(s)]",
      "st": {
-      "p": "Given a string `s` and a list of dictionary `words`, write `word_break(s, words)` that returns whether `s` can be split into a sequence of words from the dictionary. Words may be reused any number of times. An empty string counts as breakable, since it needs zero words.",
+      "p": "Given a string `s` and a list of strings `words`, return whether `s` can be split into a sequence of words from `words`.\n\nA word may be used any number of times. An empty `s` can be split, since it needs no words.",
       "ex": [
        {
-        "i": "word_break(\"leetcode\", [\"leet\", \"code\"])",
+        "i": "s = \"leetcode\", words = [\"leet\", \"code\"]",
         "o": "True",
-        "why": "\"leetcode\" splits into \"leet\" plus \"code\""
+        "why": "\"leetcode\" splits into \"leet\" and \"code\""
        },
        {
-        "i": "word_break(\"\", [\"a\", \"b\"])",
+        "i": "s = \"\", words = [\"a\", \"b\"]",
         "o": "True",
-        "why": "edge case: an empty string needs no words, so it trivially breaks"
+        "why": "edge case: an empty string needs no words, so it can be split"
        }
       ],
       "k": [
-       "O(n^2) time for a string of length n",
+       "Aim for O(n^2) time for a string of length n",
        "O(n) space"
       ]
      }
@@ -2541,33 +2661,32 @@ window.CODING = {
       "o": "35",
       "w": "items 1 and 3"
      },
-     "t": "Loop capacity downward so each item is used at most once.",
-     "code": "def knapsack(wts, vals, cap):\n    dp = [0] * (cap + 1)\n    for w, v in zip(wts, vals):\n        for c in range(cap, w - 1, -1):  # downward: this item once\n            dp[c] = max(dp[c], dp[c - w] + v)\n    return dp[cap]",
+     "t": "Let dp[c] be the best value for capacity c. When you add an item, which older entries may it build on, and why must you not use entries you have already updated for this item?",
+     "code": "def knapsack(wts, vals, cap):\n    # dp[c]: best value that fits in capacity c, using the items seen so far\n    dp = [0] * (cap + 1)  # no items yet, so every capacity is worth 0\n    for w, v in zip(wts, vals):\n        # go from the largest capacity down, so dp[c - w] still excludes this item\n        for c in range(cap, w - 1, -1):\n            # either leave the item, or take it on top of the best for the room left\n            dp[c] = max(dp[c], dp[c - w] + v)\n    return dp[cap]",
      "st": {
-      "p": "You have items described by parallel lists `wts` (weights) and `vals` (values), and a knapsack of capacity `cap`. Each item can be taken at most once. Write `knapsack(wts, vals, cap)` that returns the maximum total value that fits without exceeding capacity. An item heavier than the capacity contributes nothing.",
+      "p": "You are given `wts`, the weight of each item, `vals`, the value of each item, and a knapsack that holds at most `cap` weight. Return the largest total value you can carry.\n\nEach item can be taken at most once. An item heavier than `cap` can never be taken.",
       "ex": [
        {
-        "i": "knapsack([1, 3, 4], [15, 20, 30], 4)",
+        "i": "wts = [1, 3, 4], vals = [15, 20, 30], cap = 4",
         "o": "35",
-        "why": "items with weights 1 and 3 together weigh 4 and are worth 35"
+        "why": "the items of weight 1 and 3 together weigh 4 and are worth 15 + 20 = 35"
        },
        {
-        "i": "knapsack([5], [10], 4)",
+        "i": "wts = [5], vals = [10], cap = 4",
         "o": "0",
-        "why": "edge case: the only item is heavier than the capacity, so nothing fits"
+        "why": "edge case: the only item is heavier than the knapsack holds, so nothing fits"
        }
       ],
       "k": [
-       "O(len(items) x cap) time",
-       "O(cap) space",
-       "weights and values are non-negative"
+       "weights and values are non-negative",
+       "Aim for O(len(wts) x cap) time and O(cap) space"
       ]
      }
     }
    ],
    "spot": "Count the ways, min or max cost, choices that overlap. <b>Signal:</b> 'how many ways', 'minimum cost', and a brute force that repeats work.",
    "cx": "States times transitions; memoisation turns exponential into polynomial.",
-   "tpl": "from functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef best(i):\n    if i >= n:\n        return 0\n    return max(take(i) + best(i + 2), best(i + 1))",
+   "tpl": "# memo: i -> best result from position i onward (filled as we go)\nmemo = {}\n\ndef best(i):\n    if i >= n:\n        return 0\n    if i in memo:\n        return memo[i]  # already solved, reuse it\n    memo[i] = max(take(i) + best(i + 2), best(i + 1))\n    return memo[i]\n",
    "probs": [
     {
      "n": "Climbing stairs",
@@ -2578,26 +2697,26 @@ window.CODING = {
      },
      "l": "easy",
      "task": "Ways to climb n steps taking 1 or 2 at a time.",
-     "hint": "ways(n) = ways(n-1) + ways(n-2).",
-     "sol": "def climb(n):\n    a, b = 1, 1\n    for _ in range(n):\n        a, b = b, a + b\n    return a",
-     "c": "O(n), O(1) space.",
+     "hint": "Think about the last move: you reached step n from step n - 1 or from step n - 2. How do the ways to reach those two steps add up?",
+     "sol": "def climb(n):\n    # prev: ways to reach step i, cur: ways to reach step i + 1 (we start at i = 0)\n    prev, cur = 1, 1\n    for _ in range(n):\n        # the last move was 1 step from the step before, or 2 steps from the one before that\n        nxt = prev + cur\n        prev = cur\n        cur = nxt\n    # after n rounds, i has reached step n\n    return prev",
+     "c": "O(n) time: one addition per step. O(1) space: only the last two counts are kept.",
      "st": {
-      "p": "You are climbing a staircase with `n` steps and can take either 1 or 2 steps at a time. Write `climb(n)` that returns the number of distinct ways to reach the top. Treat `n = 0` as already at the top, so there is exactly one way: taking no steps at all.",
+      "p": "Given an integer `n`, the number of steps in a staircase, return the number of distinct ways to climb to the top when each move is 1 or 2 steps.\n\nTwo ways differ if their sequences of moves differ. With `n = 0` you are already at the top, so there is exactly one way: take no steps.",
       "ex": [
        {
-        "i": "climb(5)",
+        "i": "n = 5",
         "o": "8",
-        "why": "the 1s-and-2s step counts follow the Fibonacci recurrence"
+        "why": "eight different sequences of 1s and 2s add up to 5 steps"
        },
        {
-        "i": "climb(0)",
+        "i": "n = 0",
         "o": "1",
-        "why": "edge case: zero steps means one trivial way, taking none"
+        "why": "edge case: you are already at the top, so the one way is to take no steps"
        }
       ],
       "k": [
-       "O(n) time, O(1) space",
-       "n is a non-negative integer"
+       "n >= 0",
+       "Aim for O(n) time and O(1) extra space"
       ]
      }
     },
@@ -2610,26 +2729,26 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Max sum without taking two adjacent houses.",
-     "hint": "At each house: rob it plus best two back, or skip it.",
-     "sol": "def rob(nums):\n    take, skip = 0, 0\n    for x in nums:\n        take, skip = skip + x, max(take, skip)\n    return max(take, skip)",
-     "c": "O(n).",
+     "hint": "At each house you either rob it and add the best total from two houses back, or skip it. What two numbers do you need to carry along as you walk down the street?",
+     "sol": "def rob(nums):\n    # take: best total so far if we robbed the latest house\n    # skip: best total so far if we did not rob the latest house\n    take, skip = 0, 0\n    for x in nums:\n        # robbing this house is only allowed if the previous one was skipped\n        new_take = skip + x\n        # skipping this house keeps the better of the two earlier outcomes\n        new_skip = max(take, skip)\n        take = new_take\n        skip = new_skip\n    return max(take, skip)",
+     "c": "O(n) time: one step per house. O(1) space: two running totals.",
      "st": {
-      "p": "You are robbing houses on a street where `nums[i]` is the cash in house i. You cannot rob two adjacent houses, since it trips the alarm. Write `rob(nums)` that returns the maximum total you can steal. An empty list of houses has nothing to steal.",
+      "p": "Given a list `nums` where `nums[i]` is the cash in house `i`, return the most cash you can steal in one night.\n\nYou cannot rob two houses next to each other. An empty list has nothing to steal.",
       "ex": [
        {
-        "i": "rob([2, 7, 9, 3, 1])",
+        "i": "nums = [2, 7, 9, 3, 1]",
         "o": "12",
-        "why": "rob houses at indices 0, 2 and 4 (2 + 9 + 1) and skip the rest"
+        "why": "houses 0, 2 and 4 give 2 + 9 + 1 = 12, and no allowed choice gives more"
        },
        {
-        "i": "rob([])",
+        "i": "nums = []",
         "o": "0",
-        "why": "edge case: no houses means nothing to rob"
+        "why": "edge case: no houses means nothing to steal"
        }
       ],
       "k": [
-       "O(n) time, O(1) space",
-       "amounts are non-negative"
+       "amounts are non-negative",
+       "Aim for O(n) time and O(1) extra space"
       ]
      }
     },
@@ -2642,28 +2761,32 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Fewest coins to make an amount, or -1.",
-     "hint": "dp[a] = 1 + min over coins of dp[a - coin].",
-     "sol": "def coin_change(coins, amount):\n    INF = amount + 1  # more coins than could ever be needed\n    dp = [0] + [INF] * amount  # dp[a] = fewest coins that make a\n    for a in range(1, amount + 1):\n        for c in coins:\n            if c <= a:\n                dp[a] = min(dp[a], dp[a - c] + 1)\n    return dp[amount] if dp[amount] != INF else -1",
-     "c": "O(amount x coins).",
+     "hint": "Suppose you already knew the fewest coins for every smaller amount. Which coin would be the last one you add to reach the current amount?",
+     "sol": "def coin_change(coins, amount):\n    INF = amount + 1  # more coins than could ever be needed, so it means \"unreachable\"\n    # dp[a]: fewest coins that make exactly a\n    dp = [0] + [INF] * amount  # zero coins make 0\n    for a in range(1, amount + 1):\n        for c in coins:\n            if c <= a:\n                # use coin c last: the rest, a - c, was already solved\n                dp[a] = min(dp[a], dp[a - c] + 1)\n    if dp[amount] == INF:\n        return -1  # no combination reached the amount\n    return dp[amount]",
+     "c": "O(amount x coins) time: each amount tries each coin once. O(amount) space for the table.",
      "st": {
-      "p": "Given a list of coin denominations `coins` and a target `amount`, write `coin_change(coins, amount)` that returns the fewest coins needed to make exactly that amount, reusing any denomination as many times as needed. If no combination makes the amount exactly, return -1.",
+      "p": "Given a list of coin values `coins` and an integer `amount`, return the fewest coins that add up to exactly `amount`.\n\nYou have an unlimited supply of each coin value. If no combination makes the amount, return -1.",
       "ex": [
        {
-        "i": "coin_change([1, 2, 5], 11)",
+        "i": "coins = [1, 2, 5], amount = 11",
         "o": "3",
-        "why": "5 + 5 + 1 uses the fewest coins"
+        "why": "5 + 5 + 1 = 11 uses 3 coins, and no 2 coins make 11"
        },
        {
-        "i": "coin_change([2], 3)",
+        "i": "coins = [2], amount = 3",
         "o": "-1",
-        "why": "edge case: an odd amount is unreachable with only even coins"
+        "why": "edge case: a single coin of 2 only reaches even amounts, and 3 is odd"
        }
       ],
       "k": [
-       "O(amount x len(coins)) time",
-       "O(amount) space",
-       "coin values and amount are non-negative integers"
+       "coin values are positive integers, amount is non-negative",
+       "Aim for O(amount x len(coins)) time and O(amount) space"
       ]
+     },
+     "first": {
+      "label": "First idea, O(coins^amount)",
+      "note": "Try every coin as the next one and solve what is left, over and over. The same remaining amount is solved many times. What if you stored the answer for each amount, smallest first?",
+      "code": "def coin_change(coins, amount):\n    # fewest coins that make exactly `left`, or -1 if impossible\n    def fewest(left):\n        if left == 0:\n            return 0  # nothing left to make\n        best = -1\n        for c in coins:\n            if c <= left:\n                # take coin c, then solve what remains from scratch\n                sub = fewest(left - c)\n                if sub != -1 and (best == -1 or sub + 1 < best):\n                    best = sub + 1\n        return best\n    return fewest(amount)"
      }
     },
     {
@@ -2675,27 +2798,32 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Length of the longest subsequence common to two strings.",
-     "hint": "A 2D table: match extends the diagonal, else take the best neighbour.",
-     "sol": "def lcs(a, b):\n    dp = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]\n    for i in range(1, len(a) + 1):\n        for j in range(1, len(b) + 1):\n            if a[i - 1] == b[j - 1]:\n                dp[i][j] = dp[i - 1][j - 1] + 1  # match: extend the diagonal\n            else:\n                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])  # drop a character from a or b\n    return dp[-1][-1]",
-     "c": "O(n m).",
+     "hint": "Look at the last characters of the first i letters of a and the first j letters of b. If they are equal, what happens to the answer? If not, which smaller pair of prefixes should you look at?",
+     "sol": "def lcs(a, b):\n    # dp[i][j]: longest common subsequence of the first i characters of a and the first j of b\n    dp = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]  # row 0 and column 0 stay 0: one side is empty\n    for i in range(1, len(a) + 1):\n        for j in range(1, len(b) + 1):\n            if a[i - 1] == b[j - 1]:\n                # the last characters match, so keep them and extend the shorter pair\n                dp[i][j] = dp[i - 1][j - 1] + 1\n            else:\n                # no match: drop the last character of a, or of b, and keep the better result\n                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])\n    return dp[len(a)][len(b)]",
+     "c": "O(n x m) time and space: one table cell per pair of prefixes.",
      "st": {
-      "p": "Write `lcs(a, b)` that returns the length of the longest subsequence common to strings `a` and `b`. A subsequence keeps the original order but may skip characters. Either string may be empty.",
+      "p": "Given two strings `a` and `b`, return the length of their longest common subsequence.\n\nA subsequence keeps the original order of the characters but may skip some. Either string may be empty.",
       "ex": [
        {
-        "i": "lcs(\"abcde\", \"ace\")",
+        "i": "a = \"abcde\", b = \"ace\"",
         "o": "3",
         "why": "\"ace\" appears in order in both strings"
        },
        {
-        "i": "lcs(\"\", \"abc\")",
+        "i": "a = \"\", b = \"abc\"",
         "o": "0",
         "why": "edge case: an empty string shares no characters with anything"
        }
       ],
       "k": [
-       "O(n x m) time and space for strings of length n and m",
+       "Aim for O(n x m) time and space for strings of length n and m",
        "n and m are the lengths of a and b"
       ]
+     },
+     "first": {
+      "label": "First idea, O(2^(n+m))",
+      "note": "At each mismatch, try dropping a character from a and from b, and follow both. The same pair of positions is solved again and again. What if you stored the answer for each pair (i, j)?",
+      "code": "def lcs(a, b):\n    # longest common subsequence of a[i:] and b[j:]\n    def go(i, j):\n        if i == len(a) or j == len(b):\n            return 0  # one string is used up\n        if a[i] == b[j]:\n            return 1 + go(i + 1, j + 1)  # equal characters: keep both\n        # different: skip a character of a, or of b, and take the better result\n        return max(go(i + 1, j), go(i, j + 1))\n    return go(0, 0)"
      }
     }
    ],
@@ -2728,25 +2856,25 @@ window.CODING = {
       "o": "[[2, 2, 3], [7]]",
       "w": "numbers can repeat"
      },
-     "t": "Recurse from the same index to allow reuse; stop when the rest would overshoot.",
-     "code": "def combination_sum(cands, target):\n    out = []\n    def go(i, path, left):\n        if left == 0:\n            out.append(path[:])\n            return\n        for j in range(i, len(cands)):\n            if cands[j] <= left:\n                path.append(cands[j])\n                go(j, path, left - cands[j])   # j, not j + 1: reuse allowed\n                path.pop()\n    go(0, [], target)\n    return out",
+     "t": "After choosing a number you may choose it again. How do you stop the same combination showing up in two orders, and when do you stop going deeper?",
+     "code": "def combination_sum(cands, target):\n    out = []  # every combination that reached the target\n    def go(i, path, left):\n        # path: numbers chosen so far; left: how much is still needed\n        # i: only candidates from index i on may be chosen, so no combination repeats in another order\n        if left == 0:\n            out.append(path[:])  # a copy, because path keeps changing\n            return\n        for j in range(i, len(cands)):\n            if cands[j] <= left:  # a bigger number would overshoot\n                path.append(cands[j])\n                go(j, path, left - cands[j])  # j, not j + 1: the same number may be used again\n                path.pop()  # undo this choice\n    go(0, [], target)\n    return out",
      "st": {
-      "p": "Given a list of distinct positive numbers `cands` and a `target`, write `combination_sum(cands, target)` that returns every combination of candidates that sums exactly to target. A candidate may be reused any number of times, and no combination should be a reordering of another already returned. If no combination reaches the target, return an empty list.",
+      "p": "Given a list of distinct positive integers `cands` and an integer `target`, return all unique combinations of `cands` that add up to `target`.\n\nThe same number may be used any number of times. Two combinations are the same if they hold the same numbers, in whatever order. If none reaches `target`, return an empty list.",
       "ex": [
        {
-        "i": "combination_sum([2, 3, 6, 7], 7)",
+        "i": "cands = [2, 3, 6, 7], target = 7",
         "o": "[[2, 2, 3], [7]]",
-        "why": "2 + 2 + 3 and 7 both sum to 7; no other combination does"
+        "why": "2 + 2 + 3 and 7 both add up to 7, and no other combination does"
        },
        {
-        "i": "combination_sum([2], 3)",
+        "i": "cands = [2], target = 3",
         "o": "[]",
-        "why": "edge case: only even sums are reachable with a single even candidate, so an odd target has no combination"
+        "why": "edge case: a single even number only reaches even sums, and 3 is odd"
        }
       ],
       "k": [
-       "worst case exponential in target and len(cands)",
-       "candidates and target are positive integers"
+       "candidates and target are positive integers",
+       "The number of combinations can grow exponentially"
       ]
      }
     },
@@ -2757,25 +2885,25 @@ window.CODING = {
       "o": "6 subsets",
       "w": "[2] and [1, 2] only once"
      },
-     "t": "Sort; at one depth, skip a number equal to the one before it.",
-     "code": "def subsets_dup(nums):\n    nums, out = sorted(nums), []\n    def go(i, path):\n        out.append(path[:])\n        for j in range(i, len(nums)):\n            if j > i and nums[j] == nums[j - 1]:   # same choice at this depth\n                continue\n            path.append(nums[j])\n            go(j + 1, path)\n            path.pop()\n    go(0, [])\n    return out",
+     "t": "Equal numbers should be treated as the same choice. How can you arrange the input so that, at one step, you can skip a number equal to the one before it?",
+     "code": "def subsets_dup(nums):\n    nums = sorted(nums)  # equal numbers now sit next to each other\n    out = []  # every distinct subset\n    def go(i, path):\n        # every path is a subset, so record it on arrival\n        out.append(path[:])\n        for j in range(i, len(nums)):\n            # an equal number was already tried first at this step, so this branch would repeat it\n            if j > i and nums[j] == nums[j - 1]:\n                continue\n            path.append(nums[j])\n            go(j + 1, path)  # j + 1: each position is used at most once\n            path.pop()  # undo this choice\n    go(0, [])\n    return out",
      "st": {
-      "p": "Given a list of numbers `nums` that may contain duplicates, write `subsets_dup(nums)` that returns every distinct subset, with no duplicate subset appearing twice, as a list of lists.",
+      "p": "Given a list of integers `nums` that may contain duplicates, return all distinct subsets.\n\nNo subset may appear twice, even if it can be built from different positions. The subsets may come in any order.",
       "ex": [
        {
-        "i": "subsets_dup([1, 2, 2])",
+        "i": "nums = [1, 2, 2]",
         "o": "[[], [1], [1, 2], [1, 2, 2], [2], [2, 2]]",
-        "why": "6 distinct subsets; [2] and [1, 2] each appear once even though 2 repeats, any order is accepted"
+        "why": "6 distinct subsets: [2] and [1, 2] each appear once even though 2 occurs twice"
        },
        {
-        "i": "subsets_dup([])",
+        "i": "nums = []",
         "o": "[[]]",
-        "why": "edge case: an empty input still has one subset, the empty one"
+        "why": "edge case: an empty list still has one subset, the empty one"
        }
       ],
       "k": [
-       "O(n x 2^n) time worst case",
-       "input may be unsorted; sort first to group duplicates together"
+       "Aim for O(n x 2^n) time in the worst case",
+       "nums may be in any order"
       ]
      }
     },
@@ -2786,25 +2914,25 @@ window.CODING = {
       "o": "5 strings",
       "w": "\"((()))\", \"(()())\", ..."
      },
-     "t": "Add an opener while any are left; a closer only while it has an opener to match.",
-     "code": "def gen_parens(n):\n    out = []\n    def go(s, opened, closed):\n        if len(s) == 2 * n:\n            out.append(s)\n            return\n        if opened < n:\n            go(s + \"(\", opened + 1, closed)\n        if closed < opened:\n            go(s + \")\", opened, closed + 1)\n    go(\"\", 0, 0)\n    return out",
+     "t": "Build the string left to right. When is it still safe to add an opening bracket, and when is a closing bracket allowed?",
+     "code": "def gen_parens(n):\n    out = []  # every well-formed string\n    def go(s, opened, closed):\n        # s: the string built so far; opened and closed count the brackets in it\n        if len(s) == 2 * n:\n            out.append(s)  # all 2n characters placed, and the rules kept it balanced\n            return\n        if opened < n:\n            go(s + \"(\", opened + 1, closed)  # an opener is fine while some are left\n        if closed < opened:\n            go(s + \")\", opened, closed + 1)  # a closer needs an unmatched opener\n    go(\"\", 0, 0)\n    return out",
      "st": {
-      "p": "Write `gen_parens(n)` that returns every string of `n` pairs of balanced parentheses, as a list of strings. A string is balanced when every closing bracket has a matching, earlier opening bracket and the counts are equal at the end.",
+      "p": "Given an integer `n`, the number of pairs of parentheses, return all well-formed strings made of `n` pairs.\n\nA string is well-formed when every closing bracket matches an earlier opening bracket and the two counts are equal at the end. The strings may come in any order.",
       "ex": [
        {
-        "i": "gen_parens(3)",
+        "i": "n = 3",
         "o": "[\"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"]",
-        "why": "the 5 balanced strings for 3 pairs (the 3rd Catalan number), in the order the openers-first recursion visits them, any order is accepted"
+        "why": "the 5 well-formed strings for 3 pairs (the 3rd Catalan number); any order is accepted"
        },
        {
-        "i": "gen_parens(0)",
+        "i": "n = 0",
         "o": "[\"\"]",
-        "why": "edge case: zero pairs gives exactly one result, the empty string"
+        "why": "edge case: zero pairs gives exactly one string, the empty one"
        }
       ],
       "k": [
-       "O(4^n / sqrt(n)) strings generated, each built in O(n)",
-       "n counts pairs, so the result holds 2n-character strings"
+       "O(4^n / sqrt(n)) strings are generated, each built in O(n)",
+       "n counts pairs, so each string has 2n characters"
       ]
      }
     }
@@ -2822,25 +2950,25 @@ window.CODING = {
      },
      "l": "medium",
      "task": "All subsets of distinct numbers.",
-     "hint": "At each index, include it or not.",
-     "sol": "def subsets(nums):\n    out = []\n    def go(i, path):\n        if i == len(nums):\n            out.append(path[:])\n            return\n        go(i + 1, path)  # skip nums[i]\n        path.append(nums[i])  # take nums[i]\n        go(i + 1, path)\n        path.pop()  # undo before going back up\n    go(0, [])\n    return out",
-     "c": "O(n 2^n).",
+     "hint": "For each number there are two choices: it is in the subset or it is not. How can you make those choices one number at a time, and undo each one when you step back?",
+     "sol": "def subsets(nums):\n    out = []  # every finished subset\n    def go(i, path):\n        # path holds the choices made so far; i is the next number to decide on\n        if i == len(nums):\n            out.append(path[:])  # a copy, because path keeps changing\n            return\n        go(i + 1, path)  # first branch: leave nums[i] out\n        path.append(nums[i])  # second branch: put nums[i] in\n        go(i + 1, path)\n        path.pop()  # undo, so the caller sees path as it was\n    go(0, [])\n    return out",
+     "c": "O(n x 2^n): 2^n subsets, each copied in O(n) time. Space is the same for the output.",
      "st": {
-      "p": "Write `subsets(nums)` that returns every subset of a list of distinct numbers, as a list of lists, including the empty subset and the full list itself. The order of the subsets in the result does not matter.",
+      "p": "Given a list of distinct integers `nums`, return all of its subsets, including the empty subset and `nums` itself.\n\nThe subsets may come in any order.",
       "ex": [
        {
-        "i": "subsets([1, 2, 3])",
+        "i": "nums = [1, 2, 3]",
         "o": "[[], [3], [2], [2, 3], [1], [1, 3], [1, 2], [1, 2, 3]]",
-        "why": "8 subsets total (2^3); this is the order the skip-then-take recursion visits them, any order is accepted"
+        "why": "2^3 = 8 subsets; any order is accepted"
        },
        {
-        "i": "subsets([])",
+        "i": "nums = []",
         "o": "[[]]",
-        "why": "edge case: an empty input still has one subset, the empty one"
+        "why": "edge case: an empty list still has one subset, the empty one"
        }
       ],
       "k": [
-       "O(n x 2^n) time and space",
+       "Aim for O(n x 2^n) time and space",
        "nums has no duplicate values"
       ]
      }
@@ -2854,27 +2982,31 @@ window.CODING = {
      },
      "l": "medium",
      "task": "All orderings of distinct numbers.",
-     "hint": "Choose an unused number, recurse, undo.",
-     "sol": "def permutations(nums):\n    out, used = [], [False] * len(nums)\n    def go(path):\n        if len(path) == len(nums):\n            out.append(path[:])\n            return\n        for i, x in enumerate(nums):\n            if not used[i]:  # each number once per path\n                used[i] = True\n                path.append(x)\n                go(path)\n                path.pop()\n                used[i] = False  # undo the choice\n    go([])\n    return out",
-     "c": "O(n n!).",
+     "hint": "Build an ordering one position at a time. Which numbers are still free to place next, and how do you give one back when you step back?",
+     "sol": "def permutations(nums):\n    out = []  # every finished ordering\n    used = [False] * len(nums)  # used[i]: is nums[i] already in the current path?\n    def go(path):\n        if len(path) == len(nums):\n            out.append(path[:])  # a copy, because path keeps changing\n            return\n        for i in range(len(nums)):\n            if not used[i]:  # a number can appear only once per ordering\n                used[i] = True\n                path.append(nums[i])\n                go(path)\n                path.pop()  # undo: take the number back out\n                used[i] = False  # and free it for other orderings\n    go([])\n    return out",
+     "c": "O(n x n!): n! orderings, each copied in O(n) time. Space is the same for the output.",
      "st": {
-      "p": "Write `permutations(nums)` that returns every ordering of a list of distinct numbers, as a list of lists. The order of the permutations in the result does not matter.",
+      "p": "Given a list of distinct integers `nums`, return all possible orderings of its elements.\n\nThe orderings may come in any order.",
       "ex": [
        {
-        "i": "permutations([1, 2, 3])",
+        "i": "nums = [1, 2, 3]",
         "o": "[[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]",
-        "why": "3! = 6 orderings; this is the order the used-array recursion visits them, any order is accepted"
+        "why": "3! = 6 orderings; any order is accepted"
        },
        {
-        "i": "permutations([])",
+        "i": "nums = []",
         "o": "[[]]",
-        "why": "edge case: an empty input has exactly one ordering, the empty one"
+        "why": "edge case: an empty list has exactly one ordering, the empty one"
        }
       ],
       "k": [
-       "O(n x n!) time and space",
+       "Aim for O(n x n!) time and space",
        "nums has no duplicate values"
       ]
+     },
+     "alt": {
+      "note": "Same orderings from the library: `itertools.permutations` yields them in this order as tuples.",
+      "code": "from itertools import permutations as _perms\n\ndef permutations(nums):\n    return [list(p) for p in _perms(nums)]"
      }
     }
    ],
@@ -2913,22 +3045,22 @@ window.CODING = {
      "t": "Guard the read-modify-write with a lock; `+=` is three steps, not one.",
      "code": "import threading\n\nclass Counter:\n    def __init__(self):\n        self.value = 0\n        self._lock = threading.Lock()\n\n    def add(self, n=1):\n        with self._lock:          # read, add and write as one step\n            self.value += n",
      "st": {
-      "p": "`Counter` has `add(n=1)` and a `value` attribute. Many threads call `add` at the same time, and when they all finish `value` must equal everything added. `self.value += n` is a read, an add and a write, and the interpreter can switch threads between them, so two threads can read the same old value and one update is lost. Guard the three steps with a lock.",
+      "p": "Implement a `Counter` with `add(n=1)` and a `value` attribute. Many threads call `add` at the same time.\n\nWhen they all finish, `value` must equal the sum of everything that was added.",
       "ex": [
        {
         "i": "8 threads each call `add()` 1,000 times",
         "o": "`value` is 8000",
-        "why": "every update is applied once; with no lock, two threads can read the same old value and one add is lost"
+        "why": "every update is applied exactly once, so 8 x 1,000 = 8000"
        },
        {
         "i": "`add(5)` called once on a new counter",
         "o": "`value` is 5",
-        "why": "one thread, no contention: the lock costs almost nothing"
+        "why": "one thread, no one to compete with: the result is the amount added"
        }
       ],
       "k": [
        "any number of threads may call add",
-       "hold the lock only around the update, nothing slower"
+       "threads must wait on each other for as short a time as possible"
       ]
      }
     },
@@ -2942,22 +3074,22 @@ window.CODING = {
      "t": "Check, lock that key, check again; the slow load holds only that key's lock.",
      "code": "import threading\n\nclass Cache:\n    def __init__(self, load):\n        self._load, self._data, self._locks = load, {}, {}\n\n    def get(self, key):\n        if key in self._data:                       # fast path: no lock\n            return self._data[key]\n        with self._locks.setdefault(key, threading.Lock()):    # one lock per key\n            if key not in self._data:               # check again: a waiter finds it loaded\n                self._data[key] = self._load(key)   # slow call holds only this key's lock\n            return self._data[key]",
      "st": {
-      "p": "`Cache(load)` has `get(key)`. The first call for a key runs `load(key)`, which is slow; later calls return the stored value. Many threads ask at once: `load` must run once per key, and a slow load for one key must not make another key wait.",
+      "p": "Implement `Cache(load)` with `get(key)`. The first call for a key runs `load(key)`, which is slow, and stores the result. Later calls for that key return the stored value.\n\nMany threads ask at once. `load` must run only once per key, and a slow load for one key must not make a thread asking for another key wait.",
       "ex": [
        {
         "i": "5 threads call `get('u1')` together; `load` takes 0.1 s",
         "o": "`load` runs once, all five get its value",
-        "why": "four threads wait on the lock for u1, then find the value stored"
+        "why": "four of the threads arrive while the value loads, and each finds it stored when it is their turn"
        },
        {
         "i": "3 threads call `get('a')`, `get('b')` and `get('c')`; each load takes 0.1 s",
         "o": "about 0.1 s in total",
-        "why": "each key has its own lock, so the three loads overlap"
+        "why": "the three keys do not depend on each other, so the three loads run at the same time"
        }
       ],
       "k": [
        "a load that raises stores nothing; the next call tries again",
-       "the fast path for a stored key takes no lock"
+       "a thread reading a key that is already stored must not wait for other threads"
       ]
      }
     },
@@ -2971,22 +3103,22 @@ window.CODING = {
      "t": "`pool.map` yields in input order; `as_completed` yields whichever finishes first.",
      "code": "from concurrent.futures import ThreadPoolExecutor, as_completed\n\ndef fetch_all(keys, fetch, workers=8):\n    with ThreadPoolExecutor(workers) as pool:\n        return list(pool.map(fetch, keys))                  # input order\n\ndef fetch_ready_first(keys, fetch, workers=8):\n    with ThreadPoolExecutor(workers) as pool:\n        futures = {pool.submit(fetch, k): k for k in keys}\n        return [(futures[f], f.result()) for f in as_completed(futures)]   # fastest first",
      "st": {
-      "p": "Write `fetch_all(keys, fetch)`, which returns the results in the order of `keys`, and `fetch_ready_first(keys, fetch)`, which returns `(key, result)` pairs in the order they finish. Both use a thread pool, so the calls overlap. A worker that raises must surface its exception to the caller.",
+      "p": "Implement `fetch_all(keys, fetch)`, which returns `fetch(key)` for every key in the order of `keys`, and `fetch_ready_first(keys, fetch)`, which returns `(key, result)` pairs in the order the fetches finish.\n\nThe fetches are slow and must overlap. If a fetch raises, the exception must reach the caller.",
       "ex": [
        {
         "i": "keys a, b, c where `fetch` sleeps 0.3, 0.1 and 0.2 s",
         "o": "`fetch_all` gives a, b, c; `fetch_ready_first` gives b, c, a",
-        "why": "map hands results back in submission order; as_completed in finishing order"
+        "why": "`fetch_all` follows the order of `keys`; `fetch_ready_first` follows the finishing times, 0.1 s, 0.2 s, 0.3 s"
        },
        {
         "i": "keys a, b where `fetch('b')` raises ValueError",
         "o": "both functions raise ValueError",
-        "why": "`result()` re-raises the worker's exception in the caller"
+        "why": "the worker's exception is raised again in the caller when its result is asked for"
        }
       ],
       "k": [
-       "a pool of 8 workers by default",
-       "the pool is shut down when the function returns"
+       "eight fetches run at a time by default",
+       "no worker threads are left running when the function returns"
       ]
      }
     },
@@ -3000,22 +3132,22 @@ window.CODING = {
      "t": "Take locks in one global order, so no thread waits on a lock held by a thread that waits on yours.",
      "code": "import threading\n\nclass Account:\n    def __init__(self, id, balance):\n        self.id, self.balance, self.lock = id, balance, threading.Lock()\n\ndef transfer(src, dst, amount):\n    if src is dst:\n        return False\n    first, second = sorted((src, dst), key=lambda a: a.id)   # one global order\n    with first.lock, second.lock:\n        if src.balance < amount:\n            return False\n        src.balance -= amount\n        dst.balance += amount\n        return True",
      "st": {
-      "p": "Write `transfer(src, dst, amount)` for `Account` objects that each have an `id`, a `balance` and a `lock`. It moves the money if `src` has enough and returns True, otherwise it returns False. Many threads transfer in both directions at once, so two transfers can need the same two locks. Never deadlock, and never lose or create money.",
+      "p": "Implement `transfer(src, dst, amount)` for `Account` objects that each have an `id`, a `balance` and a `lock`. It moves the money and returns True if `src` has enough, otherwise it returns False and changes nothing.\n\nMany threads transfer in both directions at once, so two transfers can need the same two locks. Never deadlock, and never lose or create money.",
       "ex": [
        {
         "i": "`transfer(a, b, 30)` and `transfer(b, a, 10)` run at once; a holds 100 and b holds 50",
         "o": "both return True; a ends at 80, b at 70",
-        "why": "both threads lock the lower id first, so neither waits on the other in a circle"
+        "why": "both threads take the lower id first, so neither can hold a lock the other is waiting for"
        },
        {
         "i": "`transfer(a, b, 500)` when a holds 100",
         "o": "False, balances unchanged",
-        "why": "the check runs inside the locks, so it sees the true balance"
+        "why": "the balance is read while both accounts are held, so it is the true balance"
        }
       ],
       "k": [
        "a transfer from an account to itself does nothing and returns False",
-       "the check and both updates happen under both locks"
+       "the balance check and both updates cannot be interleaved with another transfer"
       ]
      }
     },
@@ -3029,22 +3161,22 @@ window.CODING = {
      "t": "A bounded `Queue` is the cap and the backpressure; N workers pull from it.",
      "code": "import asyncio\n\nasync def run_pipeline(items, work, workers=3, size=10):\n    q = asyncio.Queue(maxsize=size)\n    out = [None] * len(items)\n\n    async def worker():\n        while True:\n            i, item = await q.get()\n            try:\n                out[i] = await work(item)\n            except Exception as exc:\n                out[i] = exc                  # one bad item must not kill the worker\n            finally:\n                q.task_done()\n\n    tasks = [asyncio.create_task(worker()) for _ in range(workers)]\n    for pair in enumerate(items):\n        await q.put(pair)                     # waits when the queue is full: backpressure\n    await q.join()                            # every item has been processed\n    for t in tasks:\n        t.cancel()\n    await asyncio.gather(*tasks, return_exceptions=True)\n    return out",
      "st": {
-      "p": "Write `async run_pipeline(items, work, workers=3, size=10)`. A producer puts the items on a bounded `asyncio.Queue`. `workers` tasks take items, `await work(item)` and store the result at the item's index. Return the list in input order. An item whose `work` raises stores the exception object and the worker carries on. When every item is done, stop the workers.",
+      "p": "Implement `async run_pipeline(items, work, workers=3, size=10)`. A producer feeds the items into a queue that holds at most `size` items. `workers` tasks take items from it, `await work(item)` and store the result at the item's index.\n\nReturn the results in input order. If `work` raises for an item, store the exception object in its place and carry on. When every item is done, the workers must stop.",
       "ex": [
        {
         "i": "`items` 0 to 5, `work` squares after a short sleep, 2 workers",
         "o": "`[0, 1, 4, 9, 16, 25]`",
-        "why": "results are stored by index, so completion order does not matter"
+        "why": "each result goes to its own index, so the order the workers finish in does not matter"
        },
        {
         "i": "`work` raises ValueError for item 3",
         "o": "index 3 holds the ValueError, the rest are normal results",
-        "why": "each worker catches Exception per item and goes on"
+        "why": "each worker catches the error for that one item and moves on to the next"
        }
       ],
       "k": [
        "the producer waits when the queue is full",
-       "do not catch CancelledError here: cancel is how the workers are stopped"
+       "cancelling is how the workers are stopped, so a cancel must not be swallowed"
       ]
      }
     },
@@ -3058,22 +3190,22 @@ window.CODING = {
      "t": "`wait_for` cancels the work on timeout; a task that catches `CancelledError` cleans up and re-raises.",
      "code": "import asyncio\n\nasync def fetch_or_none(fetch, key, seconds):\n    try:\n        return await asyncio.wait_for(fetch(key), seconds)   # cancels fetch on timeout\n    except asyncio.TimeoutError:\n        return None\n\nasync def worker(job, log):\n    try:\n        await job()\n    except asyncio.CancelledError:\n        log.append(\"cleanup\")        # undo partial work\n        raise                        # never swallow a cancel",
      "st": {
-      "p": "Write `async fetch_or_none(fetch, key, seconds)`: await `fetch(key)`, but give up after `seconds` and return None, leaving no work running. Then write `async worker(job, log)`: it awaits `job()`; if it is cancelled, it appends `'cleanup'` to `log` and lets the cancellation carry on.",
+      "p": "Implement `async fetch_or_none(fetch, key, seconds)`: await `fetch(key)`, but give up after `seconds` and return None, leaving no work running.\n\nThen implement `async worker(job, log)`: it awaits `job()`. If it is cancelled, it appends `'cleanup'` to `log` and the cancellation must still reach whoever cancelled it.",
       "ex": [
        {
         "i": "`fetch` sleeps 1 s, `seconds` is 0.05",
         "o": "None",
-        "why": "the timeout cancels the fetch inside wait_for, so nothing keeps running"
+        "why": "the fetch is cancelled when the time runs out, so nothing keeps running"
        },
        {
         "i": "a task running `worker(job, log)` is cancelled",
         "o": "`log` is `['cleanup']` and awaiting the task raises CancelledError",
-        "why": "the handler cleans up and re-raises, so the caller still sees the cancel"
+        "why": "the cleanup runs and the cancel is raised again, so the caller still sees it"
        }
       ],
       "k": [
-       "never swallow CancelledError: re-raise it",
-       "a timeout is TimeoutError on Python 3.11 and up, asyncio.TimeoutError before; asyncio.TimeoutError works on both"
+       "a cancel must never be swallowed",
+       "a timeout raises `TimeoutError` on Python 3.11 and up, `asyncio.TimeoutError` before; `asyncio.TimeoutError` matches both"
       ]
      }
     },
@@ -3087,22 +3219,22 @@ window.CODING = {
      "t": "Time each try out separately; back off with jitter; retry only errors that can succeed later.",
      "code": "import asyncio, random\n\nclass Transient(Exception):\n    pass\n\nasync def call_with_retry(op, attempts=4, base=0.1, cap=1.0, per_try=0.5, sleep=asyncio.sleep):\n    for n in range(1, attempts + 1):\n        try:\n            return await asyncio.wait_for(op(), per_try)\n        except (Transient, asyncio.TimeoutError):       # retry only what can succeed later\n            if n == attempts:\n                raise\n            await sleep(random.random() * min(cap, base * 2 ** (n - 1)))   # full jitter",
      "st": {
-      "p": "Write `async call_with_retry(op, attempts=4, base=0.1, cap=1.0, per_try=0.5, sleep=asyncio.sleep)`. It awaits `op()` with a timeout of `per_try` seconds. On `Transient` or a timeout it waits a random time up to `min(cap, base * 2**(n-1))` after try n and tries again, up to `attempts` tries, then re-raises. Any other exception is raised at once.",
+      "p": "Implement `async call_with_retry(op, attempts=4, base=0.1, cap=1.0, per_try=0.5, sleep=asyncio.sleep)`. It awaits `op()` and gives each try at most `per_try` seconds.\n\nIf a try raises `Transient` or times out, wait a random time between 0 and `min(cap, base * 2**(n-1))` after try n, then try again, up to `attempts` tries; after the last one, raise the error. Any other exception is raised at once, without a retry.",
       "ex": [
        {
         "i": "`op` raises `Transient` twice, then returns 'ok'",
         "o": "'ok', after 3 calls",
-        "why": "the first two failures are retried; the third try succeeds"
+        "why": "the first two tries fail with a retryable error, and the third succeeds"
        },
        {
         "i": "`op` raises ValueError",
         "o": "ValueError after 1 call",
-        "why": "a bad request does not get better; retrying it only wastes time"
+        "why": "a bad request will fail the same way again, so retrying only wastes time"
        }
       ],
       "k": [
-       "pass sleep in, so a test does not wait",
-       "full jitter: a random wait up to the ceiling, not the ceiling itself"
+       "`sleep` is passed in, so that a caller can replace the real wait",
+       "the wait is a random time up to the ceiling, not the ceiling itself"
       ]
      }
     },
@@ -3116,22 +3248,22 @@ window.CODING = {
      "t": "A blocking call freezes the whole loop; hand it to a thread (I/O) or a process (CPU).",
      "code": "import asyncio, time\n\ndef blocking_read(path):              # a sync library call: it would freeze the loop\n    time.sleep(0.1)\n    return path.upper()\n\nasync def read_all(paths):\n    return await asyncio.gather(*(asyncio.to_thread(blocking_read, p) for p in paths))",
      "st": {
-      "p": "A sync library function `blocking_read(path)` takes 0.1 s and cannot be rewritten as async. Write `async read_all(paths)` that calls it for every path so the calls overlap and the event loop stays free for other tasks. Return the results in input order.",
+      "p": "A synchronous library function `blocking_read(path)` takes 0.1 s and cannot be rewritten as async. Implement `async read_all(paths)` that reads every path so that the reads overlap and the event loop stays free for other tasks.\n\nReturn the results in input order.",
       "ex": [
        {
         "i": "5 paths",
         "o": "5 results in about 0.1 s",
-        "why": "five pool threads wait at the same time"
+        "why": "the five reads wait at the same time, so the total is about one read"
        },
        {
         "i": "calling `blocking_read` directly inside a coroutine",
         "o": "every other task stops for 0.1 s",
-        "why": "time.sleep never gives control back to the loop; asyncio.sleep does"
+        "why": "the loop is stuck for the whole read, so nothing else can run in the meantime"
        }
       ],
       "k": [
-       "asyncio.to_thread needs Python 3.9 or newer",
-       "CPU-bound work needs a process pool: threads share one GIL"
+       "`asyncio.to_thread` needs Python 3.9 or newer",
+       "work that is limited by the processor, not by waiting, gains nothing from threads: they share one interpreter lock"
       ]
      }
     }
@@ -3149,26 +3281,26 @@ window.CODING = {
      },
      "l": "easy",
      "task": "Make three methods run in order, whichever thread calls first.",
-     "hint": "Two Events: second waits for the first to be set, third for the second.",
+     "hint": "Each method needs to know that the one before it has finished. What could `second` wait on, and who tells it the wait is over?",
      "sol": "import threading\n\nclass Foo:\n    def __init__(self):\n        self._one, self._two = threading.Event(), threading.Event()\n\n    def first(self, print_first):\n        print_first()\n        self._one.set()\n\n    def second(self, print_second):\n        self._one.wait()          # blocks until first has printed\n        print_second()\n        self._two.set()\n\n    def third(self, print_third):\n        self._two.wait()\n        print_third()",
      "c": "O(1) per call; each method waits once on an event, no spinning.",
      "st": {
-      "p": "The `Foo` class has three methods, `first(print_first)`, `second(print_second)` and `third(print_third)`. Three different threads each call one of them, in any order, and each method calls the function it receives. Make the output always `first`, `second`, `third`, in that order, whichever method is called first.",
+      "p": "Implement the class `Foo` with three methods, `first(print_first)`, `second(print_second)` and `third(print_third)`. Three different threads each call one of the methods, in any order, and each method calls the function it is given.\n\nThe output must always be `first`, `second`, `third`, in that order, whichever method is called first.",
       "ex": [
        {
         "i": "the threads call `third`, `second`, `first`, in that order",
         "o": "firstsecondthird",
-        "why": "third waits for second's event, second waits for first's"
+        "why": "`third` cannot print until `second` has, and `second` cannot print until `first` has"
        },
        {
         "i": "the threads call `first`, `second`, `third`, in that order",
         "o": "firstsecondthird",
-        "why": "each event is already set when the next method needs it"
+        "why": "`first` already ran, so `second` and `third` find nothing to wait for"
        }
       ],
       "k": [
        "each method is called exactly once",
-       "a method that is too early must block, not spin"
+       "a method that is called too early must wait without using the processor"
       ]
      }
     },
@@ -3181,27 +3313,27 @@ window.CODING = {
      },
      "l": "medium",
      "task": "A thread-safe queue that blocks when full or empty.",
-     "hint": "One Condition on one lock: wait_for the room or the item, notify_all after every change.",
+     "hint": "Full and empty are two reasons to wait, on the same shared state. How can a sleeping thread be woken exactly when that state changes, and how does it re-check the condition when it wakes?",
      "sol": "import threading\nfrom collections import deque\n\nclass BoundedBlockingQueue:\n    def __init__(self, capacity):\n        self._q, self._cap = deque(), capacity\n        self._cv = threading.Condition()\n\n    def enqueue(self, element):\n        with self._cv:\n            self._cv.wait_for(lambda: len(self._q) < self._cap)   # wait while full\n            self._q.append(element)\n            self._cv.notify_all()          # producers and consumers share the condition\n\n    def dequeue(self):\n        with self._cv:\n            self._cv.wait_for(lambda: self._q)                    # wait while empty\n            element = self._q.popleft()\n            self._cv.notify_all()\n            return element\n\n    def size(self):\n        with self._cv:\n            return len(self._q)",
      "c": "O(1) per call; waiting threads sleep on the condition, they do not poll.",
      "st": {
-      "p": "Implement `BoundedBlockingQueue(capacity)`. `enqueue(element)` adds to the back and blocks while the queue is full. `dequeue()` removes and returns the front item and blocks while the queue is empty. `size()` returns the current count. Producers and consumers run in many threads.",
+      "p": "Design a queue shared by many producer and consumer threads, with a fixed `capacity`.\n\n`enqueue(element)` adds to the back and waits while the queue is full. `dequeue()` removes and returns the front item and waits while the queue is empty. `size()` returns the current count.",
       "ex": [
        {
         "i": "capacity 2; one thread calls `enqueue` with 1, 2, 3 while another calls `dequeue` three times",
         "o": "`dequeue` returns 1, 2, 3",
-        "why": "the third enqueue blocks until the first dequeue makes room"
+        "why": "the third `enqueue` has no room until the first `dequeue` takes an item out"
        },
        {
         "i": "`dequeue` is called on an empty queue, then another thread enqueues 7",
         "o": "`dequeue` returns 7",
-        "why": "the caller sleeps until an item arrives"
+        "why": "the caller waits until an item arrives, then returns it"
        }
       ],
       "k": [
        "1 <= capacity",
        "first in, first out",
-       "no busy waiting"
+       "a waiting thread must not use the processor while it waits"
       ]
      }
     },
@@ -3214,26 +3346,26 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Four threads cooperate to print one sequence in order.",
-     "hint": "One shared counter under a Condition; each thread waits until the counter is its kind of number.",
+     "hint": "All four threads look at the same next number. How can each one sleep until that number is its kind, and what must it check once it wakes up, including after n is passed?",
      "sol": "import threading\n\nclass FizzBuzz:\n    def __init__(self, n):\n        self.n, self.i = n, 1\n        self._cv = threading.Condition()\n\n    def _run(self, mine, emit):\n        with self._cv:\n            while True:\n                self._cv.wait_for(lambda: self.i > self.n or mine(self.i))\n                if self.i > self.n:\n                    return                 # all numbers done: every thread leaves\n                emit(self.i)\n                self.i += 1\n                self._cv.notify_all()\n\n    def fizz(self, print_fizz):\n        self._run(lambda i: i % 3 == 0 and i % 5 != 0, lambda i: print_fizz())\n\n    def buzz(self, print_buzz):\n        self._run(lambda i: i % 5 == 0 and i % 3 != 0, lambda i: print_buzz())\n\n    def fizzbuzz(self, print_fizzbuzz):\n        self._run(lambda i: i % 15 == 0, lambda i: print_fizzbuzz())\n\n    def number(self, print_number):\n        self._run(lambda i: i % 3 != 0 and i % 5 != 0, print_number)",
      "c": "O(n) turns; notify_all wakes all four threads on each turn.",
      "st": {
-      "p": "Four threads share one `FizzBuzz(n)` object. One calls `fizz(print_fizz)`, one `buzz(print_buzz)`, one `fizzbuzz(print_fizzbuzz)` and one `number(print_number)`. Together they print 1 to n: a multiple of 3 prints fizz, a multiple of 5 prints buzz, a multiple of both prints fizzbuzz, and any other number prints itself. Each thread prints only its own kind, in order, and returns when n is done.",
+      "p": "Four threads share one `FizzBuzz(n)` object. One calls `fizz(print_fizz)`, one `buzz(print_buzz)`, one `fizzbuzz(print_fizzbuzz)` and one `number(print_number)`.\n\nTogether they print the numbers 1 to n: a multiple of 3 prints fizz, a multiple of 5 prints buzz, a multiple of both prints fizzbuzz, and any other number prints itself. The output is in order, each thread prints only its own kind, and every thread returns once n is done.",
       "ex": [
        {
         "i": "`FizzBuzz(15)`, the four threads started in any order",
         "o": "1 2 fizz 4 buzz fizz 7 8 fizz buzz 11 fizz 13 14 fizzbuzz",
-        "why": "the shared counter decides whose turn it is, whatever the start order"
+        "why": "whichever thread starts first, the next number to print decides whose turn it is"
        },
        {
         "i": "`FizzBuzz(2)`",
         "o": "1 2",
-        "why": "the fizz, buzz and fizzbuzz threads find nothing to print and exit when the counter passes n"
+        "why": "no number from 1 to 2 is a multiple of 3 or 5, so those three threads print nothing and must still return"
        }
       ],
       "k": [
        "every thread must return once n is done",
-       "`print_number` receives the number"
+       "`print_number` receives the number to print"
       ]
      }
     },
@@ -3246,25 +3378,25 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Release hydrogen and oxygen threads as valid water molecules.",
-     "hint": "Semaphore(2) for hydrogen, Semaphore(1) for oxygen, and a Barrier(3) where the molecule forms.",
+     "hint": "Count what a molecule needs: two H, one O. What can limit how many of each type may enter at once, and what makes the three of them leave together?",
      "sol": "import threading\n\nclass H2O:                            # two hydrogens and one oxygen make a molecule\n    def __init__(self):\n        self._h = threading.Semaphore(2)       # at most two hydrogens in a molecule\n        self._o = threading.Semaphore(1)       # and one oxygen\n        self._barrier = threading.Barrier(3)   # the three meet before any releases\n\n    def hydrogen(self, release_hydrogen):\n        with self._h:\n            self._barrier.wait()\n            release_hydrogen()\n\n    def oxygen(self, release_oxygen):\n        with self._o:\n            self._barrier.wait()\n            release_oxygen()",
      "c": "O(1) per call; the next molecule cannot form until this one has released.",
      "st": {
-      "p": "`H2O` has `hydrogen(release_hydrogen)` and `oxygen(release_oxygen)`. Many threads call them in any order, and there are always twice as many hydrogen calls as oxygen calls. A thread waits until a molecule can form, then calls its release function. Every consecutive group of three outputs must be two H and one O.",
+      "p": "Design `H2O` with `hydrogen(release_hydrogen)` and `oxygen(release_oxygen)`. Many threads call them in any order, and there are always twice as many hydrogen calls as oxygen calls.\n\nA thread waits until a molecule can form, then calls its release function. Every consecutive group of three outputs must be two H and one O.",
       "ex": [
        {
         "i": "threads arrive as H, H, H, O, O, H",
         "o": "HHOHOH, or any order where each group of 3 is two H and one O",
-        "why": "the barrier opens only when two hydrogens and one oxygen are all waiting"
+        "why": "a molecule is released only when two hydrogens and one oxygen have all arrived"
        },
        {
         "i": "one oxygen arrives long before any hydrogen",
         "o": "it waits at the barrier",
-        "why": "no molecule forms with a missing atom"
+        "why": "no molecule can form with an atom missing, so the oxygen waits"
        }
       ],
       "k": [
-       "the order of the three within a molecule does not matter",
+       "the order of the three atoms within a molecule does not matter",
        "a new molecule may not start releasing before the previous one is out"
       ]
      }
@@ -3304,22 +3436,22 @@ window.CODING = {
      "t": "Each Python tool has one job: Enum for fixed choices, dataclass for values, ABC for a contract, Protocol for a shape.",
      "code": "from abc import ABC, abstractmethod\nfrom dataclasses import dataclass\nfrom enum import Enum\nfrom typing import Protocol\n\nclass Size(Enum):\n    SMALL = 1\n    LARGE = 2\n\n@dataclass(frozen=True)\nclass Vehicle:                    # a value: compared by fields, cannot change\n    plate: str\n    size: Size\n\nclass Spot(ABC):                  # a contract; subclasses fill in the rule\n    @abstractmethod\n    def fits(self, vehicle): ...\n\nclass Compact(Spot):\n    def fits(self, vehicle):\n        return vehicle.size is Size.SMALL\n\nclass Payment(Protocol):          # any object with pay() works; no inheritance needed\n    def pay(self, cents) -> bool: ...",
      "st": {
-      "p": "Model a parking lot's nouns in Python. A vehicle is a value, a plate and a size, that never changes after it is created. A size is one of a fixed set. A spot is a contract with a `fits` rule that each kind of spot fills in. A payment method is anything that has a `pay` method. Choose the Python tool for each: dataclass, Enum, ABC or Protocol.",
+      "p": "Model the nouns of a parking lot in Python, choosing for each the language feature that fits it.\n\nA vehicle is a value, a plate and a size, that never changes after it is created. A size is one of a fixed set. A spot is a contract with a `fits` rule that each kind of spot fills in. A payment method is anything that has a `pay` method, whatever its class.",
       "ex": [
        {
         "i": "a small `Vehicle` and a `Compact` spot",
         "o": "`fits` is True",
-        "why": "Compact.fits compares the vehicle's size with Size.SMALL"
+        "why": "a Compact spot fits a vehicle whose size is SMALL"
        },
        {
         "i": "assigning to `plate` on a `Vehicle`",
         "o": "raises FrozenInstanceError",
-        "why": "frozen=True makes the dataclass a value that cannot change"
+        "why": "a vehicle is a fixed value, so changing a field after it is created is an error"
        }
       ],
       "k": [
-       "`Spot()` itself cannot be created: it has an abstract method",
-       "a Protocol needs no base class; the type checker checks the shape"
+       "`Spot()` itself cannot be created, because its rule is left unfilled",
+       "a payment method needs no base class; a type checker only checks that it has the right shape"
       ]
      }
     },
@@ -3333,22 +3465,22 @@ window.CODING = {
      "t": "A registry maps a name to a class; a new kind is one line and no caller changes.",
      "code": "from abc import ABC, abstractmethod\n\nclass Notifier(ABC):\n    @abstractmethod\n    def send(self, to, text): ...\n\nclass Email(Notifier):\n    def send(self, to, text):\n        return \"email \" + to + \": \" + text\n\nclass Sms(Notifier):\n    def send(self, to, text):\n        return \"sms \" + to + \": \" + text\n\nNOTIFIERS = {\"email\": Email, \"sms\": Sms}      # a new kind is one more line\n\ndef make_notifier(kind):\n    try:\n        return NOTIFIERS[kind]()\n    except KeyError:\n        raise ValueError(\"unknown notifier: \" + kind) from None",
      "st": {
-      "p": "The caller has a name from a config file or a request, such as 'email' or 'sms', not a class. Write `make_notifier(kind)` that returns the right `Notifier` and raises a clear ValueError for an unknown name. Adding a channel must not change any caller.",
+      "p": "The caller has a name from a config file or a request, such as 'email' or 'sms', not a class. Implement `make_notifier(kind)` that returns the right `Notifier` for the name and raises a clear ValueError for an unknown name.\n\nAdding a new channel must not change any caller.",
       "ex": [
        {
         "i": "`make_notifier('sms').send('ann', 'hi')`",
         "o": "'sms ann: hi'",
-        "why": "the registry picks the Sms class"
+        "why": "the name 'sms' gives an Sms notifier, whose `send` makes that line"
        },
        {
         "i": "`make_notifier('fax')`",
         "o": "raises ValueError",
-        "why": "an unknown name fails loudly with the name in the message"
+        "why": "no channel is called 'fax', so the call fails and the message names it"
        }
       ],
       "k": [
-       "no if-chain on the name: a dict lookup",
-       "the caller depends on Notifier only"
+       "the name is never compared in a chain of if statements",
+       "the caller knows only the `Notifier` type, not the concrete classes"
       ]
      }
     },
@@ -3362,22 +3494,22 @@ window.CODING = {
      "t": "The subject keeps a list of callbacks and calls each on a change; it knows no listener's type.",
      "code": "class Stock:\n    def __init__(self, price):\n        self.price, self._watchers = price, []\n\n    def subscribe(self, fn):\n        self._watchers.append(fn)\n        return lambda: self._watchers.remove(fn)       # call it to unsubscribe\n\n    def set_price(self, price):\n        self.price = price\n        for fn in list(self._watchers):                # a copy: a watcher may unsubscribe\n            fn(price)",
      "st": {
-      "p": "A `Stock` holds a price. Other code wants to hear about every change without the stock knowing who it is. `subscribe(fn)` registers a callback and returns a function that unsubscribes it. `set_price(p)` stores the price and calls every current subscriber with it.",
+      "p": "Design a `Stock` that holds a price. Other code wants to hear about every change without the stock knowing who is listening.\n\n`subscribe(fn)` registers a callback and returns a function that removes it again. `set_price(p)` stores the price and calls every current subscriber with it.",
       "ex": [
        {
         "i": "two subscribers, then `set_price(10)` and `set_price(12)`",
         "o": "each subscriber sees 10, then 12",
-        "why": "set_price calls every registered callback in turn"
+        "why": "both subscribers are called with each new price, in turn"
        },
        {
         "i": "a subscriber unsubscribes, then `set_price(15)`",
         "o": "only the remaining subscriber is called",
-        "why": "the returned function removed the callback from the list"
+        "why": "the removed subscriber no longer hears anything, so only the other one is called"
        }
       ],
       "k": [
        "the stock holds callbacks, not listener classes",
-       "iterate over a copy so a callback can unsubscribe safely"
+       "a callback may unsubscribe itself while the stock is notifying"
       ]
      }
     },
@@ -3391,22 +3523,22 @@ window.CODING = {
      "t": "Each state is a class with the same methods; the machine forwards calls and states swap themselves in.",
      "code": "class Locked:\n    def coin(self, t):\n        t.state = Unlocked()\n        return \"unlocked\"\n\n    def push(self, t):\n        return \"locked\"\n\nclass Unlocked:\n    def coin(self, t):\n        return \"already unlocked\"\n\n    def push(self, t):\n        t.state = Locked()\n        return \"passed\"\n\nclass Turnstile:\n    def __init__(self):\n        self.state = Locked()\n\n    def coin(self):\n        return self.state.coin(self)\n\n    def push(self):\n        return self.state.push(self)",
      "st": {
-      "p": "A turnstile starts locked. A coin unlocks it; a push while unlocked lets one person through and locks it again. A push while locked does nothing, and a coin while unlocked does nothing. Write it with one class per state and no if-chain on a state flag.",
+      "p": "Design a turnstile that starts locked. A coin unlocks it. A push while it is unlocked lets one person through and locks it again. A push while it is locked does nothing, and a coin while it is unlocked does nothing.\n\nAdding a new condition later must not mean editing a chain of checks in every method.",
       "ex": [
        {
         "i": "`coin()`, `push()`, `push()` on a new turnstile",
         "o": "'unlocked', 'passed', 'locked'",
-        "why": "the second push finds the turnstile locked again"
+        "why": "the first push lets the person through and locks it again, so the second push finds it locked"
        },
        {
         "i": "`coin()` twice",
         "o": "'unlocked', 'already unlocked'",
-        "why": "an unlocked state ignores a second coin"
+        "why": "a coin that arrives while it is already unlocked changes nothing"
        }
       ],
       "k": [
-       "adding a state is adding a class",
-       "a table of allowed moves is enough when states differ only in which moves are legal"
+       "adding a new condition means adding code in one place",
+       "if the conditions differ only in which moves are allowed, a table of allowed moves is enough"
       ]
      }
     },
@@ -3420,22 +3552,22 @@ window.CODING = {
      "t": "Leaves and containers share a method, so the caller never asks which one it holds.",
      "code": "class File:\n    def __init__(self, name, size):\n        self.name, self.size = name, size\n\n    def total_size(self):\n        return self.size\n\nclass Folder:\n    def __init__(self, name):\n        self.name, self.children = name, []\n\n    def add(self, child):\n        self.children.append(child)\n        return self\n\n    def total_size(self):\n        return sum(c.total_size() for c in self.children)     # the same call on a file or a folder",
      "st": {
-      "p": "A folder holds files and other folders, to any depth. Both kinds must answer `total_size()`: a file returns its size, a folder returns the sum of everything inside it. The caller must not need to check which kind it holds.",
+      "p": "Design files and folders so that both answer `total_size()`. A file returns its own size. A folder holds files and other folders, to any depth, and returns the size of everything inside it.\n\nThe caller must not need to check which kind it is holding.",
       "ex": [
        {
         "i": "a folder with a 10-byte file and a subfolder with a 5-byte file",
         "o": "`total_size()` is 15",
-        "why": "the subfolder answers the same call the file does"
+        "why": "the subfolder answers the same call a file does, and 10 + 5 = 15"
        },
        {
         "i": "an empty folder",
         "o": "`total_size()` is 0",
-        "why": "the sum of nothing is 0"
+        "why": "an empty folder holds nothing, so its size is 0"
        }
       ],
       "k": [
-       "no isinstance checks",
-       "the same idea fits menus, org charts and expression trees"
+       "the caller never checks the type of what it holds",
+       "the same shape fits menus, org charts and expression trees"
       ]
      }
     },
@@ -3449,21 +3581,21 @@ window.CODING = {
      "t": "A module-level object is already one instance; pass it in with a default so tests can pass a fresh one.",
      "code": "class Registry:\n    def __init__(self):\n        self.items = {}\n\nREGISTRY = Registry()                 # a module is imported once: this is the one shared object\n\ndef register(name, item, registry=REGISTRY):     # callers use the default; tests pass their own\n    registry.items[name] = item\n    return registry",
      "st": {
-      "p": "A `Registry` must exist once for the whole program. Show the Python way, and say why a classic `__new__` Singleton is a poor fit: it is hidden global state that a test cannot reset, and its check in `__new__` is a check-then-act race under threads. Write `register` so that a test can pass its own registry.",
+      "p": "Design how a `Registry` exists once for the whole program, so that the code that needs it reaches the shared one by default and a test can still give its own. Implement `register(name, item, ...)` accordingly.\n\nSay why the classic way of forcing a single instance inside `__new__` is a poor fit in Python: it is hidden global state that a test cannot reset, and its check is a race when threads call it at once.",
       "ex": [
        {
         "i": "`register('a', 1)` with the default registry",
         "o": "`REGISTRY.items` holds a",
-        "why": "the default is the one shared object"
+        "why": "the default is the one shared registry, so the entry appears there"
        },
        {
         "i": "`register('a', 1, Registry())`",
         "o": "the new registry holds a; `REGISTRY` is unchanged",
-        "why": "a test gets isolation without touching global state"
+        "why": "the test passes its own registry, so the shared one is untouched"
        }
       ],
       "k": [
-       "no __new__ trick",
+       "no check inside `__new__`",
        "hidden global state is the reason to avoid it, not style"
       ]
      }
@@ -3478,22 +3610,22 @@ window.CODING = {
      "t": "Money is integer cents, never float; time comes from a clock you pass in, so a test can move it.",
      "code": "import math, time\nfrom dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass Money:\n    cents: int                         # integer cents: 0.1 + 0.2 never appears\n\n    def __add__(self, other):\n        return Money(self.cents + other.cents)\n\n    def __str__(self):\n        return \"%d.%02d\" % divmod(self.cents, 100)\n\nclass Clock:\n    def now(self):\n        return time.monotonic()        # durations: the wall clock can jump back\n\nclass Ticket:\n    def __init__(self, clock, rate):\n        self.clock, self.rate, self.start = clock, rate, clock.now()\n\n    def fee(self):\n        hours = max(1, math.ceil((self.clock.now() - self.start) / 3600))   # each started hour is billed\n        return Money(self.rate.cents * hours)",
      "st": {
-      "p": "A parking ticket bills a `Money` rate for every started hour, with a minimum of one hour. Write `Money` so that amounts are exact, and `Ticket` so that a test can control the time: it reads time from a `Clock` object passed in, using the monotonic clock in production.",
+      "p": "A parking ticket bills a `Money` rate for every started hour, with a minimum of one hour. Design `Money` so that amounts are exact, and `Ticket` so that a test can control the time: it reads time from a `Clock` object that is passed in, and in production that clock never goes backwards.",
       "ex": [
        {
         "i": "a fake clock, a rate of 200 cents, and `fee()` after 90 minutes",
         "o": "`Money(400)`",
-        "why": "90 minutes is 1.5 hours, rounded up to 2 hours of 200 cents"
+        "why": "90 minutes is 1.5 hours, which counts as 2 started hours of 200 cents"
        },
        {
         "i": "`str(Money(1050))`",
         "o": "'10.50'",
-        "why": "cents are split into whole units and the remainder only when printed"
+        "why": "1050 cents print as 10 whole units and 50 cents"
        }
       ],
       "k": [
        "state the rounding rule out loud",
-       "Decimal is the alternative when amounts have fractions of a cent"
+       "when amounts have fractions of a cent, the `Decimal` type is the alternative"
       ]
      }
     }
@@ -3511,21 +3643,21 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Allocate spots by size, issue tickets, bill by the started hour.",
-     "hint": "A vehicle fits a spot of its size or bigger; choose the smallest free spot that fits.",
+     "hint": "Of the free spots that are big enough, which one wastes the least space? What do you need to remember about each ticket to bill it later?",
      "sol": "import itertools, math\nfrom dataclasses import dataclass\nfrom enum import IntEnum\n\nclass Size(IntEnum):\n    SMALL = 1\n    MEDIUM = 2\n    LARGE = 3                       # a vehicle fits a spot of its own size or bigger\n\n@dataclass(frozen=True)\nclass Vehicle:\n    plate: str\n    size: Size\n\n@dataclass\nclass Spot:\n    id: int\n    size: Size\n    vehicle: Vehicle = None\n\n@dataclass(frozen=True)\nclass Ticket:\n    id: int\n    spot_id: int\n    start: float\n\nclass ParkingLot:\n    def __init__(self, sizes, clock, rate_cents=200):\n        self.spots = [Spot(i, s) for i, s in enumerate(sizes)]\n        self.clock, self.rate = clock, rate_cents          # clock() returns seconds\n        self._ids = itertools.count(1)\n        self._open = {}                                    # ticket id -> Ticket\n\n    def park(self, vehicle):\n        free = [s for s in self.spots if s.vehicle is None and s.size >= vehicle.size]\n        if not free:\n            return None                                    # nothing fits\n        spot = min(free, key=lambda s: (s.size, s.id))     # smallest spot that fits\n        spot.vehicle = vehicle\n        ticket = Ticket(next(self._ids), spot.id, self.clock())\n        self._open[ticket.id] = ticket\n        return ticket\n\n    def leave(self, ticket_id):\n        ticket = self._open.pop(ticket_id)\n        self.spots[ticket.spot_id].vehicle = None\n        hours = max(1, math.ceil((self.clock() - ticket.start) / 3600))\n        return hours * self.rate                           # fee in cents",
      "c": "park is O(spots); leave is O(1). A heap of free spots per size makes park O(log n).",
      "st": {
-      "p": "Design a parking lot. It has spots of three sizes, and a vehicle can use a spot of its own size or a bigger one. `park(vehicle)` returns a ticket, or None when no spot fits. `leave(ticket_id)` frees the spot and returns the fee in cents, charging every started hour with a one-hour minimum. Pass the clock in so the fee can be tested.",
+      "p": "Design a parking lot with spots of three sizes. A vehicle fits a spot of its own size or a bigger one.\n\n`park(vehicle)` returns a ticket, or None when no spot fits. `leave(ticket_id)` frees the spot and returns the fee in cents: every started hour is charged, with a one-hour minimum. The clock is passed in, so a caller can control the time.",
       "ex": [
        {
         "i": "a lot with spots [SMALL, LARGE]; park two SMALL cars, then a third",
         "o": "tickets for spot 0 and spot 1, then None",
-        "why": "the first takes the smallest spot that fits; the third finds none free"
+        "why": "the first car takes the smallest spot it fits; for the third car every spot is taken"
        },
        {
         "i": "`leave` 90 minutes after `park`, at 200 cents an hour",
         "o": "400",
-        "why": "1.5 hours is billed as 2 started hours"
+        "why": "1.5 hours counts as 2 started hours, and 2 x 200 = 400"
        }
       ],
       "k": [
@@ -3543,21 +3675,21 @@ window.CODING = {
      },
      "l": "medium",
      "task": "ls, mkdir, add_content and read_content over a tree of folders and files.",
-     "hint": "One node type: a folder has children, a file has content. Walk the path one part at a time.",
+     "hint": "A folder and a file are both things with a name. What would one type that can be either look like, and how do you reach a node from a path like /a/b/f one part at a time?",
      "sol": "class Node:\n    def __init__(self):\n        self.children = {}            # name -> Node, for a folder\n        self.content = None           # a string, for a file\n\nclass FileSystem:\n    def __init__(self):\n        self.root = Node()\n\n    def _walk(self, path, create=False):\n        node = self.root\n        for part in [p for p in path.split(\"/\") if p]:\n            if part not in node.children:\n                if not create:\n                    raise FileNotFoundError(path)\n                node.children[part] = Node()\n            node = node.children[part]\n        return node\n\n    def ls(self, path):\n        node = self._walk(path)\n        if node.content is not None:                   # a file lists as itself\n            return [path.split(\"/\")[-1]]\n        return sorted(node.children)\n\n    def mkdir(self, path):\n        self._walk(path, create=True)\n\n    def add_content(self, path, text):\n        node = self._walk(path, create=True)\n        node.content = (node.content or \"\") + text\n\n    def read_content(self, path):\n        return self._walk(path).content",
      "c": "O(length of the path) per call; ls adds a sort of the names.",
      "st": {
-      "p": "Design an in-memory file system. `ls(path)` returns the sorted names inside a folder, or only the file's own name if the path is a file. `mkdir(path)` creates the folder and any missing parents. `add_content(path, text)` creates the file if needed and appends to it. `read_content(path)` returns a file's content. Paths start with '/', and '/' is the root.",
+      "p": "Design an in-memory file system. `ls(path)` returns the sorted names inside a folder, or only the file's own name if the path is a file. `mkdir(path)` creates a folder and any parents that are missing. `add_content(path, text)` creates the file if needed and appends the text to it. `read_content(path)` returns the content of a file.\n\nPaths start with '/', and '/' is the root.",
       "ex": [
        {
         "i": "`mkdir('/a/b')`, `add_content('/a/b/f', 'hi')`, `ls('/a/b')`",
         "o": "['f']",
-        "why": "the file lives in /a/b"
+        "why": "the file `f` was created inside the folder /a/b"
        },
        {
         "i": "then `add_content('/a/b/f', '!')` and `read_content('/a/b/f')`",
         "o": "'hi!'",
-        "why": "a second add appends to the content"
+        "why": "the second add is appended after the first, giving 'hi!'"
        }
       ],
       "k": [
@@ -3575,11 +3707,11 @@ window.CODING = {
      },
      "l": "medium",
      "task": "A cart with coupons that have a minimum spend and cannot be reused.",
-     "hint": "A coupon is data: a code, a percent, a flat amount, a minimum spend. Apply in the order given.",
+     "hint": "A coupon is data: a code, a percent, a flat amount, a minimum spend. What does the cart need to remember to answer apply and total, and in which order are the discounts taken?",
      "sol": "from dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass Coupon:\n    code: str\n    percent: int = 0\n    flat_cents: int = 0\n    min_spend_cents: int = 0\n\nclass Cart:\n    def __init__(self, coupons):\n        self._coupons = {c.code: c for c in coupons}      # what the shop accepts\n        self._lines = {}                                  # sku -> [price_cents, qty]\n        self._applied = []\n\n    def add(self, sku, price_cents, qty=1):\n        line = self._lines.setdefault(sku, [price_cents, 0])\n        line[1] += qty\n\n    def subtotal(self):\n        return sum(price * qty for price, qty in self._lines.values())\n\n    def apply(self, code):\n        coupon = self._coupons.get(code)\n        if coupon is None or coupon in self._applied:\n            return False                                  # unknown, or already used\n        if self.subtotal() < coupon.min_spend_cents:\n            return False\n        self._applied.append(coupon)\n        return True\n\n    def total(self):\n        total = self.subtotal()\n        for c in self._applied:                           # in the order applied\n            total = max(0, total - total * c.percent // 100 - c.flat_cents)\n        return total",
      "c": "O(items) for the subtotal, O(coupons) for the total.",
      "st": {
-      "p": "Design a shopping cart. `add(sku, price_cents, qty)` adds items; adding a sku again adds to its quantity. `apply(code)` applies a coupon and returns True, or returns False if the code is unknown, already applied, or the subtotal is below the coupon's minimum spend. `total()` applies the coupons in the order they were applied, percent first and then the flat amount, and never goes below zero. All money is integer cents.",
+      "p": "Design a shopping cart. `add(sku, price_cents, qty)` adds items; adding a sku again adds to its quantity. `apply(code)` applies a coupon and returns True, or False if the code is unknown, was already applied, or the subtotal is below the coupon's minimum spend.\n\n`total()` applies the coupons in the order they were applied, the percent discount first and then the flat amount, and never goes below zero. All money is in integer cents.",
       "ex": [
        {
         "i": "4,500 cents in the cart; the shop has SAVE10 (10%) and TAKE3 (300 cents off, minimum 4,000); apply SAVE10, then TAKE3",
@@ -3589,7 +3721,7 @@ window.CODING = {
        {
         "i": "apply SAVE10 twice",
         "o": "True, then False",
-        "why": "a coupon cannot be reused"
+        "why": "the first apply works; the same code a second time is refused"
        }
       ],
       "k": [
@@ -3607,21 +3739,21 @@ window.CODING = {
      },
      "l": "medium",
      "task": "Books, members, loans with a limit, due dates and fines.",
-     "hint": "Track copies per book and loans per member; a due day is the borrow day plus the loan period.",
+     "hint": "Track how many copies are on the shelf and what each member holds. A loan's due day is the day it was borrowed plus the loan period; what makes a return late?",
      "sol": "from dataclasses import dataclass, field\n\nLOAN_DAYS, MAX_LOANS, FINE_PER_DAY = 14, 3, 25     # fine in cents\n\n@dataclass\nclass Member:\n    name: str\n    loans: dict = field(default_factory=dict)      # isbn -> due day\n\nclass Library:\n    def __init__(self):\n        self.copies = {}                           # isbn -> copies on the shelf\n        self.members = {}\n\n    def add_book(self, isbn, copies=1):\n        self.copies[isbn] = self.copies.get(isbn, 0) + copies\n\n    def join(self, name):\n        self.members[name] = Member(name)\n\n    def borrow(self, name, isbn, today):\n        m = self.members[name]\n        if self.copies.get(isbn, 0) == 0 or len(m.loans) >= MAX_LOANS or isbn in m.loans:\n            return False\n        self.copies[isbn] -= 1\n        m.loans[isbn] = today + LOAN_DAYS\n        return True\n\n    def give_back(self, name, isbn, today):\n        due = self.members[name].loans.pop(isbn)\n        self.copies[isbn] += 1\n        return max(0, today - due) * FINE_PER_DAY",
      "c": "O(1) per call.",
      "st": {
-      "p": "Design a small library. `add_book(isbn, copies)` and `join(name)` set it up. `borrow(name, isbn, today)` returns True and starts a 14-day loan, or returns False if no copy is on the shelf, the member already holds 3 books, or the member already holds this book. `give_back(name, isbn, today)` returns the copy and the fine in cents, 25 per day late. Days are whole numbers.",
+      "p": "Design a small library. `add_book(isbn, copies)` and `join(name)` set it up. `borrow(name, isbn, today)` starts a 14-day loan and returns True, or returns False if no copy is on the shelf, the member already holds 3 books, or the member already holds this book.\n\n`give_back(name, isbn, today)` returns the copy and the fine in cents: 25 for each day it is late. Days are whole numbers.",
       "ex": [
        {
         "i": "one copy of a book; `borrow` on day 1, then `give_back` on day 20",
         "o": "True, then 125",
-        "why": "due on day 15, so 5 days late at 25 cents"
+        "why": "it was due on day 15 and came back on day 20, 5 days late at 25 cents each"
        },
        {
         "i": "a second member borrows the same single copy while it is out",
         "o": "False",
-        "why": "no copy is on the shelf"
+        "why": "the only copy is out on loan, so none is on the shelf"
        }
       ],
       "k": [
@@ -3639,21 +3771,21 @@ window.CODING = {
      },
      "l": "hard",
      "task": "One elevator that serves floor requests without wasting trips.",
-     "hint": "Keep the direction while a request is ahead; turn around only when none is. Choose the scheduling rule as a Strategy if asked.",
+     "hint": "Which way is the elevator facing, and is any stop still ahead of it? Only when nothing is ahead does it have a reason to turn around.",
      "sol": "from enum import Enum\n\nclass Dir(Enum):\n    UP = 1\n    DOWN = -1\n    IDLE = 0\n\nclass Elevator:\n    def __init__(self, floors):\n        self.floors, self.floor, self.dir = floors, 0, Dir.IDLE\n        self.stops = set()                              # floors someone asked for\n\n    def request(self, floor):\n        if 0 <= floor < self.floors and floor != self.floor:\n            self.stops.add(floor)\n\n    def step(self):\n        \"\"\"One tick: move a floor. Returns the floor if the doors open there.\"\"\"\n        if not self.stops:\n            self.dir = Dir.IDLE\n            return None\n        if self.dir is Dir.IDLE:\n            nearest = min(self.stops, key=lambda f: abs(f - self.floor))\n            self.dir = Dir.UP if nearest > self.floor else Dir.DOWN\n        if not any((f - self.floor) * self.dir.value > 0 for f in self.stops):\n            self.dir = Dir.UP if self.dir is Dir.DOWN else Dir.DOWN   # nothing ahead: turn around\n        self.floor += self.dir.value\n        if self.floor in self.stops:\n            self.stops.remove(self.floor)\n            return self.floor\n        return None\n\n    def run(self):\n        visited = []\n        while self.stops:\n            f = self.step()\n            if f is not None:\n                visited.append(f)\n        return visited",
      "c": "O(stops) per step; a sorted structure makes the 'anything ahead' check O(log n).",
      "st": {
-      "p": "Design one elevator for a building with `floors` floors, starting at floor 0. `request(floor)` records a stop. `step()` moves one floor and returns the floor if the doors open there. The elevator keeps its direction while any requested floor is ahead of it, then turns around; when idle it heads for the nearest request. `run()` steps until no stops remain and returns the floors in the order served.",
+      "p": "Design one elevator for a building with `floors` floors, starting at floor 0. `request(floor)` records a stop. `step()` moves one floor and returns the floor if the doors open there.\n\nThe elevator keeps its direction while any requested floor is ahead of it, and turns around when none is. When it is idle it heads for the nearest request. `run()` steps until no stops remain and returns the floors in the order they were served.",
       "ex": [
        {
         "i": "at floor 0, `request(5)`, `request(2)`, `request(8)`, then `run()`",
         "o": "[2, 5, 8]",
-        "why": "it goes up once, serving each requested floor on the way"
+        "why": "every request is above floor 0, so it goes up once and stops at 2, 5 and 8 in turn"
        },
        {
         "i": "at floor 8 after that, `request(3)`, `request(9)`, then `run()`",
         "o": "[9, 3]",
-        "why": "9 is nearest, so it goes up first and then turns down"
+        "why": "9 is nearer than 3, so it goes up to 9 first, then turns and goes down to 3"
        }
       ],
       "k": [
@@ -3671,21 +3803,21 @@ window.CODING = {
      },
      "l": "medium",
      "task": "set(key, value, time) and get(key, time) returns the value as it was at that time.",
-     "hint": "Per key, keep increasing timestamps and values side by side; bisect finds the last one at or before the time.",
+     "hint": "For one key, the timestamps only ever grow. Given that, how can you find the last one at or before a time without looking at every entry?",
      "sol": "import bisect\n\nclass TimeMap:\n    def __init__(self):\n        self._times, self._values = {}, {}      # key -> timestamps in increasing order, values\n\n    def set(self, key, value, timestamp):\n        self._times.setdefault(key, []).append(timestamp)\n        self._values.setdefault(key, []).append(value)\n\n    def get(self, key, timestamp):\n        i = bisect.bisect_right(self._times.get(key, []), timestamp)    # entries at or before it\n        return self._values[key][i - 1] if i else \"\"",
      "c": "set is O(1); get is O(log n) by binary search.",
      "st": {
-      "p": "Design a time-based key-value store. `set(key, value, timestamp)` stores a value at a time. `get(key, timestamp)` returns the value set at the latest time at or before `timestamp`, or an empty string if there is none. Calls to `set` for a key arrive with increasing timestamps.",
+      "p": "Design a time-based key-value store. `set(key, value, timestamp)` stores a value for a key at a time. `get(key, timestamp)` returns the value stored at the latest time that is at or before `timestamp`, or an empty string if there is none.\n\nThe `set` calls for one key arrive with increasing timestamps.",
       "ex": [
        {
         "i": "`set('k', 'a', 1)`, `set('k', 'b', 4)`, then `get('k', 3)` and `get('k', 5)`",
         "o": "'a', then 'b'",
-        "why": "at time 3 the latest set is the one at time 1; at 5 it is the one at 4"
+        "why": "at time 3 the latest value set is the one from time 1; at time 5 it is the one from time 4"
        },
        {
         "i": "`get('k', 0)` and `get('missing', 9)`",
         "o": "'' and ''",
-        "why": "nothing was set at or before time 0, and the key does not exist"
+        "why": "nothing was set at or before time 0, and the key `missing` never existed"
        }
       ],
       "k": [

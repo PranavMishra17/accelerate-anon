@@ -1557,3 +1557,13 @@ and Bar Raiser follow-ups with answers where his work supplies them (the rest ar
 behind View your transcript. A How they dig section and nine checked Bar Raiser resources were added, drawing on an
 internal Amazon interviewer worksheet he shared. The STAR answers were written at his request from his telling and his
 work. No charter deviation.
+
+**2026-10-28: Coding page, questions read as questions and solutions explain themselves.**
+Every problem and variation on the pattern tabs (105) was rewritten. The statement is a plain question, with
+the empty function drawn under it from the solution, and no method in it; hints are shut behind Show the hint,
+and example Why lines explain the answer, not the method. Main solutions no longer lean on `Counter`,
+`defaultdict`, `bisect`, `lru_cache`, `OrderedDict` or `nsmallest` (`deque` and `heapq` stay, explained), and
+carry comments. Seventeen medium and hard problems show a slower first idea before the real one, and eleven show the
+standard-library version after it; both are tested against the examples. Concurrency and OOD kept their code;
+only their words changed. Why: Pranav could not understand questions like "`middle` receives the `head`", and
+library one-liners and bare code taught him nothing. No charter deviation.
