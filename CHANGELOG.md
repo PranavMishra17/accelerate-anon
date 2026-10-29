@@ -1567,3 +1567,14 @@ carry comments. Seventeen medium and hard problems show a slower first idea befo
 standard-library version after it; both are tested against the examples. Concurrency and OOD kept their code;
 only their words changed. Why: Pranav could not understand questions like "`middle` receives the `head`", and
 library one-liners and bare code taught him nothing. No charter deviation.
+
+**2026-10-29: Amazon loop re-planned from 2026 reports: GenAI added, design cut back.**
+Research shared by Pranav, checked source by source and extended with about eleven more 2026 SDE I reports, shows
+the fourth round is not confirmed: coding and a Bar Raiser are near certain, GenAI questions appear in most loops
+(a full round in the closest match to his pipeline, talk plus a LeetCode problem), and a design round, when there is
+one, is object-oriented. The page now says so (format, overview, rounds, card), Prep gains a GenAI round of twelve
+questions and two tool-use stories for him to tell, and the plan from 29 October adds the reported problems (Next
+Permutation, Course Schedule II, the celebrity problem, Domino and Tromino Tiling, Distance K, Search in Rotated
+Sorted Array, Insert Interval), two GenAI questions a day, four designs from a blank page with extension follow-ups
+instead of seven, and one HLD-lite evening. Week 5 mathematics stays on 30 and 31 October, at his choice. No charter
+deviation: the wildcard carries interview prep by design.

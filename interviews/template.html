@@ -659,7 +659,7 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
 .lab.cd-drill { margin: var(--s6) 0 var(--s2); padding-top: var(--s3); border-top: var(--hair); font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); }
 /* a long loop's tabs: the day's checklist on every tab, the plan calendar, the daily workbench, the loop-day card */
 .k-daily { --k: var(--cat-1); } .k-design { --k: var(--cat-2); } .k-story { --k: var(--cat-3); }
-.k-revise { --k: var(--cat-4); } .k-plan { --k: var(--cat-5); } .k-loop { --k: var(--cat-6); } .k-other { --k: var(--muted); }
+.k-genai { --k: var(--accent); } .k-revise { --k: var(--cat-4); } .k-plan { --k: var(--cat-5); } .k-loop { --k: var(--cat-6); } .k-other { --k: var(--muted); }
 .td { font-size: var(--fs-sm); }
 .td-rail { margin-bottom: var(--s5); padding-bottom: var(--s4); border-bottom: var(--hair); }
 .td-h { display: flex; align-items: center; gap: var(--s1); margin-bottom: var(--s2); }
@@ -2886,7 +2886,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   }
 
   /* -------- the day's checklist, on every tab */
-  var KINDS = [["daily", "Daily two"], ["design", "Design"], ["story", "Stories"], ["revise", "Revise"], ["plan", "Milestone"], ["loop", "Loop practice"], ["other", "Other"]];
+  var KINDS = [["daily", "Daily two"], ["design", "Design"], ["story", "Stories"], ["genai", "GenAI"], ["revise", "Revise"], ["plan", "Milestone"], ["loop", "Loop practice"], ["other", "Other"]];
   function planDays() {
     var out = [];
     (LOOP.plan ? LOOP.plan.weeks : []).forEach(function (w) { w.days.forEach(function (d) { out.push(d); }); });
