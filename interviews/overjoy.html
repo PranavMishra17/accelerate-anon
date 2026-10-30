@@ -648,6 +648,29 @@ textarea.cd-ta.small { min-height: 60px; font-family: var(--font); white-space: 
 .cd-faq details { border-bottom: var(--hair); padding: var(--s2) 0; }
 .cd-faq summary { cursor: pointer; font-weight: var(--w-strong); }
 .cd-faq p { margin: var(--s2) 0 0; color: var(--soft); }
+/* Hand-drawn figures in LLD part 0 (ported from lld-path.html); markers come from one hidden #lld-defs. */
+.cd-svg svg { display: block; width: 100%; max-width: 420px; height: auto; }
+.d-box { fill: var(--sunken); stroke: var(--muted); stroke-width: 1.2; }
+.d-acc { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.d-dim, .d-dashbox { fill: var(--bg); stroke: var(--rule); stroke-width: 1; }
+.d-dashbox { stroke: var(--muted); stroke-dasharray: 4 3; }
+.d-ln { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+.d-ar, .d-tri, .d-agg { stroke: var(--muted); stroke-width: 1.4; fill: none; marker-end: url(#ar); }
+.d-tri { marker-end: url(#tri); }
+.d-agg { marker-end: none; marker-start: url(#dia); }
+.d-ara { stroke: var(--accent); stroke-width: 1.6; fill: none; marker-end: url(#ara); }
+.d-bad { stroke: var(--warn); stroke-width: 1.3; stroke-dasharray: 4 3; fill: none; marker-end: url(#arb); }
+.d-badbox { fill: color-mix(in srgb, var(--warn) 14%, var(--surface)); stroke: var(--warn); stroke-width: 1.3; }
+.d-dash { stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 4 4; fill: none; }
+.d-dashed { stroke-dasharray: 4 3; }
+.d-spot { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; }
+.d-lock { fill: none; stroke: var(--accent); stroke-width: 1.6; }
+.d-t { fill: var(--ink); font-family: var(--mono); font-size: var(--fs-xs); }
+.d-s, .d-x { fill: var(--muted); font-family: var(--mono); font-size: var(--fs-xs); }
+.d-x { fill: var(--warn); }
+.d-b { fill: var(--ink); font-family: var(--font); font-size: var(--fs-sm); font-weight: var(--w-strong); }
+.d-a { fill: var(--accent); font-family: var(--mono); font-size: var(--fs-xs); font-weight: var(--w-strong); }
+.d-big { fill: var(--accent); font-family: var(--font); font-size: var(--fs-2xl); font-weight: var(--w-strong); }
 .cd-prob dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--s1) var(--s4); font-size: var(--fs-sm); }
 .cd-prob dt { color: var(--muted); }
 .cd-ex { margin: var(--s2) 0; font-size: var(--fs-sm); }
@@ -785,8 +808,8 @@ body[data-tab="card"] main { padding-top: var(--s4); }
 .wb-dot.done { background: var(--ok); border-color: var(--ok); color: var(--bg); }
 .wb-dot.today { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
 .wb-dot.on { border: 2px solid var(--accent); color: var(--accent); font-weight: var(--w-strong); }
-.wb-switch { display: flex; gap: var(--s5); border-bottom: var(--hair); }
-.wb-p { padding: var(--s2) 0; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.wb-switch { display: flex; flex-wrap: wrap; column-gap: var(--s5); border-bottom: var(--hair); }
+.wb-p { white-space: nowrap; padding: var(--s2) 0; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .wb-p:hover { color: var(--ink); text-decoration: none; }
 .wb-p.on { color: var(--ink); font-weight: var(--w-strong); border-bottom-color: var(--accent); }
 .wb-pm { color: var(--muted); font-weight: normal; font-size: var(--fs-sm); margin-left: var(--s2); }
@@ -2602,6 +2625,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   function cdMcq(b) {
     var w = el("div", "cd-blk");
     w.appendChild(el("p", "cd-q", inl(b.q)));
+    if (b.code) { w.appendChild(cdPre(b.code)); }
     var box = el("div", "cd-opts"), why = el("div");
     var opts = b.o.concat(["I don't know"]);
     var btns = opts.map(function (o, i) {
@@ -2676,7 +2700,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     }
     return w;
   }
-  function cdFaq(items) {
+  function cdFaq(items, allProse) {
     var w = el("div", "cd-blk cd-faq");
     items.forEach(function (x) {
       var d = el("details"); d.appendChild(el("summary", "", inl(x.q)));
@@ -2684,7 +2708,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       var code = [];
       function flush() { if (code.length) { d.appendChild(cdPre(code.join("\n\n"))); code = []; } }
       String(x.a).split(/\n\n/).forEach(function (c) {
-        var prose = !/\n/.test(c) && /^[A-Z"'(]/.test(c) && !/^[A-Z]\w*(\(|\s*=|\.)/.test(c) && !/^(If|For|While|With|From|Import|Class|Def)\b.*:$/.test(c);
+        var prose = allProse || !/\n/.test(c) && /^[A-Z"'(]/.test(c) && !/^[A-Z]\w*(\(|\s*=|\.)/.test(c) && !/^(If|For|While|With|From|Import|Class|Def)\b.*:$/.test(c);
         if (prose) { flush(); d.appendChild(el("p", "", inl(c))); } else if (c.trim()) { code.push(c.replace(/^\n+|\n+$/g, "")); }
       });
       flush();
@@ -2756,6 +2780,21 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     });
     return g;
   }
+  /* Arrowheads for the part 0 figures, defined once per page. */
+  function lldDefs() {
+    if (document.getElementById("lld-defs")) { return; }
+    var m = function (id, box, ref, w, h, d, st, o) {
+      return '<marker id="' + id + '" viewBox="' + box + '" refX="' + ref[0] + '" refY="' + ref[1] + '" markerWidth="' + w + '" markerHeight="' + h +
+        '" orient="' + (o || "auto-start-reverse") + '"><path d="' + d + '" style="' + st + '"/></marker>';
+    };
+    var d = document.createElement("div");
+    d.innerHTML = '<svg id="lld-defs" width="0" height="0" style="position:absolute" aria-hidden="true"><defs>' +
+      m("ar", "0 0 10 10", [9, 5], 7, 7, "M0 0L10 5L0 10z", "fill:var(--muted)") + m("ara", "0 0 10 10", [9, 5], 7, 7, "M0 0L10 5L0 10z", "fill:var(--accent)") +
+      m("arb", "0 0 10 10", [9, 5], 7, 7, "M0 0L10 5L0 10z", "fill:var(--warn)") +
+      m("tri", "0 0 12 12", [11, 6], 11, 11, "M1 1L11 6L1 11z", "fill:var(--surface);stroke:var(--muted);stroke-width:1", "auto") +
+      m("dia", "0 0 16 10", [1, 5], 14, 9, "M1 5L8 1L15 5L8 9z", "fill:var(--surface);stroke:var(--muted);stroke-width:1", "auto") + "</defs></svg>";
+    document.body.appendChild(d.firstChild);
+  }
   function cdBlock(b) {
     switch (b.t) {
       case "turn": return cdTurn(b);
@@ -2770,7 +2809,8 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       case "mcq": return cdMcq(b);
       case "write": return cdWrite(b);
       case "vis": var v = el("div", "cd-blk"); v.appendChild(Sheet.cheat({ vis: b.vis })); return v;
-      case "faq": return cdFaq(b.items);
+      case "faq": var fq = cdFaq(b.items, b.prose); if (b.title) { fq.insertBefore(el("div", "lab", esc(b.title)), fq.firstChild); } return fq;
+      case "svg": lldDefs(); var sv = el("div", "cd-blk cd-svg", b.svg); if (sv.firstElementChild) { sv.firstElementChild.setAttribute("aria-label", b.alt || ""); } return sv;
       case "table": var t = el("table");
         t.innerHTML = "<thead><tr>" + b.head.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") + "</tr></thead><tbody>" +
           b.rows.map(function (r) { return "<tr>" + r.map(function (c) { return "<td>" + inl(c) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody>";
@@ -2791,7 +2831,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       parts.filter(function (p) { return p.id === st["last:" + tab]; })[0] || parts[0];
     cdSave("last:" + tab, cur.id);
     var top = el("section", "block"); top.id = cur.id;
-    top.appendChild(el("h1", "", esc(cur.n + ". " + cur.title)));
+    top.appendChild(el("h1", "", esc(cur.n + (cur.n % 1 ? " " : ". ") + cur.title)));
     top.appendChild(el("p", "hsub", "About " + cur.minutes + " minutes. " + inl(cur.lead)));
     var ol = el("ol", "cd-parts");
     parts.forEach(function (p) {
@@ -2806,7 +2846,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     nav.push([cur.id, "Parts"]);
     var probOf = function (s) { return s.blocks.filter(function (b) { return b.t === "problem"; })[0]; };
     var isTurns = cur.sections.length > 1 && cur.sections.every(function (s) { return s.blocks.some(function (b) { return b.t === "turn"; }); });
-    var oneAt = cur.sections.some(probOf) || isTurns, secs = cur.sections, si = 0;
+    var oneAt = cur.one || cur.sections.some(probOf) || isTurns, secs = cur.sections, si = 0;
     if (cur.sections.some(function (s) { return s.blocks.some(function (b) { return b.t === "turn"; }); })) {
       var sm = el("div", "say-mode", "<span>Answers</span>");
       [["Shown", false], ["Try first", true]].forEach(function (o) {
@@ -2834,7 +2874,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       /* Material first, with code notes showing; then the questions on it, under Practise. */
       var learn = [], drill = [];
       s.blocks.forEach(function (b) {
-        if (b.t === "code") { learn.push(b.ask ? Object.assign({}, b, { ask: null }) : b); if (b.ask) { drill.push(b); } }
+        if (b.t === "code") { if (!b.quiz) { learn.push(b.ask ? Object.assign({}, b, { ask: null }) : b); } if (b.ask) { drill.push(b); } }
         else if (/^(predict|mcq|write|problem)$/.test(b.t)) { drill.push(b); }
         else { learn.push(b); }
       });

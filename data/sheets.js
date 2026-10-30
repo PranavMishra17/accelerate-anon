@@ -2663,3 +2663,405 @@ window.SHEETS = {
       { rule: "The pattern is the means; the reason and the cost are the answer." }]
   };
 })();
+
+/* The four lighter HLD sessions added on 29 Oct: w4d, w4e, w5e, w5f. */
+(function () {
+  var S = window.SHEETS = window.SHEETS || {};
+S["w4d:0"] = {
+    cheat: ["Why copy: survive a dead machine, and serve reads from more places.",
+            "Single-leader: one node takes every write and ships it to followers; followers serve reads and lag.",
+            "Synchronous follower: write waits, latency and availability suffer. Asynchronous: fast, but a failover can lose the last acknowledged writes.",
+            "Failover: detect by timeout, promote the most recent follower, repoint everyone. Two leaders at once is split brain.",
+            "Multi-leader and leaderless: more than one node takes writes, so concurrent writes to one key need a merge rule."],
+    terms: [
+      { t: "Replication lag", mem: "How far behind a follower is.", d: "The delay between a write landing on the leader and being visible on a follower. Reads from followers can be stale by this much." },
+      { t: "Failover", mem: "Promote a follower.", d: "Replacing a dead leader by promoting a follower, repointing clients and followers, and making the old leader a follower if it returns." },
+      { t: "Split brain", mem: "Two leaders at once.", d: "Two nodes both believe they lead and both accept writes, so the copies diverge. Worse than briefly having no leader." },
+      { t: "Monotonic reads", mem: "Never go back in time.", d: "A user's later read never shows older data than an earlier read, for example by pinning the user to one follower." },
+      { t: "Multi-leader", mem: "Several writers.", d: "More than one node accepts writes and replicates to the others, which needs a rule for conflicting writes." }],
+    vis: [
+      { title: "Three ways to copy", vs: { cols: ["Who takes writes", "What goes wrong"], rows: [
+        ["Single-leader", "one leader", "lag on followers; async failover loses writes"],
+        ["Multi-leader", "several leaders", "conflicting writes to one key"],
+        ["Leaderless", "any replica", "stale reads unless a quorum overlaps"]] } },
+      { title: "A failover", flow: ["Leader dies", "Timeout notices", "Promote latest follower", "Repoint clients", "Old leader rejoins as follower"], note: "The writes the followers never received are the cost." }]
+  };
+  S["w4d:1"] = {
+    cheat: ["N replicas, a write waits for W acknowledgements, a read asks R replicas.",
+            "W + R > N: the read set and write set share at least W + R - N replicas.",
+            "N = 3, W = 2, R = 2 is the usual setting: it survives one dead replica both ways.",
+            "W = N makes reads cheap and writes fragile; R = N does the reverse.",
+            "Read repair and anti-entropy fix old copies, but failed writes, sloppy quorums and clock-based merges can still return old data."],
+    terms: [
+      { t: "Quorum", mem: "Enough replicas to overlap.", d: "The number of replicas that must answer for a read or write to count, chosen so a read and a write share a replica." },
+      { t: "W + R > N", mem: "The overlap rule.", d: "With N copies, W write acknowledgements and R read replicas, a read is guaranteed to meet one replica that saw the latest acknowledged write." },
+      { t: "Read repair", mem: "Fix it on the way past.", d: "A read that finds a replica with an older value writes the newer value back to it." },
+      { t: "Anti-entropy", mem: "Background compare.", d: "A background process that compares replicas and copies missing data, for rarely read keys that read repair never touches." },
+      { t: "Sloppy quorum", mem: "Any nodes will do.", d: "During a failure, writes go to nodes outside the usual N to stay available, so the overlap guarantee no longer holds until they hand the data back." }],
+    vis: [
+      { title: "The overlap, N = 3", calc: [["W + R - N", "2 + 2 - 3 = 1 replica in common"], ["W + R > N ?", "2 + 2 = 4 > 3, overlap guaranteed"], ["N = 5, W = 3, R = 2", "3 + 2 = 5, not > 5: no guarantee"]] },
+      { title: "Tuning the dials", vs: { cols: ["Fast and cheap", "Fragile"], rows: [
+        ["W = 1, R = N", "writes", "reads touch every replica"],
+        ["W = N, R = 1", "reads", "one dead replica blocks writes"],
+        ["W = R = 2 of 3", "balanced", "two live replicas needed for either"]] } }]
+  };
+  S["w4d:2"] = {
+    cheat: ["Linearizable: behaves as one copy; a read that starts after a write finishes sees it or newer.",
+            "A lagging follower, or a minority side of a partition, breaks it.",
+            "CAP: when a partition hits, refuse some requests (linearizable) or answer and risk stale data. Not a pick of two for all time.",
+            "Kleppmann: CP and AP labels hide that single-leader and Dynamo-style stores fit neither; ask what each feature needs.",
+            "Consensus: nodes agree on one value, the leader or the next log entry, and need a majority: 3 of 5 work, 2 of 5 do not."],
+    terms: [
+      { t: "Linearizability", mem: "One copy, real-time order.", d: "Each operation takes effect at one instant between its start and end, and a read that starts after a write finishes sees it or something newer." },
+      { t: "CAP choice", mem: "Refuse or be stale.", d: "During a network partition a store either refuses some requests to stay linearizable, or answers from a copy that may be stale." },
+      { t: "Partition", mem: "The network splits.", d: "Some nodes cannot reach others, though all are running. The case that forces the CAP choice." },
+      { t: "Consensus", mem: "Agree on one thing.", d: "Nodes decide a single value, such as who leads or the next log entry, despite failures, using a majority." },
+      { t: "Raft", mem: "Consensus built to read.", d: "A consensus algorithm designed to be easier to understand than Paxos: a leader chosen by majority and a replicated log." }],
+    vis: [
+      { title: "Eventual against linearizable", vs: { cols: ["Eventual", "Linearizable"], rows: [
+        ["Promise", "copies agree once writes stop", "one copy, real-time order"],
+        ["Stale read after a write", "allowed", "forbidden"],
+        ["During a partition", "keeps answering", "minority side refuses"]] } },
+      { title: "Five nodes, a partition", split: [["Three-node side", ["has a majority", "elects a leader", "keeps committing"]], ["Two-node side", ["no majority", "cannot commit", "refuses rather than diverge"]]] }]
+  };
+  S["w4d:3"] = {
+    cheat: ["Per shard: one leader, two followers in other zones. Writes to the leader, asynchronous for result rows.",
+            "Dedup check (scenario id plus attempt): read the leader, because a stale miss runs a replay twice.",
+            "Dashboard: read a follower; seconds of staleness change nothing it shows.",
+            "Closed run's report: a follower that has caught up to the run's last write, or the leader.",
+            "Leader dies: the last unreplicated writes are lost; re-run the missing scenario ids, safe because replays are idempotent. A higher term fences the old leader."],
+    terms: [
+      { t: "Read routing", mem: "Each read picks its replica.", d: "Choosing the leader or a follower per read by how fresh that read must be, instead of one policy for the whole store." },
+      { t: "Caught-up follower", mem: "Past the last write.", d: "A follower whose replication position is at or beyond a given write, so a read there sees that write." },
+      { t: "Term", mem: "The leader's number.", d: "A number that rises with each new leader. The store rejects writes carrying an older term, like a fencing token." },
+      { t: "Reconcile", mem: "Expected against stored.", d: "After a failover, compare the scenario ids the harness expects with those stored and re-run the missing ones." }],
+    vis: [
+      { title: "Three reads, three answers", vs: { cols: ["Served from", "Why"], rows: [
+        ["Dedup check", "leader", "a stale miss runs the replay twice"],
+        ["Dashboard", "follower", "seconds of lag are invisible"],
+        ["Closed-run report", "caught-up follower", "must include every result"]] } },
+      { title: "The rate", calc: [["10^8 replays / 86,400 s", "about 1,160 writes a second, on average"]] }]
+  };
+  S["w4d:4"] = {
+    cheat: ["Stale reload, cause one: the read hit a follower that lacks your own write. Fix: serve that user from the leader for a short window.",
+            "Backward read, cause two: reads alternate between followers at different lag. Fix: pin the user to one follower (monotonic reads).",
+            "Do not make every read wait for every follower: that taxes everyone to fix a few users.",
+            "'Eventual consistency' alone is not an answer: say which reads need which guarantee, and the lag you can state.",
+            "Close with: consistency is chosen per read, and I can say what each choice costs."],
+    terms: [
+      { t: "Read-your-writes", mem: "See what you wrote last.", d: "After a user's own write, their reads show it, even if reads are served by followers." },
+      { t: "Monotonic reads", mem: "Only move forward.", d: "A user's reads never show older data than an earlier read of theirs." },
+      { t: "Consistent prefix reads", mem: "Causes before effects.", d: "Reads see writes in the order they happened, so an answer never appears before its question." },
+      { t: "Session consistency", mem: "Guarantees for one session.", d: "Read-your-writes and monotonic reads that hold for as long as one user's session lasts." }],
+    vis: [
+      { title: "Two causes, two fixes", vs: { cols: ["Symptom", "Fix"], rows: [
+        ["Own write missing", "reload shows the old value", "read from leader for a short window"],
+        ["View goes backward", "comment appears, then vanishes", "pin the user to one follower"]] } },
+      { rule: "Consistency is chosen per read, with its cost named." }]
+  };
+S["w4e:0"] = {
+    cheat: ["Atomicity: all of a transaction commits, or none of it does, so a crash or abort leaves no half-done work.",
+            "Isolation: concurrent transactions should look as if run one after another. Full isolation is serializability and costs speed.",
+            "Durability: once committed, it survives a crash.",
+            "Consistency: your invariants. Kept by you, with constraints and correct use of the other three.",
+            "Serializable three ways: serial execution, two-phase locking, serializable snapshot isolation.",
+            "Most databases default below serializable, so name the anomaly the design allows."],
+    terms: [
+      { t: "Transaction", mem: "One unit, all or nothing.", d: "A group of reads and writes the database treats as a single operation: it commits as a whole or aborts and leaves nothing." },
+      { t: "Atomicity", mem: "Abort leaves no trace.", d: "On a crash or abort, partial writes are rolled back, so the application can retry from a clean state." },
+      { t: "Isolation", mem: "Do not see each other half-done.", d: "Concurrent transactions do not see each other's partial work. The strongest form is serializability." },
+      { t: "Serializability", mem: "As if one at a time.", d: "The result equals some order of running the transactions one after another. Reached by serial execution, two-phase locking or serializable snapshot isolation." },
+      { t: "Two-phase locking", mem: "Readers wait for writers.", d: "Take locks as you go and hold them until commit, so conflicting transactions block each other. Safe, but slow under contention." },
+      { t: "Serializable snapshot isolation", mem: "Run free, abort on conflict.", d: "Transactions run on snapshots without blocking, and the database aborts one when it detects a conflict that would break serializability." }],
+    vis: [
+      { title: "The four letters", vs: { cols: ["It promises", "Who keeps it"], rows: [
+        ["Atomicity", "all or nothing on a crash", "the database"],
+        ["Consistency", "your rules about the data hold", "you, with constraints"],
+        ["Isolation", "no seeing half-done work", "the database, to a level you pick"],
+        ["Durability", "committed data survives a crash", "the database"]] } },
+      { title: "Three ways to serializable", vs: { cols: ["How", "What it costs"], rows: [
+        ["Serial execution", "one transaction at a time, on one thread", "throughput of one core"],
+        ["Two-phase locking", "hold locks until commit", "readers wait for writers"],
+        ["Serializable snapshot isolation", "run freely, abort on a detected conflict", "aborts that must be retried"]] } },
+      { rule: "The question is never whether to use transactions. It is what level this workload can live with." }]
+  };
+  S["w4e:1"] = {
+    cheat: ["Dirty read: seeing an uncommitted write. Read committed stops it.",
+            "Non-repeatable read: a row reads differently twice in one transaction. Snapshot isolation stops it.",
+            "Lost update: two read-modify-write cycles overlap. Fix: atomic update, row lock, or compare-and-set.",
+            "Write skew: read the same rows, write different ones, break a rule across them. Only serializable, or a lock on what the rule reads, stops it.",
+            "Phantom: a new row matches an earlier query. Snapshot isolation hides it from reads, but check-then-insert rules still skew.",
+            "Postgres: default is read committed; repeatable read is snapshot isolation; retry on a serialization failure (40001)."],
+    terms: [
+      { t: "Dirty read", mem: "Reading what may roll back.", d: "Seeing another transaction's write before it commits. If that transaction aborts, you acted on data that never existed." },
+      { t: "Non-repeatable read", mem: "Same row, two answers.", d: "Reading a row twice in one transaction and getting different values because another transaction committed in between." },
+      { t: "Lost update", mem: "The later write wins, silently.", d: "Two transactions read a value, change it and write it back; the second write overwrites the first without having seen it." },
+      { t: "Write skew", mem: "Different rows, one broken rule.", d: "Two transactions read the same rows, each writes a different row, and the rule across them breaks. No two writes touch the same row, so no conflict is seen." },
+      { t: "Phantom", mem: "A row that was not there.", d: "A new row that matches a query a transaction already ran. A check-then-insert rule can break this way." },
+      { t: "MVCC", mem: "Many versions, no read locks.", d: "Multi-version concurrency control: each write makes a new version of the row, and each transaction reads from its own snapshot." }],
+    vis: [
+      { title: "What each level lets through", vs: { cols: ["Read committed", "Snapshot isolation", "Serializable"], rows: [
+        ["Dirty read", "stopped", "stopped", "stopped"],
+        ["Non-repeatable read", "allowed", "stopped", "stopped"],
+        ["Lost update", "allowed", "often detected", "stopped"],
+        ["Write skew", "allowed", "allowed", "stopped"],
+        ["Phantom", "allowed", "hidden from reads", "stopped"]] } },
+      { title: "Write skew, one cap, two workers", flow: ["Both read: 199 running", "Each starts a different replay", "No row written twice, no conflict", "Now 201 running"], note: "Fix: lock the run's row for the check, or run serializable and retry." }]
+  };
+  S["w4e:2"] = {
+    cheat: ["B-tree: updates pages in place; a read is one traversal; range scans walk the leaves. Cost: random I/O on writes.",
+            "LSM-tree: append, flush sorted files, merge later. Cost: a read may check several levels; compaction uses I/O.",
+            "Choose from the access pattern: in-place updates read by key, B-tree; write-once at a high rate, LSM or object storage.",
+            "Composite index: sorted by the first column, then the second. Serves a leftmost prefix: equality columns first, the range column last.",
+            "Every index is one extra write per insert, plus space. A partial index covers only the rows you query.",
+            "Document model: one record whole. Relational: joins and constraints across records."],
+    terms: [
+      { t: "Secondary index", mem: "Another way in.", d: "An index on a column that is not the primary key. It maps column values to rows, and every insert must update it." },
+      { t: "Composite index", mem: "Sorted by a, then b.", d: "An index over several columns, ordered by the first, then the second within each first value. It serves queries on a leftmost prefix." },
+      { t: "Partial index", mem: "Only the rows you query.", d: "An index with a WHERE clause, so it holds entries for matching rows only and stays small and cheap to write." },
+      { t: "Covering index", mem: "Answered from the index.", d: "An index that holds every column a query needs, so the table is not read at all." },
+      { t: "Compaction", mem: "Merging the sorted files.", d: "The background merge in an LSM-tree that combines sorted files and drops overwritten values. It uses I/O that foreground work competes with." },
+      { t: "Write amplification", mem: "One write, many I/Os.", d: "Writing more bytes to disk than the application wrote: compaction in an LSM-tree, page rewrites in a B-tree." }],
+    vis: [
+      { title: "B-tree against LSM-tree", vs: { cols: ["B-tree", "LSM-tree"], rows: [
+        ["Write", "update the page in place: random I/O", "append to memory, flush sorted: sequential"],
+        ["Read", "one traversal", "may check several levels"],
+        ["Background cost", "page splits", "compaction"],
+        ["Fits", "rows updated in place, read by key", "high write rate, rarely changed"]] } },
+      { title: "Index on (a, b)", vs: { cols: ["Uses the order?"], rows: [
+        ["WHERE a = 5", "yes"],
+        ["WHERE a = 5 AND b > 10", "yes: equality, then a range"],
+        ["WHERE a > 5 AND b = 10", "partly: b only checked inside the range"],
+        ["WHERE b = 5", "usually no: sorted by a first"]] } }]
+  };
+  S["w4e:3"] = {
+    cheat: ["Table: replays(run_id, scenario_id, status, attempt, finished_at, trace_ref), primary key (run_id, scenario_id). 100,000,000 × 100 B = 10 GB.",
+            "Traces (10 KB each) stay in object storage; the row holds a reference.",
+            "Claim: SELECT queued rows FOR UPDATE SKIP LOCKED limit 100, set running, same transaction. No collision, no waiting.",
+            "Retry: INSERT ... ON CONFLICT (run_id, scenario_id) DO UPDATE. A retry overwrites its own row.",
+            "Indexes: partial on queued for the claim; partial on failed (run_id, finished_at) for the dashboard: 3 million entries, not 100 million.",
+            "Counter: add the batch once, 1 million updates, not 100 million on one hot row. Cap across rows: lock the run's row."],
+    terms: [
+      { t: "SKIP LOCKED", mem: "Take what is free.", d: "A row-lock option: SELECT ... FOR UPDATE SKIP LOCKED ignores rows another transaction holds, so workers claim different rows without waiting." },
+      { t: "Upsert", mem: "Insert or update, once.", d: "INSERT ... ON CONFLICT DO UPDATE: one atomic statement that inserts a row or updates the one with the same key." },
+      { t: "Hot row", mem: "One row, every writer.", d: "A single row that many transactions update, so they queue on its lock. A shared counter is the usual case." },
+      { t: "Row lock", mem: "Hold it while you check.", d: "FOR UPDATE locks a row until the transaction ends. Used where a rule spans rows and snapshot isolation would let two checks pass." }],
+    vis: [
+      { title: "Sizing the table", calc: [
+        ["100,000,000 × 100 B", "10 GB"],
+        ["100,000,000 × 3%", "3,000,000 failed rows"],
+        ["100,000,000 / 100 per batch", "1,000,000 counter updates"]] },
+      { title: "The design", parts: [["replays", "primary key (run_id, scenario_id); status, attempt, trace_ref"], ["Claim", "FOR UPDATE SKIP LOCKED, limit 100"], ["Retry", "ON CONFLICT DO UPDATE on the key"], ["Partial index: queued", "for the claim; shrinks as work drains"], ["Partial index: failed", "(run_id, finished_at) for the dashboard"], ["Run row", "locked with FOR UPDATE to check the cap", true]] }]
+  };
+  S["w4e:4"] = {
+    cheat: ["The check: two workers read 199, both start one. That is write skew; the cap is a rule across rows.",
+            "Fix one: lock the run's row with FOR UPDATE for the check. Fix two: serializable, and retry on a serialization failure.",
+            "Slow query order: read the plan, choose the index from the access pattern, price the write, say what you left out.",
+            "Dashboard: partial index on (run_id, finished_at) where status is failed. Equality column first, range after.",
+            "Say it in 90 seconds: anomaly, fix, cost, what you left out."],
+    terms: [
+      { t: "Query plan", mem: "How it will run.", d: "The database's chosen route for a query, shown by EXPLAIN: which index it uses, or whether it scans the table." },
+      { t: "Serialization failure", mem: "Aborted, run it again.", d: "The error a database raises when it aborts a transaction to keep serializability. The application retries it, so the work must be safe to repeat." }],
+    vis: [
+      { title: "Slow query, in order", flow: ["Read the plan", "Pick the index", "Price the write", "Say what you left out"] },
+      { title: "Two fixes for the cap", vs: { cols: ["Row lock", "Serializable"], rows: [
+        ["How", "FOR UPDATE on the run's row", "run at the top level, retry on abort"],
+        ["Cost", "workers on that run wait", "aborts and a retry loop"],
+        ["Good when", "one rule, one row to lock", "many rules, hard to name the rows"]] } }]
+  };
+S["w5e:0"] = {
+    cheat: ["A remote call can be slow, lost, or done with the reply lost: timeouts, retries and idempotency belong in the contract.",
+            "REST: resources and HTTP verbs, JSON. Any client, curl-debuggable, cacheable GETs. Bigger messages, no built-in streaming.",
+            "gRPC: a .proto schema, generated stubs, Protocol Buffers over HTTP/2, streaming, a deadline on every call.",
+            "Protobuf fields are their number: add with a fresh number, never reuse or retype one.",
+            "Outside callers get REST; inside callers with streams or a strict contract get gRPC."],
+    terms: [
+      { t: "REST", mem: "Nouns and verbs.", d: "An API of resources named by URL and changed with HTTP verbs, usually carrying JSON. GET is safe; PUT and DELETE are idempotent." },
+      { t: "gRPC", mem: "Typed calls over HTTP/2.", d: "A call framework: a .proto file defines services and messages, tools generate both sides, and calls can stream." },
+      { t: "Protocol Buffers", mem: "Compact, numbered fields.", d: "A binary format defined by a schema. A field is identified by its number on the wire, which is what makes schema change safe." },
+      { t: "Deadline", mem: "A timeout that travels.", d: "A time by which a call must finish, passed along to every service it calls, so no one works on an answer nobody is waiting for." },
+      { t: "Idempotency key", mem: "Same key, same effect.", d: "A caller-supplied token the server stores with the result, so a retried request returns the stored result instead of acting twice." }],
+    vis: [
+      { title: "REST against gRPC", vs: { cols: ["REST", "gRPC"], rows: [
+        ["Contract", "optional (OpenAPI)", "required (.proto), generated code"],
+        ["Wire", "JSON text over HTTP/1.1 or 2", "Protocol Buffers over HTTP/2"],
+        ["Streaming", "none built in", "server, client, both ways"],
+        ["Callers", "browser, script, curl", "generated stubs; browser needs a proxy"],
+        ["Pick for", "public and partner APIs", "internal calls, streams, strict contracts"]] } },
+      { rule: "Pick by who the caller is, not by which is faster." }]
+  };
+  S["w5e:1"] = {
+    cheat: ["Layer 4: IP and port, moves bytes, balances connections. Layer 7: reads HTTP, routes by path, host or header, balances requests.",
+            "Round robin for equal short requests; least connections when work varies; weighted for mixed machines; a hash to keep a key on one backend.",
+            "Health check: probe on a timer, out after K failures, back after M passes. Keep it shallow.",
+            "gRPC behind layer 4 piles onto one backend: one long connection carries every call. Use layer 7 or client-side balancing.",
+            "The balancer is a single point of failure: run a pair or a managed fleet behind one address."],
+    terms: [
+      { t: "Layer 4 balancer", mem: "Connections, not requests.", d: "Chooses a backend from the IP address and port when the connection opens, then copies bytes. Cheap, and blind to the request." },
+      { t: "Layer 7 balancer", mem: "Reads the request.", d: "Ends TLS and parses HTTP, so it can route by path or header, retry, and choose a backend per request." },
+      { t: "Least connections", mem: "Fewest in flight wins.", d: "Sends the next request to the backend with the fewest open requests, which tracks work better than round robin when requests vary." },
+      { t: "Health check", mem: "In or out of rotation.", d: "A probe the balancer repeats; failures take a backend out and passes bring it back. A deep check can remove a healthy fleet." },
+      { t: "Lame duck", mem: "Finish, take no new work.", d: "A backend that still listens but tells callers to stop sending new requests, so it can drain before a deploy or shutdown." }],
+    vis: [
+      { title: "Layer 4 against layer 7", vs: { cols: ["Layer 4", "Layer 7"], rows: [
+        ["Sees", "IP address, port", "HTTP path, host, headers, cookies"],
+        ["Balances", "connections", "requests"],
+        ["Can", "pass TLS through, be very fast", "end TLS, route, retry, rewrite"],
+        ["Costs", "no content routing", "more CPU, one more parser to trust"]] } },
+      { title: "Which algorithm", vs: { cols: ["Use it when", "Breaks when"], rows: [
+        ["Round robin", "requests are alike and short", "some take 100 times longer"],
+        ["Least connections", "work per request varies", "connections are long-lived and idle"],
+        ["Hash on a key", "the same key must reach the same backend", "one key is hot"]] } }]
+  };
+  S["w5e:2"] = {
+    cheat: ["DNS: browser, recursive resolver, root, TLD, authoritative name server; every step caches the answer for its TTL.",
+            "TTL makes DNS fast and slow to change: a dead address lingers, so DNS is coarse routing, not fast failover.",
+            "CDN: a cache at the edge. A hit is served nearby; a miss goes to the origin once and the copy is kept for its TTL.",
+            "Version the URL for content that never changes, and it needs no invalidation.",
+            "Same for everyone and rarely changes: the edge. Per caller or by the second: never."],
+    terms: [
+      { t: "Recursive resolver", mem: "Asks on your behalf.", d: "The server, often your ISP's, that walks the DNS chain for the browser and caches what it learns." },
+      { t: "Authoritative name server", mem: "Holds the real record.", d: "The server that owns a domain's records and gives the final answer, such as the address for api.example.com." },
+      { t: "TTL", mem: "How long to keep it.", d: "Seconds a cached answer may be reused, in DNS and in a CDN. A longer TTL means fewer lookups and slower change." },
+      { t: "Edge / point of presence", mem: "A cache near you.", d: "A CDN server in a location close to users that holds copies of content and answers for the origin." },
+      { t: "Origin", mem: "The source of truth.", d: "Your own server behind the CDN, asked only on a miss." }],
+    vis: [
+      { title: "A cold lookup", flow: ["Browser asks resolver", "Resolver asks root", "Root points to TLD", "TLD points to name server", "Name server returns address"], note: "Each answer is cached for its TTL, so the next lookup stops early." },
+      { title: "What goes to the edge", split: [["Edge", ["dashboard files", "finished run reports at a versioned URL", "anything the same for everyone"]], ["Never at the edge", ["submit a run", "status of a live run", "anything per caller or changing by the second"]]] }]
+  };
+  S["w5e:3"] = {
+    cheat: ["Token bucket: capacity B, refill r a second, one token per request, empty means 429 with Retry-After. Burst B, then r.",
+            "Fixed window: cheap, but twice the limit can pass across a boundary.",
+            "Sliding window counter: previous × (1 − elapsed / window) + current. Two numbers per key.",
+            "Counter in each server's memory multiplies the limit by the server count: use a shared store, updated atomically.",
+            "Limiter store down: usually fail open; fail closed only where unlimited calls cause real harm."],
+    terms: [
+      { t: "Token bucket", mem: "Credit builds while idle.", d: "A bucket of at most B tokens refilled at r a second. A request spends one. Allows a burst of B and a steady rate of r." },
+      { t: "Leaky bucket", mem: "Constant drip out.", d: "Requests queue and leave at a fixed rate, which smooths traffic and does not let a burst through." },
+      { t: "Sliding window", mem: "The last minute, not this one.", d: "Counts requests over a window that moves with time, so no boundary lets double the limit pass." },
+      { t: "429 and Retry-After", mem: "Slow down, then when.", d: "The status code for too many requests, and the header telling the client how many seconds to wait." },
+      { t: "Fail open", mem: "Limiter down, traffic flows.", d: "Allow requests when the limiter cannot be reached, so the protection does not become the outage." }],
+    vis: [
+      { title: "Bucket arithmetic", calc: [["start full, B = 20, r = 5 / s", "20 tokens"], ["first 10 s, at most", "20 + 5 × 10 = 70"], ["after the burst", "5 per second"]] },
+      { title: "Sliding window estimate", calc: [["limit 100 / min, previous 80, now 30, 15 s in", "80 × (1 − 15/60) + 30 = 90"], ["90 against the limit 100", "under it: allow"]] },
+      { title: "The algorithms", vs: { cols: ["Allows a burst", "Memory per key", "Weak spot"], rows: [
+        ["Token bucket", "yes, up to B", "two numbers", "needs a shared store at scale"],
+        ["Fixed window", "yes, and 2x at the edge", "one number", "the boundary"],
+        ["Sliding window log", "no", "every timestamp", "memory"],
+        ["Sliding window counter", "mostly", "two numbers", "assumes even spread"]] } }]
+  };
+  S["w5e:4"] = {
+    cheat: ["Outside: REST, a CDN for finished reports at versioned URLs. Inside: gRPC with a deadline on each replay.",
+            "Layer 7 balancer, shallow health checks, least connections: replays vary in length.",
+            "Per-tenant token bucket, shared store, admits replays fairly; the surplus waits in the queue.",
+            "Outbound bucket slightly under the model provider's limit, backoff with jitter for the few 429s, idempotent replay ids.",
+            "Say it in the order a request travels: name, balancer, limiter, API, queue, then what you cache and what you do not."],
+    terms: [
+      { t: "Admission rate", mem: "How fast work is let in.", d: "The rate a tenant's work is accepted into the system. Surplus work waits in the queue instead of being refused." },
+      { t: "Outbound limiter", mem: "Your own limit on your own calls.", d: "A bucket in front of a provider, set slightly under its limit, so you spend the quota evenly and seldom see a 429." },
+      { t: "Fair share", mem: "No tenant starves another.", d: "Capacity divided so that one large run slows itself, not everyone else." }],
+    vis: [
+      { title: "A submit call, in order", flow: ["DNS", "Layer 7 balancer", "API server", "Tenant bucket", "Queue", "202 and run id"], note: "Auth and the limit come before any queue slot or model call is spent." },
+      { title: "The front door", parts: [["DNS", "to the balancer"], ["CDN", "reports, dashboard files"], ["Layer 7 balancer", "TLS, least connections, shallow checks"], ["Tenant bucket", "fair admission, shared store", true], ["REST API", "outside callers"], ["gRPC", "scheduler to workers, deadlines"], ["Outbound bucket", "under the provider's limit", true]] }]
+  };
+S["w5f:0"] = {
+    cheat: ["Broker: a message goes to one consumer and is deleted once it is acknowledged. Built for work done once.",
+            "Log: events are appended in order and kept for a retention period. Reading removes nothing.",
+            "Offset: each consumer group's place in the log. A new or fixed consumer can start from the beginning.",
+            "Order: a log is ordered inside one partition only. The key picks the partition, so order holds per key.",
+            "Edge: a consumer that falls behind the retention window loses events, so lag has a deadline."],
+    terms: [
+      { t: "Message broker", mem: "Hand over, then forget.", d: "A queue that delivers each message to one consumer and removes it once acknowledged. A message that is not acknowledged is redelivered, possibly out of order." },
+      { t: "Log-based broker", mem: "Write it down, keep it.", d: "A broker that appends every event to an ordered file and keeps it for a retention period. Consumers read it without removing anything." },
+      { t: "Partition", mem: "One ordered lane.", d: "One append-only sequence inside a topic. Order holds within it and not between partitions." },
+      { t: "Offset", mem: "Your bookmark.", d: "A consumer group's position in a partition. Committing it records how far the group has got." },
+      { t: "Retention", mem: "How long the log remembers.", d: "The age or size after which old events are deleted, whether or not anyone has read them." }],
+    vis: [
+      { title: "A broker and a log", vs: { cols: ["Message broker", "Log-based broker"], rows: [
+        ["After delivery", "message is deleted", "event is kept"],
+        ["Consumers", "compete: one gets each message", "each group reads everything"],
+        ["Order", "lost with parallel consumers or redelivery", "kept inside a partition"],
+        ["Late joiner or fix", "cannot read the past", "starts at the beginning of retention"],
+        ["Best for", "jobs done once", "facts many readers need"]] } },
+      { rule: "A broker is for jobs; a log is for facts. Choose by whether anyone will want to read the past." }]
+  };
+  S["w5f:1"] = {
+    cheat: ["Key picks the partition: one key stays in order, different keys run in parallel.",
+            "A consumer group splits the partitions; each partition has one consumer in the group, so partitions cap parallelism.",
+            "Read, process, commit gives at-least-once. Commit, then process, gives at-most-once.",
+            "Lag is events written minus events read. It is the backpressure signal, and retention is its deadline.",
+            "A poison event stalls its partition: after a few attempts, park it on a dead-letter topic and move on."],
+    terms: [
+      { t: "Consumer group", mem: "A team sharing a topic.", d: "Consumers that split a topic's partitions between them, each partition going to one member. Another group reads the same topic separately." },
+      { t: "Commit", mem: "Save your place.", d: "Recording the offset a consumer has reached, so that after a crash it resumes from there." },
+      { t: "Consumer lag", mem: "How far behind you are.", d: "The number of events, or the time, between the end of the log and a group's committed offset." },
+      { t: "Hot key", mem: "One lane, all the traffic.", d: "A key that carries most of the load, so one partition is busy and the rest idle. More partitions do not help." },
+      { t: "Dead-letter topic", mem: "The parking lot.", d: "Where an event goes after repeated failures, so the partition can move on and a person can look at it later." }],
+    vis: [
+      { title: "One consumer's cycle", flow: ["read from committed offset", "process the batch", "commit new offset", "crash: resume from last commit"], note: "Commit before processing flips it to at-most-once." },
+      { title: "What breaks", vs: { cols: ["Sign", "Do this"], rows: [
+        ["Hot key", "one partition busy, others idle", "a better key, not more partitions"],
+        ["Lag", "committed offset far behind the end", "add consumers up to the partition count; slow producers"],
+        ["Poison event", "partition stops at one event", "dead-letter topic after a few tries"]] } }]
+  };
+  S["w5f:2"] = {
+    cheat: ["Dual write: the database and the stream written separately. A crash between them leaves them apart for good.",
+            "CDC tails the database's transaction log and publishes each committed change in commit order.",
+            "A new CDC pipeline takes a snapshot of the table first, then follows the log from that point.",
+            "Event sourcing stores each fact as an event; current state is a replay, with snapshots for speed.",
+            "CDC keeps the table as truth and derives events. Event sourcing keeps events as truth and derives the table."],
+    terms: [
+      { t: "Dual write", mem: "Two writes, no shared fate.", d: "Updating two stores in separate steps with no common transaction. A failure between them leaves them inconsistent." },
+      { t: "Change data capture (CDC)", mem: "Read the database's diary.", d: "Reading a database's own transaction log and publishing each committed row change as an event." },
+      { t: "Transactional outbox", mem: "Write the letter in the same transaction.", d: "Saving the event in a table in the same transaction as the data, and letting a relay publish it afterwards." },
+      { t: "Event sourcing", mem: "Store what happened.", d: "Keeping an ordered log of business events as the source of truth, and getting current state by replaying them." },
+      { t: "Snapshot", mem: "A saved starting point.", d: "A stored copy of state at some position, so a rebuild replays from there and not from the first event." }],
+    vis: [
+      { title: "CDC and event sourcing", vs: { cols: ["CDC", "Event sourcing"], rows: [
+        ["Source of truth", "the table", "the event log"],
+        ["Events are", "row changes, derived", "business facts, written first"],
+        ["Rebuild state", "snapshot, then the log", "replay the events"],
+        ["Cost", "consumers tied to the table schema", "events are a permanent contract; hard to version or delete"],
+        ["Pick it when", "derived stores must follow a database", "the history is the product"]] } },
+      { rule: "Default to a table plus CDC. Use event sourcing when the history itself is the product." }]
+  };
+  S["w5f:3"] = {
+    cheat: ["Event: scenario id, attempt, status, score, and a pointer to the trace. About 1 KB; the 10 KB trace stays in object storage.",
+            "Key by scenario id: attempts of one scenario stay in order; nothing else needs order.",
+            "Partitions are set by consumers: 1,200 per second at 2 seconds each is 2,400 in flight.",
+            "Scorer, aggregator, gate and dashboard each get a group and an offset, so none slows another.",
+            "Crash repeats a batch: write results under scenario id and attempt so a repeat overwrites."],
+    terms: [
+      { t: "Little's law", mem: "In flight = rate times time.", d: "The average number of jobs in a system equals the arrival rate times the time each one spends there. Week 1." },
+      { t: "Pointer event", mem: "Send the address, not the parcel.", d: "An event that carries a reference to a large object stored elsewhere, so the log stays small and fast." },
+      { t: "Re-scoring group", mem: "A second reader of the same log.", d: "A new consumer group that reads the retained events from the start, leaving the live group's offsets alone." },
+      { t: "Keyed overwrite", mem: "Same key, same slot.", d: "Writing a result under its scenario id and attempt, so a repeated event replaces its own earlier result." }],
+    vis: [
+      { title: "The arithmetic", calc: [
+        ["10<sup>8</sup> ÷ 86,400 s", "≈ 1,200 events per second"],
+        ["10<sup>8</sup> × 1 KB", "100 GB per day"],
+        ["100 GB × 7 days", "700 GB retained"],
+        ["1,200 × 2 s", "2,400 scoring jobs in flight"],
+        ["2,400 ÷ 50 per consumer", "48 consumers, so 64 partitions"]] },
+      { title: "One log, several groups", flow: ["replay worker writes event", "log keyed by scenario id", "scorer group", "aggregator group", "regression gate group"], note: "Each group has its own offset. Re-scoring is a new group reading the retained window." },
+      { rule: "Use a queue instead if there is one consumer and nobody needs to re-read." }]
+  };
+  S["w5f:4"] = {
+    cheat: ["Queue: work done once, each message acknowledged, retried and dead-lettered on its own.",
+            "Log: facts many readers need, replay, late joiners. Cost: order only per partition, lag, a stall on a bad event.",
+            "Derived stores follow a database by CDC into a stream, not by dual writes.",
+            "A broker's exactly-once covers the broker; an outside write still needs an idempotency key.",
+            "Event sourcing when the history is the product; otherwise a table plus CDC."],
+    terms: [
+      { t: "Exactly-once effect", mem: "Delivered twice, applied once.", d: "Reached by at-least-once delivery plus an idempotent consumer. Week 4." },
+      { t: "Competing consumers", mem: "Whoever grabs it.", d: "Several workers taking messages from one queue so that each message is handled by one of them." },
+      { t: "Projection", mem: "A view built from events.", d: "A table or index kept up to date by reading the events, used to answer reads when events are the source of truth." }],
+    vis: [
+      { title: "Which one", vs: { cols: ["Queue", "Log"], rows: [
+        ["Task or fact", "task: do it once", "fact: it happened"],
+        ["Readers", "one worker per message", "many groups, each reads all"],
+        ["Failure", "retry one message; dead-letter", "stall the partition; dead-letter topic"],
+        ["Replay", "no", "yes, within retention"]] } },
+      { rule: "Tasks go on a queue, facts go on a log, and the table stays the truth unless the history is." }]
+  };
+})();

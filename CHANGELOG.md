@@ -1588,3 +1588,16 @@ one or two checked articles, ties to Accelerate (Baseline, the coding page, the 
 multiple-choice check, an open question and what he would say. The twelve GenAI questions moved off Prep into the
 tab (one home), and the plan gives a module a day from 29 October. Built on the Learn tab: it now takes a label,
 `mine` and `links` per topic, and private `mine` lines. No charter deviation.
+
+**2026-10-29: LLD part 0 from his own file; four lighter HLD sessions in weeks 4 and 5.**
+His lld-path.html (OOP basics, pillars and relationships, SOLID and patterns, practice problems) is ported into the
+Amazon page's LLD tab as parts 0.1 to 0.4, ahead of how the round runs: one idea a screen with its figure, code, rules,
+the Amazon line, interview questions and a check, then find the bug, a final check, and a file to run with two checked
+videos and two checked articles per part (his YouTube search links were replaced, since search pages are not
+resources). Parts 1 to 6 stay as they were, at his choice, so some ideas appear twice. The template gains an `svg`
+block, a `one` part flag, code in multiple-choice questions, prose-only FAQs and quiz-only code. Weeks 4 and 5 gain
+w4d Replication and consistency, w4e Transactions and indexes, w5e APIs and the edge, w5f Streams and events: about
+75 minutes each, one reading, one design on the hundred-million replays problem, said aloud. They fill the HLD basics
+the five systems weeks skipped; milestone 2 had none to pull forward. Deviation from the charter, recorded: four
+sessions added mid-interview-sprint (commitment 3 treats a sprint as a Red week) and closer to covering a syllabus
+than the charter likes. Reason: he wants HLD kept warm beside LLD, at lighter depth, now rather than after the loop.

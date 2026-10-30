@@ -418,3 +418,132 @@ MCQ.add("w5d:3", [
     o: ["Python cannot do it", "It hides a global dependency and makes tests share state; passing one object in costs nothing", "It is slow", "It breaks inheritance", "It needs a database"],
     a: 1, why: "One instance is easy without the pattern. Its cost, hidden coupling and shared test state, is why naming and refusing it scores well.", pair: "patterns" }
 ]);
+
+/* w5e: APIs and the edge. */
+MCQ.add("w5e:0", [
+  { q: "A caller times out on a POST that creates an order. What is the safe way to retry?",
+    o: ["Switch the call to GET", "Wait for the DNS TTL to expire", "Send it to a different server", "Resend it with the same idempotency key, so the server returns the stored result if the first one ran", "Resend it as a fresh request"],
+    a: 3, why: "The caller cannot tell whether the first call ran. The same key lets the server recognise the retry and answer from the stored result instead of creating a second order.", pair: "rest-vs-grpc" },
+  { q: "Which is the strongest reason to pick gRPC over REST for calls between your own services?",
+    o: ["A typed contract that generates both sides, plus streaming and deadlines", "It works with curl and no tooling", "It needs no schema", "Browsers call it directly", "HTTP caches understand it"],
+    a: 0, why: "gRPC's strengths are the .proto contract with generated code, streaming and per-call deadlines. Browser access, HTTP caching and curl are REST's strengths.", pair: "rest-vs-grpc" },
+  { q: "A protobuf message has a field number 4 that was removed. A new field is needed. What is safe?",
+    o: ["Reuse number 4 if the new field has the same type", "Reuse number 4 for the new field", "Change the type of another field", "Renumber every field", "Give the new field a fresh number"],
+    a: 4, why: "A field is its number on the wire. Old data that still carries 4 would be read as the new field if 4 were reused. A fresh number is skipped by old readers and safe both ways.", pair: "schema-change" },
+  { q: "Which statement about GET and POST in REST is correct?",
+    o: ["Both are safe to retry without any key", "POST is cacheable by default; GET is not", "GET is safe to repeat; a POST that creates something needs an idempotency key to be retried", "PUT creates a new item on every call", "DELETE cannot be retried"],
+    a: 2, why: "GET only reads, so repeating it changes nothing. A POST that creates an item does it again each time unless the server recognises the key. PUT and DELETE are idempotent by definition.", pair: "rest-vs-grpc" }
+]);
+MCQ.add("w5e:1", [
+  { q: "A balancer must route /api to one pool and /static to another. Which can do it?",
+    o: ["Round robin", "A layer 7 balancer reading the HTTP path", "A health check", "DNS with a short TTL", "A layer 4 balancer reading the port"],
+    a: 1, why: "Only a layer 7 balancer reads the request. Layer 4 sees an IP address and port, which are the same for both paths.", pair: "l4-vs-l7" },
+  { q: "Requests range from 5 ms to 5 s. Round robin is overloading one backend. What fits better?",
+    o: ["Least connections, which tracks work in flight", "A layer 4 balancer", "A bigger TTL", "IP hash", "A longer health-check interval"],
+    a: 0, why: "Round robin hands out turns, not work, so a backend stuck on slow requests keeps getting new ones. Least connections sends the next request to the backend with the fewest open.", pair: "round-robin-vs-least-connections" },
+  { q: "One gRPC client sends 10,000 calls a second through a layer 4 balancer. What do you see?",
+    o: ["Calls are routed by path", "Calls spread evenly over all backends", "Every call fails", "Nearly all calls reach one backend, because they share one long HTTP/2 connection", "The balancer retries each call on another backend"],
+    a: 3, why: "A layer 4 balancer picks a backend per connection. gRPC multiplexes every call over one connection, so the calls follow it. Layer 7 or client-side balancing spreads them.", pair: "l4-vs-l7" },
+  { q: "A health check queries the database. The database slows down. What happens to the fleet?",
+    o: ["Nothing: the check passes", "Only the slowest backend is removed", "The balancer switches to layer 4", "Traffic shifts to the CDN", "Every backend fails the check together and the balancer pulls them all"],
+    a: 4, why: "A deep check ties every backend's health to one shared dependency. When it slows, all fail at once and nothing is left to serve requests that did not need it.", pair: "shallow-vs-deep-check" }
+]);
+MCQ.add("w5e:2", [
+  { q: "A backend dies. DNS is the only failover, with a 60-second TTL. What happens to users?",
+    o: ["DNS pushes the new address to browsers", "The CDN fixes it", "Some keep going to the dead address until their cached answers expire, and a few resolvers keep it longer", "Nothing: DNS checks health on every request", "All move to a healthy backend within a second"],
+    a: 2, why: "Resolvers and clients cache for at least the TTL, and some ignore it. DNS is coarse routing. Fast failover belongs to a health-checked balancer behind a stable address.", pair: "dns-vs-balancer" },
+  { q: "Finished run reports never change. What is the best way to serve them from a CDN?",
+    o: ["Purge the whole CDN every hour", "A long cache lifetime on a URL that includes the run id", "Serve them from DNS", "no-store, always fetch from the origin", "A 5-second lifetime"],
+    a: 1, why: "Immutable content at a URL that names its version needs no invalidation. A changed object would get a new URL, so the edge can hold the old one for a long time.", pair: "cdn-what-goes" },
+  { q: "Which response should NOT go through a CDN?",
+    o: ["The status of a live run, which changes every second and differs per caller", "A stylesheet", "A dashboard JavaScript file", "A finished report at a versioned URL", "A logo image"],
+    a: 0, why: "A cached copy of something per-caller or fast-changing would be wrong. The others are the same for everyone and change rarely.", pair: "cdn-what-goes" },
+  { q: "In which order does a cold lookup of api.example.com go?",
+    o: ["Browser, authoritative name server, root, resolver", "Browser, TLD, root, resolver", "Browser, resolver, root, TLD, authoritative name server", "Resolver, browser, root, authoritative name server", "Browser, CDN edge, root, TLD"],
+    a: 2, why: "The browser asks its recursive resolver, which asks a root server, then the TLD server, then the domain's authoritative name server. Each answer is cached for its TTL.", pair: "dns-vs-balancer" }
+]);
+MCQ.add("w5e:3", [
+  { q: "A token bucket holds 20 tokens, refills at 5 a second, and starts full. At most how many requests pass in the first 10 seconds?",
+    o: ["50", "20", "70", "100", "200"],
+    a: 2, why: "The full bucket pays for 20, and 10 seconds of refill adds 5 × 10 = 50: 20 + 50 = 70. After the burst the rate is 5 a second.", pair: "token-vs-window" },
+  { q: "Limit 100 a minute. Previous minute 80, this minute 30 so far, 15 seconds in. What does the sliding window counter estimate?",
+    o: ["30", "110", "90", "80", "100"],
+    a: 2, why: "80 × (1 − 15/60) + 30 = 80 × 0.75 + 30 = 90. It is under 100, so the request is allowed.", pair: "token-vs-window" },
+  { q: "Why can a fixed-window limiter let through nearly twice the limit?",
+    o: ["It stores timestamps", "The counter resets at the boundary, so a full limit at the end of one window and again at the start of the next both pass", "It counts every request twice", "It refills too fast", "It ignores bursts"],
+    a: 1, why: "The reset at the window edge is the gap. A sliding window moves with time, so no edge exists.", pair: "token-vs-window" },
+  { q: "Twenty API servers each keep the limit counter in local memory. A tenant's limit is 100 a minute. What can the tenant do?",
+    o: ["Make up to about 2,000 a minute, 100 on each server", "Make 100 a minute in total", "Make 5 a minute", "Nothing: the servers share the count", "Make 100 a minute if they use one connection"],
+    a: 0, why: "Each server enforces its own copy, so the limit multiplies by the server count. Keep the counter in a shared store with an atomic update.", pair: "local-vs-shared-counter" },
+  { q: "The limiter's shared store goes down for a general-purpose API. What is the usual choice?",
+    o: ["Fail open for logins and closed for the rest", "Switch to a fixed window in the CDN", "Retry the store until it returns", "Fail open: allow requests, and alert", "Fail closed: refuse everything"],
+    a: 3, why: "Blocking all traffic because the protection is down turns it into the outage. Closed is for places where unlimited calls cause real harm, such as an expensive downstream call.", pair: "fail-open-closed" }
+]);
+MCQ.add("w5e:4", [
+  { q: "One tenant submits five million replays. Others wait. What protects them at the front door?",
+    o: ["A per-tenant admission rate, with the surplus held in the queue", "A longer DNS TTL", "Caching the submit call at the CDN", "A bigger balancer", "Retries with jitter"],
+    a: 0, why: "Fairness comes from dividing admission among tenants, and the queue keeps the surplus. A bigger balancer spreads load but does not share it.", pair: "limit-vs-capacity" },
+  { q: "The model provider returns 429 once you pass its limit. Why add your own outbound limiter?",
+    o: ["It makes the replays idempotent", "Providers never send 429", "It replaces backoff and jitter entirely", "It lets you exceed the provider's limit", "At 1,200 replays a second each 429 triggers a retry; a bucket slightly under the limit spends the quota evenly and keeps 429s rare"],
+    a: 4, why: "Hitting the limit and retrying is a retry storm. A client-side bucket avoids most 429s, and backoff with jitter still handles the rest.", pair: "limit-vs-capacity" },
+  { q: "Where does the submit-a-run call sit in the design?",
+    o: ["Behind the CDN, cached for an hour", "Straight to the workers over gRPC", "Through DNS, the layer 7 balancer, auth and the tenant bucket, then the queue", "Only in the scheduler", "Outside the rate limiter, so it never fails"],
+    a: 2, why: "It is per caller and changes state, so it is never cached. It passes the balancer, then auth and the limit before any queue slot is spent.", pair: "cdn-what-goes" }
+]);
+
+/* w5f: streams and events (29 Oct 2026). */
+MCQ.add("w5f:0", [
+  { q: "A new team wants to join an existing event stream next month and read everything since January. Which setup allows it?",
+    o: ["A message broker, because each message waits until someone takes it", "A log with retention long enough to cover January, read by a new consumer group from the start", "A queue with a second consumer added", "Any broker, as long as messages are acknowledged late", "A cache in front of the producer"],
+    a: 1, why: "A log keeps events after they are read and each group has its own offset, so a new group can start at the beginning of retention. A broker has deleted what was acknowledged.", pair: "broker-vs-log" },
+  { q: "Events for one customer must be processed in the order they happened, and many customers are processed in parallel. What gives that order in a partitioned log?",
+    o: ["A global sequence number across the topic", "Using the customer id as the key, so all of that customer's events go to one partition", "One consumer for the whole topic", "A timestamp on every event", "Acknowledging each event before the next is sent"],
+    a: 1, why: "Order holds inside a partition, and the key picks the partition. Different customers sit in different partitions and run in parallel. Timestamps do not enforce order across machines.", pair: "order-per-partition" },
+  { q: "A consumer of a classic broker takes a message and crashes before acknowledging it. What does the broker do?",
+    o: ["Deletes it, because it was delivered", "Redelivers it, possibly to another consumer and after newer messages", "Moves it to the front of the log", "Stops all delivery", "Marks the producer as failed"],
+    a: 1, why: "An unacknowledged message is redelivered, so the consumer sees it at least once and possibly out of order. That is why consumers need to cope with duplicates.", pair: "broker-vs-log" }
+]);
+MCQ.add("w5f:1", [
+  { q: "A topic has 8 partitions and one consumer group with 12 consumers. What happens?",
+    o: ["All 12 consumers share the load evenly", "Eight consumers each read one partition; four sit idle", "Four partitions are read twice", "The group stalls until partitions are added", "Events are split into 12 sub-partitions"],
+    a: 1, why: "In a group each partition goes to one consumer to keep its order, so the partition count caps parallelism. Extra consumers are idle until a member fails.", pair: "partitions-and-parallelism" },
+  { q: "A consumer reads a batch, commits the offset, then processes the batch and crashes midway. What delivery behaviour results?",
+    o: ["At-least-once", "At-most-once for the part of the batch it had not finished", "Exactly-once", "The batch is delivered twice to a second group", "The offset commit fails"],
+    a: 1, why: "The offset already says the batch is done, so after the crash the group resumes past it and the unprocessed events are skipped. Processing first and committing after gives at-least-once.", pair: "commit-order" },
+  { q: "One customer sends 60 percent of all events and one partition is saturated while the others idle. What fixes it?",
+    o: ["Double the partition count", "Add consumers to the group", "Change the key so that customer's events spread, if per-customer order allows", "Raise the retention", "Commit offsets more often"],
+    a: 2, why: "The key sends all of one customer's events to one partition, so more partitions and more consumers cannot help. A key that spreads the load can, at the price of that customer's order.", pair: "partitions-and-parallelism" }
+]);
+MCQ.add("w5f:2", [
+  { q: "An order service saves the order and then publishes OrderPlaced. After a crash between the two, the database has the order and the stream does not. Which fix removes the problem and not only the symptom?",
+    o: ["Retry the publish three times", "Write the event to an outbox table in the same transaction, or build the stream from the database's log with CDC", "Publish first and write the order after", "Add a longer timeout to the publish", "Run a nightly job that compares both"],
+    a: 1, why: "The fault is the second, independent write. A shared transaction or the database's own log removes it. Retries and reordering only move the failure; a reconciliation job finds the drift late.", pair: "dual-write" },
+  { q: "A search index must follow a Postgres table. Which design keeps it in sync with the fewest places for a bug to hide?",
+    o: ["Every service that writes the table also writes the index", "CDC reads the database's log and a consumer updates the index", "The index polls the table every minute for new rows", "The index is rebuilt by hand weekly", "Writes go to the index first and the table after"],
+    a: 1, why: "The log holds every committed change in commit order, including those from scripts and migrations. Per-service writes miss those, and polling misses deletes and intermediate updates.", pair: "cdc-vs-event-sourcing" },
+  { q: "Which statement separates event sourcing from CDC?",
+    o: ["CDC uses a log and event sourcing does not", "In event sourcing the events are the source of truth and the state is derived; in CDC the table is the source and the events are derived", "Event sourcing cannot be replayed", "CDC stores business facts and event sourcing stores row diffs", "They are the same pattern under two names"],
+    a: 1, why: "Both involve a log. The difference is which side is the truth. With CDC you can still drop the stream and keep the table; with event sourcing, dropping the events loses the data.", pair: "cdc-vs-event-sourcing" }
+]);
+MCQ.add("w5f:3", [
+  { q: "The harness gets 10^8 replays a day. About how many events a second is that on average?",
+    o: ["12", "120", "1,200", "12,000", "120,000"],
+    a: 2, why: "10^8 ÷ 86,400 is about 1,157, so about 1,200 a second on average. Peaks run several times higher.", pair: "rate-arithmetic" },
+  { q: "Scoring takes 2 seconds per replay and 1,200 arrive each second. A consumer handles about 50 at a time. About how many consumers, and therefore at least how many partitions?",
+    o: ["About 5", "About 12", "About 48, so at least that many partitions", "About 480", "About 2,400, one per job"],
+    a: 2, why: "Little's law: 1,200 × 2 s = 2,400 in flight; 2,400 ÷ 50 = 48. The group cannot use more consumers than partitions, so the partition count has to be at least that.", pair: "rate-arithmetic" },
+  { q: "The consumer commits after it writes each score and crashes right after a write, before the commit. On restart, how is the duplicate result avoided?",
+    o: ["The log deletes the event once read", "The result is written under the scenario id and attempt, so the repeat overwrites the first", "The broker guarantees exactly-once", "The consumer commits twice", "Nothing is needed: the log is durable"],
+    a: 1, why: "A durable log gives at-least-once, so the event is read again. A keyed overwrite makes the repeat harmless. Durability is about not losing events, not about not repeating them.", pair: "at-least-once-effect" }
+]);
+MCQ.add("w5f:4", [
+  { q: "Which job belongs on a queue rather than a log?",
+    o: ["Keeping an audit trail of every account change", "Sending one welcome email per signup, with retries and a dead-letter queue", "Feeding a search index, a cache and a warehouse from one database", "Rebuilding a report from last year's events", "Re-scoring last week's replays with a new judge"],
+    a: 1, why: "A job to be done once, retried on its own, is what a broker does well. The other four need several readers or reading the past, which is what a log is for.", pair: "broker-vs-log" },
+  { q: "A vendor says its broker 'gives exactly-once'. What does that leave for your consumer to do?",
+    o: ["Nothing", "Make its outside writes idempotent, because a crash before the offset commit can repeat them", "Add a second broker", "Turn off retries", "Check the clock on every event"],
+    a: 1, why: "Such a guarantee covers reading and writing inside the broker. A write to an outside database or an API call can still repeat after a crash, so it needs an idempotency key.", pair: "at-least-once-effect" },
+  { q: "A product needs only the current state of each account, with no audit requirement. What is the sensible default?",
+    o: ["Event sourcing, to keep every option open", "An ordinary table, with CDC if other stores must follow it", "A queue as the system of record", "A log with infinite retention", "Store snapshots only, in a cache"],
+    a: 1, why: "Event sourcing costs you versioning, replay time and hard deletes. If the history is not the product, the table stays the truth and CDC derives the events when they are needed.", pair: "cdc-vs-event-sourcing" }
+]);

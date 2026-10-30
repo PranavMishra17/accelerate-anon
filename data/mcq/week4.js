@@ -700,3 +700,143 @@ MCQ.add("wc2:7", [
     a: 4,
     why: "A judgment call has no exact value to check against a span, so the citation verifier gives no protection. Saying so, and routing it to a human, is one of the design's honest weak points." }
 ]);
+
+MCQ.add("w4d:0", [
+  { q: "A single-leader store acknowledges writes before any follower has them. The leader dies and a follower is promoted. What is the risk?",
+    o: ["Followers refuse to take over", "A write the client was told succeeded may be missing on the new leader", "Reads become linearizable", "Every replica must be rebuilt from scratch", "The old leader's data is merged automatically"],
+    a: 1, why: "Asynchronous replication acknowledges before the copy exists elsewhere. A failover in that gap loses the write, which is the price of fast writes.", pair: "sync-vs-async" },
+  { q: "A team makes one follower synchronous. What does that buy and what does it cost?",
+    o: ["It buys lower write latency and costs durability", "It buys a copy that has every acknowledged write, and costs write latency and availability if that follower is slow or down", "It buys faster reads on every follower", "It buys conflict resolution", "It costs nothing, because the follower is a copy"],
+    a: 1, why: "Waiting for the follower means an acknowledged write exists in two places. A slow or dead follower then stalls writes unless another takes its place.", pair: "sync-vs-async" },
+  { q: "After a network problem two nodes both accept writes as leader. What is this called, and why is it dangerous?",
+    o: ["Replication lag: reads become stale", "Split brain: the copies diverge with no single order to merge them", "Read repair: values are overwritten", "A quorum read: reads fail", "Anti-entropy: the data is compared"],
+    a: 1, why: "Two leaders each build their own history. There is no single write order to reconcile them by, so data can be lost or corrupted.", pair: "split-brain-vs-lag" },
+  { q: "Which replication model most obviously needs a conflict-resolution rule?",
+    o: ["Single-leader with one synchronous follower", "Single-leader with read replicas", "Multi-leader, with writes accepted in several regions", "A leader with a hot standby that takes no reads", "None: conflicts cannot occur with replication"],
+    a: 2, why: "When two places accept writes independently, two writes to one key can cross. Single-leader avoids that by giving the leader the only say.", pair: "models" }
+]);
+MCQ.add("w4d:1", [
+  { q: "A store has N = 5, W = 3, R = 2. Which statement is correct?",
+    o: ["Reads always see the latest write, since W > R", "Reads may miss the latest write, since W + R = 5 is not greater than N = 5", "Reads are guaranteed because W + R >= N", "Writes are guaranteed to be on every replica", "The setting needs W = R"],
+    a: 1, why: "The overlap rule is W + R > N, strictly. At 3 + 2 = 5 the read can land on exactly the two replicas the write skipped.", pair: "quorum-rule" },
+  { q: "N = 3, W = 2, R = 2. One replica dies. What happens to reads and writes?",
+    o: ["Both stop, since all three are needed", "Reads continue but writes stop", "Both continue, since two replicas are still alive and each needs two", "Writes continue but reads stop", "Both continue but lose the overlap guarantee"],
+    a: 2, why: "Each operation needs two replicas and two are alive, so it survives one failure. The overlap W + R > N still holds.", pair: "quorum-rule" },
+  { q: "Writes are rare and reads are heavy. Which setting for N = 3 keeps the overlap and makes reads cheapest?",
+    o: ["W = 1, R = 1", "W = 3, R = 1", "W = 2, R = 2", "W = 1, R = 3", "W = 3, R = 3"],
+    a: 1, why: "W = 3, R = 1 gives 3 + 1 = 4 > 3 and each read touches one replica. The rare writes pay, and one dead replica blocks them.", pair: "quorum-tuning" },
+  { q: "Even with W + R > N, a read returns an older value. Which cause is real?",
+    o: ["The overlap rule is wrong", "A write failed on some replicas and was not rolled back, or concurrent writes were merged by last write wins on drifting clocks", "Quorums cannot serve reads", "R must always equal N", "Replicas never converge"],
+    a: 1, why: "The rule guarantees a shared replica, not that the newest value wins. Partial writes and clock-based merges can still pick an older one.", pair: "quorum-rule" }
+]);
+MCQ.add("w4d:2", [
+  { q: "Write W completes and returns OK. A client then starts a read and gets the value from before W. Which model does that violate?",
+    o: ["Eventual consistency", "Linearizability", "Read repair", "Durability", "Monotonic reads for a different user"],
+    a: 1, why: "Linearizability orders operations by real time: a read that starts after a write finishes must see it or newer. Eventual consistency allows the old value.", pair: "eventual-vs-linearizable" },
+  { q: "A partition cuts a five-node consensus group 3 to 2. What does the two-node side do?",
+    o: ["Keeps accepting writes and merges later", "Elects its own leader", "Cannot commit anything, because it lacks a majority", "Serves linearizable reads from its copy", "Copies the data to the other side"],
+    a: 2, why: "Progress needs a majority of five, which is three. The two-node side refuses rather than risk a second history.", pair: "partition-behaviour" },
+  { q: "An interviewer asks whether your store is CP or AP. What is the best answer?",
+    o: ["CP, because it uses a leader", "AP, because it uses replicas", "It depends on the feature: during a partition each one either refuses or may be stale, and the labels fit few real systems", "Neither, because CAP is false", "Both, by buying faster hardware"],
+    a: 2, why: "CAP's terms are narrow. The useful answer names the choice per feature during a partition, which is what the labels hide.", pair: "cap-labels" },
+  { q: "Which job is consensus actually used for?",
+    o: ["Storing every row of a large table", "Agreeing on one value such as the current leader or the next log entry", "Speeding up reads", "Compressing replicated data", "Choosing indexes"],
+    a: 1, why: "Consensus is expensive: a round trip to a majority. It is used for the small things that must have one answer, like the leader or a lock, not for bulk data.", pair: "consensus-use" }
+]);
+MCQ.add("w4d:3", [
+  { q: "A worker checks whether (scenario id, attempt) already has a result before running a replay. Where should that read be served?",
+    o: ["Any follower", "The leader, because a stale miss would run the replay again", "A cache with a one-hour TTL", "The dashboard's replica", "It need not be read at all"],
+    a: 1, why: "A stale follower can say the result is missing when it exists. The write is idempotent, so the cost is wasted work, but that is the freshness this read needs.", pair: "read-routing" },
+  { q: "A pass-rate dashboard refreshes every ten seconds. Which read path fits?",
+    o: ["The leader, for exactness", "A follower, because seconds of lag are invisible and the leader keeps its capacity", "A three-replica quorum", "The synchronous follower only", "A fresh copy per refresh"],
+    a: 1, why: "Staleness well under the refresh interval changes nothing the dashboard shows. Follower reads are what followers are for.", pair: "read-routing" },
+  { q: "The leader of a shard fails and the last second of result writes is missing. What makes this survivable?",
+    o: ["Followers hold a hidden copy", "The harness knows which scenario ids it expects, re-runs the missing ones, and the key scenario id plus attempt makes that safe", "The old leader merges its data later", "The writes are never needed", "A quorum read recovers them"],
+    a: 1, why: "A replay result can be recomputed, and idempotency makes re-running harmless. A payment could not be rebuilt this way and would need a synchronous follower.", pair: "recompute-vs-durable" },
+  { q: "Why give each leader a term number that the store checks on every write?",
+    o: ["To order reads", "To reject writes from an old leader that does not know it was replaced", "To compress the log", "To pick the read replica", "To count writes"],
+    a: 1, why: "A term works like a fencing token: after a failover the new leader holds a higher one, so an old leader's late write is refused.", pair: "split-brain-vs-lag" }
+]);
+MCQ.add("w4d:4", [
+  { q: "A user changes a setting, reloads, and sees the old value. Reads go to followers. What is the standard fix?",
+    o: ["Make every read wait for all followers", "Serve that user's reads from the leader for a short window after their write", "Tell the user to retry", "Switch the whole store to synchronous replication", "Add a longer cache TTL"],
+    a: 1, why: "This restores read-your-writes for the one user who needs it. Waiting on every follower slows everyone to fix a few.", pair: "ryw-vs-monotonic" },
+  { q: "A user sees a new comment, refreshes and it disappears, then returns on the next refresh. What is the cause and the fix?",
+    o: ["The comment was deleted; nothing to fix", "Reads alternate between followers at different lag; pin the user to one follower", "The leader is down; fail over", "The cache is cold; warm it", "The comment is in a queue; wait"],
+    a: 1, why: "Two followers are at different points in the log. Pinning the user to one makes their view move only forward, which is monotonic reads.", pair: "ryw-vs-monotonic" },
+  { q: "An interviewer asks 'is your store consistent?' Which answer is strongest?",
+    o: ["Yes, it uses a leader", "It is eventually consistent", "It depends on the read: some are served from the leader and are current, some from followers and lag by seconds, and a failover can lose unreplicated writes that we recompute", "No, consistency is impossible", "Yes, because we use a quorum"],
+    a: 2, why: "The strong answer is per read, states the lag, and names what a failure costs. A single label tells the interviewer nothing about what a user sees.", pair: "cap-labels" }
+]);
+
+/* w4e: transactions and indexes. */
+MCQ.add("w4e:0", [
+  { q: "A bank rule says a balance never goes below zero. A transaction commits and the balance is negative. Which letter of ACID failed, and whose job was it?",
+    o: ["Atomicity, the database's", "Durability, the database's", "Isolation, the database's", "Consistency, which is the application's rule, kept with constraints and correct transactions", "Nothing failed: negative balances are allowed"],
+    a: 3, why: "Consistency is your own invariant. The database enforces only what you declare as a constraint, and uses atomicity and isolation as the tools for the rest.", pair: "acid-letters" },
+  { q: "A process crashes after the first of two writes in a transaction. A reader then sees neither write. Which property did that?",
+    o: ["Isolation", "Durability", "Atomicity", "Consistency", "Replication"],
+    a: 2, why: "Atomicity rolls back the half-done work, so the transaction left no trace and a retry starts clean.", pair: "acid-letters" },
+  { q: "Which is NOT one of the three ways to get serializability?",
+    o: ["Running transactions one at a time on a single thread", "Two-phase locking", "Serializable snapshot isolation", "Letting each statement read the latest commit", "None of these is a way"],
+    a: 3, why: "Reading the latest commit per statement is read committed, a weak level. The three ways are serial execution, two-phase locking and serializable snapshot isolation.", pair: "serializable-ways" },
+  { q: "Why would a database leave its default isolation below serializable?",
+    o: ["Serializable is not possible in practice", "Weaker levels are faster and fine for many workloads; serializable costs throughput, waiting or aborts", "Serializable loses committed data", "Weaker levels are always safer", "It is a legacy accident with no reason"],
+    a: 1, why: "Each route to serializable has a cost, so databases default to a cheaper level and leave you to know what it allows.", pair: "serializable-ways" }
+]);
+MCQ.add("w4e:1", [
+  { q: "Two workers each read 'running = 199', each start a different replay, and both commit under snapshot isolation. The cap was 200. What is this?",
+    o: ["A dirty read", "A lost update", "Write skew: different rows written, a rule across them broken", "A phantom delete", "A deadlock"],
+    a: 2, why: "No row is written twice, so snapshot isolation sees no conflict. The rule spans rows, so only serializable or a lock on the rows the rule reads stops it.", pair: "lost-update-vs-write-skew" },
+  { q: "Two transactions both read counter n = 5, add one, and write 6. One increment is lost. What is the cleanest fix?",
+    o: ["Serializable for the whole database", "An atomic 'SET n = n + 1' in one statement", "A longer timeout", "A second index on n", "Retry the read"],
+    a: 1, why: "An atomic update applies the add under the row lock, so it cannot overwrite another's change. Heavier tools work, but this is the lowest rung.", pair: "lost-update-vs-write-skew" },
+  { q: "What does snapshot isolation stop that read committed does not?",
+    o: ["Dirty reads", "A row reading differently twice in one transaction", "Write skew", "All anomalies", "Deadlocks"],
+    a: 1, why: "A snapshot fixes what the whole transaction sees, so a row cannot change under it. Read committed already stops dirty reads, and neither stops write skew.", pair: "isolation-ladder" },
+  { q: "In Postgres, an application uses repeatable read and gets error 40001. What should it do?",
+    o: ["Treat it as a data corruption alarm", "Give up and report failure", "Rerun the transaction, which must be safe to run twice", "Switch to read uncommitted", "Restart the database"],
+    a: 2, why: "A serialization failure means the database aborted one of two conflicting transactions. Retrying is the expected response, and it needs the work to be idempotent.", pair: "isolation-ladder" }
+]);
+MCQ.add("w4e:2", [
+  { q: "A table holds job rows whose status changes in place, read by key. Another store holds traces written once at a high rate. Which pairing fits?",
+    o: ["LSM-tree for jobs, B-tree for traces", "B-tree for both", "LSM-tree for both", "B-tree for jobs, LSM-tree or object storage for traces", "A document model for both"],
+    a: 3, why: "In-place updates read by key suit a B-tree. Write-once, high-rate data suits appending and merging later.", pair: "btree-vs-lsm" },
+  { q: "What is the main read-side cost of an LSM-tree?",
+    o: ["Every read rewrites a page", "A read may have to check several levels before it finds the key", "Reads are always sequential", "It cannot answer range queries", "Reads need a lock on the table"],
+    a: 1, why: "Writes were appended and merged later, so a key may sit in the memtable or any of several sorted files. Bloom filters and compaction limit this.", pair: "btree-vs-lsm" },
+  { q: "There is an index on (run_id, finished_at). Which query benefits most?",
+    o: ["WHERE finished_at > X", "WHERE run_id = 7 AND finished_at > X", "WHERE run_id > 7 AND finished_at = X", "WHERE status = 'failed'", "All four equally"],
+    a: 1, why: "Equality on the leading column narrows to one stretch, then the range walks it in order. A query on finished_at alone does not use the leading column.", pair: "index-order" },
+  { q: "You add a fifth index to a table with heavy inserts. What changes?",
+    o: ["Inserts get faster", "Nothing, indexes only affect reads", "Each insert writes one more entry, so writes slow down as reads speed up", "Reads get slower", "The table shrinks"],
+    a: 2, why: "Every index is another structure to update on each insert. Reads gain and writes pay, so each index has to earn its place.", pair: "index-order" },
+  { q: "When does a document model fit better than a relational one?",
+    o: ["Many-to-many links across records", "Rules across several records that need constraints", "A record read and written whole, with few links to others", "Heavy joins", "Transactions across many records"],
+    a: 2, why: "A document keeps one record together, so one read gets it all. Relational wins when there are joins, links and cross-record rules.", pair: "document-vs-relational" }
+]);
+MCQ.add("w4e:3", [
+  { q: "Many workers claim queued replays from one table. Which claim avoids both collisions and waiting?",
+    o: ["SELECT then UPDATE by id in two statements", "A table lock", "SELECT ... FOR UPDATE SKIP LOCKED in the same transaction as the update to running", "A random sleep before each claim", "One worker only"],
+    a: 2, why: "SKIP LOCKED hands each worker rows nobody holds, and doing the update in the same transaction means the claim is atomic.", pair: "claim-vs-lock" },
+  { q: "A replay is retried and writes its result twice. Which write keeps the table correct?",
+    o: ["INSERT, ignoring the error", "SELECT to see whether it exists, then INSERT", "INSERT ... ON CONFLICT (run_id, scenario_id) DO UPDATE", "DELETE the row, then INSERT", "Append a new row each time"],
+    a: 2, why: "The upsert is one atomic statement keyed on the replay, so a retry overwrites its own row. A check then a write leaves a gap.", pair: "retry-write" },
+  { q: "The dashboard reads only failed replays, which are 3% of 100 million. Which index is smallest and still answers it?",
+    o: ["A full index on status", "A full index on (run_id, finished_at)", "A partial index on (run_id, finished_at) where status = 'failed'", "No index", "A full index on trace_ref"],
+    a: 2, why: "The partial index holds about 3 million entries instead of 100 million, so it is cheaper to write and fits in memory.", pair: "partial-index" },
+  { q: "A cap of 200 running replays per run is checked by reading a count. Which fix is correct?",
+    o: ["Raise the isolation to repeatable read only", "Lock the run's row with FOR UPDATE for the check, or run serializable and retry", "A bigger machine", "Check twice", "Read the count after the insert"],
+    a: 1, why: "The rule spans rows, so snapshot isolation lets two checks pass. A lock on the row the rule reads, or serializable, makes the second one see the first.", pair: "lost-update-vs-write-skew" }
+]);
+MCQ.add("w4e:4", [
+  { q: "A query is slow. What do you do first?",
+    o: ["Add an index on every column", "Read the query plan to see whether it scans and which index it uses", "Move to a bigger machine", "Switch to an LSM-tree", "Raise the isolation level"],
+    a: 1, why: "The plan shows what the database actually does. Choosing an index from the access pattern comes next, then pricing its write.", pair: "slow-query-order" },
+  { q: "Which is the full order for answering 'this query is slow' in an interview?",
+    o: ["Index it and say it is done", "Plan, index from the access pattern, price the write, say what you left out", "Price the write, then read the plan", "Say what you left out, then index it", "Add hardware, then index it"],
+    a: 1, why: "Evidence, choice, cost, and the honest edge. Naming the write cost shows the index was chosen, not habitual.", pair: "slow-query-order" },
+  { q: "Fixing the cap's write skew with a row lock versus serializable: which is the better fit when there is one rule and one obvious row?",
+    o: ["Serializable, always", "Neither works", "The row lock, since only workers on that run wait and there is no abort loop", "Read committed with a retry", "Remove the cap"],
+    a: 2, why: "One rule and one row to lock is cheap to lock. Serializable fits better when there are many rules and it is hard to name the rows they read.", pair: "lock-vs-serializable" }
+]);
