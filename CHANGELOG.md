@@ -1601,3 +1601,10 @@ w4d Replication and consistency, w4e Transactions and indexes, w5e APIs and the 
 the five systems weeks skipped; milestone 2 had none to pull forward. Deviation from the charter, recorded: four
 sessions added mid-interview-sprint (commitment 3 treats a sprint as a Red week) and closer to covering a syllabus
 than the charter likes. Reason: he wants HLD kept warm beside LLD, at lighter depth, now rather than after the loop.
+
+**2026-10-30: LLD part 0 in the Amazon plan; a replication figure for w4d.**
+The Amazon plan gives part 0 a part a day: 0.1 on 30 October, 0.2 on 31 October before the timed parking-lot redo,
+0.3 on 1 November before the two designs, 0.4 on 2 November beside the LRU drill. Day hours rise to 4, 4, 5 and 5.5.
+The 30 October item goes last in its day because ticks are keyed by position and the day had started. A new shared
+figure, `replication`, draws one leader with a synchronous and an asynchronous follower, the stale read on the lagging
+copy and what a failover loses; w4d draws it and its first and last steps point at it. No charter deviation.

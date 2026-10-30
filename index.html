@@ -783,13 +783,13 @@
   </main>
 </div>
 <script src="figures/icons.js?v=f5a48822"></script>
-<script src="figures/figures.js?v=730ef59c"></script>
-<script src="figures/notes.js?v=288db369"></script>
+<script src="figures/figures.js?v=0e01e061"></script>
+<script src="figures/notes.js?v=82a7302c"></script>
 <script src="figures/viewer.js?v=ecb99aae"></script>
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
 <script src="data/streams.js?v=d0b499a4"></script>
-<script src="data/reading.js?v=00c8f142"></script>
+<script src="data/reading.js?v=e28c07fe"></script>
 <script src="data/sheets.js?v=deafb649"></script>
 <script src="site/res.js?v=c33c7564"></script>
 <script src="site/nlm.js?v=2c36ecf8"></script>
@@ -2057,7 +2057,7 @@
           name: "Replication and consistency",
           blurb: "Copies of the same data, and what a reader can see while they disagree.",
           intro: "Sharding spread the replays across machines. Replication is the other half: keeping more than one copy of each piece, so a dead machine loses nothing, and then deciding what a reader is allowed to see while the copies disagree. It is lighter than the five main weeks: one read, the two mechanisms, one small design, one check.",
-          diagrams: [],
+          diagrams: ["replication"],
           steps: [
             { t: "Read DDIA 2e chapter 6, Replication, in one pass",
               sd: [{ v: "overview", a: "pattern-reliability", why: "Replication and failover as a technique: followers, promotion and what a failover costs." }, { v: "overview", a: "pattern-consistency", why: "Read-your-writes and quorums, the ideas the lag section leads into." }],

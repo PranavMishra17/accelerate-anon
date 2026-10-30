@@ -155,6 +155,27 @@ var FIGURES = (function () {
     }
   };
 
+  DIA.replication = {
+    title: "A synchronous copy costs latency. An asynchronous one costs a stale read, or a lost write.",
+    cap: "<b>One leader orders every write; followers copy it, now or later.</b> Follower A is synchronous: the leader waits for it before telling the client OK, so A always holds the latest write and every write pays for the wait. Follower B is asynchronous: writes are fast, but B lags, so a reader there sees the old value, and if the leader dies before B catches up, promoting B loses a write the client was told had landed.",
+    svg: function () {
+      var b = "";
+      b += S.box({ id: "client", x: 0, y: 70, w: 108, h: 44, label: "Client", sub: "writes x = 5", tone: "now", icon: "send" });
+      b += S.arrow(112, 92, 154, 92, { label: "write" });
+      b += S.box({ id: "leader", x: 158, y: 66, w: 144, h: 52, label: "Leader", sub: "orders every write", tone: "sys", icon: "database" });
+      b += S.arrow(306, 80, 384, 34, {});
+      b += S.arrow(306, 104, 384, 150, { dash: true });
+      b += S.box({ id: "fa", x: 388, y: 10, w: 156, h: 44, label: "Follower A, sync", sub: "leader waits; has x = 5", tone: "sys" });
+      b += S.box({ id: "fb", x: 388, y: 128, w: 156, h: 44, label: "Follower B, async", sub: "ships later; still x = 4", tone: "alaap", dash: true });
+      b += S.box({ id: "reader", x: 572, y: 128, w: 68, h: 44, label: "Reader", sub: "sees 4", tone: "flat" });
+      b += S.arrow(568, 150, 548, 150, {});
+      b += S.text(0, 214, "Leader dies now: promote A and nothing is lost; promote B and an acknowledged write is gone.", "d-t-b");
+      b += S.text(0, 234, "Read your own writes from the leader, or from a copy that has caught up to your last write.", "d-t-s");
+      b += S.text(0, 252, "Leaderless: with w + r > n, every read overlaps at least one copy holding the latest write.", "d-t-s");
+      return S.frame(640, 264, b);
+    }
+  };
+
   DIA.tail = {
     title: "One slow shard in a hundred makes almost every request slow",
     cap: "<b>Fan-out amplifies tails.</b> If a request waits on 100 shards and each is slow 1% of the time, the chance that none is slow is 0.99 to the power 100 — about 37%. So roughly 63% of requests are slow. The p99 of a component becomes the typical case for the system, which is why tail latency is a system property rather than a component detail. The figure draws 12 shards to stand in for the 100.",
