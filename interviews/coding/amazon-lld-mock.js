@@ -7,429 +7,293 @@ window.LOOP_CODING.parts.push({
  "n": 8,
  "one": true,
  "title": "Mock: Amazon Locker, the whole round",
- "minutes": 75,
- "lead": "A full design round from a two-line prompt to running, extended code, one stage at a time: the questions to ask, the interviewer's answers, nouns to classes, the class sketch, a first draft, the core methods, an extension, and the summary. Try each box before you open the answer. Every OOP and SOLID idea is mapped to the line that shows it at the end.",
+ "minutes": 45,
+ "lead": "A full locker round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. Three classes and an enum; about 40 minutes. Try each box before you open the answer.",
  "sections": [
   {
    "id": "lldm-prompt",
-   "title": "0:00 The prompt",
+   "title": "The prompt",
    "blocks": [
     {
      "t": "p",
-     "text": "This is a full 60-minute design round, disclosed one stage at a time. **Don't read ahead.** At each stage, try the box first, then open the model answer. The point is to see how a two-line prompt turns into running code, so you can do the same backwards on any other problem."
+     "text": "One round, the way you'd run it: **a) clarify, b) requirements, c) entities, d) class design, e) implementation, f) extensibility.** About 40 minutes. At each stage try the box first, then open the answer. Set the switch above to Try first."
     },
     {
      "t": "turn",
      "who": "Interviewer",
-     "ask": "Let's do a design problem. Design Amazon Locker: customers can have packages delivered to a locker near them and pick them up there. You've got about forty-five minutes, and I'd like to see some code.",
+     "ask": "Design a locker system where delivery drivers deposit packages and customers pick them up using a code.",
      "say": [
-      "Sounds good. **Before I design anything, I'd like to ask a few questions to pin down the scope**, then I'll list the use cases, sketch the classes, and write the core in Python. I'll think out loud, so stop me if I go somewhere you don't care about."
+      "Sounds good. **Before requirements, I'd like to clarify a few things in three areas: what the system must do, how it handles errors, and where the scope stops.** Then I'll list requirements, pull out the entities, design the classes and implement the main methods."
      ],
      "check": [
-      "Do you jump to classes, or ask first?",
-      "Do you say your plan, so they can steer you?"
+      "Do you clarify before you design?",
+      "Do you say your plan out loud?"
      ],
      "explain": [
-      "The first thirty seconds set the tone. Naming the seven steps out loud tells the interviewer you have a method, and invites them to cut what they don't need.",
-      "Never start with 'class Locker'. The prompt is vague on purpose; the questions are part of what's scored."
+      "Saying the order lets the interviewer steer you early. It also keeps you from jumping to classes."
      ]
-    },
-    {
-     "t": "write",
-     "id": "lldm-prompt-w",
-     "q": "Before you open the next stage: in two lines, what do you think this system must do? Write the verbs.",
-     "starter": "The system must ...",
-     "hint": "Who puts things in, who takes them out, and what happens if nobody comes?",
-     "solution": "Deliver: a driver puts a package into a free slot that fits it, and the customer is told a code.\nPick up: the customer enters the code, the slot opens, the package is theirs.\nExpire: a package nobody collects goes back after a few days.",
-     "why": "Three verbs are already most of the design: deposit, pickup, expire. Everything else is a detail of one of them."
     }
    ]
   },
   {
    "id": "lldm-clarify",
-   "title": "0:01 to 0:08 Clarify",
+   "title": "a) Clarify",
    "blocks": [
     {
      "t": "p",
-     "text": "Ask one question per area: actors, use cases, sizes and scale, the rule for choosing a slot, codes and security, failure and expiry, concurrency, persistence. **A good question changes what you draw.** If the answer wouldn't change a class or a method, skip it."
+     "text": "Three buckets. **Primary capabilities:** what it must do. **Error handling:** what goes wrong. **Scope boundaries:** what you will not build."
     },
     {
      "t": "write",
      "id": "lldm-clarify-w",
-     "q": "Write eight questions you would ask. One per line, each from a different area.",
-     "starter": "1. \n2. \n3. \n4. \n5. \n6. \n7. \n8. ",
-     "hint": "Actors, use cases, sizes, which slot, codes, expiry, two drivers at once, one locker or many.",
-     "solution": "1. Who uses it: customers and delivery drivers? Is there an admin or a system job? (actors)\n2. Is it delivery and pickup only, or also returns? (use cases)\n3. Do slots come in sizes, and does every package have a size? (sizes)\n4. If several slots fit, which one should a package get? (assignment rule)\n5. How does the customer prove it's theirs: a one-time code? How long is it? (codes)\n6. What if nobody picks it up? How long do we hold it? (expiry)\n7. Can two drivers use the same locker at the same moment? (concurrency)\n8. One locker, or a network where we pick the nearest one with room? (scale)",
-     "why": "Each of these changes the design: sizes give you an enum and a fits() check, the assignment rule gives you a strategy, expiry gives you a clock and a sweep, concurrency gives you a lock, and 'a network' gives you a second class later."
+     "q": "Write your questions under each bucket.",
+     "starter": "1. Primary capabilities\n- \n- \n- \n\n2. Error handling\n- \n- \n- \n\n3. Scope boundaries\n- ",
+     "hint": "Sizes, how the customer gets the code, how the driver gets a compartment. Many packages per customer, expiry, all full. The whole delivery flow, or only placement and pickup?",
+     "solution": "1. Primary capabilities\n- Are there different sized compartments?\n- How does the customer get the code?\n- How does the delivery driver get a compartment?\n\n2. Error handling\n- Can one customer have multiple packages?\n- Do codes expire? What happens to a package left too long?\n- What if all compartments of a size are full?\n\n3. Scope boundaries\n- Do we model the whole delivery flow, or only delivery, placement, pickup and recovery?",
+     "why": "Every question here changes a class or a method. Sizes give an enum. 'How does the customer get the code' tells you the system only returns it. Multiple packages give one token per package. Expiry and recovery give the expired path."
+    }
+   ]
+  },
+  {
+   "id": "lldm-reqs",
+   "title": "b) Requirements",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "**The interviewer answers your questions:**"
     },
     {
      "t": "turn",
      "who": "Interviewer",
-     "ask": "Good questions. Here's what I'll give you. Customers and delivery drivers; there's also a nightly job. Delivery and pickup for now, returns maybe later. Three slot sizes, small, medium, large, and every package has one. Give a package the smallest free slot it fits in. A six-digit one-time code, sent by text or email. Hold for three days, then it goes back and the customer is told. Yes, two drivers can be at one locker at once. Start with one locker; we may talk about many.",
+     "ask": "Small, medium and large compartments. The driver says the size; the system picks a compartment and opens it. The system returns a code, and getting it to the customer is someone else's job. Yes, a customer can have several packages, one code each. Codes expire after 7 days; the package stays until staff take it out. If every compartment of that size is full, return an error. Only placement, pickup and recovery; not delivery or notifications.",
      "say": [
-      "Great, let me repeat the scope so we agree. **In:** one locker, three sizes, smallest-fit assignment, deposit, pickup with a one-time six-digit code, a three-day hold, expiry with a notice, and safe for two drivers at once. **Out for now:** returns, payments, many lockers, the hardware. I'll design so returns and many lockers can be added without rewriting the core."
-     ],
-     "check": [
-      "Do you play the scope back?",
-      "Do you say what's out, and that you'll leave room for it?"
-     ],
-     "explain": [
-      "Repeating the scope catches misunderstandings before you've written a class.",
-      "Naming what's out shows judgment. Saying you'll leave room for it is how you set up the extension stage, which is coming."
+      "Thanks, that's clear. **So: three sizes, exact match, one token per package, 7-day expiry with staff recovery, an error when full.** Out of scope: the delivery system, notifications, and how the token reaches the user."
      ]
     },
     {
      "t": "table",
      "head": [
-      "Answer",
-      "What it becomes in the design"
+      "Bucket",
+      "Question",
+      "Answer"
      ],
      "rows": [
       [
-       "Three sizes",
-       "Size enum; Slot.fits(package)"
+       "Primary capabilities",
+       "Different sized compartments?",
+       "Yes: small, medium, large"
       ],
       [
-       "Smallest free slot",
-       "SlotAssigner interface, SmallestFit strategy"
+       "Primary capabilities",
+       "How does the customer get the code?",
+       "The system returns it; delivery of the code is out of scope"
       ],
       [
-       "Six-digit one-time code",
-       "CodeGenerator; a code-to-reservation map; delete on use"
+       "Primary capabilities",
+       "How does the driver get a compartment?",
+       "Says the size; the system assigns one and opens it"
       ],
       [
-       "Text or email",
-       "Notifier interface, injected"
+       "Error handling",
+       "One customer, multiple packages?",
+       "Yes, one access token per package"
       ],
       [
-       "Three-day hold",
-       "Clock, injected; Reservation.expires_at; Locker.expire()"
+       "Error handling",
+       "Code expiry? Left packages?",
+       "7 days; the package stays until staff remove it"
       ],
       [
-       "Two drivers at once",
-       "A lock around choosing and reserving a slot"
+       "Error handling",
+       "All compartments full?",
+       "Return an error"
       ],
       [
-       "Maybe many lockers, maybe returns",
-       "Keep Locker self-contained; a network class can wrap it later"
-      ]
-     ]
-    }
-   ]
-  },
-  {
-   "id": "lldm-usecases",
-   "title": "0:08 to 0:12 Use cases",
-   "blocks": [
-    {
-     "t": "write",
-     "id": "lldm-uc-w",
-     "q": "Write the use cases as short sentences: actor, verb, result. Then the failure for each.",
-     "starter": "Driver ...\nCustomer ...\nNightly job ...",
-     "hint": "Three happy paths, and what goes wrong in each.",
-     "solution": "Driver deposits a package -> it goes into the smallest free slot that fits; the customer gets a code.\n   Fails if no slot fits: tell the driver the locker is full.\nCustomer picks up with a code -> the slot opens and frees up.\n   Fails if the code is wrong, used or expired.\nNightly job expires old packages -> slots free up, customers are told it's going back.\n   Nothing to do if nothing is late.",
-     "why": "Writing the failure next to each path is what turns into exceptions and checks later. Interviewers notice when the unhappy path was planned, not patched."
-    },
-    {
-     "t": "turn",
-     "who": "Interviewer",
-     "ask": "That's the right set. Go on.",
-     "say": [
-      "So the core is three methods on the locker: **deposit, pickup and expire.** Next I'll pull the nouns out of what we just said and decide which ones deserve a class."
-     ]
-    }
-   ]
-  },
-  {
-   "id": "lldm-nouns",
-   "title": "0:12 to 0:17 Nouns to classes",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "Underline the nouns in the scope: customer, driver, package, locker, slot, size, code, text or email, hold, job. **A noun gets a class only if it owns data or rules.** Verbs become methods on the class that owns the data they change."
-    },
-    {
-     "t": "write",
-     "id": "lldm-nouns-w",
-     "q": "For each noun, write: class, enum, interface, or not a class. One line each, with why.",
-     "starter": "Package: \nSlot: \nSize: \nLocker: \nCode: \nCustomer: \nDriver: \nText or email: \nThe three-day clock: \nChoosing a slot: ",
-     "hint": "Customer and driver only call methods. Does the system store anything about them?",
-     "solution": "Package: class (immutable data: id, size, customer). A frozen dataclass.\nSlot: class. Owns its size and its state, and the rules for changing state.\nSize: enum. A fixed set, and it orders: small < medium < large.\nLocker: class. Owns the slots and the live reservations; the entry point.\nCode: a string from a CodeGenerator class, so how codes are made can change.\nCustomer: not a class. Only an id on the package; we store nothing else.\nDriver: not a class. They're the caller of deposit().\nText or email: Notifier interface, with one implementation per channel.\nThe three-day clock: Clock protocol, injected, so tests can move time.\nChoosing a slot: SlotAssigner interface; SmallestFit is the rule we were given.\nPlus one record: Reservation (code, package, slot, expires_at).",
-     "why": "Saying no to Customer and Driver is a good sign: classes with no data or rules are noise. The interfaces (Notifier, SlotAssigner, Clock) are where the extensions will plug in."
-    },
-    {
-     "t": "turn",
-     "who": "Interviewer",
-     "ask": "Why is the slot choice its own class? It's one line.",
-     "say": [
-      "Because it's the rule most likely to change. Today it's smallest fit. Tomorrow it might be 'keep cold slots for groceries' or 'balance wear across doors'. **If it's an interface, a new rule is a new class and the locker doesn't change.** That's open-closed. If it really never changes, I'd inline it, but you hinted at more later."
-     ],
-     "check": [
-      "Can you justify an abstraction, or did you add it by habit?"
-     ],
-     "explain": [
-      "Every interface you add should answer 'what change does this absorb?'. If you can't name one, don't add it. Here the interviewer already hinted at more rules."
-     ]
-    }
-   ]
-  },
-  {
-   "id": "lldm-relations",
-   "title": "0:17 to 0:22 Relationships and the class sketch",
-   "blocks": [
-    {
-     "t": "write",
-     "id": "lldm-rel-w",
-     "q": "Write the relationships: who has whom (composition), who refers to whom (association), who uses whom (dependency), and any is-a.",
-     "starter": "Locker ... Slot\nLocker ... Reservation\nReservation ... Package, Slot\nLocker ... SlotAssigner, Notifier, CodeGenerator, Clock\nis-a: ",
-     "hint": "Does a Slot exist without its Locker? Does a Package?",
-     "solution": "Locker has Slots: composition. Slots are created with the locker and die with it.\nLocker has Reservations: composition, keyed by code; one per stored package.\nReservation refers to a Package and a Slot: association. The package exists before and after.\nLocker uses SlotAssigner, Notifier, CodeGenerator, Clock: dependency, passed in through the constructor.\nis-a: SmallestFit is-a SlotAssigner; SmsNotifier and EmailNotifier are Notifiers. Nothing else inherits.",
-     "why": "Interviewers listen for 'has-a, almost never is-a'. Inheritance is used only where behaviour truly varies behind one contract (the strategies and notifiers), never to share a few fields."
-    },
-    {
-     "t": "table",
-     "head": [
-      "Class",
-      "Holds",
-      "Does",
-      "Relation"
-     ],
-     "rows": [
-      [
-       "Size (enum)",
-       "SMALL, MEDIUM, LARGE",
-       "orders by value",
-       "used by Package, Slot"
-      ],
-      [
-       "SlotState (enum)",
-       "FREE, RESERVED, OCCUPIED",
-       "",
-       "inside Slot"
-      ],
-      [
-       "Package (frozen dataclass)",
-       "id, size, customer_id",
-       "nothing; data only",
-       "referred to by Reservation"
-      ],
-      [
-       "Slot",
-       "id, size, _state, _package",
-       "fits, reserve, store, release",
-       "owned by Locker"
-      ],
-      [
-       "Reservation (dataclass)",
-       "code, package, slot, expires_at",
-       "",
-       "owned by Locker"
-      ],
-      [
-       "SlotAssigner (interface)",
-       "",
-       "choose(slots, package)",
-       "SmallestFit implements"
-      ],
-      [
-       "Notifier (interface)",
-       "",
-       "notify(customer_id, message)",
-       "Sms, Email implement"
-      ],
-      [
-       "CodeGenerator",
-       "digits",
-       "new_code()",
-       "used by Locker"
-      ],
-      [
-       "Clock (protocol)",
-       "",
-       "now()",
-       "used by Locker"
-      ],
-      [
-       "Locker (the facade)",
-       "slots, by_code, lock",
-       "deposit, pickup, expire",
-       "uses all of the above"
+       "Scope boundaries",
+       "Whole delivery flow?",
+       "No: only delivery, placement, pickup and recovery"
       ]
      ]
     },
     {
+     "t": "p",
+     "text": "Turn the answers into numbered requirements. **Each one: who does what, what the system does, and what can go wrong.** Then list what's out of scope."
+    },
+    {
+     "t": "write",
+     "id": "lldm-reqs-w",
+     "q": "Write the requirements, numbered, then out of scope.",
+     "starter": "1. \n2. \n3. \n4. \n5. \n6. Out of scope: ",
+     "hint": "Carrier deposits, a successful deposit, user retrieves, expiry, staff, out of scope.",
+     "solution": "1. Carrier deposits a package of a specific size (S, M, L).\n   - The system assigns an available compartment.\n   - Opens the compartment and returns an access token, or an error.\n2. Successful deposit: an access token is generated and returned.\n   - One access token per package.\n3. User retrieves a package by entering the access token.\n   - The system validates the code and opens the compartment.\n   - A specific error if the code is expired or invalid.\n4. Access tokens expire after 7 days.\n   - Expired tokens are rejected.\n   - The package stays in the compartment until staff remove it.\n5. Staff can open all expired compartments.\n6. Out of scope: the delivery system, the notification system, how the token gets to the user.",
+     "why": "Each requirement maps to something you'll build: 1 and 2 are deposit_package, 3 is pickup, 4 is is_expired, 5 is open_expired_compartments. If a requirement doesn't map to a method, question it."
+    }
+   ]
+  },
+  {
+   "id": "lldm-entities",
+   "title": "c) Entities",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Underline the nouns in the requirements. **Keep a noun only if the design needs its data or behaviour.**"
+    },
+    {
+     "t": "write",
+     "id": "lldm-ent-w",
+     "q": "List the nouns. For each, keep or drop, and why.",
+     "starter": "Package: \nCompartment: \nLocker: \nAccessToken: \nCarrier / User: ",
+     "hint": "What do we need to know about a package? About the carrier or the user?",
+     "solution": "Package: drop. It has lots of metadata we don't need; we only need its size, so size is a parameter of deposit.\nCompartment: keep. It has a size and is occupied or free.\nLocker: keep. It runs deposit, pickup and the expired path.\nAccessToken: keep. A code, when it expires, and which compartment it opens.\nCarrier / User: drop. Not modelled here; they're external.",
+     "why": "Three classes and one enum. Dropping Package is the move interviewers notice: you modelled what the requirements need, not everything that exists."
+    }
+   ]
+  },
+  {
+   "id": "lldm-classes",
+   "title": "d) Class design",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "For each class, think **requirements (−)**: the state it holds, set in __init__; and **behaviour (+)**: its methods, with what they return."
+    },
+    {
+     "t": "write",
+     "id": "lldm-classes-w",
+     "q": "Write Locker, AccessToken and Compartment as − state and + behaviour.",
+     "starter": "class Locker\n- \n+ \n\nclass AccessToken\n- \n+ \n\nclass Compartment\n- \n+ ",
+     "hint": "Locker holds compartments and tokens. A token holds a code, an expiration and a compartment. A compartment holds a size and occupied.",
+     "solution": "class Locker\n- compartments: Compartment[]\n- access_tokens: AccessToken[]  ->  better: Map<code, AccessToken>\n+ deposit_package(size) -> string | error\n+ pickup(code) -> void | error\n+ open_expired_compartments() -> void\n\nclass AccessToken\n- code: string\n- expiration: timestamp\n- compartment: Compartment\n+ is_expired() -> boolean\n+ get_compartment() -> Compartment\n+ get_code() -> string\n\nclass Compartment\n- size: Size   (SMALL, MEDIUM, LARGE -> enum)\n- occupied: boolean\n+ is_occupied() -> boolean\n+ mark_occupied() -> void\n+ mark_free() -> void\n+ open() -> void\n+ get_size() -> Size",
+     "why": "Start with a list of tokens if that's what comes to mind, then switch to a map from code to token: pickup looks a token up by its code, and a map makes that one step."
+    },
+    {
      "t": "turn",
      "who": "Interviewer",
-     "ask": "Where does the state live, and who's allowed to change it?",
+     "ask": "Why does the token hold the compartment, and not the other way round?",
      "say": [
-      "Inside Slot, and only Slot changes it. The state field is private; outside code can read it through a property, but the only way to change it is reserve, store or release, and **each one checks it's a legal move**: you can't store into a slot you didn't reserve, or release an empty one. That's encapsulation doing real work: an illegal state can't be reached from outside."
+      "Because the token is what the customer brings, and pickup has to get from the code to the door. **Each class owns what it knows best:** the locker finds compartments and looks up tokens, the token knows when it expires and which door it opens, and the compartment knows its size and whether it's occupied. That's the Information Expert idea."
      ],
      "explain": [
-      "This is the clearest encapsulation example in the whole round: a private field, a read-only property, and methods that guard the transitions. It's also a small State machine: FREE to RESERVED to OCCUPIED to FREE."
+      "Keep occupied on the compartment, not derived from tokens. An expired token still means a package is physically inside, so token state and physical state can differ."
      ]
     }
    ]
   },
   {
-   "id": "lldm-draft",
-   "title": "0:22 to 0:30 First draft: signatures only",
+   "id": "lldm-impl",
+   "title": "e) Implementation",
    "blocks": [
     {
-     "t": "p",
-     "text": "Write every class with its fields and method signatures, no bodies. **This is the contract.** It's quick to change now and expensive once there's logic in it. Say each method out loud as you write it."
+     "t": "svg",
+     "svg": "<svg viewBox=\"0 0 420 250\" role=\"img\" aria-label=\"Locker class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">Locker</text><text class=\"d-s\" x=\"125\" y=\"44\">deposit, pickup, expired</text>\n<rect class=\"d-box\" x=\"14\" y=\"120\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"24\" y=\"140\">Compartment</text><text class=\"d-s\" x=\"24\" y=\"158\">size, occupied</text>\n<rect class=\"d-box\" x=\"226\" y=\"120\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"236\" y=\"140\">AccessToken</text><text class=\"d-s\" x=\"236\" y=\"158\">code, expiration</text>\n<rect class=\"d-dashbox\" x=\"14\" y=\"196\" width=\"180\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"24\" y=\"216\">Size (enum)</text><text class=\"d-s\" x=\"24\" y=\"234\">SMALL, MEDIUM, LARGE</text>\n<path class=\"d-ar\" d=\"M160 54 L110 118\"/><text class=\"d-a\" x=\"84\" y=\"92\">has many</text>\n<path class=\"d-ar\" d=\"M260 54 L310 118\"/><text class=\"d-a\" x=\"292\" y=\"92\">map by code</text>\n<path class=\"d-ar\" d=\"M226 150 L196 150\"/><text class=\"d-a\" x=\"200\" y=\"190\">points to its compartment</text>\n<path class=\"d-ar\" d=\"M104 168 L104 194\"/>\n</svg>",
+     "alt": "Class map"
     },
-    {
-     "t": "write",
-     "id": "lldm-draft-w",
-     "q": "Write the skeleton: enums, Package, Slot, the three interfaces, CodeGenerator, Reservation, Locker. Bodies are '...'.",
-     "starter": "from abc import ABC, abstractmethod\nfrom dataclasses import dataclass\nfrom enum import Enum\n\n",
-     "hint": "Package is frozen. Notifier and SlotAssigner are ABCs with one abstract method each. Clock can be a Protocol.",
-     "solution": "from abc import ABC, abstractmethod\nfrom dataclasses import dataclass\nfrom enum import Enum\nfrom typing import Protocol\n\n\nclass Size(Enum):\n    SMALL = 1\n    MEDIUM = 2\n    LARGE = 3\n\n\nclass SlotState(Enum):\n    FREE = \"free\"\n    RESERVED = \"reserved\"\n    OCCUPIED = \"occupied\"\n\n\n@dataclass(frozen=True)\nclass Package:\n    package_id: str\n    size: Size\n    customer_id: str\n\n\nclass Slot:\n    def __init__(self, slot_id: str, size: Size): ...\n    def fits(self, package: Package) -> bool: ...\n    def reserve(self) -> None: ...\n    def store(self, package: Package) -> None: ...\n    def release(self) -> Package: ...\n\n\nclass Clock(Protocol):\n    def now(self) -> int: ...\n\n\nclass Notifier(ABC):\n    @abstractmethod\n    def notify(self, customer_id: str, message: str) -> None: ...\n\n\nclass SlotAssigner(ABC):\n    @abstractmethod\n    def choose(self, slots: list, package: Package): ...\n\n\nclass CodeGenerator:\n    def new_code(self) -> str: ...\n\n\n@dataclass\nclass Reservation:\n    code: str\n    package: Package\n    slot: Slot\n    expires_at: int\n\n\nclass Locker:\n    def __init__(self, locker_id, slots, assigner, notifier, codes, clock, hold_seconds): ...\n    def deposit(self, package: Package) -> Reservation: ...\n    def pickup(self, code: str) -> Package: ...\n    def expire(self) -> list: ...\n",
-     "why": "Check it against the scope: every use case is a method on Locker, every rule that might change sits behind an interface, and nothing is a class without data or rules."
-    },
-    {
-     "t": "turn",
-     "who": "Interviewer",
-     "ask": "Why is Package frozen but Slot isn't?",
-     "say": [
-      "A package's facts don't change while it's in the system: its id, size and owner. Freezing it means nobody can quietly change the size after a slot was chosen for it, and it can be a dictionary key. **A slot is the opposite: its whole job is to change state**, so it's a normal class that guards its own changes."
-     ]
-    }
-   ]
-  },
-  {
-   "id": "lldm-core",
-   "title": "0:30 to 0:45 Make it work: Slot, deposit, pickup, expire",
-   "blocks": [
     {
      "t": "p",
-     "text": "Fill in the bodies in the order the data flows: the Slot first, because everything depends on it, then deposit, then pickup, then expire. **Write the happy path, then the checks.**"
+     "text": "One method at a time. **Write the core logic as comments, list the edge cases, then write the code.** Push details into private helpers and implement them only if there's time or you're asked."
     },
     {
      "t": "write",
-     "id": "lldm-slot-w",
-     "q": "Complete Slot: fits, reserve, store, release, each guarding its transition.",
-     "starter": "class Slot:\n    def __init__(self, slot_id: str, size: Size):\n        self.slot_id = slot_id\n        self.size = size\n        self._state = SlotState.FREE\n        self._package = None\n\n    def fits(self, package: Package) -> bool:\n        ...\n",
-     "hint": "fits: free and big enough. Each transition raises if the current state is wrong.",
-     "solution": "class Slot:\n    def __init__(self, slot_id: str, size: Size):\n        self.slot_id = slot_id\n        self.size = size\n        self._state = SlotState.FREE\n        self._package = None\n\n    @property\n    def state(self) -> SlotState:\n        return self._state\n\n    def fits(self, package: Package) -> bool:\n        return self._state is SlotState.FREE and package.size.value <= self.size.value\n\n    def reserve(self) -> None:\n        if self._state is not SlotState.FREE:\n            raise ValueError(f\"slot {self.slot_id} is {self._state.value}\")\n        self._state = SlotState.RESERVED\n\n    def store(self, package: Package) -> None:\n        if self._state is not SlotState.RESERVED:\n            raise ValueError(f\"slot {self.slot_id} was not reserved\")\n        self._package = package\n        self._state = SlotState.OCCUPIED\n\n    def release(self) -> Package:\n        if self._state is not SlotState.OCCUPIED:\n            raise ValueError(f\"slot {self.slot_id} is empty\")\n        package, self._package = self._package, None\n        self._state = SlotState.FREE\n        return package\n",
-     "why": "Comparing Size by its value is why the enum has 1, 2, 3. Every method that changes state starts with a guard, so the class can never be in a state the design didn't allow."
+     "id": "lldm-dep-w",
+     "q": "deposit_package(size): write the core logic and edge cases as comments, then the code.",
+     "starter": "def deposit_package(self, size):\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
+     "hint": "Find, open, mark occupied, make and store the token, return the code. Edge: none free.",
+     "solution": "def deposit_package(self, size: Size) -> str:\n    \"\"\"\n    Core logic:\n      1. Find a free compartment of the right size\n      2. Open it (the driver puts the package in)\n      3. Mark it occupied\n      4. Generate and store an access token\n      5. Return the code\n    Edge cases:\n      1. No free compartment of that size -> error\n    \"\"\"\n    compartment = self._get_available_compartment(size)\n    if compartment is None:\n        raise LockerError(f\"no available compartment of size {size.value}\")\n    compartment.open()\n    compartment.mark_occupied()\n    token = self._generate_access_token(compartment)\n    self.access_tokens[token.get_code()] = token\n    return token.get_code()",
+     "why": "_get_available_compartment and _generate_access_token are named but not written yet. That keeps the main flow readable, and you can fill them in after."
     },
     {
      "t": "write",
-     "id": "lldm-deposit-w",
-     "q": "Write Locker.deposit(package). It must be safe if two drivers call it at the same moment.",
-     "starter": "    def deposit(self, package: Package) -> Reservation:\n        ...\n",
-     "hint": "Choose and reserve inside one lock. Notify outside the lock.",
-     "solution": "    def deposit(self, package: Package) -> Reservation:\n        with self._lock:\n            slot = self._assigner.choose(self._slots, package)\n            if slot is None:\n                raise LockerFullError(f\"no free slot fits {package.size.name}\")\n            slot.reserve()\n            code = self._codes.new_code()\n            while code in self._by_code:\n                code = self._codes.new_code()\n            slot.store(package)\n            r = Reservation(code, package, slot, self._clock.now() + self._hold)\n            self._by_code[code] = r\n        self._notifier.notify(package.customer_id, f\"Your package is in locker {self.locker_id}. Code {code}.\")\n        return r\n",
-     "why": "The race: two drivers both see slot M1 free and both put a package in it. Choosing and reserving inside one lock makes that impossible. The notification goes outside the lock, because a slow text provider shouldn't block the next driver."
+     "id": "lldm-pick-w",
+     "q": "pickup(code): core logic, edge cases, code.",
+     "starter": "def pickup(self, code):\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
+     "hint": "Look up, check expired, open, mark free, remove the token. Edges: missing code, expired.",
+     "solution": "def pickup(self, code: str) -> None:\n    \"\"\"\n    Core logic:\n      1. Look up the code to get its access token\n      2. Get the compartment\n      3. Open it (the customer takes the package)\n      4. Mark it free and remove the token\n    Edge cases:\n      1. Code empty or not in the map -> invalid code\n      2. Token expired -> expired error; the package stays for staff\n    \"\"\"\n    token = self.access_tokens.get(code)\n    if not code or token is None:\n        raise LockerError(\"invalid code\")\n    if token.is_expired(self.now()):\n        raise LockerError(\"code expired\")\n    compartment = token.get_compartment()\n    compartment.open()\n    self._clear_deposit(token)",
+     "why": "Two specific errors, as requirement 3 says. An expired code leaves the compartment occupied, so staff can recover the package."
     },
     {
      "t": "write",
-     "id": "lldm-pickup-w",
-     "q": "Write Locker.pickup(code). A code works once, and not after it expires.",
-     "starter": "    def pickup(self, code: str) -> Package:\n        ...\n",
-     "hint": "Look up, check expiry, delete the code, release the slot.",
-     "solution": "    def pickup(self, code: str) -> Package:\n        with self._lock:\n            r = self._by_code.get(code)\n            if r is None:\n                raise KeyError(\"wrong or used code\")\n            if self._clock.now() > r.expires_at:\n                raise KeyError(\"code expired\")\n            del self._by_code[code]\n            return r.slot.release()\n",
-     "why": "Deleting the code before releasing is what makes it one-time. The error says 'wrong or used code' for both cases on purpose, so a guesser can't tell which codes once existed."
-    },
-    {
-     "t": "write",
-     "id": "lldm-expire-w",
-     "q": "Write Locker.expire() for the nightly job.",
-     "starter": "    def expire(self) -> list:\n        ...\n",
-     "hint": "Find late reservations under the lock, release them, notify after.",
-     "solution": "    def expire(self) -> list:\n        now = self._clock.now()\n        with self._lock:\n            late = [c for c, r in self._by_code.items() if now > r.expires_at]\n            returned = [self._by_code.pop(c).slot.release() for c in late]\n        for p in returned:\n            self._notifier.notify(p.customer_id, f\"Package {p.package_id} was not picked up and is going back.\")\n        return returned\n",
-     "why": "The clock is injected, so a test moves time forward instead of waiting three days."
-    },
-    {
-     "t": "code",
-     "id": "lldm-core-code",
-     "title": "The whole thing, with a run",
-     "code": "import secrets\nimport threading\nfrom abc import ABC, abstractmethod\nfrom dataclasses import dataclass\nfrom enum import Enum\nfrom typing import Protocol\n\n\nclass Size(Enum):\n    SMALL = 1\n    MEDIUM = 2\n    LARGE = 3\n\n\nclass SlotState(Enum):\n    FREE = \"free\"\n    RESERVED = \"reserved\"\n    OCCUPIED = \"occupied\"\n\n\n@dataclass(frozen=True)\nclass Package:\n    package_id: str\n    size: Size\n    customer_id: str\n\n\nclass Slot:\n    def __init__(self, slot_id: str, size: Size):\n        self.slot_id = slot_id\n        self.size = size\n        self._state = SlotState.FREE\n        self._package = None\n\n    @property\n    def state(self) -> SlotState:\n        return self._state\n\n    def fits(self, package: Package) -> bool:\n        return self._state is SlotState.FREE and package.size.value <= self.size.value\n\n    def reserve(self) -> None:\n        if self._state is not SlotState.FREE:\n            raise ValueError(f\"slot {self.slot_id} is {self._state.value}\")\n        self._state = SlotState.RESERVED\n\n    def store(self, package: Package) -> None:\n        if self._state is not SlotState.RESERVED:\n            raise ValueError(f\"slot {self.slot_id} was not reserved\")\n        self._package = package\n        self._state = SlotState.OCCUPIED\n\n    def release(self) -> Package:\n        if self._state is not SlotState.OCCUPIED:\n            raise ValueError(f\"slot {self.slot_id} is empty\")\n        package, self._package = self._package, None\n        self._state = SlotState.FREE\n        return package\n\n\nclass Clock(Protocol):\n    def now(self) -> int: ...\n\n\nclass Notifier(ABC):\n    @abstractmethod\n    def notify(self, customer_id: str, message: str) -> None: ...\n\n\nclass SlotAssigner(ABC):\n    @abstractmethod\n    def choose(self, slots: list, package: Package): ...\n\n\nclass SmallestFit(SlotAssigner):\n    def choose(self, slots, package):\n        fitting = [s for s in slots if s.fits(package)]\n        return min(fitting, key=lambda s: s.size.value, default=None)\n\n\nclass CodeGenerator:\n    def __init__(self, digits: int = 6):\n        self.digits = digits\n\n    def new_code(self) -> str:\n        return \"\".join(secrets.choice(\"0123456789\") for _ in range(self.digits))\n\n\n@dataclass\nclass Reservation:\n    code: str\n    package: Package\n    slot: Slot\n    expires_at: int\n\n\nclass LockerFullError(Exception):\n    pass\n\n\nclass Locker:\n    def __init__(self, locker_id, slots, assigner, notifier, codes, clock, hold_seconds=3 * 24 * 3600):\n        self.locker_id = locker_id\n        self._slots = list(slots)\n        self._assigner = assigner\n        self._notifier = notifier\n        self._codes = codes\n        self._clock = clock\n        self._hold = hold_seconds\n        self._by_code = {}\n        self._lock = threading.Lock()\n\n    def deposit(self, package: Package) -> Reservation:\n        with self._lock:\n            slot = self._assigner.choose(self._slots, package)\n            if slot is None:\n                raise LockerFullError(f\"no free slot fits {package.size.name}\")\n            slot.reserve()\n            code = self._codes.new_code()\n            while code in self._by_code:\n                code = self._codes.new_code()\n            slot.store(package)\n            r = Reservation(code, package, slot, self._clock.now() + self._hold)\n            self._by_code[code] = r\n        self._notifier.notify(package.customer_id, f\"Your package is in locker {self.locker_id}. Code {code}.\")\n        return r\n\n    def pickup(self, code: str) -> Package:\n        with self._lock:\n            r = self._by_code.get(code)\n            if r is None:\n                raise KeyError(\"wrong or used code\")\n            if self._clock.now() > r.expires_at:\n                raise KeyError(\"code expired\")\n            del self._by_code[code]\n            return r.slot.release()\n\n    def expire(self) -> list:\n        now = self._clock.now()\n        with self._lock:\n            late = [c for c, r in self._by_code.items() if now > r.expires_at]\n            returned = [self._by_code.pop(c).slot.release() for c in late]\n        for p in returned:\n            self._notifier.notify(p.customer_id, f\"Package {p.package_id} was not picked up and is going back.\")\n        return returned\n\n\ndef make_slots(counts: dict) -> list:\n    return [Slot(f\"{size.name[0]}{i + 1}\", size) for size, n in counts.items() for i in range(n)]\n\n\nclass FakeClock:\n    def __init__(self):\n        self.t = 0\n\n    def now(self):\n        return self.t\n\n\nclass ListNotifier(Notifier):\n    def __init__(self):\n        self.sent = []\n\n    def notify(self, customer_id, message):\n        self.sent.append((customer_id, message))\n\n\nclock, notes = FakeClock(), ListNotifier()\nlocker = Locker(\"L-60601\", make_slots({Size.SMALL: 2, Size.MEDIUM: 1, Size.LARGE: 1}),\n                SmallestFit(), notes, CodeGenerator(), clock)\nr1 = locker.deposit(Package(\"p1\", Size.MEDIUM, \"c1\"))\nr2 = locker.deposit(Package(\"p2\", Size.MEDIUM, \"c2\"))\nprint(r1.slot.slot_id, r2.slot.slot_id)\nprint(locker.pickup(r1.code).package_id)\nclock.t = 4 * 24 * 3600\nprint([p.package_id for p in locker.expire()], len(notes.sent))\n",
-     "notes": {}
-    },
-    {
-     "t": "predict",
-     "id": "lldm-core-predict",
-     "q": "Four slots: S1, S2, M1, L1. Two medium packages arrive. Which slots do they get, and what does the last line print after four days?",
-     "a": "M1 and L1. The first medium takes M1, the smallest that fits; the second can't fit a small, so it takes L1. After four days the second package expires: ['p2'], and three notices were sent (two codes, one going-back)."
-    },
-    {
-     "t": "turn",
-     "who": "Interviewer",
-     "ask": "Walk me through what happens when a driver deposits a medium package.",
-     "say": [
-      "The driver calls deposit. Under the locker's lock, the assigner looks at every slot that fits, a free one at least medium, and picks the smallest: M1. The slot moves from free to reserved, we generate a code that isn't already live, the slot moves to occupied, and we store a reservation that expires in three days. **Then, outside the lock, the notifier texts the customer the code.** If no slot fits, the driver gets LockerFullError and nothing changed."
-     ],
-     "check": [
-      "Can you dry-run your own code in order, out loud?"
-     ],
-     "explain": [
-      "A dry run on one example is your test in an interview. Say the state of the slot at each step."
-     ]
+     "id": "lldm-help-w",
+     "q": "Now the helpers: _get_available_compartment, _generate_access_token, _clear_deposit, and open_expired_compartments.",
+     "starter": "def _get_available_compartment(self, size):\n    ...\n",
+     "hint": "Scan for the right size and not occupied. A random code that isn't live, now plus 7 days. Mark free and delete from the map. Open every expired token's compartment.",
+     "solution": "def _get_available_compartment(self, size: Size):\n    \"\"\"Scan all compartments; return the first free one of this size, else None.\"\"\"\n    for c in self.compartments:\n        if c.get_size() == size and not c.is_occupied():\n            return c\n    return None\n\ndef _generate_access_token(self, compartment: Compartment) -> AccessToken:\n    \"\"\"A random six-digit code that isn't live, valid for seven days.\"\"\"\n    code = f\"{secrets.randbelow(10**6):06d}\"\n    while code in self.access_tokens:\n        code = f\"{secrets.randbelow(10**6):06d}\"\n    return AccessToken(code, self.now() + self.TOKEN_LIFETIME, compartment)\n\ndef _clear_deposit(self, token: AccessToken) -> None:\n    token.get_compartment().mark_free()\n    del self.access_tokens[token.get_code()]\n\ndef open_expired_compartments(self) -> None:\n    \"\"\"\n    Core logic: for every expired token, open its compartment so staff can take the package.\n    State is not cleared here: staff clear it once the package is out of the door.\n    \"\"\"\n    for token in self.access_tokens.values():\n        if token.is_expired(self.now()):\n            token.get_compartment().open()",
+     "why": "A linear scan is fine: a locker has tens of compartments. If asked, index free compartments by size, but then the state lives in two places."
     }
    ]
   },
   {
    "id": "lldm-extend",
-   "title": "0:45 to 0:55 Extend: cold slots, many lockers",
+   "title": "f) Extensibility",
    "blocks": [
     {
+     "t": "p",
+     "text": "The interviewer changes the rules. **For each change, say which class it touches and what stays the same.** A good design changes in one place."
+    },
+    {
      "t": "turn",
      "who": "Interviewer",
-     "ask": "Two changes. Some lockers now have refrigerated slots for groceries; a grocery package must go in one, and other packages shouldn't use them unless nothing else fits. And customers should be able to choose a nearby locker, so if the first is full, try the next nearest.",
+     "ask": "What if a small package can go in a larger compartment when no small one is free?",
      "say": [
-      "Let me check what changes and what doesn't. **The flow in Locker doesn't change at all.** Cold is a new fact about slots and packages, and the preference is a new assignment rule. Many lockers is a new class that wraps Locker. I'll show both."
+      "Only _get_available_compartment changes. It tries the exact size first, then each larger size, never a smaller one. **deposit_package and every other class stay the same,** because finding a compartment was already in one helper."
      ],
      "check": [
-      "Does the change land in new classes, or do you edit the core?"
+      "Does the change land in one place?"
      ]
     },
     {
-     "t": "write",
-     "id": "lldm-extend-w",
-     "q": "Write it: how do Package and Slot learn about cold, what's the new assigner, and what wraps many lockers?",
-     "starter": "",
-     "hint": "Packages need features; slots offer features. fits() checks needs are a subset. A new SlotAssigner prefers non-cold slots for non-cold packages.",
-     "solution": "COLD = \"cold\"\n\n\n@dataclass(frozen=True)\nclass Package:\n    package_id: str\n    size: Size\n    customer_id: str\n    needs: frozenset = frozenset()          # new: what the package requires\n\n\nclass Slot:\n    def __init__(self, slot_id: str, size: Size, features=frozenset()):\n        self.slot_id = slot_id\n        self.size = size\n        self.features = frozenset(features)  # new: what the slot offers\n        self._state = SlotState.FREE\n        self._package = None\n\n    def fits(self, package: Package) -> bool:\n        return (self._state is SlotState.FREE\n                and package.size.value <= self.size.value\n                and package.needs <= self.features)\n\n    # reserve, store, release and state: unchanged\n\n\nclass ColdLast(SlotAssigner):\n    \"\"\"Smallest fit, but keep cold slots for packages that need them.\"\"\"\n    def choose(self, slots, package):\n        fitting = [s for s in slots if s.fits(package)]\n        wasted_cold = lambda s: COLD in s.features and COLD not in package.needs\n        return min(fitting, key=lambda s: (wasted_cold(s), s.size.value), default=None)\n\n\nclass LockerNetwork:\n    def __init__(self, lockers: list):\n        self._lockers = lockers\n\n    def deposit_nearest(self, package: Package, distance) -> Reservation:\n        for locker in sorted(self._lockers, key=distance):\n            try:\n                return locker.deposit(package)\n            except LockerFullError:\n                continue\n        raise LockerFullError(\"no locker nearby has room\")\n",
-     "why": "Open-closed in action: a new strategy class and a new wrapper, and the Locker's deposit, pickup and expire are untouched. The edit to Slot is data, not a new branch of behaviour."
-    },
-    {
-     "t": "turn",
-     "who": "Interviewer",
-     "ask": "Why not make a ColdSlot subclass of Slot?",
-     "say": [
-      "Because it breaks down fast. Next it's a tall slot, then a cold tall slot, and subclasses multiply. Worse, a ColdSlot that refuses non-cold packages in store() would break code written against Slot: **that's the Liskov rule, a subclass must work anywhere its parent does.** Features as data keep one Slot class, and fits() stays one honest check."
-     ],
-     "explain": [
-      "This is the LSP example to keep. The bad version: ColdSlot overrides store() to raise for a book. Code that worked with any Slot now fails. Composition (a features set) beats inheritance for capabilities."
-     ]
+     "t": "code",
+     "id": "lldm-ext-fallback",
+     "title": "Size fallback: one helper changes",
+     "code": "SIZE_ORDER = [Size.SMALL, Size.MEDIUM, Size.LARGE]\n\n\nclass Locker:\n    ...\n\n    def _get_available_compartment(self, size: Size):\n        \"\"\"Try the exact size first, then each larger size. Never a smaller one.\"\"\"\n        for s in SIZE_ORDER[SIZE_ORDER.index(size):]:\n            for c in self.compartments:\n                if c.get_size() == s and not c.is_occupied():\n                    return c\n        return None\n",
+     "notes": {}
     },
     {
      "t": "turn",
      "who": "Interviewer",
-     "ask": "Two drivers at two different lockers in the network. Any problem?",
+     "ask": "Some compartments break: the door won't open. How do you handle that?",
      "say": [
-      "No, each Locker has its own lock, so they don't block each other, and a slot belongs to exactly one locker. **The network itself holds no state**, it just tries lockers in order of distance, so it needs no lock. If we moved this to a real service with a database, the lock becomes a conditional update on the slot row: set reserved where state is free, and only one writer wins."
+      "The two-state occupied flag isn't enough any more, so it becomes a status: available, occupied or out of service. **Allocation only picks available ones.** If a door won't open during a deposit, mark it out of service and try the next compartment. Staff can mark one out of service, or back in, from the same status."
      ],
      "explain": [
-      "Name the in-memory answer, then the real one. Interviewers like hearing that the lock maps to an atomic update in a database."
+      "Swapping a boolean for an enum when a third state appears is a common follow-up. Callers that used is_occupied keep working, which is the point of hiding the field behind methods."
      ]
+    },
+    {
+     "t": "code",
+     "id": "lldm-ext-status",
+     "title": "Out of service: Compartment gets a status",
+     "code": "class Status(Enum):\n    AVAILABLE = \"available\"\n    OCCUPIED = \"occupied\"\n    OUT_OF_SERVICE = \"out of service\"\n\n\nclass DoorJammed(Exception):\n    pass\n\n\nclass Compartment:\n    def __init__(self, compartment_id: str, size: Size):\n        self.compartment_id = compartment_id\n        self.size = size\n        self.status = Status.AVAILABLE      # was: occupied = False\n\n    def get_size(self) -> Size:\n        return self.size\n\n    def is_available(self) -> bool:\n        return self.status is Status.AVAILABLE\n\n    def is_occupied(self) -> bool:\n        return self.status is Status.OCCUPIED\n\n    def mark_occupied(self) -> None:\n        self.status = Status.OCCUPIED\n\n    def mark_free(self) -> None:\n        self.status = Status.AVAILABLE\n\n    def mark_out_of_service(self) -> None:\n        self.status = Status.OUT_OF_SERVICE\n\n    def open(self) -> None:\n        pass  # the hardware raises DoorJammed if the door won't open\n",
+     "notes": {}
+    },
+    {
+     "t": "code",
+     "id": "lldm-ext-deposit",
+     "title": "deposit_package skips a jammed door",
+     "code": "    def deposit_package(self, size: Size) -> str:\n        \"\"\"Same steps; a door that won't open is taken out of service and we try the next compartment.\"\"\"\n        while True:\n            compartment = self._get_available_compartment(size)\n            if compartment is None:\n                raise LockerError(f\"no available compartment of size {size.value}\")\n            try:\n                compartment.open()\n            except DoorJammed:\n                compartment.mark_out_of_service()\n                continue\n            compartment.mark_occupied()\n            token = self._generate_access_token(compartment)\n            self.access_tokens[token.get_code()] = token\n            return token.get_code()\n\n    def _get_available_compartment(self, size: Size):\n        for s in SIZE_ORDER[SIZE_ORDER.index(size):]:\n            for c in self.compartments:\n                if c.get_size() == s and c.is_available():\n                    return c\n        return None\n",
+     "notes": {}
     },
     {
      "t": "faq",
      "items": [
       {
-       "q": "What about returns?",
-       "a": "A return is a deposit by the customer instead of the driver, with a code the carrier uses to collect. Reuse deposit with a different notifier message and a second code; no new slot logic."
+       "q": "What if a door jams at pickup?",
+       "a": "Tell the customer to contact support, keep the token alive, and mark the compartment out of service so staff can recover the package. Don't delete the token until the package is out."
       },
       {
-       "q": "What about a door that jams after reserve?",
-       "a": "That's why reserve and store are separate steps. If the door never closes, a timeout moves the slot from reserved back to free. Add it to the nightly sweep."
+       "q": "How do you know the package actually went in?",
+       "a": "Split deposit in two: reserve_compartment(size) opens the door and returns a reservation; confirm_deposit(id) issues the token once the door closes; cancel_reservation(id) frees it, with a timeout for drivers who walk away. Add a RESERVED status."
       },
       {
-       "q": "Where would a factory help?",
-       "a": "make_slots builds a locker's slots from a count per size. With features, a LockerFactory could build standard and cold-equipped lockers from a template. Don't add it until there are two kinds of locker to build."
+       "q": "Two drivers at the same locker at once?",
+       "a": "Finding a compartment and marking it occupied must happen together: wrap them in one lock, or in a database do a conditional update (set occupied where free) so only one wins."
+      },
+      {
+       "q": "Many lockers?",
+       "a": "A LockerNetwork that tries lockers nearest first and calls each one's deposit_package. The Locker class doesn't change."
+      },
+      {
+       "q": "Who clears an expired compartment?",
+       "a": "Staff, after removing the package: a staff_clear(code) that marks it free and drops the token. open_expired_compartments only opens the doors."
       }
      ]
     }
@@ -437,131 +301,19 @@ window.LOOP_CODING.parts.push({
   },
   {
    "id": "lldm-explain",
-   "title": "0:55 to 0:60 Explain it back",
+   "title": "Explain it back",
    "blocks": [
     {
      "t": "turn",
      "who": "Interviewer",
-     "ask": "We're nearly out of time. Give me the summary, and tell me what you'd do with more time.",
+     "ask": "Give me a summary.",
      "say": [
-      "**The locker is a facade with three methods: deposit, pickup and expire.** Slots own their state and guard every change, so an illegal state can't happen. The rules that change, which slot to pick and how to notify, sit behind interfaces and are injected, along with the clock and the code generator, so each can change or be faked in a test. Package is immutable data. Choosing and reserving a slot happens under one lock, so two drivers can't take the same slot.",
-      "**What I left out:** persistence, so a power cut loses state; a timeout for slots stuck in reserved; returns; rate-limiting code guesses. **With more time** I'd move state to a database with a conditional update instead of the lock, and add the reserved-timeout to the nightly job."
+      "**Three classes and an enum.** The Locker is the entry point: deposit by size returns a code, pickup by code opens the door, and staff can open expired compartments. An AccessToken holds the code, its expiry and its compartment. A Compartment holds its size and whether it's occupied. Each class owns what it knows best.",
+      "**It extends in one place each time:** size fallback changes one helper, broken doors turn occupied into a status, and a two-phase deposit or a lock handles a door that never closes or two drivers at once."
      ],
      "check": [
-      "Can you summarise in under a minute?",
-      "Do you name what you left out without being asked?"
-     ],
-     "explain": [
-      "The summary is one sentence per idea: the facade, encapsulated state, strategies behind interfaces, immutability, concurrency. Then what's missing and what's next. Never end on the last line of code."
-     ]
-    },
-    {
-     "t": "write",
-     "id": "lldm-explain-w",
-     "q": "Say it yourself first: your 60-second summary, then two things you left out.",
-     "starter": "The design is ...\nI left out ...",
-     "hint": "Facade, state, strategies, immutability, the lock. Then persistence and the reserved timeout.",
-     "solution": "The design is a Locker facade with deposit, pickup and expire. Slots encapsulate their state and guard every transition. Slot choice and notification are strategies behind interfaces, injected with the clock and code generator. Package is immutable. Choosing and reserving a slot happens under one lock.\nI left out persistence and a timeout for slots stuck in reserved; with more time, a database with a conditional update replaces the lock.",
-     "why": "This is the part people skip. The interviewer's last impression is your summary, not your code."
-    }
-   ]
-  },
-  {
-   "id": "lldm-concepts",
-   "title": "Where each concept shows up",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "Keep this beside your reading. **When a resource explains a concept, find it here in a real answer.**"
-    },
-    {
-     "t": "table",
-     "head": [
-      "Concept",
-      "Where it is in this design",
-      "Stage"
-     ],
-     "rows": [
-      [
-       "Encapsulation",
-       "Slot keeps _state and _package private; a read-only state property; only reserve, store and release change them, each with a guard",
-       "Relationships; Make it work"
-      ],
-      [
-       "Abstraction",
-       "Locker talks to SlotAssigner, Notifier, Clock and CodeGenerator by what they do, not how",
-       "Nouns to classes; First draft"
-      ],
-      [
-       "Inheritance",
-       "SmallestFit and ColdLast inherit SlotAssigner; ListNotifier inherits Notifier. Nothing inherits to share fields",
-       "Relationships; Extend"
-      ],
-      [
-       "Polymorphism",
-       "self._assigner.choose(...) runs SmallestFit or ColdLast without Locker knowing which",
-       "Make it work; Extend"
-      ],
-      [
-       "Composition",
-       "Locker has Slots and Reservations; slot features are a set, not subclasses",
-       "Relationships; Extend"
-      ],
-      [
-       "Single responsibility",
-       "Codes in CodeGenerator, sending in Notifier, choosing in SlotAssigner, state rules in Slot; Locker only coordinates",
-       "Nouns to classes"
-      ],
-      [
-       "Open-closed",
-       "Cold storage and many lockers added as new classes; deposit, pickup and expire untouched",
-       "Extend"
-      ],
-      [
-       "Liskov substitution",
-       "Why not ColdSlot: a subclass that refuses packages in store() breaks code written for Slot",
-       "Extend"
-      ],
-      [
-       "Interface segregation",
-       "Notifier has one method; Clock has one; nobody depends on methods they don't call",
-       "First draft"
-      ],
-      [
-       "Dependency inversion",
-       "Locker receives its assigner, notifier, codes and clock in the constructor, as abstractions",
-       "First draft; Make it work"
-      ],
-      [
-       "Strategy pattern",
-       "SlotAssigner with SmallestFit and ColdLast",
-       "Nouns to classes; Extend"
-      ],
-      [
-       "State machine",
-       "SlotState: FREE to RESERVED to OCCUPIED to FREE, guarded in Slot",
-       "Relationships; Make it work"
-      ],
-      [
-       "Facade",
-       "Locker is the one entry point for deposit, pickup and expire",
-       "Explain it back"
-      ],
-      [
-       "Immutability",
-       "Package is a frozen dataclass",
-       "First draft"
-      ],
-      [
-       "Concurrency",
-       "One lock around choose and reserve; in a database, a conditional update",
-       "Make it work; Extend"
-      ],
-      [
-       "Testability",
-       "FakeClock and ListNotifier stand in for time and texts",
-       "Make it work"
-      ]
+      "Under a minute?",
+      "Do you end on what it can grow into?"
      ]
     }
    ]
@@ -572,36 +324,28 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "p",
-     "text": "Everything from the round in one runnable file: the core, the cold-slot and many-locker extensions, the test doubles, and a run at the bottom. **This is what your editor should look like at minute 55.**"
-    },
-    {
-     "t": "p",
-     "text": "**The map first.** The Locker is the one entry point; it owns its slots and reservations, and everything that might change is an interface passed in (dashed)."
+     "text": "The core with both extensions applied (size fallback and out-of-service compartments), and a run at the bottom."
     },
     {
      "t": "svg",
-     "svg": "<svg viewBox=\"0 0 420 466\" role=\"img\" aria-label=\"Class map of the locker design\">\n<rect class=\"d-box\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">LockerNetwork</text><text class=\"d-s\" x=\"125\" y=\"44\">tries the nearest first</text>\n<rect class=\"d-acc\" x=\"115\" y=\"94\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"114\">Locker (facade)</text><text class=\"d-s\" x=\"125\" y=\"132\">deposit, pickup, expire</text>\n<rect class=\"d-box\" x=\"20\" y=\"190\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"210\">Slot</text><text class=\"d-s\" x=\"30\" y=\"228\">guards its own state</text>\n<rect class=\"d-box\" x=\"20\" y=\"262\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"282\">Reservation</text><text class=\"d-s\" x=\"30\" y=\"300\">code, slot, expires_at</text>\n<rect class=\"d-box\" x=\"20\" y=\"334\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"354\">Package (frozen)</text><text class=\"d-s\" x=\"30\" y=\"372\">id, size, needs</text>\n<rect class=\"d-dashbox\" x=\"224\" y=\"190\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"210\">SlotAssigner</text><text class=\"d-s\" x=\"234\" y=\"228\">SmallestFit, ColdLast</text>\n<rect class=\"d-dashbox\" x=\"224\" y=\"262\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"282\">Notifier</text><text class=\"d-s\" x=\"234\" y=\"300\">text, email</text>\n<rect class=\"d-dashbox\" x=\"224\" y=\"334\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"354\">CodeGenerator</text><text class=\"d-s\" x=\"234\" y=\"372\">six-digit codes</text>\n<rect class=\"d-dashbox\" x=\"224\" y=\"406\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"426\">Clock</text><text class=\"d-s\" x=\"234\" y=\"444\">now(), fake in tests</text>\n<path class=\"d-ar\" d=\"M210 54 L210 92\"/><text class=\"d-a\" x=\"218\" y=\"78\">wraps many</text>\n<path class=\"d-ar\" d=\"M150 142 L150 188\"/><text class=\"d-a\" x=\"158\" y=\"170\">has many</text>\n<path class=\"d-ar\" d=\"M115 118 L10 118 L10 286 L18 286\"/><text class=\"d-a\" x=\"18\" y=\"111\">has, by code</text>\n<path class=\"d-ar\" d=\"M115 310 L115 332\"/><text class=\"d-a\" x=\"122\" y=\"326\">refers to</text>\n<path class=\"d-ar\" d=\"M270 142 L300 188\"/><text class=\"d-a\" x=\"292\" y=\"166\">injected</text>\n</svg>",
+     "svg": "<svg viewBox=\"0 0 420 250\" role=\"img\" aria-label=\"Locker class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">Locker</text><text class=\"d-s\" x=\"125\" y=\"44\">deposit, pickup, expired</text>\n<rect class=\"d-box\" x=\"14\" y=\"120\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"24\" y=\"140\">Compartment</text><text class=\"d-s\" x=\"24\" y=\"158\">size, occupied</text>\n<rect class=\"d-box\" x=\"226\" y=\"120\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"236\" y=\"140\">AccessToken</text><text class=\"d-s\" x=\"236\" y=\"158\">code, expiration</text>\n<rect class=\"d-dashbox\" x=\"14\" y=\"196\" width=\"180\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"24\" y=\"216\">Size (enum)</text><text class=\"d-s\" x=\"24\" y=\"234\">SMALL, MEDIUM, LARGE</text>\n<path class=\"d-ar\" d=\"M160 54 L110 118\"/><text class=\"d-a\" x=\"84\" y=\"92\">has many</text>\n<path class=\"d-ar\" d=\"M260 54 L310 118\"/><text class=\"d-a\" x=\"292\" y=\"92\">map by code</text>\n<path class=\"d-ar\" d=\"M226 150 L196 150\"/><text class=\"d-a\" x=\"200\" y=\"190\">points to its compartment</text>\n<path class=\"d-ar\" d=\"M104 168 L104 194\"/>\n</svg>",
      "alt": "Class map"
     },
     {
-     "t": "p",
-     "text": "**One call through it: deposit.**"
-    },
-    {
      "t": "svg",
-     "svg": "<svg viewBox=\"0 0 420 446\" role=\"img\" aria-label=\"What deposit does, step by step\">\n<rect class=\"d-box\" x=\"6\" y=\"6\" width=\"230\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"16\" y=\"26\">deposit(package)</text><text class=\"d-s\" x=\"16\" y=\"44\">a driver calls it</text>\n<rect class=\"d-box\" x=\"6\" y=\"70\" width=\"230\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"16\" y=\"90\">take the lock</text><text class=\"d-s\" x=\"16\" y=\"108\">one driver at a time</text>\n<rect class=\"d-box\" x=\"6\" y=\"134\" width=\"230\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"16\" y=\"154\">assigner.choose</text><text class=\"d-s\" x=\"16\" y=\"172\">smallest free fit</text>\n<rect class=\"d-badbox\" x=\"262\" y=\"134\" width=\"152\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"272\" y=\"154\">LockerFullError</text><text class=\"d-s\" x=\"272\" y=\"172\">nothing changed</text>\n<rect class=\"d-box\" x=\"6\" y=\"198\" width=\"230\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"16\" y=\"218\">slot.reserve()</text><text class=\"d-s\" x=\"16\" y=\"236\">FREE to RESERVED</text>\n<rect class=\"d-box\" x=\"6\" y=\"262\" width=\"230\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"16\" y=\"282\">new code</text><text class=\"d-s\" x=\"16\" y=\"300\">not already live</text>\n<rect class=\"d-box\" x=\"6\" y=\"326\" width=\"230\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"16\" y=\"346\">slot.store()</text><text class=\"d-s\" x=\"16\" y=\"364\">save the Reservation</text>\n<rect class=\"d-acc\" x=\"6\" y=\"390\" width=\"230\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"16\" y=\"410\">unlock, then notify</text><text class=\"d-s\" x=\"16\" y=\"428\">text the code</text>\n<path class=\"d-ar\" d=\"M121 50 L121 68\"/>\n<path class=\"d-ar\" d=\"M121 114 L121 132\"/>\n<path class=\"d-ar\" d=\"M236 156 L260 156\"/><text class=\"d-a\" x=\"238\" y=\"128\">none</text>\n<path class=\"d-ar\" d=\"M121 178 L121 196\"/><text class=\"d-a\" x=\"128\" y=\"192\">found</text>\n<path class=\"d-ar\" d=\"M121 242 L121 260\"/>\n<path class=\"d-ar\" d=\"M121 306 L121 324\"/>\n<path class=\"d-ar\" d=\"M121 370 L121 388\"/>\n<line class=\"d-ln\" x1=\"250\" y1=\"72\" x2=\"250\" y2=\"368\"/><text class=\"d-s\" x=\"262\" y=\"300\">inside</text><text class=\"d-s\" x=\"262\" y=\"316\">the lock</text>\n</svg>",
-     "alt": "Deposit flow"
+     "svg": "<svg viewBox=\"0 0 420 330\" role=\"img\" aria-label=\"deposit and pickup\">\n<rect class=\"d-box\" x=\"6\" y=\"6\" width=\"196\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"16\" y=\"26\">deposit_package(size)</text><text class=\"d-s\" x=\"16\" y=\"44\">the carrier</text>\n<rect class=\"d-box\" x=\"6\" y=\"70\" width=\"196\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"16\" y=\"90\">free compartment?</text><text class=\"d-s\" x=\"16\" y=\"108\">exact size</text>\n<rect class=\"d-badbox\" x=\"222\" y=\"70\" width=\"192\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"232\" y=\"90\">LockerError</text><text class=\"d-s\" x=\"232\" y=\"108\">none free</text>\n<rect class=\"d-box\" x=\"6\" y=\"134\" width=\"196\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"16\" y=\"154\">open, mark occupied</text><text class=\"d-s\" x=\"16\" y=\"172\">package goes in</text>\n<rect class=\"d-box\" x=\"6\" y=\"198\" width=\"196\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"16\" y=\"218\">make token, store</text><text class=\"d-s\" x=\"16\" y=\"236\">code, 7 days</text>\n<rect class=\"d-acc\" x=\"6\" y=\"262\" width=\"196\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"16\" y=\"282\">return the code</text><text class=\"d-s\" x=\"16\" y=\"300\">to the carrier</text>\n<path class=\"d-ar\" d=\"M104 50 L104 68\"/>\n<path class=\"d-ar\" d=\"M202 92 L220 92\"/><text class=\"d-a\" x=\"204\" y=\"84\">no</text>\n<path class=\"d-ar\" d=\"M104 114 L104 132\"/><text class=\"d-a\" x=\"110\" y=\"128\">yes</text>\n<path class=\"d-ar\" d=\"M104 178 L104 196\"/>\n<path class=\"d-ar\" d=\"M104 242 L104 260\"/>\n<rect class=\"d-box\" x=\"222\" y=\"150\" width=\"192\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"232\" y=\"170\">pickup(code)</text><text class=\"d-s\" x=\"232\" y=\"188\">the customer</text>\n<rect class=\"d-box\" x=\"222\" y=\"214\" width=\"192\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"232\" y=\"234\">valid, not expired?</text><text class=\"d-s\" x=\"232\" y=\"252\">else a clear error</text>\n<rect class=\"d-acc\" x=\"222\" y=\"278\" width=\"192\" height=\"44\" rx=\"6\"/><text class=\"d-b\" x=\"232\" y=\"298\">open, mark free</text><text class=\"d-s\" x=\"232\" y=\"316\">remove the token</text>\n<path class=\"d-ar\" d=\"M318 194 L318 212\"/>\n<path class=\"d-ar\" d=\"M318 258 L318 276\"/>\n</svg>",
+     "alt": "Deposit and pickup flow"
     },
     {
      "t": "code",
      "id": "lldm-final-code",
      "title": "locker.py",
-     "code": "import secrets\nimport threading\nfrom abc import ABC, abstractmethod\nfrom dataclasses import dataclass\nfrom enum import Enum\nfrom typing import Protocol\n\n\nclass Size(Enum):\n    SMALL = 1\n    MEDIUM = 2\n    LARGE = 3\n\n\nclass SlotState(Enum):\n    FREE = \"free\"\n    RESERVED = \"reserved\"\n    OCCUPIED = \"occupied\"\n\n\nCOLD = \"cold\"\n\n\n@dataclass(frozen=True)\nclass Package:\n    package_id: str\n    size: Size\n    customer_id: str\n    needs: frozenset = frozenset()\n\n\nclass Slot:\n    def __init__(self, slot_id: str, size: Size, features=frozenset()):\n        self.slot_id = slot_id\n        self.size = size\n        self.features = frozenset(features)\n        self._state = SlotState.FREE\n        self._package = None\n\n    @property\n    def state(self) -> SlotState:\n        return self._state\n\n    def fits(self, package: Package) -> bool:\n        return (self._state is SlotState.FREE\n                and package.size.value <= self.size.value\n                and package.needs <= self.features)\n\n    def reserve(self) -> None:\n        if self._state is not SlotState.FREE:\n            raise ValueError(f\"slot {self.slot_id} is {self._state.value}\")\n        self._state = SlotState.RESERVED\n\n    def store(self, package: Package) -> None:\n        if self._state is not SlotState.RESERVED:\n            raise ValueError(f\"slot {self.slot_id} was not reserved\")\n        self._package = package\n        self._state = SlotState.OCCUPIED\n\n    def release(self) -> Package:\n        if self._state is not SlotState.OCCUPIED:\n            raise ValueError(f\"slot {self.slot_id} is empty\")\n        package, self._package = self._package, None\n        self._state = SlotState.FREE\n        return package\n\n\nclass Clock(Protocol):\n    def now(self) -> int: ...\n\n\nclass Notifier(ABC):\n    @abstractmethod\n    def notify(self, customer_id: str, message: str) -> None: ...\n\n\nclass SlotAssigner(ABC):\n    @abstractmethod\n    def choose(self, slots: list, package: Package): ...\n\n\nclass SmallestFit(SlotAssigner):\n    def choose(self, slots, package):\n        fitting = [s for s in slots if s.fits(package)]\n        return min(fitting, key=lambda s: s.size.value, default=None)\n\n\nclass CodeGenerator:\n    def __init__(self, digits: int = 6):\n        self.digits = digits\n\n    def new_code(self) -> str:\n        return \"\".join(secrets.choice(\"0123456789\") for _ in range(self.digits))\n\n\n@dataclass\nclass Reservation:\n    code: str\n    package: Package\n    slot: Slot\n    expires_at: int\n\n\nclass LockerFullError(Exception):\n    pass\n\n\nclass Locker:\n    def __init__(self, locker_id, slots, assigner, notifier, codes, clock, hold_seconds=3 * 24 * 3600):\n        self.locker_id = locker_id\n        self._slots = list(slots)\n        self._assigner = assigner\n        self._notifier = notifier\n        self._codes = codes\n        self._clock = clock\n        self._hold = hold_seconds\n        self._by_code = {}\n        self._lock = threading.Lock()\n\n    def deposit(self, package: Package) -> Reservation:\n        with self._lock:\n            slot = self._assigner.choose(self._slots, package)\n            if slot is None:\n                raise LockerFullError(f\"no free slot fits {package.size.name}\")\n            slot.reserve()\n            code = self._codes.new_code()\n            while code in self._by_code:\n                code = self._codes.new_code()\n            slot.store(package)\n            r = Reservation(code, package, slot, self._clock.now() + self._hold)\n            self._by_code[code] = r\n        self._notifier.notify(package.customer_id, f\"Your package is in locker {self.locker_id}. Code {code}.\")\n        return r\n\n    def pickup(self, code: str) -> Package:\n        with self._lock:\n            r = self._by_code.get(code)\n            if r is None:\n                raise KeyError(\"wrong or used code\")\n            if self._clock.now() > r.expires_at:\n                raise KeyError(\"code expired\")\n            del self._by_code[code]\n            return r.slot.release()\n\n    def expire(self) -> list:\n        now = self._clock.now()\n        with self._lock:\n            late = [c for c, r in self._by_code.items() if now > r.expires_at]\n            returned = [self._by_code.pop(c).slot.release() for c in late]\n        for p in returned:\n            self._notifier.notify(p.customer_id, f\"Package {p.package_id} was not picked up and is going back.\")\n        return returned\n\n\ndef make_slots(counts: dict) -> list:\n    return [Slot(f\"{size.name[0]}{i + 1}\", size) for size, n in counts.items() for i in range(n)]\n\n\nclass ColdLast(SlotAssigner):\n    \"\"\"Smallest fit, but keep cold slots for packages that need them.\"\"\"\n    def choose(self, slots, package):\n        fitting = [s for s in slots if s.fits(package)]\n        wasted_cold = lambda s: COLD in s.features and COLD not in package.needs\n        return min(fitting, key=lambda s: (wasted_cold(s), s.size.value), default=None)\n\n\nclass LockerNetwork:\n    def __init__(self, lockers: list):\n        self._lockers = lockers\n\n    def deposit_nearest(self, package: Package, distance) -> Reservation:\n        for locker in sorted(self._lockers, key=distance):\n            try:\n                return locker.deposit(package)\n            except LockerFullError:\n                continue\n        raise LockerFullError(\"no locker nearby has room\")\n\n\n# ---- test doubles and a run ----\nclass FakeClock:\n    def __init__(self):\n        self.t = 0\n\n    def now(self):\n        return self.t\n\n\nclass ListNotifier(Notifier):\n    def __init__(self):\n        self.sent = []\n\n    def notify(self, customer_id, message):\n        self.sent.append((customer_id, message))\n\n\nclock, notes = FakeClock(), ListNotifier()\nlocker = Locker(\"L-60601\", make_slots({Size.SMALL: 2, Size.MEDIUM: 1, Size.LARGE: 1}),\n                SmallestFit(), notes, CodeGenerator(), clock)\nr1 = locker.deposit(Package(\"p1\", Size.MEDIUM, \"c1\"))\nr2 = locker.deposit(Package(\"p2\", Size.MEDIUM, \"c2\"))\nprint(r1.slot.slot_id, r2.slot.slot_id)\nprint(locker.pickup(r1.code).package_id)\nclock.t = 4 * 24 * 3600\nprint([p.package_id for p in locker.expire()], len(notes.sent))\n\nclock, notes = FakeClock(), ListNotifier()\na = Locker(\"A\", [Slot(\"C1\", Size.MEDIUM, {COLD}), Slot(\"M1\", Size.MEDIUM)], ColdLast(), notes, CodeGenerator(), clock)\nprint(a.deposit(Package(\"book\", Size.SMALL, \"c2\")).slot.slot_id)\nprint(a.deposit(Package(\"milk\", Size.SMALL, \"c1\", frozenset({COLD}))).slot.slot_id)\nb = Locker(\"B\", [Slot(\"L1\", Size.LARGE)], ColdLast(), notes, CodeGenerator(), clock)\nfar = {\"A\": 1, \"B\": 5}\nprint(LockerNetwork([a, b]).deposit_nearest(Package(\"tv\", Size.LARGE, \"c3\"), lambda lk: far[lk.locker_id]).slot.slot_id)\n",
+     "code": "import secrets\nfrom datetime import datetime, timedelta\nfrom enum import Enum\n\n\nclass Size(Enum):\n    SMALL = \"small\"\n    MEDIUM = \"medium\"\n    LARGE = \"large\"\n\n\nSIZE_ORDER = [Size.SMALL, Size.MEDIUM, Size.LARGE]\n\n\nclass LockerError(Exception):\n    pass\n\n\nclass Status(Enum):\n    AVAILABLE = \"available\"\n    OCCUPIED = \"occupied\"\n    OUT_OF_SERVICE = \"out of service\"\n\n\nclass DoorJammed(Exception):\n    pass\n\n\nclass Compartment:\n    def __init__(self, compartment_id: str, size: Size):\n        self.compartment_id = compartment_id\n        self.size = size\n        self.status = Status.AVAILABLE      # was: occupied = False\n\n    def get_size(self) -> Size:\n        return self.size\n\n    def is_available(self) -> bool:\n        return self.status is Status.AVAILABLE\n\n    def is_occupied(self) -> bool:\n        return self.status is Status.OCCUPIED\n\n    def mark_occupied(self) -> None:\n        self.status = Status.OCCUPIED\n\n    def mark_free(self) -> None:\n        self.status = Status.AVAILABLE\n\n    def mark_out_of_service(self) -> None:\n        self.status = Status.OUT_OF_SERVICE\n\n    def open(self) -> None:\n        pass  # the hardware raises DoorJammed if the door won't open\n\n\nclass AccessToken:\n    def __init__(self, code: str, expiration: datetime, compartment: Compartment):\n        self.code = code\n        self.expiration = expiration\n        self.compartment = compartment\n\n    def is_expired(self, now: datetime) -> bool:\n        return now > self.expiration\n\n    def get_compartment(self) -> Compartment:\n        return self.compartment\n\n    def get_code(self) -> str:\n        return self.code\n\n\nclass Locker:\n    TOKEN_LIFETIME = timedelta(days=7)\n\n    def __init__(self, compartments: list, now=datetime.now):\n        self.compartments = compartments\n        self.access_tokens = {}          # code -> AccessToken\n        self.now = now                   # a clock we can fake in a test\n\n    def deposit_package(self, size: Size) -> str:\n        \"\"\"Same steps; a door that won't open is taken out of service and we try the next compartment.\"\"\"\n        while True:\n            compartment = self._get_available_compartment(size)\n            if compartment is None:\n                raise LockerError(f\"no available compartment of size {size.value}\")\n            try:\n                compartment.open()\n            except DoorJammed:\n                compartment.mark_out_of_service()\n                continue\n            compartment.mark_occupied()\n            token = self._generate_access_token(compartment)\n            self.access_tokens[token.get_code()] = token\n            return token.get_code()\n\n    def _get_available_compartment(self, size: Size):\n        for s in SIZE_ORDER[SIZE_ORDER.index(size):]:\n            for c in self.compartments:\n                if c.get_size() == s and c.is_available():\n                    return c\n        return None\n\n    def pickup(self, code: str) -> None:\n        \"\"\"\n        Core logic:\n          1. Look up the code to get its access token\n          2. Get the compartment\n          3. Open it (the customer takes the package)\n          4. Mark it free and remove the token\n        Edge cases:\n          1. Code empty or not in the map -> invalid code\n          2. Token expired -> expired error; the package stays for staff\n        \"\"\"\n        token = self.access_tokens.get(code)\n        if not code or token is None:\n            raise LockerError(\"invalid code\")\n        if token.is_expired(self.now()):\n            raise LockerError(\"code expired\")\n        compartment = token.get_compartment()\n        compartment.open()\n        self._clear_deposit(token)\n\n    def open_expired_compartments(self) -> None:\n        \"\"\"\n        Core logic: for every expired token, open its compartment so staff can take the package.\n        State is not cleared here: staff clear it once the package is out of the door.\n        \"\"\"\n        for token in self.access_tokens.values():\n            if token.is_expired(self.now()):\n                token.get_compartment().open()\n    def _generate_access_token(self, compartment: Compartment) -> AccessToken:\n        \"\"\"A random six-digit code that isn't live, valid for seven days.\"\"\"\n        code = f\"{secrets.randbelow(10**6):06d}\"\n        while code in self.access_tokens:\n            code = f\"{secrets.randbelow(10**6):06d}\"\n        return AccessToken(code, self.now() + self.TOKEN_LIFETIME, compartment)\n\n    def _clear_deposit(self, token: AccessToken) -> None:\n        token.get_compartment().mark_free()\n        del self.access_tokens[token.get_code()]\n\n\n# ---- a quick run ----\nclass FakeClock:\n    def __init__(self):\n        self.t = datetime(2026, 11, 1)\n\n    def __call__(self):\n        return self.t\n\n\nclass JammedCompartment(Compartment):\n    def open(self):\n        raise DoorJammed(self.compartment_id)\n\n\nclock = FakeClock()\nsmall, medium = Compartment(\"S1\", Size.SMALL), Compartment(\"M1\", Size.MEDIUM)\nbroken = JammedCompartment(\"M0\", Size.MEDIUM)\nlocker = Locker([small, broken, medium], now=clock)\na = locker.deposit_package(Size.SMALL)                # S1\nb = locker.deposit_package(Size.SMALL)                # small full: falls back to medium; M0 jams, so M1\nprint(small.status.value, broken.status.value, medium.status.value)\nlocker.pickup(b)\nprint(medium.status.value)\nclock.t += timedelta(days=8)\ntry:\n    locker.pickup(a)\nexcept LockerError as e:\n    print(e)\n",
      "notes": {}
     },
     {
      "t": "p",
-     "text": "Output of the run: M1 L1, p1, ['p2'] 3, then M1, C1, L1."
+     "text": "The run prints: occupied, out of service, occupied (the second small package fell back to medium, skipped the jammed M0 and went into M1); available after pickup; code expired."
     }
    ]
   }
