@@ -548,8 +548,59 @@ FINAL = swap(FINAL, "\n\nclass FakeClock:", "\n\n" + ext_classes.rstrip() + "\n\
 FINAL = FINAL.rstrip() + "\n\n\n" + demo.rstrip() + "\n\n" + EXTEND_TEST
 run(FINAL, CORE_OUT + EXTEND_OUT)
 
+def box(x, y, w, h, title, sub, cls="d-box"):
+    return (f'<rect class="{cls}" x="{x}" y="{y}" width="{w}" height="{h}" rx="6"/>'
+            f'<text class="d-b" x="{x + 10}" y="{y + 20}">{title}</text>'
+            f'<text class="d-s" x="{x + 10}" y="{y + 38}">{sub}</text>\n')
+
+
+def arrow(x1, y1, x2, y2, label=None, lx=None, ly=None):
+    s = f'<path class="d-ar" d="M{x1} {y1} L{x2} {y2}"/>'
+    if label:
+        s += f'<text class="d-a" x="{lx}" y="{ly}">{label}</text>'
+    return s + "\n"
+
+
+MAP_SVG = ('<svg viewBox="0 0 420 466" role="img" aria-label="Class map of the locker design">\n'
+           + box(115, 6, 190, 48, "LockerNetwork", "tries the nearest first")
+           + box(115, 94, 190, 48, "Locker (facade)", "deposit, pickup, expire", "d-acc")
+           + box(20, 190, 190, 48, "Slot", "guards its own state")
+           + box(20, 262, 190, 48, "Reservation", "code, slot, expires_at")
+           + box(20, 334, 190, 48, "Package (frozen)", "id, size, needs")
+           + box(224, 190, 190, 48, "SlotAssigner", "SmallestFit, ColdLast", "d-dashbox")
+           + box(224, 262, 190, 48, "Notifier", "text, email", "d-dashbox")
+           + box(224, 334, 190, 48, "CodeGenerator", "six-digit codes", "d-dashbox")
+           + box(224, 406, 190, 48, "Clock", "now(), fake in tests", "d-dashbox")
+           + arrow(210, 54, 210, 92, "wraps many", 218, 78)
+           + arrow(150, 142, 150, 188, "has many", 158, 170)
+           + '<path class="d-ar" d="M115 118 L10 118 L10 286 L18 286"/><text class="d-a" x="18" y="111">has, by code</text>\n'
+           + arrow(115, 310, 115, 332, "refers to", 122, 326)
+           + arrow(270, 142, 300, 188, "injected", 292, 166)
+           + '</svg>')
+
+FLOW_SVG = ('<svg viewBox="0 0 420 446" role="img" aria-label="What deposit does, step by step">\n'
+            + box(6, 6, 230, 44, "deposit(package)", "a driver calls it")
+            + box(6, 70, 230, 44, "take the lock", "one driver at a time")
+            + box(6, 134, 230, 44, "assigner.choose", "smallest free fit")
+            + box(262, 134, 152, 44, "LockerFullError", "nothing changed", "d-badbox")
+            + box(6, 198, 230, 44, "slot.reserve()", "FREE to RESERVED")
+            + box(6, 262, 230, 44, "new code", "not already live")
+            + box(6, 326, 230, 44, "slot.store()", "save the Reservation")
+            + box(6, 390, 230, 44, "unlock, then notify", "text the code", "d-acc")
+            + arrow(121, 50, 121, 68) + arrow(121, 114, 121, 132)
+            + arrow(236, 156, 260, 156, "none", 238, 128)
+            + arrow(121, 178, 121, 196, "found", 128, 192)
+            + arrow(121, 242, 121, 260) + arrow(121, 306, 121, 324) + arrow(121, 370, 121, 388)
+            + '<line class="d-ln" x1="250" y1="72" x2="250" y2="368"/>'
+            + '<text class="d-s" x="262" y="300">inside</text><text class="d-s" x="262" y="316">the lock</text>\n'
+            + '</svg>')
+
 S.append({"id": "lldm-final", "title": "The final code, in one file", "blocks": [
     {"t": "p", "text": "Everything from the round in one runnable file: the core, the cold-slot and many-locker extensions, the test doubles, and a run at the bottom. **This is what your editor should look like at minute 55.**"},
+    {"t": "p", "text": "**The map first.** The Locker is the one entry point; it owns its slots and reservations, and everything that might change is an interface passed in (dashed)."},
+    {"t": "svg", "svg": MAP_SVG, "alt": "Class map"},
+    {"t": "p", "text": "**One call through it: deposit.**"},
+    {"t": "svg", "svg": FLOW_SVG, "alt": "Deposit flow"},
     {"t": "code", "id": "lldm-final-code", "title": "locker.py", "code": FINAL, "notes": {}},
     {"t": "p", "text": "Output of the run: M1 L1, p1, ['p2'] 3, then M1, C1, L1."}
 ]})
