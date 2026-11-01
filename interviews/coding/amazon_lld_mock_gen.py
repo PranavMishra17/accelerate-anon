@@ -530,6 +530,30 @@ S.append({"id": "lldm-concepts", "title": "Where each concept shows up", "blocks
     {"t": "table", "head": ["Concept", "Where it is in this design", "Stage"], "rows": CONCEPTS}
 ]})
 
+def swap(src, old, new):
+    assert old in src, old[:50]
+    return src.replace(old, new, 1)
+
+
+ext_classes = EXTEND[EXTEND.index("class ColdLast"):]
+demo = CORE[CORE.index("clock, notes = FakeClock()"):]
+FINAL = core_defs
+FINAL = swap(FINAL, '    OCCUPIED = "occupied"\n', '    OCCUPIED = "occupied"\n\n\nCOLD = "cold"\n')
+FINAL = swap(FINAL, "    customer_id: str\n", "    customer_id: str\n    needs: frozenset = frozenset()\n")
+FINAL = swap(FINAL, "    def __init__(self, slot_id: str, size: Size):\n        self.slot_id = slot_id\n        self.size = size\n",
+             "    def __init__(self, slot_id: str, size: Size, features=frozenset()):\n        self.slot_id = slot_id\n        self.size = size\n        self.features = frozenset(features)\n")
+FINAL = swap(FINAL, "        return self._state is SlotState.FREE and package.size.value <= self.size.value\n",
+             "        return (self._state is SlotState.FREE\n                and package.size.value <= self.size.value\n                and package.needs <= self.features)\n")
+FINAL = swap(FINAL, "\n\nclass FakeClock:", "\n\n" + ext_classes.rstrip() + "\n\n\n# ---- test doubles and a run ----\nclass FakeClock:")
+FINAL = FINAL.rstrip() + "\n\n\n" + demo.rstrip() + "\n\n" + EXTEND_TEST
+run(FINAL, CORE_OUT + EXTEND_OUT)
+
+S.append({"id": "lldm-final", "title": "The final code, in one file", "blocks": [
+    {"t": "p", "text": "Everything from the round in one runnable file: the core, the cold-slot and many-locker extensions, the test doubles, and a run at the bottom. **This is what your editor should look like at minute 55.**"},
+    {"t": "code", "id": "lldm-final-code", "title": "locker.py", "code": FINAL, "notes": {}},
+    {"t": "p", "text": "Output of the run: M1 L1, p1, ['p2'] 3, then M1, C1, L1."}
+]})
+
 part = {"tab": "lld", "id": "lld-mock-locker", "n": 8, "one": True,
         "title": "Mock: Amazon Locker, the whole round",
         "minutes": 75,
