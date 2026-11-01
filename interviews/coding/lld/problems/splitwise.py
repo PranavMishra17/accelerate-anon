@@ -1,0 +1,90 @@
+"""Splitwise. Cheat only (part 0.5, tab 4): one screen, no code. Money is integer cents; the currency twist is an extension."""
+
+PROBLEM = {
+    "id": "splitwise", "title": "Splitwise",
+    "prompt": "'Design Splitwise': groups, shared expenses, who owes whom.",
+    "evidence": "LeetCode Discuss Dec 2024, May 2025 (currency conversion was the sticking point), Apr 2026 (entities, APIs and a strategy pattern, pseudocode only).",
+
+    "clarify": {
+        "capabilities": [("How are expenses split?", "Equally, or by exact amounts for now"),
+                         ("Who is in an expense?", "A payer and some participants, from one group or just friends"),
+                         ("How does someone settle up?", "They record a payment to the person they owe")],
+        "errors": [("Exact amounts that don't add up to the total?", "Reject the expense"),
+                   ("An amount that doesn't divide evenly?", "Your call; say the rule")],
+        "scope": [("Currencies, percentages, simplifying debts?", "One currency for now; expect them as follow-ups"),
+                  ("Login, notifications, persistence?", "Out of scope; in memory")],
+    },
+
+    "requirements": [
+        ["User adds an expense: a payer, an amount in cents and the participants.", "The system splits it equally or by exact amounts and records what each participant owes the payer", "Exact amounts that don't total the amount, or an unknown user, is an error"],
+        ["User asks who owes whom.", "The system returns the net amount between two users, or everyone's net balances"],
+        ["User settles up by paying someone they owe.", "The system records it as a payment in the other direction", "Paying more than owed leaves the other person owing"],
+    ],
+    "out_of_scope": ["currencies (they will ask)", "percentage and share splits", "simplifying debts", "login and notifications"],
+
+    "entities": [("User", True, "A name and an id; the ledger is keyed by it"),
+                 ("Expense", True, "A payer, an amount in cents and what each participant owes; a record of what happened"),
+                 ("Ledger", True, "The net amount owed between each pair of users"),
+                 ("Splitwise", True, "Entry point: add_expense, settle, balance"),
+                 ("Group", False, "Not needed until members join or leave; participants are passed in"),
+                 ("Split type", False, "An enum with two values for now; a Strategy only when there are more"),
+                 ("Currency / Notification", False, "Out of scope; not modelled")],
+
+    "classes": [
+        {"name": "Splitwise", "state": ["users: Map<id, User>", "expenses: Expense[]", "ledger: Ledger"],
+         "behaviour": ["add_expense(payer, amount_cents, participants, split, exacts) -> Expense | error",
+                       "settle(from_user, to_user, amount_cents) -> void | error",
+                       "balance(a, b) -> cents  (positive: a owes b)",
+                       "balances(user) -> Map<user, cents>"]},
+        {"name": "Expense", "state": ["payer: string", "amount_cents: int", "shares: Map<user, cents>"], "behaviour": []},
+        {"name": "Ledger", "state": ["net: Map<(debtor, creditor), cents>"],
+         "behaviour": ["add(debtor, creditor, cents) -> void", "owed(a, b) -> cents"]},
+        {"name": "User", "state": ["user_id: string", "name: string"], "behaviour": []},
+    ],
+
+    "map": {"center": ("Splitwise", "add, settle, balance"),
+            "owned": [("Ledger", "net per pair"), ("Expense", "payer, shares")],
+            "uses": [("Split (enum)", "EQUAL, EXACT")]},
+
+    "methods": [
+        {"name": "add_expense",
+         "logic": ["Check the payer and every participant exist",
+                   "Work out each share: equal splits the cents, with the remainder going one cent at a time from the first participant; exact checks the amounts total the expense",
+                   "Record the Expense",
+                   "For each participant other than the payer, add the share to what they owe the payer in the ledger"]},
+        {"name": "settle",
+         "logic": ["Check both users exist and the amount is positive",
+                   "Add the payment to the ledger in the other direction: the payer now owes less",
+                   "A payment larger than the debt flips the direction; nothing is rejected"]},
+        {"name": "balance",
+         "logic": ["Ask the ledger for what a owes b, net of what b owes a",
+                   "Positive means a owes b; negative means b owes a; zero means settled"]},
+        {"name": "balances",
+         "logic": ["For one user, collect the net amount against every other user who is not zero",
+                   "Derived from the ledger each time, never stored a second time"]},
+    ],
+
+    "extensions": [
+        {"ask": "Add percentage and share splits.",
+         "say": "Now an if per type would grow, so **each split type becomes a strategy with one method, shares(amount_cents, participants, params), and add_expense picks one by type.** The ledger and Expense don't change. Each strategy validates its own input: percents total 100, exacts total the amount.",
+         "short_q": "More split types", "short_a": "a SplitStrategy per type with shares(amount, participants, params); add_expense picks one; the ledger is untouched"},
+        {"ask": "Expenses in different currencies.",
+         "say": "I convert to the group's currency when the expense is added and store the rate on the Expense. **Rates change, so I never recompute history.** Amounts stay integer cents in the group currency, and a CurrencyConverter is the only class that knows rates.",
+         "short_q": "Currencies", "short_a": "convert at add time with a CurrencyConverter and store the rate on the expense; never recompute history"},
+        {"ask": "Simplify debts: the fewest payments to settle everyone.",
+         "say": "From the ledger I net each user to one balance, then match the largest creditor with the largest debtor until all are zero. It is a read over the ledger, so **nothing already written changes.** It gives few payments, not a proven minimum.",
+         "short_q": "Simplify debts", "short_a": "net each user, then match largest creditor with largest debtor; a read over the ledger"},
+        {"ask": "A member leaves the group with a balance.",
+         "say": "Block leaving until their balances are zero, or settle them first. That needs a Group that knows its members; before this I passed participants in. Two people adding expenses at once also need the ledger update under one lock.",
+         "short_q": "Leaving with a balance", "short_a": "block until settled; this is when Group earns a class; ledger updates under one lock"},
+    ],
+
+    "golden": [
+        ("Money is integer cents, and I say where the leftover cent goes when a share doesn't divide.", "it is the first thing they probe, and floats hide it."),
+        ("Expenses are append-only records; balances are derived from the ledger, and a correction is a new entry.", "history stays true, and you can answer 'how did we get here'."),
+        ("A split type is a value for now; it becomes a strategy only when the third type arrives.", "it shows restraint, and you can say exactly when the pattern earns its place."),
+        ("Settling up is a payment in the other direction, so there is no special path.", "the ledger has one operation, which keeps balances easy to trust."),
+        ("Each strategy validates its own input: percents total 100, exacts total the amount.", "bad data is rejected at the one place that understands it."),
+        ("I store the exchange rate on the expense and never recompute history.", "it is the currency twist's right answer."),
+    ],
+}
