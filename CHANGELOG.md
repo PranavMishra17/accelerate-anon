@@ -1607,4 +1607,8 @@ The Amazon plan gives part 0 a part a day: 0.1 on 30 October, 0.2 on 31 October 
 0.3 on 1 November before the two designs, 0.4 on 2 November beside the LRU drill. Day hours rise to 4, 4, 5 and 5.5.
 The 30 October item goes last in its day because ticks are keyed by position and the day had started. A new shared
 figure, `replication`, draws one leader with a synchronous and an asynchronous follower, the stale read on the lagging
-copy and what a failover loses; w4d draws it and its first and last steps point at it. No charter deviation.
+copy and what a failover loses; w4d draws it and its first and last steps point at it. No charter deviation.## 2026-10-31: An LLD mock on the Amazon page, Amazon Locker end to end
+
+What: a new LLD part, 'Mock: Amazon Locker, the whole round' (interviews/coding/amazon-lld-mock.js, generated and run by amazon_lld_mock_gen.py). Nine stages disclosed one at a time, from the two-line prompt through clarifying questions, the interviewer's answers, nouns to classes, the class sketch, a first draft, the core methods, an extension (cold slots, many lockers) and the summary, then a table mapping each OOP and SOLID idea to where it shows in the answer. Why: he wanted one worked round to study the fundamentals against and to reverse-engineer other mocks. Charter deviation: none (wildcard, Amazon loop).
+
+
