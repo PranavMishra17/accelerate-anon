@@ -1,17 +1,36 @@
 # Brief for writing an LLD problem file
 
 You write one Python file per problem in `interviews/coding/lld/problems/<id>.py`, exporting a dict `PROBLEM`.
-**Copy the shape of `problems/locker.py` exactly.** It is the reference. Read it fully, and read `lib.py` to see
-how every field is rendered (`mock_part` for a staged round, `cheat_tab` for a one-screen sheet). Do not edit
-`lib.py`, `build.py`, `overview.py` or `locker.py`; if something in them blocks you, say so in your report.
+**Copy the shape of `problems/elevator.py` exactly.** It is the reference for both the fields and, above all,
+how the implementation is decomposed. Read it fully, and read `lib.py` to see how every field is rendered
+(`mock_part` for a staged round, `cheat_tab` for a one-screen sheet). Do not edit `lib.py`, `build.py`,
+`overview.py`, `locker.py` or `elevator.py`; if something in them blocks you, say so in your report.
 
 ## The bar
-Pranav learns from these. His own Locker answer (3 classes + an enum) is the minimum that passes. Each file is
-**a little more than the minimum**: one or two extra classes or behaviours so he can infer the rest of the
-problem, never the old pattern-heavy design. Rough size: 3 to 5 classes plus enums; core code 70 to 120 lines;
-3 to 5 public methods; private helpers named in the main methods and written after. No pre-emptive interfaces,
-strategies, notifiers, clocks or dependency injection in the core unless the requirements force them; patterns
-appear in the extensions, each tied to the change that needs it. A round is about 40 minutes.
+Pranav learns from these. **Each file is the standard design a strong candidate draws for this question** (the
+one a Hello Interview or a good LeetCode Discuss write-up lands on), not the smallest thing that runs. Rough size:
+3 to 6 classes plus enums; core code 90 to 170 lines; 3 to 6 public methods. No pre-emptive interfaces,
+strategies, notifiers or dependency injection unless the requirements force them; patterns appear in the
+extensions, each tied to the change that needs it. A round is about 45 minutes.
+
+## The five rules the old files broke (read twice)
+1. **Keep a noun when it carries a rule.** A noun becomes a class when it holds a type, a date or a condition
+   that changes behaviour, even if it looks like "only data": Request (its type decides whether a passing elevator
+   stops), Loan (its due date gives days late), Move (history and undo), Filter (conditions combine). Drop a noun
+   only when nothing in the requirements reads it.
+2. **Top-down, most interesting method first.** The first method box is the most interesting public method,
+   written at the level you'd say out loud, naming the hard part as a private helper (`best =
+   self._select_best_elevator(request)`). The next box is that helper, written the same way, naming its own
+   helpers (`_find_moving_towards`, `_find_nearest_idle`, `_find_nearest`). The most interesting of those gets
+   its own box. Plain helpers (checks, lookups, status) go last, in `helpers` (a list of boxes is fine).
+3. **Core logic in a supporting class gets its own method box.** Name it `Class.method` (`Elevator.step`,
+   `Piece.can_move`, `Loan.days_late`). Never leave the heart of the problem in the skeleton.
+4. **No tricks for the logic that matters.** No sign multiplication, no `or` fallbacks over lists, no chained
+   assignment, no stdlib structure that IS the answer (OrderedDict for LRU, Counter, bisect): write the loop or
+   the structure, and mention the stdlib shortcut in a faq. Ties are broken explicitly so runs are deterministic.
+5. **Behaviour lives where its data is.** A supporting class answers questions about itself (`serves`,
+   `is_expired`, `days_late`, `can_move`); the entry class orchestrates. No "only data" class unless it truly is a
+   record nobody asks anything of.
 
 ## The order (the page renders it; you supply the content)
 a) Clarify in three buckets: capabilities, errors, scope. 2 to 4 questions each, each with the interviewer's answer.

@@ -25,8 +25,10 @@ ADD = method('''
         """
         if qty <= 0:                                       # Edge 1: nothing to add, or a hidden remove
             raise CartError("qty must be positive")
-        # Step 1: setdefault returns the existing line, or stores a new one at 0 in the same call
-        line = self.lines.setdefault(item.sku, Line(item, 0))
+        line = self.lines.get(item.sku)                    # Step 1: .get gives None for an item not yet in the cart
+        if line is None:
+            line = Line(item, 0)                           # a new line starts at 0, then Step 2 raises it
+            self.lines[item.sku] = line
         line.qty += qty                                    # Step 2: adding again raises the count
 ''')
 
@@ -59,8 +61,10 @@ SUBTOTAL = method('''
         Edge cases:
           1. Empty cart -> 0
         """
-        # Step 1: price x qty per line, summed; sum() of nothing is 0, which covers Edge 1
-        return sum(l.item.price * l.qty for l in self.lines.values())
+        total = 0                                          # Edge 1: an empty cart never enters the loop, so it stays 0
+        for line in self.lines.values():                   # Step 1: the line knows its own price times quantity
+            total += line.total()
+        return total
 ''')
 
 CHECKOUT = method('''
@@ -75,8 +79,33 @@ CHECKOUT = method('''
           2. A flat discount bigger than the total -> 0, never negative (inside Discount.apply)
         """
         total = self.subtotal()                            # Step 1: an empty cart gives 0 here (Edge 1)
-        # Step 2: the cart doesn't know which rule it got; it hands over a total and takes one back
-        return total if discount is None else discount.apply(total)
+        if discount is None:                               # Step 2: no discount, no change
+            return total
+        # the cart doesn't know which rule it got; it hands over a total and takes one back
+        return discount.apply(total)
+''')
+
+LINE_TOTAL = method('''
+    def total(self) -> int:
+        """What this line costs in cents: the item's price for each unit bought."""
+        return self.item.price * self.qty                  # the line owns both numbers, so the cart never reaches in
+''')
+
+DISCOUNT_APPLY = method('''
+    def apply(self, total: int) -> int:
+        """
+        Core logic:
+          1. A percent takes value / 100 of the total off, rounded down to a whole cent
+          2. A flat discount takes value cents off
+          3. Return the new total
+        Edge cases:
+          1. A flat discount bigger than the total -> 0, never negative
+          2. A percent rounds the discount down, so 10 percent of 999 takes 99
+        """
+        if self.kind is Kind.PERCENT:
+            off = total * self.value // 100                # Step 1 and Edge 2: whole-number division rounds down
+            return total - off
+        return max(0, total - self.value)                  # Step 2 and Edge 1: clamp at zero
 ''')
 
 HEAD = D('''\
@@ -98,7 +127,7 @@ ITEM_LINE = D('''\
 
     @dataclass(frozen=True)
     class Item:
-        """A product as the shop sells it. Only data: it knows its price, not how many are bought."""
+        """A product as the shop sells it. A record of what it is and costs; the quantity lives on the Line."""
         sku: str             # the key the cart finds a line by
         name: str
         price: int           # cents, an int so totals never drift like floats
@@ -106,7 +135,7 @@ ITEM_LINE = D('''\
 
     @dataclass
     class Line:
-        """One row of the cart: an item and how many. Only data, the cart changes qty."""
+        """One row of the cart: an item and how many. The cart changes qty; the line says what it costs."""
         item: Item           # frozen Item, so the price can't change after it was added
         qty: int             # not frozen: add and remove raise and lower it
     ''')
@@ -123,12 +152,6 @@ DISCOUNT = D('''\
                 raise CartError("bad discount value")
             self.kind = kind
             self.value = value       # a percent (0 to 100) or cents
-
-        def apply(self, total: int) -> int:
-            if self.kind is Kind.PERCENT:
-                # integer maths: total * value // 100 is the discount, rounded down to a whole cent
-                return total - total * self.value // 100
-            return max(0, total - self.value)                # flat: never below zero (Edge 2 of checkout)
     ''')
 
 CART = D('''\
@@ -141,7 +164,8 @@ CART = D('''\
             self.lines = {}          # sku -> Line: adding the same item again is one lookup
     ''')
 
-CORE = HEAD + ITEM_LINE + DISCOUNT + CART + in_class(ADD, REMOVE, SUBTOTAL, CHECKOUT)
+CORE = (HEAD + ITEM_LINE + in_class(LINE_TOTAL) + DISCOUNT + in_class(DISCOUNT_APPLY) + CART
+        + in_class(CHECKOUT, ADD, REMOVE, SUBTOTAL))
 
 DEMO = D('''\
 
@@ -186,10 +210,10 @@ EXT_BOGO = D('''\
 
         def apply(self, lines, total):
             # this rule needs the lines: it must know how many of the item are in the cart
-            line = next((l for l in lines if l.item.sku == self.sku), None)
-            if line is None:                                # item not in the cart: no change
-                return total
-            return total - (line.qty // 2) * line.item.price    # every second one is free
+            for line in lines:
+                if line.item.sku == self.sku:
+                    return total - (line.qty // 2) * line.item.price    # every second one is free
+            return total                                    # item not in the cart: no change
 
 
     # Cart.checkout passes the lines as well: discount.apply(list(self.lines.values()), total)
@@ -282,10 +306,10 @@ FINAL_DISCOUNTS = D('''\
 
         def apply(self, lines, total):
             # the only rule that reads the lines: it needs the quantity of its sku
-            line = next((l for l in lines if l.item.sku == self.sku), None)
-            if line is None:                                # item not in the cart: no change
-                return total
-            return total - (line.qty // 2) * line.item.price    # pairs of units, one of each pair free
+            for line in lines:
+                if line.item.sku == self.sku:
+                    return total - (line.qty // 2) * line.item.price    # pairs of units, one of each pair free
+            return total                                    # item not in the cart: no change
     ''')
 
 FINAL_CHECKOUT = method('''
@@ -300,7 +324,7 @@ FINAL_CHECKOUT = method('''
         return total
 ''')
 
-FINAL = FINAL_HEAD + ITEM_LINE + FINAL_DISCOUNTS + CART + in_class(ADD, REMOVE, SUBTOTAL, FINAL_CHECKOUT)
+FINAL = FINAL_HEAD + ITEM_LINE + in_class(LINE_TOTAL) + FINAL_DISCOUNTS + CART + in_class(FINAL_CHECKOUT, ADD, REMOVE, SUBTOTAL)
 FINAL_DEMO = D('''\
 
 
@@ -356,7 +380,7 @@ PROBLEM = {
     "req_why": "Each requirement maps to a method: 1 is add, 2 is remove, 3 is subtotal, 4 is checkout and Discount.apply.",
 
     "entities": [("Item", True, "A sku, a name and a price in cents; shared by every line that holds it"),
-                 ("Line", True, "An item and a quantity: what the cart actually stores"),
+                 ("Line", True, "An item and a quantity, and what that costs: what the cart actually stores"),
                  ("Cart", True, "Runs add, remove, subtotal and checkout"),
                  ("Discount", True, "A kind and a value; turns a total into a smaller total"),
                  ("Customer / Order / Payment", False, "External or out of scope; not modelled")],
@@ -368,10 +392,11 @@ PROBLEM = {
         {"name": "Cart", "state": ["lines: Map<sku, Line>  # one line per item; adding again is one lookup"],
          "behaviour": ["add(item, qty) -> void | error  # req 1: raise the quantity",
                        "remove(sku, qty) -> void | error  # req 2: shrink, drop at zero",
-                       "subtotal() -> cents  # req 3: sum of price times quantity",
+                       "subtotal() -> cents  # req 3: sum of every line's total",
                        "checkout(discount) -> cents  # req 4: subtotal, then the discount"]},
         {"name": "Line", "state": ["item: Item  # what is being bought",
-                                   "qty: int  # how many; the cart raises and lowers it"], "behaviour": []},
+                                   "qty: int  # how many; the cart raises and lowers it"],
+         "behaviour": ["total() -> cents  # req 3: price times quantity, so the cart never reaches inside"]},
         {"name": "Item", "state": ["sku: string  # the key the cart finds a line by",
                                    "name: string  # what the shopper sees",
                                    "price: int  (cents)  # subtotal needs it; an int avoids float drift"], "behaviour": []},
@@ -380,34 +405,39 @@ PROBLEM = {
          "behaviour": ["apply(total) -> cents  # req 4: smaller total, never below zero"]},
     ],
     "class_hint": "The cart holds lines by sku. A line holds an item and a quantity. A discount holds a kind and a value.",
-    "class_say": "**I start from the methods the requirements gave me, then ask what each one has to read.** Add the same item again must raise a quantity, so the cart keeps lines in a map by sku. Subtotal needs a price and a quantity, so a line holds an item and a qty. Checkout needs a kind and a value, so a discount holds those two.",
-    "class_why": "A map by sku makes 'add the same item again' one lookup. Item and Line carry data only; the rules live in Cart and Discount.",
+    "class_say": "**I start from the methods the requirements gave me, then ask what each one has to read.** Add the same item again must raise a quantity, so the cart keeps lines in a map by sku. Subtotal needs a price and a quantity, so a line holds an item and a qty, and it answers total() itself. Checkout needs a kind and a value, so a discount holds those two.",
+    "class_why": "A map by sku makes 'add the same item again' one lookup. Item is a record; the line prices itself, the cart sums the lines, and Discount holds the price rule.",
     "class_qa": [{"ask": "Why is money an int and not a float?",
                   "say": "A float can't hold most decimal prices exactly, so totals drift and comparisons fail. **I hold cents as an int and only convert to dollars when I print.** Where I divide, for a percentage, I round the discount down, so the customer never gets more than the stated percent.",
                   "explain": ["10 percent of 999 cents is 99.9. Rounding the discount down takes off 99, so 900 is paid."]}],
 
     "map": {"center": ("Cart", "add, remove, checkout"),
-            "owned": [("Line", "item, qty")],
+            "owned": [("Line", "item, qty, total()")],
             "uses": [("Discount", "kind, value"), ("Kind (enum)", "PERCENT, FLAT")]},
 
-    "skeleton": {"q": "First the small classes: Kind, CartError, Item, Line, Discount, and the cart's __init__. Each line from the class design.",
-                 "hint": "Item is frozen data. Line is an item and a quantity. Discount holds a kind and a value and checks them. The cart holds lines by sku.",
-                 "code": HEAD + ITEM_LINE + DISCOUNT + CART,
+    "skeleton": {"q": "First the small classes: Kind, CartError, Item, Line, Discount's __init__, and the cart's __init__. Each line from the class design.",
+                 "hint": "Item is frozen data. Line is an item and a quantity, and prices itself. Discount holds a kind and a value and checks them; apply comes later. The cart holds lines by sku.",
+                 "code": HEAD + ITEM_LINE + in_class(LINE_TOTAL) + DISCOUNT + CART,
                  "why": "These come straight from the - state lines. Writing them first means every method after only has to do its steps."},
     "methods": [
+        {"name": "checkout", "q": "Start with the most interesting method: checkout(discount). What does the discount get, and what comes back? Name the hard part.",
+         "hint": "Take the subtotal, let the discount change it, return it. None means no change.", "code": CHECKOUT,
+         "why": "The cart doesn't know which rule it was given. subtotal and Discount.apply are named here and written next."},
+        {"name": "Discount.apply", "q": "Discount.apply(total): how does each kind turn a total into a smaller one?",
+         "hint": "Percent: take value / 100 off, rounded down. Flat: take value cents off, never below zero.", "code": DISCOUNT_APPLY,
+         "why": "The rounding and the clamp both live here, in one place. A new kind in the extension becomes a subclass and this branch goes away."},
         {"name": "add", "q": "add(item, qty): core logic and edge cases as comments, then the code.",
          "hint": "Find or start the line, raise the quantity. Edge: quantity not positive.", "code": ADD,
-         "why": "setdefault gives 'add again raises the quantity' with no branch."},
+         "why": "A missing line starts at 0, so 'add again raises the quantity' is the same step for a new and an old item."},
         {"name": "remove", "q": "remove(sku, qty): core logic, edge cases, code.",
          "hint": "Find the line, lower it, drop it at zero. Edges: not in the cart, bad quantity.", "code": REMOVE,
          "why": "Dropping the line at zero keeps subtotal and the line count honest."},
-        {"name": "subtotal", "q": "subtotal(): what does it add up?",
-         "hint": "Price times quantity, summed, in cents.", "code": SUBTOTAL,
-         "why": "Checkout builds on it, so discounts never touch line prices."},
-        {"name": "checkout", "q": "checkout(discount): what does the discount get, and what comes back?",
-         "hint": "Take the subtotal, let the discount change it, return it. None means no change.", "code": CHECKOUT,
-         "why": "The cart doesn't know which rule it was given. The 'never below zero' rule lives in Discount.apply, in one place."},
     ],
+    "helpers": {"q": "Now the helpers: subtotal and Line.total.",
+                "starter": "def subtotal(self):\n    ...\n",
+                "hint": "A line costs price times quantity. The subtotal adds the lines up, in cents.",
+                "code": SUBTOTAL + "\n" + LINE_TOTAL,
+                "why": "Checkout builds on subtotal, so discounts never touch line prices. (sum() over the lines does the same in one line.)"},
 
     "design_check": {
         "lead": "SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies.",

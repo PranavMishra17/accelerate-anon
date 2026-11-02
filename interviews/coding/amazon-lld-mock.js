@@ -191,7 +191,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "One method at a time. **Write the core logic as comments, list the edge cases, then write the code.** Push details into private helpers and implement them only if there's time or you're asked."
+     "text": "**Start with the most interesting method, not the easiest.** Write it at the level you'd say out loud: core logic as comments, edge cases, then code that names the hard part as a private helper (best = self._select_best(...)). Then write the most interesting helper the same way, and leave the plain ones for last."
     },
     {
      "t": "write",

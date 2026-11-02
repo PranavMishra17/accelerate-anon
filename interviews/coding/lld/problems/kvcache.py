@@ -1,5 +1,6 @@
 """Key-value cache, built in layers: a dict, then a TTL, then LRU capacity; thread safety is the extension.
-Two classes (Entry, Cache). The layers are the requirements, in the order the interviewer adds them."""
+Two classes (Node, Cache). The recency list is a doubly linked list with sentinel ends, beside a dict key -> node.
+The layers are the requirements, in the order the interviewer adds them."""
 import textwrap
 
 D = textwrap.dedent
@@ -13,13 +14,15 @@ def in_class(*methods):
     return "".join("\n" + textwrap.indent(m, "    ") for m in methods)
 
 
+# ---- the cache: put and get, the two operations that matter ----
 PUT = method('''
     def put(self, key: str, value, ttl: float | None = None) -> None:
         """
         Core logic:
           1. Work out when the entry expires: now plus its ttl, or the default ttl
-          2. Store it and mark the key most recently used
-          3. If the cache is over capacity, drop the least recently used key
+          2. Key already present: replace the value and expiry, and mark it most recently used
+          3. Otherwise add a new node at the front of the list and in the dict
+          4. If the cache is over capacity, evict the least recently used node
         Edge cases:
           1. Key already present -> replace the value and restart its ttl
           2. ttl of zero or less -> error
@@ -28,34 +31,91 @@ PUT = method('''
         if ttl is not None and ttl <= 0:                   # Edge 2: would be expired on arrival
             raise ValueError("ttl must be positive")
         expires_at = None if ttl is None else self.now() + ttl     # an absolute time, so get compares to now
-        # Step 2 and Edge 1: assigning replaces any old entry, so the ttl restarts
-        self.entries[key] = Entry(value, expires_at)
-        self.entries.move_to_end(key)                      # the end is the most recently used
-        while len(self.entries) > self.capacity:           # Step 3: over capacity
-            self.entries.popitem(last=False)               # last=False pops the front: least recently used
+        node = self.nodes.get(key)
+        if node is not None:                               # Step 2 / Edge 1: same node, new value, ttl restarts
+            node.value, node.expires_at = value, expires_at
+            self._move_to_front(node)                      # a put counts as a use
+            return
+        node = Node(key, value, expires_at)                # Step 3: the node carries its key, so eviction can find the dict entry
+        self.nodes[key] = node
+        self._add_to_front(node)
+        if len(self.nodes) > self.capacity:                # Step 4: at most one over, since each put adds one
+            self._evict_lru()
 ''')
 
 GET = method('''
     def get(self, key: str):
         """
         Core logic:
-          1. Look the key up
+          1. Look the key up in the dict
           2. If it has expired, remove it and treat it as missing
-          3. Otherwise mark it most recently used and return the value
+          3. Otherwise move it to the front and return the value
         Edge cases:
           1. Missing key -> None (values are never None)
         """
-        entry = self.entries.get(key)                      # Step 1: .get gives None instead of a KeyError
-        if entry is None:                                  # Edge 1
+        node = self.nodes.get(key)                         # Step 1: O(1), .get gives None instead of a KeyError
+        if node is None:                                   # Edge 1
             return None
-        if entry.is_expired(self.now()):                   # Step 2: the entry knows its own expiry
-            del self.entries[key]                          # remove it on this read; no background job
+        if node.is_expired(self.now()):                    # Step 2: the node knows its own expiry
+            self._drop(node)                               # remove it on this read; no background job
             return None
-        self.entries.move_to_end(key)                      # Step 3: a read counts as a use
-        return entry.value
+        self._move_to_front(node)                          # Step 3: a read counts as a use
+        return node.value
 ''')
 
-DELETE = method('''
+# ---- the recency list: the part that is the LRU ----
+MOVE_TO_FRONT = method('''
+    def _move_to_front(self, node: Node) -> None:
+        """Mark a node most recently used: unlink it, then put it first."""
+        self._remove(node)
+        self._add_to_front(node)
+''')
+
+EVICT_LRU = method('''
+    def _evict_lru(self) -> None:
+        """
+        Core logic:
+          1. The least recently used node is the one right before the tail
+          2. Unlink it and delete its key from the dict
+        Edge cases:
+          1. Called on an empty list -> never: capacity is at least 1 and put calls it only when over
+        """
+        lru = self.tail.prev                               # Step 1: the back of the list is the oldest use
+        self._drop(lru)                                    # Step 2: both structures, or the dict would keep a dead node
+''')
+
+ADD_TO_FRONT = method('''
+    def _add_to_front(self, node: Node) -> None:
+        """
+        Core logic:
+          1. Point the node at the old first node and at the head
+          2. Point the head and the old first node back at it
+        Edge cases:
+          1. Empty list -> the old first node is the tail, and the same four links work
+        """
+        first = self.head.next                             # the sentinels mean first always exists
+        node.prev, node.next = self.head, first            # Step 1
+        self.head.next = node                              # Step 2: four links in all, order matters
+        first.prev = node
+''')
+
+REMOVE = method('''
+    def _remove(self, node: Node) -> None:
+        """
+        Core logic:
+          1. Link the node's neighbours to each other
+        Edge cases:
+          1. First or last real node -> its neighbour is a sentinel, so there is no special case
+        """
+        node.prev.next = node.next                         # skip over the node in both directions
+        node.next.prev = node.prev
+''')
+
+HELPERS = method('''
+    def _drop(self, node: Node) -> None:
+        self._remove(node)                                 # out of the list...
+        del self.nodes[node.key]                           # ...and out of the dict
+
     def delete(self, key: str) -> bool:
         """
         Core logic:
@@ -64,11 +124,12 @@ DELETE = method('''
         Edge cases:
           1. Missing key -> False
         """
-        # pop with a default never raises (Edge 1); an Entry is never None, so None means it was missing
-        return self.entries.pop(key, None) is not None
-''')
+        node = self.nodes.get(key)
+        if node is None:                                   # Edge 1
+            return False
+        self._drop(node)
+        return True
 
-SIZE = method('''
     def size(self) -> int:
         """
         Core logic:
@@ -76,20 +137,22 @@ SIZE = method('''
         Edge cases:
           1. Expired entries nobody has touched yet still count
         """
-        return len(self.entries)                           # no scan for expired ones: that is Edge 1, by design
+        return len(self.nodes)                             # no scan for expired ones: that is Edge 1, by design
 ''')
 
 HEAD = D('''\
     import time
-    from collections import OrderedDict
 
 
-    class Entry:
-        """One stored value and when it expires. It answers is_expired; the cache decides what to do about it."""
+    class Node:
+        """One cache entry and its place in the recency list: a value, when it expires, and its two neighbours."""
 
-        def __init__(self, value, expires_at: float | None):
+        def __init__(self, key, value, expires_at: float | None):
+            self.key = key                       # eviction knows only the node, so it needs the key to leave the dict
             self.value = value
             self.expires_at = expires_at         # None means it never expires
+            self.prev = None                     # towards the most recently used end
+            self.next = None                     # towards the least recently used end
 
         def is_expired(self, now: float) -> bool:
             # >= so a ttl of 10 means gone at exactly 10 seconds
@@ -100,7 +163,7 @@ CACHE = D('''\
 
 
     class Cache:
-        """Holds the entries in recency order and runs put, get, delete and size."""
+        """A dict for lookup and a doubly linked list for recency: the front is the latest use, the back is the oldest."""
 
         def __init__(self, capacity: int, default_ttl: float | None = None, now=time.monotonic):
             if capacity < 1:                     # a cache that holds nothing makes put meaningless
@@ -108,10 +171,14 @@ CACHE = D('''\
             self.capacity = capacity             # put compares the size to this to evict
             self.default_ttl = default_ttl       # used when a put gives no ttl
             self.now = now                       # a clock we can fake in a test
-            self.entries = OrderedDict()         # key -> Entry, least recently used first
+            self.nodes = {}                      # key -> Node: O(1) lookup
+            self.head = Node(None, None, None)   # sentinels, so no link is ever None and no edge case exists
+            self.tail = Node(None, None, None)
+            self.head.next = self.tail           # empty list: head and tail point at each other
+            self.tail.prev = self.head
     ''')
 
-CORE = HEAD + CACHE + in_class(PUT, GET, DELETE, SIZE)
+CORE = HEAD + CACHE + in_class(PUT, GET, MOVE_TO_FRONT, EVICT_LRU, ADD_TO_FRONT, REMOVE, HELPERS)
 
 DEMO = D('''\
 
@@ -151,8 +218,8 @@ EXT_LOCK = D('''\
             self.lock = threading.Lock()    # one lock for the whole cache
 
         def get(self, key):
-            with self.lock:              # get changes the order, so reads lock too
-                entry = self.entries.get(key)
+            with self.lock:              # get changes the list, so reads lock too
+                node = self.nodes.get(key)
                 ...
 
         def put(self, key, value, ttl=None):
@@ -170,38 +237,50 @@ PUT_LOCKED = method('''
             raise ValueError("ttl must be positive")
         with self.lock:                                    # store and evict as one step
             expires_at = None if ttl is None else self.now() + ttl
-            self.entries[key] = Entry(value, expires_at)
-            self.entries.move_to_end(key)
-            while len(self.entries) > self.capacity:       # inside the lock, so no thread sees it over capacity
-                self.entries.popitem(last=False)
+            node = self.nodes.get(key)
+            if node is not None:
+                node.value, node.expires_at = value, expires_at
+                self._move_to_front(node)
+                return
+            node = Node(key, value, expires_at)
+            self.nodes[key] = node
+            self._add_to_front(node)
+            if len(self.nodes) > self.capacity:            # inside the lock, so no thread sees it over capacity
+                self._evict_lru()
 ''')
 
 GET_LOCKED = method('''
     def get(self, key: str):
         """Same steps; the whole read is under the lock because a hit reorders."""
-        with self.lock:                      # get changes the order, so reads lock too
-            entry = self.entries.get(key)
-            if entry is None:
+        with self.lock:                      # get changes the list, so reads lock too
+            node = self.nodes.get(key)
+            if node is None:
                 return None
-            if entry.is_expired(self.now()):
-                del self.entries[key]        # removing is a write too
+            if node.is_expired(self.now()):
+                self._drop(node)             # removing is a write too
                 return None
-            self.entries.move_to_end(key)
-            return entry.value
+            self._move_to_front(node)
+            return node.value
 ''')
 
-DELETE_LOCKED = method('''
+HELPERS_LOCKED = method('''
+    def _drop(self, node: Node) -> None:
+        self._remove(node)                                 # callers already hold the lock
+        del self.nodes[node.key]
+
     def delete(self, key: str) -> bool:
         """Same steps, under the lock."""
         with self.lock:
-            return self.entries.pop(key, None) is not None
-''')
+            node = self.nodes.get(key)
+            if node is None:
+                return False
+            self._drop(node)
+            return True
 
-SIZE_LOCKED = method('''
     def size(self) -> int:
         """Same steps, under the lock so the count never lands mid-change."""
         with self.lock:
-            return len(self.entries)
+            return len(self.nodes)
 ''')
 
 PURGE = method('''
@@ -209,18 +288,20 @@ PURGE = method('''
         """Drop every expired entry and say how many. A timer or a background thread calls this."""
         with self.lock:
             now = self.now()                               # read the clock once, so every entry is judged at one moment
-            # collect first: deleting from a dict while looping over it raises an error
-            dead = [k for k, e in self.entries.items() if e.is_expired(now)]
-            for k in dead:
-                del self.entries[k]
+            # collect first: unlinking while looping over the dict would change it under the loop
+            dead = [n for n in self.nodes.values() if n.is_expired(now)]
+            for n in dead:
+                self._drop(n)
             return len(dead)                               # lets the caller log how much was cleaned
 ''')
 
 HEAD_FINAL = HEAD.replace("import time\n", "import threading\nimport time\n")
-CACHE_FINAL = CACHE.replace("        self.entries = OrderedDict()         # key -> Entry, least recently used first\n",
-                            "        self.entries = OrderedDict()         # key -> Entry, least recently used first\n"
-                            "        self.lock = threading.Lock()         # one lock around every change\n")
-FINAL = HEAD_FINAL + CACHE_FINAL + in_class(PUT_LOCKED, GET_LOCKED, DELETE_LOCKED, SIZE_LOCKED, PURGE)
+CACHE_FINAL = CACHE.replace("        self.tail.prev = self.head\n",
+                            "        self.tail.prev = self.head\n"
+                            "            self.lock = threading.Lock()         # one lock around every change\n"
+                            .replace("            self.lock", "        self.lock"))
+FINAL = HEAD_FINAL + CACHE_FINAL + in_class(PUT_LOCKED, GET_LOCKED, MOVE_TO_FRONT, EVICT_LRU, ADD_TO_FRONT, REMOVE,
+                                           HELPERS_LOCKED, PURGE)
 FINAL_DEMO = D('''\
 
 
@@ -255,7 +336,7 @@ FINAL_OUT = "100\n100 0\n"
 PROBLEM = {
     "id": "kvcache", "title": "A key-value cache", "part_id": "lld-kvstore", "n": 7,
     "part_title": "A key-value cache, built in layers", "minutes": 40,
-    "lead": "A cache grows one layer at a time: a dict, then a TTL, then an LRU capacity, then thread safety when the interviewer asks. A full round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design, e) implementation, f) extensibility. Two classes. Try each box before you open the answer.",
+    "lead": "A cache grows one layer at a time: a dict, then a TTL, then an LRU capacity, then thread safety when the interviewer asks. A full round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design, e) implementation, f) extensibility. Two classes. The LRU is a doubly linked list you write, beside the dict. Try each box before you open the answer.",
     "prompt": "Design an in-memory key-value cache. Then add a time to live, then a capacity with least recently used eviction.",
     "evidence": "Reported in Amazon rounds as a cache that starts as a dict and gains layers every few minutes: expiry, then capacity with LRU, then threads.",
     "drill": "part 7, a key-value cache built in layers.",
@@ -272,7 +353,7 @@ PROBLEM = {
     },
     "clarify_hint": "The operations, what the ttl counts from, what capacity counts. Missing, expired, put on an existing key, bad numbers. Does expiry need a background job? Threads?",
     "clarify_say": "**I sort my questions into three buckets: what it must do, what goes wrong, where scope stops.** I ask what the time to live counts from and what capacity counts, because each one is a layer. Then missing and expired keys, and last whether expiry needs a background job or threads.",
-    "clarify_why": "Each answer is a layer. A ttl gives an expiry on each entry, capacity gives an ordered dict, and 'checked when touched' means no background thread yet.",
+    "clarify_why": "Each answer is a layer. A ttl gives an expiry on each entry, capacity gives a recency list that evicts from one end, and 'checked when touched' means no background thread yet.",
     "answers": "put, get, delete and a count of entries. The time to live counts from the put: one default, and a put can override it. Capacity counts keys, and the least recently used key goes first; reads and writes both count as a use. A missing or expired key returns None. A put on an existing key replaces the value and restarts its ttl. A bad capacity or a ttl of zero is an error. Expiry is checked when a key is touched, not by a background job. Single-threaded to start; threads are a follow-up.",
     "playback": ["Thanks, that's clear. **So: a dict that expires entries when they are touched and evicts the least recently used key when it is full.** Out of scope: persistence, networking, a background thread for expiry. Threads come as the follow-up."],
 
@@ -285,68 +366,88 @@ PROBLEM = {
     "out_of_scope": ["persistence and networking", "a background thread that removes expired entries", "threads (an extension)", "values that are None"],
     "req_hint": "Store with an expiry, read, the capacity limit, delete and count.",
     "req_say": "From your answers I get four requirements. **Each one is a layer or a method: put with a ttl, get, the capacity limit inside put, and delete with size.** I say the error case with each one, like a ttl of zero.",
-    "req_why": "Each requirement is a layer or a method: 1 is put and the ttl, 2 is get, 3 is the LRU in put, 4 is delete and size.",
+    "req_why": "Each requirement is a layer or a method: 1 is put and the ttl, 2 is get, 3 is the LRU eviction in put, 4 is delete and size.",
 
     "entities": [("User / caller", False, "External; not modelled"),
-                 ("Key and value", False, "A string and anything else; they sit in the dict, not in classes"),
-                 ("Entry", True, "A value and when it expires, so expiry is per entry"),
-                 ("Cache", True, "Holds the entries in recency order and runs put, get, delete"),
+                 ("Key and value", False, "A string and anything else; the key is the dict key, the value sits in the node"),
+                 ("Entry / list node", True, "A value, when it expires, its key and two neighbours; one class, so the dict and the list share the same object"),
+                 ("Cache", True, "Holds the dict and the list, and runs put, get, delete"),
                  ("Clock", False, "A function passed in, so a test can fake time; not a class"),
                  ("Eviction policy", False, "Only LRU is asked for; it becomes a class only if another policy is requested")],
-    "ent_hint": "What does an entry need besides its value? Is the clock a class? Is the eviction policy one?",
-    "ent_say": "I underline the nouns. **An entry stays, because expiry belongs to each value, and the cache stays to hold them in order.** Keys and values sit in the dict, the clock is a function I pass in, and eviction is a line in put. None of those earns a class yet.",
-    "ent_why": "Two classes. The clock is a function and eviction is a line in put; neither earns a class until the requirements force it.",
+    "ent_hint": "What does an entry need besides its value? What does the recency list need from each entry? Is the clock a class?",
+    "ent_say": "I underline the nouns. **The entry stays, and it doubles as the list node, because expiry belongs to each value and the list links the same objects the dict finds.** The cache stays to hold them. Keys and values sit in the dict, the clock is a function I pass in, and eviction is a method, not a class, until a second policy is asked for.",
+    "ent_why": "Two classes. One Node serves as entry and list node, so a dict hit gives the node to move in O(1). The clock is a function and eviction is a method; neither earns a class yet.",
 
     "classes": [
         {"name": "Cache", "state": ["capacity: int  # put compares the size to this to evict",
                                     "default_ttl: seconds | None  # used when a put gives no ttl",
                                     "now: function returning seconds  # a passed-in clock, so time can be faked",
-                                    "entries: OrderedDict<key, Entry>  (least recently used first)  # lookup by key, and order is the LRU"],
+                                    "nodes: Map<key, Node>  # O(1) lookup, and the way back from a node to its key",
+                                    "head, tail: Node  (sentinels)  # list ends that are never real entries, so no edge cases",
+                                    "(list order)  # head.next is the most recently used, tail.prev the least"],
          "behaviour": ["put(key, value, ttl) -> void | error  # req 1 and 3: store, then evict if over capacity",
                        "get(key) -> value | None  # req 2: miss, expiry, and marks a use",
                        "delete(key) -> boolean  # req 4: says whether the key was there",
-                       "size() -> int  # req 4: expired but untouched entries still count"]},
-        {"name": "Entry", "state": ["value: any  # what the caller stored",
-                                    "expires_at: seconds | None  # expiry is per entry, set at put"],
-         "behaviour": ["is_expired(now) -> boolean  # get asks the entry, not the cache"]},
+                       "size() -> int  # req 4: expired but untouched entries still count",
+                       "_move_to_front(node) -> void  # a use: unlink, then add first",
+                       "_evict_lru() -> void  # the node before the tail goes, from list and dict",
+                       "_add_to_front(node), _remove(node) -> void  # the two list operations"]},
+        {"name": "Node", "state": ["key: any  # eviction finds the dict entry from the node",
+                                   "value: any  # what the caller stored",
+                                   "expires_at: seconds | None  # expiry is per entry, set at put",
+                                   "prev, next: Node  # the neighbours in the recency list"],
+         "behaviour": ["is_expired(now) -> boolean  # get asks the node, not the cache"]},
     ],
-    "class_hint": "Cache holds an ordered dict of entries and a clock. An entry holds a value and an expiry time.",
-    "class_say": "**I start from the four methods and ask what each one has to read.** Get and put find a key, so the cache keeps a dict of entries. Eviction needs the least recently used key, so an ordered dict gives me both lookup and order. Expiry needs the time, so I pass in a clock, and each entry stores when it expires.",
-    "class_why": "An ordered dict is the whole LRU: the front is the oldest use, move_to_end marks a use, and popitem from the front evicts.",
-    "class_qa": [{"ask": "Why an OrderedDict and not a dict plus a list of keys?",
-                  "say": "Because the list makes every get O(n): finding the key to move. **An ordered dict does the lookup, the move to the end and the eviction from the front all in O(1),** and that's all LRU needs.",
-                  "explain": ["Since Python 3.7 a plain dict keeps insertion order, but it has no move_to_end, so a use cannot reorder it cheaply."]}],
+    "class_hint": "Cache holds a dict of nodes, a clock, and a list with a sentinel at each end. A node holds a key, a value, an expiry time and two neighbours.",
+    "class_say": "**I start from the four methods and ask what each one has to read.** Get and put find a key in O(1), so the cache keeps a dict of nodes. Eviction needs the least recently used key and a use needs to move an entry to the other end, both in O(1), so the nodes also form a doubly linked list. Expiry needs the time, so I pass in a clock, and each node stores when it expires.",
+    "class_why": "The dict finds a node, the list orders the nodes, and both point at the same objects. Sentinels at both ends remove every empty-list and end-of-list case.",
+    "class_qa": [{"ask": "Why a dict and a linked list, and not a dict plus a list of keys?",
+                  "say": "Because the list makes every get O(n): finding the key to move. **The dict gives me the node, and the node already knows its neighbours, so unlinking it and putting it first is O(1).** Eviction is O(1) too: the node before the tail.",
+                  "explain": ["The list has to be doubly linked: unlinking a node needs its previous neighbour without a scan."]},
+                 {"ask": "Why sentinel nodes at the head and the tail?",
+                  "say": "So no link is ever None. **Adding to an empty list and removing the first or last node run the same lines as any other case,** which is where hand-written linked lists usually break."}],
 
     "map": {"center": ("Cache", "put, get, delete, size"),
-            "owned": [("Entry", "value, expires_at")],
-            "uses": [("OrderedDict", "recency order"), ("now()", "the clock, a function")]},
+            "owned": [("Node", "key, value, prev, next")],
+            "uses": [("Dict", "key -> Node"), ("now()", "the clock, a function")]},
 
-    "skeleton": {"q": "First the small classes: Entry and the cache's __init__. Each line from the class design.",
-                 "hint": "Entry holds a value and an expiry and answers is_expired. The cache holds a capacity, a default ttl, a clock and an ordered dict.",
+    "skeleton": {"q": "First the small pieces: Node and the cache's __init__, with the two sentinels linked to each other. Each line from the class design.",
+                 "hint": "Node holds a key, a value, an expiry and two neighbours, and answers is_expired. The cache holds a capacity, a default ttl, a clock, a dict, and a head and tail node pointing at each other.",
                  "code": HEAD + CACHE,
                  "why": "These come straight from the - state lines. Writing them first means every method after only has to do its steps."},
     "methods": [
-        {"name": "put", "q": "put(key, value, ttl): core logic and edge cases as comments, then the code.",
-         "hint": "Work out the expiry, store, move to the end, drop from the front while over capacity. Edges: replace, ttl of zero.", "code": PUT,
-         "why": "Replacing a key moves it to the end too, so a put counts as a use. The loop is a while because capacity never changes, but it is harmless."},
+        {"name": "put", "q": "Start with the most interesting method: put(key, value, ttl). Core logic and edge cases as comments, then the code. Name the list work as helpers.",
+         "hint": "Work out the expiry. Existing key: update it and self._move_to_front(node). New key: make a node, add it to the dict and the front, and self._evict_lru() if over capacity. Edges: replace, ttl of zero.", "code": PUT,
+         "why": "Replacing a key moves it to the front too, so a put counts as a use. The list work has names here, and gets its own boxes next."},
         {"name": "get", "q": "get(key): core logic, edge cases, code.",
-         "hint": "Look up, check expiry, mark used, return. Edge: missing.", "code": GET,
+         "hint": "Look up, check expiry, move to the front, return. Edge: missing.", "code": GET,
          "why": "An expired key is removed on the read, which is why size() can count dead entries. A hit changes the order, which matters for threads."},
-        {"name": "delete", "q": "delete(key): what does it return?",
-         "hint": "Pop the key; say whether it was there.", "code": DELETE,
-         "why": "pop with a default never raises, and the boolean tells the caller whether anything happened."},
-        {"name": "size", "q": "size(): what does it count?",
-         "hint": "The entries held. Say what that includes.", "code": SIZE,
-         "why": "It includes expired entries nobody touched. Say it before they ask."},
+        {"name": "_move_to_front", "q": "_move_to_front(node): what is a use, in terms of the list?",
+         "hint": "Unlink the node, then add it first.", "code": MOVE_TO_FRONT,
+         "why": "Two calls to the list operations, so there is one place that says what a use means."},
+        {"name": "_evict_lru", "q": "_evict_lru(): which node goes, and what must you remove it from?",
+         "hint": "The node right before the tail. Both the list and the dict.", "code": EVICT_LRU,
+         "why": "The LRU is O(1) because the oldest use is always at the back. Forgetting the dict entry leaves a dead node that get would still find."},
+        {"name": "_add_to_front", "q": "_add_to_front(node): link it between the head and the old first node.",
+         "hint": "Four links: the node's prev and next, the head's next, the old first node's prev.", "code": ADD_TO_FRONT,
+         "why": "Because of the sentinels the old first node always exists, even in an empty list."},
+        {"name": "_remove", "q": "_remove(node): unlink it from the list.",
+         "hint": "Join its two neighbours to each other.", "code": REMOVE,
+         "why": "Two lines, and no case for the first or last node: their neighbours are sentinels."},
     ],
+    "helpers": {"q": "Last, the plain ones: _drop, delete and size.",
+                "starter": "def _drop(self, node):\n    ...\n",
+                "hint": "_drop unlinks the node and deletes its key from the dict. delete finds the node and drops it. size is the dict length.",
+                "code": HELPERS,
+                "why": "_drop is the one way a node leaves, so list and dict never disagree. size includes expired entries nobody touched. Say it before they ask."},
 
     "design_check": {
         "lead": "SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies.",
         "solid": [
-            ("Single responsibility", "Entry knows its own expiry; Cache owns the order, the capacity and put, get, delete, size."),
-            ("Open/closed", "Today a new eviction rule edits put and get. Pulling eviction into a policy makes it a new class instead."),
+            ("Single responsibility", "Node knows its own expiry; Cache owns the dict, the list order, the capacity and put, get, delete, size."),
+            ("Open/closed", "Today a new eviction rule edits _evict_lru and _move_to_front. Pulling eviction into a policy makes it a new class instead."),
             ("Liskov substitution", "Nothing to substitute yet: no subclasses. An LFU policy would have to honour on_use and victim like the LRU one."),
-            ("Interface segregation", "Nothing to segregate yet: no interfaces, and callers use all four Cache methods."),
+            ("Interface segregation", "Nothing to segregate yet: no interfaces, and callers use all four public Cache methods."),
             ("Dependency inversion", "Cache is handed its clock now instead of calling time itself; eviction is still built in."),
         ],
         "varies": [
@@ -358,33 +459,34 @@ PROBLEM = {
     },
     "extensions": [
         {"ask": "Now several threads use the cache at once. What goes wrong and what do you do?",
-         "say": "Move to end and pop from the front are not atomic, and **even get changes the order, so reads need the lock too.** One lock around each public method keeps it simple and correct. Contention is the cost.",
-         "explain": ["A reader-writer lock does not help here, because every read is also a write to the order."],
+         "say": "Unlinking and relinking a node, and the dict update beside it, are not atomic, and **even get changes the list, so reads need the lock too.** One lock around each public method keeps it simple and correct. Contention is the cost.",
+         "explain": ["A reader-writer lock does not help here, because every read is also a write to the list."],
          "code": EXT_LOCK, "code_title": "Thread safety: one lock, taken by every public method",
          "short_q": "Several threads", "short_a": "one lock around every public method, reads too, because get reorders"},
         {"ask": "Expired entries pile up if nobody reads them. How do you clean up?",
          "say": "Add purge_expired(), which drops every expired entry and returns how many. **Something calls it on a timer,** a background thread or the caller. Until then, size counts them and LRU still bounds memory.",
          "short_q": "Expired entries pile up", "short_a": "purge_expired() on a timer; LRU still bounds memory meanwhile"},
         {"ask": "Evict the least frequently used key instead. What changes?",
-         "say": "The eviction line. **Pull it into one small class with two calls, on_use(key) and victim(),** and let the cache ask it. LRU keeps order, LFU keeps counts. Put and get stay the same.",
+         "say": "The eviction methods. **Pull them into one small class with two calls, on_use(key) and victim(),** and let the cache ask it. LRU keeps the list, LFU keeps counts. Put and get stay the same.",
          "short_q": "Another eviction policy", "short_a": "pull eviction into a policy with on_use(key) and victim(); the cache asks it"},
         {"ask": "On a miss, load the value from a database. Many callers miss the same key at once.",
          "say": "Add get_or_load(key, loader). **Only the first caller runs the loader; the others wait for its result** (a per-key lock or a pending future), so one popular key does not send a hundred queries.",
          "short_q": "Load on a miss", "short_a": "get_or_load(key, loader); one caller loads, the rest wait on it"},
     ],
-    "faq": [("Why now >= expires_at and not >?", "A ttl of 10 should mean gone at exactly 10 seconds. Say which you chose."),
+    "faq": [("Why not an OrderedDict?", "It is the shortcut I would name, not use: move_to_end and popitem(last=False) do the whole LRU in a few lines. If the interviewer allows it, say so after the linked list, and mention it is the same idea built in."),
+            ("Why now >= expires_at and not >?", "A ttl of 10 should mean gone at exactly 10 seconds. Say which you chose."),
             ("A different ttl for each key?", "Already there: the put's ttl overrides the default.")],
 
-    "summary": ["**Two classes.** The Cache holds an ordered dict of entries, least recently used first. put stores the value with an expiry and drops the front entry when it is over capacity; get removes an expired key, or marks a live one used. An Entry holds a value and its expiry time, and the clock is a function we pass in.",
+    "summary": ["**Two classes.** The Cache holds a dict from key to node, and a doubly linked list of the same nodes with a sentinel at each end, most recently used first. put stores the value with an expiry and evicts the node before the tail when it is over capacity; get removes an expired key, or moves a live one to the front. A Node holds a value, its key, its expiry time and its neighbours, and the clock is a function we pass in.",
                 "**It grows by layer:** one lock around every method for threads (reads too, because get reorders), a purge for entries nobody touches, an eviction policy pulled out if LFU is asked for, and a loader so one miss fills the key once."],
 
     "golden": [
         ("Build the layers in order: a dict, then expiry, then capacity. Say what each one costs.", "interviewers add layers on purpose, and over-building layer three first is the common failure."),
-        ("An OrderedDict is the whole LRU: move_to_end on a use, popitem from the front to evict.", "every operation stays O(1), and it is five lines instead of a linked list."),
+        ("The LRU is a dict plus a doubly linked list with sentinels: a use moves a node to the front, eviction drops the one before the tail.", "every operation stays O(1), and the sentinels remove every end-of-list case."),
+        ("The node carries its key, so evicting a node can delete its dict entry.", "forgetting this leaves the dict pointing at an unlinked node."),
         ("Time is a function passed in, so the demo and the tests fake it.", "ttl logic cannot be shown any other way without sleeping."),
         ("Expiry is checked when a key is touched, and size() admits that expired entries count.", "it follows the agreed scope and shows you know the edge before they ask."),
         ("Even get takes the lock, because it reorders.", "it is the senior answer to threads: reads are writes here."),
-        ("Each extension changes one place: a lock, a purge, a policy, a loader.", "it shows the design stayed small and open."),
     ],
 
     "core_code": CORE, "demo": DEMO, "demo_out": DEMO_OUT,

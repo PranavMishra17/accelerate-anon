@@ -187,17 +187,18 @@ def mock_part(P):
         cls_blocks.append(turn(qa["ask"], qa["say"], explain=qa.get("explain")))
     S.append({"id": f"{pid}-classes", "title": "d) Class design", "blocks": cls_blocks})
     impl = [{"t": "svg", "svg": mp, "alt": "Class map"},
-            {"t": "p", "text": "One method at a time. **Write the core logic as comments, list the edge cases, then write the code.** Push details into private helpers and implement them only if there's time or you're asked."}]
+            {"t": "p", "text": "**Start with the most interesting method, not the easiest.** Write it at the level you'd say out loud: core logic as comments, edge cases, then code that names the hard part as a private helper (best = self._select_best(...)). Then write the most interesting helper the same way, and leave the plain ones for last."}]
     if P.get("skeleton"):
         k = P["skeleton"]
         impl.append({"t": "write", "id": f"{pid}-skeleton-w", "q": k["q"], "starter": k.get("starter", ""), "hint": k["hint"],
                      "solution": norm(k["code"]), "why": k["why"]})
     for m in P["methods"]:
-        impl.append({"t": "write", "id": f"{pid}-m-{m['name']}", "q": m["q"], "starter": starter(m), "hint": m["hint"],
+        impl.append({"t": "write", "id": f"{pid}-m-{m['name'].replace('.', '-')}", "q": m["q"], "starter": starter(m), "hint": m["hint"],
                      "solution": norm(m["code"]), "why": m["why"]})
-    if P.get("helpers"):
-        impl.append({"t": "write", "id": f"{pid}-helpers-w", "q": P["helpers"]["q"], "starter": P["helpers"].get("starter", ""),
-                     "hint": P["helpers"]["hint"], "solution": norm(P["helpers"]["code"]), "why": P["helpers"]["why"]})
+    hs = P.get("helpers") or []
+    for k, h in enumerate([hs] if isinstance(hs, dict) else hs):     # one helpers box, or several in reading order
+        impl.append({"t": "write", "id": f"{pid}-helpers-w" + (f"{k}" if k else ""), "q": h["q"], "starter": h.get("starter", ""),
+                     "hint": h["hint"], "solution": norm(h["code"]), "why": h["why"]})
     S.append({"id": f"{pid}-impl", "title": "e) Implementation", "blocks": impl})
     ext = [{"t": "p", "text": "The interviewer changes the rules. **For each change, say which class it touches and what stays the same.** A good design changes in one place."}]
     ext += design_check_blocks(P)

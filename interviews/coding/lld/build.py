@@ -1,6 +1,6 @@
 """Builds the Amazon LLD pages from interviews/coding/lld/problems/*.py:
   amazon-lld-mock.js    part 8, the Locker mock
-  amazon-lld-drills.js  parts 2 to 7, each a staged round
+  amazon-lld-drills.js  parts 2 to 7 and 9 to 15, each a staged round
   amazon-lld-top10.js   part 0.5, an overview and ten one-screen cheat sheets
 Run: python interviews/coding/lld/build.py            (all; checks every piece of code first)
      python interviews/coding/lld/build.py check <id> (one problem's code only)"""
@@ -11,7 +11,8 @@ sys.path.insert(0, HERE)
 import lib  # noqa: E402
 
 CODING = os.path.dirname(HERE)
-DRILLS = ["parking", "filesystem", "cart", "library", "elevator", "kvcache"]   # parts 2..7, in order
+DRILLS = ["parking", "filesystem", "cart", "library", "elevator", "kvcache",   # parts 2..7, in order
+          "chess", "splitwise", "booking", "vending", "ratelimiter", "meeting", "filesearch"]   # parts 9..15 (8 is the Locker mock)
 TOP10 = ["locker", "parking", "chess", "splitwise", "booking", "vending", "elevator", "ratelimiter", "meeting", "filesearch"]
 
 
@@ -42,7 +43,7 @@ def main():
     for p in P.values():
         lib.check(p)
     write("amazon-lld-mock.js", "Amazon loop, LLD mock: Amazon Locker end to end.", [lib.mock_part(P["locker"])])
-    write("amazon-lld-drills.js", "Amazon loop, LLD drills, parts 2 to 7, each a staged round.", [lib.mock_part(P[i]) for i in DRILLS])
+    write("amazon-lld-drills.js", "Amazon loop, LLD drills, parts 2 to 7 and 9 to 15, each a staged round.", [lib.mock_part(P[i]) for i in DRILLS])
     import overview
     tabs = [overview.SECTION] + [lib.cheat_tab(P[i], k) for k, i in enumerate(TOP10, 1)]
     write("amazon-lld-top10.js", "Amazon loop, LLD part 0.5: the ten most reported Amazon LLD questions.",

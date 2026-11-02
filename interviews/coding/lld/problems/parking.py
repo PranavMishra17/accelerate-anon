@@ -71,24 +71,49 @@ FREE_COUNT = method('''
         return sum(1 for s in self.spots if s.fits(size))
 ''')
 
-HELPERS_COMMON = method('''
-    def _find_spot(self, size: Size):
-        """Smallest free spot that fits; ties go to the first one listed (the lowest level)."""
-        candidates = [s for s in self.spots if s.fits(size)]          # free and big enough
-        # min keeps the first of equal sizes, so the lowest level wins; default=None when empty
-        return min(candidates, key=lambda s: s.size, default=None)
+FIND_SPOT = method('''
+    def _find_spot(self, size: Size) -> Spot | None:
+        """
+        Core logic:
+          1. Walk the spots in order, skipping any that are taken or too small
+          2. Keep the smallest that fits, so a big spot stays free for a big vehicle
+          3. Return it, or None when nothing fits
+        Edge cases:
+          1. Equal sizes -> the first listed wins, which is the lowest level
+        """
+        best = None
+        for spot in self.spots:                            # Step 1: spots are listed lowest level first
+            if not spot.fits(size):                        # taken, or too small for this vehicle
+                continue
+            if best is None or spot.size < best.size:      # Step 2: strictly smaller, so a tie keeps the earlier spot
+                best = spot
+        return best                                        # Step 3: None means full for this size
+''')
 
+IS_PARKED = method('''
     def _is_parked(self, plate: str) -> bool:
         """An open ticket with this plate means the car is inside."""
         return any(t.plate == plate for t in self.tickets.values())
 ''')
 
+HOURS_PARKED = method('''
+    def hours_parked(self, now: datetime) -> int:
+        """
+        Core logic:
+          1. Time between entry and now, in hours
+          2. Round up: every started hour counts
+          3. At least one hour is charged
+        Edge cases:
+          1. Exit in the same minute as entry -> 1 hour, not 0
+        """
+        hours = ceil((now - self.entered_at) / timedelta(hours=1))   # Step 1 and 2: 2.3 hours becomes 3
+        return max(1, hours)                               # Step 3 and Edge 1
+''')
+
 FEE = method('''
     def _fee(self, ticket: Ticket, now: datetime) -> int:
-        """Every started hour counts; the rate depends on the vehicle's size."""
-        # time parked / one hour = hours as a float; ceil rounds 2.3 up to 3; at least 1 hour
-        hours = max(1, ceil((now - ticket.entered_at) / timedelta(hours=1)))
-        return hours * self.RATE_PER_HOUR[ticket.size]     # rate looked up by the vehicle's size
+        """The ticket knows its hours; the lot knows the rate for the vehicle's size."""
+        return ticket.hours_parked(now) * self.RATE_PER_HOUR[ticket.size]
 ''')
 
 HEAD = D('''\
@@ -133,7 +158,7 @@ TICKET = D('''\
 
 
     class Ticket:
-        """A record of one stay. Only data, no behaviour: the lot does the work, the ticket remembers."""
+        """One stay. It remembers when the car came in, so it can say how many hours it has been here."""
 
         def __init__(self, ticket_id: int, plate: str, size: Size, spot: Spot, entered_at: datetime):
             self.ticket_id = ticket_id   # the key the driver hands back at exit
@@ -155,7 +180,7 @@ LOT = D('''\
             self.next_id = 1                 # the id the next ticket will get
     ''')
 
-CORE = HEAD + SPOT + TICKET + LOT + in_class(ENTER, EXIT, FREE_COUNT, HELPERS_COMMON, FEE)
+CORE = HEAD + SPOT + TICKET + in_class(HOURS_PARKED) + LOT + in_class(ENTER, FIND_SPOT, EXIT, FREE_COUNT, IS_PARKED, FEE)
 
 DEMO = D('''\
 
@@ -186,8 +211,7 @@ EXT_PRICING = D('''\
         RATE_PER_HOUR = {Size.SMALL: 100, Size.MEDIUM: 200, Size.LARGE: 400}
 
         def fee(self, ticket: Ticket, now: datetime) -> int:     # the old _fee, moved here unchanged
-            hours = max(1, ceil((now - ticket.entered_at) / timedelta(hours=1)))
-            return hours * self.RATE_PER_HOUR[ticket.size]
+            return ticket.hours_parked(now) * self.RATE_PER_HOUR[ticket.size]
 
 
     class CappedPricing(Pricing):     # a new rule is a subclass; the lot never changes
@@ -246,9 +270,8 @@ PRICING = D('''\
         RATE_PER_HOUR = {Size.SMALL: 100, Size.MEDIUM: 200, Size.LARGE: 400}   # cents
 
         def fee(self, ticket: Ticket, now: datetime) -> int:
-            # started hours, at least one, times the rate for the vehicle's size
-            hours = max(1, ceil((now - ticket.entered_at) / timedelta(hours=1)))
-            return hours * self.RATE_PER_HOUR[ticket.size]
+            # the ticket's started hours (at least one) times the rate for the vehicle's size
+            return ticket.hours_parked(now) * self.RATE_PER_HOUR[ticket.size]
 
 
     class CappedPricing(Pricing):     # a daily cap is a new rule, so a subclass
@@ -271,7 +294,8 @@ FINAL_LOT = D('''\
             self.lock = Lock()               # one gate at a time chooses and parks
     ''')
 
-FINAL = FINAL_HEAD + SPOT + TICKET + PRICING + FINAL_LOT + in_class(FINAL_ENTER, FINAL_EXIT, FREE_COUNT, HELPERS_COMMON)
+FINAL = (FINAL_HEAD + SPOT + TICKET + in_class(HOURS_PARKED) + PRICING + FINAL_LOT
+         + in_class(FINAL_ENTER, FIND_SPOT, FINAL_EXIT, FREE_COUNT, IS_PARKED))
 
 FINAL_DEMO = D('''\
 
@@ -337,7 +361,7 @@ PROBLEM = {
 
     "entities": [("Vehicle", False, "Only its plate and size matter, and both are parameters of enter"),
                  ("Spot", True, "Has a size and holds a vehicle or is free"),
-                 ("Ticket", True, "Id, plate, size, spot and entry time: what exit needs to price the stay"),
+                 ("Ticket", True, "Id, plate, size, spot and entry time; it works out the hours parked for the fee"),
                  ("ParkingLot", True, "Runs enter, exit and the free counts"),
                  ("Level", False, "Only an ordering of spots here; a prefix in the spot id and the order of the list cover it"),
                  ("Driver / Gate", False, "External; not modelled")],
@@ -362,45 +386,51 @@ PROBLEM = {
                                      "plate: string  # catches the same car entering twice",
                                      "size: Size  # the fee rate, without a second lookup",
                                      "spot: Spot  # exit frees this spot directly",
-                                     "entered_at: datetime  # fee = now - entered_at"],
-         "behaviour": []},
+                                     "entered_at: datetime  # hours parked = now - entered_at"],
+         "behaviour": ["hours_parked(now) -> int  # started hours, at least 1; the fee is this times the rate"]},
     ],
-    "class_hint": "The lot holds spots and open tickets. A spot holds a size and who is in it. A ticket holds what exit needs for the fee.",
-    "class_say": "**I start from the methods the requirements gave me, then ask what each one has to read.** Enter needs the spots in order, so the lot holds a list. Exit gets only a ticket id, so the lot keeps tickets in a map by id, and a counter to make new ids. The ticket carries what the fee needs: size, spot and entry time.",
+    "class_hint": "The lot holds spots and open tickets. A spot holds a size and who is in it. A ticket holds what exit needs for the fee and can say its own hours.",
+    "class_say": "**I start from the methods the requirements gave me, then ask what each one has to read.** Enter needs the spots in order, so the lot holds a list. Exit gets only a ticket id, so the lot keeps tickets in a map by id, and a counter to make new ids. The ticket carries what the fee needs: size, spot and entry time, and it answers hours_parked(now) itself.",
     "class_why": "Exit looks a ticket up by id, so a map keeps it to one step. The ticket stores the vehicle size so the fee needs no second lookup.",
     "class_qa": [{"ask": "Why is the vehicle not a class?",
                   "say": "Because the lot only ever needs its plate and its size, and both come in as arguments. **I'd add a Vehicle class when a vehicle has behaviour,** say a truck that needs two spots. Until then it's a class that only carries data.",
                   "explain": ["Say the same about Car, Motorcycle and Truck as subclasses: only the size differs, so a Size enum does the job."]}],
 
     "map": {"center": ("ParkingLot", "enter, exit, free_count"),
-            "owned": [("Spot", "size, plate"), ("Ticket", "plate, spot, entry time")],
+            "owned": [("Spot", "size, plate"), ("Ticket", "spot, hours_parked")],
             "uses": [("Size (enum)", "SMALL, MEDIUM, LARGE")]},
 
-    "skeleton": {"q": "First the small classes: Size, ParkingError, Spot, Ticket, and the lot's __init__. Each line from the class design.",
-                 "hint": "Spot holds a size and a plate and changes its own state. Ticket only stores what exit needs. The lot holds the spots, the open tickets by id and the next id.",
+    "skeleton": {"q": "First the small classes: Size, ParkingError, Spot, Ticket (its fields), and the lot's __init__. Each line from the class design.",
+                 "hint": "Spot holds a size and a plate and changes its own state. Ticket stores what exit needs (hours_parked comes later, in its own box). The lot holds the spots, the open tickets by id and the next id.",
                  "code": HEAD + SPOT + TICKET + LOT,
                  "why": "These come straight from the − state lines. Writing them first means every method after only has to do its steps."},
     "methods": [
-        {"name": "enter", "q": "enter(plate, size, now): core logic and edge cases as comments, then the code.",
-         "hint": "Find the smallest spot that fits, park, make and store the ticket, return it. Edges: already parked, none free.", "code": ENTER,
-         "why": "_find_spot and _is_parked are named here and written after. The flow reads in four lines."},
+        {"name": "enter", "q": "Start with the most interesting public method: enter(plate, size, now). Core logic and edge cases as comments, then the code. Name the hard part as a helper.",
+         "hint": "Check the plate, spot = self._find_spot(size), park, make and store the ticket, return it. Edges: already parked, none free.", "code": ENTER,
+         "why": "The flow reads in a few lines. Choosing the spot is the hard part, so it gets a name here and its own box next."},
+        {"name": "_find_spot", "q": "_find_spot(size): which free spot should the vehicle get? Write the loop.",
+         "hint": "Skip spots that don't fit. Keep the smallest. A tie keeps the first, which is the lowest level.", "code": FIND_SPOT,
+         "why": "Smallest fit keeps big spots free for big vehicles. A strict < means ties go to the earlier spot, so runs are the same every time. (min with a key does the same in one line.)"},
         {"name": "exit", "q": "exit(ticket_id, now): core logic, edge cases, code.",
          "hint": "Look up, price it, free the spot, close the ticket. Edge: unknown ticket.", "code": EXIT,
          "why": "The fee is computed before the spot is freed and the ticket deleted, so an error can't leave a half-closed ticket."},
+        {"name": "Ticket.hours_parked", "q": "Ticket.hours_parked(now): how many hours does the fee count?",
+         "hint": "Time since entry in hours, rounded up, at least one.", "code": HOURS_PARKED,
+         "why": "The ticket owns entered_at, so it answers the time question. The lot only multiplies by a rate."},
         {"name": "free_count", "q": "free_count(size): how many spots can take this vehicle?",
          "hint": "Count the spots whose fits() is true.", "code": FREE_COUNT,
          "why": "It reuses fits(), the same rule enter uses, so the count and the allocation can never disagree."},
     ],
-    "helpers": {"q": "Now the helpers: _find_spot, _is_parked, _fee.",
-                "starter": "def _find_spot(self, size):\n    ...\n",
-                "hint": "The free spots that fit, then the smallest. Any open ticket with this plate. Started hours times the rate for the size.",
-                "code": HELPERS_COMMON + "\n" + FEE,
+    "helpers": {"q": "Now the helpers: _is_parked and _fee.",
+                "starter": "def _is_parked(self, plate):\n    ...\n",
+                "hint": "Any open ticket with this plate. The ticket's hours times the rate for the size.",
+                "code": IS_PARKED + "\n" + FEE,
                 "why": "A linear scan is fine for a lot with hundreds of spots. Keeping a free list per size is faster but puts state in two places."},
 
     "design_check": {
         "lead": "SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies.",
         "solid": [
-            ("Single responsibility", "Spot tracks one space, Ticket records one stay, the lot runs enter and exit. The fee moves into Pricing once it varies."),
+            ("Single responsibility", "Spot tracks one space, Ticket records one stay and counts its hours, the lot runs enter and exit. The fee moves into Pricing once it varies."),
             ("Open/closed", "A new pricing rule is a new Pricing subclass. enter and exit are not edited."),
             ("Liskov substitution", "CappedPricing works anywhere Pricing does: same fee(ticket, now), still cents."),
             ("Interface segregation", "No interface until something varies. Pricing has one method, fee."),
@@ -431,7 +461,7 @@ PROBLEM = {
     "faq": [("What if a truck needs two adjacent spots?", "A spot gets a neighbour link and fits() checks a run of spots. Only Spot and _find_spot change."),
             ("Many garages?", "A garage network that tries each lot and calls its enter. ParkingLot doesn't change.")],
 
-    "summary": ["**Three classes and an enum.** The ParkingLot is the entry point: a vehicle enters by size and gets a ticket for the smallest free spot that fits, and exits with the ticket to get the amount owed. A Spot holds its size and who is in it. A Ticket holds the plate, size, spot and entry time.",
+    "summary": ["**Three classes and an enum.** The ParkingLot is the entry point: a vehicle enters by size and gets a ticket for the smallest free spot that fits, and exits with the ticket to get the amount owed. A Spot holds its size and who is in it. A Ticket holds the plate, size, spot and entry time, and counts its own started hours.",
                 "**It extends in one place each time:** a new pricing rule is a Pricing class given to the lot, nearest spot changes one helper, and two gates racing for the last spot are one lock around choose-and-park."],
 
     "golden": [

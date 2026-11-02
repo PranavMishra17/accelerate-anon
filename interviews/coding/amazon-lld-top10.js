@@ -464,7 +464,7 @@ window.LOOP_CODING.parts.push({
       [
        "Ticket",
        "keep",
-       "Id, plate, size, spot and entry time: what exit needs to price the stay"
+       "Id, plate, size, spot and entry time; it works out the hours parked for the fee"
       ],
       [
        "ParkingLot",
@@ -487,18 +487,18 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-parking-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class ParkingLot\n- spots: Spot[]  (lowest level first)  # enter scans in order for the first free fit\n- tickets: Map<ticket_id, Ticket>  # exit only gets an id; a map finds it in one step\n- next_id: int  # every ticket needs a unique id; a counter hands out the next\n+ enter(plate, size, now) -> Ticket | error  # req 1\n+ exit(ticket_id, now) -> fee in cents | error  # req 2 and 3: free the spot, price the stay\n+ free_count(size) -> int  # req 4: the sign at the gate\n\nclass Spot\n- spot_id: string  # printed on the ticket so the driver finds the car\n- size: Size  (SMALL, MEDIUM, LARGE -> enum)  # decides what fits\n- plate: string | None  # None means free; no separate flag\n+ fits(size) -> boolean  # the size rule lives in one place\n+ park(plate) -> void  # the spot changes its own state\n+ leave() -> void  # exit calls it to free the spot\n\nclass Ticket\n- ticket_id: int  # the key in the lot's map\n- plate: string  # catches the same car entering twice\n- size: Size  # the fee rate, without a second lookup\n- spot: Spot  # exit frees this spot directly\n- entered_at: datetime  # fee = now - entered_at\n",
+     "code": "class ParkingLot\n- spots: Spot[]  (lowest level first)  # enter scans in order for the first free fit\n- tickets: Map<ticket_id, Ticket>  # exit only gets an id; a map finds it in one step\n- next_id: int  # every ticket needs a unique id; a counter hands out the next\n+ enter(plate, size, now) -> Ticket | error  # req 1\n+ exit(ticket_id, now) -> fee in cents | error  # req 2 and 3: free the spot, price the stay\n+ free_count(size) -> int  # req 4: the sign at the gate\n\nclass Spot\n- spot_id: string  # printed on the ticket so the driver finds the car\n- size: Size  (SMALL, MEDIUM, LARGE -> enum)  # decides what fits\n- plate: string | None  # None means free; no separate flag\n+ fits(size) -> boolean  # the size rule lives in one place\n+ park(plate) -> void  # the spot changes its own state\n+ leave() -> void  # exit calls it to free the spot\n\nclass Ticket\n- ticket_id: int  # the key in the lot's map\n- plate: string  # catches the same car entering twice\n- size: Size  # the fee rate, without a second lookup\n- spot: Spot  # exit frees this spot directly\n- entered_at: datetime  # hours parked = now - entered_at\n+ hours_parked(now) -> int  # started hours, at least 1; the fee is this times the rate\n",
      "notes": {}
     },
     {
      "t": "say",
      "lines": [
-      "**I start from the methods the requirements gave me, then ask what each one has to read.** Enter needs the spots in order, so the lot holds a list. Exit gets only a ticket id, so the lot keeps tickets in a map by id, and a counter to make new ids. The ticket carries what the fee needs: size, spot and entry time."
+      "**I start from the methods the requirements gave me, then ask what each one has to read.** Enter needs the spots in order, so the lot holds a list. Exit gets only a ticket id, so the lot keeps tickets in a map by id, and a counter to make new ids. The ticket carries what the fee needs: size, spot and entry time, and it answers hours_parked(now) itself."
      ]
     },
     {
      "t": "svg",
-     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"Parking lot class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">ParkingLot</text><text class=\"d-s\" x=\"125\" y=\"44\">enter, exit, free_count</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Spot</text><text class=\"d-s\" x=\"30\" y=\"138\">size, plate</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">Ticket</text><text class=\"d-s\" x=\"30\" y=\"210\">plate, spot, entry time</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Size (enum)</text><text class=\"d-s\" x=\"234\" y=\"138\">SMALL, MEDIUM, LARGE</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
+     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"Parking lot class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">ParkingLot</text><text class=\"d-s\" x=\"125\" y=\"44\">enter, exit, free_count</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Spot</text><text class=\"d-s\" x=\"30\" y=\"138\">size, plate</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">Ticket</text><text class=\"d-s\" x=\"30\" y=\"210\">spot, hours_parked</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Size (enum)</text><text class=\"d-s\" x=\"234\" y=\"138\">SMALL, MEDIUM, LARGE</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
      "alt": "Class map"
     },
     {
@@ -509,7 +509,9 @@ window.LOOP_CODING.parts.push({
      "t": "list",
      "items": [
       "enter: Find the smallest free spot the vehicle fits in; Park the vehicle there; Create a ticket (id, plate, size, spot, entry time) and store it; Return the ticket.",
+      "_find_spot: Walk the spots in order, skipping any that are taken or too small; Keep the smallest that fits, so a big spot stays free for a big vehicle; Return it, or None when nothing fits.",
       "exit: Look up the ticket; Work out the fee from the time parked; Free the spot and close the ticket; Return the fee in cents.",
+      "Ticket.hours_parked: Time between entry and now, in hours; Round up: every started hour counts; At least one hour is charged.",
       "free_count: Count the free spots a vehicle of this size fits in."
      ]
     },
@@ -539,7 +541,7 @@ window.LOOP_CODING.parts.push({
      "rows": [
       [
        "Single responsibility",
-       "Spot tracks one space, Ticket records one stay, the lot runs enter and exit. The fee moves into Pricing once it varies."
+       "Spot tracks one space, Ticket records one stay and counts its hours, the lot runs enter and exit. The fee moves into Pricing once it varies."
       ],
       [
        "Open/closed",
@@ -618,7 +620,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Reported:** GeeksforGeeks (three loops, one a bar raiser where the LLD caused the rejection); LeetCode Discuss Jun 2025 (L5, with an API and request/response per call). Probed hard: a reason for every class and method placement."
+     "text": "**Reported:** GeeksforGeeks (three loops, one a bar raiser where the LLD caused the rejection); LeetCode Discuss Jun 2025 (L5, with an API and request/response per call). Probed hard: a reason for every class and method placement. **Full practice:** part 9, Chess."
     },
     {
      "t": "table",
@@ -636,12 +638,12 @@ window.LOOP_CODING.parts.push({
       [
        "Primary capabilities",
        "Do we need the full rules?",
-       "Normal moves and captures; special moves are a follow-up"
+       "Normal moves for all six pieces and captures; castling, en passant and promotion are follow-ups"
       ],
       [
        "Primary capabilities",
        "How does a game end?",
-       "Checkmate or resignation"
+       "Checkmate, stalemate or resignation"
       ],
       [
        "Error handling",
@@ -650,13 +652,28 @@ window.LOOP_CODING.parts.push({
       ],
       [
        "Error handling",
-       "Check and checkmate?",
-       "Detect check; checkmate if no legal move is left"
+       "Can a player leave their own king in check?",
+       "No: that move is rejected"
+      ],
+      [
+       "Error handling",
+       "Check, checkmate and stalemate?",
+       "Detect all three after every move: no legal move left is mate if the king is attacked, else stalemate"
       ],
       [
        "Scope boundaries",
        "Timers, undo, an engine or AI opponent?",
        "None of them at first; keep the move history"
+      ],
+      [
+       "Scope boundaries",
+       "Draw by repetition or the fifty-move rule?",
+       "Out of scope"
+      ],
+      [
+       "Scope boundaries",
+       "A display or a user interface?",
+       "No: moves are two (row, column) positions"
       ]
      ]
     },
@@ -667,11 +684,12 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "Two players alternate turns, white first. The game tracks whose turn it is and its status; A move out of turn is rejected.",
-      "A player moves a piece from one square to another. The piece decides whether the move fits its own rule and the path is clear; An illegal move is rejected and the turn stays.",
-      "A move onto an enemy piece captures it. The captured piece leaves the board; Moving onto your own piece is rejected.",
-      "The game ends in checkmate or resignation. The game status changes and no more moves are accepted.",
-      "Out of scope: castling, en passant, promotion (a line each in extensions), check detection beyond a line, timers, online play, an AI opponent."
+      "Two players alternate turns, white first. The game tracks whose turn it is and its status; A move out of turn, or after the game ends, is rejected.",
+      "A player moves a piece from one square to another. The piece's own rule and a clear path decide; a move onto an enemy piece captures it; An illegal move, an own piece on the target, or a move that leaves your king in check is rejected; the board and the turn stay as they were.",
+      "After every move the game works out the next player's situation. The status becomes CHECK, CHECKMATE (the other side wins) or STALEMATE (a draw); Once the game is over no more moves are accepted.",
+      "A player can resign at any time. The other player wins.",
+      "Anyone can read the status, the winner and the move history.",
+      "Out of scope: castling, en passant and promotion (extensions), draw by repetition, fifty moves, insufficient material, timers, online play, an AI opponent, a display or UI."
      ]
     },
     {
@@ -685,35 +703,50 @@ window.LOOP_CODING.parts.push({
       [
        "Game",
        "keep",
-       "Owns the board, the players and whose turn it is; the entry point"
+       "Owns the board, whose turn it is, the status and the history; the entry point"
       ],
       [
        "Board",
        "keep",
-       "Holds the 8x8 squares and which piece is on each"
+       "Holds the 8x8 grid, finds a king, and answers whether a path is clear or a square is attacked"
       ],
       [
-       "Piece",
+       "Piece (abstract)",
        "keep",
-       "Abstract; each kind knows its own movement rule"
+       "Each kind has its own rule for where it can move"
+      ],
+      [
+       "Rook, Bishop, Queen, Knight, King, Pawn",
+       "keep",
+       "One subclass per kind: six different can_move rules, which is real polymorphism, not a pre-emptive one"
       ],
       [
        "Move",
        "keep",
-       "Piece, from, to and what was captured; a list of these gives history and undo"
+       "Piece, from, to and what was captured; a list of these is the history, and undo would pop one"
+      ],
+      [
+       "Colour",
+       "keep",
+       "An enum with other(); decides whose turn and whose piece"
+      ],
+      [
+       "Status",
+       "keep",
+       "An enum: active, check, checkmate, stalemate, resigned"
       ],
       [
        "Player",
-       "keep",
-       "A name and a colour"
+       "drop",
+       "A name nothing reads; the colour is all the game needs"
       ],
       [
        "Square / Cell",
        "drop",
-       "A (row, col) pair is enough; no class"
+       "A (row, col) tuple is enough; no class"
       ],
       [
-       "Spectator / Clock",
+       "Clock, spectator, engine",
        "drop",
        "Not in the requirements"
       ]
@@ -723,18 +756,18 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-chess-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class Game\n- board: Board  # make_move needs the pieces to look at\n- players: Player[2]  # a move is checked against the player's colour\n- turn: Colour  # req 1: reject a move out of turn\n- status: Status  # req 4: no moves once the game is over\n- moves: Move[]  # the history, and what undo would pop\n+ make_move(player, frm, to) -> Move | error  # req 1 to 3: the one entry for a turn\n+ resign(player) -> void  # req 4: the other way a game ends\n+ get_status() -> Status  # lets the caller see if the game is over\n\nclass Board\n- grid: Piece | None [8][8]  # which piece is on each square\n+ piece_at(pos) -> Piece | None  # make_move reads the start and target squares\n+ move(frm, to) -> Piece | None  (the captured piece)  # req 3: a capture leaves the board\n+ path_clear(frm, to) -> boolean  # req 2: sliding pieces cannot jump\n\nclass Piece (abstract)\n- colour: Colour  # make_move rejects moving the other side's piece\n+ can_move(board, frm, to) -> boolean  (King, Queen, Rook, Bishop, Knight and Pawn each override it)  # req 2: each kind owns its rule\n\nclass Move\n- piece: Piece  # what moved\n- frm: (row, col)  # needed to put it back\n- to: (row, col)  # where it landed\n- captured: Piece | None  # undo restores it\n\nclass Player\n- name: string  # who is playing\n- colour: Colour  # req 1: decides whose turn it is\n",
+     "code": "class Game\n- board: Board  # make_move reads the pieces and the squares\n- turn: Colour  # req 1: reject a move out of turn; also who may be mated next\n- status: Status  # req 3, 4: no moves once the game is over\n- winner: Colour | None  # req 3, 4: set by checkmate or resignation, None in a draw\n- moves: Move[]  # req 5: the history\n+ make_move(player, frm, to) -> Move | error  # req 1 to 3: the one entry for a turn\n+ resign(player) -> void  # req 4: the other way a game ends\n+ is_over() -> bool  # make_move and resign refuse once true\n+ _why_illegal(piece, frm, to) -> string | None  # one legality rule, shared by make_move and the mate search\n+ _leaves_king_in_check(colour, frm, to) -> bool  # req 2: simulate, ask, undo\n+ _update_status() -> void  # req 3: check, checkmate or stalemate for the next player\n+ _has_any_legal_move(colour) -> bool  # req 3: decides mate or stalemate\n\nclass Board\n- grid: Piece | None [8][8]  # which piece is on each square\n+ piece_at(pos) -> Piece | None  # make_move and every can_move read squares\n+ is_path_clear(frm, to) -> bool  # req 2: sliding pieces cannot jump\n+ is_attacked(pos, by) -> bool  # req 2, 3: could any piece of colour by move onto pos?\n+ find_king(colour) -> position  # the square the check question is about\n+ pieces_of(colour) -> (position, piece)[]  # attack and the mate search walk these\n+ move(frm, to) -> Piece | None  # req 2: a capture leaves the board\n+ undo_move(frm, to, captured) -> void  # put a simulated move back\n\nclass Piece (abstract)\n- colour: Colour  # make_move rejects moving the other side's piece\n+ can_move(board, frm, to) -> bool  (Rook, Bishop, Queen, Knight, King and Pawn each override it)  # req 2: each kind owns its rule\n\nclass Pawn\n- step: int  # +1 for white, -1 for black: pawns only go forward\n- start_row: int  # the double step is allowed only from here\n+ can_move(board, frm, to) -> bool  # forward onto empty, double from start, diagonal only to capture\n\nclass Move\n- piece: Piece  # what moved\n- frm: (row, col)  # where it came from\n- to: (row, col)  # where it landed\n- captured: Piece | None  # undo restores it\n",
      "notes": {}
     },
     {
      "t": "say",
      "lines": [
-      "**I start from the methods the requirements gave me: make_move, resign and the status.** Make_move has to read the board, whose turn it is and the game status, so Game holds those. The board only knows what sits on each square, and each piece knows its own rule. A Move records the piece, both squares and the capture, so a list of them is the history."
+      "**I start from the methods the requirements gave me: make_move, resign and the status.** Make_move has to read the board, whose turn it is and whether the game is over, so Game holds those. To keep my own king safe it asks the board whether a square is attacked, so the board needs a way to ask every enemy piece. The board knows where pieces are, each piece knows its own rule, and a pawn also needs its direction and start row, which is why it has two fields."
      ]
     },
     {
      "t": "svg",
-     "svg": "<svg viewBox=\"0 0 420 316\" role=\"img\" aria-label=\"Chess class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">Game</text><text class=\"d-s\" x=\"125\" y=\"44\">turns, make_move</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Board</text><text class=\"d-s\" x=\"30\" y=\"138\">8x8 grid</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">Player</text><text class=\"d-s\" x=\"30\" y=\"210\">name, colour</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-box\" x=\"20\" y=\"244\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"264\">Move</text><text class=\"d-s\" x=\"30\" y=\"282\">history</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 268 L18 268\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Piece (abstract)</text><text class=\"d-s\" x=\"234\" y=\"138\">can_move per kind</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">Colour, Status</text><text class=\"d-s\" x=\"234\" y=\"210\">enums</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
+     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"Chess class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">Game</text><text class=\"d-s\" x=\"125\" y=\"44\">turns, make_move</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Board</text><text class=\"d-s\" x=\"30\" y=\"138\">8x8 grid, pieces</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">Move</text><text class=\"d-s\" x=\"30\" y=\"210\">history</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Piece (abstract)</text><text class=\"d-s\" x=\"234\" y=\"138\">six kinds, can_move</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">Colour, Status</text><text class=\"d-s\" x=\"234\" y=\"210\">enums</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
      "alt": "Class map"
     },
     {
@@ -744,10 +777,16 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "make_move: Reject if the game is over or it is not this player's turn; Get the piece at the start square; reject if empty or not this player's colour; Ask the piece can_move(board, frm, to); reject if no; Reject if the target holds your own piece; Board moves it and returns any captured piece; record a Move; If the captured piece is a king, finish the game; else switch turns.",
-      "resign: The resigning player loses: set the status to the other colour's win.",
-      "can_move (per piece): Rook: same row or column, path clear; Bishop: equal row and column distance, path clear; Queen: rook or bishop rule; Knight: an L (2 and 1), jumps, no path check; King: one square any way; Pawn: forward one (two from start), diagonal only to capture.",
-      "path_clear: Step from frm toward to one square at a time; Any piece on a square strictly between them blocks."
+      "make_move: Reject if the game is over or it is not this player's turn; Find the piece at frm; it must be this player's; Ask whether the move is legal (own piece, the piece's rule, own king safe); Apply it on the board and record a Move; Pass the turn, then work out check, checkmate or stalemate for the next player.",
+      "_why_illegal: The target must not hold the mover's own piece; The piece's own rule must allow the move (shape and a clear path); The move must not leave the mover's own king attacked.",
+      "_leaves_king_in_check: Make the move on the real board, remembering what it captured; Ask whether the mover's king is now attacked; Put everything back, whatever the answer.",
+      "Board.is_attacked: Walk every piece of the attacking colour; Ask each one: could you move onto pos?; Any yes means pos is attacked.",
+      "_update_status: The player to move is now self.turn; ask whether their king is attacked; If they have a legal move: CHECK when attacked, else ACTIVE; No legal move and attacked: CHECKMATE, and the other side wins; No legal move and not attacked: STALEMATE, a draw.",
+      "_has_any_legal_move: For each piece of this colour, try every square on the board; Use the same legality rule as make_move; The first legal move answers yes; none at all answers no.",
+      "Rook.can_move: A rook moves along one row or one column; Every square between must be empty.",
+      "Board.is_path_clear: Work out the one-square step along the line (row and column each -1, 0 or 1); Start one step past frm; Any piece on a square before reaching to blocks the path.",
+      "Pawn.can_move: Straight ahead, one square, onto an empty square; From the start row, two squares, both empty; Diagonally one square ahead, only onto an enemy piece.",
+      "resign: The resigning player loses: status RESIGNED, the other colour wins."
      ]
     },
     {
@@ -757,15 +796,15 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "Castling, en passant, promotion: inside the pieces: a has_moved flag, and Move records the extra effect",
-      "Check and checkmate: simulate the move, test if the king is attacked, undo if so; mate means no legal move",
-      "Undo: pop the last Move; it holds the captured piece",
+      "Promotion: Pawn.last_row; make_move swaps in the chosen piece, a queen by default",
+      "Castling, en passant: has_moved on Piece; King allows the castle; Move records the second piece; en passant reads the last Move",
+      "Undo: pop the last Move; board.undo_move; restore the turn; recompute status",
       "Timers: a Clock owned by Game, started and stopped where the turn switches"
      ]
     },
     {
      "t": "p",
-     "text": "**Design check.** Check each choice against SOLID in a minute. The one real variation here is movement, and the Piece subclasses already hold it."
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies. Here the Piece subclasses are real polymorphism the problem asks for, not a pre-emptive pattern."
     },
     {
      "t": "table",
@@ -776,23 +815,23 @@ window.LOOP_CODING.parts.push({
      "rows": [
       [
        "Single responsibility",
-       "Game runs turns and status, Board holds squares, Piece decides its own move, Move records one move."
+       "Game runs turns and status, Board holds squares and lines, each Piece decides its own move, Move records one move."
       ],
       [
        "Open/closed",
-       "A new kind of piece is a new Piece subclass with its own can_move. make_move is not edited."
+       "A new kind of piece is a new Piece subclass with its own can_move. make_move, the board and the status check are not edited."
       ],
       [
        "Liskov substitution",
-       "Any Piece subclass works where Piece does: same can_move and path_clear contract."
+       "Any Piece subclass works where Piece does: same can_move contract, shape and path only. Check is never the piece's job."
       ],
       [
        "Interface segregation",
-       "No interface until something varies. Piece has one question, can_move."
+       "Piece has one question, can_move. Nothing more is asked of a piece."
       ],
       [
        "Dependency inversion",
-       "Nothing is injected yet. Game builds its Board; hand it one if tests or variants need it."
+       "Nothing is injected yet. Game builds its Board; hand it one if a test needs a hand-placed position."
       ]
      ]
     },
@@ -815,18 +854,18 @@ window.LOOP_CODING.parts.push({
       ],
       [
        "Castling, en passant, promotion",
-       "No pattern: a flag",
-       "has_moved on Piece, extra effect on Move"
+       "No pattern: a flag and a field",
+       "has_moved on Piece, extra effect recorded on Move"
       ],
       [
        "Timers per player",
-       "Observer, only if others must hear",
-       "a Clock Game calls where the turn switches"
+       "No pattern: a field. Observer only if others must hear",
+       "a Clock Game starts and stops where the turn switches"
       ],
       [
        "Check and checkmate",
        "No pattern: simulate",
-       "try the move on Board, undo if the king is attacked"
+       "try the move on Board, ask is_attacked, undo"
       ]
      ]
     },
@@ -838,9 +877,9 @@ window.LOOP_CODING.parts.push({
      "t": "list",
      "items": [
       "**Piece is abstract and each kind owns its movement rule; Game never asks what kind it is.** Why: adding a piece changes one class, and it is the reason interviewers probe placement.",
-      "**The Board knows what is on each square and whether a path is clear; it does not know the rules.** Why: rules in pieces, geometry in the board, turns in the game: each class has one job.",
-      "**Special moves and check detection are mentioned as extensions, not designed up front.** Why: it shows scope judgment and keeps the core to five classes in 40 minutes.",
-      "**Move holds the piece, both squares and the capture.** Why: it gives history and undo for free, and check detection can simulate and reverse a move."
+      "**A move is legal if the target is not my own piece, the piece's can_move allows it, and my own king is safe afterwards.** Why: three tests in that order, one method, shared by make_move and the mate search.",
+      "**To test king safety, make the move on the board, ask is_attacked, and undo.** Why: pins, a king stepping into attack and capturing the attacker all fall out with no special case.",
+      "**The board knows what is on each square and whether a path is clear; it does not know the rules.** Why: rules in pieces, geometry in the board, turns in the game: each class has one job."
      ]
     }
    ]
@@ -855,7 +894,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Reported:** LeetCode Discuss Dec 2024, May 2025 (currency conversion was the sticking point), Apr 2026 (entities, APIs and a strategy pattern, pseudocode only)."
+     "text": "**Reported:** LeetCode Discuss Dec 2024, May 2025 (currency conversion was the sticking point), Apr 2026 (entities, APIs and a strategy pattern, pseudocode only). **Full practice:** part 10, Splitwise."
     },
     {
      "t": "table",
@@ -868,12 +907,12 @@ window.LOOP_CODING.parts.push({
       [
        "Primary capabilities",
        "How are expenses split?",
-       "Equally, or by exact amounts for now"
+       "Equally, by exact amounts, or by percentages"
       ],
       [
        "Primary capabilities",
        "Who is in an expense?",
-       "A payer and some participants, from one group or just friends"
+       "A payer and some participants, all members of one group; two friends are a group of two"
       ],
       [
        "Primary capabilities",
@@ -882,7 +921,7 @@ window.LOOP_CODING.parts.push({
       ],
       [
        "Error handling",
-       "Exact amounts that don't add up to the total?",
+       "Exact amounts or percentages that don't add up?",
        "Reject the expense"
       ],
       [
@@ -892,7 +931,7 @@ window.LOOP_CODING.parts.push({
       ],
       [
        "Scope boundaries",
-       "Currencies, percentages, simplifying debts?",
+       "Currencies, simplifying debts?",
        "One currency for now; expect them as follow-ups"
       ],
       [
@@ -909,10 +948,10 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "User adds an expense: a payer, an amount in cents and the participants. The system splits it equally or by exact amounts and records what each participant owes the payer; Exact amounts that don't total the amount, or an unknown user, is an error.",
-      "User asks who owes whom. The system returns the net amount between two users, or everyone's net balances.",
-      "User settles up by paying someone they owe. The system records it as a payment in the other direction; Paying more than owed leaves the other person owing.",
-      "Out of scope: currencies (they will ask), percentage and share splits, simplifying debts, login and notifications."
+      "User adds an expense: a payer, an amount in cents, a group and a split. The system computes each person's share by the split type and records what each owes the payer; Shares that don't total the amount, an unknown group or a non-member is an error.",
+      "User asks who owes whom. The system returns the net amount between two users, or one user's net against everyone.",
+      "User settles up by paying someone they owe. The system records it as a debt in the other direction; Paying more than owed leaves the other person owing.",
+      "Out of scope: currencies (they will ask), simplifying debts (they will ask), login and notifications, persistence."
      ]
     },
     {
@@ -925,13 +964,23 @@ window.LOOP_CODING.parts.push({
      "rows": [
       [
        "User",
+       "drop",
+       "Only a name is needed, and a string is enough"
+      ],
+      [
+       "Group",
        "keep",
-       "A name and an id; the ledger is keyed by it"
+       "Holds the members; an expense is checked against it"
       ],
       [
        "Expense",
        "keep",
-       "A payer, an amount in cents and what each participant owes; a record of what happened"
+       "A payer, an amount and the shares: the record of what happened"
+      ],
+      [
+       "Split",
+       "keep",
+       "Its kind decides how shares are computed: equal, exact or percent"
       ],
       [
        "Ledger",
@@ -944,16 +993,6 @@ window.LOOP_CODING.parts.push({
        "Entry point: add_expense, settle, balance"
       ],
       [
-       "Group",
-       "drop",
-       "Not needed until members join or leave; participants are passed in"
-      ],
-      [
-       "Split type",
-       "drop",
-       "An enum with two values for now; a Strategy only when there are more"
-      ],
-      [
        "Currency / Notification",
        "drop",
        "Out of scope; not modelled"
@@ -964,18 +1003,18 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-splitwise-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class Splitwise\n- users: Map<id, User>  # every payer and participant is checked to exist\n- expenses: Expense[]  # append-only record of what happened\n- ledger: Ledger  # req 2: the net owed per pair, so balances are one read\n+ add_expense(payer, amount_cents, participants, split, exacts) -> Expense | error  # req 1\n+ settle(from_user, to_user, amount_cents) -> void | error  # req 3: a payment the other way\n+ balance(a, b) -> cents  (positive: a owes b)  # req 2: net between two users\n+ balances(user) -> Map<user, cents>  # req 2: everyone's net balances\n\nclass Expense\n- payer: string  # who is owed the shares\n- amount_cents: int  # integer cents, so no float drift\n- shares: Map<user, cents>  # what each participant owes the payer\n\nclass Ledger\n- net: Map<(debtor, creditor), cents>  # one number per pair; settling is an entry the other way\n+ add(debtor, creditor, cents) -> void  # the one write, for expenses and payments\n+ owed(a, b) -> cents  # net of what b owes a\n\nclass User\n- user_id: string  # the key the ledger uses\n- name: string  # for display\n",
+     "code": "class Splitwise\n- groups: Map<id, Group>  # every payer and participant is checked against one\n- expenses: Expense[]  # append-only record of what happened\n- ledger: Ledger  # req 2: the net owed per pair, so balances are one read\n+ create_group(group_id, members) -> void | error  # members for add_expense to check against\n+ add_expense(group_id, payer, amount_cents, split) -> Expense | error  # req 1\n+ settle(from_user, to_user, amount_cents) -> void | error  # req 3: a payment the other way\n+ balance(a, b) -> cents  (positive: a owes b)  # req 2: net between two users\n+ balances(user) -> Map<user, cents>  # req 2: one user against everyone\n\nclass Split\n- kind: SplitKind  (EQUAL, EXACT, PERCENT -> enum)  # which rule computes the shares\n- values: Map<user, number>  # who is in it, and cents or percent for them\n+ shares(amount_cents) -> Map<user, cents> | error  # req 1: always totals the amount\n\nclass Expense\n- group_id: string  # where it happened\n- payer: string  # who is owed the shares\n- amount_cents: int  # integer cents, so no float drift\n- shares: Map<user, cents>  # what each person owes the payer\n\nclass Group\n- members: Set<string>  # who an expense may involve\n+ has(user) -> bool  # add_expense checks every person\n\nclass Ledger\n- net: Map<(debtor, creditor), cents>  # one number per pair; settling is an entry the other way\n+ add(debtor, creditor, cents) -> void  # the one write, for expenses and payments\n+ owed(a, b) -> cents  # net of what b owes a\n+ balances(user) -> Map<user, cents>  # req 2: the non-zero nets for one user\n",
      "notes": {}
     },
     {
      "t": "say",
      "lines": [
-      "**I start from the methods the requirements gave me: add_expense, settle and balance.** Add_expense has to record what happened and update who owes whom, so I keep a list of expenses and a ledger. Settle is a payment in the other direction, so it goes into the same ledger. Balance only reads the ledger."
+      "**I start from the methods and ask what each one has to read.** Add_expense has to check membership, so it reads groups, and it has to divide the amount, so the split carries a kind and the people. It records an expense and updates who owes whom, so I keep a list of expenses and a ledger. Settle is a payment in the other direction, so it goes into the same ledger."
      ]
     },
     {
      "t": "svg",
-     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"Splitwise class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">Splitwise</text><text class=\"d-s\" x=\"125\" y=\"44\">add, settle, balance</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Ledger</text><text class=\"d-s\" x=\"30\" y=\"138\">net per pair</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">Expense</text><text class=\"d-s\" x=\"30\" y=\"210\">payer, shares</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Split (enum)</text><text class=\"d-s\" x=\"234\" y=\"138\">EQUAL, EXACT</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
+     "svg": "<svg viewBox=\"0 0 420 316\" role=\"img\" aria-label=\"Splitwise class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">Splitwise</text><text class=\"d-s\" x=\"125\" y=\"44\">add_expense, settle</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Group</text><text class=\"d-s\" x=\"30\" y=\"138\">members, has</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">Ledger</text><text class=\"d-s\" x=\"30\" y=\"210\">net per pair</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-box\" x=\"20\" y=\"244\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"264\">Expense</text><text class=\"d-s\" x=\"30\" y=\"282\">payer, shares</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 268 L18 268\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Split</text><text class=\"d-s\" x=\"234\" y=\"138\">kind, values, shares</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">SplitKind (enum)</text><text class=\"d-s\" x=\"234\" y=\"210\">EQUAL, EXACT, PERCENT</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
      "alt": "Class map"
     },
     {
@@ -985,10 +1024,14 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "add_expense: Check the payer and every participant exist; Work out each share: equal splits the cents, with the remainder going one cent at a time from the first participant; exact checks the amounts total the expense; Record the Expense; For each participant other than the payer, add the share to what they owe the payer in the ledger.",
-      "settle: Check both users exist and the amount is positive; Add the payment to the ledger in the other direction: the payer now owes less; A payment larger than the debt flips the direction; nothing is rejected.",
-      "balance: Ask the ledger for what a owes b, net of what b owes a; Positive means a owes b; negative means b owes a; zero means settled.",
-      "balances: For one user, collect the net amount against every other user who is not zero; Derived from the ledger each time, never stored a second time."
+      "add_expense: Check the group, the amount, and that the payer and everyone in the split are members; Ask the split for each person's share of the amount; Record the expense and update the ledger.",
+      "Split.shares: Check there is someone to split with, and no negative number; Equal: divide evenly; the leftover cents go one each to the first people; Exact: the amounts are the shares, and must total the expense; Percent: percents must total 100; floor each share, leftover cents as in equal.",
+      "Split._equal_shares: Divide with a remainder: base cents each, and a few cents left over; Walk the people in the order given; the first ones get one extra cent.",
+      "Split._percent_shares: The percents must total 100; Each share is the amount times the percent, floored to a whole cent; Floors lose under a cent each: hand the lost cents out one by one, in order.",
+      "Ledger.balances: Find everyone this user has a pair entry with; For each, take the net between them, skipping zero; Return them in name order.",
+      "settle: Check both users are known and the amount is positive; Record it as a debt the other way: to_user now owes from_user that much.",
+      "balance: Check both users are known; Ask the ledger what a owes b, net of what b owes a.",
+      "balances: Check the user is known; Ask the ledger for this user's net against everyone else."
      ]
     },
     {
@@ -998,15 +1041,15 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "More split types: a SplitStrategy per type with shares(amount, participants, params); add_expense picks one; the ledger is untouched",
+      "Simplify debts: net each user, then match biggest debtor with biggest creditor; a read over the ledger",
+      "More split types: a new SplitKind; weights over their total; one shared helper; only Split changes",
       "Currencies: convert at add time with a CurrencyConverter and store the rate on the expense; never recompute history",
-      "Simplify debts: net each user, then match largest creditor with largest debtor; a read over the ledger",
-      "Leaving with a balance: block until settled; this is when Group earns a class; ledger updates under one lock"
+      "Concurrent writes: one Lock around add_expense and settle; per-group locks if it blocks"
      ]
     },
     {
      "t": "p",
-     "text": "**Design check.** Check each choice against SOLID in a minute. Split types are an enum today, and a Strategy appears only when more arrive."
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
     },
     {
      "t": "table",
@@ -1017,23 +1060,23 @@ window.LOOP_CODING.parts.push({
      "rows": [
       [
        "Single responsibility",
-       "Expense records one event, Ledger keeps net balances, Splitwise is the entry point."
+       "Split computes shares, Ledger keeps net balances, Expense records an event, Splitwise orchestrates."
       ],
       [
        "Open/closed",
-       "Today a new split type edits add_expense. It becomes a SplitStrategy once there are more than two."
+       "A new split kind is a new branch in Split.shares and one helper. The ledger and Splitwise are not edited."
       ],
       [
        "Liskov substitution",
-       "Not yet: no subclasses. Every SplitStrategy would have to return shares that sum to the amount."
+       "Nothing to substitute yet: no subclasses. Every future split kind must return shares that total the amount."
       ],
       [
        "Interface segregation",
-       "No interface until something varies. A strategy would have one method, shares."
+       "Nothing to segregate yet: no interfaces."
       ],
       [
        "Dependency inversion",
-       "Splitwise builds its Ledger. Nothing is injected yet."
+       "Splitwise builds its Ledger. Nothing is injected at this size."
       ]
      ]
     },
@@ -1050,9 +1093,9 @@ window.LOOP_CODING.parts.push({
      ],
      "rows": [
       [
-       "Split types (percentage, shares)",
-       "Strategy",
-       "a SplitStrategy per type; add_expense picks one"
+       "Split types (weights, adjustments)",
+       "Strategy, once the if chain grows past four kinds",
+       "today one dispatch in Split.shares"
       ],
       [
        "Currencies",
@@ -1065,9 +1108,9 @@ window.LOOP_CODING.parts.push({
        "net each user over the Ledger; nothing written changes"
       ],
       [
-       "Leaving with a balance",
-       "No pattern: a Group class",
-       "block until zero; ledger updates under one lock"
+       "Two people adding at once",
+       "No pattern: a lock",
+       "one Lock around add_expense and settle"
       ]
      ]
     },
@@ -1078,10 +1121,10 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "**Money is integer cents, and I say where the leftover cent goes when a share doesn't divide.** Why: it is the first thing they probe, and floats hide it.",
-      "**Expenses are append-only records; balances are derived from the ledger, and a correction is a new entry.** Why: history stays true, and you can answer 'how did we get here'.",
-      "**A split type is a value for now; it becomes a strategy only when the third type arrives.** Why: it shows restraint, and you can say exactly when the pattern earns its place.",
-      "**Settling up is a payment in the other direction, so there is no special path.** Why: the ledger has one operation, which keeps balances easy to trust."
+      "**Money is integer cents, and I say where the leftover cent goes: to the first people in the order given.** Why: it is the first thing they probe, and floats hide it.",
+      "**Split is a class: a kind and who is in it. The kind decides how shares are computed.** Why: add_expense never knows the rules, so a new split kind touches one class.",
+      "**Settling up is a debt the other way, so there is no special path.** Why: the ledger has one write, which keeps balances easy to trust.",
+      "**Every split returns shares that total the amount to the cent, or raises.** Why: bad data is rejected at the one place that understands it."
      ]
     }
    ]
@@ -1096,7 +1139,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Reported:** roundz Mar 2025 (SDE2, a BookMyShow class diagram); GeeksforGeeks (railway booking twice); a reported follow-up: extend from movies to events."
+     "text": "**Reported:** roundz Mar 2025 (SDE2, a BookMyShow class diagram); GeeksforGeeks (railway booking twice); a reported follow-up: extend from movies to events. **Full practice:** part 11, Ticket booking (movie or train)."
     },
     {
      "t": "table",
@@ -1109,7 +1152,7 @@ window.LOOP_CODING.parts.push({
       [
        "Primary capabilities",
        "What is being booked?",
-       "Seats for one show (a train journey works the same way)"
+       "Seats for one show; a train journey works the same way"
       ],
       [
        "Primary capabilities",
@@ -1124,7 +1167,7 @@ window.LOOP_CODING.parts.push({
       [
        "Error handling",
        "Two people want the same seat?",
-       "It must never be double-booked"
+       "It must never be double-booked, even at the same moment"
       ],
       [
        "Error handling",
@@ -1132,9 +1175,19 @@ window.LOOP_CODING.parts.push({
        "The hold expires and the seats are free again"
       ],
       [
+       "Error handling",
+       "A seat that doesn't exist, or the same seat twice?",
+       "Reject it"
+      ],
+      [
        "Scope boundaries",
        "Search, payments, prices, cancellation?",
        "Search and payment are out; prices are a follow-up; cancel before the show is in"
+      ],
+      [
+       "Scope boundaries",
+       "How does time work?",
+       "The caller passes in the current time, in minutes, so a run is deterministic and needs no timer thread"
       ]
      ]
     },
@@ -1145,11 +1198,12 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "A user holds one or more seats for a show. The system marks them held with an expiry, all or none; A seat that is taken or already held is an error and nothing is held.",
-      "The user confirms the booking. The held seats become booked and a Booking is returned; A hold that expired or is not theirs is an error.",
-      "A hold expires after a few minutes. The seats become available again without anyone calling.",
+      "A user holds one or more seats for a show. The system keeps them held until a time, all or none; A seat that is taken or held, an unknown seat, or a seat listed twice is an error and nothing is held.",
+      "The user confirms the hold. The held seats become booked and a Booking is returned; A hold that expired, is unknown or is not theirs is an error.",
+      "A hold runs out. The seats become available again the next time anyone looks, without a timer.",
       "A user cancels a booking. The seats become available; Cancelling twice is an error.",
-      "Out of scope: search and browsing, payment, pricing (an extension), notifications."
+      "Two users go for the same seat at once. Exactly one of them gets it.",
+      "Out of scope: search and browsing, payment, pricing (an extension), notifications, a real clock or timer thread."
      ]
     },
     {
@@ -1163,27 +1217,32 @@ window.LOOP_CODING.parts.push({
       [
        "Show",
        "keep",
-       "A movie at a time on a screen; owns its per-show seats"
+       "A screening or a journey: owns its seats, and which are held or booked"
       ],
       [
        "Seat",
-       "keep",
-       "A physical seat: row and number; the same for every show"
+       "drop",
+       "An id string like A1; nothing asks a seat anything"
       ],
       [
-       "ShowSeat",
+       "Hold",
        "keep",
-       "One seat for one show: its state (available, held, booked) and who holds it until when"
+       "Seats, a user and an expiry: the expiry is the rule that makes it temporary"
       ],
       [
        "Booking",
        "keep",
-       "The user, the show and the seats they confirmed"
+       "The confirmed seats; it can be cancelled once, and cancel asks it"
+      ],
+      [
+       "Booking service",
+       "keep",
+       "Entry point: hold, confirm, cancel"
       ],
       [
        "Theatre / Screen",
        "drop",
-       "Only where seats live; a Show can carry its seat list"
+       "Only where seats live; a Show carries its seat ids"
       ],
       [
        "User, Payment",
@@ -1196,18 +1255,18 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-booking-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class BookingService\n- shows: Map<show_id, Show>  # hold and confirm start from a show id\n- bookings: Map<id, Booking>  # req 4: cancel gets only a booking id\n+ hold(show_id, seat_ids, user) -> hold_id | error  # req 1 and 3: all seats or none, with an expiry\n+ confirm(hold_id, user) -> Booking | error  # req 2: held seats become booked\n+ cancel(booking_id) -> void | error  # req 4: seats go back on sale\n\nclass Show\n- show_id: string  # the key the service looks it up by\n- show_seats: Map<seat_id, ShowSeat>  # each seat's state is per show\n+ get_seat(seat_id) -> ShowSeat  # hold reads every chosen seat first\n\nclass Seat\n- row: string  # the physical seat, same for every show\n- number: int  # with the row, names the seat\n\nclass ShowSeat\n- seat: Seat  # which physical seat this is\n- state: SeatState  # AVAILABLE, HELD or BOOKED for this show\n- held_by: string | None  # confirm checks the hold is theirs\n- held_until: timestamp | None  # req 3: an expired hold counts as free\n+ is_available(now) -> boolean  # req 3: the expiry check lives in one place\n+ hold(user, until) -> void  # the seat changes its own state\n+ book() -> void  # req 2\n+ release() -> void  # req 4\n\nclass Booking\n- booking_id: string  # the key in the service's map\n- user: string  # who confirmed it\n- show_seats: ShowSeat[]  # cancel releases exactly these\n",
+     "code": "class BookingService\n- hold_minutes: int  # how long a hold lasts\n- shows: Map<show_id, Show>  # hold_seats starts from a show id\n- holds: Map<hold_id, Hold>  # confirm gets only a hold id\n- bookings: Map<id, Booking>  # cancel gets only a booking id\n+ hold_seats(show_id, seats, user, now) -> hold_id | error  # req 1 and 5: all seats or none, under the lock\n+ confirm(hold_id, user, now) -> Booking | error  # req 2: held seats become booked\n+ cancel(booking_id) -> void | error  # req 4: seats go back on sale\n+ available_seats(show_id, now) -> string[]  # a read also frees expired holds (req 3)\n\nclass Show\n- show_id: string  # the key the service looks it up by\n- seats: Set<seat_id>  # every seat the show has\n- held: Map<seat_id, Hold>  # which hold keeps a seat; absent means not held\n- booked: Set<seat_id>  # seats sold\n- lock: Lock  # one per show: check and mark are one step\n+ release_expired(now) -> void  # req 3: drop holds that ran out\n+ all_free(seats) -> bool  # hold_seats: every chosen seat is free\n+ place(hold), book(hold), free(seats) -> void  # the three state changes\n+ is_free(seat) -> bool  # not booked and not held\n\nclass Hold\n- hold_id: string  # what hold_seats returns\n- show_id: string  # confirm finds the show from the hold\n- user: string  # confirm checks the hold is theirs\n- seats: string[]  # held together or not at all\n- expires_at: int  # minutes; the rule that makes it temporary\n+ is_expired(now) -> bool  # req 3: the one place the time is compared\n\nclass Booking\n- booking_id: string  # the key in the service's map\n- show_id: string  # cancel finds the show from it\n- user: string  # who confirmed it\n- seats: string[]  # cancel frees exactly these\n- cancelled: bool  # cancelling twice is an error\n+ cancel() -> void | error  # req 4: marks itself, refuses a second time\n",
      "notes": {}
     },
     {
      "t": "say",
      "lines": [
-      "**I start from the methods the requirements gave me: hold, confirm and cancel, and each has to read a seat's state per show.** That is why a physical Seat stays the same and a ShowSeat holds the state, who holds it and until when. Hold needs to find a show by id, so the service keeps a map of shows. Cancel gets only a booking id, so it keeps a map of bookings too."
+      "**I start from the methods and ask what each one has to read.** Hold has to find a show and know which seats are taken, so the show keeps held and booked, and a lock so two users can't both win. Confirm gets only a hold id, so the service keeps a map of holds, and each hold remembers its show, its user and when it ends. Cancel gets only a booking id, so a second map."
      ]
     },
     {
      "t": "svg",
-     "svg": "<svg viewBox=\"0 0 420 316\" role=\"img\" aria-label=\"Ticket booking (movie or train) class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">BookingService</text><text class=\"d-s\" x=\"125\" y=\"44\">hold, confirm, cancel</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Show</text><text class=\"d-s\" x=\"30\" y=\"138\">its show seats</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">ShowSeat</text><text class=\"d-s\" x=\"30\" y=\"210\">state, held_until</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-box\" x=\"20\" y=\"244\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"264\">Booking</text><text class=\"d-s\" x=\"30\" y=\"282\">user, seats</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 268 L18 268\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Seat</text><text class=\"d-s\" x=\"234\" y=\"138\">row, number</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">SeatState (enum)</text><text class=\"d-s\" x=\"234\" y=\"210\">AVAILABLE, HELD, BOOKED</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
+     "svg": "<svg viewBox=\"0 0 420 316\" role=\"img\" aria-label=\"Ticket booking (movie or train) class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">BookingService</text><text class=\"d-s\" x=\"125\" y=\"44\">hold_seats, confirm, cancel</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Show</text><text class=\"d-s\" x=\"30\" y=\"138\">seats, held, booked, lock</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">Hold</text><text class=\"d-s\" x=\"30\" y=\"210\">user, seats, expires_at</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-box\" x=\"20\" y=\"244\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"264\">Booking</text><text class=\"d-s\" x=\"30\" y=\"282\">user, seats, cancelled</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 268 L18 268\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">BookingError</text><text class=\"d-s\" x=\"234\" y=\"138\">every refusal</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">Lock</text><text class=\"d-s\" x=\"234\" y=\"210\">one per show</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
      "alt": "Class map"
     },
     {
@@ -1217,10 +1276,11 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "hold: Look up the show and every ShowSeat first, before changing anything; If any seat is not available (booked, or held and not expired), raise and hold nothing; Mark every seat held for this user until now plus the hold time, in one locked step; Return a hold id that names the seats.",
-      "confirm: Look up the hold; error if unknown or held by someone else; Error if any seat's hold has expired (it may be taken by now); Mark every seat booked; create and store the Booking.",
-      "cancel: Look up the booking; error if unknown or already cancelled; Release every ShowSeat and mark the booking cancelled.",
-      "is_available (on ShowSeat): Available if state is AVAILABLE; Or HELD with held_until in the past: an expired hold counts as free, so no timer thread is needed."
+      "hold_seats: Find the show and check the seats are a sensible request; Under the show's lock, release holds that have expired; If every chosen seat is free, create a Hold that ends hold_minutes from now; Mark the seats held, remember the hold, return its id.",
+      "confirm: Find the hold and check it is this user's; Under the show's lock, release expired holds, then check this hold is still alive; Turn its held seats into booked seats; Drop the hold, create and store the Booking.",
+      "cancel: Find the booking and its show; Under the lock, mark the booking cancelled; Put its seats back on sale.",
+      "Show.release_expired: Find the seats whose hold has expired; Remove them from held, so they count as free again.",
+      "Show.all_free: Look at every chosen seat; Any seat booked or held -> False."
      ]
     },
     {
@@ -1230,15 +1290,15 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "Seat types and prices: type on Seat; a PricingStrategy computes the total; Booking stores the price paid",
-      "Two users, same seat: check-all-then-mark under one lock per show, or a conditional update; all or nothing",
-      "Cancellation and refunds: a Booking state plus a RefundPolicy by time before the show",
-      "Movies to trains or events: Show becomes Event or Journey; Seat and ShowSeat unchanged"
+      "Seat types and prices: price per seat on Show; Booking stores the total paid; a PricingStrategy if rules grow",
+      "Cancellation and refunds: Show.refund(paid, now) by time before the start; cancel returns it; RefundPolicy if rules vary",
+      "Many servers: conditional update in the database: set held where free or expired; roll back if the count is short",
+      "Movies to trains or events: Show becomes Event or Journey; Hold, Booking and the lock unchanged"
      ]
     },
     {
      "t": "p",
-     "text": "**Design check.** Check each choice against SOLID in a minute. Pricing and refunds are the rules that move, and nothing else needs a pattern."
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute. Pricing and refunds are the rules that move, and nothing else needs a pattern."
     },
     {
      "t": "table",
@@ -1249,15 +1309,15 @@ window.LOOP_CODING.parts.push({
      "rows": [
       [
        "Single responsibility",
-       "Seat is the physical seat, ShowSeat the state for one show, Booking the confirmed result, BookingService the entry."
+       "Hold knows when it ends, Booking knows if it was cancelled, Show knows which seats are free, the service finds and orchestrates."
       ],
       [
        "Open/closed",
-       "Pricing and refunds are not in hold or confirm yet. A PricingStrategy or RefundPolicy is added, not edited in."
+       "Pricing and refunds are not in hold_seats or confirm yet. A PricingStrategy or RefundPolicy is added, not edited in."
       ],
       [
        "Liskov substitution",
-       "Not yet: no subclasses. A PricingStrategy would return a total for the show seats."
+       "Not yet: no subclasses. A PricingStrategy would return a total for the chosen seats."
       ],
       [
        "Interface segregation",
@@ -1265,7 +1325,7 @@ window.LOOP_CODING.parts.push({
       ],
       [
        "Dependency inversion",
-       "BookingService looks up Shows itself. Policies would be handed to it."
+       "The service builds its own Shows. Once policies exist they are handed to it."
       ]
      ]
     },
@@ -1284,7 +1344,7 @@ window.LOOP_CODING.parts.push({
       [
        "Seat types and prices",
        "Strategy",
-       "a PricingStrategy takes show seats, returns a total"
+       "a PricingStrategy takes the seats, returns a total"
       ],
       [
        "Cancellation refunds",
@@ -1294,12 +1354,12 @@ window.LOOP_CODING.parts.push({
       [
        "Two users, same seat",
        "No pattern: a lock",
-       "check all then mark held under one lock per show"
+       "already in the core: one Lock per show around check and mark"
       ],
       [
        "Trains or events",
        "No pattern: rename",
-       "Show becomes Event; Seat and ShowSeat stay"
+       "Show becomes Event or Journey; holds and bookings stay"
       ]
      ]
     },
@@ -1310,10 +1370,10 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "**Seat is physical and the same for every show; ShowSeat is that seat in one show, with its state.** Why: this split is the whole design: state per show means one seat can sell again at the next screening.",
-      "**A hold takes all the chosen seats or none: check every seat first, then mark them together.** Why: partial holds strand a user with half a booking.",
-      "**A hold carries an expiry, and an expired hold counts as available when we check.** Why: no background timer is needed, and abandoned carts free themselves.",
-      "**Confirm re-checks that the hold is still theirs and not expired.** Why: someone else may have taken the seat after the hold lapsed."
+      "**A Hold is a class with an expiry, and is_expired is the only place time is compared.** Why: the rule that makes a hold temporary lives with the data it is about, so confirm and the show's release never disagree.",
+      "**hold_seats checks every seat first, then marks them all, inside one lock per show.** Why: check and mark are one step, so two users can't both win, and a failure holds nothing.",
+      "**Expired holds are released when anyone looks, not by a timer.** Why: no thread, no second lock, and the run is deterministic; abandoned carts free themselves.",
+      "**Confirm releases expired holds, then re-checks the hold is still alive.** Why: someone else may have taken the seat after the hold lapsed."
      ]
     }
    ]
@@ -1328,7 +1388,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Reported:** GeeksforGeeks Sept 2022 (SDE-2); 1point3acres Feb 2026 (SDE2); TechPrep."
+     "text": "**Reported:** GeeksforGeeks Sept 2022 (SDE-2); 1point3acres Feb 2026 (SDE2); TechPrep. **Full practice:** part 12, Vending machine."
     },
     {
      "t": "table",
@@ -1341,12 +1401,12 @@ window.LOOP_CODING.parts.push({
       [
        "Primary capabilities",
        "What does the customer put in, and how do they choose?",
-       "Coins first, then a slot code"
+       "Coins and one-dollar notes, as denominations; then a slot code"
       ],
       [
        "Primary capabilities",
-       "Is change given?",
-       "Yes, from the coins inside the machine"
+       "Is change given, and from where?",
+       "Yes, from the coins inside the machine, largest first"
       ],
       [
        "Primary capabilities",
@@ -1365,18 +1425,18 @@ window.LOOP_CODING.parts.push({
       ],
       [
        "Error handling",
-       "Change can't be made?",
-       "Refuse the sale; the customer can cancel"
+       "Exact change can't be made?",
+       "Refuse the sale and refund everything inserted"
       ],
       [
        "Scope boundaries",
-       "Cards, notes, remote stock reports?",
-       "No: coins only, in memory"
+       "Cards, remote stock reports, a screen?",
+       "No: cash only, in memory"
       ],
       [
        "Scope boundaries",
-       "Restocking?",
-       "An admin mode takes the machine out of service while it happens"
+       "Who restocks, and when?",
+       "An operator refills slots and loads coins, only when no customer is mid-purchase"
       ]
      ]
     },
@@ -1387,11 +1447,11 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "A customer inserts coins. The machine adds them to the balance; Rejects them if the machine is out of service.",
-      "A customer selects a slot. If the balance covers the price, the machine dispenses the product and returns change; An error if the slot is unknown, sold out, too expensive for the balance, or change can't be made.",
-      "A customer cancels. The machine returns the whole balance.",
-      "An admin restocks and loads coins. The machine is out of service until the admin is done.",
-      "Out of scope: card and note payments, remote stock reports, promotions, a UI."
+      "A customer inserts coins or notes. The machine holds them and adds them to the balance; An error for something that is not a denomination it takes.",
+      "A customer selects a slot. If the balance covers the price, the machine dispenses the product and pays out the change from its coins; An error if nothing is inserted, the slot is unknown or sold out, or the balance is too low (money stays); exact change impossible refunds everything.",
+      "A customer cancels. The machine returns exactly the coins that were inserted.",
+      "An operator restocks slots and loads coins. The machine adds them; An error while a customer has money in.",
+      "Out of scope: card payments, remote stock reports, promotions, a screen or UI, threads and power cuts."
      ]
     },
     {
@@ -1410,7 +1470,7 @@ window.LOOP_CODING.parts.push({
       [
        "Slot",
        "keep",
-       "A product name, a price and how many are left"
+       "A product name, a price and a count; it answers whether it can sell"
       ],
       [
        "VendingMachine",
@@ -1418,17 +1478,22 @@ window.LOOP_CODING.parts.push({
        "Holds the slots and coins, and runs insert, select and cancel"
       ],
       [
+       "Denomination (coin or note)",
+       "keep",
+       "A fixed set of values, read both to add up the balance and to make change: an enum"
+      ],
+      [
        "State",
        "keep",
-       "Idle, has money or out of service: which actions are allowed"
+       "Idle or has money: which actions are allowed. An enum with guards"
       ],
       [
-       "Coin",
+       "Change",
        "drop",
-       "An integer value in cents"
+       "A dict of denomination to count; nothing asks it a question"
       ],
       [
-       "Customer / Admin",
+       "Customer / Operator",
        "drop",
        "External; not modelled"
       ]
@@ -1438,18 +1503,18 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-vending-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class VendingMachine\n- slots: Map<code, Slot>  # select looks the product up by code\n- coins: Map<value, count>  (change comes from here)  # change can only be made from coins inside\n- balance: int  # req 1: what the customer has put in so far\n- state: State  # decides which actions are allowed\n+ insert_coin(value) -> void | error  # req 1\n+ select(code) -> product | error  # req 2: dispense and give change\n+ cancel() -> refund in cents  # req 3: return the whole balance\n+ set_out_of_service(flag) -> void  # req 4: admin restocks\n\nclass Slot\n- name: string  # the product it holds\n- price: int  # select compares it with the balance\n- count: int  # req 2: sold out when it reaches zero\n+ is_available() -> boolean  # select asks the slot, not its count\n+ take() -> void  # one product leaves\n\nclass State\n- IDLE  # nothing inserted\n- HAS_MONEY  # a balance is waiting for a choice\n- OUT_OF_SERVICE  (enum)  # req 4: coins are refused\n",
+     "code": "class VendingMachine\n- slots: Map<code, Slot>  # select looks the product up by code\n- coins: Map<Denomination, int>  # the change box; change can only come from coins inside\n- inserted: Map<Denomination, int>  # this customer's coins, held so a cancel gives the same ones back\n- state: State  (IDLE, HAS_MONEY -> enum)  # decides which actions are allowed\n+ insert(coin) -> balance | error  # req 1\n+ select(code) -> (name, change) | error  # req 2: dispense and pay out the change\n+ cancel() -> refund  # req 3: the coins that were inserted\n+ restock(code, count) -> void | error  # req 4: operator\n+ load_coins(coin, count) -> void | error  # req 4: operator\n+ balance() -> int  # the value of the held coins\n+ _make_change(amount) -> change | None  # largest coin first; None when it can't be made\n\nclass Slot\n- name: string  # the product it holds\n- price: int  # select compares it with the balance\n- count: int  # sold out when it reaches zero\n+ is_available() -> bool  # select asks the slot, not its count\n+ take() -> void  # one product leaves\n+ refill(count) -> void  # req 4\n",
      "notes": {}
     },
     {
      "t": "say",
      "lines": [
-      "**I start from the methods the requirements gave me: insert_coin, select, cancel and an admin switch.** Select has to read the price and the balance, so the machine keeps a balance and a slot per code. Change comes from coins already inside, so it also keeps a coin box. Which action is allowed depends on the state, so that is an enum."
+      "**I start from the methods and ask what each one has to read.** Select has to read the price, so a slot keeps a price and a count. It has to read the balance, so the machine holds the customer's coins. It makes change from coins already inside, so there is a coin box, a count per denomination. And which action is allowed depends on the mode, so that is a State enum."
      ]
     },
     {
      "t": "svg",
-     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"Vending machine class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">VendingMachine</text><text class=\"d-s\" x=\"125\" y=\"44\">insert, select, cancel</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Slot</text><text class=\"d-s\" x=\"30\" y=\"138\">name, price, count</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">State (enum)</text><text class=\"d-s\" x=\"234\" y=\"138\">IDLE, HAS_MONEY, ...</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">Coins</text><text class=\"d-s\" x=\"234\" y=\"210\">value to count</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
+     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"Vending machine class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">VendingMachine</text><text class=\"d-s\" x=\"125\" y=\"44\">insert, select, cancel</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Slot</text><text class=\"d-s\" x=\"30\" y=\"138\">name, price, count</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Denomination (enum)</text><text class=\"d-s\" x=\"234\" y=\"138\">NICKEL to DOLLAR</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">State (enum)</text><text class=\"d-s\" x=\"234\" y=\"210\">IDLE, HAS_MONEY</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
      "alt": "Class map"
     },
     {
@@ -1459,10 +1524,12 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "insert_coin: Refuse if the state is out of service; Add the coin to the coin box and the value to the balance; Move to has money.",
-      "select: Look up the slot; error if unknown or sold out; Error if the balance is below the price; Work out the change from the coin box; error if it can't be made; Take one product, remove the change coins, reset the balance, return to idle; Return the product.",
-      "cancel: Return the whole balance and reset it; Move back to idle; Nothing inserted: return 0.",
-      "set_out_of_service: Admin switches the state to out of service, or back to idle; Refund any balance first."
+      "select: Only with money in, and only for a slot that exists and has stock; The balance must cover the price; Work out the change from the coins inside, the customer's coins included; No exact change: refund everything and refuse the sale; Dispense: take the product, move the money into the box, pay out the change; Back to idle; return the product name and the change.",
+      "_make_change: Start from the largest denomination; Take as many of it as fit in the amount and as the machine has (the box plus this customer's coins); Carry the rest to the next smaller one; Something left after the smallest -> None, the sale is refused.",
+      "insert: Check it is a denomination the machine takes; Hold it with the customer's other coins; Move to HAS_MONEY; Return the new balance.",
+      "cancel: Hand back exactly the coins the customer inserted; Clear them and go back to idle.",
+      "restock: Operator only: not while a customer is mid-purchase; Add the count to the slot.",
+      "load_coins: Operator only: not while a customer is mid-purchase; Add the coins to the change box."
      ]
     },
     {
@@ -1472,15 +1539,15 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "Can't make change: a change helper on the coin counts that can say no; select asks it first and refuses the sale",
-      "Many more states: each state becomes a class with the same methods; the machine delegates to the current one",
-      "Card payments: a Payment strategy: coins and card both take an amount or fail; select asks it",
-      "Power cut mid-dispense: update product count and balance as one step; a restart refunds unfinished sales"
+      "Greedy fails: replace _make_change's body with a search over counts; the contract and select stay",
+      "Many more modes: each mode becomes a class with insert, select and cancel; the machine delegates to the current one",
+      "Card payments: a Payment strategy: cash and card both charge an amount or fail; select asks it",
+      "Low stock report: low_stock(limit) returns the slot codes at or under the limit"
      ]
     },
     {
      "t": "p",
-     "text": "**Design check.** Check each choice against SOLID in a minute. States and payment are what grow, and each gets a pattern only when it does."
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute. The modes get an enum and guards now, and State classes only if each mode grows its own behaviour."
     },
     {
      "t": "table",
@@ -1491,23 +1558,23 @@ window.LOOP_CODING.parts.push({
      "rows": [
       [
        "Single responsibility",
-       "Slot holds a product, VendingMachine runs insert_coin, select and cancel. Change-making moves out once it can say no."
+       "The slot knows its stock, the machine runs the sale, and change-making is one method that only plans."
       ],
       [
        "Open/closed",
-       "Today a new state edits an if-chain in the machine. As State classes, a new state is a new class."
+       "A new denomination is one line in the enum: the balance and the change loop read the enum, so neither is edited."
       ],
       [
        "Liskov substitution",
-       "Not yet: no subclasses. Every State class would answer insert_coin, select and cancel."
+       "Nothing to substitute yet: no subclasses. State classes would each answer insert, select and cancel."
       ],
       [
        "Interface segregation",
-       "No interface until something varies. A payment method would have one job: take an amount or fail."
+       "No interfaces. A payment method would have one job: charge an amount or fail."
       ],
       [
        "Dependency inversion",
-       "VendingMachine reads its own balance. A Payment object would be handed to it."
+       "The machine owns its coins. A Payment object would be handed in once card payments arrive."
       ]
      ]
     },
@@ -1524,24 +1591,24 @@ window.LOOP_CODING.parts.push({
      ],
      "rows": [
       [
-       "More states (dispensing, maintenance)",
-       "State",
-       "each state a class; the machine delegates to the current one"
+       "More modes (maintenance, card reader waiting)",
+       "State, once each mode behaves differently in three or more methods",
+       "today two values and two guards; Dispensing never exists between calls, because the sale is one call"
       ],
       [
        "Card payments",
        "Strategy",
-       "coins and card both take an amount or fail"
+       "cash and card both charge an amount or fail"
       ],
       [
-       "Cannot make change",
-       "No pattern: a helper",
-       "a change function on coin counts; select asks first"
+       "Change algorithm (greedy, then exact search)",
+       "No pattern: replace one method",
+       "_make_change keeps its contract"
       ],
       [
-       "Power cut mid-dispense",
-       "No pattern: one step",
-       "update product count and balance together"
+       "Two customers on real threads",
+       "No pattern: a lock",
+       "one Lock around the public methods"
       ]
      ]
     },
@@ -1552,10 +1619,10 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "**The balance is the state: money in means HAS_MONEY, nothing means IDLE, and every action checks the state first.** Why: illegal moves become errors in one place, not a pile of ifs.",
-      "**Coins are counts in the machine, so change comes from what is physically inside.** Why: the interviewer's first probe is always: what if you can't make change?",
-      "**Cancel works from every state that holds money.** Why: customers lose trust when money gets stuck, and interviewers check for it.",
-      "**An enum with guarded transitions first; State classes only when the states grow their own behaviour.** Why: it shows you don't reach for a pattern before the requirements need it."
+      "**select checks everything before it moves anything.** Why: a refusal then leaves the machine as it was, which makes the refund exact and the money never stuck.",
+      "**Change is a real loop over the machine's own coins, largest first.** Why: the interviewer's first probe is what if you can't make change, and the answer is None, refuse and refund.",
+      "**The customer's coins are held apart until the sale goes through.** Why: a cancel is then a plain hand-back, and it can never fail for lack of change.",
+      "**An enum with guards first; State classes only when the modes grow their own behaviour.** Why: it shows you don't reach for a pattern before the requirements need it."
      ]
     }
    ]
@@ -1582,43 +1649,43 @@ window.LOOP_CODING.parts.push({
      "rows": [
       [
        "Primary capabilities",
-       "How many cars and floors?",
-       "Several cars and ten floors; both are parameters"
+       "How many elevators and floors?",
+       "Three elevators and ten floors, 0 to 9; keep both as parameters"
       ],
       [
        "Primary capabilities",
        "What kinds of request are there?",
-       "A hall call is a floor and a direction; a car call is a destination floor pressed inside"
+       "A hall call is a floor and up or down; a car call is a destination floor pressed inside"
       ],
       [
        "Primary capabilities",
-       "Who decides which car answers a hall call?",
-       "The system: the nearest suitable car; expect a different policy later"
+       "Who decides which elevator answers a hall call?",
+       "The system; nobody picks an elevator by hand"
       ],
       [
        "Error handling",
        "A floor that doesn't exist?",
-       "Return an error"
+       "Reject it"
       ],
       [
        "Error handling",
-       "Does a car stop for floors on the way?",
-       "Yes, if it is heading that way, it stops there first"
+       "A hall call for the floor the elevator is already on?",
+       "Serve it: the doors open"
       ],
       [
        "Error handling",
-       "Weight limits, jammed doors?",
-       "No: one floor per tick, doors open for one tick"
+       "Weight limits, jammed doors, an emergency stop?",
+       "Out of scope"
       ],
       [
        "Scope boundaries",
        "How does time work? Threads or a real clock?",
-       "Neither: a step() method advances every car one tick, so a run is deterministic"
+       "Neither: a step() method advances every elevator one tick, so a run is deterministic"
       ],
       [
        "Scope boundaries",
        "A display or a user interface?",
-       "No: print each car's floor and direction"
+       "No: print each elevator's floor and direction"
       ]
      ]
     },
@@ -1629,11 +1696,11 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "Someone presses a hall button (a floor and a direction). The system chooses a car and adds the floor to its stops; Returns the car's id, or an error if the floor doesn't exist.",
-      "A rider presses a floor inside a car. The system adds the floor to that car's stops; An error if the floor or the car doesn't exist.",
-      "Time advances with step(). Each car stops at its requested floors, keeps its direction while stops are ahead, then turns, and goes idle when none are left.",
-      "Anyone can read each car's floor and direction.",
-      "Out of scope: weight and capacity, real speeds, doors that jam, a display or UI, threads and a real clock."
+      "Someone presses up or down on a floor. The system picks the best elevator and gives it the request; Returns the elevator's id; an error for a floor that doesn't exist.",
+      "A rider inside presses a floor. That elevator gets a destination request; An error for a bad floor or a bad elevator.",
+      "Time advances with step(). Each elevator stops for requests that match its direction, keeps going while requests are ahead, turns when none are, and goes idle when it has none.",
+      "Anyone can read each elevator's floor and direction.",
+      "Out of scope: weight and capacity, door mechanics, an emergency stop, a display or UI, threads and a real clock."
      ]
     },
     {
@@ -1650,19 +1717,24 @@ window.LOOP_CODING.parts.push({
        "Only the number of floors matters; it is a parameter"
       ],
       [
-       "Elevator car",
+       "Elevator",
        "keep",
-       "Has a floor, a direction and the floors it must stop at"
+       "Has a floor, a direction and the requests it owes, and moves itself"
       ],
       [
-       "Elevator system",
+       "Elevator controller",
        "keep",
-       "Routes hall calls and car calls and runs the tick"
+       "Picks an elevator for each hall call and runs the tick"
       ],
       [
        "Request",
+       "keep",
+       "A floor and a type (up, down or destination); the type decides whether a passing elevator stops"
+      ],
+      [
+       "Floor",
        "drop",
-       "A hall call is just a floor and a direction, handed straight to a method"
+       "No behaviour; an int"
       ],
       [
        "Door, button, display",
@@ -1680,18 +1752,18 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-elevator-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class ElevatorSystem\n- floors: int  # request and select_floor check a floor against it\n- cars: Car[]  # request scans these to pick one; step moves each\n+ request(floor, direction) -> car id | error  # req 1: pick a car for a hall call\n+ select_floor(car_id, floor) -> void | error  # req 2: a button inside a car\n+ step() -> void  # req 3: advance every car one tick\n+ status() -> string  # req 4: each car's floor and direction\n\nclass Car\n- car_id: int  # request returns it; select_floor gets it\n- floor: int  # where the car is now\n- direction: Direction  (UP, DOWN, IDLE -> enum)  # decides which way step moves\n- stops: Set<floor>  # a set, so pressing twice costs nothing\n+ add_stop(floor) -> void  # a call lands here once a car is chosen\n+ step() -> void  # req 3: the car moves itself, not the system\n",
+     "code": "class ElevatorController\n- floors: int  # every request is checked against it\n- elevators: Elevator[]  # dispatch scans these; step moves each\n+ request_elevator(floor, type) -> elevator id | error  # req 1: a hall call\n+ press_floor(elevator_id, floor) -> void | error  # req 2: a button inside\n+ step() -> void  # req 3: one tick for every elevator\n+ status() -> string  # req 4\n+ _select_best_elevator(request) -> Elevator  # three tiers, each a finder\n\nclass Elevator\n- elevator_id: int  # what request_elevator returns\n- floor: int  # where it is now\n- direction: Direction  (UP, DOWN, IDLE -> enum)  # which way it travels\n- requests: Set<Request>  # what it owes; a set, so a double press adds nothing\n+ add_request(request) -> void  # dispatch and press_floor land here\n+ step() -> void  # req 3: SCAN, the elevator moves itself\n+ has_requests_ahead(direction) -> bool  # step: keep going or turn\n+ has_stops_at_or_beyond(floor, direction) -> bool  # dispatch: will it really reach the caller\n\nclass Request\n- floor: int\n- kind: RequestType  (PICKUP_UP, PICKUP_DOWN, DESTINATION -> enum)  # why it stops there\n+ heading() -> Direction  # which way the caller wants to go\n+ serves(direction) -> bool  # does a car going this way stop for it\n",
      "notes": {}
     },
     {
      "t": "say",
      "lines": [
-      "**I start from the four methods and ask what each one has to read.** A hall call has to choose among cars, so the system keeps a list of cars and the floor count to reject bad floors. Step moves a car, so a car needs its floor, its direction and the floors it must stop at. A set holds those stops, so a double press adds nothing."
+      "**I start from the methods and ask what each one has to read.** A hall call has to choose among elevators, so the controller keeps the list. Step has to know where the elevator is, which way it is going and what it owes, so those three are its state. And to stop only for calls going its way, each stop has to remember its type, so the stops are Request objects, not floors."
      ]
     },
     {
      "t": "svg",
-     "svg": "<svg viewBox=\"0 0 420 172\" role=\"img\" aria-label=\"Elevator system class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">ElevatorSystem</text><text class=\"d-s\" x=\"125\" y=\"44\">request, select_floor, step</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Car</text><text class=\"d-s\" x=\"30\" y=\"138\">floor, direction, stops</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Direction (enum)</text><text class=\"d-s\" x=\"234\" y=\"138\">UP, DOWN, IDLE</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
+     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"Elevator system class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">ElevatorController</text><text class=\"d-s\" x=\"125\" y=\"44\">request_elevator, step</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Elevator</text><text class=\"d-s\" x=\"30\" y=\"138\">floor, direction, step</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">Request</text><text class=\"d-s\" x=\"30\" y=\"210\">floor, kind, serves</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Direction (enum)</text><text class=\"d-s\" x=\"234\" y=\"138\">UP, DOWN, IDLE</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">RequestType (enum)</text><text class=\"d-s\" x=\"234\" y=\"210\">UP, DOWN, DESTINATION</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
      "alt": "Class map"
     },
     {
@@ -1701,10 +1773,12 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "request: Check the floor exists; Choose a car for the hall call; Add the floor to that car's stops; Return the car's id.",
-      "select_floor: Check the floor exists; Add it to that car's stops.",
-      "step: Advance every car by one tick.",
-      "status: One short entry per car: id, floor, direction."
+      "request_elevator: Check the floor, and that a hall call has a direction; Wrap it in a Request; Pick the best elevator for it; Give that elevator the request, return its id.",
+      "_select_best_elevator: An elevator already moving towards the floor, the same way the caller wants to go; Else the nearest idle elevator; Else the nearest elevator of all; it gets there after its current trip.",
+      "_find_moving_towards: Scan every elevator moving the way the caller wants to go; Keep it only if it hasn't passed the floor yet; And only if it has a stop at or beyond the floor, so it won't turn around before reaching it; Track the closest one and return it: one pass, O(n).",
+      "Elevator.step: No requests: go idle and stay; Idle with requests: point towards the nearest request; A request on this floor that this trip serves: open the doors, remove it, stay this tick; Nothing ahead in this direction: reverse, stay this tick; Otherwise move one floor.",
+      "step: Every elevator takes its own step, in the same tick.",
+      "press_floor: Check the floor and the elevator; Add a DESTINATION request to that elevator."
      ]
     },
     {
@@ -1714,10 +1788,10 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "Priority or other policy: _choose_car becomes a function given to the system; each policy is another function",
-      "Fire mode: recall() replaces every car's stops with the ground floor; Car.step already goes there",
-      "Maintenance or full car: a status on Car; dispatch skips cars not in service; State classes if each state differs",
-      "Doors that hold: a door state with a tick counter on Car; no moving while open"
+      "Cancel a floor: Elevator.remove_request; an equal Request finds it; step unchanged",
+      "Express cars: stops_at on Elevator; dispatch filters by can_stop_at, then the same tiers",
+      "Concurrent calls: one Lock around request_elevator and step; or a queue step drains each tick",
+      "Fire mode: replace every elevator's requests with a destination at 0; step already goes there"
      ]
     },
     {
@@ -1733,23 +1807,23 @@ window.LOOP_CODING.parts.push({
      "rows": [
       [
        "Single responsibility",
-       "Car owns its floor, stops and movement in step(), ElevatorSystem chooses the car in request and select_floor."
+       "The controller chooses an elevator, the elevator moves, the request knows whether it is served by a direction."
       ],
       [
        "Open/closed",
-       "A new dispatch policy is a new function given to the system. request, step and Car are not edited."
+       "A new dispatch rule is a new tier or finder in _select_best_elevator. Elevator.step is not edited."
       ],
       [
        "Liskov substitution",
-       "Any policy with the nearest_car signature works in place of it: (cars, floor, direction) returns a Car."
+       "Nothing to substitute yet: no subclasses. An express car is the same Elevator with stops_at set."
       ],
       [
        "Interface segregation",
-       "Nothing to segregate yet: no interfaces. A policy is one function."
+       "Nothing to segregate yet: no interfaces."
       ],
       [
        "Dependency inversion",
-       "ElevatorSystem is handed choose instead of hard-coding nearest_car."
+       "Not needed at this size. Once dispatch rules multiply, the controller is handed a dispatcher object."
       ]
      ]
     },
@@ -1766,24 +1840,24 @@ window.LOOP_CODING.parts.push({
      ],
      "rows": [
       [
-       "Which car answers a call (priority, express)",
-       "Strategy",
-       "nearest_car passed in as choose; each policy is another function"
+       "The dispatch rule (express, priority, rush hour)",
+       "Strategy, once there are two rules",
+       "today three tiers in _select_best_elevator"
       ],
       [
-       "Car in service, out of service or full",
-       "State, only if each state behaves differently",
-       "today a status on Car would be enough"
+       "The movement rule (SCAN, LOOK, first come)",
+       "Strategy, only if asked",
+       "today one Elevator.step"
       ],
       [
-       "Fire recall",
-       "No pattern: a method",
-       "recall() replaces every car's stops with floor 0"
+       "Elevator in service, maintenance or fire mode",
+       "State, if each state moves differently",
+       "today direction alone"
       ],
       [
-       "Doors that hold open",
-       "No pattern: a field",
-       "a door counter on Car, no moving while open"
+       "Two calls at once on real threads",
+       "No pattern: a lock",
+       "one Lock around request_elevator and step"
       ]
      ]
     },
@@ -1794,10 +1868,10 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "**One step() moves everything one tick, with no threads and no real clock.** Why: the run is deterministic, so you can trace it by hand and anyone can check it.",
-      "**The system chooses the car; the car chooses how to move.** Why: a new scheduling policy never touches movement, and interviewers probe exactly this split.",
-      "**A hall call is a floor and a direction; a car call is a floor. They are different methods.** Why: the destination is unknown until the rider gets in.",
-      "**The stops are a set and the car keeps its direction while stops are ahead.** Why: that is the SCAN idea in six lines, and duplicate presses cost nothing."
+      "**Request is a class: a floor and a type. The type decides whether a passing elevator stops.** Why: without it an elevator going up stops for someone going down, which is the bug interviewers look for.",
+      "**Dispatch reads as three tiers, each a named finder: moving towards, nearest idle, nearest.** Why: the high-level method says the rule out loud; the interesting finder is one O(n) loop.",
+      "**Stopping is direction-aware, travelling is not.** Why: that one sentence is SCAN, and it is all of Elevator.step.",
+      "**The controller's step is a loop; each elevator owns its own step.** Why: the controller chooses, the elevator moves, so a new dispatch rule never touches movement."
      ]
     }
    ]
@@ -1812,7 +1886,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Reported:** LeetCode Discuss Mar 2025 (token bucket, then sliding window) and Aug 2026 (fixed window, sliding window, token bucket, then Redis and distributed). Asked as a design, then pushed through algorithms."
+     "text": "**Reported:** LeetCode Discuss Mar 2025 (token bucket, then sliding window) and Aug 2026 (fixed window, sliding window, token bucket, then Redis and distributed). Asked as a design, then pushed through algorithms. **Full practice:** part 13, Rate limiter."
     },
     {
      "t": "table",
@@ -1825,37 +1899,47 @@ window.LOOP_CODING.parts.push({
       [
        "Primary capabilities",
        "Limit by what?",
-       "A key: a user, an API key or an IP"
+       "A client id: a user, an API key or an IP, as a string"
       ],
       [
        "Primary capabilities",
        "What is the limit?",
-       "N requests per time, with a small burst allowed"
+       "N requests per second in the long run, with a small burst allowed"
       ],
       [
        "Primary capabilities",
        "What does the caller learn?",
-       "Allowed or denied, and how long to wait"
+       "Allowed or denied, and how long to wait before retrying"
       ],
       [
        "Error handling",
-       "What happens when a key is over its limit?",
+       "What happens when a client is over its limit?",
        "Deny with a retry-after; the HTTP 429 is someone else's job"
       ],
       [
        "Error handling",
        "A bad limit, such as zero or negative?",
-       "Reject it at construction"
+       "Reject it when the rule is built"
+      ],
+      [
+       "Error handling",
+       "A request with no client id?",
+       "Reject it"
       ],
       [
        "Scope boundaries",
-       "One server or many?",
-       "One to start; many is the follow-up"
+       "Which algorithm?",
+       "Token bucket to start; the interviewer may ask for others after"
       ],
       [
        "Scope boundaries",
-       "Different limits per endpoint or plan?",
-       "Later; one rule first"
+       "How does time work? A real clock?",
+       "No: the caller passes the current time in seconds with each request, so a run is deterministic"
+      ],
+      [
+       "Scope boundaries",
+       "One server or many? Different limits per plan?",
+       "One server and one rule first; many servers and plans are follow-ups"
       ]
      ]
     },
@@ -1866,10 +1950,10 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "A service asks whether a request from a key may go ahead. The limiter takes a token from that key's bucket if there is one; Denies, with a retry-after, when the bucket is empty.",
-      "Each key has its own bucket, full the first time it is seen. A bucket refills steadily with time, up to its capacity; Time comes from an injected clock.",
-      "A rule sets the capacity (the burst) and the refill rate. A zero or negative rule is rejected when the limiter is built.",
-      "Out of scope: the HTTP layer and the 429 response, many servers, persistence."
+      "A service asks whether a request from a client may go ahead. The limiter finds that client's bucket and takes a token if there is one; Denies, with a retry-after, when the bucket is empty; an error for an empty client id.",
+      "Each client has its own bucket, full the first time it is seen. A bucket refills steadily with elapsed time, up to its capacity; Time is passed in with each call; a time that has not moved, or goes backwards, adds nothing.",
+      "A rule sets the capacity (the burst) and the refill rate. A zero or negative rule is rejected when the Rule is built.",
+      "Out of scope: the HTTP layer and the 429 response, many servers, persistence, different limits per plan (an extension), a real clock."
      ]
     },
     {
@@ -1883,32 +1967,37 @@ window.LOOP_CODING.parts.push({
       [
        "Request",
        "drop",
-       "Only its key matters; the key is a string"
+       "Only its client id and time matter; both are arguments"
       ],
       [
        "User / API key / IP",
        "drop",
-       "The key itself; not modelled"
+       "The client id itself, a string; not modelled"
       ],
       [
        "Rule",
        "keep",
-       "Capacity and refill rate; one object so per-plan rules come cheaply"
+       "Capacity and refill rate, validated once when built; one value so per-plan rules come cheaply"
       ],
       [
        "TokenBucket",
        "keep",
-       "Tokens left and when it last refilled, for one key"
+       "Tokens left and when it last refilled, for one client; it answers try_consume"
       ],
       [
        "RateLimiter",
        "keep",
-       "Holds the rule and one bucket per key"
+       "Holds the rule and one bucket per client; the entry point"
       ],
       [
        "Clock",
        "drop",
-       "A function passed in; tests fake it"
+       "Dropped: the time is a number passed into each call"
+      ],
+      [
+       "Response, HTTP 429",
+       "drop",
+       "Someone else's job; allow returns a pair"
       ]
      ]
     },
@@ -1916,18 +2005,18 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-ratelimiter-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class RateLimiter\n- rule: Rule  # req 3: every bucket follows the same rule\n- buckets: Map<key, TokenBucket>  # req 2: one bucket per key, made on first use\n- now: function returning seconds  # injected clock, so tests can fake time\n+ allow(key) -> (allowed: boolean, retry_after: seconds)  # req 1: the one call a service makes\n\nclass TokenBucket\n- tokens: float  # what is left to spend; fractional as it refills\n- last_refill: seconds  # refill by the time since this\n+ try_take(now) -> (allowed, retry_after)  # req 1: take a token or say when to retry\n+ _refill(now) -> void  # req 2: tokens grow with time, up to capacity\n\nclass Rule\n- capacity: int  # req 3: the burst size\n- refill_per_sec: float  # req 3: the steady rate\n",
+     "code": "class RateLimiter\n- rule: Rule  # req 3: every bucket follows it\n- buckets: Map<client_id, TokenBucket>  # req 2: one bucket per client, made on first use\n+ allow(client_id, now) -> (allowed: bool, retry_after: seconds) | error  # req 1: the one call a service makes\n+ _bucket_for(client_id, now) -> TokenBucket  # req 2: find or make the client's bucket\n\nclass TokenBucket\n- rule: Rule  # capacity to cap at, rate to refill at\n- tokens: float  # what is left to spend; fractional as it refills\n- last_refill: seconds  # refill by the time since this\n+ try_consume(now) -> (allowed, retry_after)  # req 1: take a token or say when to retry\n+ _refill(now) -> void  # req 2: tokens grow with time, up to capacity\n\nclass Rule\n- capacity: int  # req 3: the burst size\n- refill_per_sec: float  # req 3: the steady rate\n+ __post_init__() -> void | error  # req 3: reject a zero or negative rule when built\n",
      "notes": {}
     },
     {
      "t": "say",
      "lines": [
-      "**I start from the one method the requirements gave me: allow(key).** It has to read that key's token count and when it last refilled, so each key gets a bucket with those two fields. The limiter keeps a map of buckets and a rule for capacity and rate. Time comes in as a function, so the refill can be tested."
+      "**I start from the methods and ask what each one has to read.** allow has to find a client's bucket, so the limiter keeps a map of them. try_consume has to know how many tokens are left and how long since the last refill, so those are the bucket's state, and it needs the capacity and the rate, which come from the Rule. Time is never state: it comes in as an argument."
      ]
     },
     {
      "t": "svg",
-     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"Rate limiter class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">RateLimiter</text><text class=\"d-s\" x=\"125\" y=\"44\">allow(key)</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">TokenBucket</text><text class=\"d-s\" x=\"30\" y=\"138\">tokens, last_refill</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">Rule</text><text class=\"d-s\" x=\"30\" y=\"210\">capacity, refill</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">now()</text><text class=\"d-s\" x=\"234\" y=\"138\">the clock, a function</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
+     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"Rate limiter class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">RateLimiter</text><text class=\"d-s\" x=\"125\" y=\"44\">allow(client_id, now)</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">TokenBucket</text><text class=\"d-s\" x=\"30\" y=\"138\">tokens, last_refill</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">Rule</text><text class=\"d-s\" x=\"30\" y=\"210\">capacity, refill rate</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">now (seconds)</text><text class=\"d-s\" x=\"234\" y=\"138\">passed in, not read</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
      "alt": "Class map"
     },
     {
@@ -1937,8 +2026,9 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "allow: Find the key's bucket, making a full one if it is new; Ask the bucket to take a token at the current time; Return its answer: allowed, or denied with a retry-after.",
-      "try_take: Refill first: tokens grow by elapsed time times the rate, capped at capacity; If at least one token, take it and allow; Otherwise deny; retry-after is the time until one token exists."
+      "allow: Check there is a client id; Find that client's bucket (a new client gets a full one); Ask the bucket to take a token at this time; Return its answer: allowed, or denied with how long to wait.",
+      "TokenBucket.try_consume: Refill for the time that has passed; If at least one whole token is left, take it and allow; Otherwise deny, and say how long until one token exists.",
+      "TokenBucket._refill: Work out the time since the last refill; Add that time times the rate to the tokens; Cap the tokens at capacity; Remember this time as the last refill."
      ]
     },
     {
@@ -1948,15 +2038,15 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "Other algorithms: one try_take(now) interface; the limiter does not know which; fixed window allows 2N at a boundary",
-      "Idle keys pile up: drop buckets that are full and idle; or LRU eviction",
-      "Two requests at once: refill and take as one step: a lock per key, or an atomic store operation",
-      "Many servers: buckets in Redis, refill and take as one atomic script, the store's clock"
+      "Other algorithms: one try_consume(now) interface; sliding window log = a deque of times, pop expired, compare to the limit; fixed window allows 2N at a boundary",
+      "Limits per plan: dict of tier -> Rule; the tier picks the Rule when the bucket is made",
+      "Two requests at once: refill and take as one step: a lock per client, one lock for the dict; or an atomic store operation",
+      "Idle clients pile up: drop buckets that are full and idle; or LRU eviction"
      ]
     },
     {
      "t": "p",
-     "text": "**Design check.** Check each choice against SOLID in a minute. The algorithm is what varies, and try_take is the seam."
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
     },
     {
      "t": "table",
@@ -1967,23 +2057,23 @@ window.LOOP_CODING.parts.push({
      "rows": [
       [
        "Single responsibility",
-       "Rule holds numbers, TokenBucket does the refill and take for one key, RateLimiter maps keys to buckets."
+       "Rule holds and validates two numbers, TokenBucket refills and takes for one client, RateLimiter maps clients to buckets."
       ],
       [
        "Open/closed",
-       "A new algorithm is a new class with try_take(now). allow is not edited."
+       "A new algorithm is a new class with try_consume(now). allow is not edited."
       ],
       [
        "Liskov substitution",
-       "A fixed or sliding window class works anywhere TokenBucket does: same try_take answer, allowed or retry-after."
+       "A sliding window class works anywhere TokenBucket does: the same call, the same answer shape, allowed or retry-after."
       ],
       [
        "Interface segregation",
-       "No interface until something varies. The bucket has one call, try_take."
+       "No interface until something varies. The bucket has one call, try_consume."
       ],
       [
        "Dependency inversion",
-       "The clock is a function passed in, so tests fake it. The limiter is handed its Rule."
+       "Time is a number passed in, so nothing reads a clock. The limiter is handed its Rule (or its rules, and the algorithm class, once those vary)."
       ]
      ]
     },
@@ -2000,19 +2090,19 @@ window.LOOP_CODING.parts.push({
      ],
      "rows": [
       [
-       "Fixed or sliding window",
-       "Strategy",
-       "each algorithm a class with try_take(now)"
+       "Token bucket, sliding window or fixed window",
+       "Strategy, once there are two",
+       "each algorithm a class with try_consume(now); the limiter holds the class"
       ],
       [
-       "Idle keys pile up",
-       "No pattern: a map",
-       "drop full idle buckets, or LRU eviction"
+       "Limits per plan",
+       "No pattern: a dict",
+       "tier name -> Rule; the tier picks the Rule once"
       ],
       [
-       "Two requests, one key",
+       "Two requests, one client at once",
        "No pattern: a lock",
-       "refill and take as one step per key"
+       "a lock per client around refill and take"
       ],
       [
        "Many servers",
@@ -2028,8 +2118,8 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "**Time is a function passed in, never read inside the bucket.** Why: the limiter can be shown, and tested, without sleeping.",
-      "**Refill is computed from elapsed time when a request arrives; there is no timer thread.** Why: no background work, and an idle key costs nothing.",
+      "**Time is passed in, never read inside the bucket.** Why: the limiter can be shown, and tested, without sleeping.",
+      "**Refill is computed from elapsed time when a request arrives; there is no timer thread.** Why: no background work, and an idle client costs nothing.",
       "**allow returns the decision and the wait, not only a bool.** Why: the caller can send a retry-after, which was in the requirements.",
       "**Refill and take are one step.** Why: it is the race in this design, and the one the follow-up goes after."
      ]
@@ -2046,7 +2136,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Reported:** LeetCode Discuss May 2025 (L5, LLD round); Taro Sep 2025 (SDE2, a meeting app)."
+     "text": "**Reported:** LeetCode Discuss May 2025 (L5, LLD round); Taro Sep 2025 (SDE2, a meeting app). **Full practice:** part 14, Meeting room reservation."
     },
     {
      "t": "table",
@@ -2069,7 +2159,12 @@ window.LOOP_CODING.parts.push({
       [
        "Primary capabilities",
        "Which room does the system pick?",
-       "The smallest free room that fits the attendees"
+       "The smallest free room that fits; on a tie, the one added first"
+      ],
+      [
+       "Primary capabilities",
+       "Can a user ask for a particular room, or see what is free?",
+       "Yes: book a named room, see a room's schedule, and list the free rooms for a slot"
       ],
       [
        "Error handling",
@@ -2082,9 +2177,29 @@ window.LOOP_CODING.parts.push({
        "Return an error"
       ],
       [
+       "Error handling",
+       "A start that is not before the end?",
+       "Reject it"
+      ],
+      [
+       "Error handling",
+       "Cancel a booking that doesn't exist?",
+       "Return an error"
+      ],
+      [
        "Scope boundaries",
        "Recurring meetings, equipment, invites?",
        "Not at first; recurring is the likely follow-up"
+      ],
+      [
+       "Scope boundaries",
+       "Time zones, or bookings in the past?",
+       "One time zone, and no check on the past"
+      ],
+      [
+       "Scope boundaries",
+       "Is this one process, or many users at once?",
+       "One process, one caller at a time; threads are a follow-up"
       ]
      ]
     },
@@ -2095,11 +2210,12 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "A user books a room for a start and end time and a number of attendees. The system picks the smallest room that fits and has no overlapping booking; No room free is an error.",
-      "A booking must have its start before its end. Anything else is rejected.",
+      "A user books a room for a start, an end and a number of attendees. The system picks the smallest room that fits and has no overlapping booking, the first added on a tie; Returns the booking; an error if the times are bad or no room is free.",
+      "A user books a named room for the same details. The system checks that the room fits and is free; An error for an unknown room, a room that is too small, or one that is busy.",
       "Back-to-back meetings are allowed. A meeting ending at 10:00 does not overlap one starting at 10:00.",
       "The organiser cancels a booking. The room is free for that time again; An unknown booking is an error.",
-      "Out of scope: recurring meetings (an extension), equipment filters, invites and notifications, calendars of attendees."
+      "Anyone can see a room's schedule, and which rooms are free for a slot.",
+      "Out of scope: recurring meetings (an extension), equipment filters, invites and notifications, calendars of attendees, time zones, threads."
      ]
     },
     {
@@ -2113,32 +2229,37 @@ window.LOOP_CODING.parts.push({
       [
        "Room",
        "keep",
-       "An id, a capacity and its bookings; knows if it is free for an interval"
+       "Has an id, a capacity and its bookings, and says whether it is free for a slot"
       ],
       [
        "Booking",
        "keep",
-       "The room, the interval and the organiser"
-      ],
-      [
-       "Interval",
-       "keep",
-       "A start and end; the overlap check lives here"
+       "A room, a start, an end, an organiser and a head count; it knows whether it overlaps a slot"
       ],
       [
        "Scheduler (service)",
        "keep",
-       "Entry point: finds the smallest room that fits and books it"
+       "Entry point: finds the smallest room that fits and books it, cancels, lists"
+      ],
+      [
+       "Interval",
+       "drop",
+       "Two datetimes on Booking are enough; the overlap rule lives there"
       ],
       [
        "User / Attendee",
        "drop",
-       "An organiser id is enough; attendees are a count"
+       "An organiser name is enough; attendees are a count"
       ],
       [
        "Notifier",
        "drop",
        "Out of scope"
+      ],
+      [
+       "Calendar",
+       "drop",
+       "A room's schedule is its sorted bookings; no class"
       ]
      ]
     },
@@ -2146,18 +2267,18 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-meeting-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class Scheduler\n- rooms: Room[]  (sorted by capacity)  # book takes the first room that fits, which is the smallest\n- bookings: Map<id, Booking>  # req 4: cancel gets only a booking id\n+ book(organiser, start, end, attendees) -> Booking | error  # req 1 to 3\n+ cancel(booking_id) -> void | error  # req 4: the room is free again\n\nclass Room\n- room_id: string  # names the room in a booking\n- capacity: int  # req 1: must hold the attendees\n- bookings: Booking[]  # is_free checks the new interval against these\n+ is_free(interval) -> boolean  # req 1: no overlapping booking\n+ add(booking) -> void  # book stores it here\n+ remove(booking) -> void  # req 4\n\nclass Booking\n- booking_id: string  # the key in the scheduler's map\n- room: Room  # cancel removes it from this room\n- interval: Interval  # when the room is taken\n- organiser: string  # who booked it\n\nclass Interval\n- start: datetime  # req 2: must come before end\n- end: datetime  (half-open: [start, end))  # req 3: back-to-back is allowed\n+ overlaps(other) -> boolean  # the one place the overlap rule lives\n",
+     "code": "class RoomScheduler\n- rooms: Map<id, Room>  # in the order added; the search keeps the first of equal sizes\n- bookings: Map<id, Booking>  # req 4: cancel gets only a booking id\n- next_id: int  # ids are never reused\n+ book(organiser, start, end, attendees) -> Booking | error  # req 1\n+ book_room(organiser, room_id, start, end, attendees) -> Booking | error  # req 2\n+ cancel(booking_id) -> void | error  # req 4\n+ schedule(room_id) -> Booking[]  # req 5: earliest first\n+ free_rooms(start, end, attendees) -> string[]  # req 5\n+ _find_room(start, end, attendees) -> Room | None  # the smallest free room that fits\n\nclass Room\n- room_id: string  # names the room in errors and lists\n- capacity: int  # req 1: must hold the attendees\n- bookings: Booking[]  # is_free checks the new slot against these\n+ is_free(start, end) -> bool  # req 1 and 2: no overlapping booking\n+ add(booking) -> void  # book stores it here\n+ remove(booking) -> void  # req 4\n\nclass Booking\n- booking_id: string  # the key in the scheduler's map\n- room: Room  # cancel removes it from this room\n- start: datetime  # first moment the room is taken\n- end: datetime  # first moment it is free: half-open [start, end), so req 3 holds\n- organiser: string  # who booked it\n- attendees: int  # head count\n+ overlaps(start, end) -> bool  # req 3: the one place the overlap rule lives\n",
      "notes": {}
     },
     {
      "t": "say",
      "lines": [
-      "**I start from the methods the requirements gave me: book and cancel, and book has to read room sizes and existing bookings.** So the scheduler keeps rooms sorted by capacity, and each room holds its own bookings and answers is_free. Cancel gets only an id, so the scheduler keeps a map of bookings. The overlap rule goes in one Interval class, half-open so back-to-back is fine."
+      "**I start from the methods and ask what each one has to read.** Book has to compare room sizes and check existing bookings, so each room holds its own bookings and answers is_free, which in turn asks each booking whether it overlaps. Cancel gets only an id, so the scheduler keeps a map of bookings. And the slot is half-open, so back-to-back is allowed with one strict comparison."
      ]
     },
     {
      "t": "svg",
-     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"Meeting room reservation class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">Scheduler</text><text class=\"d-s\" x=\"125\" y=\"44\">book, cancel</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Room</text><text class=\"d-s\" x=\"30\" y=\"138\">capacity, bookings</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">Booking</text><text class=\"d-s\" x=\"30\" y=\"210\">room, interval</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Interval</text><text class=\"d-s\" x=\"234\" y=\"138\">[start, end)</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
+     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"Meeting room reservation class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">RoomScheduler</text><text class=\"d-s\" x=\"125\" y=\"44\">book, cancel, free_rooms</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Room</text><text class=\"d-s\" x=\"30\" y=\"138\">capacity, bookings, is_free</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">Booking</text><text class=\"d-s\" x=\"30\" y=\"210\">slot, overlaps</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">MeetingError</text><text class=\"d-s\" x=\"234\" y=\"138\">every refusal</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
      "alt": "Class map"
     },
     {
@@ -2167,10 +2288,13 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "book: Reject if start is not before end, or attendees is below one; Rooms are sorted by capacity; take the first with capacity at least attendees and is_free(interval); No such room: raise an error; Create the Booking, add it to the room and to the map, return it.",
-      "cancel: Look up the booking; error if unknown; Remove it from its room and from the map.",
-      "is_free (on Room): Free if no existing booking's interval overlaps the new one.",
-      "overlaps (on Interval): Half-open: [a, b) and [c, d) overlap exactly when a < d and c < b; So end equal to start does not overlap, and back-to-back meetings pass."
+      "book: Check the times and the head count; Find the smallest room that fits and is free for the slot; No such room -> error; Create the booking in that room and return it.",
+      "_find_room: Look at every room; Skip a room that is too small; Skip a room that has a booking in the slot; Keep the smallest one that is left; one pass, O(rooms x bookings).",
+      "Room.is_free: Ask each booking in this room whether it overlaps the slot; Any overlap -> not free; none -> free.",
+      "Booking.overlaps: Treat both as half-open: [start, end); They overlap when each one starts before the other ends.",
+      "book_room: Check the times and the head count; Look the room up, check it fits and is free; Create the booking in it and return it.",
+      "cancel: Look the booking up by id; Remove it from its room and from the map.",
+      "free_rooms: Collect the rooms that fit and are free for the slot; Order them smallest first, ties by id."
      ]
     },
     {
@@ -2180,15 +2304,15 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "Recurring meetings: a rule expands to intervals; check all, book all or none",
+      "Recurring meetings: a rule expands to slots; one room free for all, then book all or none",
+      "Notifications: a Notifier handed in; called after book and cancel succeed",
       "Two people, one room: choose-and-add as one step: a lock (per room), or a database constraint",
-      "Equipment filter: a set on Room; filter, then pick the smallest; a RoomSelector if rules grow",
-      "Notifications: a Notifier called after book and cancel succeed"
+      "Equipment filter: a set on Room; skip rooms that lack it; a RoomSelector if rules grow"
      ]
     },
     {
      "t": "p",
-     "text": "**Design check.** Check each choice against SOLID in a minute. Room choice and notification are the parts that may vary."
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
     },
     {
      "t": "table",
@@ -2199,23 +2323,23 @@ window.LOOP_CODING.parts.push({
      "rows": [
       [
        "Single responsibility",
-       "Interval owns overlap, Room owns is_free, Booking records one booking, Scheduler picks a room and books it."
+       "Booking owns overlap, Room owns is_free, the scheduler picks a room and records the booking."
       ],
       [
        "Open/closed",
-       "A new room rule is a RoomSelector, added not edited. book is not changed."
+       "A new room rule is a new test in _find_room, or later a RoomSelector. Booking.overlaps and Room.is_free are not edited."
       ],
       [
        "Liskov substitution",
-       "Not yet: no subclasses. Any RoomSelector would take rooms and needs and return one room."
+       "Nothing to substitute yet: no subclasses. Any RoomSelector would take rooms and needs and return one room."
       ],
       [
        "Interface segregation",
-       "No interface until something varies. A Notifier would have one call, notify."
+       "No interfaces yet. A Notifier would have one call, notify."
       ],
       [
        "Dependency inversion",
-       "Scheduler holds its rooms and picks the smallest itself. A selector or Notifier would be handed in."
+       "The scheduler picks the smallest room itself. A selector or a Notifier would be handed in."
       ]
      ]
     },
@@ -2244,7 +2368,7 @@ window.LOOP_CODING.parts.push({
       [
        "Recurring meetings",
        "No pattern: a list",
-       "expand to intervals; check all, book all or none"
+       "expand to slots; check all, book all or none"
       ],
       [
        "Two people, last room",
@@ -2260,9 +2384,9 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "**Intervals are half-open: [start, end). They overlap when a.start < b.end and b.start < a.end.** Why: end equals start is allowed, and it is one line instead of a pile of cases.",
-      "**The overlap check lives on Interval, and is_free on Room.** Why: each class answers a question about itself, and the scheduler reads like a sentence.",
-      "**Keep rooms sorted by capacity and take the first that fits and is free.** Why: that is the smallest room that fits, without a comparison in the loop.",
+      "**Slots are half-open: [start, end). They overlap when a.start < b.end and b.start < a.end.** Why: end equals start is allowed, and it is one line instead of a pile of cases.",
+      "**The overlap check lives on Booking, is_free on Room, and book reads like a sentence.** Why: each class answers a question about itself, and the scheduler only orchestrates.",
+      "**The search keeps the best so far and replaces it only on a strictly smaller capacity.** Why: that is the smallest room and the tie-break in one comparison, so the result is deterministic.",
       "**Validate start before end first.** Why: bad input never reaches the room logic."
      ]
     }
@@ -2278,7 +2402,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Reported:** PracHub (onsite, hard) and a Hello Interview community report; LeetCode posts from 2019 and a 2024 write-up. Long known as an Amazon favourite, but thin in 2024 to 2026 reports. **Full practice:** part 3, File management."
+     "text": "**Reported:** PracHub (onsite, hard) and a Hello Interview community report; LeetCode posts from 2019 and a 2024 write-up. Long known as an Amazon favourite, but thin in 2024 to 2026 reports. **Full practice:** part 15, File search."
     },
     {
      "t": "table",
@@ -2290,43 +2414,48 @@ window.LOOP_CODING.parts.push({
      "rows": [
       [
        "Primary capabilities",
-       "Which filters?",
-       "Size, extension, name pattern, modified time to start"
+       "Which conditions?",
+       "Extension, name contains, minimum size and maximum size to start"
       ],
       [
        "Primary capabilities",
-       "Combine them?",
-       "AND, OR and NOT"
+       "Can conditions combine?",
+       "Yes: and, or and not, nested to any depth"
       ],
       [
        "Primary capabilities",
-       "What does search return?",
-       "Each matching file's path"
+       "What does a search return?",
+       "The path of each matching file, in name order"
       ],
       [
        "Error handling",
-       "Start path missing?",
+       "The start is missing, or is a file?",
        "Error"
       ],
       [
        "Error handling",
-       "Symlinks, with possible cycles?",
-       "Out of scope; say how you would stop a loop"
+       "Nothing matches?",
+       "An empty result, not an error"
       ],
       [
        "Error handling",
-       "A folder you cannot read?",
-       "Skip it and keep going"
+       "Symlinks with cycles, or a folder you cannot read?",
+       "Out of scope; say how you would stop a loop"
       ],
       [
        "Scope boundaries",
        "A real disk, or a tree already in memory?",
-       "A tree in memory"
+       "A tree in memory, built by hand in the demo"
       ],
       [
        "Scope boundaries",
        "Huge trees?",
-       "Yes: results should stream, not wait for the whole walk"
+       "Return a list first; streaming is a follow-up"
+      ],
+      [
+       "Scope boundaries",
+       "Case in names and extensions?",
+       "Ignore case"
       ]
      ]
     },
@@ -2337,10 +2466,10 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "User searches under a start folder with a condition. The system walks everything below it and returns the files that match; Error if the start folder does not exist.",
-      "A condition tests one file: size, extension or name. Conditions combine with AND, OR and NOT.",
-      "Results come out as the walk finds them. A huge tree does not wait to finish, or fill memory.",
-      "Out of scope: a real disk, symlinks, permissions, searching file contents."
+      "User gives a start folder and a condition. The system walks every folder below it and returns the paths of matching files, in name order; Error if the start is not a folder; an empty list if nothing matches.",
+      "A condition tests one file: extension, name contains, minimum size, maximum size. Conditions combine with and, or and not, to any depth; A new kind of condition is added without editing find.",
+      "Extension and name checks ignore case. ReadMe.MD matches the extension md and the text readme.",
+      "Out of scope: a real disk, symlinks and cycles, permissions, searching file contents, streaming (a follow-up)."
      ]
     },
     {
@@ -2359,27 +2488,37 @@ window.LOOP_CODING.parts.push({
       [
        "File",
        "keep",
-       "A name and a size; the extension comes from the name"
+       "A name and a size; the extension comes from the name, so it answers extension() itself"
       ],
       [
        "Directory",
        "keep",
-       "A name and its children; files and folders form a Composite tree"
+       "A name and its children; files and folders form a tree, so it nests"
       ],
       [
        "Filter",
        "keep",
-       "One question about a file: matches(file); size, extension and name are its subclasses"
+       "One question about a file: matches(file). The type of condition changes the answer, so each kind is a class"
+      ],
+      [
+       "And, Or, Not",
+       "keep",
+       "Combinations are Filters that hold Filters, so a query is a tree of the same class"
       ],
       [
        "FileSearcher",
        "keep",
-       "Walks the tree and asks the filter about each file"
+       "The entry point: walks the tree and asks the filter about each file"
       ],
       [
-       "Query / result list",
+       "Path",
        "drop",
-       "Results are yielded one by one; no list class"
+       "A string built while walking; nothing asks it a question"
+      ],
+      [
+       "Result list",
+       "drop",
+       "A plain list of strings"
       ]
      ]
     },
@@ -2387,18 +2526,18 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-filesearch-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class FileSearcher\n+ search(root, filter) -> files, one at a time  # req 1 and 3: walk the tree and yield matches\n\nclass Directory\n- name: string  # part of the path we return\n- children: Entry[]  # files and folders, so the tree nests\n+ contains files and folders  # the walk pushes its children\n\nclass File\n- name: string  # the extension comes from it\n- size: int  # req 2: size conditions read it\n+ extension() -> string  # ExtensionFilter asks the file\n\nclass Filter (base)\n+ matches(file) -> boolean  # req 2: one question about one file\n\nclass SizeFilter, ExtensionFilter\n- the limit or the extension  # the value each one compares against\n+ matches(file) -> boolean  # each kind answers its own question\n",
+     "code": "class FileSearcher\n+ find(root, condition) -> string[] | error  # req 1: the paths of matching files\n+ _walk(root) -> (path, File)[]  # req 1: every file below root with its path\n\nclass File\n- name: string  # the extension comes from it\n- size: int  # bytes; size filters read it\n+ extension() -> string  # req 3: lowercase text after the last dot; ExtensionFilter asks the file\n\nclass Directory\n- name: string  # part of every path below it\n- children: Entry[]  # File and Directory, so the tree nests\n+ no methods  # the walk reads children; it is a record the walk asks nothing of\n\nclass Filter (base)\n+ matches(file) -> bool  # req 2: one yes or no question about one file\n\nclass ExtensionFilter, NameContainsFilter\n- extension or text: string  # lowercased once, in the constructor\n+ matches(file) -> bool  # each kind answers its own question\n\nclass MinSizeFilter, MaxSizeFilter\n- limit: int  # bytes\n+ matches(file) -> bool  # size >= limit, or size <= limit\n\nclass AndFilter, OrFilter\n- filters: Filter[]  # the children; they can be combinations too\n+ matches(file) -> bool  # all children say yes, or any child says yes\n\nclass NotFilter\n- inner: Filter  # the one filter it flips\n+ matches(file) -> bool  # not inner.matches(file)\n",
      "notes": {}
     },
     {
      "t": "say",
      "lines": [
-      "**I start from the one method the requirements gave me: search(root, filter), which yields matching files.** It has to walk a tree, so folders hold children and files hold a name and a size. Each condition is a Filter with one method, matches(file). That way And, Or and Not can combine them, and the walk never needs to know the kind."
+      "**I start from the methods and ask what each one has to read.** find has to walk a tree, so folders hold children and files hold a name and a size. Every condition answers matches(file) from its own value, a limit or an extension. And, Or and Not answer by asking the filters they hold, which is why they are Filters too."
      ]
     },
     {
      "t": "svg",
-     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"File search, like Unix find class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">FileSearcher</text><text class=\"d-s\" x=\"125\" y=\"44\">search(root, filter)</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Directory</text><text class=\"d-s\" x=\"30\" y=\"138\">children</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">File</text><text class=\"d-s\" x=\"30\" y=\"210\">name, size</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Filter</text><text class=\"d-s\" x=\"234\" y=\"138\">matches(file)</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">Size, Ext</text><text class=\"d-s\" x=\"234\" y=\"210\">one class each</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<path class=\"d-ar\" d=\"M115 148 L115 170\"/><text class=\"d-a\" x=\"122\" y=\"164\">contains</text>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
+     "svg": "<svg viewBox=\"0 0 420 316\" role=\"img\" aria-label=\"File search, like Unix find class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">FileSearcher</text><text class=\"d-s\" x=\"125\" y=\"44\">find, _walk</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Directory</text><text class=\"d-s\" x=\"30\" y=\"138\">name, children</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">File</text><text class=\"d-s\" x=\"30\" y=\"210\">name, size</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Filter (base)</text><text class=\"d-s\" x=\"234\" y=\"138\">matches(file)</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">Ext, Name, Size</text><text class=\"d-s\" x=\"234\" y=\"210\">one class each</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"244\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"264\">And, Or, Not</text><text class=\"d-s\" x=\"234\" y=\"282\">hold Filters</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 268 L406 268\"/>\n<path class=\"d-ar\" d=\"M115 148 L115 170\"/><text class=\"d-a\" x=\"122\" y=\"164\">contains</text>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
      "alt": "Class map"
     },
     {
@@ -2408,9 +2547,11 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "search: Start a stack with the root folder; Pop one; a file is tested, a folder pushes its children; Test with filter.matches(file); Yield each match as it is found.",
-      "matches: Each filter answers one question about one file; SizeFilter compares the size; ExtensionFilter compares the end of the name.",
-      "combine: And asks all its children, Or asks any, Not flips one; They are Filters too, so they nest to any depth."
+      "find: Check the start is a folder; Walk the tree, getting every file with its path; Keep the path of each file the condition accepts.",
+      "_walk: Start a stack with the root folder and its path; Pop one entry. A file is recorded with its path; A folder pushes its children, each with its own path; Stop when the stack is empty.",
+      "Filter.matches: Answer one yes or no question about one file.",
+      "ExtensionFilter.matches: Compare the file's extension with ours.",
+      "AndFilter.matches: Ask each child filter about the file; The first no ends it: the file does not match; Every child said yes: it matches."
      ]
     },
     {
@@ -2420,15 +2561,15 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "Combine filters: And, Or, Not are Filters that hold Filters; any query is a tree of them",
-      "Symlink loops: a visited set of real paths; skip a folder already seen",
-      "New criteria: each is a new Filter class; nothing else changes",
-      "Huge trees: stream with a generator; explicit stack; parallel subtrees; a result limit"
+      "New condition: a new Filter class (plus a File field); find untouched",
+      "Huge trees: _walk yields; find returns a generator expression; check the start eagerly",
+      "Hidden folders: in _walk, continue on a folder named .x; its children are never pushed",
+      "Max depth: the stack entry carries a depth; skip a folder past max_depth"
      ]
     },
     {
      "t": "p",
-     "text": "**Design check.** Check each choice against SOLID in a minute. Here the patterns are the design: a tree of files and a Filter per question."
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
     },
     {
      "t": "table",
@@ -2439,23 +2580,23 @@ window.LOOP_CODING.parts.push({
      "rows": [
       [
        "Single responsibility",
-       "File and Directory hold the tree, Filter answers one question, FileSearcher walks and yields."
+       "File and Directory hold the tree, a Filter answers one question, FileSearcher walks and collects."
       ],
       [
        "Open/closed",
-       "A new criterion is a new Filter class. search and the existing filters stay as they are."
+       "A new condition is a new Filter class. find, _walk and the existing filters are not edited."
       ],
       [
        "Liskov substitution",
-       "SizeFilter, ExtensionFilter and And, Or, Not all work wherever Filter does: matches(file) returns a boolean."
+       "Every filter and every combination works wherever a Filter does: matches(file) returns a bool."
       ],
       [
        "Interface segregation",
-       "Filter has one method, matches. No searcher is forced to know about size or extension."
+       "Filter has one method. The searcher is not forced to know about size or extension."
       ],
       [
        "Dependency inversion",
-       "search is handed a Filter instead of building the test itself."
+       "find is handed a Filter, so it depends on the idea of a condition and not on any kind."
       ]
      ]
     },
@@ -2472,24 +2613,24 @@ window.LOOP_CODING.parts.push({
      ],
      "rows": [
       [
-       "New criteria (owner, modified)",
+       "New conditions (owner, modified time)",
        "Strategy",
-       "each a new Filter; the searcher is untouched"
+       "each is a new Filter class; find does not change"
       ],
       [
        "Combined queries (and, or, not)",
        "Composite",
-       "And, Or, Not are Filters that hold Filters"
+       "And, Or and Not are Filters that hold Filters"
       ],
       [
        "Files inside folders",
-       "Composite",
-       "Directory holds Files and Directories, walked with a stack"
+       "Composite, in the data",
+       "Directory holds File and Directory; the walk uses a stack"
       ],
       [
-       "Symlink loops, huge trees",
-       "No pattern: a set and a generator",
-       "visited set of real paths; yield matches"
+       "Huge trees, deep trees, hidden folders",
+       "No pattern: a generator and a check",
+       "yield matches; skip a folder in _walk"
       ]
      ]
     },
@@ -2500,10 +2641,10 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "**A filter is one question about one file; combining filters is a filter that holds filters.** Why: any query is built from the same two ideas, so the searcher never changes.",
-      "**Files and folders are one tree; the searcher only walks and asks.** Why: walking and testing are separate, so each can change alone.",
-      "**Yield matches as the walk finds them; don't build a list first.** Why: a huge tree starts answering at once and never fills memory.",
-      "**Walk with an explicit stack, not recursion.** Why: a deep tree cannot overflow the call stack."
+      "**A filter is one question about one file; combining filters is a filter that holds filters.** Why: any query is built from the same two ideas, so find never changes.",
+      "**find is handed a Filter and only calls matches.** Why: a new condition is a new class, and nothing already written is edited.",
+      "**And stops at the first no, Or at the first yes, Not flips.** Why: short-circuit is the whole logic, and an empty And is true while an empty Or is false.",
+      "**Walk with an explicit stack of (path, entry); push children in reverse name order.** Why: a deep tree cannot overflow, and the output is in name order every run."
      ]
     }
    ]

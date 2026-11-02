@@ -28,10 +28,11 @@ MKDIR = method('''
         for name in self._parts(path):                     # Step 1: Edge 1 is raised inside _parts
             child = node.children.get(name)                # .get gives None when the name is new
             if child is None:
-                child = node.children[name] = Directory(name)   # Step 2: make the missing folder
+                child = Directory(name)                    # Step 2: make the missing folder
+                node.children[name] = child                # and hang it under its parent
             if not isinstance(child, Directory):           # Step 3: a file is in the way
                 raise FsError(f"not a folder: {name}")
-            node = child                                   # Edge 2: an existing folder is just walked through
+            node = child                                   # Edge 2: an existing folder is walked through
 ''')
 
 ADD_FILE = method('''
@@ -62,8 +63,9 @@ LS = method('''
           1. Path does not exist -> error
         """
         node = self._resolve(path)                         # Step 1: Edge 1 is raised inside _resolve
-        # Step 2: sorted() so the output is the same every run; a file lists as itself, like Unix ls
-        return sorted(node.children) if isinstance(node, Directory) else [node.name]
+        if isinstance(node, Directory):
+            return sorted(node.children)                   # Step 2: sorted, so the output is the same every run
+        return [node.name]                                 # a file lists as itself, like Unix ls
 ''')
 
 SIZE_OF = method('''
@@ -77,6 +79,57 @@ SIZE_OF = method('''
         """
         # Step 1 and 2: a File returns its bytes, a Directory adds up its children; no type check here
         return self._resolve(path).size()
+''')
+
+RESOLVE = method('''
+    def _resolve(self, path: str) -> Entry:
+        """
+        Core logic:
+          1. Split the path into names
+          2. Start at the root and step into the child with each name
+          3. Return the entry the last name points at
+        Edge cases:
+          1. A name is missing -> error
+          2. A name on the way is a file, so it has no children -> error
+        """
+        node = self.root                                   # every absolute path starts at the root
+        for name in self._parts(path):                     # Step 1
+            # Edge 2: a file has no children, so "not a Directory" also means the path goes through a file
+            if not isinstance(node, Directory) or name not in node.children:
+                raise FsError(f"no such path: {path}")     # Edge 1
+            node = node.children[name]                     # Step 2: one step down per name
+        return node                                        # Step 3
+''')
+
+DIR_SIZE = method('''
+    def size(self) -> int:
+        """
+        Core logic:
+          1. Start a total at zero
+          2. Add each child's size; a child folder adds up its own children the same way
+          3. Return the total
+        Edge cases:
+          1. An empty folder -> 0
+        """
+        total = 0                                          # Edge 1: no children leaves this at 0
+        for child in self.children.values():               # Step 2: File.size is its bytes, Directory.size recurses
+            total += child.size()
+        return total
+''')
+
+DIR_WALK = method('''
+    def walk(self, path: str):
+        """
+        Core logic:
+          1. Yield this folder with its path
+          2. For each child in name order, walk it with the path extended by its name
+        Edge cases:
+          1. The root path "/" must not produce "//docs"
+        """
+        yield path, self                                   # Step 1: a generator, one entry at a time, never a whole list
+        for name in sorted(self.children):                 # sorted, so the order is the same every run
+            child_path = path.rstrip("/") + "/" + name     # Edge 1: rstrip drops the slash the root already has
+            yield from self.children[name].walk(child_path)   # Step 2: the child yields itself, then what is below it
 ''')
 
 FIND = method('''
@@ -113,16 +166,6 @@ HELPERS = method('''
     def _normal(self, path: str) -> str:
         return "/" + "/".join(self._parts(path))           # a clean path: "/" for the root, no trailing slash
 
-    def _resolve(self, path: str) -> Entry:
-        """Walk down from the root; error if any name is missing or a file is in the way."""
-        node = self.root
-        for name in self._parts(path):
-            # a file has no children, so "not a Directory" also means the path goes through a file
-            if not isinstance(node, Directory) or name not in node.children:
-                raise FsError(f"no such path: {path}")
-            node = node.children[name]                     # one step down per name
-        return node
-
     def _split(self, path: str):
         """The folder that holds this path, and the last name in it."""
         parts = self._parts(path)
@@ -149,7 +192,7 @@ HEAD = D('''\
             raise NotImplementedError    # each kind answers for itself
 
         def walk(self, path: str):
-            yield path, self             # a file is a leaf: just itself; Directory adds what is below
+            yield path, self             # a file is a leaf: only itself; Directory adds what is below
 
 
     class File(Entry):
@@ -160,6 +203,9 @@ HEAD = D('''\
 
         def size(self) -> int:
             return self.nbytes
+    ''')
+
+DIRECTORY = D('''\
 
 
     class Directory(Entry):
@@ -167,16 +213,6 @@ HEAD = D('''\
         def __init__(self, name: str):
             super().__init__(name)
             self.children = {}               # name -> Entry; a dict, so a lookup by name is one step
-
-        def size(self) -> int:
-            # a folder is what is inside it; a child folder adds up its own children the same way
-            return sum(c.size() for c in self.children.values())
-
-        def walk(self, path: str):
-            yield path, self                 # a generator: one entry at a time, never the whole tree in a list
-            for name in sorted(self.children):     # sorted, so the order is the same every run
-                # rstrip("/") so the root "/" does not produce "//docs"
-                yield from self.children[name].walk(path.rstrip("/") + "/" + name)
     ''')
 
 FS = D('''\
@@ -187,7 +223,8 @@ FS = D('''\
             self.root = Directory("")        # the top folder; its name is empty because "/" is its path
     ''')
 
-CORE = HEAD + FS + in_class(MKDIR, ADD_FILE, LS, SIZE_OF, FIND, HELPERS)
+CORE = (HEAD + DIRECTORY + in_class(DIR_SIZE, DIR_WALK) + FS
+        + in_class(FIND, SIZE_OF, RESOLVE, MKDIR, ADD_FILE, LS, HELPERS))
 
 DEMO = D('''\
 
@@ -213,39 +250,42 @@ DEMO_OUT = ("['notes', 'report.pdf'] 5200\n['/docs/notes/ideas.txt', '/docs/note
 
 # ---- extensions ----
 EXT_FILTERS = D('''\
-    # a filter is any function: entry -> bool
-    def ext(x: str):
-        return lambda e: e.name.endswith("." + x)     # returns a function, so it can be passed to find
+    class Filter:
+        """A condition on one file. Each kind of condition is a subclass."""
+        def matches(self, file: File) -> bool:
+            raise NotImplementedError
 
-    def min_size(n: int):
-        return lambda e: e.size() >= n
 
-    def all_of(*filters):                    # AND: every filter must accept
-        return lambda e: all(f(e) for f in filters)
+    class Extension(Filter):
+        def __init__(self, ext: str):
+            self.ext = ext
 
-    def any_of(*filters):                    # OR: one accepting filter is enough
-        return lambda e: any(f(e) for f in filters)
-
-    def not_(f):                             # NOT: flips one filter
-        return lambda e: not f(e)
+        def matches(self, file: File) -> bool:
+            return file.name.endswith("." + self.ext)
 
 
     class FileSystem:
         ...
 
-        def find(self, path: str = "/", keep=lambda e: True) -> list:     # default keeps every file
-            return [p for p, e in self._resolve(path).walk(self._normal(path))
-                    if isinstance(e, File) and keep(e)]       # the walk is unchanged; only the test is a parameter
+        def find(self, path: str = "/", flt: Filter | None = None) -> list:   # a filter replaces ext and min_size
+            ...
+            if flt is None or flt.matches(entry):     # the walk is unchanged; only this test is a parameter
+                found.append(p)
+            ...
 
-    # fs.find("/", all_of(ext("log"), not_(min_size(10**6))))
+    # Size, AND, OR and NOT are more subclasses. The full design is part 15, File search.
     ''')
 
 FIND_FINAL = method('''
-    def find(self, path: str = "/", keep=lambda e: True) -> list:
-        """Every file under path for which keep(file) is true."""
-        # same walk as before; the whole test is one call to the filter
-        return [p for p, e in self._resolve(path).walk(self._normal(path))
-                if isinstance(e, File) and keep(e)]
+    def find(self, path: str = "/", flt: Filter | None = None) -> list:
+        """Every file under path that the filter accepts. No filter means every file."""
+        found = []
+        for p, entry in self._resolve(path).walk(self._normal(path)):
+            if not isinstance(entry, File):                # folders are walked through, never returned
+                continue
+            if flt is None or flt.matches(entry):          # the whole test is one call to the filter
+                found.append(p)
+        return found
 ''')
 
 DELETE = method('''
@@ -274,30 +314,25 @@ MOVE = method('''
         target.children[name] = parent.children.pop(name)  # pop and attach last, after every check has passed
 ''')
 
-FILTER_FUNCS = D('''\
+FILTER_CLASSES = D('''\
 
 
-    def ext(x: str):
-        return lambda e: e.name.endswith("." + x)     # each filter builds a function entry -> bool
+    class Filter:
+        """A condition on one file. Each kind of condition is a subclass."""
+        def matches(self, file: File) -> bool:
+            raise NotImplementedError
 
 
-    def min_size(n: int):
-        return lambda e: e.size() >= n
+    class Extension(Filter):
+        def __init__(self, ext: str):
+            self.ext = ext
 
-
-    def all_of(*filters):                             # AND
-        return lambda e: all(f(e) for f in filters)
-
-
-    def any_of(*filters):                             # OR
-        return lambda e: any(f(e) for f in filters)
-
-
-    def not_(f):                                      # NOT
-        return lambda e: not f(e)
+        def matches(self, file: File) -> bool:
+            return file.name.endswith("." + self.ext)
     ''')
 
-FINAL = HEAD + FILTER_FUNCS + FS + in_class(MKDIR, ADD_FILE, LS, SIZE_OF, FIND_FINAL, DELETE, MOVE, HELPERS)
+FINAL = (HEAD + DIRECTORY + in_class(DIR_SIZE, DIR_WALK) + FILTER_CLASSES + FS
+         + in_class(FIND_FINAL, SIZE_OF, RESOLVE, MKDIR, ADD_FILE, LS, DELETE, MOVE, HELPERS))
 FINAL_DEMO = D('''\
 
 
@@ -308,8 +343,8 @@ FINAL_DEMO = D('''\
     fs.add_file("/docs/notes/todo.txt", 120)
     fs.add_file("/docs/notes/ideas.txt", 80)
     fs.add_file("/docs/report.pdf", 5000)
-    print(fs.find("/", all_of(any_of(ext("txt"), ext("pdf")), min_size(100))))   # (txt OR pdf) AND >= 100 bytes
-    print(fs.find("/", all_of(ext("txt"), not_(min_size(100)))))                 # txt files under 100 bytes
+    print(fs.find("/", Extension("txt")))        # only the .txt files
+    print(fs.find("/docs"))                      # no filter: every file under /docs
     fs.move("/docs/notes/todo.txt", "/tmp")      # /docs loses 120 bytes
     print(fs.ls("/tmp"), fs.size_of("/docs"))    # 5200 - 120 = 5080
     fs.delete("/docs/notes")                     # takes ideas.txt with it
@@ -319,7 +354,7 @@ FINAL_DEMO = D('''\
     except FsError as e:
         print(e)
     ''')
-FINAL_OUT = ("['/docs/notes/todo.txt', '/docs/report.pdf']\n['/docs/notes/ideas.txt']\n['todo.txt'] 5080\n"
+FINAL_OUT = ("['/docs/notes/ideas.txt', '/docs/notes/todo.txt']\n['/docs/notes/ideas.txt', '/docs/notes/todo.txt', '/docs/report.pdf']\n['todo.txt'] 5080\n"
              "['report.pdf']\ncannot move a folder into itself\n")
 
 PROBLEM = {
@@ -367,10 +402,10 @@ PROBLEM = {
                  ("Entry", True, "The shared base: size() and walk() work on a file or a folder, so callers need no type checks"),
                  ("FileSystem", True, "Holds the root and turns a path into an entry"),
                  ("File contents", False, "Only the size matters here"),
-                 ("Filter", False, "Two parameters on find are enough for now; it becomes a class when conditions combine")],
+                 ("Filter", False, "Two parameters on find are enough for now; it becomes a class when conditions vary (part 15, File search)")],
     "ent_hint": "Which nouns carry data the design needs? Is a path an object? Is a filter a class yet?",
-    "ent_say": "I underline the nouns. **File and directory carry data I need, and a shared Entry base lets size and walk work on either.** A path is only a string that the file system turns into an entry. A filter stays two parameters on find until conditions combine.",
-    "ent_why": "Four classes: Entry, File, Directory and FileSystem. A filter is not one yet: it earns its place only when the interviewer asks to combine conditions.",
+    "ent_say": "I underline the nouns. **File and directory carry data I need, and a shared Entry base lets size and walk work on either.** A path is only a string that the file system turns into an entry. A filter stays two parameters on find until conditions vary.",
+    "ent_why": "Four classes: Entry, File, Directory and FileSystem. A filter is not one yet: it earns its place only when the interviewer asks for more kinds of condition.",
 
     "classes": [
         {"name": "FileSystem", "state": ["root: Directory  # every absolute path starts here"],
@@ -399,11 +434,26 @@ PROBLEM = {
             "uses": [("Entry (base)", "size(), walk()")],
             "links": [(0, "contains")]},
 
-    "skeleton": {"q": "First the small classes: FsError, Entry, File, Directory, and the file system's __init__. Each line from the class design.",
-                 "hint": "Entry holds a name and the shared size and walk. File adds a size. Directory holds children by name and adds them up. The file system holds the root.",
-                 "code": HEAD + FS,
+    "skeleton": {"q": "First the small classes: FsError, Entry, File, Directory's fields, and the file system's __init__. Each line from the class design.",
+                 "hint": "Entry holds a name and the shared size and walk. File adds a size. Directory holds children by name. The file system holds the root.",
+                 "code": HEAD + DIRECTORY + FS,
                  "why": "These come straight from the - state lines. Writing them first means every method after only has to do its steps."},
     "methods": [
+        {"name": "find", "q": "Start with the most interesting method: find(path, ext, min_size). Core logic and edge cases as comments, then the code. Name the walk.",
+         "hint": "Resolve the start, walk everything under it, keep the files that match. Edges: no such path, no filters.", "code": FIND,
+         "why": "Walking the tree is the hard part, so it is a call to walk, written next. Only files are returned."},
+        {"name": "Directory.walk", "q": "Directory.walk(path): how does a folder yield everything below it?",
+         "hint": "Yield itself, then walk each child in name order with the path extended.", "code": DIR_WALK,
+         "why": "A generator, so the tree is never built as a list. Sorted children make every run the same. The root path needs rstrip so it does not make //docs."},
+        {"name": "size_of", "q": "size_of(path): where does the adding up happen?",
+         "hint": "Resolve, then call size() on the entry.", "code": SIZE_OF,
+         "why": "One line, because Directory.size() already adds up its children. That is the payoff of the shared base."},
+        {"name": "Directory.size", "q": "Directory.size(): a folder is what is inside it. Write the adding up.",
+         "hint": "A total, plus each child's size. A child folder does the same.", "code": DIR_SIZE,
+         "why": "The recursion hides in child.size(): a File returns bytes, a Directory calls this method. No isinstance check."},
+        {"name": "_resolve", "q": "_resolve(path): turn a path into an entry.",
+         "hint": "Start at the root, step into the child with each name. Edges: missing name, a file in the way.", "code": RESOLVE,
+         "why": "Every method but mkdir goes through it, so path errors are raised in one place."},
         {"name": "mkdir", "q": "mkdir(path): core logic and edge cases as comments, then the code.",
          "hint": "Split into names, walk down, make what is missing. Edges: relative path, a file in the way.", "code": MKDIR,
          "why": "_parts is named but not written yet. Making a folder that exists is not an error, as agreed."},
@@ -413,40 +463,34 @@ PROBLEM = {
         {"name": "ls", "q": "ls(path): what does a folder give, and a file?",
          "hint": "Resolve; a folder gives sorted names. Edge: no such path.", "code": LS,
          "why": "Listing a file returns its own name, like Unix ls. Say that you chose it."},
-        {"name": "size_of", "q": "size_of(path): where does the adding up happen?",
-         "hint": "Resolve, then call size() on the entry.", "code": SIZE_OF,
-         "why": "One line, because Directory.size() already adds up its children. That is the payoff of the shared base."},
-        {"name": "find", "q": "find(path, ext, min_size): core logic, edge cases, code.",
-         "hint": "Resolve, walk, keep the files that match. Edges: no such path, no filters.", "code": FIND,
-         "why": "Directory.walk is a generator, so it never builds the whole tree in memory. Only files are returned."},
     ],
-    "helpers": {"q": "Now the helpers: _parts, _normal, _resolve, _split.",
-                "starter": "def _resolve(self, path):\n    ...\n",
-                "hint": "Split on slashes and drop empty names. Walk down from the root. _split resolves everything but the last name.",
+    "helpers": {"q": "Now the helpers: _parts, _normal, _split.",
+                "starter": "def _parts(self, path):\n    ...\n",
+                "hint": "Split on slashes and drop empty names. _normal rebuilds a clean path. _split resolves everything but the last name.",
                 "code": HELPERS,
-                "why": "Every path rule lives in these four. If paths later gain '..' or relative forms, only _parts changes."},
+                "why": "Every path rule lives in _parts, _resolve and these. If paths later gain '..' or relative forms, only _parts changes."},
 
     "design_check": {
         "lead": "SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies.",
         "solid": [
             ("Single responsibility", "File and Directory know their own size, FileSystem turns a path into an entry, and _parts, _resolve and _split hold every path rule."),
-            ("Open/closed", "A new filter is a new function handed to find. find is not edited."),
+            ("Open/closed", "A new condition is a new Filter subclass handed to find. find is not edited."),
             ("Liskov substitution", "File and Directory both work wherever an Entry does: size() returns bytes and walk() yields files."),
             ("Interface segregation", "Entry has two methods, size and walk. Nothing wider to split yet."),
-            ("Dependency inversion", "find depends on a keep(entry) function, not on a concrete extension or size rule."),
+            ("Dependency inversion", "find depends on the Filter base, not on a concrete extension or size rule."),
         ],
         "varies": [
             ("File and folder behave alike", "Composite", "Entry, with File and Directory under it; Directory.size adds up its children"),
-            ("Combining search conditions", "Strategy, as functions", "ext, min_size, all_of, any_of and not_ passed to find"),
+            ("More kinds of search condition", "Strategy, as classes", "Filter and Extension passed to find; the full design is part 15, File search"),
             ("Million entries, size cached", "No pattern: a field", "a total on each Directory, updated up the parent chain"),
             ("Permissions", "No pattern: one helper", "_check(user, entry, action) before every operation"),
         ],
     },
     "extensions": [
-        {"ask": "Find files that are .txt or .pdf and bigger than 100 bytes. How do you combine conditions?",
-         "say": "A condition becomes a small function from an entry to true or false, and find takes one. **AND, OR and NOT are functions that wrap other conditions,** so any combination is built from the same pieces and find never changes again.",
-         "code": EXT_FILTERS, "code_title": "Filters as functions: find keeps what they accept",
-         "short_q": "Combine conditions", "short_a": "a filter is entry -> bool; all_of, any_of, not_ wrap filters; find takes one"},
+        {"ask": "Find files by more conditions: extension, size, and combinations. How do you open find up?",
+         "say": "A condition becomes a Filter with one method, matches(file), and find takes one. **Each kind of condition is a subclass,** so a new one never edits find. Combining them with AND, OR and NOT is the full design, and it is its own round: part 15, File search.",
+         "code": EXT_FILTERS, "code_title": "A Filter class: find keeps what it accepts",
+         "short_q": "More conditions", "short_a": "a Filter with matches(file); find takes one; combining them is part 15"},
         {"ask": "Now add delete and move.",
          "say": "Both use _split, which already gives the folder and the name. Delete removes the name from its folder; move pops it from one folder and puts it in another. **The one trap is moving a folder into itself,** so move checks that first.",
          "code": method(DELETE + "\n" + MOVE), "code_title": "delete and move: two methods on FileSystem",
@@ -462,19 +506,19 @@ PROBLEM = {
             ("Symbolic links?", "An entry that points at another path. find then needs a visited set to avoid loops; I left links out of scope.")],
 
     "summary": ["**Four classes.** A FileSystem holds the root and turns an absolute path into an entry. File and Directory share a base, so a folder's size and a search over the tree work without asking which kind of entry they have. Make, add, list, size and find are each a short method on top of one resolve step.",
-                "**It grows in one place at a time:** combining conditions makes find take a filter function, delete and move reuse the split helper, a cached size per folder fixes huge trees, and permissions become one check before every operation."],
+                "**It grows in one place at a time:** more kinds of condition make find take a Filter, delete and move reuse the split helper, a cached size per folder fixes huge trees, and permissions become one check before every operation."],
 
     "golden": [
         ("Ask first. The prompt is one line, so the questions are the first thing marked.", "no requirements given means scope is the test; designing at once skips what they are grading."),
         ("File and Directory are both Entries: a folder's size adds up its children without asking their type.", "that is the Composite, justified by one requirement instead of dropped in as a pattern."),
         ("Every path rule lives in one resolve step; no other method splits a string.", "relative paths or '..' later change one helper."),
-        ("find walks with a generator and takes a condition; conditions are functions that combine.", "new filters and AND, OR, NOT arrive without touching the file system."),
-        ("Name the trap before they do: a folder moved into itself.", "it shows you thought about the tree, not just the happy path."),
+        ("find walks with a generator and takes a Filter; each condition is a subclass.", "new conditions arrive without touching the file system."),
+        ("Name the trap before they do: a folder moved into itself.", "it shows you thought about the tree, not only the happy path."),
         ("A size per folder, kept up the parent chain, answers the million-entry follow-up.", "it trades writes for reads and says what each costs."),
     ],
 
     "core_code": CORE, "demo": DEMO, "demo_out": DEMO_OUT,
-    "final_intro": "The core with both file-system extensions applied (conditions as combinable functions, and delete and move), and a run at the bottom.",
+    "final_intro": "The core with both file-system extensions applied (a Filter class, and delete and move), and a run at the bottom.",
     "final_title": "filesystem.py", "final_code": FINAL, "final_demo": FINAL_DEMO, "final_out": FINAL_OUT,
-    "final_out_note": "the .txt or .pdf files of at least 100 bytes, the small .txt, the move into /tmp and the new size of /docs, the listing after deleting the notes folder, and the error for moving a folder into itself.",
+    "final_out_note": "the .txt files, every file under /docs, the move into /tmp and the new size of /docs, the listing after deleting the notes folder, and the error for moving a folder into itself.",
 }
