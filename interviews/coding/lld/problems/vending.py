@@ -62,6 +62,22 @@ PROBLEM = {
         {"name": "set_out_of_service", "logic": ["Admin switches the state to out of service, or back to idle", "Refund any balance first"]},
     ],
 
+    "design_check": {
+        "lead": "Check each choice against SOLID in a minute. States and payment are what grow, and each gets a pattern only when it does.",
+        "solid": [
+            ("Single responsibility", "Slot holds a product, VendingMachine runs insert_coin, select and cancel. Change-making moves out once it can say no."),
+            ("Open/closed", "Today a new state edits an if-chain in the machine. As State classes, a new state is a new class."),
+            ("Liskov substitution", "Not yet: no subclasses. Every State class would answer insert_coin, select and cancel."),
+            ("Interface segregation", "No interface until something varies. A payment method would have one job: take an amount or fail."),
+            ("Dependency inversion", "VendingMachine reads its own balance. A Payment object would be handed to it."),
+        ],
+        "varies": [
+            ("More states (dispensing, maintenance)", "State", "each state a class; the machine delegates to the current one"),
+            ("Card payments", "Strategy", "coins and card both take an amount or fail"),
+            ("Cannot make change", "No pattern: a helper", "a change function on coin counts; select asks first"),
+            ("Power cut mid-dispense", "No pattern: one step", "update product count and balance together"),
+        ],
+    },
     "extensions": [
         {"ask": "The machine has too few coins to make change.",
          "say": "Change-making becomes its own helper that works on coin counts and can say no. **select asks it before dispensing,** and refuses the sale when it can't be made.",

@@ -23,12 +23,12 @@ ADD_COPY = method('''
         Edge cases:
           1. Barcode already used -> error
         """
-        if barcode in self.copies:
+        if barcode in self.copies:                         # Edge 1: a barcode names exactly one copy
             raise LibraryError(f"barcode {barcode} already exists")
-        self.books[book.isbn] = book
-        copy = Copy(barcode, book)
-        book.copies.append(copy)
-        self.copies[barcode] = copy
+        self.books[book.isbn] = book                       # Step 1: keyed by isbn, so a second copy reuses the title
+        copy = Copy(barcode, book)                         # Step 2: the copy points back to its title...
+        book.copies.append(copy)                           # ...and the title lists its copies
+        self.copies[barcode] = copy                        # by barcode: checkout and return only get a barcode
 ''')
 
 SEARCH = method('''
@@ -41,7 +41,8 @@ SEARCH = method('''
         Edge cases:
           1. No match -> empty list
         """
-        t = text.lower()
+        t = text.lower()                                   # Step 1: compare in lower case so "DUNE" finds "Dune"
+        # Steps 2 and 3: "in" is a substring test (part of a word); titles, not copies; no match gives []
         return [b for b in self.books.values() if t in b.title.lower() or t in b.author.lower()]
 ''')
 
@@ -58,17 +59,18 @@ CHECKOUT = method('''
           2. Copy already on loan -> error
           3. Member already holds the maximum -> error
         """
+        # Step 1: .get gives None instead of a KeyError, so both lookups can fail into one check
         member, copy = self.members.get(member_id), self.copies.get(barcode)
-        if member is None or copy is None:
+        if member is None or copy is None:                 # Edge 1
             raise LibraryError("unknown member or copy")
-        if copy.borrower is not None:
+        if copy.borrower is not None:                      # Edge 2: a borrower means it is out
             raise LibraryError(f"copy {barcode} is on loan")
-        if len(member.loans) >= self.MAX_LOANS:
+        if len(member.loans) >= self.MAX_LOANS:            # Edge 3: the loans list length is the count
             raise LibraryError("loan limit reached")
-        copy.borrower = member
-        copy.due = today + timedelta(days=self.LOAN_DAYS)
-        member.loans.append(copy)
-        return copy.due
+        copy.borrower = member                             # Step 3: the copy remembers who has it...
+        copy.due = today + timedelta(days=self.LOAN_DAYS)  # ...and when it is due (the date is passed in)
+        member.loans.append(copy)                          # the member remembers it too, for the limit check
+        return copy.due                                    # Step 4
 ''')
 
 RETURN = method('''
@@ -83,20 +85,22 @@ RETURN = method('''
           1. Unknown barcode, or the copy is not on loan -> error
           2. Returned on or before the due date -> fine 0
         """
-        copy = self.copies.get(barcode)
-        if copy is None or copy.borrower is None:
+        copy = self.copies.get(barcode)                    # Step 1
+        if copy is None or copy.borrower is None:          # Edge 1: unknown, or already on the shelf
             raise LibraryError(f"copy {barcode} is not on loan")
-        member = copy.borrower
+        member = copy.borrower                             # the copy knows its borrower, so no member id is needed
+        # Step 2: (today - due) is a timedelta, .days its whole days; max(0, ...) is Edge 2, on time costs nothing
         fine = self._fine_for(member, max(0, (today - copy.due).days))
-        member.fines += fine
-        member.loans.remove(copy)
-        copy.borrower = copy.due = None
-        return fine
+        member.fines += fine                               # Step 3: fines add up on the member
+        member.loans.remove(copy)                          # the loan ends on both sides
+        copy.borrower = copy.due = None                    # back on the shelf: no borrower, no due date
+        return fine                                        # Step 4
 ''')
 
 HELPERS = method('''
     def _fine_for(self, member: Member, days_late: int) -> int:
         """Cents owed for a late return: a flat rate per day."""
+        # member is unused today; it is here so a per-member rate is a change to this helper only
         return days_late * self.FINE_PER_DAY
 ''')
 
@@ -104,49 +108,55 @@ HEAD = D('''\
     from datetime import date, timedelta
 
 
-    class LibraryError(Exception):
+    class LibraryError(Exception):    # one error type the caller can catch for every refusal
         pass
     ''')
 
 CLASSES = D('''\
 
 
-    class Book:                          # a title, shared by all its copies
+    class Book:
+        """A title, shared by all its copies. Only data, no behaviour: the library searches, the book remembers."""
+
         def __init__(self, isbn: str, title: str, author: str):
-            self.isbn = isbn
-            self.title = title
-            self.author = author
-            self.copies = []             # list of Copy
+            self.isbn = isbn             # the key every copy of this title shares
+            self.title = title           # search matches on this
+            self.author = author         # and on this
+            self.copies = []             # list of Copy: the title knows its physical copies
 
 
-    class Copy:                          # one physical copy
+    class Copy:
+        """One physical copy. Only data, no behaviour: it knows its borrower and due date, the library enforces the rules."""
+
         def __init__(self, barcode: str, book: Book):
-            self.barcode = barcode
-            self.book = book
-            self.borrower = None         # Member, or None when on the shelf
-            self.due = None              # date, set while on loan
+            self.barcode = barcode       # the key a borrower presents at the desk
+            self.book = book             # points back to the title
+            self.borrower = None         # Member, or None when on the shelf; no separate on-loan flag
+            self.due = None              # date, set while on loan; return compares today to it
 
 
     class Member:
+        """A person who borrows. Only data, no behaviour: the library checks the limit and adds the fines."""
+
         def __init__(self, member_id: str, name: str):
-            self.member_id = member_id
+            self.member_id = member_id   # the key in the library's members map
             self.name = name
-            self.loans = []              # list of Copy
-            self.fines = 0               # cents
+            self.loans = []              # list of Copy; its length is checked against the loan limit
+            self.fines = 0               # cents; a late return adds to it
     ''')
 
 LIBRARY = D('''\
 
 
     class Library:
-        LOAN_DAYS = 14
+        LOAN_DAYS = 14                   # the rules live here, in one place
         MAX_LOANS = 2
         FINE_PER_DAY = 25                # cents
 
         def __init__(self, members: list):
-            self.members = {m.member_id: m for m in members}
+            self.members = {m.member_id: m for m in members}   # id -> Member: checkout gets an id, one lookup
             self.books = {}              # isbn -> Book
-            self.copies = {}             # barcode -> Copy
+            self.copies = {}             # barcode -> Copy: checkout and return get only a barcode
     ''')
 
 CORE = HEAD + CLASSES + LIBRARY + in_class(ADD_COPY, SEARCH, CHECKOUT, RETURN, HELPERS)
@@ -155,23 +165,23 @@ DEMO = D('''\
 
 
     # ---- a quick run ----
-    today = date(2026, 11, 1)
+    today = date(2026, 11, 1)                # a fixed date, so every run prints the same thing
     ann = Member("m1", "Ann")
     lib = Library([ann, Member("m2", "Bob")])
     dune = Book("i1", "Dune", "Frank Herbert")
     lib.add_copy(dune, "c1")
     lib.add_copy(Book("i2", "Emma", "Jane Austen"), "c2")
     lib.add_copy(Book("i3", "Ulysses", "James Joyce"), "c3")
-    print(lib.checkout("m1", "c1", today))
-    lib.checkout("m1", "c2", today)
-    for who, barcode in (("m1", "c3"), ("m2", "c1")):
+    print(lib.checkout("m1", "c1", today))   # due 14 days out: 2026-11-15
+    lib.checkout("m1", "c2", today)          # Ann now holds 2, the limit
+    for who, barcode in (("m1", "c3"), ("m2", "c1")):   # Ann is at the limit; c1 is already out
         try:
             lib.checkout(who, barcode, today)
         except LibraryError as e:
             print(e)
-    print(lib.return_copy("c1", today + timedelta(days=17)))
-    print(ann.fines, [b.title for b in lib.search("DUNE")])
-    print(lib.return_copy("c2", today + timedelta(days=10)))
+    print(lib.return_copy("c1", today + timedelta(days=17)))   # 3 days late x 25 = 75
+    print(ann.fines, [b.title for b in lib.search("DUNE")])    # the fine is on Ann; search ignores case
+    print(lib.return_copy("c2", today + timedelta(days=10)))   # early, so max(0, ...) gives no fine
     ''')
 DEMO_OUT = "2026-11-15\nloan limit reached\ncopy c1 is on loan\n75\n75 ['Dune']\n0\n"
 
@@ -180,7 +190,7 @@ EXT_RESERVE = D('''\
     class Book:
         def __init__(self, isbn, title, author):
             ...
-            self.waiting = deque()           # member ids, first in line first
+            self.waiting = deque()           # member ids, first in line first; a deque pops from the left in O(1)
 
 
     class Copy:
@@ -191,10 +201,11 @@ EXT_RESERVE = D('''\
 
     class Library:
         def reserve(self, member_id: str, isbn: str) -> None:
-            book = self.books[isbn]
+            book = self.books[isbn]                  # the queue is per title: people want the title, not one copy
+            # a copy that is neither lent nor held is free to borrow, so there is nothing to queue for
             if any(c.borrower is None and c.held_for is None for c in book.copies):
                 raise LibraryError("a copy is on the shelf; borrow it")
-            book.waiting.append(member_id)
+            book.waiting.append(member_id)           # join the back of the line
 
         # checkout: also reject when copy.held_for is set and is not this member; clear it when the holder borrows
         # return_copy, last step: if copy.book.waiting: copy.held_for = copy.book.waiting.popleft()
@@ -211,16 +222,16 @@ EXT_NOTIFY = D('''\
     ''')
 
 EXT_FINE = D('''\
-    class Kind(Enum):
+    class Kind(Enum):                 # the kinds of member that pay different rates
         ADULT = "adult"
         STUDENT = "student"
 
 
     class Library:
-        FINE_PER_DAY = {Kind.ADULT: 25, Kind.STUDENT: 10}     # cents
+        FINE_PER_DAY = {Kind.ADULT: 25, Kind.STUDENT: 10}     # cents; was one number, now a lookup by kind
 
         def _fine_for(self, member: Member, days_late: int) -> int:
-            return days_late * self.FINE_PER_DAY[member.kind]
+            return days_late * self.FINE_PER_DAY[member.kind]  # the member argument finally earns its place
 
 
     # Member gets one more field: self.kind = kind. return_copy does not change.
@@ -232,12 +243,12 @@ FINAL_HEAD = D('''\
     from enum import Enum
 
 
-    class Kind(Enum):
+    class Kind(Enum):                 # the kinds of member that pay different rates
         ADULT = "adult"
         STUDENT = "student"
 
 
-    class LibraryError(Exception):
+    class LibraryError(Exception):    # one error type the caller can catch for every refusal
         pass
     ''')
 
@@ -245,28 +256,34 @@ FINAL_CLASSES = D('''\
 
 
     class Book:
+        """A title, shared by all its copies. Only data, no behaviour: the library searches, the book remembers."""
+
         def __init__(self, isbn: str, title: str, author: str):
             self.isbn = isbn
             self.title = title
             self.author = author
-            self.copies = []
-            self.waiting = deque()           # member ids, first in line first
+            self.copies = []                 # the title knows its physical copies
+            self.waiting = deque()           # member ids, first in line first; popleft is O(1)
 
 
     class Copy:
+        """One physical copy. Only data, no behaviour: it knows its borrower and due date, the library enforces the rules."""
+
         def __init__(self, barcode: str, book: Book):
             self.barcode = barcode
             self.book = book
-            self.borrower = None
+            self.borrower = None             # None means on the shelf
             self.due = None
-            self.held_for = None             # member id the copy is kept for
+            self.held_for = None             # member id the copy is kept for; None when nobody is waiting
 
 
     class Member:
+        """A person who borrows. Only data, no behaviour: the library checks the limit and adds the fines."""
+
         def __init__(self, member_id: str, name: str, kind: Kind = Kind.ADULT):
             self.member_id = member_id
             self.name = name
-            self.kind = kind
+            self.kind = kind                 # picks the fine rate; adult by default, so old callers still work
             self.loans = []
             self.fines = 0
     ''')
@@ -277,12 +294,12 @@ FINAL_LIBRARY = D('''\
     class Library:
         LOAN_DAYS = 14
         MAX_LOANS = 2
-        FINE_PER_DAY = {Kind.ADULT: 25, Kind.STUDENT: 10}      # cents
+        FINE_PER_DAY = {Kind.ADULT: 25, Kind.STUDENT: 10}      # cents, by member kind
 
         def __init__(self, members: list):
-            self.members = {m.member_id: m for m in members}
-            self.books = {}
-            self.copies = {}
+            self.members = {m.member_id: m for m in members}   # id -> Member
+            self.books = {}                  # isbn -> Book
+            self.copies = {}                 # barcode -> Copy
     ''')
 
 FINAL_CHECKOUT = method('''
@@ -292,11 +309,12 @@ FINAL_CHECKOUT = method('''
             raise LibraryError("unknown member or copy")
         if copy.borrower is not None:
             raise LibraryError(f"copy {barcode} is on loan")
+        # new check: a held copy goes only to the member it is held for; None means not held
         if copy.held_for not in (None, member_id):
             raise LibraryError(f"copy {barcode} is held for another member")
         if len(member.loans) >= self.MAX_LOANS:
             raise LibraryError("loan limit reached")
-        copy.held_for = None
+        copy.held_for = None                               # the holder borrowed it, so the hold is used up
         copy.borrower = member
         copy.due = today + timedelta(days=self.LOAN_DAYS)
         member.loans.append(copy)
@@ -309,26 +327,27 @@ FINAL_RETURN = method('''
         if copy is None or copy.borrower is None:
             raise LibraryError(f"copy {barcode} is not on loan")
         member = copy.borrower
-        fine = self._fine_for(member, max(0, (today - copy.due).days))
+        fine = self._fine_for(member, max(0, (today - copy.due).days))   # days late, never negative
         member.fines += fine
         member.loans.remove(copy)
         copy.borrower = copy.due = None
-        if copy.book.waiting:
-            copy.held_for = copy.book.waiting.popleft()
+        if copy.book.waiting:                              # new last step: someone is queued for this title
+            copy.held_for = copy.book.waiting.popleft()    # first in line gets the copy, not the shelf
         return fine
 ''')
 
 RESERVE = method('''
     def reserve(self, member_id: str, isbn: str) -> None:
-        book = self.books[isbn]
+        book = self.books[isbn]                            # the queue is per title, not per copy
+        # a copy that is neither lent nor held is free to borrow, so there is nothing to queue for
         if any(c.borrower is None and c.held_for is None for c in book.copies):
             raise LibraryError("a copy is on the shelf; borrow it")
-        book.waiting.append(member_id)
+        book.waiting.append(member_id)                     # join the back of the line
 ''')
 
 FINAL_HELPERS = method('''
     def _fine_for(self, member: Member, days_late: int) -> int:
-        return days_late * self.FINE_PER_DAY[member.kind]
+        return days_late * self.FINE_PER_DAY[member.kind]   # rate looked up by the member's kind
 ''')
 
 FINAL = FINAL_HEAD + FINAL_CLASSES + FINAL_LIBRARY + in_class(ADD_COPY, SEARCH, FINAL_CHECKOUT, RESERVE, FINAL_RETURN, FINAL_HELPERS)
@@ -337,18 +356,18 @@ FINAL_DEMO = D('''\
 
     # ---- a quick run ----
     today = date(2026, 11, 1)
-    ann, bob = Member("m1", "Ann"), Member("m2", "Bob", Kind.STUDENT)
+    ann, bob = Member("m1", "Ann"), Member("m2", "Bob", Kind.STUDENT)   # Bob pays the student rate
     lib = Library([ann, bob, Member("m3", "Cy")])
     lib.add_copy(Book("i1", "Dune", "Frank Herbert"), "c1")
     lib.checkout("m1", "c1", today)
-    lib.reserve("m2", "i1")
-    print(lib.return_copy("c1", today + timedelta(days=17)))
+    lib.reserve("m2", "i1")                                  # the only copy is out, so Bob queues
+    print(lib.return_copy("c1", today + timedelta(days=17)))   # Ann is 3 days late: 3 x 25 = 75; copy held for Bob
     try:
-        lib.checkout("m3", "c1", today + timedelta(days=17))
+        lib.checkout("m3", "c1", today + timedelta(days=17))   # Cy is not first in line
     except LibraryError as e:
         print(e)
     lib.checkout("m2", "c1", today + timedelta(days=17))
-    print(lib.return_copy("c1", today + timedelta(days=33)))
+    print(lib.return_copy("c1", today + timedelta(days=33)))   # due day 31, so 2 days late x 10 = 20
     print(ann.fines, bob.fines)
     ''')
 FINAL_OUT = "75\ncopy c1 is held for another member\n20\n75 20\n"
@@ -431,6 +450,10 @@ PROBLEM = {
             "owned": [("Book", "isbn, title, copies"), ("Copy", "borrower, due"), ("Member", "loans, fines")],
             "uses": [("Constants", "14 days, 2, 25 cents")]},
 
+    "skeleton": {"q": "First the small classes: LibraryError, Book, Copy, Member, and the library's __init__. Each line from the class design.",
+                 "hint": "Book, Copy and Member only store data. The library holds the members, titles and copies in maps by key, and the rules as constants.",
+                 "code": HEAD + CLASSES + LIBRARY,
+                 "why": "These come straight from the - state lines. Writing them first means every method after only has to do its steps."},
     "methods": [
         {"name": "add_copy", "q": "add_copy(book, barcode): core logic and edge cases as comments, then the code.",
          "hint": "Remember the title, make the copy, link both ways. Edge: barcode already used.", "code": ADD_COPY,
@@ -451,6 +474,22 @@ PROBLEM = {
                 "code": HELPERS,
                 "why": "It takes the member even though the core ignores it. That is the seam the per-member fine plugs into."},
 
+    "design_check": {
+        "lead": "SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies.",
+        "solid": [
+            ("Single responsibility", "Book is the title, Copy is one physical copy and its borrower, Member holds loans and fines, Library runs checkout and return_copy."),
+            ("Open/closed", "A different fine is a change inside _fine_for alone. return_copy is not edited."),
+            ("Liskov substitution", "Nothing to substitute yet: no subclasses."),
+            ("Interface segregation", "Nothing to segregate yet: no interfaces. The notification callable has one call, on_hold_ready."),
+            ("Dependency inversion", "Library is handed a notifier callable and today's date, and does not know if it is email, SMS or a log line."),
+        ],
+        "varies": [
+            ("Fine by member kind", "Strategy, only if rules grow", "today a lookup by Kind inside _fine_for"),
+            ("Tell the member a copy is ready", "Observer, only if several things react", "today one injected callable, on_hold_ready"),
+            ("Queue for a title that is out", "No pattern: a field", "a queue on Book and a held_for on Copy"),
+            ("Two desks at once", "No pattern: a lock", "check free and set borrower as one step under a lock"),
+        ],
+    },
     "extensions": [
         {"ask": "All copies of a title are out. Members should be able to queue for it.",
          "say": "The title gets a queue of member ids and each copy gets a held_for. **Returning a copy hands it to the first in line instead of the shelf.** Checkout refuses a held copy to anyone else. The queue is per title, because people want the title, not a specific copy.",

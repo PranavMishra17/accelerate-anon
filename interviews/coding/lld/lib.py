@@ -140,6 +140,19 @@ def golden_list(P):
 
 
 # ---------- the staged mock ----------
+def design_check_blocks(P):
+    """SOLID as it shows in this design, and what varies -> which pattern. Lives inside Extensibility."""
+    dc = P.get("design_check")
+    if not dc:
+        return []
+    return [
+        {"t": "p", "text": "**Design check.** " + dc["lead"]},
+        {"t": "table", "head": ["Principle", "Where it shows here"], "rows": [list(r) for r in dc["solid"]]},
+        {"t": "p", "text": "**What varies decides the pattern.** If nothing varies, no pattern."},
+        {"t": "table", "head": ["What could change", "Pattern", "In this design"], "rows": [list(r) for r in dc["varies"]]},
+    ]
+
+
 def mock_part(P):
     pid = P["id"]
     mp = class_map(P["title"] + " class map", P["map"])
@@ -175,6 +188,10 @@ def mock_part(P):
     S.append({"id": f"{pid}-classes", "title": "d) Class design", "blocks": cls_blocks})
     impl = [{"t": "svg", "svg": mp, "alt": "Class map"},
             {"t": "p", "text": "One method at a time. **Write the core logic as comments, list the edge cases, then write the code.** Push details into private helpers and implement them only if there's time or you're asked."}]
+    if P.get("skeleton"):
+        k = P["skeleton"]
+        impl.append({"t": "write", "id": f"{pid}-skeleton-w", "q": k["q"], "starter": k.get("starter", ""), "hint": k["hint"],
+                     "solution": norm(k["code"]), "why": k["why"]})
     for m in P["methods"]:
         impl.append({"t": "write", "id": f"{pid}-m-{m['name']}", "q": m["q"], "starter": starter(m), "hint": m["hint"],
                      "solution": norm(m["code"]), "why": m["why"]})
@@ -183,6 +200,7 @@ def mock_part(P):
                      "hint": P["helpers"]["hint"], "solution": norm(P["helpers"]["code"]), "why": P["helpers"]["why"]})
     S.append({"id": f"{pid}-impl", "title": "e) Implementation", "blocks": impl})
     ext = [{"t": "p", "text": "The interviewer changes the rules. **For each change, say which class it touches and what stays the same.** A good design changes in one place."}]
+    ext += design_check_blocks(P)
     for e in P["extensions"]:
         ext.append(turn(e["ask"], e["say"], explain=e.get("explain")))
         if e.get("code"):
@@ -220,6 +238,7 @@ def cheat_tab(P, number):
         {"t": "list", "items": [f"{m['name']}: " + "; ".join(logic_of(m)) + "." for m in P["methods"]]},
         {"t": "p", "text": "**Extensibility**"},
         {"t": "list", "items": [f"{e['short_q']}: {e['short_a']}" for e in P["extensions"]]},
+    ] + design_check_blocks(P) + [
         {"t": "p", "text": "**Lines that set you apart**"},
         {"t": "list", "items": golden_list(P)[:4]},
     ]

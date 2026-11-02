@@ -74,6 +74,22 @@ PROBLEM = {
         {"name": "path_clear", "logic": ["Step from frm toward to one square at a time", "Any piece on a square strictly between them blocks"]},
     ],
 
+    "design_check": {
+        "lead": "Check each choice against SOLID in a minute. The one real variation here is movement, and the Piece subclasses already hold it.",
+        "solid": [
+            ("Single responsibility", "Game runs turns and status, Board holds squares, Piece decides its own move, Move records one move."),
+            ("Open/closed", "A new kind of piece is a new Piece subclass with its own can_move. make_move is not edited."),
+            ("Liskov substitution", "Any Piece subclass works where Piece does: same can_move and path_clear contract."),
+            ("Interface segregation", "No interface until something varies. Piece has one question, can_move."),
+            ("Dependency inversion", "Nothing is injected yet. Game builds its Board; hand it one if tests or variants need it."),
+        ],
+        "varies": [
+            ("Movement rule per piece", "No pattern: subclass", "each Piece has its own can_move"),
+            ("Castling, en passant, promotion", "No pattern: a flag", "has_moved on Piece, extra effect on Move"),
+            ("Timers per player", "Observer, only if others must hear", "a Clock Game calls where the turn switches"),
+            ("Check and checkmate", "No pattern: simulate", "try the move on Board, undo if the king is attacked"),
+        ],
+    },
     "extensions": [
         {"ask": "Add castling, en passant and promotion.",
          "say": "These are piece rules, so they stay inside the pieces. **The King's can_move allows the two-square castle only if neither piece has moved**, so Piece gets a has_moved flag, and Move records a rook move or a promotion. Game and Board don't change shape.",

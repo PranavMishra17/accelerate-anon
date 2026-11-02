@@ -73,6 +73,22 @@ PROBLEM = {
          "logic": ["Available if state is AVAILABLE", "Or HELD with held_until in the past: an expired hold counts as free, so no timer thread is needed"]},
     ],
 
+    "design_check": {
+        "lead": "Check each choice against SOLID in a minute. Pricing and refunds are the rules that move, and nothing else needs a pattern.",
+        "solid": [
+            ("Single responsibility", "Seat is the physical seat, ShowSeat the state for one show, Booking the confirmed result, BookingService the entry."),
+            ("Open/closed", "Pricing and refunds are not in hold or confirm yet. A PricingStrategy or RefundPolicy is added, not edited in."),
+            ("Liskov substitution", "Not yet: no subclasses. A PricingStrategy would return a total for the show seats."),
+            ("Interface segregation", "No interface until something varies. Each policy would have one method."),
+            ("Dependency inversion", "BookingService looks up Shows itself. Policies would be handed to it."),
+        ],
+        "varies": [
+            ("Seat types and prices", "Strategy", "a PricingStrategy takes show seats, returns a total"),
+            ("Cancellation refunds", "Strategy", "a RefundPolicy by time before the show"),
+            ("Two users, same seat", "No pattern: a lock", "check all then mark held under one lock per show"),
+            ("Trains or events", "No pattern: rename", "Show becomes Event; Seat and ShowSeat stay"),
+        ],
+    },
     "extensions": [
         {"ask": "Different seat types and prices.",
          "say": "Seat gets a type, and **a PricingStrategy takes the show seats and returns a total**. Booking stores the price it was confirmed at so later price changes don't rewrite history.",

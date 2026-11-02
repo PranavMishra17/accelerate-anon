@@ -461,6 +461,73 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Spot tracks one space, Ticket records one stay, the lot runs enter and exit. The fee moves into Pricing once it varies."
+      ],
+      [
+       "Open/closed",
+       "A new pricing rule is a new Pricing subclass. enter and exit are not edited."
+      ],
+      [
+       "Liskov substitution",
+       "CappedPricing works anywhere Pricing does: same fee(ticket, now), still cents."
+      ],
+      [
+       "Interface segregation",
+       "No interface until something varies. Pricing has one method, fee."
+      ],
+      [
+       "Dependency inversion",
+       "The lot is handed a Pricing object instead of building the rule itself."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "The fee rule (cap, weekend rate)",
+       "Strategy",
+       "Pricing and CappedPricing, given to the lot"
+      ],
+      [
+       "How a spot is chosen (nearest the gate)",
+       "Strategy, only if asked",
+       "a chooser the lot calls inside _find_spot"
+      ],
+      [
+       "Two gates at once",
+       "No pattern: a lock",
+       "find and park as one step under self.lock"
+      ],
+      [
+       "Vehicle types with their own behaviour",
+       "Factory, only if creation differs",
+       "today a Size enum is enough"
+      ]
+     ]
+    },
+    {
+     "t": "p",
      "text": "**Lines that set you apart**"
     },
     {

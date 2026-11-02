@@ -28,14 +28,14 @@ DEPOSIT = method('''
         Edge cases:
           1. No free compartment of that size -> error
         """
-        compartment = self._get_available_compartment(size)
-        if compartment is None:
+        compartment = self._get_available_compartment(size)       # Step 1: None means nothing free
+        if compartment is None:                                    # Edge 1: full for this size
             raise LockerError(f"no available compartment of size {size.value}")
-        compartment.open()
-        compartment.mark_occupied()
-        token = self._generate_access_token(compartment)
-        self.access_tokens[token.get_code()] = token
-        return token.get_code()
+        compartment.open()                                         # Step 2: the driver can put the package in
+        compartment.mark_occupied()                                # Step 3: the compartment owns its own flag
+        token = self._generate_access_token(compartment)           # Step 4: the token remembers which door it opens
+        self.access_tokens[token.get_code()] = token               # store by code: pickup only gets the code
+        return token.get_code()                                    # Step 5: the carrier hands this to the customer
 ''')
 
 PICKUP = method('''
@@ -49,13 +49,13 @@ PICKUP = method('''
           1. Code empty or not in the map -> invalid code
           2. Token expired -> expired error; the package stays for staff
         """
-        token = self.access_tokens.get(code)
-        if not code or token is None:
+        token = self.access_tokens.get(code)                       # Step 1: .get gives None instead of a KeyError
+        if not code or token is None:                              # Edge 1: empty, never issued, or already used
             raise LockerError("invalid code")
-        if token.is_expired(self.now()):
+        if token.is_expired(self.now()):                           # Edge 2: checked before opening, so the package stays
             raise LockerError("code expired")
-        token.get_compartment().open()
-        self._clear_deposit(token)
+        token.get_compartment().open()                             # Step 2: the token knows its door
+        self._clear_deposit(token)                                 # Step 3: free the door and drop the token (one-time code)
 ''')
 
 OPEN_EXPIRED = method('''
@@ -67,9 +67,11 @@ OPEN_EXPIRED = method('''
         Edge cases:
           1. Nothing expired -> nothing opens
         """
+        # Step 1: collect first, so we read self.now() against every token the same way
         expired = [t for t in self.access_tokens.values() if t.is_expired(self.now())]
         for token in expired:
-            token.get_compartment().open()
+            token.get_compartment().open()                         # open only; the package is still inside
+        # Step 2: codes, because staff_clear takes a code; Edge 1: an empty list when nothing expired
         return [t.get_code() for t in expired]
 ''')
 
@@ -82,29 +84,32 @@ STAFF_CLEAR = method('''
           1. Unknown code -> error
         """
         token = self.access_tokens.get(code)
-        if token is None:
+        if token is None:                                          # Edge 1: unknown code
             raise LockerError("invalid code")
-        self._clear_deposit(token)
+        self._clear_deposit(token)                                 # Step 1: no expiry check; staff clear expired codes
 ''')
 
 HELPERS = method('''
     def _get_available_compartment(self, size: Size):
         """Scan all compartments; return the first free one of this size, else None."""
         for c in self.compartments:
-            if c.get_size() == size and not c.is_occupied():
+            if c.get_size() == size and not c.is_occupied():       # exact size, and not taken
                 return c
-        return None
+        return None                                                # nothing found: the caller raises
 
     def _generate_access_token(self, compartment: Compartment) -> AccessToken:
         """A random six-digit code that isn't live, valid for seven days."""
+        # randbelow(10**6) is 0..999999; :06d pads with zeros so the code is always six digits
         code = f"{secrets.randbelow(10**6):06d}"
-        while code in self.access_tokens:
+        while code in self.access_tokens:                          # retry on a clash with a live code
             code = f"{secrets.randbelow(10**6):06d}"
+        # expiry = now + 7 days, fixed at deposit time
         return AccessToken(code, self.now() + self.TOKEN_LIFETIME, compartment)
 
     def _clear_deposit(self, token: AccessToken) -> None:
+        """The one place a deposit ends: pickup and staff_clear both call it."""
         token.get_compartment().mark_free()
-        del self.access_tokens[token.get_code()]
+        del self.access_tokens[token.get_code()]                   # the code is dead, so it can't be reused
 ''')
 
 HEAD = D('''\
@@ -113,13 +118,13 @@ HEAD = D('''\
     from enum import Enum
 
 
-    class Size(Enum):
+    class Size(Enum):           # an enum, so a size can't be misspelled
         SMALL = "small"
         MEDIUM = "medium"
         LARGE = "large"
 
 
-    class LockerError(Exception):
+    class LockerError(Exception):     # one error type the caller can catch for every refusal
         pass
     ''')
 
@@ -127,10 +132,12 @@ COMPARTMENT = D('''\
 
 
     class Compartment:
+        """One door. It knows its size and whether it is taken, nothing else."""
+
         def __init__(self, compartment_id: str, size: Size):
-            self.compartment_id = compartment_id
-            self.size = size
-            self.occupied = False
+            self.compartment_id = compartment_id   # which door, e.g. "S1"
+            self.size = size                       # what deposit matches on
+            self.occupied = False                  # free or taken; the compartment owns this flag
 
         def get_size(self) -> Size:
             return self.size
@@ -152,13 +159,15 @@ TOKEN = D('''\
 
 
     class AccessToken:
+        """The key a customer holds. It knows its code, its expiry and its door; it opens nothing itself."""
+
         def __init__(self, code: str, expiration: datetime, compartment: Compartment):
-            self.code = code
-            self.expiration = expiration
-            self.compartment = compartment
+            self.code = code                   # what the customer types in; the key in the locker's map
+            self.expiration = expiration       # fixed at deposit: now + 7 days
+            self.compartment = compartment     # lets pickup go from the code to the door
 
         def is_expired(self, now: datetime) -> bool:
-            return now > self.expiration
+            return now > self.expiration       # now is passed in, so the token needs no clock
 
         def get_compartment(self) -> Compartment:
             return self.compartment
@@ -171,11 +180,11 @@ LOCKER = D('''\
 
 
     class Locker:
-        TOKEN_LIFETIME = timedelta(days=7)
+        TOKEN_LIFETIME = timedelta(days=7)   # one constant, so the expiry rule changes in one place
 
         def __init__(self, compartments: list, now=datetime.now):
-            self.compartments = compartments
-            self.access_tokens = {}          # code -> AccessToken
+            self.compartments = compartments   # deposit scans these for a free door of the size
+            self.access_tokens = {}          # code -> AccessToken; pickup only gets a code, so key by it
             self.now = now                   # a clock we can fake in a test
     ''')
 
@@ -185,41 +194,41 @@ DEMO = D('''\
 
 
     # ---- a quick run ----
-    class FakeClock:
+    class FakeClock:                      # a clock we can move forward, so expiry can be shown
         def __init__(self):
             self.t = datetime(2026, 11, 1)
 
-        def __call__(self):
+        def __call__(self):               # called like datetime.now(), so Locker takes it as now
             return self.t
 
 
     clock = FakeClock()
-    locker = Locker([Compartment("S1", Size.SMALL), Compartment("M1", Size.MEDIUM)], now=clock)
+    locker = Locker([Compartment("S1", Size.SMALL), Compartment("M1", Size.MEDIUM)], now=clock)   # one door per size
     code = locker.deposit_package(Size.MEDIUM)
     try:
-        locker.deposit_package(Size.MEDIUM)
+        locker.deposit_package(Size.MEDIUM)      # the only medium door is taken
     except LockerError as e:
         print(e)
     locker.pickup(code)
     try:
-        locker.pickup(code)
+        locker.pickup(code)                      # the code was used up by the first pickup
     except LockerError as e:
         print(e)
     late = locker.deposit_package(Size.SMALL)
-    clock.t += timedelta(days=8)
+    clock.t += timedelta(days=8)                 # past the 7 days
     try:
         locker.pickup(late)
     except LockerError as e:
         print(e)
-    opened = locker.open_expired_compartments()
-    locker.staff_clear(opened[0])
+    opened = locker.open_expired_compartments()  # staff path: the door opens, the state stays
+    locker.staff_clear(opened[0])                # staff took the package out, so free it
     print("S1 free again:", not locker.compartments[0].is_occupied())
     ''')
 DEMO_OUT = "no available compartment of size medium\ninvalid code\ncode expired\nS1 free again: True\n"
 
 # ---- extensions ----
 EXT_FALLBACK = D('''\
-    SIZE_ORDER = [Size.SMALL, Size.MEDIUM, Size.LARGE]
+    SIZE_ORDER = [Size.SMALL, Size.MEDIUM, Size.LARGE]    # smallest to largest; the order is the fallback order
 
 
     class Locker:
@@ -227,6 +236,7 @@ EXT_FALLBACK = D('''\
 
         def _get_available_compartment(self, size: Size):
             """Try the exact size first, then each larger size. Never a smaller one."""
+            # slicing from the requested size's index drops every smaller size
             for s in SIZE_ORDER[SIZE_ORDER.index(size):]:
                 for c in self.compartments:
                     if c.get_size() == s and not c.is_occupied():
@@ -237,17 +247,19 @@ EXT_FALLBACK = D('''\
 STATUS_COMPARTMENT = D('''\
 
 
-    class Status(Enum):
+    class Status(Enum):               # three states, so a boolean no longer fits
         AVAILABLE = "available"
         OCCUPIED = "occupied"
         OUT_OF_SERVICE = "out of service"
 
 
-    class DoorJammed(Exception):
+    class DoorJammed(Exception):      # raised by the hardware when a door won't open
         pass
 
 
     class Compartment:
+        """One door. It knows its size and its status, nothing else."""
+
         def __init__(self, compartment_id: str, size: Size):
             self.compartment_id = compartment_id
             self.size = size
@@ -260,7 +272,7 @@ STATUS_COMPARTMENT = D('''\
             return self.status is Status.AVAILABLE
 
         def is_occupied(self) -> bool:
-            return self.status is Status.OCCUPIED
+            return self.status is Status.OCCUPIED     # old callers keep working
 
         def mark_occupied(self) -> None:
             self.status = Status.OCCUPIED
@@ -269,7 +281,7 @@ STATUS_COMPARTMENT = D('''\
             self.status = Status.AVAILABLE
 
         def mark_out_of_service(self) -> None:
-            self.status = Status.OUT_OF_SERVICE
+            self.status = Status.OUT_OF_SERVICE       # never picked again until staff reset it
 
         def open(self) -> None:
             pass  # the hardware raises DoorJammed if the door won't open
@@ -278,24 +290,24 @@ STATUS_COMPARTMENT = D('''\
 STATUS_DEPOSIT = method('''
     def deposit_package(self, size: Size) -> str:
         """Same steps; a door that won't open is taken out of service and we try the next compartment."""
-        while True:
+        while True:                                       # loop: each jam removes one door, so it ends
             compartment = self._get_available_compartment(size)
-            if compartment is None:
+            if compartment is None:                       # Edge 1: nothing left, jammed doors included
                 raise LockerError(f"no available compartment of size {size.value}")
             try:
                 compartment.open()
             except DoorJammed:
-                compartment.mark_out_of_service()
-                continue
+                compartment.mark_out_of_service()         # out of the pool, so the next scan skips it
+                continue                                  # try the next compartment
             compartment.mark_occupied()
             token = self._generate_access_token(compartment)
             self.access_tokens[token.get_code()] = token
             return token.get_code()
 
     def _get_available_compartment(self, size: Size):
-        for s in SIZE_ORDER[SIZE_ORDER.index(size):]:
+        for s in SIZE_ORDER[SIZE_ORDER.index(size):]:     # exact size, then larger
             for c in self.compartments:
-                if c.get_size() == s and c.is_available():
+                if c.get_size() == s and c.is_available():    # available, so occupied and broken doors are skipped
                     return c
         return None
 ''')
@@ -307,7 +319,7 @@ FINAL_DEMO = D('''\
 
 
     # ---- a quick run ----
-    class FakeClock:
+    class FakeClock:                      # a clock we can move forward
         def __init__(self):
             self.t = datetime(2026, 11, 1)
 
@@ -315,7 +327,7 @@ FINAL_DEMO = D('''\
             return self.t
 
 
-    class JammedCompartment(Compartment):
+    class JammedCompartment(Compartment):     # a test double: a door that never opens
         def open(self):
             raise DoorJammed(self.compartment_id)
 
@@ -323,7 +335,7 @@ FINAL_DEMO = D('''\
     clock = FakeClock()
     small, medium = Compartment("S1", Size.SMALL), Compartment("M1", Size.MEDIUM)
     broken = JammedCompartment("M0", Size.MEDIUM)
-    locker = Locker([small, broken, medium], now=clock)
+    locker = Locker([small, broken, medium], now=clock)    # the jammed door is listed before the good medium one
     a = locker.deposit_package(Size.SMALL)                # S1
     b = locker.deposit_package(Size.SMALL)                # small full: falls back to medium; M0 jams, so M1
     print(small.status.value, broken.status.value, medium.status.value)
@@ -413,6 +425,10 @@ PROBLEM = {
             "owned": [("Compartment", "size, occupied"), ("AccessToken", "code, expiration")],
             "uses": [("Size (enum)", "SMALL, MEDIUM, LARGE")]},
 
+    "skeleton": {"q": "First the small classes: Size, LockerError, Compartment, AccessToken, and the locker's __init__. Each line from the class design.",
+                 "hint": "Compartment holds a size and an occupied flag. AccessToken holds a code, an expiration and a compartment. The locker holds the compartments, the tokens by code and a clock.",
+                 "code": HEAD + COMPARTMENT + TOKEN + LOCKER,
+                 "why": "These come straight from the - state lines. Writing them first means every method after only has to do its steps."},
     "methods": [
         {"name": "deposit_package", "q": "deposit_package(size): core logic and edge cases as comments, then the code.",
          "hint": "Find, open, mark occupied, make and store the token, return the code. Edge: none free.", "code": DEPOSIT,
@@ -433,6 +449,22 @@ PROBLEM = {
                 "code": HELPERS,
                 "why": "A linear scan is fine: a locker has tens of compartments. Indexing free ones by size is faster but keeps state in two places."},
 
+    "design_check": {
+        "lead": "SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies.",
+        "solid": [
+            ("Single responsibility", "Compartment owns its occupied flag, AccessToken owns a code and its expiry, Locker runs deposit_package and pickup."),
+            ("Open/closed", "Size fallback is a change inside _get_available_compartment alone. deposit_package is not edited."),
+            ("Liskov substitution", "A Compartment subclass such as JammedCompartment still answers open, mark_occupied and mark_free the same way."),
+            ("Interface segregation", "Nothing to segregate yet: no interfaces, and each class has a handful of methods."),
+            ("Dependency inversion", "Locker is handed its compartments and a clock (now), instead of building them or calling datetime.now itself."),
+        ],
+        "varies": [
+            ("Which compartment fits (larger sizes allowed)", "Strategy, only if asked", "today one helper, _get_available_compartment, makes the choice"),
+            ("Compartment condition (available, occupied, out of service)", "State, only if each status behaves differently", "today a Status enum is enough"),
+            ("Broken doors and the reserve step", "No pattern: a field", "a status on Compartment and a RESERVED value"),
+            ("Two drivers at once", "No pattern: a lock", "find and mark occupied as one step under a lock"),
+        ],
+    },
     "extensions": [
         {"ask": "What if a small package can go in a larger compartment when no small one is free?",
          "say": "Only _get_available_compartment changes. It tries the exact size first, then each larger size, never a smaller one. **deposit_package and every other class stay the same.**",

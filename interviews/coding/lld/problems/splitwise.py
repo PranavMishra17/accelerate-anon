@@ -71,6 +71,22 @@ PROBLEM = {
                    "Derived from the ledger each time, never stored a second time"]},
     ],
 
+    "design_check": {
+        "lead": "Check each choice against SOLID in a minute. Split types are an enum today, and a Strategy appears only when more arrive.",
+        "solid": [
+            ("Single responsibility", "Expense records one event, Ledger keeps net balances, Splitwise is the entry point."),
+            ("Open/closed", "Today a new split type edits add_expense. It becomes a SplitStrategy once there are more than two."),
+            ("Liskov substitution", "Not yet: no subclasses. Every SplitStrategy would have to return shares that sum to the amount."),
+            ("Interface segregation", "No interface until something varies. A strategy would have one method, shares."),
+            ("Dependency inversion", "Splitwise builds its Ledger. Nothing is injected yet."),
+        ],
+        "varies": [
+            ("Split types (percentage, shares)", "Strategy", "a SplitStrategy per type; add_expense picks one"),
+            ("Currencies", "No pattern: a field", "a rate stored on Expense, converted at add time"),
+            ("Simplify debts", "No pattern: a read", "net each user over the Ledger; nothing written changes"),
+            ("Leaving with a balance", "No pattern: a Group class", "block until zero; ledger updates under one lock"),
+        ],
+    },
     "extensions": [
         {"ask": "Add percentage and share splits.",
          "say": "Now an if per type would grow, so **each split type becomes a strategy with one method, shares(amount_cents, participants, params), and add_expense picks one by type.** The ledger and Expense don't change. Each strategy validates its own input: percents total 100, exacts total the amount.",

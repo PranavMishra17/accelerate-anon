@@ -56,6 +56,22 @@ PROBLEM = {
         {"name": "combine", "logic": ["And asks all its children, Or asks any, Not flips one", "They are Filters too, so they nest to any depth"]},
     ],
 
+    "design_check": {
+        "lead": "Check each choice against SOLID in a minute. Here the patterns are the design: a tree of files and a Filter per question.",
+        "solid": [
+            ("Single responsibility", "File and Directory hold the tree, Filter answers one question, FileSearcher walks and yields."),
+            ("Open/closed", "A new criterion is a new Filter class. search and the existing filters stay as they are."),
+            ("Liskov substitution", "SizeFilter, ExtensionFilter and And, Or, Not all work wherever Filter does: matches(file) returns a boolean."),
+            ("Interface segregation", "Filter has one method, matches. No searcher is forced to know about size or extension."),
+            ("Dependency inversion", "search is handed a Filter instead of building the test itself."),
+        ],
+        "varies": [
+            ("New criteria (owner, modified)", "Strategy", "each a new Filter; the searcher is untouched"),
+            ("Combined queries (and, or, not)", "Composite", "And, Or, Not are Filters that hold Filters"),
+            ("Files inside folders", "Composite", "Directory holds Files and Directories, walked with a stack"),
+            ("Symlink loops, huge trees", "No pattern: a set and a generator", "visited set of real paths; yield matches"),
+        ],
+    },
     "extensions": [
         {"ask": "Find XML files over 5 MB, or any file named like a log.",
          "say": "Filters combine. And, Or and Not are Filters that hold other Filters, so **any query is a small tree of the same class,** and the searcher never changes.",

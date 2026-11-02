@@ -67,6 +67,22 @@ PROBLEM = {
                    "So end equal to start does not overlap, and back-to-back meetings pass"]},
     ],
 
+    "design_check": {
+        "lead": "Check each choice against SOLID in a minute. Room choice and notification are the parts that may vary.",
+        "solid": [
+            ("Single responsibility", "Interval owns overlap, Room owns is_free, Booking records one booking, Scheduler picks a room and books it."),
+            ("Open/closed", "A new room rule is a RoomSelector, added not edited. book is not changed."),
+            ("Liskov substitution", "Not yet: no subclasses. Any RoomSelector would take rooms and needs and return one room."),
+            ("Interface segregation", "No interface until something varies. A Notifier would have one call, notify."),
+            ("Dependency inversion", "Scheduler holds its rooms and picks the smallest itself. A selector or Notifier would be handed in."),
+        ],
+        "varies": [
+            ("Equipment and room rules", "Strategy, only if rules grow", "a RoomSelector takes rooms and needs"),
+            ("Notify on book and cancel", "Observer", "a Notifier called after book and cancel succeed"),
+            ("Recurring meetings", "No pattern: a list", "expand to intervals; check all, book all or none"),
+            ("Two people, last room", "No pattern: a lock", "choose and add as one step"),
+        ],
+    },
     "extensions": [
         {"ask": "Add recurring meetings, like every Monday for ten weeks.",
          "say": "A recurrence rule expands to a list of intervals. **The booking checks every occurrence with is_free and books all or none**, so book takes a list of intervals, and Interval, Room and the room choice stay the same.",

@@ -24,14 +24,14 @@ MKDIR = method('''
           1. Path not absolute -> error
           2. The folder already exists -> nothing happens
         """
-        node = self.root
-        for name in self._parts(path):
-            child = node.children.get(name)
+        node = self.root                                   # every absolute path starts at the root
+        for name in self._parts(path):                     # Step 1: Edge 1 is raised inside _parts
+            child = node.children.get(name)                # .get gives None when the name is new
             if child is None:
-                child = node.children[name] = Directory(name)
-            if not isinstance(child, Directory):
+                child = node.children[name] = Directory(name)   # Step 2: make the missing folder
+            if not isinstance(child, Directory):           # Step 3: a file is in the way
                 raise FsError(f"not a folder: {name}")
-            node = child
+            node = child                                   # Edge 2: an existing folder is just walked through
 ''')
 
 ADD_FILE = method('''
@@ -44,12 +44,12 @@ ADD_FILE = method('''
           1. Folder missing, or the name is taken -> error
           2. Negative size -> error
         """
-        if nbytes < 0:
+        if nbytes < 0:                                     # Edge 2: checked first, before anything changes
             raise FsError("size cannot be negative")
-        parent, name = self._split(path)
-        if name in parent.children:
+        parent, name = self._split(path)                   # Step 1: Edge 1 (missing folder) is raised inside _split
+        if name in parent.children:                        # Edge 1: the name is taken
             raise FsError(f"already exists: {path}")
-        parent.children[name] = File(name, nbytes)
+        parent.children[name] = File(name, nbytes)         # Step 2: stored under its name, the way lookups find it
 ''')
 
 LS = method('''
@@ -61,7 +61,8 @@ LS = method('''
         Edge cases:
           1. Path does not exist -> error
         """
-        node = self._resolve(path)
+        node = self._resolve(path)                         # Step 1: Edge 1 is raised inside _resolve
+        # Step 2: sorted() so the output is the same every run; a file lists as itself, like Unix ls
         return sorted(node.children) if isinstance(node, Directory) else [node.name]
 ''')
 
@@ -74,6 +75,7 @@ SIZE_OF = method('''
         Edge cases:
           1. Path does not exist -> error
         """
+        # Step 1 and 2: a File returns its bytes, a Directory adds up its children; no type check here
         return self._resolve(path).size()
 ''')
 
@@ -90,82 +92,90 @@ FIND = method('''
           2. No filters given -> every file
         """
         found = []
+        # Step 1 and 2: walk yields (full path, entry) for everything under the start; Edge 1 is raised in _resolve
         for p, entry in self._resolve(path).walk(self._normal(path)):
-            if not isinstance(entry, File):
+            if not isinstance(entry, File):                # folders are walked through, never returned
                 continue
-            if ext and not entry.name.endswith("." + ext):
+            if ext and not entry.name.endswith("." + ext):    # Edge 2: ext=None skips this filter
                 continue
-            if entry.size() >= min_size:
-                found.append(p)
+            if entry.size() >= min_size:                   # Edge 2: min_size=0 keeps every file
+                found.append(p)                            # Step 3 and 4: the full path, not the name
         return found
 ''')
 
 HELPERS = method('''
     def _parts(self, path: str) -> list:
+        """The one place a path string is split: names between slashes, or an error if not absolute."""
         if not path.startswith("/"):
             raise FsError(f"path must be absolute: {path}")
-        return [p for p in path.split("/") if p]
+        return [p for p in path.split("/") if p]           # drops empty names, so "/a//b/" is ["a", "b"]
 
     def _normal(self, path: str) -> str:
-        return "/" + "/".join(self._parts(path))
+        return "/" + "/".join(self._parts(path))           # a clean path: "/" for the root, no trailing slash
 
     def _resolve(self, path: str) -> Entry:
         """Walk down from the root; error if any name is missing or a file is in the way."""
         node = self.root
         for name in self._parts(path):
+            # a file has no children, so "not a Directory" also means the path goes through a file
             if not isinstance(node, Directory) or name not in node.children:
                 raise FsError(f"no such path: {path}")
-            node = node.children[name]
+            node = node.children[name]                     # one step down per name
         return node
 
     def _split(self, path: str):
         """The folder that holds this path, and the last name in it."""
         parts = self._parts(path)
-        if not parts:
+        if not parts:                                      # "/" has no last name and no parent
             raise FsError("the root cannot be used here")
-        parent = self._resolve("/" + "/".join(parts[:-1]))
+        parent = self._resolve("/" + "/".join(parts[:-1]))     # everything but the last name
         if not isinstance(parent, Directory):
             raise FsError(f"not a folder: {path}")
-        return parent, parts[-1]
+        return parent, parts[-1]                           # the folder, and the name inside it
 ''')
 
 HEAD = D('''\
-    class FsError(Exception):
+    class FsError(Exception):     # one error type the caller can catch for every refusal
         pass
 
 
     class Entry:
-        """A file or a folder. Both answer size() and walk(), so callers need not tell them apart."""
+        """A file or a folder. Both answer size() and walk(), so callers need not tell them apart.
+        It holds a name and the shared defaults; it is not a place to keep contents or children."""
         def __init__(self, name: str):
-            self.name = name
+            self.name = name             # the key its parent stores it under
 
         def size(self) -> int:
-            raise NotImplementedError
+            raise NotImplementedError    # each kind answers for itself
 
         def walk(self, path: str):
-            yield path, self
+            yield path, self             # a file is a leaf: just itself; Directory adds what is below
 
 
     class File(Entry):
+        """A leaf. A name and a size, no contents; it never holds other entries."""
         def __init__(self, name: str, nbytes: int):
             super().__init__(name)
-            self.nbytes = nbytes
+            self.nbytes = nbytes         # the size in bytes; the contents are out of scope
 
         def size(self) -> int:
             return self.nbytes
 
 
     class Directory(Entry):
+        """A folder. It holds children by name and adds them up; path rules live in FileSystem."""
         def __init__(self, name: str):
             super().__init__(name)
-            self.children = {}               # name -> Entry
+            self.children = {}               # name -> Entry; a dict, so a lookup by name is one step
 
         def size(self) -> int:
+            # a folder is what is inside it; a child folder adds up its own children the same way
             return sum(c.size() for c in self.children.values())
 
         def walk(self, path: str):
-            yield path, self
-            for name in sorted(self.children):
+            yield path, self                 # a generator: one entry at a time, never the whole tree in a list
+            for name in sorted(self.children):     # sorted, so the order is the same every run
+                # rstrip("/") so the root "/" does not produce "//docs"
                 yield from self.children[name].walk(path.rstrip("/") + "/" + name)
     ''')
 
@@ -174,7 +184,7 @@ FS = D('''\
 
     class FileSystem:
         def __init__(self):
-            self.root = Directory("")
+            self.root = Directory("")        # the top folder; its name is empty because "/" is its path
     ''')
 
 CORE = HEAD + FS + in_class(MKDIR, ADD_FILE, LS, SIZE_OF, FIND, HELPERS)
@@ -184,13 +194,14 @@ DEMO = D('''\
 
     # ---- a quick run ----
     fs = FileSystem()
-    fs.mkdir("/docs/notes")
+    fs.mkdir("/docs/notes")                      # makes /docs on the way, then notes
     fs.add_file("/docs/notes/todo.txt", 120)
     fs.add_file("/docs/notes/ideas.txt", 80)
     fs.add_file("/docs/report.pdf", 5000)
-    print(fs.ls("/docs"), fs.size_of("/docs"))
+    print(fs.ls("/docs"), fs.size_of("/docs"))   # 120 + 80 + 5000 = 5200
     print(fs.find("/", ext="txt"))
     print(fs.find("/docs", min_size=1000))
+    # each of these hits one edge case: name taken, no such path, a file in the way
     for bad in (lambda: fs.add_file("/docs/report.pdf", 1), lambda: fs.ls("/nope"), lambda: fs.mkdir("/docs/report.pdf/x")):
         try:
             bad()
@@ -204,27 +215,27 @@ DEMO_OUT = ("['notes', 'report.pdf'] 5200\n['/docs/notes/ideas.txt', '/docs/note
 EXT_FILTERS = D('''\
     # a filter is any function: entry -> bool
     def ext(x: str):
-        return lambda e: e.name.endswith("." + x)
+        return lambda e: e.name.endswith("." + x)     # returns a function, so it can be passed to find
 
     def min_size(n: int):
         return lambda e: e.size() >= n
 
-    def all_of(*filters):                    # AND
+    def all_of(*filters):                    # AND: every filter must accept
         return lambda e: all(f(e) for f in filters)
 
-    def any_of(*filters):                    # OR
+    def any_of(*filters):                    # OR: one accepting filter is enough
         return lambda e: any(f(e) for f in filters)
 
-    def not_(f):                             # NOT
+    def not_(f):                             # NOT: flips one filter
         return lambda e: not f(e)
 
 
     class FileSystem:
         ...
 
-        def find(self, path: str = "/", keep=lambda e: True) -> list:
+        def find(self, path: str = "/", keep=lambda e: True) -> list:     # default keeps every file
             return [p for p, e in self._resolve(path).walk(self._normal(path))
-                    if isinstance(e, File) and keep(e)]
+                    if isinstance(e, File) and keep(e)]       # the walk is unchanged; only the test is a parameter
 
     # fs.find("/", all_of(ext("log"), not_(min_size(10**6))))
     ''')
@@ -232,6 +243,7 @@ EXT_FILTERS = D('''\
 FIND_FINAL = method('''
     def find(self, path: str = "/", keep=lambda e: True) -> list:
         """Every file under path for which keep(file) is true."""
+        # same walk as before; the whole test is one call to the filter
         return [p for p, e in self._resolve(path).walk(self._normal(path))
                 if isinstance(e, File) and keep(e)]
 ''')
@@ -239,10 +251,10 @@ FIND_FINAL = method('''
 DELETE = method('''
     def delete(self, path: str) -> None:
         """A file, or a folder with everything in it."""
-        parent, name = self._split(path)
+        parent, name = self._split(path)                   # the same helper add_file uses
         if name not in parent.children:
             raise FsError(f"no such path: {path}")
-        del parent.children[name]
+        del parent.children[name]                          # a folder takes its whole subtree with it
 ''')
 
 MOVE = method('''
@@ -254,33 +266,34 @@ MOVE = method('''
         target = self._resolve(dst_folder)
         if not isinstance(target, Directory):
             raise FsError(f"not a folder: {dst_folder}")
-        if name in target.children:
+        if name in target.children:                        # would overwrite something
             raise FsError(f"already exists: {dst_folder}/{name}")
+        # the trailing "/" makes "/a/b" not count as inside "/a/bc"; a folder can't go under itself
         if (self._normal(dst_folder) + "/").startswith(self._normal(src) + "/"):
             raise FsError("cannot move a folder into itself")
-        target.children[name] = parent.children.pop(name)
+        target.children[name] = parent.children.pop(name)  # pop and attach last, after every check has passed
 ''')
 
 FILTER_FUNCS = D('''\
 
 
     def ext(x: str):
-        return lambda e: e.name.endswith("." + x)
+        return lambda e: e.name.endswith("." + x)     # each filter builds a function entry -> bool
 
 
     def min_size(n: int):
         return lambda e: e.size() >= n
 
 
-    def all_of(*filters):
+    def all_of(*filters):                             # AND
         return lambda e: all(f(e) for f in filters)
 
 
-    def any_of(*filters):
+    def any_of(*filters):                             # OR
         return lambda e: any(f(e) for f in filters)
 
 
-    def not_(f):
+    def not_(f):                                      # NOT
         return lambda e: not f(e)
     ''')
 
@@ -295,14 +308,14 @@ FINAL_DEMO = D('''\
     fs.add_file("/docs/notes/todo.txt", 120)
     fs.add_file("/docs/notes/ideas.txt", 80)
     fs.add_file("/docs/report.pdf", 5000)
-    print(fs.find("/", all_of(any_of(ext("txt"), ext("pdf")), min_size(100))))
-    print(fs.find("/", all_of(ext("txt"), not_(min_size(100)))))
-    fs.move("/docs/notes/todo.txt", "/tmp")
-    print(fs.ls("/tmp"), fs.size_of("/docs"))
-    fs.delete("/docs/notes")
+    print(fs.find("/", all_of(any_of(ext("txt"), ext("pdf")), min_size(100))))   # (txt OR pdf) AND >= 100 bytes
+    print(fs.find("/", all_of(ext("txt"), not_(min_size(100)))))                 # txt files under 100 bytes
+    fs.move("/docs/notes/todo.txt", "/tmp")      # /docs loses 120 bytes
+    print(fs.ls("/tmp"), fs.size_of("/docs"))    # 5200 - 120 = 5080
+    fs.delete("/docs/notes")                     # takes ideas.txt with it
     print(fs.ls("/docs"))
     try:
-        fs.move("/docs", "/docs")
+        fs.move("/docs", "/docs")                # the trap: a folder into itself
     except FsError as e:
         print(e)
     ''')
@@ -386,6 +399,10 @@ PROBLEM = {
             "uses": [("Entry (base)", "size(), walk()")],
             "links": [(0, "contains")]},
 
+    "skeleton": {"q": "First the small classes: FsError, Entry, File, Directory, and the file system's __init__. Each line from the class design.",
+                 "hint": "Entry holds a name and the shared size and walk. File adds a size. Directory holds children by name and adds them up. The file system holds the root.",
+                 "code": HEAD + FS,
+                 "why": "These come straight from the - state lines. Writing them first means every method after only has to do its steps."},
     "methods": [
         {"name": "mkdir", "q": "mkdir(path): core logic and edge cases as comments, then the code.",
          "hint": "Split into names, walk down, make what is missing. Edges: relative path, a file in the way.", "code": MKDIR,
@@ -409,6 +426,22 @@ PROBLEM = {
                 "code": HELPERS,
                 "why": "Every path rule lives in these four. If paths later gain '..' or relative forms, only _parts changes."},
 
+    "design_check": {
+        "lead": "SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies.",
+        "solid": [
+            ("Single responsibility", "File and Directory know their own size, FileSystem turns a path into an entry, and _parts, _resolve and _split hold every path rule."),
+            ("Open/closed", "A new filter is a new function handed to find. find is not edited."),
+            ("Liskov substitution", "File and Directory both work wherever an Entry does: size() returns bytes and walk() yields files."),
+            ("Interface segregation", "Entry has two methods, size and walk. Nothing wider to split yet."),
+            ("Dependency inversion", "find depends on a keep(entry) function, not on a concrete extension or size rule."),
+        ],
+        "varies": [
+            ("File and folder behave alike", "Composite", "Entry, with File and Directory under it; Directory.size adds up its children"),
+            ("Combining search conditions", "Strategy, as functions", "ext, min_size, all_of, any_of and not_ passed to find"),
+            ("Million entries, size cached", "No pattern: a field", "a total on each Directory, updated up the parent chain"),
+            ("Permissions", "No pattern: one helper", "_check(user, entry, action) before every operation"),
+        ],
+    },
     "extensions": [
         {"ask": "Find files that are .txt or .pdf and bigger than 100 bytes. How do you combine conditions?",
          "say": "A condition becomes a small function from an entry to true or false, and find takes one. **AND, OR and NOT are functions that wrap other conditions,** so any combination is built from the same pieces and find never changes again.",

@@ -52,6 +52,22 @@ PROBLEM = {
         {"name": "try_take", "logic": ["Refill first: tokens grow by elapsed time times the rate, capped at capacity", "If at least one token, take it and allow", "Otherwise deny; retry-after is the time until one token exists"]},
     ],
 
+    "design_check": {
+        "lead": "Check each choice against SOLID in a minute. The algorithm is what varies, and try_take is the seam.",
+        "solid": [
+            ("Single responsibility", "Rule holds numbers, TokenBucket does the refill and take for one key, RateLimiter maps keys to buckets."),
+            ("Open/closed", "A new algorithm is a new class with try_take(now). allow is not edited."),
+            ("Liskov substitution", "A fixed or sliding window class works anywhere TokenBucket does: same try_take answer, allowed or retry-after."),
+            ("Interface segregation", "No interface until something varies. The bucket has one call, try_take."),
+            ("Dependency inversion", "The clock is a function passed in, so tests fake it. The limiter is handed its Rule."),
+        ],
+        "varies": [
+            ("Fixed or sliding window", "Strategy", "each algorithm a class with try_take(now)"),
+            ("Idle keys pile up", "No pattern: a map", "drop full idle buckets, or LRU eviction"),
+            ("Two requests, one key", "No pattern: a lock", "refill and take as one step per key"),
+            ("Many servers", "No pattern: a store", "buckets in Redis, one atomic script, the store's clock"),
+        ],
+    },
     "extensions": [
         {"ask": "Swap in a fixed window or a sliding window.",
          "say": "Put the bucket behind one call, try_take(now), and each algorithm becomes a class with that call. **The limiter picks one and never knows which.** A fixed window lets 2N through at a boundary, so say why a sliding window or a token bucket is better.",

@@ -23,10 +23,10 @@ REQUEST = method('''
         Edge cases:
           1. Floor outside the building -> error
         """
-        self._check_floor(floor)
-        car = self._choose_car(floor, direction)
-        car.add_stop(floor)
-        return car.car_id
+        self._check_floor(floor)                           # Step 1 / Edge 1: refuse a floor that doesn't exist
+        car = self._choose_car(floor, direction)           # Step 2: the one line a new dispatch policy replaces
+        car.add_stop(floor)                                # Step 3: the car will stop here on its way
+        return car.car_id                                  # Step 4: so the caller knows which car is coming
 ''')
 
 SELECT_FLOOR = method('''
@@ -39,10 +39,10 @@ SELECT_FLOOR = method('''
           1. Floor outside the building -> error
           2. Unknown car -> error
         """
-        self._check_floor(floor)
-        if not 0 <= car_id < len(self.cars):
+        self._check_floor(floor)                           # Step 1 / Edge 1
+        if not 0 <= car_id < len(self.cars):               # Edge 2: car ids are list positions, so check the range
             raise ElevatorError(f"no car {car_id}")
-        self.cars[car_id].add_stop(floor)
+        self.cars[car_id].add_stop(floor)                  # Step 2: no choosing, the rider is already in this car
 ''')
 
 STEP = method('''
@@ -53,8 +53,8 @@ STEP = method('''
         Edge cases:
           1. A car with no stops stays where it is
         """
-        for car in self.cars:
-            car.step()
+        for car in self.cars:                              # Step 1: all cars move in the same tick
+            car.step()                                     # Edge 1 is handled inside Car.step
 ''')
 
 STATUS = method('''
@@ -65,19 +65,22 @@ STATUS = method('''
         Edge cases:
           1. Idle cars show I
         """
+        # "0@3I" = car 0 at floor 3, direction's first letter (U, D or I for idle); joined with spaces
         return " ".join(f"{c.car_id}@{c.floor}{c.direction.name[0]}" for c in self.cars)
 ''')
 
 HELPERS = method('''
     def _check_floor(self, floor: int) -> None:
-        if not 0 <= floor < self.floors:
+        if not 0 <= floor < self.floors:                   # floors are numbered 0 to floors - 1
             raise ElevatorError(f"no floor {floor}")
 
     def _choose_car(self, floor: int, direction: Direction) -> Car:
         """Idle cars, or cars coming towards this floor in the same direction; else any. Nearest wins, first car on a tie."""
         def can_pick_up(c: Car) -> bool:
+            # idle, or going the same way with the floor still ahead: (distance to floor) x (direction sign) >= 0
             return c.direction is Direction.IDLE or (c.direction is direction and (floor - c.floor) * direction.value >= 0)
-        candidates = [c for c in self.cars if can_pick_up(c)] or self.cars
+        candidates = [c for c in self.cars if can_pick_up(c)] or self.cars   # nobody suitable: any car, it gets there later
+        # min keeps the first of equal distances, so the lowest car id wins a tie
         return min(candidates, key=lambda c: abs(c.floor - floor))
 ''')
 
@@ -86,12 +89,12 @@ HEAD = D('''\
 
 
     class Direction(Enum):
-        UP = 1
+        UP = 1                       # the values are floor steps: floor += direction.value moves the car
         DOWN = -1
-        IDLE = 0
+        IDLE = 0                     # zero, so an idle car would not move even if asked
 
 
-    class ElevatorError(Exception):
+    class ElevatorError(Exception):    # one error type the caller can catch for every refusal
         pass
     ''')
 
@@ -99,11 +102,13 @@ CAR = D('''\
 
 
     class Car:
+        """One elevator car. It moves itself; it does not know about other cars or who called it."""
+
         def __init__(self, car_id: int, floor: int = 0):
-            self.car_id = car_id
-            self.floor = floor
-            self.direction = Direction.IDLE
-            self.stops = set()               # floors this car must stop at
+            self.car_id = car_id             # the system returns it to say which car is coming
+            self.floor = floor               # where the car is now
+            self.direction = Direction.IDLE  # which way it moves next; IDLE when nothing is left to do
+            self.stops = set()               # floors this car must stop at; a set, so a double press adds nothing
 
         def add_stop(self, floor: int) -> None:
             self.stops.add(floor)
@@ -112,20 +117,21 @@ CAR = D('''\
             """One tick: open the doors if we are at a stop, else move one floor towards the next one."""
             if self.floor in self.stops:
                 self.stops.remove(self.floor)        # doors open for this tick
-                if not self.stops:
+                if not self.stops:                   # that was the last stop, so rest
                     self.direction = Direction.IDLE
-                return
-            if not self.stops:
+                return                               # opening the doors uses the whole tick
+            if not self.stops:                       # nothing to do: stay put
                 return
             self.direction = self._pick_direction()
-            self.floor += self.direction.value
+            self.floor += self.direction.value       # +1 up, -1 down: one floor per tick
 
         def _pick_direction(self) -> Direction:
             """Keep going while there are stops ahead (the SCAN idea); otherwise turn towards the nearest one."""
+            # a stop is ahead when (distance) x (direction sign) is positive; an idle car has sign 0, so none is ahead
             ahead = [s for s in self.stops if (s - self.floor) * self.direction.value > 0]
-            if ahead:
+            if ahead:                                # keep going: don't reverse while riders are waiting ahead
                 return self.direction
-            nearest = min(self.stops, key=lambda s: abs(s - self.floor))
+            nearest = min(self.stops, key=lambda s: abs(s - self.floor))   # nothing ahead: turn to the closest stop
             return Direction.UP if nearest > self.floor else Direction.DOWN
     ''')
 
@@ -134,8 +140,8 @@ SYSTEM = D('''\
 
     class ElevatorSystem:
         def __init__(self, cars: int, floors: int):
-            self.floors = floors
-            self.cars = [Car(i) for i in range(cars)]       # every car starts at floor 0
+            self.floors = floors                            # request and select_floor check a floor against it
+            self.cars = [Car(i) for i in range(cars)]       # every car starts at floor 0; the id is its list position
     ''')
 
 CORE = HEAD + CAR + SYSTEM + in_class(REQUEST, SELECT_FLOOR, STEP, STATUS, HELPERS)
@@ -145,20 +151,20 @@ DEMO = D('''\
 
     # ---- a quick run ----
     system = ElevatorSystem(cars=2, floors=10)
-    system.cars[1].floor = 9
+    system.cars[1].floor = 9                      # park car 1 at the top, so car 0 is clearly nearer to floor 3
     print("call from 3 goes to car", system.request(3, Direction.UP))
-    for _ in range(4):
+    for _ in range(4):                            # 3 ticks to climb to floor 3, 1 tick with the doors open
         system.step()
     print(system.status())                        # car 0 is at 3 with its doors open
     system.select_floor(0, 6)                     # the rider gets in and presses 6
-    for _ in range(4):
+    for _ in range(4):                            # 3 ticks up to 6, 1 tick with the doors open
         system.step()
     print(system.status())
     try:
-        system.request(12, Direction.DOWN)
+        system.request(12, Direction.DOWN)        # the building has floors 0 to 9
     except ElevatorError as e:
         print(e)
-    system.step()
+    system.step()                                 # no stops anywhere, so nothing moves
     print(system.status())
     ''')
 DEMO_OUT = "call from 3 goes to car 0\n0@3I 1@9I\n0@6I 1@9I\nno floor 12\n0@6I 1@9I\n"
@@ -168,19 +174,20 @@ EXT_STRATEGY = D('''\
     def nearest_car(cars: list, floor: int, direction: Direction) -> Car:
         """The old _choose_car, now a plain function. Priority or express cars are another function like it."""
         def can_pick_up(c: Car) -> bool:
+            # idle, or going the same way with the floor still ahead
             return c.direction is Direction.IDLE or (c.direction is direction and (floor - c.floor) * direction.value >= 0)
         candidates = [c for c in cars if can_pick_up(c)] or cars
-        return min(candidates, key=lambda c: abs(c.floor - floor))
+        return min(candidates, key=lambda c: abs(c.floor - floor))    # nearest wins, first car on a tie
 
 
     class ElevatorSystem:
         def __init__(self, cars: int, floors: int, choose=nearest_car):
             ...
-            self.choose = choose                 # was the method _choose_car
+            self.choose = choose                 # was the method _choose_car; any function with this signature fits
 
         def request(self, floor: int, direction: Direction) -> int:
             ...
-            car = self.choose(self.cars, floor, direction)
+            car = self.choose(self.cars, floor, direction)    # was self._choose_car(floor, direction)
     ''')
 
 EXT_RECALL = D('''\
@@ -190,14 +197,14 @@ EXT_RECALL = D('''\
         def recall(self) -> None:
             """Emergency: forget every stop and send every car to the ground floor."""
             for car in self.cars:
-                car.stops = {0}
+                car.stops = {0}          # replaces the set; Car.step already walks to its nearest (only) stop
     ''')
 
 FINAL_REQUEST = method('''
     def request(self, floor: int, direction: Direction) -> int:
         """Same steps; the strategy picks the car."""
         self._check_floor(floor)
-        car = self.choose(self.cars, floor, direction)
+        car = self.choose(self.cars, floor, direction)     # whichever policy the system was given
         car.add_stop(floor)
         return car.car_id
 ''')
@@ -206,12 +213,12 @@ RECALL = method('''
     def recall(self) -> None:
         """Emergency: forget every stop and send every car to the ground floor."""
         for car in self.cars:
-            car.stops = {0}
+            car.stops = {0}                  # the old stops are dropped; Car.step does the walking
 ''')
 
 FINAL_HELPERS = method('''
     def _check_floor(self, floor: int) -> None:
-        if not 0 <= floor < self.floors:
+        if not 0 <= floor < self.floors:                   # floors are numbered 0 to floors - 1
             raise ElevatorError(f"no floor {floor}")
 ''')
 
@@ -219,10 +226,12 @@ NEAREST = D('''\
 
 
     def nearest_car(cars: list, floor: int, direction: Direction) -> Car:
+        """The default dispatch policy: a plain function, so another policy is another function."""
         def can_pick_up(c: Car) -> bool:
+            # idle, or going the same way with the floor still ahead
             return c.direction is Direction.IDLE or (c.direction is direction and (floor - c.floor) * direction.value >= 0)
-        candidates = [c for c in cars if can_pick_up(c)] or cars
-        return min(candidates, key=lambda c: abs(c.floor - floor))
+        candidates = [c for c in cars if can_pick_up(c)] or cars   # nobody suitable: any car, it gets there later
+        return min(candidates, key=lambda c: abs(c.floor - floor))   # nearest wins, first car on a tie
     ''')
 
 FINAL_SYSTEM = D('''\
@@ -232,7 +241,7 @@ FINAL_SYSTEM = D('''\
         def __init__(self, cars: int, floors: int, choose=nearest_car):
             self.floors = floors
             self.cars = [Car(i) for i in range(cars)]
-            self.choose = choose             # (cars, floor, direction) -> Car
+            self.choose = choose             # (cars, floor, direction) -> Car; the system is given its policy
     ''')
 
 FINAL = HEAD + CAR + NEAREST + FINAL_SYSTEM + in_class(FINAL_REQUEST, SELECT_FLOOR, STEP, STATUS, RECALL, FINAL_HELPERS)
@@ -241,18 +250,18 @@ FINAL_DEMO = D('''\
 
 
     # ---- a quick run ----
-    def always_car_zero(cars, floor, direction):
+    def always_car_zero(cars, floor, direction):     # a stand-in policy: proves the system uses the function it is given
         return cars[0]
 
 
     system = ElevatorSystem(cars=2, floors=10, choose=always_car_zero)
     system.cars[1].floor = 9
-    print("call from 8 goes to car", system.request(8, Direction.DOWN))
-    system.cars[1].stops.add(2)
+    print("call from 8 goes to car", system.request(8, Direction.DOWN))   # car 1 is nearer, but the policy says car 0
+    system.cars[1].stops.add(2)                      # car 1 gets a stop below, so it heads down
     system.step()
-    print(system.status())
+    print(system.status())                           # car 0 climbed to 1 (U); car 1 came down to 8 (D)
     system.recall()
-    for _ in range(9):
+    for _ in range(9):                               # 9 ticks is enough for the farthest car to reach floor 0
         system.step()
     print(system.status())
     ''')
@@ -329,6 +338,10 @@ PROBLEM = {
             "owned": [("Car", "floor, direction, stops")],
             "uses": [("Direction (enum)", "UP, DOWN, IDLE")]},
 
+    "skeleton": {"q": "First the small pieces: Direction, ElevatorError, Car, and the system's __init__. Each line from the class design.",
+                 "hint": "Car holds its floor, direction and a set of stops, and moves itself. The system holds the floor count and the list of cars.",
+                 "code": HEAD + CAR + SYSTEM,
+                 "why": "These come straight from the - state lines. Writing them first means every method after only has to do its steps."},
     "methods": [
         {"name": "request", "q": "request(floor, direction): core logic and edge cases as comments, then the code.",
          "hint": "Check the floor, choose a car, add the stop, return the id. Edge: bad floor.", "code": REQUEST,
@@ -349,6 +362,22 @@ PROBLEM = {
                 "code": HELPERS,
                 "why": "Ties go to the first car, so the run is deterministic. If nothing is suitable the nearest car still takes the call and gets to it later."},
 
+    "design_check": {
+        "lead": "SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies.",
+        "solid": [
+            ("Single responsibility", "Car owns its floor, stops and movement in step(), ElevatorSystem chooses the car in request and select_floor."),
+            ("Open/closed", "A new dispatch policy is a new function given to the system. request, step and Car are not edited."),
+            ("Liskov substitution", "Any policy with the nearest_car signature works in place of it: (cars, floor, direction) returns a Car."),
+            ("Interface segregation", "Nothing to segregate yet: no interfaces. A policy is one function."),
+            ("Dependency inversion", "ElevatorSystem is handed choose instead of hard-coding nearest_car."),
+        ],
+        "varies": [
+            ("Which car answers a call (priority, express)", "Strategy", "nearest_car passed in as choose; each policy is another function"),
+            ("Car in service, out of service or full", "State, only if each state behaves differently", "today a status on Car would be enough"),
+            ("Fire recall", "No pattern: a method", "recall() replaces every car's stops with floor 0"),
+            ("Doors that hold open", "No pattern: a field", "a door counter on Car, no moving while open"),
+        ],
+    },
     "extensions": [
         {"ask": "Now add priority scheduling: some calls must be answered first, or a different policy altogether.",
          "say": "Only the choice of car changes. I turn _choose_car into a function the system is given, nearest_car by default. **Priority, express or rush-hour policies are more functions like it,** and request, step and Car don't change.",

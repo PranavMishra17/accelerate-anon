@@ -24,15 +24,18 @@ ENTER = method('''
           1. Plate already parked -> error
           2. No free spot that fits -> error
         """
+        # Edge 1: the same car can't hold two spots
         if self._is_parked(plate):
             raise ParkingError(f"{plate} is already parked")
+        # Step 1: the helper scans the spots; None means nothing fits
         spot = self._find_spot(size)
-        if spot is None:
+        if spot is None:                                   # Edge 2: full for this size
             raise ParkingError(f"no free spot for {size.name.lower()}")
-        spot.park(plate)
+        spot.park(plate)                                   # Step 2: the spot marks itself taken
+        # Step 3: the ticket records what exit will need: which spot, what size, when
         ticket = Ticket(self.next_id, plate, size, spot, now)
-        self.next_id += 1
-        self.tickets[ticket.ticket_id] = ticket
+        self.next_id += 1                                  # so the next ticket gets a new id
+        self.tickets[ticket.ticket_id] = ticket            # store by id: exit only gets the id back
         return ticket
 ''')
 
@@ -47,12 +50,12 @@ EXIT = method('''
         Edge cases:
           1. Unknown or already used ticket -> error
         """
-        ticket = self.tickets.get(ticket_id)
-        if ticket is None:
+        ticket = self.tickets.get(ticket_id)              # Step 1: .get gives None instead of a KeyError
+        if ticket is None:                                 # Edge 1: never issued, or already used
             raise ParkingError("unknown ticket")
-        fee = self._fee(ticket, now)
-        ticket.spot.leave()
-        del self.tickets[ticket_id]
+        fee = self._fee(ticket, now)                       # Step 2: price first, before changing anything
+        ticket.spot.leave()                                # Step 3: the ticket knows its spot; free it
+        del self.tickets[ticket_id]                        # close it, so the same ticket can't exit twice
         return fee
 ''')
 
@@ -64,24 +67,28 @@ FREE_COUNT = method('''
         Edge cases:
           1. None free -> 0
         """
+        # fits() is the same rule enter uses, so the count never disagrees with enter
         return sum(1 for s in self.spots if s.fits(size))
 ''')
 
 HELPERS_COMMON = method('''
     def _find_spot(self, size: Size):
         """Smallest free spot that fits; ties go to the first one listed (the lowest level)."""
-        candidates = [s for s in self.spots if s.fits(size)]
+        candidates = [s for s in self.spots if s.fits(size)]          # free and big enough
+        # min keeps the first of equal sizes, so the lowest level wins; default=None when empty
         return min(candidates, key=lambda s: s.size, default=None)
 
     def _is_parked(self, plate: str) -> bool:
+        """An open ticket with this plate means the car is inside."""
         return any(t.plate == plate for t in self.tickets.values())
 ''')
 
 FEE = method('''
     def _fee(self, ticket: Ticket, now: datetime) -> int:
         """Every started hour counts; the rate depends on the vehicle's size."""
+        # time parked / one hour = hours as a float; ceil rounds 2.3 up to 3; at least 1 hour
         hours = max(1, ceil((now - ticket.entered_at) / timedelta(hours=1)))
-        return hours * self.RATE_PER_HOUR[ticket.size]
+        return hours * self.RATE_PER_HOUR[ticket.size]     # rate looked up by the vehicle's size
 ''')
 
 HEAD = D('''\
@@ -90,13 +97,13 @@ HEAD = D('''\
     from math import ceil
 
 
-    class Size(IntEnum):
+    class Size(IntEnum):        # IntEnum so sizes compare: LARGE >= MEDIUM is True
         SMALL = 1
         MEDIUM = 2
         LARGE = 3
 
 
-    class ParkingError(Exception):
+    class ParkingError(Exception):    # one error type the caller can catch for every refusal
         pass
     ''')
 
@@ -104,16 +111,19 @@ SPOT = D('''\
 
 
     class Spot:
+        """One parking space. It knows its size and who is in it, nothing else."""
+
         def __init__(self, spot_id: str, size: Size):
-            self.spot_id = spot_id
+            self.spot_id = spot_id       # e.g. "L2-17": the level is in the id, so no Level class
             self.size = size
-            self.plate = None            # the vehicle in it, or None
+            self.plate = None            # the vehicle in it, or None when free
 
         def fits(self, size: Size) -> bool:
+            # free, and at least as big as the vehicle (a car may take a large spot)
             return self.plate is None and self.size >= size
 
         def park(self, plate: str) -> None:
-            self.plate = plate
+            self.plate = plate           # the spot owns its own state; the lot asks, never sets it
 
         def leave(self) -> None:
             self.plate = None
@@ -123,12 +133,14 @@ TICKET = D('''\
 
 
     class Ticket:
+        """A record of one stay. Only data, no behaviour: the lot does the work, the ticket remembers."""
+
         def __init__(self, ticket_id: int, plate: str, size: Size, spot: Spot, entered_at: datetime):
-            self.ticket_id = ticket_id
-            self.plate = plate
-            self.size = size
-            self.spot = spot
-            self.entered_at = entered_at
+            self.ticket_id = ticket_id   # the key the driver hands back at exit
+            self.plate = plate           # lets _is_parked catch a car entering twice
+            self.size = size             # picks the hourly rate without looking the vehicle up
+            self.spot = spot             # a reference to the Spot object, so exit can free it directly
+            self.entered_at = entered_at # fee = now - entered_at
     ''')
 
 LOT = D('''\
@@ -138,9 +150,9 @@ LOT = D('''\
         RATE_PER_HOUR = {Size.SMALL: 100, Size.MEDIUM: 200, Size.LARGE: 400}   # cents
 
         def __init__(self, spots: list):
-            self.spots = spots               # listed lowest level first
-            self.tickets = {}                # ticket_id -> Ticket
-            self.next_id = 1
+            self.spots = spots               # listed lowest level first, so a scan finds low spots first
+            self.tickets = {}                # ticket_id -> Ticket, the open stays only
+            self.next_id = 1                 # the id the next ticket will get
     ''')
 
 CORE = HEAD + SPOT + TICKET + LOT + in_class(ENTER, EXIT, FREE_COUNT, HELPERS_COMMON, FEE)
@@ -149,7 +161,7 @@ DEMO = D('''\
 
 
     # ---- a quick run ----
-    lot = ParkingLot([Spot("S1", Size.SMALL), Spot("M1", Size.MEDIUM), Spot("L1", Size.LARGE)])
+    lot = ParkingLot([Spot("S1", Size.SMALL), Spot("M1", Size.MEDIUM), Spot("L1", Size.LARGE)])   # one spot per size
     t0 = datetime(2026, 11, 1, 9, 0)
     bike = lot.enter("BIKE-1", Size.SMALL, t0)
     car = lot.enter("CAR-1", Size.MEDIUM, t0)
@@ -159,10 +171,10 @@ DEMO = D('''\
         lot.enter("TRUCK-1", Size.LARGE, t0)
     except ParkingError as e:
         print(e)
-    print(lot.exit(car.ticket_id, t0 + timedelta(hours=2, minutes=20)))
+    print(lot.exit(car.ticket_id, t0 + timedelta(hours=2, minutes=20)))   # 3 started hours x 200 = 600
     print(lot.free_count(Size.MEDIUM))
     try:
-        lot.exit(car.ticket_id, t0)
+        lot.exit(car.ticket_id, t0)          # the same ticket again: it was closed
     except ParkingError as e:
         print(e)
     ''')
@@ -173,23 +185,23 @@ EXT_PRICING = D('''\
     class Pricing:
         RATE_PER_HOUR = {Size.SMALL: 100, Size.MEDIUM: 200, Size.LARGE: 400}
 
-        def fee(self, ticket: Ticket, now: datetime) -> int:
+        def fee(self, ticket: Ticket, now: datetime) -> int:     # the old _fee, moved here unchanged
             hours = max(1, ceil((now - ticket.entered_at) / timedelta(hours=1)))
             return hours * self.RATE_PER_HOUR[ticket.size]
 
 
-    class CappedPricing(Pricing):
+    class CappedPricing(Pricing):     # a new rule is a subclass; the lot never changes
         def __init__(self, cap: int):
             self.cap = cap
 
         def fee(self, ticket: Ticket, now: datetime) -> int:
-            return min(super().fee(ticket, now), self.cap)
+            return min(super().fee(ticket, now), self.cap)       # the hourly fee, but never above the cap
 
 
     class ParkingLot:
         def __init__(self, spots: list, pricing: Pricing = None):
             ...
-            self.pricing = pricing or Pricing()
+            self.pricing = pricing or Pricing()       # the lot is given its rule; hourly by default
 
         def exit(self, ticket_id: int, now: datetime) -> int:
             ...
@@ -199,15 +211,15 @@ EXT_PRICING = D('''\
 FINAL_ENTER = method('''
     def enter(self, plate: str, size: Size, now: datetime) -> Ticket:
         """Same steps; choosing a spot and parking in it happen under one lock."""
-        with self.lock:
+        with self.lock:                                    # two gates can't both take the last spot
             if self._is_parked(plate):
                 raise ParkingError(f"{plate} is already parked")
             spot = self._find_spot(size)
             if spot is None:
                 raise ParkingError(f"no free spot for {size.name.lower()}")
-            spot.park(plate)
+            spot.park(plate)                               # find and park inside one lock: no gap between
             ticket = Ticket(self.next_id, plate, size, spot, now)
-            self.next_id += 1
+            self.next_id += 1                              # also under the lock, so ids never repeat
             self.tickets[ticket.ticket_id] = ticket
             return ticket
 ''')
@@ -219,7 +231,7 @@ FINAL_EXIT = method('''
             ticket = self.tickets.get(ticket_id)
             if ticket is None:
                 raise ParkingError("unknown ticket")
-            fee = self.pricing.fee(ticket, now)
+            fee = self.pricing.fee(ticket, now)            # whichever rule the lot was given
             ticket.spot.leave()
             del self.tickets[ticket_id]
             return fee
@@ -234,11 +246,12 @@ PRICING = D('''\
         RATE_PER_HOUR = {Size.SMALL: 100, Size.MEDIUM: 200, Size.LARGE: 400}   # cents
 
         def fee(self, ticket: Ticket, now: datetime) -> int:
+            # started hours, at least one, times the rate for the vehicle's size
             hours = max(1, ceil((now - ticket.entered_at) / timedelta(hours=1)))
             return hours * self.RATE_PER_HOUR[ticket.size]
 
 
-    class CappedPricing(Pricing):
+    class CappedPricing(Pricing):     # a daily cap is a new rule, so a subclass
         def __init__(self, cap: int):
             self.cap = cap
 
@@ -251,10 +264,10 @@ FINAL_LOT = D('''\
 
     class ParkingLot:
         def __init__(self, spots: list, pricing: Pricing = None):
-            self.spots = spots
-            self.tickets = {}
+            self.spots = spots               # lowest level first
+            self.tickets = {}                # ticket_id -> Ticket, open stays
             self.next_id = 1
-            self.pricing = pricing or Pricing()
+            self.pricing = pricing or Pricing()   # the fee rule, swappable
             self.lock = Lock()               # one gate at a time chooses and parks
     ''')
 
@@ -276,14 +289,14 @@ FINAL_DEMO = D('''\
             results.append(None)
 
 
-    gates = [Thread(target=arrive, args=(p,)) for p in ("A", "B")]
+    gates = [Thread(target=arrive, args=(p,)) for p in ("A", "B")]   # two cars race for one spot
     for g in gates:
         g.start()
     for g in gates:
         g.join()
     winners = [r for r in results if r]
     print(len(winners), "of 2 got the last spot")
-    print(lot.exit(winners[0].ticket_id, t0 + timedelta(hours=10)))
+    print(lot.exit(winners[0].ticket_id, t0 + timedelta(hours=10)))   # 10 h x 200 = 2000, capped at 1500
     ''')
 FINAL_OUT = "1 of 2 got the last spot\n1500\n"
 
@@ -363,6 +376,10 @@ PROBLEM = {
             "owned": [("Spot", "size, plate"), ("Ticket", "plate, spot, entry time")],
             "uses": [("Size (enum)", "SMALL, MEDIUM, LARGE")]},
 
+    "skeleton": {"q": "First the small classes: Size, ParkingError, Spot, Ticket, and the lot's __init__. Each line from the class design.",
+                 "hint": "Spot holds a size and a plate and changes its own state. Ticket only stores what exit needs. The lot holds the spots, the open tickets by id and the next id.",
+                 "code": HEAD + SPOT + TICKET + LOT,
+                 "why": "These come straight from the − state lines. Writing them first means every method after only has to do its steps."},
     "methods": [
         {"name": "enter", "q": "enter(plate, size, now): core logic and edge cases as comments, then the code.",
          "hint": "Find the smallest spot that fits, park, make and store the ticket, return it. Edges: already parked, none free.", "code": ENTER,
@@ -380,6 +397,22 @@ PROBLEM = {
                 "code": HELPERS_COMMON + "\n" + FEE,
                 "why": "A linear scan is fine for a lot with hundreds of spots. Keeping a free list per size is faster but puts state in two places."},
 
+    "design_check": {
+        "lead": "SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies.",
+        "solid": [
+            ("Single responsibility", "Spot tracks one space, Ticket records one stay, the lot runs enter and exit. The fee moves into Pricing once it varies."),
+            ("Open/closed", "A new pricing rule is a new Pricing subclass. enter and exit are not edited."),
+            ("Liskov substitution", "CappedPricing works anywhere Pricing does: same fee(ticket, now), still cents."),
+            ("Interface segregation", "No interface until something varies. Pricing has one method, fee."),
+            ("Dependency inversion", "The lot is handed a Pricing object instead of building the rule itself."),
+        ],
+        "varies": [
+            ("The fee rule (cap, weekend rate)", "Strategy", "Pricing and CappedPricing, given to the lot"),
+            ("How a spot is chosen (nearest the gate)", "Strategy, only if asked", "a chooser the lot calls inside _find_spot"),
+            ("Two gates at once", "No pattern: a lock", "find and park as one step under self.lock"),
+            ("Vehicle types with their own behaviour", "Factory, only if creation differs", "today a Size enum is enough"),
+        ],
+    },
     "extensions": [
         {"ask": "Pricing changes: a daily cap now, a flat weekend rate next month. What do you touch?",
          "say": "Only the fee. I move it out of the lot into a Pricing class that the lot is given, and the daily cap is a subclass. **enter, exit's steps and every other class stay the same,** and a weekend rate is one more subclass.",
