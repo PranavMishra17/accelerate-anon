@@ -25,8 +25,11 @@ d) Classes: `state` (the "-" lines, what __init__ sets, with types) and `behavio
    `class_say` walks from the methods to what each must read, which gives the state.
 e) Methods: each public method's code starts with a docstring holding "Core logic:" numbered steps and
    "Edge cases:" numbered steps, then the code. Helpers go in `helpers.code`.
+e0) `skeleton` {q, hint, code, why}: the head and every supporting class implemented, the entry class's __init__; built from CORE's constants.
+   All code carries short why-comments on the lines that need them.
 f) Extensions: 3 or 4 interviewer follow-ups: `ask`, `say` (first person), optional `code` + `code_title`,
    and `short_q` / `short_a` for the cheat sheet.
+`design_check` {lead, solid: five (principle, where it shows here), varies: 3 or 4 (what could change, pattern, in this design)}, rendered inside Extensibility.
 Then `summary` (2 spoken paragraphs), `golden` (4 to 6 pairs: the line, then why it matters; the first 4 show on
 the cheat sheet, so put the strongest first), and the final file (core with the extensions applied) + a demo.
 

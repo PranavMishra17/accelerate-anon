@@ -258,6 +258,73 @@ window.LOOP_CODING.parts.push({
      "text": "The interviewer changes the rules. **For each change, say which class it touches and what stays the same.** A good design changes in one place."
     },
     {
+     "t": "p",
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Compartment owns its occupied flag, AccessToken owns a code and its expiry, Locker runs deposit_package and pickup."
+      ],
+      [
+       "Open/closed",
+       "Size fallback is a change inside _get_available_compartment alone. deposit_package is not edited."
+      ],
+      [
+       "Liskov substitution",
+       "A Compartment subclass such as JammedCompartment still answers open, mark_occupied and mark_free the same way."
+      ],
+      [
+       "Interface segregation",
+       "Nothing to segregate yet: no interfaces, and each class has a handful of methods."
+      ],
+      [
+       "Dependency inversion",
+       "Locker is handed its compartments and a clock (now), instead of building them or calling datetime.now itself."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "Which compartment fits (larger sizes allowed)",
+       "Strategy, only if asked",
+       "today one helper, _get_available_compartment, makes the choice"
+      ],
+      [
+       "Compartment condition (available, occupied, out of service)",
+       "State, only if each status behaves differently",
+       "today a Status enum is enough"
+      ],
+      [
+       "Broken doors and the reserve step",
+       "No pattern: a field",
+       "a status on Compartment and a RESERVED value"
+      ],
+      [
+       "Two drivers at once",
+       "No pattern: a lock",
+       "find and mark occupied as one step under a lock"
+      ]
+     ]
+    },
+    {
      "t": "turn",
      "who": "Interviewer",
      "ask": "What if a small package can go in a larger compartment when no small one is free?",
@@ -267,7 +334,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "locker-ext-2",
+     "id": "locker-ext-6",
      "title": "Size fallback: one helper changes",
      "code": "SIZE_ORDER = [Size.SMALL, Size.MEDIUM, Size.LARGE]    # smallest to largest; the order is the fallback order\n\n\nclass Locker:\n    ...\n\n    def _get_available_compartment(self, size: Size):\n        \"\"\"Try the exact size first, then each larger size. Never a smaller one.\"\"\"\n        # slicing from the requested size's index drops every smaller size\n        for s in SIZE_ORDER[SIZE_ORDER.index(size):]:\n            for c in self.compartments:\n                if c.get_size() == s and not c.is_occupied():\n                    return c\n        return None\n",
      "notes": {}
@@ -285,7 +352,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "locker-ext-4",
+     "id": "locker-ext-8",
      "title": "Out of service: a status, and deposit skips a jammed door",
      "code": "class Status(Enum):               # three states, so a boolean no longer fits\n    AVAILABLE = \"available\"\n    OCCUPIED = \"occupied\"\n    OUT_OF_SERVICE = \"out of service\"\n\n\nclass DoorJammed(Exception):      # raised by the hardware when a door won't open\n    pass\n\n\nclass Compartment:\n    \"\"\"One door. It knows its size and its status, nothing else.\"\"\"\n\n    def __init__(self, compartment_id: str, size: Size):\n        self.compartment_id = compartment_id\n        self.size = size\n        self.status = Status.AVAILABLE      # was: occupied = False\n\n    def get_size(self) -> Size:\n        return self.size\n\n    def is_available(self) -> bool:\n        return self.status is Status.AVAILABLE\n\n    def is_occupied(self) -> bool:\n        return self.status is Status.OCCUPIED     # old callers keep working\n\n    def mark_occupied(self) -> None:\n        self.status = Status.OCCUPIED\n\n    def mark_free(self) -> None:\n        self.status = Status.AVAILABLE\n\n    def mark_out_of_service(self) -> None:\n        self.status = Status.OUT_OF_SERVICE       # never picked again until staff reset it\n\n    def open(self) -> None:\n        pass  # the hardware raises DoorJammed if the door won't open\n\ndef deposit_package(self, size: Size) -> str:\n    \"\"\"Same steps; a door that won't open is taken out of service and we try the next compartment.\"\"\"\n    while True:                                       # loop: each jam removes one door, so it ends\n        compartment = self._get_available_compartment(size)\n        if compartment is None:                       # Edge 1: nothing left, jammed doors included\n            raise LockerError(f\"no available compartment of size {size.value}\")\n        try:\n            compartment.open()\n        except DoorJammed:\n            compartment.mark_out_of_service()         # out of the pool, so the next scan skips it\n            continue                                  # try the next compartment\n        compartment.mark_occupied()\n        token = self._generate_access_token(compartment)\n        self.access_tokens[token.get_code()] = token\n        return token.get_code()\n\ndef _get_available_compartment(self, size: Size):\n    for s in SIZE_ORDER[SIZE_ORDER.index(size):]:     # exact size, then larger\n        for c in self.compartments:\n            if c.get_size() == s and c.is_available():    # available, so occupied and broken doors are skipped\n                return c\n    return None\n",
      "notes": {}

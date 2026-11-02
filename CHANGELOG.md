@@ -1624,3 +1624,11 @@ short comment saying why it exists (next_id: every ticket needs a unique id). Th
 and class design solutions of the staged rounds each end with a short Say it block: how to talk your way to that
 answer, the class one starting from the methods and what each must read. The ten cheat sheets show the class one.
 Fields `clarify_say`, `req_say`, `ent_say`, `class_say` in `interviews/coding/lld/problems/*.py`. No charter deviation.
+
+**1 Nov 2026: LLD code reads on its own; SOLID and patterns inside Extensibility.** Every code sample in the seven
+staged rounds now carries comments on the lines that need a why, tied to the docstring's steps and edge cases.
+Implementation opens with a new box: the small classes (enums, error, the supporting classes such as Spot and the
+data-only Ticket, the entry class's __init__), so every class is shown implemented. Extensibility, in every round
+and on the ten cheat sheets, now holds a design check: the five SOLID principles as they show in that design, and
+a what-varies table that names a pattern only where something varies. Fields `skeleton` and `design_check` in
+`interviews/coding/lld/problems/*.py`. No charter deviation.

@@ -723,6 +723,73 @@ window.LOOP_CODING.parts.push({
      "text": "The interviewer changes the rules. **For each change, say which class it touches and what stays the same.** A good design changes in one place."
     },
     {
+     "t": "p",
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "File and Directory know their own size, FileSystem turns a path into an entry, and _parts, _resolve and _split hold every path rule."
+      ],
+      [
+       "Open/closed",
+       "A new filter is a new function handed to find. find is not edited."
+      ],
+      [
+       "Liskov substitution",
+       "File and Directory both work wherever an Entry does: size() returns bytes and walk() yields files."
+      ],
+      [
+       "Interface segregation",
+       "Entry has two methods, size and walk. Nothing wider to split yet."
+      ],
+      [
+       "Dependency inversion",
+       "find depends on a keep(entry) function, not on a concrete extension or size rule."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "File and folder behave alike",
+       "Composite",
+       "Entry, with File and Directory under it; Directory.size adds up its children"
+      ],
+      [
+       "Combining search conditions",
+       "Strategy, as functions",
+       "ext, min_size, all_of, any_of and not_ passed to find"
+      ],
+      [
+       "Million entries, size cached",
+       "No pattern: a field",
+       "a total on each Directory, updated up the parent chain"
+      ],
+      [
+       "Permissions",
+       "No pattern: one helper",
+       "_check(user, entry, action) before every operation"
+      ]
+     ]
+    },
+    {
      "t": "turn",
      "who": "Interviewer",
      "ask": "Find files that are .txt or .pdf and bigger than 100 bytes. How do you combine conditions?",
@@ -732,7 +799,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "filesystem-ext-2",
+     "id": "filesystem-ext-6",
      "title": "Filters as functions: find keeps what they accept",
      "code": "# a filter is any function: entry -> bool\ndef ext(x: str):\n    return lambda e: e.name.endswith(\".\" + x)     # returns a function, so it can be passed to find\n\ndef min_size(n: int):\n    return lambda e: e.size() >= n\n\ndef all_of(*filters):                    # AND: every filter must accept\n    return lambda e: all(f(e) for f in filters)\n\ndef any_of(*filters):                    # OR: one accepting filter is enough\n    return lambda e: any(f(e) for f in filters)\n\ndef not_(f):                             # NOT: flips one filter\n    return lambda e: not f(e)\n\n\nclass FileSystem:\n    ...\n\n    def find(self, path: str = \"/\", keep=lambda e: True) -> list:     # default keeps every file\n        return [p for p, e in self._resolve(path).walk(self._normal(path))\n                if isinstance(e, File) and keep(e)]       # the walk is unchanged; only the test is a parameter\n\n# fs.find(\"/\", all_of(ext(\"log\"), not_(min_size(10**6))))\n",
      "notes": {}
@@ -747,7 +814,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "filesystem-ext-4",
+     "id": "filesystem-ext-8",
      "title": "delete and move: two methods on FileSystem",
      "code": "def delete(self, path: str) -> None:\n    \"\"\"A file, or a folder with everything in it.\"\"\"\n    parent, name = self._split(path)                   # the same helper add_file uses\n    if name not in parent.children:\n        raise FsError(f\"no such path: {path}\")\n    del parent.children[name]                          # a folder takes its whole subtree with it\n\ndef move(self, src: str, dst_folder: str) -> None:\n    \"\"\"Detach the entry from its folder and attach it to another, under the same name.\"\"\"\n    parent, name = self._split(src)\n    if name not in parent.children:\n        raise FsError(f\"no such path: {src}\")\n    target = self._resolve(dst_folder)\n    if not isinstance(target, Directory):\n        raise FsError(f\"not a folder: {dst_folder}\")\n    if name in target.children:                        # would overwrite something\n        raise FsError(f\"already exists: {dst_folder}/{name}\")\n    # the trailing \"/\" makes \"/a/b\" not count as inside \"/a/bc\"; a folder can't go under itself\n    if (self._normal(dst_folder) + \"/\").startswith(self._normal(src) + \"/\"):\n        raise FsError(\"cannot move a folder into itself\")\n    target.children[name] = parent.children.pop(name)  # pop and attach last, after every check has passed\n",
      "notes": {}
@@ -1050,11 +1117,20 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "write",
+     "id": "cart-skeleton-w",
+     "q": "First the small classes: Kind, CartError, Item, Line, Discount, and the cart's __init__. Each line from the class design.",
+     "starter": "",
+     "hint": "Item is frozen data. Line is an item and a quantity. Discount holds a kind and a value and checks them. The cart holds lines by sku.",
+     "solution": "from dataclasses import dataclass\nfrom enum import Enum\n\n\nclass Kind(Enum):        # the two discount kinds; a typo'd string can't slip through\n    PERCENT = \"percent\"\n    FLAT = \"flat\"\n\n\nclass CartError(Exception):    # one error type the caller can catch for every refusal\n    pass\n\n\n@dataclass(frozen=True)\nclass Item:\n    \"\"\"A product as the shop sells it. Only data: it knows its price, not how many are bought.\"\"\"\n    sku: str             # the key the cart finds a line by\n    name: str\n    price: int           # cents, an int so totals never drift like floats\n\n\n@dataclass\nclass Line:\n    \"\"\"One row of the cart: an item and how many. Only data, the cart changes qty.\"\"\"\n    item: Item           # frozen Item, so the price can't change after it was added\n    qty: int             # not frozen: add and remove raise and lower it\n\n\nclass Discount:\n    \"\"\"One price rule, a kind and a value. It turns a total into a smaller total and knows nothing of the cart.\"\"\"\n\n    def __init__(self, kind: Kind, value: int):\n        # reject bad values at creation, so apply never sees one\n        if value < 0 or (kind is Kind.PERCENT and value > 100):\n            raise CartError(\"bad discount value\")\n        self.kind = kind\n        self.value = value       # a percent (0 to 100) or cents\n\n    def apply(self, total: int) -> int:\n        if self.kind is Kind.PERCENT:\n            # integer maths: total * value // 100 is the discount, rounded down to a whole cent\n            return total - total * self.value // 100\n        return max(0, total - self.value)                # flat: never below zero (Edge 2 of checkout)\n\n\nclass Cart:\n    \"\"\"The shopper's basket. It owns the lines and the sums; the pricing rule lives in Discount.\"\"\"\n\n    def __init__(self):\n        self.lines = {}          # sku -> Line: adding the same item again is one lookup",
+     "why": "These come straight from the - state lines. Writing them first means every method after only has to do its steps."
+    },
+    {
+     "t": "write",
      "id": "cart-m-add",
      "q": "add(item, qty): core logic and edge cases as comments, then the code.",
      "starter": "def add(self, item: Item, qty: int = 1) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
      "hint": "Find or start the line, raise the quantity. Edge: quantity not positive.",
-     "solution": "def add(self, item: Item, qty: int = 1) -> None:\n    \"\"\"\n    Core logic:\n      1. Find the line for this item, or start one at quantity 0\n      2. Raise its quantity\n    Edge cases:\n      1. Quantity zero or negative -> error\n    \"\"\"\n    if qty <= 0:\n        raise CartError(\"qty must be positive\")\n    line = self.lines.setdefault(item.sku, Line(item, 0))\n    line.qty += qty",
+     "solution": "def add(self, item: Item, qty: int = 1) -> None:\n    \"\"\"\n    Core logic:\n      1. Find the line for this item, or start one at quantity 0\n      2. Raise its quantity\n    Edge cases:\n      1. Quantity zero or negative -> error\n    \"\"\"\n    if qty <= 0:                                       # Edge 1: nothing to add, or a hidden remove\n        raise CartError(\"qty must be positive\")\n    # Step 1: setdefault returns the existing line, or stores a new one at 0 in the same call\n    line = self.lines.setdefault(item.sku, Line(item, 0))\n    line.qty += qty                                    # Step 2: adding again raises the count",
      "why": "setdefault gives 'add again raises the quantity' with no branch."
     },
     {
@@ -1063,7 +1139,7 @@ window.LOOP_CODING.parts.push({
      "q": "remove(sku, qty): core logic, edge cases, code.",
      "starter": "def remove(self, sku: str, qty: int = 1) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
      "hint": "Find the line, lower it, drop it at zero. Edges: not in the cart, bad quantity.",
-     "solution": "def remove(self, sku: str, qty: int = 1) -> None:\n    \"\"\"\n    Core logic:\n      1. Find the line\n      2. Lower its quantity\n      3. Drop the line when it reaches zero\n    Edge cases:\n      1. Item not in the cart -> error\n      2. Quantity zero, negative, or more than the cart holds -> error\n    \"\"\"\n    line = self.lines.get(sku)\n    if line is None:\n        raise CartError(f\"{sku} is not in the cart\")\n    if qty <= 0 or qty > line.qty:\n        raise CartError(f\"cannot remove {qty} of {sku}\")\n    line.qty -= qty\n    if line.qty == 0:\n        del self.lines[sku]",
+     "solution": "def remove(self, sku: str, qty: int = 1) -> None:\n    \"\"\"\n    Core logic:\n      1. Find the line\n      2. Lower its quantity\n      3. Drop the line when it reaches zero\n    Edge cases:\n      1. Item not in the cart -> error\n      2. Quantity zero, negative, or more than the cart holds -> error\n    \"\"\"\n    line = self.lines.get(sku)                         # Step 1: .get gives None instead of a KeyError\n    if line is None:                                   # Edge 1: nothing to remove\n        raise CartError(f\"{sku} is not in the cart\")\n    if qty <= 0 or qty > line.qty:                     # Edge 2: checked before changing anything\n        raise CartError(f\"cannot remove {qty} of {sku}\")\n    line.qty -= qty                                    # Step 2\n    if line.qty == 0:                                  # Step 3: no empty lines, so subtotal stays honest\n        del self.lines[sku]",
      "why": "Dropping the line at zero keeps subtotal and the line count honest."
     },
     {
@@ -1072,7 +1148,7 @@ window.LOOP_CODING.parts.push({
      "q": "subtotal(): what does it add up?",
      "starter": "def subtotal(self) -> int:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
      "hint": "Price times quantity, summed, in cents.",
-     "solution": "def subtotal(self) -> int:\n    \"\"\"\n    Core logic:\n      1. Add up price times quantity over every line, in cents\n    Edge cases:\n      1. Empty cart -> 0\n    \"\"\"\n    return sum(l.item.price * l.qty for l in self.lines.values())",
+     "solution": "def subtotal(self) -> int:\n    \"\"\"\n    Core logic:\n      1. Add up price times quantity over every line, in cents\n    Edge cases:\n      1. Empty cart -> 0\n    \"\"\"\n    # Step 1: price x qty per line, summed; sum() of nothing is 0, which covers Edge 1\n    return sum(l.item.price * l.qty for l in self.lines.values())",
      "why": "Checkout builds on it, so discounts never touch line prices."
     },
     {
@@ -1081,7 +1157,7 @@ window.LOOP_CODING.parts.push({
      "q": "checkout(discount): what does the discount get, and what comes back?",
      "starter": "def checkout(self, discount: Discount | None = None) -> int:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
      "hint": "Take the subtotal, let the discount change it, return it. None means no change.",
-     "solution": "def checkout(self, discount: Discount | None = None) -> int:\n    \"\"\"\n    Core logic:\n      1. Take the subtotal\n      2. Ask the discount for the new total; no discount means no change\n      3. Return the cents to pay; the cart is not emptied\n    Edge cases:\n      1. Empty cart -> 0\n      2. A flat discount bigger than the total -> 0, never negative (inside Discount.apply)\n    \"\"\"\n    total = self.subtotal()\n    return total if discount is None else discount.apply(total)",
+     "solution": "def checkout(self, discount: Discount | None = None) -> int:\n    \"\"\"\n    Core logic:\n      1. Take the subtotal\n      2. Ask the discount for the new total; no discount means no change\n      3. Return the cents to pay; the cart is not emptied\n    Edge cases:\n      1. Empty cart -> 0\n      2. A flat discount bigger than the total -> 0, never negative (inside Discount.apply)\n    \"\"\"\n    total = self.subtotal()                            # Step 1: an empty cart gives 0 here (Edge 1)\n    # Step 2: the cart doesn't know which rule it got; it hands over a total and takes one back\n    return total if discount is None else discount.apply(total)",
      "why": "The cart doesn't know which rule it was given. The 'never below zero' rule lives in Discount.apply, in one place."
     }
    ]
@@ -1095,6 +1171,73 @@ window.LOOP_CODING.parts.push({
      "text": "The interviewer changes the rules. **For each change, say which class it touches and what stays the same.** A good design changes in one place."
     },
     {
+     "t": "p",
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Item is a product, Line is one quantity, Discount is one price rule, Cart owns the lines and the sums."
+      ],
+      [
+       "Open/closed",
+       "Core: a new kind edits Discount.apply. After buy-one-get-one, a new rule is a new Discount subclass and Cart.checkout is untouched."
+      ],
+      [
+       "Liskov substitution",
+       "Percent, Flat and BuyOneGetOne work anywhere a Discount does: same apply(lines, total), still returns cents."
+      ],
+      [
+       "Interface segregation",
+       "Nothing to segregate yet: Discount has one method, apply."
+      ],
+      [
+       "Dependency inversion",
+       "checkout depends on the Discount it is handed, not on any one rule."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "A new discount rule (buy-one-get-one)",
+       "Strategy",
+       "Discount base class with Percent, Flat, BuyOneGetOne"
+      ],
+      [
+       "Stacking several discounts",
+       "No pattern: a list",
+       "checkout loops over the discounts in the order given"
+      ],
+      [
+       "A coupon that expires",
+       "No pattern: a field",
+       "optional expires on Discount, with now passed in"
+      ],
+      [
+       "How a percentage rounds",
+       "No pattern: one line",
+       "total * pct // 100 in Percent.apply"
+      ]
+     ]
+    },
+    {
      "t": "turn",
      "who": "Interviewer",
      "ask": "Add buy-one-get-one: every second pen is free.",
@@ -1104,9 +1247,9 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "cart-ext-2",
+     "id": "cart-ext-6",
      "title": "BOGO: Discount becomes a family",
-     "code": "class Discount:                      # now a base class; each rule is a subclass\n    def apply(self, lines: list, total: int) -> int:\n        raise NotImplementedError\n\n\nclass Percent(Discount):\n    def __init__(self, pct: int):\n        self.pct = pct\n\n    def apply(self, lines, total):\n        return total - total * self.pct // 100\n\n\nclass BuyOneGetOne(Discount):\n    def __init__(self, sku: str):\n        self.sku = sku\n\n    def apply(self, lines, total):\n        line = next((l for l in lines if l.item.sku == self.sku), None)\n        if line is None:\n            return total\n        return total - (line.qty // 2) * line.item.price    # every second one is free\n\n\n# Cart.checkout passes the lines as well: discount.apply(list(self.lines.values()), total)\n",
+     "code": "class Discount:                      # now a base class; each rule is a subclass\n    def apply(self, lines: list, total: int) -> int:\n        raise NotImplementedError    # a rule must say how it changes the total\n\n\nclass Percent(Discount):\n    def __init__(self, pct: int):\n        self.pct = pct\n\n    def apply(self, lines, total):\n        return total - total * self.pct // 100          # same maths as before, lines unused\n\n\nclass BuyOneGetOne(Discount):\n    def __init__(self, sku: str):\n        self.sku = sku               # which item the offer is for\n\n    def apply(self, lines, total):\n        # this rule needs the lines: it must know how many of the item are in the cart\n        line = next((l for l in lines if l.item.sku == self.sku), None)\n        if line is None:                                # item not in the cart: no change\n            return total\n        return total - (line.qty // 2) * line.item.price    # every second one is free\n\n\n# Cart.checkout passes the lines as well: discount.apply(list(self.lines.values()), total)\n",
      "notes": {}
     },
     {
@@ -1119,9 +1262,9 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "cart-ext-4",
+     "id": "cart-ext-8",
      "title": "Stacking: checkout loops",
-     "code": "def checkout(self, discounts: list) -> int:\n    \"\"\"Apply each discount to the running total, in the order given.\"\"\"\n    lines = list(self.lines.values())\n    total = self.subtotal()\n    for d in discounts:\n        total = d.apply(lines, total)\n    return total\n",
+     "code": "def checkout(self, discounts: list) -> int:\n    \"\"\"Apply each discount to the running total, in the order given.\"\"\"\n    lines = list(self.lines.values())                   # taken once, every discount sees the same lines\n    total = self.subtotal()\n    for d in discounts:\n        total = d.apply(lines, total)                   # each rule starts from the last rule's result\n    return total\n",
      "notes": {}
     },
     {
@@ -1134,9 +1277,9 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "cart-ext-6",
+     "id": "cart-ext-10",
      "title": "Expiry: the time is passed in",
-     "code": "class Discount:\n    def __init__(self, expires: datetime | None = None):\n        self.expires = expires\n\n    def is_expired(self, now: datetime) -> bool:\n        return self.expires is not None and now > self.expires\n\n\ndef checkout(self, discounts: list, now: datetime) -> int:\n    lines = list(self.lines.values())\n    total = self.subtotal()\n    for d in discounts:\n        if d.is_expired(now):\n            raise CartError(\"coupon expired\")\n        total = d.apply(lines, total)\n    return total\n",
+     "code": "class Discount:\n    def __init__(self, expires: datetime | None = None):\n        self.expires = expires       # None means it never expires\n\n    def is_expired(self, now: datetime) -> bool:\n        return self.expires is not None and now > self.expires\n\n\ndef checkout(self, discounts: list, now: datetime) -> int:    # now is passed in, never read here\n    lines = list(self.lines.values())\n    total = self.subtotal()\n    for d in discounts:\n        if d.is_expired(now):                           # an error, not a silent skip\n            raise CartError(\"coupon expired\")\n        total = d.apply(lines, total)\n    return total\n",
      "notes": {}
     },
     {
@@ -1211,7 +1354,7 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "cart-final-code",
      "title": "cart.py",
-     "code": "from dataclasses import dataclass\nfrom datetime import datetime\n\n\nclass CartError(Exception):\n    pass\n\n\n@dataclass(frozen=True)\nclass Item:\n    sku: str\n    name: str\n    price: int           # cents\n\n\n@dataclass\nclass Line:\n    item: Item\n    qty: int\n\n\nclass Discount:\n    def __init__(self, expires: datetime | None = None):\n        self.expires = expires\n\n    def is_expired(self, now: datetime) -> bool:\n        return self.expires is not None and now > self.expires\n\n    def apply(self, lines: list, total: int) -> int:\n        raise NotImplementedError\n\n\nclass Percent(Discount):\n    def __init__(self, pct: int, expires: datetime | None = None):\n        if not 0 <= pct <= 100:\n            raise CartError(\"percent must be 0 to 100\")\n        super().__init__(expires)\n        self.pct = pct\n\n    def apply(self, lines, total):\n        return total - total * self.pct // 100\n\n\nclass Flat(Discount):\n    def __init__(self, cents: int, expires: datetime | None = None):\n        super().__init__(expires)\n        self.cents = cents\n\n    def apply(self, lines, total):\n        return max(0, total - self.cents)\n\n\nclass BuyOneGetOne(Discount):\n    def __init__(self, sku: str, expires: datetime | None = None):\n        super().__init__(expires)\n        self.sku = sku\n\n    def apply(self, lines, total):\n        line = next((l for l in lines if l.item.sku == self.sku), None)\n        if line is None:\n            return total\n        return total - (line.qty // 2) * line.item.price\n\n\nclass Cart:\n    def __init__(self):\n        self.lines = {}          # sku -> Line\n\n    def add(self, item: Item, qty: int = 1) -> None:\n        \"\"\"\n        Core logic:\n          1. Find the line for this item, or start one at quantity 0\n          2. Raise its quantity\n        Edge cases:\n          1. Quantity zero or negative -> error\n        \"\"\"\n        if qty <= 0:\n            raise CartError(\"qty must be positive\")\n        line = self.lines.setdefault(item.sku, Line(item, 0))\n        line.qty += qty\n\n    def remove(self, sku: str, qty: int = 1) -> None:\n        \"\"\"\n        Core logic:\n          1. Find the line\n          2. Lower its quantity\n          3. Drop the line when it reaches zero\n        Edge cases:\n          1. Item not in the cart -> error\n          2. Quantity zero, negative, or more than the cart holds -> error\n        \"\"\"\n        line = self.lines.get(sku)\n        if line is None:\n            raise CartError(f\"{sku} is not in the cart\")\n        if qty <= 0 or qty > line.qty:\n            raise CartError(f\"cannot remove {qty} of {sku}\")\n        line.qty -= qty\n        if line.qty == 0:\n            del self.lines[sku]\n\n    def subtotal(self) -> int:\n        \"\"\"\n        Core logic:\n          1. Add up price times quantity over every line, in cents\n        Edge cases:\n          1. Empty cart -> 0\n        \"\"\"\n        return sum(l.item.price * l.qty for l in self.lines.values())\n\n    def checkout(self, discounts: list, now: datetime) -> int:\n        \"\"\"Apply each discount to the running total, in the order given; an expired coupon is an error.\"\"\"\n        lines = list(self.lines.values())\n        total = self.subtotal()\n        for d in discounts:\n            if d.is_expired(now):\n                raise CartError(\"coupon expired\")\n            total = d.apply(lines, total)\n        return total\n\n\n# ---- a quick run ----\ncart = Cart()\ncart.add(Item(\"p1\", \"pen\", 250), 4)\ncart.add(Item(\"b1\", \"book\", 1999))\nnow = datetime(2026, 11, 2)\nbogo = BuyOneGetOne(\"p1\")\nprint(cart.checkout([bogo], now))\nprint(cart.checkout([bogo, Percent(10), Flat(500)], now))\nprint(cart.checkout([Flat(500), Percent(10)], now))\ntry:\n    cart.checkout([Percent(10, expires=datetime(2026, 11, 1))], now)\nexcept CartError as e:\n    print(e)\n",
+     "code": "from dataclasses import dataclass\nfrom datetime import datetime\n\n\nclass CartError(Exception):    # one error type the caller can catch for every refusal\n    pass\n\n\n@dataclass(frozen=True)\nclass Item:\n    \"\"\"A product as the shop sells it. Only data: it knows its price, not how many are bought.\"\"\"\n    sku: str             # the key the cart finds a line by\n    name: str\n    price: int           # cents, an int so totals never drift like floats\n\n\n@dataclass\nclass Line:\n    \"\"\"One row of the cart: an item and how many. Only data, the cart changes qty.\"\"\"\n    item: Item           # frozen Item, so the price can't change after it was added\n    qty: int             # not frozen: add and remove raise and lower it\n\n\nclass Discount:\n    \"\"\"The base of every rule: carries the optional expiry, leaves apply to the subclasses.\"\"\"\n\n    def __init__(self, expires: datetime | None = None):\n        self.expires = expires       # None means it never expires\n\n    def is_expired(self, now: datetime) -> bool:\n        return self.expires is not None and now > self.expires\n\n    def apply(self, lines: list, total: int) -> int:\n        raise NotImplementedError    # each subclass says how it changes the total\n\n\nclass Percent(Discount):\n    \"\"\"A percentage off the running total.\"\"\"\n\n    def __init__(self, pct: int, expires: datetime | None = None):\n        if not 0 <= pct <= 100:                         # reject a bad percent at creation\n            raise CartError(\"percent must be 0 to 100\")\n        super().__init__(expires)\n        self.pct = pct\n\n    def apply(self, lines, total):\n        return total - total * self.pct // 100          # rounds the discount down to a whole cent\n\n\nclass Flat(Discount):\n    \"\"\"A fixed number of cents off, never taking the total below zero.\"\"\"\n\n    def __init__(self, cents: int, expires: datetime | None = None):\n        super().__init__(expires)\n        self.cents = cents\n\n    def apply(self, lines, total):\n        return max(0, total - self.cents)               # clamp: the total is never negative\n\n\nclass BuyOneGetOne(Discount):\n    \"\"\"Every second unit of one sku is free.\"\"\"\n\n    def __init__(self, sku: str, expires: datetime | None = None):\n        super().__init__(expires)\n        self.sku = sku               # the item the offer is for\n\n    def apply(self, lines, total):\n        # the only rule that reads the lines: it needs the quantity of its sku\n        line = next((l for l in lines if l.item.sku == self.sku), None)\n        if line is None:                                # item not in the cart: no change\n            return total\n        return total - (line.qty // 2) * line.item.price    # pairs of units, one of each pair free\n\n\nclass Cart:\n    \"\"\"The shopper's basket. It owns the lines and the sums; the pricing rule lives in Discount.\"\"\"\n\n    def __init__(self):\n        self.lines = {}          # sku -> Line: adding the same item again is one lookup\n\n    def add(self, item: Item, qty: int = 1) -> None:\n        \"\"\"\n        Core logic:\n          1. Find the line for this item, or start one at quantity 0\n          2. Raise its quantity\n        Edge cases:\n          1. Quantity zero or negative -> error\n        \"\"\"\n        if qty <= 0:                                       # Edge 1: nothing to add, or a hidden remove\n            raise CartError(\"qty must be positive\")\n        # Step 1: setdefault returns the existing line, or stores a new one at 0 in the same call\n        line = self.lines.setdefault(item.sku, Line(item, 0))\n        line.qty += qty                                    # Step 2: adding again raises the count\n\n    def remove(self, sku: str, qty: int = 1) -> None:\n        \"\"\"\n        Core logic:\n          1. Find the line\n          2. Lower its quantity\n          3. Drop the line when it reaches zero\n        Edge cases:\n          1. Item not in the cart -> error\n          2. Quantity zero, negative, or more than the cart holds -> error\n        \"\"\"\n        line = self.lines.get(sku)                         # Step 1: .get gives None instead of a KeyError\n        if line is None:                                   # Edge 1: nothing to remove\n            raise CartError(f\"{sku} is not in the cart\")\n        if qty <= 0 or qty > line.qty:                     # Edge 2: checked before changing anything\n            raise CartError(f\"cannot remove {qty} of {sku}\")\n        line.qty -= qty                                    # Step 2\n        if line.qty == 0:                                  # Step 3: no empty lines, so subtotal stays honest\n            del self.lines[sku]\n\n    def subtotal(self) -> int:\n        \"\"\"\n        Core logic:\n          1. Add up price times quantity over every line, in cents\n        Edge cases:\n          1. Empty cart -> 0\n        \"\"\"\n        # Step 1: price x qty per line, summed; sum() of nothing is 0, which covers Edge 1\n        return sum(l.item.price * l.qty for l in self.lines.values())\n\n    def checkout(self, discounts: list, now: datetime) -> int:\n        \"\"\"Apply each discount to the running total, in the order given; an expired coupon is an error.\"\"\"\n        lines = list(self.lines.values())                   # taken once, every discount sees the same lines\n        total = self.subtotal()\n        for d in discounts:\n            if d.is_expired(now):                           # now is passed in, so expiry is testable\n                raise CartError(\"coupon expired\")\n            total = d.apply(lines, total)                   # the order of the list is the order of the maths\n        return total\n\n\n# ---- a quick run ----\ncart = Cart()\ncart.add(Item(\"p1\", \"pen\", 250), 4)\ncart.add(Item(\"b1\", \"book\", 1999))\nnow = datetime(2026, 11, 2)                              # a fixed time, so the run is repeatable\nbogo = BuyOneGetOne(\"p1\")\nprint(cart.checkout([bogo], now))                        # 2 free pens: 2999 - 500\nprint(cart.checkout([bogo, Percent(10), Flat(500)], now))\nprint(cart.checkout([Flat(500), Percent(10)], now))      # same rules, other order, other total\ntry:\n    cart.checkout([Percent(10, expires=datetime(2026, 11, 1))], now)     # expired yesterday\nexcept CartError as e:\n    print(e)\n",
      "notes": {}
     },
     {
@@ -1484,6 +1627,73 @@ window.LOOP_CODING.parts.push({
      "text": "The interviewer changes the rules. **For each change, say which class it touches and what stays the same.** A good design changes in one place."
     },
     {
+     "t": "p",
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Book is the title, Copy is one physical copy and its borrower, Member holds loans and fines, Library runs checkout and return_copy."
+      ],
+      [
+       "Open/closed",
+       "A different fine is a change inside _fine_for alone. return_copy is not edited."
+      ],
+      [
+       "Liskov substitution",
+       "Nothing to substitute yet: no subclasses."
+      ],
+      [
+       "Interface segregation",
+       "Nothing to segregate yet: no interfaces. The notification callable has one call, on_hold_ready."
+      ],
+      [
+       "Dependency inversion",
+       "Library is handed a notifier callable and today's date, and does not know if it is email, SMS or a log line."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "Fine by member kind",
+       "Strategy, only if rules grow",
+       "today a lookup by Kind inside _fine_for"
+      ],
+      [
+       "Tell the member a copy is ready",
+       "Observer, only if several things react",
+       "today one injected callable, on_hold_ready"
+      ],
+      [
+       "Queue for a title that is out",
+       "No pattern: a field",
+       "a queue on Book and a held_for on Copy"
+      ],
+      [
+       "Two desks at once",
+       "No pattern: a lock",
+       "check free and set borrower as one step under a lock"
+      ]
+     ]
+    },
+    {
      "t": "turn",
      "who": "Interviewer",
      "ask": "All copies of a title are out. Members should be able to queue for it.",
@@ -1493,7 +1703,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "library-ext-2",
+     "id": "library-ext-6",
      "title": "Reservations: a queue on Book, a hold on Copy",
      "code": "class Book:\n    def __init__(self, isbn, title, author):\n        ...\n        self.waiting = deque()           # member ids, first in line first; a deque pops from the left in O(1)\n\n\nclass Copy:\n    def __init__(self, barcode, book):\n        ...\n        self.held_for = None             # member id, set when a returned copy goes to the queue\n\n\nclass Library:\n    def reserve(self, member_id: str, isbn: str) -> None:\n        book = self.books[isbn]                  # the queue is per title: people want the title, not one copy\n        # a copy that is neither lent nor held is free to borrow, so there is nothing to queue for\n        if any(c.borrower is None and c.held_for is None for c in book.copies):\n            raise LibraryError(\"a copy is on the shelf; borrow it\")\n        book.waiting.append(member_id)           # join the back of the line\n\n    # checkout: also reject when copy.held_for is set and is not this member; clear it when the holder borrows\n    # return_copy, last step: if copy.book.waiting: copy.held_for = copy.book.waiting.popleft()\n",
      "notes": {}
@@ -1508,7 +1718,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "library-ext-4",
+     "id": "library-ext-8",
      "title": "Notification: one callable",
      "code": "class Library:\n    def __init__(self, members, on_hold_ready=lambda member_id, barcode: None):\n        ...\n        self.on_hold_ready = on_hold_ready     # a plain callable; email, SMS or a log line plugs in here\n\n    # return_copy, after setting copy.held_for:\n    #     self.on_hold_ready(copy.held_for, copy.barcode)\n",
      "notes": {}
@@ -1523,7 +1733,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "library-ext-6",
+     "id": "library-ext-10",
      "title": "Fine by member kind: one helper",
      "code": "class Kind(Enum):                 # the kinds of member that pay different rates\n    ADULT = \"adult\"\n    STUDENT = \"student\"\n\n\nclass Library:\n    FINE_PER_DAY = {Kind.ADULT: 25, Kind.STUDENT: 10}     # cents; was one number, now a lookup by kind\n\n    def _fine_for(self, member: Member, days_late: int) -> int:\n        return days_late * self.FINE_PER_DAY[member.kind]  # the member argument finally earns its place\n\n\n# Member gets one more field: self.kind = kind. return_copy does not change.\n",
      "notes": {}
@@ -1881,6 +2091,73 @@ window.LOOP_CODING.parts.push({
      "text": "The interviewer changes the rules. **For each change, say which class it touches and what stays the same.** A good design changes in one place."
     },
     {
+     "t": "p",
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Car owns its floor, stops and movement in step(), ElevatorSystem chooses the car in request and select_floor."
+      ],
+      [
+       "Open/closed",
+       "A new dispatch policy is a new function given to the system. request, step and Car are not edited."
+      ],
+      [
+       "Liskov substitution",
+       "Any policy with the nearest_car signature works in place of it: (cars, floor, direction) returns a Car."
+      ],
+      [
+       "Interface segregation",
+       "Nothing to segregate yet: no interfaces. A policy is one function."
+      ],
+      [
+       "Dependency inversion",
+       "ElevatorSystem is handed choose instead of hard-coding nearest_car."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "Which car answers a call (priority, express)",
+       "Strategy",
+       "nearest_car passed in as choose; each policy is another function"
+      ],
+      [
+       "Car in service, out of service or full",
+       "State, only if each state behaves differently",
+       "today a status on Car would be enough"
+      ],
+      [
+       "Fire recall",
+       "No pattern: a method",
+       "recall() replaces every car's stops with floor 0"
+      ],
+      [
+       "Doors that hold open",
+       "No pattern: a field",
+       "a door counter on Car, no moving while open"
+      ]
+     ]
+    },
+    {
      "t": "turn",
      "who": "Interviewer",
      "ask": "Now add priority scheduling: some calls must be answered first, or a different policy altogether.",
@@ -1890,7 +2167,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "elevator-ext-2",
+     "id": "elevator-ext-6",
      "title": "Dispatch passed in as a function",
      "code": "def nearest_car(cars: list, floor: int, direction: Direction) -> Car:\n    \"\"\"The old _choose_car, now a plain function. Priority or express cars are another function like it.\"\"\"\n    def can_pick_up(c: Car) -> bool:\n        # idle, or going the same way with the floor still ahead\n        return c.direction is Direction.IDLE or (c.direction is direction and (floor - c.floor) * direction.value >= 0)\n    candidates = [c for c in cars if can_pick_up(c)] or cars\n    return min(candidates, key=lambda c: abs(c.floor - floor))    # nearest wins, first car on a tie\n\n\nclass ElevatorSystem:\n    def __init__(self, cars: int, floors: int, choose=nearest_car):\n        ...\n        self.choose = choose                 # was the method _choose_car; any function with this signature fits\n\n    def request(self, floor: int, direction: Direction) -> int:\n        ...\n        car = self.choose(self.cars, floor, direction)    # was self._choose_car(floor, direction)\n",
      "notes": {}
@@ -1905,7 +2182,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "elevator-ext-4",
+     "id": "elevator-ext-8",
      "title": "Emergency recall",
      "code": "class ElevatorSystem:\n    ...\n\n    def recall(self) -> None:\n        \"\"\"Emergency: forget every stop and send every car to the ground floor.\"\"\"\n        for car in self.cars:\n            car.stops = {0}          # replaces the set; Car.step already walks to its nearest (only) stop\n",
      "notes": {}
@@ -2208,11 +2485,20 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "write",
+     "id": "kvcache-skeleton-w",
+     "q": "First the small classes: Entry and the cache's __init__. Each line from the class design.",
+     "starter": "",
+     "hint": "Entry holds a value and an expiry and answers is_expired. The cache holds a capacity, a default ttl, a clock and an ordered dict.",
+     "solution": "import time\nfrom collections import OrderedDict\n\n\nclass Entry:\n    \"\"\"One stored value and when it expires. It answers is_expired; the cache decides what to do about it.\"\"\"\n\n    def __init__(self, value, expires_at: float | None):\n        self.value = value\n        self.expires_at = expires_at         # None means it never expires\n\n    def is_expired(self, now: float) -> bool:\n        # >= so a ttl of 10 means gone at exactly 10 seconds\n        return self.expires_at is not None and now >= self.expires_at\n\n\nclass Cache:\n    \"\"\"Holds the entries in recency order and runs put, get, delete and size.\"\"\"\n\n    def __init__(self, capacity: int, default_ttl: float | None = None, now=time.monotonic):\n        if capacity < 1:                     # a cache that holds nothing makes put meaningless\n            raise ValueError(\"capacity must be at least 1\")\n        self.capacity = capacity             # put compares the size to this to evict\n        self.default_ttl = default_ttl       # used when a put gives no ttl\n        self.now = now                       # a clock we can fake in a test\n        self.entries = OrderedDict()         # key -> Entry, least recently used first",
+     "why": "These come straight from the - state lines. Writing them first means every method after only has to do its steps."
+    },
+    {
+     "t": "write",
      "id": "kvcache-m-put",
      "q": "put(key, value, ttl): core logic and edge cases as comments, then the code.",
      "starter": "def put(self, key: str, value, ttl: float | None = None) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
      "hint": "Work out the expiry, store, move to the end, drop from the front while over capacity. Edges: replace, ttl of zero.",
-     "solution": "def put(self, key: str, value, ttl: float | None = None) -> None:\n    \"\"\"\n    Core logic:\n      1. Work out when the entry expires: now plus its ttl, or the default ttl\n      2. Store it and mark the key most recently used\n      3. If the cache is over capacity, drop the least recently used key\n    Edge cases:\n      1. Key already present -> replace the value and restart its ttl\n      2. ttl of zero or less -> error\n    \"\"\"\n    ttl = self.default_ttl if ttl is None else ttl\n    if ttl is not None and ttl <= 0:\n        raise ValueError(\"ttl must be positive\")\n    expires_at = None if ttl is None else self.now() + ttl\n    self.entries[key] = Entry(value, expires_at)\n    self.entries.move_to_end(key)\n    while len(self.entries) > self.capacity:\n        self.entries.popitem(last=False)",
+     "solution": "def put(self, key: str, value, ttl: float | None = None) -> None:\n    \"\"\"\n    Core logic:\n      1. Work out when the entry expires: now plus its ttl, or the default ttl\n      2. Store it and mark the key most recently used\n      3. If the cache is over capacity, drop the least recently used key\n    Edge cases:\n      1. Key already present -> replace the value and restart its ttl\n      2. ttl of zero or less -> error\n    \"\"\"\n    ttl = self.default_ttl if ttl is None else ttl     # Step 1: a put's own ttl beats the default\n    if ttl is not None and ttl <= 0:                   # Edge 2: would be expired on arrival\n        raise ValueError(\"ttl must be positive\")\n    expires_at = None if ttl is None else self.now() + ttl     # an absolute time, so get compares to now\n    # Step 2 and Edge 1: assigning replaces any old entry, so the ttl restarts\n    self.entries[key] = Entry(value, expires_at)\n    self.entries.move_to_end(key)                      # the end is the most recently used\n    while len(self.entries) > self.capacity:           # Step 3: over capacity\n        self.entries.popitem(last=False)               # last=False pops the front: least recently used",
      "why": "Replacing a key moves it to the end too, so a put counts as a use. The loop is a while because capacity never changes, but it is harmless."
     },
     {
@@ -2221,7 +2507,7 @@ window.LOOP_CODING.parts.push({
      "q": "get(key): core logic, edge cases, code.",
      "starter": "def get(self, key: str):\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
      "hint": "Look up, check expiry, mark used, return. Edge: missing.",
-     "solution": "def get(self, key: str):\n    \"\"\"\n    Core logic:\n      1. Look the key up\n      2. If it has expired, remove it and treat it as missing\n      3. Otherwise mark it most recently used and return the value\n    Edge cases:\n      1. Missing key -> None (values are never None)\n    \"\"\"\n    entry = self.entries.get(key)\n    if entry is None:\n        return None\n    if entry.is_expired(self.now()):\n        del self.entries[key]\n        return None\n    self.entries.move_to_end(key)\n    return entry.value",
+     "solution": "def get(self, key: str):\n    \"\"\"\n    Core logic:\n      1. Look the key up\n      2. If it has expired, remove it and treat it as missing\n      3. Otherwise mark it most recently used and return the value\n    Edge cases:\n      1. Missing key -> None (values are never None)\n    \"\"\"\n    entry = self.entries.get(key)                      # Step 1: .get gives None instead of a KeyError\n    if entry is None:                                  # Edge 1\n        return None\n    if entry.is_expired(self.now()):                   # Step 2: the entry knows its own expiry\n        del self.entries[key]                          # remove it on this read; no background job\n        return None\n    self.entries.move_to_end(key)                      # Step 3: a read counts as a use\n    return entry.value",
      "why": "An expired key is removed on the read, which is why size() can count dead entries. A hit changes the order, which matters for threads."
     },
     {
@@ -2230,7 +2516,7 @@ window.LOOP_CODING.parts.push({
      "q": "delete(key): what does it return?",
      "starter": "def delete(self, key: str) -> bool:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
      "hint": "Pop the key; say whether it was there.",
-     "solution": "def delete(self, key: str) -> bool:\n    \"\"\"\n    Core logic:\n      1. Remove the key if it is there\n      2. Say whether anything was removed\n    Edge cases:\n      1. Missing key -> False\n    \"\"\"\n    return self.entries.pop(key, None) is not None",
+     "solution": "def delete(self, key: str) -> bool:\n    \"\"\"\n    Core logic:\n      1. Remove the key if it is there\n      2. Say whether anything was removed\n    Edge cases:\n      1. Missing key -> False\n    \"\"\"\n    # pop with a default never raises (Edge 1); an Entry is never None, so None means it was missing\n    return self.entries.pop(key, None) is not None",
      "why": "pop with a default never raises, and the boolean tells the caller whether anything happened."
     },
     {
@@ -2239,7 +2525,7 @@ window.LOOP_CODING.parts.push({
      "q": "size(): what does it count?",
      "starter": "def size(self) -> int:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
      "hint": "The entries held. Say what that includes.",
-     "solution": "def size(self) -> int:\n    \"\"\"\n    Core logic:\n      1. Count the entries held\n    Edge cases:\n      1. Expired entries nobody has touched yet still count\n    \"\"\"\n    return len(self.entries)",
+     "solution": "def size(self) -> int:\n    \"\"\"\n    Core logic:\n      1. Count the entries held\n    Edge cases:\n      1. Expired entries nobody has touched yet still count\n    \"\"\"\n    return len(self.entries)                           # no scan for expired ones: that is Edge 1, by design",
      "why": "It includes expired entries nobody touched. Say it before they ask."
     }
    ]
@@ -2251,6 +2537,73 @@ window.LOOP_CODING.parts.push({
     {
      "t": "p",
      "text": "The interviewer changes the rules. **For each change, say which class it touches and what stays the same.** A good design changes in one place."
+    },
+    {
+     "t": "p",
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Entry knows its own expiry; Cache owns the order, the capacity and put, get, delete, size."
+      ],
+      [
+       "Open/closed",
+       "Today a new eviction rule edits put and get. Pulling eviction into a policy makes it a new class instead."
+      ],
+      [
+       "Liskov substitution",
+       "Nothing to substitute yet: no subclasses. An LFU policy would have to honour on_use and victim like the LRU one."
+      ],
+      [
+       "Interface segregation",
+       "Nothing to segregate yet: no interfaces, and callers use all four Cache methods."
+      ],
+      [
+       "Dependency inversion",
+       "Cache is handed its clock now instead of calling time itself; eviction is still built in."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "The eviction policy (LFU)",
+       "Strategy",
+       "a policy with on_use(key) and victim() that Cache asks"
+      ],
+      [
+       "Several threads",
+       "No pattern: a lock",
+       "self.lock around every public method, reads too"
+      ],
+      [
+       "Expired entries piling up",
+       "No pattern: a method",
+       "purge_expired() called on a timer"
+      ],
+      [
+       "Load on a miss",
+       "No pattern: a function passed in",
+       "get_or_load(key, loader), one caller loads and the rest wait"
+      ]
+     ]
     },
     {
      "t": "turn",
@@ -2265,9 +2618,9 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "kvcache-ext-2",
+     "id": "kvcache-ext-6",
      "title": "Thread safety: one lock, taken by every public method",
-     "code": "import threading\n\n\nclass Cache:\n    def __init__(self, capacity, default_ttl=None, now=time.monotonic):\n        ...\n        self.lock = threading.Lock()\n\n    def get(self, key):\n        with self.lock:              # get changes the order, so reads lock too\n            entry = self.entries.get(key)\n            ...\n\n    def put(self, key, value, ttl=None):\n        with self.lock:\n            ...\n\n    # delete and size take the lock the same way\n",
+     "code": "import threading\n\n\nclass Cache:\n    def __init__(self, capacity, default_ttl=None, now=time.monotonic):\n        ...\n        self.lock = threading.Lock()    # one lock for the whole cache\n\n    def get(self, key):\n        with self.lock:              # get changes the order, so reads lock too\n            entry = self.entries.get(key)\n            ...\n\n    def put(self, key, value, ttl=None):\n        with self.lock:              # find, store and evict as one step\n            ...\n\n    # delete and size take the lock the same way\n",
      "notes": {}
     },
     {
@@ -2366,7 +2719,7 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "kvcache-final-code",
      "title": "kvcache.py",
-     "code": "import threading\nimport time\nfrom collections import OrderedDict\n\n\nclass Entry:\n    def __init__(self, value, expires_at: float | None):\n        self.value = value\n        self.expires_at = expires_at         # None means it never expires\n\n    def is_expired(self, now: float) -> bool:\n        return self.expires_at is not None and now >= self.expires_at\n\n\nclass Cache:\n    def __init__(self, capacity: int, default_ttl: float | None = None, now=time.monotonic):\n        if capacity < 1:\n            raise ValueError(\"capacity must be at least 1\")\n        self.capacity = capacity\n        self.default_ttl = default_ttl\n        self.now = now                       # a clock we can fake in a test\n        self.entries = OrderedDict()         # key -> Entry, least recently used first\n        self.lock = threading.Lock()         # one lock around every change\n\n    def put(self, key: str, value, ttl: float | None = None) -> None:\n        ttl = self.default_ttl if ttl is None else ttl\n        if ttl is not None and ttl <= 0:\n            raise ValueError(\"ttl must be positive\")\n        with self.lock:\n            expires_at = None if ttl is None else self.now() + ttl\n            self.entries[key] = Entry(value, expires_at)\n            self.entries.move_to_end(key)\n            while len(self.entries) > self.capacity:\n                self.entries.popitem(last=False)\n\n    def get(self, key: str):\n        with self.lock:                      # get changes the order, so reads lock too\n            entry = self.entries.get(key)\n            if entry is None:\n                return None\n            if entry.is_expired(self.now()):\n                del self.entries[key]\n                return None\n            self.entries.move_to_end(key)\n            return entry.value\n\n    def delete(self, key: str) -> bool:\n        with self.lock:\n            return self.entries.pop(key, None) is not None\n\n    def size(self) -> int:\n        with self.lock:\n            return len(self.entries)\n\n    def purge_expired(self) -> int:\n        \"\"\"Drop every expired entry and say how many. A timer or a background thread calls this.\"\"\"\n        with self.lock:\n            now = self.now()\n            dead = [k for k, e in self.entries.items() if e.is_expired(now)]\n            for k in dead:\n                del self.entries[k]\n            return len(dead)\n\n\n# ---- a quick run ----\nclass FakeClock:\n    def __init__(self):\n        self.t = 0.0\n\n    def __call__(self):\n        return self.t\n\n\ndef hammer(cache, base):\n    for i in range(1000):\n        cache.put(f\"{base}-{i}\", i)\n        cache.get(f\"{base}-{i // 2}\")\n\n\nclock = FakeClock()\ncache = Cache(capacity=100, default_ttl=10, now=clock)\nthreads = [threading.Thread(target=hammer, args=(cache, n)) for n in range(8)]\nfor t in threads:\n    t.start()\nfor t in threads:\n    t.join()\nprint(cache.size())\nclock.t += 11\nprint(cache.purge_expired(), cache.size())\n",
+     "code": "import threading\nimport time\nfrom collections import OrderedDict\n\n\nclass Entry:\n    \"\"\"One stored value and when it expires. It answers is_expired; the cache decides what to do about it.\"\"\"\n\n    def __init__(self, value, expires_at: float | None):\n        self.value = value\n        self.expires_at = expires_at         # None means it never expires\n\n    def is_expired(self, now: float) -> bool:\n        # >= so a ttl of 10 means gone at exactly 10 seconds\n        return self.expires_at is not None and now >= self.expires_at\n\n\nclass Cache:\n    \"\"\"Holds the entries in recency order and runs put, get, delete and size.\"\"\"\n\n    def __init__(self, capacity: int, default_ttl: float | None = None, now=time.monotonic):\n        if capacity < 1:                     # a cache that holds nothing makes put meaningless\n            raise ValueError(\"capacity must be at least 1\")\n        self.capacity = capacity             # put compares the size to this to evict\n        self.default_ttl = default_ttl       # used when a put gives no ttl\n        self.now = now                       # a clock we can fake in a test\n        self.entries = OrderedDict()         # key -> Entry, least recently used first\n        self.lock = threading.Lock()         # one lock around every change\n\n    def put(self, key: str, value, ttl: float | None = None) -> None:\n        \"\"\"Same steps; the store and the eviction happen under one lock.\"\"\"\n        ttl = self.default_ttl if ttl is None else ttl\n        if ttl is not None and ttl <= 0:                   # checked before the lock: it touches no shared state\n            raise ValueError(\"ttl must be positive\")\n        with self.lock:                                    # store and evict as one step\n            expires_at = None if ttl is None else self.now() + ttl\n            self.entries[key] = Entry(value, expires_at)\n            self.entries.move_to_end(key)\n            while len(self.entries) > self.capacity:       # inside the lock, so no thread sees it over capacity\n                self.entries.popitem(last=False)\n\n    def get(self, key: str):\n        \"\"\"Same steps; the whole read is under the lock because a hit reorders.\"\"\"\n        with self.lock:                      # get changes the order, so reads lock too\n            entry = self.entries.get(key)\n            if entry is None:\n                return None\n            if entry.is_expired(self.now()):\n                del self.entries[key]        # removing is a write too\n                return None\n            self.entries.move_to_end(key)\n            return entry.value\n\n    def delete(self, key: str) -> bool:\n        \"\"\"Same steps, under the lock.\"\"\"\n        with self.lock:\n            return self.entries.pop(key, None) is not None\n\n    def size(self) -> int:\n        \"\"\"Same steps, under the lock so the count never lands mid-change.\"\"\"\n        with self.lock:\n            return len(self.entries)\n\n    def purge_expired(self) -> int:\n        \"\"\"Drop every expired entry and say how many. A timer or a background thread calls this.\"\"\"\n        with self.lock:\n            now = self.now()                               # read the clock once, so every entry is judged at one moment\n            # collect first: deleting from a dict while looping over it raises an error\n            dead = [k for k, e in self.entries.items() if e.is_expired(now)]\n            for k in dead:\n                del self.entries[k]\n            return len(dead)                               # lets the caller log how much was cleaned\n\n\n# ---- a quick run ----\nclass FakeClock:                             # time we move by hand, so the run needs no sleeping\n    def __init__(self):\n        self.t = 0.0\n\n    def __call__(self):\n        return self.t\n\n\ndef hammer(cache, base):                     # each thread writes its own keys and reads recent ones\n    for i in range(1000):\n        cache.put(f\"{base}-{i}\", i)\n        cache.get(f\"{base}-{i // 2}\")\n\n\nclock = FakeClock()\ncache = Cache(capacity=100, default_ttl=10, now=clock)\nthreads = [threading.Thread(target=hammer, args=(cache, n)) for n in range(8)]    # 8 threads, one shared cache\nfor t in threads:\n    t.start()\nfor t in threads:\n    t.join()\nprint(cache.size())\nclock.t += 11                                # every entry is now past its ttl\nprint(cache.purge_expired(), cache.size())\n",
      "notes": {}
     },
     {

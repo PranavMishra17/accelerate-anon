@@ -287,6 +287,73 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Compartment owns its occupied flag, AccessToken owns a code and its expiry, Locker runs deposit_package and pickup."
+      ],
+      [
+       "Open/closed",
+       "Size fallback is a change inside _get_available_compartment alone. deposit_package is not edited."
+      ],
+      [
+       "Liskov substitution",
+       "A Compartment subclass such as JammedCompartment still answers open, mark_occupied and mark_free the same way."
+      ],
+      [
+       "Interface segregation",
+       "Nothing to segregate yet: no interfaces, and each class has a handful of methods."
+      ],
+      [
+       "Dependency inversion",
+       "Locker is handed its compartments and a clock (now), instead of building them or calling datetime.now itself."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "Which compartment fits (larger sizes allowed)",
+       "Strategy, only if asked",
+       "today one helper, _get_available_compartment, makes the choice"
+      ],
+      [
+       "Compartment condition (available, occupied, out of service)",
+       "State, only if each status behaves differently",
+       "today a Status enum is enough"
+      ],
+      [
+       "Broken doors and the reserve step",
+       "No pattern: a field",
+       "a status on Compartment and a RESERVED value"
+      ],
+      [
+       "Two drivers at once",
+       "No pattern: a lock",
+       "find and mark occupied as one step under a lock"
+      ]
+     ]
+    },
+    {
+     "t": "p",
      "text": "**Lines that set you apart**"
     },
     {
@@ -698,6 +765,73 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
+     "text": "**Design check.** Check each choice against SOLID in a minute. The one real variation here is movement, and the Piece subclasses already hold it."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Game runs turns and status, Board holds squares, Piece decides its own move, Move records one move."
+      ],
+      [
+       "Open/closed",
+       "A new kind of piece is a new Piece subclass with its own can_move. make_move is not edited."
+      ],
+      [
+       "Liskov substitution",
+       "Any Piece subclass works where Piece does: same can_move and path_clear contract."
+      ],
+      [
+       "Interface segregation",
+       "No interface until something varies. Piece has one question, can_move."
+      ],
+      [
+       "Dependency inversion",
+       "Nothing is injected yet. Game builds its Board; hand it one if tests or variants need it."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "Movement rule per piece",
+       "No pattern: subclass",
+       "each Piece has its own can_move"
+      ],
+      [
+       "Castling, en passant, promotion",
+       "No pattern: a flag",
+       "has_moved on Piece, extra effect on Move"
+      ],
+      [
+       "Timers per player",
+       "Observer, only if others must hear",
+       "a Clock Game calls where the turn switches"
+      ],
+      [
+       "Check and checkmate",
+       "No pattern: simulate",
+       "try the move on Board, undo if the king is attacked"
+      ]
+     ]
+    },
+    {
+     "t": "p",
      "text": "**Lines that set you apart**"
     },
     {
@@ -872,6 +1006,73 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
+     "text": "**Design check.** Check each choice against SOLID in a minute. Split types are an enum today, and a Strategy appears only when more arrive."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Expense records one event, Ledger keeps net balances, Splitwise is the entry point."
+      ],
+      [
+       "Open/closed",
+       "Today a new split type edits add_expense. It becomes a SplitStrategy once there are more than two."
+      ],
+      [
+       "Liskov substitution",
+       "Not yet: no subclasses. Every SplitStrategy would have to return shares that sum to the amount."
+      ],
+      [
+       "Interface segregation",
+       "No interface until something varies. A strategy would have one method, shares."
+      ],
+      [
+       "Dependency inversion",
+       "Splitwise builds its Ledger. Nothing is injected yet."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "Split types (percentage, shares)",
+       "Strategy",
+       "a SplitStrategy per type; add_expense picks one"
+      ],
+      [
+       "Currencies",
+       "No pattern: a field",
+       "a rate stored on Expense, converted at add time"
+      ],
+      [
+       "Simplify debts",
+       "No pattern: a read",
+       "net each user over the Ledger; nothing written changes"
+      ],
+      [
+       "Leaving with a balance",
+       "No pattern: a Group class",
+       "block until zero; ledger updates under one lock"
+      ]
+     ]
+    },
+    {
+     "t": "p",
      "text": "**Lines that set you apart**"
     },
     {
@@ -1033,6 +1234,73 @@ window.LOOP_CODING.parts.push({
       "Two users, same seat: check-all-then-mark under one lock per show, or a conditional update; all or nothing",
       "Cancellation and refunds: a Booking state plus a RefundPolicy by time before the show",
       "Movies to trains or events: Show becomes Event or Journey; Seat and ShowSeat unchanged"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**Design check.** Check each choice against SOLID in a minute. Pricing and refunds are the rules that move, and nothing else needs a pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Seat is the physical seat, ShowSeat the state for one show, Booking the confirmed result, BookingService the entry."
+      ],
+      [
+       "Open/closed",
+       "Pricing and refunds are not in hold or confirm yet. A PricingStrategy or RefundPolicy is added, not edited in."
+      ],
+      [
+       "Liskov substitution",
+       "Not yet: no subclasses. A PricingStrategy would return a total for the show seats."
+      ],
+      [
+       "Interface segregation",
+       "No interface until something varies. Each policy would have one method."
+      ],
+      [
+       "Dependency inversion",
+       "BookingService looks up Shows itself. Policies would be handed to it."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "Seat types and prices",
+       "Strategy",
+       "a PricingStrategy takes show seats, returns a total"
+      ],
+      [
+       "Cancellation refunds",
+       "Strategy",
+       "a RefundPolicy by time before the show"
+      ],
+      [
+       "Two users, same seat",
+       "No pattern: a lock",
+       "check all then mark held under one lock per show"
+      ],
+      [
+       "Trains or events",
+       "No pattern: rename",
+       "Show becomes Event; Seat and ShowSeat stay"
+      ]
      ]
     },
     {
@@ -1212,6 +1480,73 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
+     "text": "**Design check.** Check each choice against SOLID in a minute. States and payment are what grow, and each gets a pattern only when it does."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Slot holds a product, VendingMachine runs insert_coin, select and cancel. Change-making moves out once it can say no."
+      ],
+      [
+       "Open/closed",
+       "Today a new state edits an if-chain in the machine. As State classes, a new state is a new class."
+      ],
+      [
+       "Liskov substitution",
+       "Not yet: no subclasses. Every State class would answer insert_coin, select and cancel."
+      ],
+      [
+       "Interface segregation",
+       "No interface until something varies. A payment method would have one job: take an amount or fail."
+      ],
+      [
+       "Dependency inversion",
+       "VendingMachine reads its own balance. A Payment object would be handed to it."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "More states (dispensing, maintenance)",
+       "State",
+       "each state a class; the machine delegates to the current one"
+      ],
+      [
+       "Card payments",
+       "Strategy",
+       "coins and card both take an amount or fail"
+      ],
+      [
+       "Cannot make change",
+       "No pattern: a helper",
+       "a change function on coin counts; select asks first"
+      ],
+      [
+       "Power cut mid-dispense",
+       "No pattern: one step",
+       "update product count and balance together"
+      ]
+     ]
+    },
+    {
+     "t": "p",
      "text": "**Lines that set you apart**"
     },
     {
@@ -1387,6 +1722,73 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Car owns its floor, stops and movement in step(), ElevatorSystem chooses the car in request and select_floor."
+      ],
+      [
+       "Open/closed",
+       "A new dispatch policy is a new function given to the system. request, step and Car are not edited."
+      ],
+      [
+       "Liskov substitution",
+       "Any policy with the nearest_car signature works in place of it: (cars, floor, direction) returns a Car."
+      ],
+      [
+       "Interface segregation",
+       "Nothing to segregate yet: no interfaces. A policy is one function."
+      ],
+      [
+       "Dependency inversion",
+       "ElevatorSystem is handed choose instead of hard-coding nearest_car."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "Which car answers a call (priority, express)",
+       "Strategy",
+       "nearest_car passed in as choose; each policy is another function"
+      ],
+      [
+       "Car in service, out of service or full",
+       "State, only if each state behaves differently",
+       "today a status on Car would be enough"
+      ],
+      [
+       "Fire recall",
+       "No pattern: a method",
+       "recall() replaces every car's stops with floor 0"
+      ],
+      [
+       "Doors that hold open",
+       "No pattern: a field",
+       "a door counter on Car, no moving while open"
+      ]
+     ]
+    },
+    {
+     "t": "p",
      "text": "**Lines that set you apart**"
     },
     {
@@ -1554,6 +1956,73 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
+     "text": "**Design check.** Check each choice against SOLID in a minute. The algorithm is what varies, and try_take is the seam."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Rule holds numbers, TokenBucket does the refill and take for one key, RateLimiter maps keys to buckets."
+      ],
+      [
+       "Open/closed",
+       "A new algorithm is a new class with try_take(now). allow is not edited."
+      ],
+      [
+       "Liskov substitution",
+       "A fixed or sliding window class works anywhere TokenBucket does: same try_take answer, allowed or retry-after."
+      ],
+      [
+       "Interface segregation",
+       "No interface until something varies. The bucket has one call, try_take."
+      ],
+      [
+       "Dependency inversion",
+       "The clock is a function passed in, so tests fake it. The limiter is handed its Rule."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "Fixed or sliding window",
+       "Strategy",
+       "each algorithm a class with try_take(now)"
+      ],
+      [
+       "Idle keys pile up",
+       "No pattern: a map",
+       "drop full idle buckets, or LRU eviction"
+      ],
+      [
+       "Two requests, one key",
+       "No pattern: a lock",
+       "refill and take as one step per key"
+      ],
+      [
+       "Many servers",
+       "No pattern: a store",
+       "buckets in Redis, one atomic script, the store's clock"
+      ]
+     ]
+    },
+    {
+     "t": "p",
      "text": "**Lines that set you apart**"
     },
     {
@@ -1715,6 +2184,73 @@ window.LOOP_CODING.parts.push({
       "Two people, one room: choose-and-add as one step: a lock (per room), or a database constraint",
       "Equipment filter: a set on Room; filter, then pick the smallest; a RoomSelector if rules grow",
       "Notifications: a Notifier called after book and cancel succeed"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**Design check.** Check each choice against SOLID in a minute. Room choice and notification are the parts that may vary."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "Interval owns overlap, Room owns is_free, Booking records one booking, Scheduler picks a room and books it."
+      ],
+      [
+       "Open/closed",
+       "A new room rule is a RoomSelector, added not edited. book is not changed."
+      ],
+      [
+       "Liskov substitution",
+       "Not yet: no subclasses. Any RoomSelector would take rooms and needs and return one room."
+      ],
+      [
+       "Interface segregation",
+       "No interface until something varies. A Notifier would have one call, notify."
+      ],
+      [
+       "Dependency inversion",
+       "Scheduler holds its rooms and picks the smallest itself. A selector or Notifier would be handed in."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "Equipment and room rules",
+       "Strategy, only if rules grow",
+       "a RoomSelector takes rooms and needs"
+      ],
+      [
+       "Notify on book and cancel",
+       "Observer",
+       "a Notifier called after book and cancel succeed"
+      ],
+      [
+       "Recurring meetings",
+       "No pattern: a list",
+       "expand to intervals; check all, book all or none"
+      ],
+      [
+       "Two people, last room",
+       "No pattern: a lock",
+       "choose and add as one step"
+      ]
      ]
     },
     {
@@ -1888,6 +2424,73 @@ window.LOOP_CODING.parts.push({
       "Symlink loops: a visited set of real paths; skip a folder already seen",
       "New criteria: each is a new Filter class; nothing else changes",
       "Huge trees: stream with a generator; explicit stack; parallel subtrees; a result limit"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**Design check.** Check each choice against SOLID in a minute. Here the patterns are the design: a tree of files and a Filter per question."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Principle",
+      "Where it shows here"
+     ],
+     "rows": [
+      [
+       "Single responsibility",
+       "File and Directory hold the tree, Filter answers one question, FileSearcher walks and yields."
+      ],
+      [
+       "Open/closed",
+       "A new criterion is a new Filter class. search and the existing filters stay as they are."
+      ],
+      [
+       "Liskov substitution",
+       "SizeFilter, ExtensionFilter and And, Or, Not all work wherever Filter does: matches(file) returns a boolean."
+      ],
+      [
+       "Interface segregation",
+       "Filter has one method, matches. No searcher is forced to know about size or extension."
+      ],
+      [
+       "Dependency inversion",
+       "search is handed a Filter instead of building the test itself."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**What varies decides the pattern.** If nothing varies, no pattern."
+    },
+    {
+     "t": "table",
+     "head": [
+      "What could change",
+      "Pattern",
+      "In this design"
+     ],
+     "rows": [
+      [
+       "New criteria (owner, modified)",
+       "Strategy",
+       "each a new Filter; the searcher is untouched"
+      ],
+      [
+       "Combined queries (and, or, not)",
+       "Composite",
+       "And, Or, Not are Filters that hold Filters"
+      ],
+      [
+       "Files inside folders",
+       "Composite",
+       "Directory holds Files and Directories, walked with a stack"
+      ],
+      [
+       "Symlink loops, huge trees",
+       "No pattern: a set and a generator",
+       "visited set of real paths; yield matches"
+      ]
      ]
     },
     {

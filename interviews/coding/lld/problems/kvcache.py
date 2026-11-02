@@ -24,14 +24,15 @@ PUT = method('''
           1. Key already present -> replace the value and restart its ttl
           2. ttl of zero or less -> error
         """
-        ttl = self.default_ttl if ttl is None else ttl
-        if ttl is not None and ttl <= 0:
+        ttl = self.default_ttl if ttl is None else ttl     # Step 1: a put's own ttl beats the default
+        if ttl is not None and ttl <= 0:                   # Edge 2: would be expired on arrival
             raise ValueError("ttl must be positive")
-        expires_at = None if ttl is None else self.now() + ttl
+        expires_at = None if ttl is None else self.now() + ttl     # an absolute time, so get compares to now
+        # Step 2 and Edge 1: assigning replaces any old entry, so the ttl restarts
         self.entries[key] = Entry(value, expires_at)
-        self.entries.move_to_end(key)
-        while len(self.entries) > self.capacity:
-            self.entries.popitem(last=False)
+        self.entries.move_to_end(key)                      # the end is the most recently used
+        while len(self.entries) > self.capacity:           # Step 3: over capacity
+            self.entries.popitem(last=False)               # last=False pops the front: least recently used
 ''')
 
 GET = method('''
@@ -44,13 +45,13 @@ GET = method('''
         Edge cases:
           1. Missing key -> None (values are never None)
         """
-        entry = self.entries.get(key)
-        if entry is None:
+        entry = self.entries.get(key)                      # Step 1: .get gives None instead of a KeyError
+        if entry is None:                                  # Edge 1
             return None
-        if entry.is_expired(self.now()):
-            del self.entries[key]
+        if entry.is_expired(self.now()):                   # Step 2: the entry knows its own expiry
+            del self.entries[key]                          # remove it on this read; no background job
             return None
-        self.entries.move_to_end(key)
+        self.entries.move_to_end(key)                      # Step 3: a read counts as a use
         return entry.value
 ''')
 
@@ -63,6 +64,7 @@ DELETE = method('''
         Edge cases:
           1. Missing key -> False
         """
+        # pop with a default never raises (Edge 1); an Entry is never None, so None means it was missing
         return self.entries.pop(key, None) is not None
 ''')
 
@@ -74,7 +76,7 @@ SIZE = method('''
         Edge cases:
           1. Expired entries nobody has touched yet still count
         """
-        return len(self.entries)
+        return len(self.entries)                           # no scan for expired ones: that is Edge 1, by design
 ''')
 
 HEAD = D('''\
@@ -83,11 +85,14 @@ HEAD = D('''\
 
 
     class Entry:
+        """One stored value and when it expires. It answers is_expired; the cache decides what to do about it."""
+
         def __init__(self, value, expires_at: float | None):
             self.value = value
             self.expires_at = expires_at         # None means it never expires
 
         def is_expired(self, now: float) -> bool:
+            # >= so a ttl of 10 means gone at exactly 10 seconds
             return self.expires_at is not None and now >= self.expires_at
     ''')
 
@@ -95,11 +100,13 @@ CACHE = D('''\
 
 
     class Cache:
+        """Holds the entries in recency order and runs put, get, delete and size."""
+
         def __init__(self, capacity: int, default_ttl: float | None = None, now=time.monotonic):
-            if capacity < 1:
+            if capacity < 1:                     # a cache that holds nothing makes put meaningless
                 raise ValueError("capacity must be at least 1")
-            self.capacity = capacity
-            self.default_ttl = default_ttl
+            self.capacity = capacity             # put compares the size to this to evict
+            self.default_ttl = default_ttl       # used when a put gives no ttl
             self.now = now                       # a clock we can fake in a test
             self.entries = OrderedDict()         # key -> Entry, least recently used first
     ''')
@@ -110,7 +117,7 @@ DEMO = D('''\
 
 
     # ---- a quick run ----
-    class FakeClock:
+    class FakeClock:                             # time we move by hand, so the run needs no sleeping
         def __init__(self):
             self.t = 0.0
 
@@ -125,9 +132,9 @@ DEMO = D('''\
     cache.get("a")                               # a is now the most recently used
     cache.put("c", 3)                            # over capacity: b is the least recently used
     print(cache.get("b"), cache.get("a"), cache.get("c"))
-    clock.t += 11
+    clock.t += 11                                # past the default ttl of 10
     print(cache.get("a"), cache.size())          # a expired; c is expired too but untouched
-    cache.put("d", 4, ttl=100)
+    cache.put("d", 4, ttl=100)                   # this put overrides the default ttl
     clock.t += 50
     print(cache.get("d"), cache.get("c"))
     ''')
@@ -141,7 +148,7 @@ EXT_LOCK = D('''\
     class Cache:
         def __init__(self, capacity, default_ttl=None, now=time.monotonic):
             ...
-            self.lock = threading.Lock()
+            self.lock = threading.Lock()    # one lock for the whole cache
 
         def get(self, key):
             with self.lock:              # get changes the order, so reads lock too
@@ -149,7 +156,7 @@ EXT_LOCK = D('''\
                 ...
 
         def put(self, key, value, ttl=None):
-            with self.lock:
+            with self.lock:              # find, store and evict as one step
                 ...
 
         # delete and size take the lock the same way
@@ -157,25 +164,27 @@ EXT_LOCK = D('''\
 
 PUT_LOCKED = method('''
     def put(self, key: str, value, ttl: float | None = None) -> None:
+        """Same steps; the store and the eviction happen under one lock."""
         ttl = self.default_ttl if ttl is None else ttl
-        if ttl is not None and ttl <= 0:
+        if ttl is not None and ttl <= 0:                   # checked before the lock: it touches no shared state
             raise ValueError("ttl must be positive")
-        with self.lock:
+        with self.lock:                                    # store and evict as one step
             expires_at = None if ttl is None else self.now() + ttl
             self.entries[key] = Entry(value, expires_at)
             self.entries.move_to_end(key)
-            while len(self.entries) > self.capacity:
+            while len(self.entries) > self.capacity:       # inside the lock, so no thread sees it over capacity
                 self.entries.popitem(last=False)
 ''')
 
 GET_LOCKED = method('''
     def get(self, key: str):
+        """Same steps; the whole read is under the lock because a hit reorders."""
         with self.lock:                      # get changes the order, so reads lock too
             entry = self.entries.get(key)
             if entry is None:
                 return None
             if entry.is_expired(self.now()):
-                del self.entries[key]
+                del self.entries[key]        # removing is a write too
                 return None
             self.entries.move_to_end(key)
             return entry.value
@@ -183,12 +192,14 @@ GET_LOCKED = method('''
 
 DELETE_LOCKED = method('''
     def delete(self, key: str) -> bool:
+        """Same steps, under the lock."""
         with self.lock:
             return self.entries.pop(key, None) is not None
 ''')
 
 SIZE_LOCKED = method('''
     def size(self) -> int:
+        """Same steps, under the lock so the count never lands mid-change."""
         with self.lock:
             return len(self.entries)
 ''')
@@ -197,11 +208,12 @@ PURGE = method('''
     def purge_expired(self) -> int:
         """Drop every expired entry and say how many. A timer or a background thread calls this."""
         with self.lock:
-            now = self.now()
+            now = self.now()                               # read the clock once, so every entry is judged at one moment
+            # collect first: deleting from a dict while looping over it raises an error
             dead = [k for k, e in self.entries.items() if e.is_expired(now)]
             for k in dead:
                 del self.entries[k]
-            return len(dead)
+            return len(dead)                               # lets the caller log how much was cleaned
 ''')
 
 HEAD_FINAL = HEAD.replace("import time\n", "import threading\nimport time\n")
@@ -213,7 +225,7 @@ FINAL_DEMO = D('''\
 
 
     # ---- a quick run ----
-    class FakeClock:
+    class FakeClock:                             # time we move by hand, so the run needs no sleeping
         def __init__(self):
             self.t = 0.0
 
@@ -221,7 +233,7 @@ FINAL_DEMO = D('''\
             return self.t
 
 
-    def hammer(cache, base):
+    def hammer(cache, base):                     # each thread writes its own keys and reads recent ones
         for i in range(1000):
             cache.put(f"{base}-{i}", i)
             cache.get(f"{base}-{i // 2}")
@@ -229,13 +241,13 @@ FINAL_DEMO = D('''\
 
     clock = FakeClock()
     cache = Cache(capacity=100, default_ttl=10, now=clock)
-    threads = [threading.Thread(target=hammer, args=(cache, n)) for n in range(8)]
+    threads = [threading.Thread(target=hammer, args=(cache, n)) for n in range(8)]    # 8 threads, one shared cache
     for t in threads:
         t.start()
     for t in threads:
         t.join()
     print(cache.size())
-    clock.t += 11
+    clock.t += 11                                # every entry is now past its ttl
     print(cache.purge_expired(), cache.size())
     ''')
 FINAL_OUT = "100\n100 0\n"
@@ -309,6 +321,10 @@ PROBLEM = {
             "owned": [("Entry", "value, expires_at")],
             "uses": [("OrderedDict", "recency order"), ("now()", "the clock, a function")]},
 
+    "skeleton": {"q": "First the small classes: Entry and the cache's __init__. Each line from the class design.",
+                 "hint": "Entry holds a value and an expiry and answers is_expired. The cache holds a capacity, a default ttl, a clock and an ordered dict.",
+                 "code": HEAD + CACHE,
+                 "why": "These come straight from the - state lines. Writing them first means every method after only has to do its steps."},
     "methods": [
         {"name": "put", "q": "put(key, value, ttl): core logic and edge cases as comments, then the code.",
          "hint": "Work out the expiry, store, move to the end, drop from the front while over capacity. Edges: replace, ttl of zero.", "code": PUT,
@@ -324,6 +340,22 @@ PROBLEM = {
          "why": "It includes expired entries nobody touched. Say it before they ask."},
     ],
 
+    "design_check": {
+        "lead": "SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies.",
+        "solid": [
+            ("Single responsibility", "Entry knows its own expiry; Cache owns the order, the capacity and put, get, delete, size."),
+            ("Open/closed", "Today a new eviction rule edits put and get. Pulling eviction into a policy makes it a new class instead."),
+            ("Liskov substitution", "Nothing to substitute yet: no subclasses. An LFU policy would have to honour on_use and victim like the LRU one."),
+            ("Interface segregation", "Nothing to segregate yet: no interfaces, and callers use all four Cache methods."),
+            ("Dependency inversion", "Cache is handed its clock now instead of calling time itself; eviction is still built in."),
+        ],
+        "varies": [
+            ("The eviction policy (LFU)", "Strategy", "a policy with on_use(key) and victim() that Cache asks"),
+            ("Several threads", "No pattern: a lock", "self.lock around every public method, reads too"),
+            ("Expired entries piling up", "No pattern: a method", "purge_expired() called on a timer"),
+            ("Load on a miss", "No pattern: a function passed in", "get_or_load(key, loader), one caller loads and the rest wait"),
+        ],
+    },
     "extensions": [
         {"ask": "Now several threads use the cache at once. What goes wrong and what do you do?",
          "say": "Move to end and pop from the front are not atomic, and **even get changes the order, so reads need the lock too.** One lock around each public method keeps it simple and correct. Contention is the cost.",

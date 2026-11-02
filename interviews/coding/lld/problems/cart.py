@@ -23,10 +23,11 @@ ADD = method('''
         Edge cases:
           1. Quantity zero or negative -> error
         """
-        if qty <= 0:
+        if qty <= 0:                                       # Edge 1: nothing to add, or a hidden remove
             raise CartError("qty must be positive")
+        # Step 1: setdefault returns the existing line, or stores a new one at 0 in the same call
         line = self.lines.setdefault(item.sku, Line(item, 0))
-        line.qty += qty
+        line.qty += qty                                    # Step 2: adding again raises the count
 ''')
 
 REMOVE = method('''
@@ -40,13 +41,13 @@ REMOVE = method('''
           1. Item not in the cart -> error
           2. Quantity zero, negative, or more than the cart holds -> error
         """
-        line = self.lines.get(sku)
-        if line is None:
+        line = self.lines.get(sku)                         # Step 1: .get gives None instead of a KeyError
+        if line is None:                                   # Edge 1: nothing to remove
             raise CartError(f"{sku} is not in the cart")
-        if qty <= 0 or qty > line.qty:
+        if qty <= 0 or qty > line.qty:                     # Edge 2: checked before changing anything
             raise CartError(f"cannot remove {qty} of {sku}")
-        line.qty -= qty
-        if line.qty == 0:
+        line.qty -= qty                                    # Step 2
+        if line.qty == 0:                                  # Step 3: no empty lines, so subtotal stays honest
             del self.lines[sku]
 ''')
 
@@ -58,6 +59,7 @@ SUBTOTAL = method('''
         Edge cases:
           1. Empty cart -> 0
         """
+        # Step 1: price x qty per line, summed; sum() of nothing is 0, which covers Edge 1
         return sum(l.item.price * l.qty for l in self.lines.values())
 ''')
 
@@ -72,7 +74,8 @@ CHECKOUT = method('''
           1. Empty cart -> 0
           2. A flat discount bigger than the total -> 0, never negative (inside Discount.apply)
         """
-        total = self.subtotal()
+        total = self.subtotal()                            # Step 1: an empty cart gives 0 here (Edge 1)
+        # Step 2: the cart doesn't know which rule it got; it hands over a total and takes one back
         return total if discount is None else discount.apply(total)
 ''')
 
@@ -81,12 +84,12 @@ HEAD = D('''\
     from enum import Enum
 
 
-    class Kind(Enum):
+    class Kind(Enum):        # the two discount kinds; a typo'd string can't slip through
         PERCENT = "percent"
         FLAT = "flat"
 
 
-    class CartError(Exception):
+    class CartError(Exception):    # one error type the caller can catch for every refusal
         pass
     ''')
 
@@ -95,22 +98,27 @@ ITEM_LINE = D('''\
 
     @dataclass(frozen=True)
     class Item:
-        sku: str
+        """A product as the shop sells it. Only data: it knows its price, not how many are bought."""
+        sku: str             # the key the cart finds a line by
         name: str
-        price: int           # cents
+        price: int           # cents, an int so totals never drift like floats
 
 
     @dataclass
     class Line:
-        item: Item
-        qty: int
+        """One row of the cart: an item and how many. Only data, the cart changes qty."""
+        item: Item           # frozen Item, so the price can't change after it was added
+        qty: int             # not frozen: add and remove raise and lower it
     ''')
 
 DISCOUNT = D('''\
 
 
     class Discount:
+        """One price rule, a kind and a value. It turns a total into a smaller total and knows nothing of the cart."""
+
         def __init__(self, kind: Kind, value: int):
+            # reject bad values at creation, so apply never sees one
             if value < 0 or (kind is Kind.PERCENT and value > 100):
                 raise CartError("bad discount value")
             self.kind = kind
@@ -118,16 +126,19 @@ DISCOUNT = D('''\
 
         def apply(self, total: int) -> int:
             if self.kind is Kind.PERCENT:
-                return total - total * self.value // 100     # the discount rounds down to a whole cent
-            return max(0, total - self.value)
+                # integer maths: total * value // 100 is the discount, rounded down to a whole cent
+                return total - total * self.value // 100
+            return max(0, total - self.value)                # flat: never below zero (Edge 2 of checkout)
     ''')
 
 CART = D('''\
 
 
     class Cart:
+        """The shopper's basket. It owns the lines and the sums; the pricing rule lives in Discount."""
+
         def __init__(self):
-            self.lines = {}          # sku -> Line
+            self.lines = {}          # sku -> Line: adding the same item again is one lookup
     ''')
 
 CORE = HEAD + ITEM_LINE + DISCOUNT + CART + in_class(ADD, REMOVE, SUBTOTAL, CHECKOUT)
@@ -137,20 +148,20 @@ DEMO = D('''\
 
     # ---- a quick run ----
     cart = Cart()
-    cart.add(Item("p1", "pen", 250), 4)
-    cart.add(Item("b1", "book", 1999))
+    cart.add(Item("p1", "pen", 250), 4)                  # 4 x 250 = 1000
+    cart.add(Item("b1", "book", 1999))                   # qty defaults to 1
     print(cart.subtotal())
-    print(cart.checkout(Discount(Kind.PERCENT, 10)))
+    print(cart.checkout(Discount(Kind.PERCENT, 10)))     # 2999 - 299 (rounded down) = 2700
     print(cart.checkout(Discount(Kind.FLAT, 500)))
-    print(cart.checkout(Discount(Kind.FLAT, 5000)))
-    for bad in (lambda: cart.add(Item("x", "x", 1), 0), lambda: cart.remove("zz")):
+    print(cart.checkout(Discount(Kind.FLAT, 5000)))      # bigger than the total: clamped to 0
+    for bad in (lambda: cart.add(Item("x", "x", 1), 0), lambda: cart.remove("zz")):   # the two error paths
         try:
             bad()
         except CartError as e:
             print(e)
     one = Cart()
     one.add(Item("c1", "cup", 999))
-    print(one.checkout(Discount(Kind.PERCENT, 10)))
+    print(one.checkout(Discount(Kind.PERCENT, 10)))      # 10 percent of 999 is 99.9: takes 99, pays 900
     ''')
 DEMO_OUT = "2999\n2700\n2499\n0\nqty must be positive\nzz is not in the cart\n900\n"
 
@@ -158,7 +169,7 @@ DEMO_OUT = "2999\n2700\n2499\n0\nqty must be positive\nzz is not in the cart\n90
 EXT_BOGO = D('''\
     class Discount:                      # now a base class; each rule is a subclass
         def apply(self, lines: list, total: int) -> int:
-            raise NotImplementedError
+            raise NotImplementedError    # a rule must say how it changes the total
 
 
     class Percent(Discount):
@@ -166,16 +177,17 @@ EXT_BOGO = D('''\
             self.pct = pct
 
         def apply(self, lines, total):
-            return total - total * self.pct // 100
+            return total - total * self.pct // 100          # same maths as before, lines unused
 
 
     class BuyOneGetOne(Discount):
         def __init__(self, sku: str):
-            self.sku = sku
+            self.sku = sku               # which item the offer is for
 
         def apply(self, lines, total):
+            # this rule needs the lines: it must know how many of the item are in the cart
             line = next((l for l in lines if l.item.sku == self.sku), None)
-            if line is None:
+            if line is None:                                # item not in the cart: no change
                 return total
             return total - (line.qty // 2) * line.item.price    # every second one is free
 
@@ -186,27 +198,27 @@ EXT_BOGO = D('''\
 EXT_STACK = D('''\
     def checkout(self, discounts: list) -> int:
         """Apply each discount to the running total, in the order given."""
-        lines = list(self.lines.values())
+        lines = list(self.lines.values())                   # taken once, every discount sees the same lines
         total = self.subtotal()
         for d in discounts:
-            total = d.apply(lines, total)
+            total = d.apply(lines, total)                   # each rule starts from the last rule's result
         return total
     ''')
 
 EXT_COUPON = D('''\
     class Discount:
         def __init__(self, expires: datetime | None = None):
-            self.expires = expires
+            self.expires = expires       # None means it never expires
 
         def is_expired(self, now: datetime) -> bool:
             return self.expires is not None and now > self.expires
 
 
-    def checkout(self, discounts: list, now: datetime) -> int:
+    def checkout(self, discounts: list, now: datetime) -> int:    # now is passed in, never read here
         lines = list(self.lines.values())
         total = self.subtotal()
         for d in discounts:
-            if d.is_expired(now):
+            if d.is_expired(now):                           # an error, not a silent skip
                 raise CartError("coupon expired")
             total = d.apply(lines, total)
         return total
@@ -217,7 +229,7 @@ FINAL_HEAD = D('''\
     from datetime import datetime
 
 
-    class CartError(Exception):
+    class CartError(Exception):    # one error type the caller can catch for every refusal
         pass
     ''')
 
@@ -225,57 +237,66 @@ FINAL_DISCOUNTS = D('''\
 
 
     class Discount:
+        """The base of every rule: carries the optional expiry, leaves apply to the subclasses."""
+
         def __init__(self, expires: datetime | None = None):
-            self.expires = expires
+            self.expires = expires       # None means it never expires
 
         def is_expired(self, now: datetime) -> bool:
             return self.expires is not None and now > self.expires
 
         def apply(self, lines: list, total: int) -> int:
-            raise NotImplementedError
+            raise NotImplementedError    # each subclass says how it changes the total
 
 
     class Percent(Discount):
+        """A percentage off the running total."""
+
         def __init__(self, pct: int, expires: datetime | None = None):
-            if not 0 <= pct <= 100:
+            if not 0 <= pct <= 100:                         # reject a bad percent at creation
                 raise CartError("percent must be 0 to 100")
             super().__init__(expires)
             self.pct = pct
 
         def apply(self, lines, total):
-            return total - total * self.pct // 100
+            return total - total * self.pct // 100          # rounds the discount down to a whole cent
 
 
     class Flat(Discount):
+        """A fixed number of cents off, never taking the total below zero."""
+
         def __init__(self, cents: int, expires: datetime | None = None):
             super().__init__(expires)
             self.cents = cents
 
         def apply(self, lines, total):
-            return max(0, total - self.cents)
+            return max(0, total - self.cents)               # clamp: the total is never negative
 
 
     class BuyOneGetOne(Discount):
+        """Every second unit of one sku is free."""
+
         def __init__(self, sku: str, expires: datetime | None = None):
             super().__init__(expires)
-            self.sku = sku
+            self.sku = sku               # the item the offer is for
 
         def apply(self, lines, total):
+            # the only rule that reads the lines: it needs the quantity of its sku
             line = next((l for l in lines if l.item.sku == self.sku), None)
-            if line is None:
+            if line is None:                                # item not in the cart: no change
                 return total
-            return total - (line.qty // 2) * line.item.price
+            return total - (line.qty // 2) * line.item.price    # pairs of units, one of each pair free
     ''')
 
 FINAL_CHECKOUT = method('''
     def checkout(self, discounts: list, now: datetime) -> int:
         """Apply each discount to the running total, in the order given; an expired coupon is an error."""
-        lines = list(self.lines.values())
+        lines = list(self.lines.values())                   # taken once, every discount sees the same lines
         total = self.subtotal()
         for d in discounts:
-            if d.is_expired(now):
+            if d.is_expired(now):                           # now is passed in, so expiry is testable
                 raise CartError("coupon expired")
-            total = d.apply(lines, total)
+            total = d.apply(lines, total)                   # the order of the list is the order of the maths
         return total
 ''')
 
@@ -287,13 +308,13 @@ FINAL_DEMO = D('''\
     cart = Cart()
     cart.add(Item("p1", "pen", 250), 4)
     cart.add(Item("b1", "book", 1999))
-    now = datetime(2026, 11, 2)
+    now = datetime(2026, 11, 2)                              # a fixed time, so the run is repeatable
     bogo = BuyOneGetOne("p1")
-    print(cart.checkout([bogo], now))
+    print(cart.checkout([bogo], now))                        # 2 free pens: 2999 - 500
     print(cart.checkout([bogo, Percent(10), Flat(500)], now))
-    print(cart.checkout([Flat(500), Percent(10)], now))
+    print(cart.checkout([Flat(500), Percent(10)], now))      # same rules, other order, other total
     try:
-        cart.checkout([Percent(10, expires=datetime(2026, 11, 1))], now)
+        cart.checkout([Percent(10, expires=datetime(2026, 11, 1))], now)     # expired yesterday
     except CartError as e:
         print(e)
     ''')
@@ -369,6 +390,10 @@ PROBLEM = {
             "owned": [("Line", "item, qty")],
             "uses": [("Discount", "kind, value"), ("Kind (enum)", "PERCENT, FLAT")]},
 
+    "skeleton": {"q": "First the small classes: Kind, CartError, Item, Line, Discount, and the cart's __init__. Each line from the class design.",
+                 "hint": "Item is frozen data. Line is an item and a quantity. Discount holds a kind and a value and checks them. The cart holds lines by sku.",
+                 "code": HEAD + ITEM_LINE + DISCOUNT + CART,
+                 "why": "These come straight from the - state lines. Writing them first means every method after only has to do its steps."},
     "methods": [
         {"name": "add", "q": "add(item, qty): core logic and edge cases as comments, then the code.",
          "hint": "Find or start the line, raise the quantity. Edge: quantity not positive.", "code": ADD,
@@ -384,6 +409,22 @@ PROBLEM = {
          "why": "The cart doesn't know which rule it was given. The 'never below zero' rule lives in Discount.apply, in one place."},
     ],
 
+    "design_check": {
+        "lead": "SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies.",
+        "solid": [
+            ("Single responsibility", "Item is a product, Line is one quantity, Discount is one price rule, Cart owns the lines and the sums."),
+            ("Open/closed", "Core: a new kind edits Discount.apply. After buy-one-get-one, a new rule is a new Discount subclass and Cart.checkout is untouched."),
+            ("Liskov substitution", "Percent, Flat and BuyOneGetOne work anywhere a Discount does: same apply(lines, total), still returns cents."),
+            ("Interface segregation", "Nothing to segregate yet: Discount has one method, apply."),
+            ("Dependency inversion", "checkout depends on the Discount it is handed, not on any one rule."),
+        ],
+        "varies": [
+            ("A new discount rule (buy-one-get-one)", "Strategy", "Discount base class with Percent, Flat, BuyOneGetOne"),
+            ("Stacking several discounts", "No pattern: a list", "checkout loops over the discounts in the order given"),
+            ("A coupon that expires", "No pattern: a field", "optional expires on Discount, with now passed in"),
+            ("How a percentage rounds", "No pattern: one line", "total * pct // 100 in Percent.apply"),
+        ],
+    },
     "extensions": [
         {"ask": "Add buy-one-get-one: every second pen is free.",
          "say": "A rule that depends on the lines can't take only the total, so **Discount becomes a base class with one method, apply(lines, total), and each rule is a subclass.** Percent and Flat move over unchanged; BuyOneGetOne is new. Cart changes in one spot: it passes the lines as well.",
