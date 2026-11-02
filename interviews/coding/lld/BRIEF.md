@@ -20,6 +20,9 @@ b) Requirements, numbered: `[headline, sub, sub]`, each "who does what; what the
 c) Entities: every noun from the requirements, keep or drop, with a reason (drop what only carries data the
    design doesn't need; external actors are dropped).
 d) Classes: `state` (the "-" lines, what __init__ sets, with types) and `behaviour` (the "+" lines, with return types).
+   Every state and behaviour line ends with `  # why it exists`, under a line (see parking.py).
+   Spoken `clarify_say`, `req_say`, `ent_say`, `class_say` (cheat-only files: `class_say`): 2 to 4 sentences, one **bold** idea;
+   `class_say` walks from the methods to what each must read, which gives the state.
 e) Methods: each public method's code starts with a docstring holding "Core logic:" numbered steps and
    "Edge cases:" numbered steps, then the code. Helpers go in `helpers.code`.
 f) Extensions: 3 or 4 interviewer follow-ups: `ask`, `say` (first person), optional `code` + `code_title`,
