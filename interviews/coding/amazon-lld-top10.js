@@ -245,8 +245,14 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-locker-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class Locker\n- compartments: Compartment[]\n- access_tokens: Map<code, AccessToken>  (a list first is fine; a map makes pickup one step)\n+ deposit_package(size) -> string | error\n+ pickup(code) -> void | error\n+ open_expired_compartments() -> codes\n+ staff_clear(code) -> void\n\nclass AccessToken\n- code: string\n- expiration: timestamp\n- compartment: Compartment\n+ is_expired() -> boolean\n+ get_compartment() -> Compartment\n+ get_code() -> string\n\nclass Compartment\n- size: Size  (SMALL, MEDIUM, LARGE -> enum)\n- occupied: boolean\n+ is_occupied() -> boolean\n+ mark_occupied() -> void\n+ mark_free() -> void\n+ open() -> void\n+ get_size() -> Size\n",
+     "code": "class Locker\n- compartments: Compartment[]  # deposit scans these for a free one of the size\n- access_tokens: Map<code, AccessToken>  (a list first is fine; a map makes pickup one step)  # pickup gets only a code; a map finds its token\n+ deposit_package(size) -> string | error  # req 1 and 2: assign, open, return the code\n+ pickup(code) -> void | error  # req 3: code to token to door\n+ open_expired_compartments() -> codes  # req 5: staff open every expired door\n+ staff_clear(code) -> void  # req 5: staff empty one and free it\n\nclass AccessToken\n- code: string  # what the customer brings; the map key\n- expiration: timestamp  # req 4: seven days after deposit\n- compartment: Compartment  # pickup must get from the code to the door\n+ is_expired() -> boolean  # req 4: one place for the expiry rule\n+ get_compartment() -> Compartment  # pickup opens this door\n+ get_code() -> string  # deposit returns it to the carrier\n\nclass Compartment\n- size: Size  (SMALL, MEDIUM, LARGE -> enum)  # deposit matches on it\n- occupied: boolean  # free or taken, nothing more is needed\n+ is_occupied() -> boolean  # deposit skips taken doors\n+ mark_occupied() -> void  # deposit takes the door\n+ mark_free() -> void  # pickup and staff_clear give it back\n+ open() -> void  # req 1 and 3: the door opens for deposit and pickup\n+ get_size() -> Size  # deposit compares it to the requested size\n",
      "notes": {}
+    },
+    {
+     "t": "say",
+     "lines": [
+      "**I start from the methods the requirements gave me, then ask what each one has to read.** Pickup gets only a code, so the locker keeps tokens in a map by code. The token has to reach the door, so it holds its compartment, and it holds an expiry for requirement 4. Deposit needs to find a free door of a size, so the locker holds the compartments, each with a size and an occupied flag."
+     ]
     },
     {
      "t": "svg",
@@ -414,8 +420,14 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-parking-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class ParkingLot\n- spots: Spot[]  (lowest level first)\n- tickets: Map<ticket_id, Ticket>\n- next_id: int\n+ enter(plate, size, now) -> Ticket | error\n+ exit(ticket_id, now) -> fee in cents | error\n+ free_count(size) -> int\n\nclass Spot\n- spot_id: string\n- size: Size  (SMALL, MEDIUM, LARGE -> enum)\n- plate: string | None\n+ fits(size) -> boolean\n+ park(plate) -> void\n+ leave() -> void\n\nclass Ticket\n- ticket_id: int\n- plate: string\n- size: Size\n- spot: Spot\n- entered_at: datetime\n",
+     "code": "class ParkingLot\n- spots: Spot[]  (lowest level first)  # enter scans in order for the first free fit\n- tickets: Map<ticket_id, Ticket>  # exit only gets an id; a map finds it in one step\n- next_id: int  # every ticket needs a unique id; a counter hands out the next\n+ enter(plate, size, now) -> Ticket | error  # req 1\n+ exit(ticket_id, now) -> fee in cents | error  # req 2 and 3: free the spot, price the stay\n+ free_count(size) -> int  # req 4: the sign at the gate\n\nclass Spot\n- spot_id: string  # printed on the ticket so the driver finds the car\n- size: Size  (SMALL, MEDIUM, LARGE -> enum)  # decides what fits\n- plate: string | None  # None means free; no separate flag\n+ fits(size) -> boolean  # the size rule lives in one place\n+ park(plate) -> void  # the spot changes its own state\n+ leave() -> void  # exit calls it to free the spot\n\nclass Ticket\n- ticket_id: int  # the key in the lot's map\n- plate: string  # catches the same car entering twice\n- size: Size  # the fee rate, without a second lookup\n- spot: Spot  # exit frees this spot directly\n- entered_at: datetime  # fee = now - entered_at\n",
      "notes": {}
+    },
+    {
+     "t": "say",
+     "lines": [
+      "**I start from the methods the requirements gave me, then ask what each one has to read.** Enter needs the spots in order, so the lot holds a list. Exit gets only a ticket id, so the lot keeps tickets in a map by id, and a counter to make new ids. The ticket carries what the fee needs: size, spot and entry time."
+     ]
     },
     {
      "t": "svg",
@@ -577,8 +589,14 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-chess-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class Game\n- board: Board\n- players: Player[2]\n- turn: Colour\n- status: Status\n- moves: Move[]\n+ make_move(player, frm, to) -> Move | error\n+ resign(player) -> void\n+ get_status() -> Status\n\nclass Board\n- grid: Piece | None [8][8]\n+ piece_at(pos) -> Piece | None\n+ move(frm, to) -> Piece | None  (the captured piece)\n+ path_clear(frm, to) -> boolean\n\nclass Piece (abstract)\n- colour: Colour\n+ can_move(board, frm, to) -> boolean  (King, Queen, Rook, Bishop, Knight and Pawn each override it)\n\nclass Move\n- piece: Piece\n- frm: (row, col)\n- to: (row, col)\n- captured: Piece | None\n\nclass Player\n- name: string\n- colour: Colour\n",
+     "code": "class Game\n- board: Board  # make_move needs the pieces to look at\n- players: Player[2]  # a move is checked against the player's colour\n- turn: Colour  # req 1: reject a move out of turn\n- status: Status  # req 4: no moves once the game is over\n- moves: Move[]  # the history, and what undo would pop\n+ make_move(player, frm, to) -> Move | error  # req 1 to 3: the one entry for a turn\n+ resign(player) -> void  # req 4: the other way a game ends\n+ get_status() -> Status  # lets the caller see if the game is over\n\nclass Board\n- grid: Piece | None [8][8]  # which piece is on each square\n+ piece_at(pos) -> Piece | None  # make_move reads the start and target squares\n+ move(frm, to) -> Piece | None  (the captured piece)  # req 3: a capture leaves the board\n+ path_clear(frm, to) -> boolean  # req 2: sliding pieces cannot jump\n\nclass Piece (abstract)\n- colour: Colour  # make_move rejects moving the other side's piece\n+ can_move(board, frm, to) -> boolean  (King, Queen, Rook, Bishop, Knight and Pawn each override it)  # req 2: each kind owns its rule\n\nclass Move\n- piece: Piece  # what moved\n- frm: (row, col)  # needed to put it back\n- to: (row, col)  # where it landed\n- captured: Piece | None  # undo restores it\n\nclass Player\n- name: string  # who is playing\n- colour: Colour  # req 1: decides whose turn it is\n",
      "notes": {}
+    },
+    {
+     "t": "say",
+     "lines": [
+      "**I start from the methods the requirements gave me: make_move, resign and the status.** Make_move has to read the board, whose turn it is and the game status, so Game holds those. The board only knows what sits on each square, and each piece knows its own rule. A Move records the piece, both squares and the capture, so a list of them is the history."
+     ]
     },
     {
      "t": "svg",
@@ -745,8 +763,14 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-splitwise-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class Splitwise\n- users: Map<id, User>\n- expenses: Expense[]\n- ledger: Ledger\n+ add_expense(payer, amount_cents, participants, split, exacts) -> Expense | error\n+ settle(from_user, to_user, amount_cents) -> void | error\n+ balance(a, b) -> cents  (positive: a owes b)\n+ balances(user) -> Map<user, cents>\n\nclass Expense\n- payer: string\n- amount_cents: int\n- shares: Map<user, cents>\n\nclass Ledger\n- net: Map<(debtor, creditor), cents>\n+ add(debtor, creditor, cents) -> void\n+ owed(a, b) -> cents\n\nclass User\n- user_id: string\n- name: string\n",
+     "code": "class Splitwise\n- users: Map<id, User>  # every payer and participant is checked to exist\n- expenses: Expense[]  # append-only record of what happened\n- ledger: Ledger  # req 2: the net owed per pair, so balances are one read\n+ add_expense(payer, amount_cents, participants, split, exacts) -> Expense | error  # req 1\n+ settle(from_user, to_user, amount_cents) -> void | error  # req 3: a payment the other way\n+ balance(a, b) -> cents  (positive: a owes b)  # req 2: net between two users\n+ balances(user) -> Map<user, cents>  # req 2: everyone's net balances\n\nclass Expense\n- payer: string  # who is owed the shares\n- amount_cents: int  # integer cents, so no float drift\n- shares: Map<user, cents>  # what each participant owes the payer\n\nclass Ledger\n- net: Map<(debtor, creditor), cents>  # one number per pair; settling is an entry the other way\n+ add(debtor, creditor, cents) -> void  # the one write, for expenses and payments\n+ owed(a, b) -> cents  # net of what b owes a\n\nclass User\n- user_id: string  # the key the ledger uses\n- name: string  # for display\n",
      "notes": {}
+    },
+    {
+     "t": "say",
+     "lines": [
+      "**I start from the methods the requirements gave me: add_expense, settle and balance.** Add_expense has to record what happened and update who owes whom, so I keep a list of expenses and a ledger. Settle is a payment in the other direction, so it goes into the same ledger. Balance only reads the ledger."
+     ]
     },
     {
      "t": "svg",
@@ -904,8 +928,14 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-booking-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class BookingService\n- shows: Map<show_id, Show>\n- bookings: Map<id, Booking>\n+ hold(show_id, seat_ids, user) -> hold_id | error\n+ confirm(hold_id, user) -> Booking | error\n+ cancel(booking_id) -> void | error\n\nclass Show\n- show_id: string\n- show_seats: Map<seat_id, ShowSeat>\n+ get_seat(seat_id) -> ShowSeat\n\nclass Seat\n- row: string\n- number: int\n\nclass ShowSeat\n- seat: Seat\n- state: SeatState\n- held_by: string | None\n- held_until: timestamp | None\n+ is_available(now) -> boolean\n+ hold(user, until) -> void\n+ book() -> void\n+ release() -> void\n\nclass Booking\n- booking_id: string\n- user: string\n- show_seats: ShowSeat[]\n",
+     "code": "class BookingService\n- shows: Map<show_id, Show>  # hold and confirm start from a show id\n- bookings: Map<id, Booking>  # req 4: cancel gets only a booking id\n+ hold(show_id, seat_ids, user) -> hold_id | error  # req 1 and 3: all seats or none, with an expiry\n+ confirm(hold_id, user) -> Booking | error  # req 2: held seats become booked\n+ cancel(booking_id) -> void | error  # req 4: seats go back on sale\n\nclass Show\n- show_id: string  # the key the service looks it up by\n- show_seats: Map<seat_id, ShowSeat>  # each seat's state is per show\n+ get_seat(seat_id) -> ShowSeat  # hold reads every chosen seat first\n\nclass Seat\n- row: string  # the physical seat, same for every show\n- number: int  # with the row, names the seat\n\nclass ShowSeat\n- seat: Seat  # which physical seat this is\n- state: SeatState  # AVAILABLE, HELD or BOOKED for this show\n- held_by: string | None  # confirm checks the hold is theirs\n- held_until: timestamp | None  # req 3: an expired hold counts as free\n+ is_available(now) -> boolean  # req 3: the expiry check lives in one place\n+ hold(user, until) -> void  # the seat changes its own state\n+ book() -> void  # req 2\n+ release() -> void  # req 4\n\nclass Booking\n- booking_id: string  # the key in the service's map\n- user: string  # who confirmed it\n- show_seats: ShowSeat[]  # cancel releases exactly these\n",
      "notes": {}
+    },
+    {
+     "t": "say",
+     "lines": [
+      "**I start from the methods the requirements gave me: hold, confirm and cancel, and each has to read a seat's state per show.** That is why a physical Seat stays the same and a ShowSeat holds the state, who holds it and until when. Hold needs to find a show by id, so the service keeps a map of shows. Cancel gets only a booking id, so it keeps a map of bookings too."
+     ]
     },
     {
      "t": "svg",
@@ -1073,8 +1103,14 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-vending-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class VendingMachine\n- slots: Map<code, Slot>\n- coins: Map<value, count>  (change comes from here)\n- balance: int\n- state: State\n+ insert_coin(value) -> void | error\n+ select(code) -> product | error\n+ cancel() -> refund in cents\n+ set_out_of_service(flag) -> void\n\nclass Slot\n- name: string\n- price: int\n- count: int\n+ is_available() -> boolean\n+ take() -> void\n\nclass State\n- IDLE\n- HAS_MONEY\n- OUT_OF_SERVICE  (enum)\n",
+     "code": "class VendingMachine\n- slots: Map<code, Slot>  # select looks the product up by code\n- coins: Map<value, count>  (change comes from here)  # change can only be made from coins inside\n- balance: int  # req 1: what the customer has put in so far\n- state: State  # decides which actions are allowed\n+ insert_coin(value) -> void | error  # req 1\n+ select(code) -> product | error  # req 2: dispense and give change\n+ cancel() -> refund in cents  # req 3: return the whole balance\n+ set_out_of_service(flag) -> void  # req 4: admin restocks\n\nclass Slot\n- name: string  # the product it holds\n- price: int  # select compares it with the balance\n- count: int  # req 2: sold out when it reaches zero\n+ is_available() -> boolean  # select asks the slot, not its count\n+ take() -> void  # one product leaves\n\nclass State\n- IDLE  # nothing inserted\n- HAS_MONEY  # a balance is waiting for a choice\n- OUT_OF_SERVICE  (enum)  # req 4: coins are refused\n",
      "notes": {}
+    },
+    {
+     "t": "say",
+     "lines": [
+      "**I start from the methods the requirements gave me: insert_coin, select, cancel and an admin switch.** Select has to read the price and the balance, so the machine keeps a balance and a slot per code. Change comes from coins already inside, so it also keeps a coin box. Which action is allowed depends on the state, so that is an enum."
+     ]
     },
     {
      "t": "svg",
@@ -1242,8 +1278,14 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-elevator-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class ElevatorSystem\n- floors: int\n- cars: Car[]\n+ request(floor, direction) -> car id | error\n+ select_floor(car_id, floor) -> void | error\n+ step() -> void\n+ status() -> string\n\nclass Car\n- car_id: int\n- floor: int\n- direction: Direction  (UP, DOWN, IDLE -> enum)\n- stops: Set<floor>\n+ add_stop(floor) -> void\n+ step() -> void\n",
+     "code": "class ElevatorSystem\n- floors: int  # request and select_floor check a floor against it\n- cars: Car[]  # request scans these to pick one; step moves each\n+ request(floor, direction) -> car id | error  # req 1: pick a car for a hall call\n+ select_floor(car_id, floor) -> void | error  # req 2: a button inside a car\n+ step() -> void  # req 3: advance every car one tick\n+ status() -> string  # req 4: each car's floor and direction\n\nclass Car\n- car_id: int  # request returns it; select_floor gets it\n- floor: int  # where the car is now\n- direction: Direction  (UP, DOWN, IDLE -> enum)  # decides which way step moves\n- stops: Set<floor>  # a set, so pressing twice costs nothing\n+ add_stop(floor) -> void  # a call lands here once a car is chosen\n+ step() -> void  # req 3: the car moves itself, not the system\n",
      "notes": {}
+    },
+    {
+     "t": "say",
+     "lines": [
+      "**I start from the four methods and ask what each one has to read.** A hall call has to choose among cars, so the system keeps a list of cars and the floor count to reject bad floors. Step moves a car, so a car needs its floor, its direction and the floors it must stop at. A set holds those stops, so a double press adds nothing."
+     ]
     },
     {
      "t": "svg",
@@ -1405,8 +1447,14 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-ratelimiter-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class RateLimiter\n- rule: Rule\n- buckets: Map<key, TokenBucket>\n- now: function returning seconds\n+ allow(key) -> (allowed: boolean, retry_after: seconds)\n\nclass TokenBucket\n- tokens: float\n- last_refill: seconds\n+ try_take(now) -> (allowed, retry_after)\n+ _refill(now) -> void\n\nclass Rule\n- capacity: int\n- refill_per_sec: float\n",
+     "code": "class RateLimiter\n- rule: Rule  # req 3: every bucket follows the same rule\n- buckets: Map<key, TokenBucket>  # req 2: one bucket per key, made on first use\n- now: function returning seconds  # injected clock, so tests can fake time\n+ allow(key) -> (allowed: boolean, retry_after: seconds)  # req 1: the one call a service makes\n\nclass TokenBucket\n- tokens: float  # what is left to spend; fractional as it refills\n- last_refill: seconds  # refill by the time since this\n+ try_take(now) -> (allowed, retry_after)  # req 1: take a token or say when to retry\n+ _refill(now) -> void  # req 2: tokens grow with time, up to capacity\n\nclass Rule\n- capacity: int  # req 3: the burst size\n- refill_per_sec: float  # req 3: the steady rate\n",
      "notes": {}
+    },
+    {
+     "t": "say",
+     "lines": [
+      "**I start from the one method the requirements gave me: allow(key).** It has to read that key's token count and when it last refilled, so each key gets a bucket with those two fields. The limiter keeps a map of buckets and a rule for capacity and rate. Time comes in as a function, so the refill can be tested."
+     ]
     },
     {
      "t": "svg",
@@ -1562,8 +1610,14 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-meeting-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class Scheduler\n- rooms: Room[]  (sorted by capacity)\n- bookings: Map<id, Booking>\n+ book(organiser, start, end, attendees) -> Booking | error\n+ cancel(booking_id) -> void | error\n\nclass Room\n- room_id: string\n- capacity: int\n- bookings: Booking[]\n+ is_free(interval) -> boolean\n+ add(booking) -> void\n+ remove(booking) -> void\n\nclass Booking\n- booking_id: string\n- room: Room\n- interval: Interval\n- organiser: string\n\nclass Interval\n- start: datetime\n- end: datetime  (half-open: [start, end))\n+ overlaps(other) -> boolean\n",
+     "code": "class Scheduler\n- rooms: Room[]  (sorted by capacity)  # book takes the first room that fits, which is the smallest\n- bookings: Map<id, Booking>  # req 4: cancel gets only a booking id\n+ book(organiser, start, end, attendees) -> Booking | error  # req 1 to 3\n+ cancel(booking_id) -> void | error  # req 4: the room is free again\n\nclass Room\n- room_id: string  # names the room in a booking\n- capacity: int  # req 1: must hold the attendees\n- bookings: Booking[]  # is_free checks the new interval against these\n+ is_free(interval) -> boolean  # req 1: no overlapping booking\n+ add(booking) -> void  # book stores it here\n+ remove(booking) -> void  # req 4\n\nclass Booking\n- booking_id: string  # the key in the scheduler's map\n- room: Room  # cancel removes it from this room\n- interval: Interval  # when the room is taken\n- organiser: string  # who booked it\n\nclass Interval\n- start: datetime  # req 2: must come before end\n- end: datetime  (half-open: [start, end))  # req 3: back-to-back is allowed\n+ overlaps(other) -> boolean  # the one place the overlap rule lives\n",
      "notes": {}
+    },
+    {
+     "t": "say",
+     "lines": [
+      "**I start from the methods the requirements gave me: book and cancel, and book has to read room sizes and existing bookings.** So the scheduler keeps rooms sorted by capacity, and each room holds its own bookings and answers is_free. Cancel gets only an id, so the scheduler keeps a map of bookings. The overlap rule goes in one Interval class, half-open so back-to-back is fine."
+     ]
     },
     {
      "t": "svg",
@@ -1730,8 +1784,14 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "id": "t10-filesearch-classes",
      "title": "Classes: − state, + behaviour",
-     "code": "class FileSearcher\n+ search(root, filter) -> files, one at a time\n\nclass Directory\n- name: string\n- children: Entry[]\n+ contains files and folders\n\nclass File\n- name: string\n- size: int\n+ extension() -> string\n\nclass Filter (base)\n+ matches(file) -> boolean\n\nclass SizeFilter, ExtensionFilter\n- the limit or the extension\n+ matches(file) -> boolean\n",
+     "code": "class FileSearcher\n+ search(root, filter) -> files, one at a time  # req 1 and 3: walk the tree and yield matches\n\nclass Directory\n- name: string  # part of the path we return\n- children: Entry[]  # files and folders, so the tree nests\n+ contains files and folders  # the walk pushes its children\n\nclass File\n- name: string  # the extension comes from it\n- size: int  # req 2: size conditions read it\n+ extension() -> string  # ExtensionFilter asks the file\n\nclass Filter (base)\n+ matches(file) -> boolean  # req 2: one question about one file\n\nclass SizeFilter, ExtensionFilter\n- the limit or the extension  # the value each one compares against\n+ matches(file) -> boolean  # each kind answers its own question\n",
      "notes": {}
+    },
+    {
+     "t": "say",
+     "lines": [
+      "**I start from the one method the requirements gave me: search(root, filter), which yields matching files.** It has to walk a tree, so folders hold children and files hold a name and a size. Each condition is a Filter with one method, matches(file). That way And, Or and Not can combine them, and the walk never needs to know the kind."
+     ]
     },
     {
      "t": "svg",

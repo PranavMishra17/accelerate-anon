@@ -47,7 +47,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. Primary capabilities\n- \n\n2. Error handling\n- \n\n3. Scope boundaries\n- ",
      "hint": "Vehicle sizes and how a spot is chosen. What a ticket is. Full lot, lost ticket, how the price works. Payment, reservations, many gates.",
      "solution": "1. Primary capabilities\n- Which vehicles park here, and does size matter?\n- Does the driver choose a spot, or does the system?\n- What does the driver get on entry and exit?\n\n2. Error handling\n- What if the lot is full for that vehicle?\n- A lost or already used ticket?\n- How is the price decided?\n\n3. Scope boundaries\n- Taking payment, reservations, plate recognition?\n- Many gates, or one garage?",
-     "why": "Every question changes a class or a method. Sizes give an enum and the fits rule. The ticket gives a class. Pricing gives the fee helper that the first extension replaces."
+     "why": "Every question changes a class or a method. Sizes give an enum and the fits rule. The ticket gives a class. Pricing gives the fee helper that the first extension replaces.",
+     "say": "**I group my questions in three buckets: what it must do, what goes wrong, where scope stops.** Sizes and how a spot is chosen first, because they decide the classes. Then a full lot and a bad ticket. Then what I will not build."
     }
    ]
   },
@@ -128,7 +129,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. \n2. \n3. \n",
      "hint": "A vehicle enters, a vehicle exits, the fee, free counts.",
      "solution": "1. A vehicle of a given size enters the lot.\n   - The system assigns the smallest free spot it fits in\n   - Parks it and returns a ticket, or an error if none fits or the plate is already parked\n2. A driver exits by handing back the ticket.\n   - The system frees the spot and returns the amount owed\n   - An error if the ticket is unknown or already used\n3. The fee is every started hour at a rate by vehicle size.\n4. Anyone can ask how many free spots fit a size.\n5. Out of scope: taking payment, reservations, plate recognition, a UI or API layer, saving to a database.",
-     "why": "Each requirement maps to a method: 1 is enter, 2 and 3 are exit and its fee helper, 4 is free_count."
+     "why": "Each requirement maps to a method: 1 is enter, 2 and 3 are exit and its fee helper, 4 is free_count.",
+     "say": "From your answers I get four requirements. **Each one is a thing someone does, and each becomes a method: enter, exit, the fee, free counts.** I say the error case with each so I don't forget it in the code."
     }
    ]
   },
@@ -147,7 +149,8 @@ window.LOOP_CODING.parts.push({
      "starter": "Vehicle: \nSpot: \nTicket: \nParkingLot: \nLevel: \nDriver / Gate: ",
      "hint": "What do we need to know about a vehicle? Does a level do anything the list of spots doesn't?",
      "solution": "Vehicle: drop. Only its plate and size matter, and both are parameters of enter\nSpot: keep. Has a size and holds a vehicle or is free\nTicket: keep. Id, plate, size, spot and entry time: what exit needs to price the stay\nParkingLot: keep. Runs enter, exit and the free counts\nLevel: drop. Only an ordering of spots here; a prefix in the spot id and the order of the list cover it\nDriver / Gate: drop. External; not modelled",
-     "why": "Three classes and one enum. Dropping Vehicle and Level is the move interviewers notice: you modelled what the requirements need, and Level comes back only if the requirements give it behaviour."
+     "why": "Three classes and one enum. Dropping Vehicle and Level is the move interviewers notice: you modelled what the requirements need, and Level comes back only if the requirements give it behaviour.",
+     "say": "I underline the nouns. **Spot, ticket and the lot carry data or behaviour I need, so they stay.** A vehicle is only a plate and a size, so those become parameters. A level only orders spots, so the list order covers it."
     }
    ]
   },
@@ -165,8 +168,9 @@ window.LOOP_CODING.parts.push({
      "q": "Write each class as − state and + behaviour.",
      "starter": "class ParkingLot\n- \n+ \n\nclass Spot\n- \n+ \n\nclass Ticket\n- \n+ ",
      "hint": "The lot holds spots and open tickets. A spot holds a size and who is in it. A ticket holds what exit needs for the fee.",
-     "solution": "class ParkingLot\n- spots: Spot[]  (lowest level first)\n- tickets: Map<ticket_id, Ticket>\n- next_id: int\n+ enter(plate, size, now) -> Ticket | error\n+ exit(ticket_id, now) -> fee in cents | error\n+ free_count(size) -> int\n\nclass Spot\n- spot_id: string\n- size: Size  (SMALL, MEDIUM, LARGE -> enum)\n- plate: string | None\n+ fits(size) -> boolean\n+ park(plate) -> void\n+ leave() -> void\n\nclass Ticket\n- ticket_id: int\n- plate: string\n- size: Size\n- spot: Spot\n- entered_at: datetime",
-     "why": "Exit looks a ticket up by id, so a map keeps it to one step. The ticket stores the vehicle size so the fee needs no second lookup."
+     "solution": "class ParkingLot\n- spots: Spot[]  (lowest level first)  # enter scans in order for the first free fit\n- tickets: Map<ticket_id, Ticket>  # exit only gets an id; a map finds it in one step\n- next_id: int  # every ticket needs a unique id; a counter hands out the next\n+ enter(plate, size, now) -> Ticket | error  # req 1\n+ exit(ticket_id, now) -> fee in cents | error  # req 2 and 3: free the spot, price the stay\n+ free_count(size) -> int  # req 4: the sign at the gate\n\nclass Spot\n- spot_id: string  # printed on the ticket so the driver finds the car\n- size: Size  (SMALL, MEDIUM, LARGE -> enum)  # decides what fits\n- plate: string | None  # None means free; no separate flag\n+ fits(size) -> boolean  # the size rule lives in one place\n+ park(plate) -> void  # the spot changes its own state\n+ leave() -> void  # exit calls it to free the spot\n\nclass Ticket\n- ticket_id: int  # the key in the lot's map\n- plate: string  # catches the same car entering twice\n- size: Size  # the fee rate, without a second lookup\n- spot: Spot  # exit frees this spot directly\n- entered_at: datetime  # fee = now - entered_at",
+     "why": "Exit looks a ticket up by id, so a map keeps it to one step. The ticket stores the vehicle size so the fee needs no second lookup.",
+     "say": "**I start from the methods the requirements gave me, then ask what each one has to read.** Enter needs the spots in order, so the lot holds a list. Exit gets only a ticket id, so the lot keeps tickets in a map by id, and a counter to make new ids. The ticket carries what the fee needs: size, spot and entry time."
     },
     {
      "t": "turn",
@@ -408,7 +412,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. Primary capabilities\n- \n\n2. Error handling\n- \n\n3. Scope boundaries\n- ",
      "hint": "What a user does, how a thing is addressed, what a file holds, what find matches on. Folder exists, name taken, bad path. A real disk, delete and move, users.",
      "solution": "1. Primary capabilities\n- What can a user do?\n- How are things addressed?\n- What does a file hold?\n- What can find match on?\n\n2. Error handling\n- Make a folder that already exists?\n- Add a file whose name is taken?\n- List or search a path that does not exist?\n\n3. Scope boundaries\n- A real disk, or a model in memory?\n- Delete and move?\n- Several users, permissions, two things at once?",
-     "why": "With no requirements given, the questions are the answer. Paths give a resolve step, a size and no contents give a tiny File, and 'delete and move later' tells you where the design must stay open."
+     "why": "With no requirements given, the questions are the answer. Paths give a resolve step, a size and no contents give a tiny File, and 'delete and move later' tells you where the design must stay open.",
+     "say": "**I group my questions in three buckets: what it must do, what goes wrong, where scope stops.** The prompt is one line, so I start with what a user does, how things are addressed and what a file holds. Then a folder that exists, a taken name and a bad path. Then real disk, delete and move."
     }
    ]
   },
@@ -499,7 +504,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. \n2. \n3. \n",
      "hint": "Make folders and files, list, size, find. Each with its error.",
      "solution": "1. User makes folders and adds files by absolute path.\n   - The system makes the missing folders on the way; a file needs its folder to exist\n   - Error if the path is not absolute, the name is taken, or a file is in the way\n2. User lists a folder.\n   - Returns the child names, sorted\n   - Error if the path does not exist\n3. User asks the size of a file or a folder.\n   - A folder's size is the total of everything inside it\n4. User finds files under a path by extension and minimum size.\n   - Returns the full path of each match\n   - Error if the start path does not exist\n5. Out of scope: file contents, a real disk, delete and move (extensions), users and permissions, threads.",
-     "why": "Each requirement is a method: 1 is mkdir and add_file, 2 is ls, 3 is size_of, 4 is find. Requirement 3 is the one that points at a Composite."
+     "why": "Each requirement is a method: 1 is mkdir and add_file, 2 is ls, 3 is size_of, 4 is find. Requirement 3 is the one that points at a Composite.",
+     "say": "From your answers I get four requirements. **Each one is a thing a user does, and each becomes a method: make folders and files, list, size, find.** I say the error case with each so I don't forget it in the code."
     }
    ]
   },
@@ -518,7 +524,8 @@ window.LOOP_CODING.parts.push({
      "starter": "User: \nPath: \nFile: \nDirectory: \nEntry: \nFileSystem: \nFile contents: \nFilter: ",
      "hint": "Which nouns carry data the design needs? Is a path an object? Is a filter a class yet?",
      "solution": "User: drop. External actor; not modelled\nPath: drop. A string; the file system turns it into an entry\nFile: keep. A name and a size\nDirectory: keep. A name and its children, by name\nEntry: keep. The shared base: size() and walk() work on a file or a folder, so callers need no type checks\nFileSystem: keep. Holds the root and turns a path into an entry\nFile contents: drop. Only the size matters here\nFilter: drop. Two parameters on find are enough for now; it becomes a class when conditions combine",
-     "why": "Four classes: Entry, File, Directory and FileSystem. A filter is not one yet: it earns its place only when the interviewer asks to combine conditions."
+     "why": "Four classes: Entry, File, Directory and FileSystem. A filter is not one yet: it earns its place only when the interviewer asks to combine conditions.",
+     "say": "I underline the nouns. **File and directory carry data I need, and a shared Entry base lets size and walk work on either.** A path is only a string that the file system turns into an entry. A filter stays two parameters on find until conditions combine."
     }
    ]
   },
@@ -536,8 +543,9 @@ window.LOOP_CODING.parts.push({
      "q": "Write each class as − state and + behaviour.",
      "starter": "class FileSystem\n- \n+ \n\nclass Entry\n- \n+ \n\nclass File (is an Entry)\n- \n+ \n\nclass Directory (is an Entry)\n- \n+ ",
      "hint": "FileSystem holds the root. File and Directory share a base with size and walk. A directory holds children by name.",
-     "solution": "class FileSystem\n- root: Directory\n+ mkdir(path) -> void | error\n+ add_file(path, nbytes) -> void | error\n+ ls(path) -> names | error\n+ size_of(path) -> int | error\n+ find(path, ext, min_size) -> paths | error\n\nclass Entry\n- name: string\n+ size() -> int\n+ walk(path) -> (path, entry) pairs\n\nclass File (is an Entry)\n- nbytes: int\n+ size() -> nbytes\n\nclass Directory (is an Entry)\n- children: Map<name, Entry>\n+ size() -> sum of the children\n+ walk(path) -> itself, then everything below",
-     "why": "The base class is the only extra idea. Because both answer size() and walk(), a folder's size and find need no isinstance checks."
+     "solution": "class FileSystem\n- root: Directory  # every absolute path starts here\n+ mkdir(path) -> void | error  # req 1: make folders on the way\n+ add_file(path, nbytes) -> void | error  # req 1: put a file in its folder\n+ ls(path) -> names | error  # req 2: the child names, sorted\n+ size_of(path) -> int | error  # req 3: file or folder size\n+ find(path, ext, min_size) -> paths | error  # req 4: walk and filter\n\nclass Entry\n- name: string  # the key its parent stores it under\n+ size() -> int  # req 3: file or folder, no type check\n+ walk(path) -> (path, entry) pairs  # req 4: find visits both kinds alike\n\nclass File (is an Entry)\n- nbytes: int  # a file is a name and a size, no contents\n+ size() -> nbytes  # req 3: a file knows its own size\n\nclass Directory (is an Entry)\n- children: Map<name, Entry>  # lookup by name; a taken name is an error\n+ size() -> sum of the children  # req 3: a folder is what is inside it\n+ walk(path) -> itself, then everything below  # req 4: find needs every path",
+     "why": "The base class is the only extra idea. Because both answer size() and walk(), a folder's size and find need no isinstance checks.",
+     "say": "**I start from the methods the requirements gave me, then ask what each one has to read.** Every method gets a path, so the file system holds a root and walks down from it. A folder's size is what is inside it, and find visits every entry, so both kinds answer size and walk. A folder looks a child up by name, so it holds a map by name."
     },
     {
      "t": "turn",
@@ -804,7 +812,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. Primary capabilities\n- \n\n2. Error handling\n- \n\n3. Scope boundaries\n- ",
      "hint": "Items and quantities, what a percentage applies to, how the cart is used. Below zero, rounding, bad input. Combining discounts, tax and shipping.",
      "solution": "1. Primary capabilities\n- What is in the cart: items with quantities?\n- What does the percentage apply to?\n- How is the cart used?\n\n2. Error handling\n- Can a flat discount push the total below zero?\n- What if a percentage does not divide evenly?\n- Bad input: zero quantity, removing something not in the cart?\n\n3. Scope boundaries\n- Can discounts be combined?\n- Tax, shipping, payment, stock?",
-     "why": "Each question changes a class or a rule. Quantities give a line. 'What it applies to' fixes the discount's input. Rounding is the first thing they check, and it is yours to choose."
+     "why": "Each question changes a class or a rule. Quantities give a line. 'What it applies to' fixes the discount's input. Rounding is the first thing they check, and it is yours to choose.",
+     "say": "**I group my questions in three buckets: what it must do, what goes wrong, where scope stops.** What is in the cart and what a percentage applies to first, because they decide the classes. Then a total below zero, rounding and bad input. Then combining discounts, tax and shipping."
     }
    ]
   },
@@ -885,7 +894,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. \n2. \n3. \n",
      "hint": "Add, remove, subtotal, checkout with one discount.",
      "solution": "1. User adds an item with a quantity.\n   - The cart keeps one line per item and raises its quantity\n   - Zero or negative quantity is an error\n2. User removes some or all of an item.\n   - The line shrinks and is dropped at zero\n   - An item not in the cart, or more than it holds, is an error\n3. The cart reports a subtotal in integer cents.\n4. Checkout applies one discount (none, a percent or a flat amount) and returns the cents to pay.\n   - A percent is taken off the whole total and rounded down to a whole cent\n   - A flat discount never takes the total below zero; the cart is not emptied\n5. Out of scope: tax and shipping, payment, stock levels, combining discounts (they will ask).",
-     "why": "Each requirement maps to a method: 1 is add, 2 is remove, 3 is subtotal, 4 is checkout and Discount.apply."
+     "why": "Each requirement maps to a method: 1 is add, 2 is remove, 3 is subtotal, 4 is checkout and Discount.apply.",
+     "say": "From your answers I get four requirements. **Each one is a thing the shopper does, and each becomes a method: add, remove, subtotal, checkout with one discount.** I say the error case with each so I don't forget it in the code."
     }
    ]
   },
@@ -904,7 +914,8 @@ window.LOOP_CODING.parts.push({
      "starter": "Item: \nLine: \nCart: \nDiscount: \nCustomer / Order / Payment: ",
      "hint": "What does the cart store? What does a discount need to know? What about the customer and payment?",
      "solution": "Item: keep. A sku, a name and a price in cents; shared by every line that holds it\nLine: keep. An item and a quantity: what the cart actually stores\nCart: keep. Runs add, remove, subtotal and checkout\nDiscount: keep. A kind and a value; turns a total into a smaller total\nCustomer / Order / Payment: drop. External or out of scope; not modelled",
-     "why": "Four small classes and an enum. Discount is a class, not an if inside checkout, because the next question is always 'now add another kind'."
+     "why": "Four small classes and an enum. Discount is a class, not an if inside checkout, because the next question is always 'now add another kind'.",
+     "say": "I underline the nouns. **Item, line, cart and discount all carry data or a rule I need, so they stay.** The customer and payment are outside the system. Discount is a class, not an if in checkout, because the next question is another kind."
     }
    ]
   },
@@ -922,8 +933,9 @@ window.LOOP_CODING.parts.push({
      "q": "Write each class as − state and + behaviour.",
      "starter": "class Cart\n- \n+ \n\nclass Line\n- \n+ \n\nclass Item\n- \n+ \n\nclass Discount\n- \n+ ",
      "hint": "The cart holds lines by sku. A line holds an item and a quantity. A discount holds a kind and a value.",
-     "solution": "class Cart\n- lines: Map<sku, Line>\n+ add(item, qty) -> void | error\n+ remove(sku, qty) -> void | error\n+ subtotal() -> cents\n+ checkout(discount) -> cents\n\nclass Line\n- item: Item\n- qty: int\n\nclass Item\n- sku: string\n- name: string\n- price: int  (cents)\n\nclass Discount\n- kind: Kind  (PERCENT, FLAT -> enum)\n- value: int  (a percent or cents)\n+ apply(total) -> cents",
-     "why": "A map by sku makes 'add the same item again' one lookup. Item and Line carry data only; the rules live in Cart and Discount."
+     "solution": "class Cart\n- lines: Map<sku, Line>  # one line per item; adding again is one lookup\n+ add(item, qty) -> void | error  # req 1: raise the quantity\n+ remove(sku, qty) -> void | error  # req 2: shrink, drop at zero\n+ subtotal() -> cents  # req 3: sum of price times quantity\n+ checkout(discount) -> cents  # req 4: subtotal, then the discount\n\nclass Line\n- item: Item  # what is being bought\n- qty: int  # how many; the cart raises and lowers it\n\nclass Item\n- sku: string  # the key the cart finds a line by\n- name: string  # what the shopper sees\n- price: int  (cents)  # subtotal needs it; an int avoids float drift\n\nclass Discount\n- kind: Kind  (PERCENT, FLAT -> enum)  # decides how apply works\n- value: int  (a percent or cents)  # the amount that kind uses\n+ apply(total) -> cents  # req 4: smaller total, never below zero",
+     "why": "A map by sku makes 'add the same item again' one lookup. Item and Line carry data only; the rules live in Cart and Discount.",
+     "say": "**I start from the methods the requirements gave me, then ask what each one has to read.** Add the same item again must raise a quantity, so the cart keeps lines in a map by sku. Subtotal needs a price and a quantity, so a line holds an item and a qty. Checkout needs a kind and a value, so a discount holds those two."
     },
     {
      "t": "turn",
@@ -1171,7 +1183,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. Primary capabilities\n- \n\n2. Error handling\n- \n\n3. Scope boundaries\n- ",
      "hint": "A book versus a copy, loan length and limit, search. Late returns, a copy already out, today's date. Reservations, payment, logins, threads.",
      "solution": "1. Primary capabilities\n- Is a book the same as a copy of a book?\n- What are the loan rules?\n- How do people find books?\n\n2. Error handling\n- What happens on a late return?\n- A copy that is already out, or a member at the limit?\n- How does the code know today's date?\n\n3. Scope boundaries\n- Reservations, paying fines, logins, notifications?\n- Persistence or threads?",
-     "why": "A title and its copies give two classes. The limit and the fine give constants and the one place they live. Passing the date in decides how the demo and any test stay stable."
+     "why": "A title and its copies give two classes. The limit and the fine give constants and the one place they live. Passing the date in decides how the demo and any test stay stable.",
+     "say": "**I sort my questions into three buckets: what it must do, what goes wrong, where scope stops.** I ask first whether a book and a copy are the same thing, because that decides the classes. Then the loan rules and a late return, then what I will leave out, like reservations."
     }
    ]
   },
@@ -1252,7 +1265,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. \n2. \n3. \n",
      "hint": "Add a copy, search, borrow, return with a fine.",
      "solution": "1. Librarian adds a copy of a title.\n   - The system links the copy to its title by isbn\n   - A repeated barcode is an error\n2. User searches by title or author.\n   - The system returns matching titles, any case, part of a word\n3. Member borrows a copy.\n   - The system records the borrower and a due date 14 days out\n   - A copy already on loan, an unknown copy, or a member already at 2 loans is an error\n4. Member returns a copy.\n   - The system frees it and adds a fine of 25 cents per late day to the member\n   - A copy that is not on loan is an error; on time means no fine\n5. Out of scope: reservations (they will ask), paying fines, logins and roles, persistence and threads.",
-     "why": "Each requirement maps to a method: 1 is add_copy, 2 is search, 3 is checkout, 4 is return_copy and _fine_for."
+     "why": "Each requirement maps to a method: 1 is add_copy, 2 is search, 3 is checkout, 4 is return_copy and _fine_for.",
+     "say": "From your answers I get four requirements. **Each one is something a person does, and each becomes a method: add_copy, search, checkout, return_copy.** I say the error case beside each one, so the code handles it."
     }
    ]
   },
@@ -1271,7 +1285,8 @@ window.LOOP_CODING.parts.push({
      "starter": "Book (a title): \nCopy: \nMember: \nLibrary: \nLoan: \nLibrarian: ",
      "hint": "Is a book one thing or two? What does a loan add that the copy doesn't already hold?",
      "solution": "Book (a title): keep. isbn, title and author, shared by all its copies; search works on it\nCopy: keep. One physical copy with a barcode; it knows who has it and when it is due\nMember: keep. Holds their current loans and the fines they owe\nLibrary: keep. Runs add, search, checkout and return, and owns the rules\nLoan: drop. Only a borrower and a due date; both live on the Copy\nLibrarian: drop. A caller of the same methods; not modelled",
-     "why": "Four classes. Dropping Loan keeps the borrower and due date on the copy, and the member's loans are a list of copies. Splitting title from copy is the move interviewers look for."
+     "why": "Four classes. Dropping Loan keeps the borrower and due date on the copy, and the member's loans are a list of copies. Splitting title from copy is the move interviewers look for.",
+     "say": "I underline the nouns. **A title and a copy are two things, so Book and Copy both stay,** along with Member and Library. A loan is only a borrower and a due date, and both sit on the copy, so it is not a class. A librarian calls the same methods, so no class."
     }
    ]
   },
@@ -1289,8 +1304,9 @@ window.LOOP_CODING.parts.push({
      "q": "Write each class as − state and + behaviour.",
      "starter": "class Library\n- \n+ \n\nclass Book\n- \n+ \n\nclass Copy\n- \n+ \n\nclass Member\n- \n+ ",
      "hint": "The library holds members, titles and copies by key. A copy knows its title, its borrower and its due date. A member holds loans and fines.",
-     "solution": "class Library\n- members: Map<id, Member>\n- books: Map<isbn, Book>\n- copies: Map<barcode, Copy>\n- LOAN_DAYS, MAX_LOANS, FINE_PER_DAY: constants\n+ add_copy(book, barcode) -> void | error\n+ search(text) -> Book[]\n+ checkout(member_id, barcode, today) -> due date | error\n+ return_copy(barcode, today) -> fine cents | error\n\nclass Book\n- isbn: string\n- title: string\n- author: string\n- copies: Copy[]\n\nclass Copy\n- barcode: string\n- book: Book\n- borrower: Member | None\n- due: date | None\n\nclass Member\n- member_id: string\n- name: string\n- loans: Copy[]\n- fines: int  (cents)",
-     "why": "Maps by key make borrow and return one lookup. The rules (14 days, 2 loans, the fine) sit in the Library, so the data classes stay plain."
+     "solution": "class Library\n- members: Map<id, Member>  # borrow gets a member id; a map finds them in one step\n- books: Map<isbn, Book>  # add_copy links a copy to its title by isbn\n- copies: Map<barcode, Copy>  # checkout and return get only a barcode\n- LOAN_DAYS, MAX_LOANS, FINE_PER_DAY: constants  # the rules in one place\n+ add_copy(book, barcode) -> void | error  # req 1: a repeated barcode is an error\n+ search(text) -> Book[]  # req 2: titles, any case, part of a word\n+ checkout(member_id, barcode, today) -> due date | error  # req 3: 14 days, 2 loans max\n+ return_copy(barcode, today) -> fine cents | error  # req 4: late days times 25 cents\n\nclass Book\n- isbn: string  # the key that all copies of a title share\n- title: string  # search matches on this\n- author: string  # search matches on this too\n- copies: Copy[]  # a title knows its physical copies\n\nclass Copy\n- barcode: string  # the key a borrower presents\n- book: Book  # a copy points back to its title\n- borrower: Member | None  # None means on the shelf; no separate flag\n- due: date | None  # return compares today to this for the fine\n\nclass Member\n- member_id: string  # the key in the library's map\n- name: string  # who the loans belong to\n- loans: Copy[]  # its length is checked against the 2-loan limit\n- fines: int  (cents)  # a late return adds to it",
+     "why": "Maps by key make borrow and return one lookup. The rules (14 days, 2 loans, the fine) sit in the Library, so the data classes stay plain.",
+     "say": "**I start from the four methods and ask what each one has to read.** Checkout and return get only a barcode, so the library keeps copies in a map by barcode. Checkout also gets a member id, so members are a map too, and the limit check needs the member's loans. Return needs the due date to price a late fine, so the copy stores its borrower and due date."
     },
     {
      "t": "turn",
@@ -1555,7 +1571,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. Primary capabilities\n- \n\n2. Error handling\n- \n\n3. Scope boundaries\n- ",
      "hint": "Cars and floors, the two kinds of button, who picks the car. A floor that doesn't exist, stopping on the way, weight and jams. How time works, and a display.",
      "solution": "1. Primary capabilities\n- How many cars and floors?\n- What kinds of request are there?\n- Who decides which car answers a hall call?\n\n2. Error handling\n- A floor that doesn't exist?\n- Does a car stop for floors on the way?\n- Weight limits, jammed doors?\n\n3. Scope boundaries\n- How does time work? Threads or a real clock?\n- A display or a user interface?",
-     "why": "Every question changes a class or a method. The two buttons give request and select_floor. The tick question is the one that matters: a step() method makes the whole system deterministic and easy to trace on a whiteboard."
+     "why": "Every question changes a class or a method. The two buttons give request and select_floor. The tick question is the one that matters: a step() method makes the whole system deterministic and easy to trace on a whiteboard.",
+     "say": "**I sort my questions into three buckets: what it must do, what goes wrong, where scope stops.** I ask about the two kinds of button first, because they become two methods. Then bad floors, and last how time works, since a tick method makes the whole thing easy to trace."
     }
    ]
   },
@@ -1636,7 +1653,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. \n2. \n3. \n",
      "hint": "A hall call, a car call, time passing, reading the state.",
      "solution": "1. Someone presses a hall button (a floor and a direction).\n   - The system chooses a car and adds the floor to its stops\n   - Returns the car's id, or an error if the floor doesn't exist\n2. A rider presses a floor inside a car.\n   - The system adds the floor to that car's stops\n   - An error if the floor or the car doesn't exist\n3. Time advances with step().\n   - Each car stops at its requested floors, keeps its direction while stops are ahead, then turns, and goes idle when none are left\n4. Anyone can read each car's floor and direction.\n5. Out of scope: weight and capacity, real speeds, doors that jam, a display or UI, threads and a real clock.",
-     "why": "Each requirement maps to a method: 1 is request, 2 is select_floor, 3 is step and Car.step, 4 is status."
+     "why": "Each requirement maps to a method: 1 is request, 2 is select_floor, 3 is step and Car.step, 4 is status.",
+     "say": "From your answers I get four requirements. **Each one is something that happens, and each becomes a method: request, select_floor, step, status.** I say the error case with each one, like a floor that does not exist."
     }
    ]
   },
@@ -1655,7 +1673,8 @@ window.LOOP_CODING.parts.push({
      "starter": "Building: \nElevator car: \nElevator system: \nRequest: \nDoor, button, display: \nRider: ",
      "hint": "What does a request need to carry? Do doors and buttons do anything in this scope?",
      "solution": "Building: drop. Only the number of floors matters; it is a parameter\nElevator car: keep. Has a floor, a direction and the floors it must stop at\nElevator system: keep. Routes hall calls and car calls and runs the tick\nRequest: drop. A hall call is just a floor and a direction, handed straight to a method\nDoor, button, display: drop. No behaviour in this scope: doors are one tick, buttons are method calls\nRider: drop. External; not modelled",
-     "why": "Two classes and one enum. Dropping Request, Door and Display is the move interviewers notice: nothing in the requirements gives them behaviour."
+     "why": "Two classes and one enum. Dropping Request, Door and Display is the move interviewers notice: nothing in the requirements gives them behaviour.",
+     "say": "I underline the nouns. **The car and the system carry data and behaviour, so they stay.** A request is only a floor and a direction passed to a method, and doors and buttons do nothing in this scope. A building is only a floor count, so it is a parameter."
     }
    ]
   },
@@ -1673,8 +1692,9 @@ window.LOOP_CODING.parts.push({
      "q": "Write each class as − state and + behaviour.",
      "starter": "class ElevatorSystem\n- \n+ \n\nclass Car\n- \n+ ",
      "hint": "The system holds the cars and the building height. A car holds where it is, which way it is going and the floors it must stop at.",
-     "solution": "class ElevatorSystem\n- floors: int\n- cars: Car[]\n+ request(floor, direction) -> car id | error\n+ select_floor(car_id, floor) -> void | error\n+ step() -> void\n+ status() -> string\n\nclass Car\n- car_id: int\n- floor: int\n- direction: Direction  (UP, DOWN, IDLE -> enum)\n- stops: Set<floor>\n+ add_stop(floor) -> void\n+ step() -> void",
-     "why": "A set of stops cannot hold duplicates, so pressing a button twice costs nothing. The car decides its own movement; the system only decides which car."
+     "solution": "class ElevatorSystem\n- floors: int  # request and select_floor check a floor against it\n- cars: Car[]  # request scans these to pick one; step moves each\n+ request(floor, direction) -> car id | error  # req 1: pick a car for a hall call\n+ select_floor(car_id, floor) -> void | error  # req 2: a button inside a car\n+ step() -> void  # req 3: advance every car one tick\n+ status() -> string  # req 4: each car's floor and direction\n\nclass Car\n- car_id: int  # request returns it; select_floor gets it\n- floor: int  # where the car is now\n- direction: Direction  (UP, DOWN, IDLE -> enum)  # decides which way step moves\n- stops: Set<floor>  # a set, so pressing twice costs nothing\n+ add_stop(floor) -> void  # a call lands here once a car is chosen\n+ step() -> void  # req 3: the car moves itself, not the system",
+     "why": "A set of stops cannot hold duplicates, so pressing a button twice costs nothing. The car decides its own movement; the system only decides which car.",
+     "say": "**I start from the four methods and ask what each one has to read.** A hall call has to choose among cars, so the system keeps a list of cars and the floor count to reject bad floors. Step moves a car, so a car needs its floor, its direction and the floors it must stop at. A set holds those stops, so a double press adds nothing."
     },
     {
      "t": "turn",
@@ -1932,7 +1952,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. Primary capabilities\n- \n\n2. Error handling\n- \n\n3. Scope boundaries\n- ",
      "hint": "The operations, what the ttl counts from, what capacity counts. Missing, expired, put on an existing key, bad numbers. Does expiry need a background job? Threads?",
      "solution": "1. Primary capabilities\n- What operations?\n- What is the time to live measured from?\n- What counts toward capacity, and what is evicted?\n\n2. Error handling\n- What does get return for a missing or expired key?\n- Put on a key that exists?\n- A bad capacity or a time to live of zero?\n\n3. Scope boundaries\n- Do expired entries have to disappear on their own?\n- Threads, persistence, a network?",
-     "why": "Each answer is a layer. A ttl gives an expiry on each entry, capacity gives an ordered dict, and 'checked when touched' means no background thread yet."
+     "why": "Each answer is a layer. A ttl gives an expiry on each entry, capacity gives an ordered dict, and 'checked when touched' means no background thread yet.",
+     "say": "**I sort my questions into three buckets: what it must do, what goes wrong, where scope stops.** I ask what the time to live counts from and what capacity counts, because each one is a layer. Then missing and expired keys, and last whether expiry needs a background job or threads."
     }
    ]
   },
@@ -2013,7 +2034,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. \n2. \n3. \n",
      "hint": "Store with an expiry, read, the capacity limit, delete and count.",
      "solution": "1. User stores a value under a key.\n   - The system keeps it with an expiry time (the put's ttl, else the default)\n   - A put on an existing key replaces it and restarts the ttl; a ttl of zero or less is an error\n2. User reads a key.\n   - The system returns the value and marks the key most recently used\n   - A missing or expired key returns None; an expired one is removed\n3. The cache holds at most a set number of keys.\n   - A put that goes over drops the least recently used key\n   - A capacity under 1 is an error\n4. User deletes a key or asks how many entries there are.\n   - Delete says whether the key was there\n   - Expired entries that nobody touched still count\n5. Out of scope: persistence and networking, a background thread that removes expired entries, threads (an extension), values that are None.",
-     "why": "Each requirement is a layer or a method: 1 is put and the ttl, 2 is get, 3 is the LRU in put, 4 is delete and size."
+     "why": "Each requirement is a layer or a method: 1 is put and the ttl, 2 is get, 3 is the LRU in put, 4 is delete and size.",
+     "say": "From your answers I get four requirements. **Each one is a layer or a method: put with a ttl, get, the capacity limit inside put, and delete with size.** I say the error case with each one, like a ttl of zero."
     }
    ]
   },
@@ -2032,7 +2054,8 @@ window.LOOP_CODING.parts.push({
      "starter": "User / caller: \nKey and value: \nEntry: \nCache: \nClock: \nEviction policy: ",
      "hint": "What does an entry need besides its value? Is the clock a class? Is the eviction policy one?",
      "solution": "User / caller: drop. External; not modelled\nKey and value: drop. A string and anything else; they sit in the dict, not in classes\nEntry: keep. A value and when it expires, so expiry is per entry\nCache: keep. Holds the entries in recency order and runs put, get, delete\nClock: drop. A function passed in, so a test can fake time; not a class\nEviction policy: drop. Only LRU is asked for; it becomes a class only if another policy is requested",
-     "why": "Two classes. The clock is a function and eviction is a line in put; neither earns a class until the requirements force it."
+     "why": "Two classes. The clock is a function and eviction is a line in put; neither earns a class until the requirements force it.",
+     "say": "I underline the nouns. **An entry stays, because expiry belongs to each value, and the cache stays to hold them in order.** Keys and values sit in the dict, the clock is a function I pass in, and eviction is a line in put. None of those earns a class yet."
     }
    ]
   },
@@ -2050,8 +2073,9 @@ window.LOOP_CODING.parts.push({
      "q": "Write each class as − state and + behaviour.",
      "starter": "class Cache\n- \n+ \n\nclass Entry\n- \n+ ",
      "hint": "Cache holds an ordered dict of entries and a clock. An entry holds a value and an expiry time.",
-     "solution": "class Cache\n- capacity: int\n- default_ttl: seconds | None\n- now: function returning seconds\n- entries: OrderedDict<key, Entry>  (least recently used first)\n+ put(key, value, ttl) -> void | error\n+ get(key) -> value | None\n+ delete(key) -> boolean\n+ size() -> int\n\nclass Entry\n- value: any\n- expires_at: seconds | None\n+ is_expired(now) -> boolean",
-     "why": "An ordered dict is the whole LRU: the front is the oldest use, move_to_end marks a use, and popitem from the front evicts."
+     "solution": "class Cache\n- capacity: int  # put compares the size to this to evict\n- default_ttl: seconds | None  # used when a put gives no ttl\n- now: function returning seconds  # a passed-in clock, so time can be faked\n- entries: OrderedDict<key, Entry>  (least recently used first)  # lookup by key, and order is the LRU\n+ put(key, value, ttl) -> void | error  # req 1 and 3: store, then evict if over capacity\n+ get(key) -> value | None  # req 2: miss, expiry, and marks a use\n+ delete(key) -> boolean  # req 4: says whether the key was there\n+ size() -> int  # req 4: expired but untouched entries still count\n\nclass Entry\n- value: any  # what the caller stored\n- expires_at: seconds | None  # expiry is per entry, set at put\n+ is_expired(now) -> boolean  # get asks the entry, not the cache",
+     "why": "An ordered dict is the whole LRU: the front is the oldest use, move_to_end marks a use, and popitem from the front evicts.",
+     "say": "**I start from the four methods and ask what each one has to read.** Get and put find a key, so the cache keeps a dict of entries. Eviction needs the least recently used key, so an ordered dict gives me both lookup and order. Expiry needs the time, so I pass in a clock, and each entry stores when it expires."
     },
     {
      "t": "turn",

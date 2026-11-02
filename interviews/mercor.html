@@ -873,7 +873,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
 <dialog id="convo" class="convo" aria-label="Mock conversation"></dialog>
 <script src="../figures/icons.js?v=f5a48822"></script>
 <script src="../figures/figures.js?v=0e01e061"></script>
-<script src="../private/figures.js?v=0bdbc163"></script>
+<script src="../private/figures.js?v=38a55080"></script>
 <script src="../figures/notes.js?v=82a7302c"></script>
 <script src="../private/notes.js?v=23086437"></script>
 <script src="../private/loops/mercor.js?v=57196f25"></script>
@@ -2661,6 +2661,12 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       var r = el("div");
       r.appendChild(cdPre(b.solution));
       if (b.why) { r.appendChild(el("p", "cd-why", inl(b.why))); }
+      if (b.say) {
+        r.appendChild(el("div", "lab", "Say it"));
+        var sh = el("div", "say-sheet");
+        [].concat(b.say).forEach(function (t) { sh.appendChild(el("p", "", inl(t))); });
+        r.appendChild(sh);
+      }
       bar.after(r);
       return el("span");
     });

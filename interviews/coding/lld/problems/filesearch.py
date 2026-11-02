@@ -32,12 +32,18 @@ PROBLEM = {
                  ("Query / result list", False, "Results are yielded one by one; no list class")],
 
     "classes": [
-        {"name": "FileSearcher", "behaviour": ["search(root, filter) -> files, one at a time"]},
-        {"name": "Directory", "state": ["name: string", "children: Entry[]"], "behaviour": ["contains files and folders"]},
-        {"name": "File", "state": ["name: string", "size: int"], "behaviour": ["extension() -> string"]},
-        {"name": "Filter (base)", "behaviour": ["matches(file) -> boolean"]},
-        {"name": "SizeFilter, ExtensionFilter", "state": ["the limit or the extension"], "behaviour": ["matches(file) -> boolean"]},
+        {"name": "FileSearcher", "behaviour": ["search(root, filter) -> files, one at a time  # req 1 and 3: walk the tree and yield matches"]},
+        {"name": "Directory", "state": ["name: string  # part of the path we return",
+                                        "children: Entry[]  # files and folders, so the tree nests"],
+         "behaviour": ["contains files and folders  # the walk pushes its children"]},
+        {"name": "File", "state": ["name: string  # the extension comes from it",
+                                   "size: int  # req 2: size conditions read it"],
+         "behaviour": ["extension() -> string  # ExtensionFilter asks the file"]},
+        {"name": "Filter (base)", "behaviour": ["matches(file) -> boolean  # req 2: one question about one file"]},
+        {"name": "SizeFilter, ExtensionFilter", "state": ["the limit or the extension  # the value each one compares against"],
+         "behaviour": ["matches(file) -> boolean  # each kind answers its own question"]},
     ],
+    "class_say": "**I start from the one method the requirements gave me: search(root, filter), which yields matching files.** It has to walk a tree, so folders hold children and files hold a name and a size. Each condition is a Filter with one method, matches(file). That way And, Or and Not can combine them, and the walk never needs to know the kind.",
 
     "map": {"center": ("FileSearcher", "search(root, filter)"),
             "owned": [("Directory", "children"), ("File", "name, size")],

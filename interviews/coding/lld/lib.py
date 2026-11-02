@@ -152,24 +152,24 @@ def mock_part(P):
         {"t": "p", "text": "Three buckets. **Primary capabilities:** what it must do. **Error handling:** what goes wrong. **Scope boundaries:** what you will not build."},
         {"t": "write", "id": f"{pid}-clarify-w", "q": "Write your questions under each bucket.",
          "starter": "1. Primary capabilities\n- \n\n2. Error handling\n- \n\n3. Scope boundaries\n- ",
-         "hint": P["clarify_hint"], "solution": clarify_text(P), "why": P["clarify_why"]}]})
+         "hint": P["clarify_hint"], "solution": clarify_text(P), "why": P["clarify_why"], "say": P.get("clarify_say")}]})
     S.append({"id": f"{pid}-reqs", "title": "b) Requirements", "blocks": [
         {"t": "p", "text": "**The interviewer answers your questions:**"},
         turn(P["answers"], P["playback"]),
         {"t": "table", "head": ["Bucket", "Question", "Answer"], "rows": clarify_rows(P)},
         {"t": "p", "text": "Turn the answers into numbered requirements. **Each one: who does what, what the system does, and what can go wrong.** Then list what's out of scope."},
         {"t": "write", "id": f"{pid}-reqs-w", "q": "Write the requirements, numbered, then out of scope.",
-         "starter": "1. \n2. \n3. \n", "hint": P["req_hint"], "solution": req_text(P), "why": P["req_why"]}]})
+         "starter": "1. \n2. \n3. \n", "hint": P["req_hint"], "solution": req_text(P), "why": P["req_why"], "say": P.get("req_say")}]})
     S.append({"id": f"{pid}-entities", "title": "c) Entities", "blocks": [
         {"t": "p", "text": "Underline the nouns in the requirements. **Keep a noun only if the design needs its data or behaviour.**"},
         {"t": "write", "id": f"{pid}-ent-w", "q": "List the nouns. For each, keep or drop, and why.",
          "starter": "\n".join(f"{n}: " for n, _, _ in P["entities"]), "hint": P["ent_hint"],
-         "solution": entity_text(P), "why": P["ent_why"]}]})
+         "solution": entity_text(P), "why": P["ent_why"], "say": P.get("ent_say")}]})
     cls_blocks = [
         {"t": "p", "text": "For each class, think **requirements (−)**: the state it holds, set in __init__; and **behaviour (+)**: its methods, with what they return."},
         {"t": "write", "id": f"{pid}-classes-w", "q": "Write each class as − state and + behaviour.",
          "starter": "\n\n".join(f"class {c['name']}\n- \n+ " for c in P["classes"]), "hint": P["class_hint"],
-         "solution": class_text(P), "why": P["class_why"]}]
+         "solution": class_text(P), "why": P["class_why"], "say": P.get("class_say")}]
     for qa in P.get("class_qa", []):
         cls_blocks.append(turn(qa["ask"], qa["say"], explain=qa.get("explain")))
     S.append({"id": f"{pid}-classes", "title": "d) Class design", "blocks": cls_blocks})
@@ -214,6 +214,7 @@ def cheat_tab(P, number):
             + ["Out of scope: " + ", ".join(P["out_of_scope"]) + "."]},
         {"t": "table", "head": ["Noun", "Keep?", "Why"], "rows": [[n, "keep" if k else "drop", w] for n, k, w in P["entities"]]},
         {"t": "code", "id": f"t10-{P['id']}-classes", "title": "Classes: − state, + behaviour", "code": class_text(P) + "\n", "notes": {}},
+    ] + ([{"t": "say", "lines": [P["class_say"]]}] if P.get("class_say") else []) + [
         {"t": "svg", "svg": class_map(P["title"] + " class map", P["map"]), "alt": "Class map"},
         {"t": "p", "text": "**Core flow**"},
         {"t": "list", "items": [f"{m['name']}: " + "; ".join(logic_of(m)) + "." for m in P["methods"]]},

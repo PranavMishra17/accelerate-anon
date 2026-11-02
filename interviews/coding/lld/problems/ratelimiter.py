@@ -30,12 +30,18 @@ PROBLEM = {
                  ("Clock", False, "A function passed in; tests fake it")],
 
     "classes": [
-        {"name": "RateLimiter", "state": ["rule: Rule", "buckets: Map<key, TokenBucket>", "now: function returning seconds"],
-         "behaviour": ["allow(key) -> (allowed: boolean, retry_after: seconds)"]},
-        {"name": "TokenBucket", "state": ["tokens: float", "last_refill: seconds"],
-         "behaviour": ["try_take(now) -> (allowed, retry_after)", "_refill(now) -> void"]},
-        {"name": "Rule", "state": ["capacity: int", "refill_per_sec: float"], "behaviour": []},
+        {"name": "RateLimiter", "state": ["rule: Rule  # req 3: every bucket follows the same rule",
+                                          "buckets: Map<key, TokenBucket>  # req 2: one bucket per key, made on first use",
+                                          "now: function returning seconds  # injected clock, so tests can fake time"],
+         "behaviour": ["allow(key) -> (allowed: boolean, retry_after: seconds)  # req 1: the one call a service makes"]},
+        {"name": "TokenBucket", "state": ["tokens: float  # what is left to spend; fractional as it refills",
+                                          "last_refill: seconds  # refill by the time since this"],
+         "behaviour": ["try_take(now) -> (allowed, retry_after)  # req 1: take a token or say when to retry",
+                       "_refill(now) -> void  # req 2: tokens grow with time, up to capacity"]},
+        {"name": "Rule", "state": ["capacity: int  # req 3: the burst size",
+                                   "refill_per_sec: float  # req 3: the steady rate"], "behaviour": []},
     ],
+    "class_say": "**I start from the one method the requirements gave me: allow(key).** It has to read that key's token count and when it last refilled, so each key gets a bucket with those two fields. The limiter keeps a map of buckets and a rule for capacity and rate. Time comes in as a function, so the refill can be tested.",
 
     "map": {"center": ("RateLimiter", "allow(key)"),
             "owned": [("TokenBucket", "tokens, last_refill"), ("Rule", "capacity, refill")],

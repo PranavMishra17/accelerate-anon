@@ -1619,4 +1619,8 @@ What: a new part 0.5 on the Amazon LLD tab (interviews/coding/amazon-lld-top10.j
 
 What: a new LLD part, 'Mock: Amazon Locker, the whole round' (interviews/coding/amazon-lld-mock.js, generated and run by amazon_lld_mock_gen.py). Nine stages disclosed one at a time, from the two-line prompt through clarifying questions, the interviewer's answers, nouns to classes, the class sketch, a first draft, the core methods, an extension (cold slots, many lockers) and the summary, then a table mapping each OOP and SOLID idea to where it shows in the answer. Why: he wanted one worked round to study the fundamentals against and to reverse-engineer other mocks. Charter deviation: none (wildcard, Amazon loop).
 
-
+**1 Nov 2026: LLD answers explain how to get there.** In every Amazon LLD problem each class line now carries a
+short comment saying why it exists (next_id: every ticket needs a unique id). The clarify, requirements, entities
+and class design solutions of the staged rounds each end with a short Say it block: how to talk your way to that
+answer, the class one starting from the methods and what each must read. The ten cheat sheets show the class one.
+Fields `clarify_say`, `req_say`, `ent_say`, `class_say` in `interviews/coding/lld/problems/*.py`. No charter deviation.

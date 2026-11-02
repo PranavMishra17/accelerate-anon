@@ -47,7 +47,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. Primary capabilities\n- \n\n2. Error handling\n- \n\n3. Scope boundaries\n- ",
      "hint": "Sizes, how the customer gets the code, how the driver gets a compartment. Many packages per customer, expiry, all full. The whole delivery flow, or only placement and pickup?",
      "solution": "1. Primary capabilities\n- Are there different sized compartments?\n- How does the customer get the code?\n- How does the driver get a compartment?\n\n2. Error handling\n- Can one customer have multiple packages?\n- Do codes expire? What happens to a package left too long?\n- What if all compartments of a size are full?\n\n3. Scope boundaries\n- Whole delivery flow, or only delivery, placement, pickup and recovery?",
-     "why": "Every question changes a class or a method. Sizes give an enum. Multiple packages give one token per package. Expiry and recovery give the expired path."
+     "why": "Every question changes a class or a method. Sizes give an enum. Multiple packages give one token per package. Expiry and recovery give the expired path.",
+     "say": "**I group my questions in three buckets: what it must do, what goes wrong, where scope stops.** Sizes and how the driver gets a compartment first, because they decide the classes. Then many packages, expiry and a full locker. Then whether this is the whole delivery flow."
     }
    ]
   },
@@ -123,7 +124,8 @@ window.LOOP_CODING.parts.push({
      "starter": "1. \n2. \n3. \n",
      "hint": "Carrier deposits, a successful deposit, user retrieves, expiry, staff.",
      "solution": "1. Carrier deposits a package of a specific size (S, M, L).\n   - The system assigns an available compartment\n   - Opens it and returns an access token, or an error\n2. Successful deposit: an access token is generated and returned.\n   - One access token per package\n3. User retrieves a package by entering the access token.\n   - The system validates the code and opens the compartment\n   - A specific error if the code is expired or invalid\n4. Access tokens expire after 7 days.\n   - Expired tokens are rejected\n   - The package stays until staff remove it\n5. Staff can open all expired compartments, then clear each one.\n6. Out of scope: the delivery system, the notification system, how the token gets to the user.",
-     "why": "Each requirement maps to a method: 1 and 2 are deposit_package, 3 is pickup, 4 is is_expired, 5 is open_expired_compartments and staff_clear."
+     "why": "Each requirement maps to a method: 1 and 2 are deposit_package, 3 is pickup, 4 is is_expired, 5 is open_expired_compartments and staff_clear.",
+     "say": "From your answers I get five requirements. **Each one is a thing a driver, customer or staff member does, and each becomes a method: deposit, pickup, expiry, the staff path.** I say the error case with each so I don't forget it in the code."
     }
    ]
   },
@@ -142,7 +144,8 @@ window.LOOP_CODING.parts.push({
      "starter": "Package: \nCompartment: \nLocker: \nAccessToken: \nCarrier / User: ",
      "hint": "What do we need to know about a package? About the carrier or the user?",
      "solution": "Package: drop. Lots of metadata we don't need; only its size, so size is a parameter of deposit\nCompartment: keep. Has a size and is occupied or free\nLocker: keep. Runs deposit, pickup and the expired path\nAccessToken: keep. A code, when it expires, and which compartment it opens\nCarrier / User: drop. External; not modelled",
-     "why": "Three classes and one enum. Dropping Package is the move interviewers notice: you modelled what the requirements need."
+     "why": "Three classes and one enum. Dropping Package is the move interviewers notice: you modelled what the requirements need.",
+     "say": "I underline the nouns. **Compartment, locker and access token carry data or behaviour I need, so they stay.** A package is only a size, so that becomes a parameter of deposit. The carrier and the user are outside the system."
     }
    ]
   },
@@ -160,8 +163,9 @@ window.LOOP_CODING.parts.push({
      "q": "Write each class as − state and + behaviour.",
      "starter": "class Locker\n- \n+ \n\nclass AccessToken\n- \n+ \n\nclass Compartment\n- \n+ ",
      "hint": "Locker holds compartments and tokens. A token holds a code, an expiration and a compartment. A compartment holds a size and occupied.",
-     "solution": "class Locker\n- compartments: Compartment[]\n- access_tokens: Map<code, AccessToken>  (a list first is fine; a map makes pickup one step)\n+ deposit_package(size) -> string | error\n+ pickup(code) -> void | error\n+ open_expired_compartments() -> codes\n+ staff_clear(code) -> void\n\nclass AccessToken\n- code: string\n- expiration: timestamp\n- compartment: Compartment\n+ is_expired() -> boolean\n+ get_compartment() -> Compartment\n+ get_code() -> string\n\nclass Compartment\n- size: Size  (SMALL, MEDIUM, LARGE -> enum)\n- occupied: boolean\n+ is_occupied() -> boolean\n+ mark_occupied() -> void\n+ mark_free() -> void\n+ open() -> void\n+ get_size() -> Size",
-     "why": "Pickup looks a token up by its code, so a map from code to token makes it one step."
+     "solution": "class Locker\n- compartments: Compartment[]  # deposit scans these for a free one of the size\n- access_tokens: Map<code, AccessToken>  (a list first is fine; a map makes pickup one step)  # pickup gets only a code; a map finds its token\n+ deposit_package(size) -> string | error  # req 1 and 2: assign, open, return the code\n+ pickup(code) -> void | error  # req 3: code to token to door\n+ open_expired_compartments() -> codes  # req 5: staff open every expired door\n+ staff_clear(code) -> void  # req 5: staff empty one and free it\n\nclass AccessToken\n- code: string  # what the customer brings; the map key\n- expiration: timestamp  # req 4: seven days after deposit\n- compartment: Compartment  # pickup must get from the code to the door\n+ is_expired() -> boolean  # req 4: one place for the expiry rule\n+ get_compartment() -> Compartment  # pickup opens this door\n+ get_code() -> string  # deposit returns it to the carrier\n\nclass Compartment\n- size: Size  (SMALL, MEDIUM, LARGE -> enum)  # deposit matches on it\n- occupied: boolean  # free or taken, nothing more is needed\n+ is_occupied() -> boolean  # deposit skips taken doors\n+ mark_occupied() -> void  # deposit takes the door\n+ mark_free() -> void  # pickup and staff_clear give it back\n+ open() -> void  # req 1 and 3: the door opens for deposit and pickup\n+ get_size() -> Size  # deposit compares it to the requested size",
+     "why": "Pickup looks a token up by its code, so a map from code to token makes it one step.",
+     "say": "**I start from the methods the requirements gave me, then ask what each one has to read.** Pickup gets only a code, so the locker keeps tokens in a map by code. The token has to reach the door, so it holds its compartment, and it holds an expiry for requirement 4. Deposit needs to find a free door of a size, so the locker holds the compartments, each with a size and an occupied flag."
     },
     {
      "t": "turn",
