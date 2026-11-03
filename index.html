@@ -345,6 +345,10 @@
   .kt-session > summary { cursor: pointer; font-size: var(--fs-sm); font-weight: 600; color: var(--muted); }
   .kt-session > summary:hover { color: var(--ink); }
   .shead .kicker .nlm-copy { margin-left: auto; }
+  .shead .kicker .nlm-copy + .revisit-q { margin-left: var(--s2); }
+  .wbq-lack { padding-left: 0; list-style: none; }
+  .wbq-lack li { margin: var(--s2) 0; }
+  .wbq-lack li .w { display: block; color: var(--muted); font-size: var(--fs-sm); }
   .sxg { font-size: var(--fs-lg); font-weight: 600; margin: var(--s5) 0 var(--s2); }
   /* the session table: steps down, beats across; the open row's drawer below it */
   .stable { width: 100%; border-collapse: collapse; table-layout: fixed; }
@@ -940,6 +944,24 @@
               out: "two minutes accounted for, spoken once without notes",
               ans: {"lead": "A hundred million is a rate problem before a size problem: about 1,200 a second, up to 10 thousand at peak.", "pts": ["Rate first: how many a second, how big each one is, steady or bursty.", "Bound the queue: an unbounded one absorbs overload silently and dies all at once while the dashboard looks fine. A full bounded queue pushes back on the producer, or I shed load on purpose.", "Split on a key, assume skew: real traffic is power-law, so the hottest partition is the ceiling, however many machines sit behind it.", "Make rare failures safe: at this rate one in a million is a hundred a day, so every handler is idempotent and retries are capped.", "Size from the tail: p99 and peak, not the mean; the slow requests are where the heaviest users live."], "close": "No product names, and that is the point: the same sentences hold whichever vendor is underneath."} }
           ],
+          revisit: [
+            { step: 0, q: "Your manager wants one number for response time on the weekly dashboard. Which do you give, and why not the mean?",
+              a: "p99, or p95 at the least. The mean is pulled down by the bulk of fast requests, so it hides the slow tail, and the tail is where the heaviest users and the retries they trigger live. Capacity has to cover the tail, not the average." },
+            { step: 0, q: "A client times out and retries. Why does that tend to make the tail worse, not better?",
+              a: "The retry adds load to a path that is already slow, so the extra traffic lands exactly where there is the least spare capacity. Slow requests make more requests, which makes them slower: retries need backoff and a budget." },
+            { step: 1, q: "Explain backpressure and load shedding to a new engineer, and say when you'd reach for each.",
+              a: "Backpressure: a full queue refuses work and pushes that refusal back to the producer, so the producer slows down. Load shedding: you deliberately drop some work so the rest stays fast. Backpressure when the producer can wait; shedding when it can't and some requests matter less than others." },
+            { step: 1, q: "What is the practical difference between a bounded and an unbounded queue when load runs past capacity?",
+              a: "A bounded queue fails fast and loud: it rejects work, and you see it at once. An unbounded queue fails slow and silent: it absorbs everything, latency and memory climb, and the process dies with no warning." },
+            { step: 2, q: "Load runs at twice capacity for twenty minutes into an unbounded queue. Walk through what the dashboards show, and why that is the dangerous part.",
+              a: "Throughput looks normal and the error rate stays flat, because every request is still accepted and eventually completed. Only latency, queue depth and memory climb. Nothing alerts until memory runs out and the process dies, taking the whole backlog with it. The danger is that it looks healthy until it is dead." },
+            { step: 2, q: "Which metric actually shows a queue heading toward saturation, and what would you alert on?",
+              a: "Queue depth, and how long the oldest item has waited, not throughput. Alert when depth or wait time keeps rising over a window, well before memory is at risk." },
+            { step: 3, q: "Someone says 'we need to handle a hundred million'. What do you turn it into first, and what breaks first as you scale up?",
+              a: "A rate: a hundred million a day is about 1,200 a second on average and up to 10 thousand at peak, plus how big each one is. Then at each step up: first the single database, then a queue in front of the work, then partitioning by a defensible key, where the hottest partition becomes the ceiling. Size from the tail." },
+            { step: 4, q: "Give the hundred-million answer in two minutes, in order, with no product names.",
+              a: "Rate first: per second, size, steady or bursty. Then bound the queue on purpose so overload is loud. Then partition by a key you can defend, assuming it is skewed, since the hottest partition sets the ceiling for the whole system. Then size capacity from the tail, not the mean." }
+          ],
           quiz: [
             { q: "A queue in front of your workers is unbounded and load doubles past capacity. What does a user notice first?",
               o: ["Requests start being rejected", "Latency climbs while no errors appear", "Throughput drops immediately", "Workers restart"], a: 1,
@@ -1029,6 +1051,22 @@
               out: "one written line with both moves: the log keeps the best θ because it is increasing and turns the product into a sum, and the minus makes it a loss to minimise",
               ans: {"lead": "Minimising the negative log-likelihood gives exactly the same parameters as maximising the likelihood; it is the same problem in a form computers handle.", "pts": ["Same answer: log is increasing, so the θ that makes L highest also makes log L highest.", "Product to sum: log L is a sum of log-probabilities, so it does not underflow the way a product of thousands of small probabilities does.", "Easy derivative: a sum differentiates term by term; for seven heads in ten, the slope of log L is 7/p − 3/(1 − p), zero at p = 0.7.", "Minus for a loss: optimisers minimise, so −log L turns the top into a bottom at the same θ.", "Same as cross-entropy: averaged over examples, the negative log-likelihood is the log loss you minimise when training a classifier."], "close": "So nothing about the answer changes; the log and the minus make it stable and something an optimiser can walk downhill to."} }
           ],
+          revisit: [
+            { step: 0, q: "A colleague says a derivative is 'the formula where you lower the exponent by one'. How would you correct that in a sentence or two?",
+              a: "The power rule is a shortcut for computing a derivative, not what it is. A derivative is the limit that an approximation settles to as the pieces get arbitrarily fine, and the error shrinks to zero as they do." },
+            { step: 1, q: "Show why log(ab) = log a + log b, starting from the idea that a log reads an exponent back off.",
+              a: "Let x = log a and y = log b, so a = c^x and b = c^y. Then ab = c^x · c^y = c^(x + y), because multiplying powers of one base adds exponents. Taking the log of ab gives x + y, which is log a + log b." },
+            { step: 1, q: "You plot an exponentially growing metric on a log vertical axis. What do you see, and what does it tell you if you see something else?",
+              a: "A straight line, because the log undoes the exponential and constant multiplicative growth becomes constant slope. If the line bends, the growth is not really exponential." },
+            { step: 2, q: "Evaluate log2 8 - log2 2, then pull the exponent out of log5(25^3). Say which rule you used each time.",
+              a: "Quotient rule: log2 8 - log2 2 = log2 4 = 2. Power rule: log5(25^3) = 3 · log5 25 = 3 · 2 = 6." },
+            { step: 3, q: "Why do we minimise the negative log-likelihood when what we want is the parameters that make the data most probable?",
+              a: "The log keeps the best parameter in the same place, because log is increasing, and it turns a fragile product into a stable sum. The minus sign turns the peak into a valley, which is the direction an optimiser knows how to walk." },
+            { step: 3, q: "You have 1000 independent data points, each with probability 0.01 under the model. What goes wrong if you multiply them, and what do you compute instead?",
+              a: "0.01^1000 = 10^-2000, which is below the smallest float64 and rounds to zero. Compute the sum of the logs instead: 1000 · log 0.01 is about -4605, an ordinary number that does not underflow." },
+            { step: 3, q: "Seven heads in ten flips. Write the log-likelihood in p and find the best p.",
+              a: "L(p) = p^7 (1 - p)^3, so log L = 7 log p + 3 log(1 - p). Setting the derivative to zero, 7/p - 3/(1 - p) = 0, gives p = 0.7. The sum differentiates term by term, which the product would not." }
+          ],
           quiz: [
             { q: "Why take the log of a likelihood?",
               o: ["It is more accurate", "It turns a product into a sum, avoiding underflow and simplifying the derivative", "It bounds the value between zero and one", "It makes the function convex"], a: 1,
@@ -1046,6 +1084,22 @@
           name: "Part 0 — orientation",
           blurb: "Run it, listen to it, understand the shape before the detail.",
           intro: "Two of the four hours Alaap gets across the whole milestone. Orientation only, and no machine learning required.",
+          revisit: [
+            { step: 0, q: "Your demo's gates all pass on a rendered line. A teammate says it is therefore ready to ship. What do you say?",
+              a: "The gates check identity and intelligibility: drift, consistency, uniqueness and CER. None of them checks that the voice sounds natural, because the naturalness floor is proposed but never enforced. So I listen to the audio before I trust it." },
+            { step: 0, q: "Describe in two sentences what the demo script does from start to finish.",
+              a: "It mints a voice identity from a text description through the mapper. It then renders scripted lines through the frozen TTS using that fixed identity." },
+            { step: 1, q: "Describe the two-tower shape in words. What is each tower, and what is the only thing passing between them?",
+              a: "Tower A is learned: a text encoder plus a trained mapper turn a description into a speaker vector. Tower B is frozen: an acoustic model turns that vector plus text into audio. The speaker vector is the only channel between them." },
+            { step: 1, q: "The scope document named one renderer and the project now uses another. What changed, why, and what does it show about the design?",
+              a: "The renderer moved from Zonos-v0.1, which turned out dead and licence-poisoned, to Qwen3-TTS. It shows the frozen tower can be swapped because all the learning lives in the mapper." },
+            { step: 1, q: "Why does the identity store keep a seed clip as well as the speaker vector?",
+              a: "An encoder change has already orphaned every stored vector once. With the original audio kept, identities can be re-extracted under a new encoder instead of being lost." },
+            { step: 2, q: "Someone proposes fine-tuning the TTS model to fix a rendering quirk. Argue against it.",
+              a: "The TTS is frozen so that all learning stays in the small mapper, which is a cheap, well-scoped job. Fine-tuning would tie the system to one checkpoint's quirks and make a swap like the Zonos move far more expensive. It would also risk catastrophically forgetting general speech quality, and need much more paired data." },
+            { step: 2, q: "Why is training only the mapper cheap compared with training the whole system?",
+              a: "The mapper is a small head that maps a description into a speaker-vector space the frozen model already knows how to consume. It needs far less data and carries far less risk than training the base acoustic model." }
+          ],
           steps: [
             { t: "Run the demo script and listen to the output", al: [{ p: "plan/part-0", why: "Part 0's Do step, with the exact command and what to listen for." }],
               close: [
@@ -1189,6 +1243,24 @@
               out: "one written fix for the four-percent user, with its cost stated",
               ans: {"lead": "I would split that one user's traffic across several shards, and the cost is that reading all of their history now fans out.", "pts": ["What breaks: one user carrying four percent of all traffic sends four percent of the entire system's load to a single shard.", "Bottleneck: that shard limits the system no matter how many shards exist.", "The change: hash user id together with a secondary key such as session id or a time bucket, so their events spread across several shards.", "The cost: operations that were a simple lookup by user id, such as reading all of one user's history in order, must fan out across those shards and be merged."], "close": "That is the same tail-latency amplification trade-off as the fan-out diagram."} }
           ],
+          revisit: [
+            { step: 0, q: "You are choosing how to partition a table that gets frequent range scans over sorted keys. Hash or key-range, and what do you give up?",
+              a: "Key-range, because it keeps a scanned range together on one or few partitions. You give up even load: skewed access concentrates on whichever range is popular. Hash would spread load evenly but scatter neighbouring keys and destroy efficient range scans." },
+            { step: 0, q: "Why must a rebalancing scheme not tie a key's partition to the total number of partitions?",
+              a: "If assignment depends on the current count, changing the count forces almost every key to move. A good scheme moves only a share of data proportional to the change." },
+            { step: 1, q: "You hash on user id with a good hash function, and one partition is still on fire. Explain how that happens.",
+              a: "Hashing spreads the space of keys evenly, not the traffic each key carries. Real usage is power-law, so one dominant key sends all its events to one partition however good the hash is, and that partition sets the ceiling for the system." },
+            { step: 2, q: "A request fans out to 100 shards and waits for all of them. Each is slow 1 percent of the time. How often is the request slow? Show the arithmetic.",
+              a: "It is fast only if all 100 are fast: 0.99^100, about 0.37. So roughly 63 percent of requests hit at least one slow shard." },
+            { step: 2, q: "Your manager says each shard's p99 is fine, so the system is fine. What is wrong with that, and what is one lever?",
+              a: "With fan-out, the component's one-percent tail becomes the system's typical case. One lever is cutting the fan-out: at 20 shards, 0.99^20 is about 0.82, so only about 18 percent of requests are slow." },
+            { step: 3, q: "Design the partitioning for an eval harness replaying a hundred million scenarios. What key, and why?",
+              a: "Partition by scenario id, because the natural unit of comparison is the scenario. All replays of one scenario then sit on one shard and aggregation for it stays local rather than scattered across the cluster." },
+            { step: 3, q: "One scenario family turns out a thousand times more common than the others. What happens and what do you change?",
+              a: "Its shard becomes the hot partition and the ceiling for the whole run. Split that one family by hashing a secondary key such as replay id, so its load spreads over several shards while smaller families stay on one shard." },
+            { step: 4, q: "You shard by user id and one user is 4 percent of all traffic. Name one fix and the cost it brings.",
+              a: "Hash the user id together with a secondary key such as session id or a time bucket so their events spread across shards. The cost is that reading all of that user's history is no longer one lookup: it fans out across shards and has to be merged, which brings back tail-latency amplification." }
+          ],
           quiz: [
             { q: "You shard by hash of user id. One user generates four percent of all events. What happens?",
               o: ["Nothing, hashing distributes load evenly", "That user's shard becomes the bottleneck for the system", "Hash collisions increase", "Rebalancing fixes it automatically"], a: 1,
@@ -1288,6 +1360,24 @@
               out: "two written sentences on what composition lets the chain rule compute that nothing else does",
               ans: {"lead": "The chain rule differentiates a function inside a function by multiplying the derivatives of its parts, without expanding the whole thing first.", "pts": ["Composition: it handles functions built by nesting one inside another, which no other rule does.", "Multiply local rates: dy/dx = dy/du · du/dx, one ordinary derivative per link of the chain.", "Evaluate in place: the outer derivative is taken at the inner value, so for (3x + 1)² at x = 2 it is 2 · 7 = 14, times 3, giving 42.", "Scales to long chains: each factor only needs its own function, which is what partial derivatives build on in week 4."], "close": "So it turns one hard derivative into a product of easy ones."} }
           ],
+          revisit: [
+            { step: 0, q: "A new teammate has only seen the power rule. Explain in your own words what a derivative is and what the chain rule says.",
+              a: "A derivative is the instantaneous rate of change, the slope of the tangent at one point: a tiny nudge dx becomes a nudge f'(x) dx in the output. The chain rule says that when one function feeds another, the two local rates multiply, because the nudge is scaled once by each layer." },
+            { step: 0, q: "Grow a square of side x by a tiny dx. Where does the power rule d/dx x^2 = 2x come from?",
+              a: "The new area is x^2 + 2x dx + dx^2. Two thin strips of area x dx appear, and the corner dx^2 is so small it vanishes. So the change is 2x per unit of dx." },
+            { step: 1, q: "Differentiate x^2 / (x + 1), say which rule you used, and say how you would check it.",
+              a: "Quotient rule: (2x(x + 1) - x^2 · 1) / (x + 1)^2 = (x^2 + 2x) / (x + 1)^2. Check by nudging x from 1 to 1.01: the measured slope is about 0.751 and the formula gives 0.75." },
+            { step: 1, q: "How do you decide which rule to reach for on an expression you have not seen before?",
+              a: "Name the outermost operation: a product, a quotient, a power, or one function inside another. Write that rule's template, differentiate each piece alone, then fill it in." },
+            { step: 2, q: "Derive the derivative of the sigmoid in terms of itself.",
+              a: "Write sigma as (1 + e^-x)^-1. The chain rule gives -(1 + e^-x)^-2 · (-e^-x) = e^-x / (1 + e^-x)^2. Split it into 1/(1 + e^-x), which is sigma, times e^-x/(1 + e^-x), which is 1 - sigma. So sigma' = sigma (1 - sigma)." },
+            { step: 2, q: "Why is it useful that sigma' = sigma (1 - sigma), and where is the slope largest?",
+              a: "The forward pass has already computed sigma, so the gradient costs one subtraction and one multiplication, with no new exponential. The slope peaks at 0.25 where sigma = 0.5 and collapses in the tails." },
+            { step: 3, q: "Use the chain rule, without expanding, to find the derivative of (3x + 1)^2 at x = 2.",
+              a: "Let u = 3x + 1, so u = 7. Then dy/du = 2u = 14 and du/dx = 3, so dy/dx = 14 · 3 = 42. Expanding to 9x^2 + 6x + 1 gives 18x + 6 = 42 as a check." },
+            { step: 3, q: "A network has layers x, f1, f2, f3, loss. How do you get d(loss)/dx, and why is that autograd?",
+              a: "Multiply one local derivative per link, working backward: d(loss)/d(f3) · d(f3)/d(f2) · d(f2)/d(f1) · d(f1)/dx. Each factor needs only its own function at the value the forward pass left there, so autograd is the chain rule with that forward pass recorded on a tape." }
+          ],
           quiz: [
             { q: "The sigmoid's derivative, in terms of the sigmoid itself, is:",
               o: ["\u03c3(x)", "\u03c3(x)(1 \u2212 \u03c3(x))", "1 \u2212 \u03c3(x)", "\u03c3(x)\u00b2"], a: 1,
@@ -1306,6 +1396,20 @@
           blurb: "Four interventions, each named by what it actually does.",
           intro: "Diagnostic Q1. Overfitting was named correctly; the interventions stayed vague. This pins them down.",
           diagrams: ["overfit"],
+          revisit: [
+            { step: 0, q: "A model's training loss keeps falling. Why is that not evidence it is learning, and what tells you?",
+              a: "Training loss falls for a model that is learning and for one that is only memorising. They look the same until validation loss turns upward while training loss still falls. That turn is what separates them." },
+            { step: 0, q: "Explain L1 and L2 regularisation by what each does to the weights.",
+              a: "L2 penalises the sum of squared weights, shrinking them toward zero without reaching it, which limits how sharply the model responds to any one feature. L1 penalises absolute weights and drives some to exactly zero, which is feature selection and not only shrinkage." },
+            { step: 0, q: "Explain what early stopping and dropout each do, and how they differ from L2.",
+              a: "Early stopping halts training when validation loss turns up, before the model fits the noise. Dropout removes units at random during training so no single path can be relied on, forcing redundancy. L2 removes nothing; it only shrinks weight sizes." },
+            { step: 0, q: "Why does adding more or augmented data reduce overfitting?",
+              a: "It raises the amount of real structure the model must explain, so memorising individual examples stops being the easy option. The point where validation loss turns up moves later." },
+            { step: 1, q: "A model on your own work is overfitting. Which intervention do you try first, and why?",
+              a: "Early stopping. It costs nothing to add, since a held-out metric is already tracked on every run in the eval harness. It needs no architecture change and no new hyperparameter guessed ahead of time." },
+            { step: 1, q: "When would you reach past early stopping to regularisation or dropout?",
+              a: "When early stopping alone does not control the overfitting. Then you add a weight penalty or dropout, accepting that you now have to choose a penalty strength or a drop rate." }
+          ],
           steps: [
             { t: "Write four interventions, each with its mechanism rather than its name",
               close: [
@@ -1480,6 +1584,22 @@
               out: "written answer: daily and monthly volume at 10 KB times a hundred million a day, the storage cost, what changes if it must be queried",
               ans: {"lead": "At ten kilobytes a trace and a hundred million a day it is about a terabyte a day and thirty a month, cheap to hold but not to query without a metadata index.", "pts": ["Volume: ten kilobytes times a hundred million is about one terabyte a day, and roughly thirty terabytes across a month, the same arithmetic as the sizing exercise.", "Cost to hold: on object storage at about two cents a gigabyte-month, thirty terabytes is on the order of six hundred dollars a month, which is cheap.", "If it must be queried: object storage alone stops being enough, because it has no index of its own.", "The fix: a separate metadata store, such as a small database or a columnar table, holding the fields worth filtering on (scenario, timestamp, pass or fail) with a pointer back to the object."], "close": "That way a query does not mean scanning a terabyte a day by hand."} }
           ],
+          revisit: [
+            { step: 0, q: "Your team logs a lot of write-heavy, append-style events and reads them rarely. A colleague proposes a B-tree store. Argue for or against.",
+              a: "Against. A B-tree update means finding and rewriting the exact page on disk, which is random I/O on every write. An LSM-tree appends to a memtable, flushes sorted files and merges them later in the background, so writes are cheap sequential I/O. Reads may check several layers, but they are rare here." },
+            { step: 0, q: "Why can an LSM-tree read touch several files, and why does a B-tree read not?",
+              a: "In an LSM-tree the key might live in any of several sorted files that compaction has not merged yet, so a lookup may check more than one. A B-tree read is one direct traversal to the page that holds the key, with no layers to check." },
+            { step: 1, q: "In a design review someone says reading from object storage will be 'about as fast as the network'. What numbers do you correct them with?",
+              a: "Memory is about 100 nanoseconds, a random SSD read about 100 microseconds, and a round trip in the same data centre about half a millisecond. An object storage GET is tens of milliseconds, call it 50, because it is a full network round trip plus the storage service's own work. Each step up the ladder costs one to three orders of magnitude." },
+            { step: 2, q: "Eval traces are written once, never updated and read in bulk. Where do they belong, and what would make you change your mind?",
+              a: "Object storage, because that shape is exactly what it is cheap at. I would change my mind if the access pattern turned into filtering, joining or querying in real time, because object storage has no query engine and a database or warehouse would earn its cost back." },
+            { step: 3, q: "Size it: ten kilobytes a trace, a hundred million traces a day. What do you say for a day, a month, and the cost to hold it?",
+              a: "About 1 terabyte a day and roughly 30 terabytes a month. On object storage at about two cents a gigabyte-month that is on the order of $600 a month to hold, before request or egress cost." },
+            { step: 3, q: "Your finance lead asks why the storage bill keeps growing when nobody decided to store more. What is the retention answer?",
+              a: "Keeping every trace forever is a cost decision nobody made on purpose, since storage cost accrues every month. Keep the last 30 days hot and cheaply queryable behind a small metadata index, then move older data to a colder tier or delete it once it stops helping debug a regression." },
+            { step: 4, q: "Product now wants to find traces by scenario and by pass or fail. What do you add, and why do you not move everything to a database?",
+              a: "Add a separate metadata store, such as a small database or columnar table, holding the fields worth filtering on with a pointer back to the object. The bulk payloads stay cheap in object storage. Without the index you would scan a terabyte a day by hand." }
+          ],
           quiz: [
             { q: "Ten kilobytes per trace, a hundred million traces a day. Roughly how much per day?",
               o: ["1 GB", "100 GB", "1 TB", "100 TB"], a: 2,
@@ -1595,6 +1715,24 @@
               out: "ten shapes answered in a row without re-deriving the rule",
               ans: {"lead": "Shapes are automatic once you check that the inner dimensions match and read the outer dimensions off as the answer.", "pts": ["Matrix times matrix: 4 by 3 times 3 by 5 gives 4 by 5, and 2 by 6 times 6 by 2 gives 2 by 2.", "Row times column: a 1 by 3 row vector times a 3 by 1 column vector gives 1 by 1, a scalar.", "Column times row: a 3 by 1 times a 1 by 3 gives 3 by 3, the outer product.", "When it fails: a 5 by 2 cannot multiply another 5 by 2, because the inner dimensions, 2 and 5, do not match. One has to be transposed first, or the multiplication has to go the other way round."], "close": "Ten of these back to back made the check and the read-off automatic, rather than something to re-derive each time."} }
           ],
+          revisit: [
+            { step: 0, q: "A teammate says a matrix is 'just a grid of numbers you multiply row by column'. What would you tell them it really is, and why is knowing two columns enough in 2D?",
+              a: "A matrix is a linear transformation: its columns are where the basis vectors î and ĵ land. Since any v = xî + yĵ and linearity keeps sums and scalings, Av = x(Aî) + y(Aĵ), so those two landing places fix where every vector goes." },
+            { step: 0, q: "What does the product BA mean, and which matrix acts first?",
+              a: "BA is the single matrix that does A first and then B, a composition of transformations. It reads right to left because the right-hand matrix acts first. Row-times-column is only the bookkeeping." },
+            { step: 1, q: "Derive cosine similarity from the dot product in a few lines.",
+              a: "Start with a · b = |a||b| cos θ, which follows from expanding |a − b|^2 by algebra and by the law of cosines. Divide both sides by |a||b| to get cos θ = (a · b)/(|a||b|). That equals the dot product of a/|a| and b/|b|, the unit-length versions." },
+            { step: 1, q: "Why do we use cosine similarity and not raw dot product or Euclidean distance on embeddings?",
+              a: "An embedding's length often reflects something incidental, like how frequent a token or document is, while its direction carries meaning. Cosine divides the lengths out, so (3, 4) and (6, 8) score exactly 1." },
+            { step: 2, q: "A is 4 x 3 and B is 3 x 5. Give the shape of AB and of (AB)^T, and show why (AB)^T = B^T A^T.",
+              a: "AB is 4 x 5 and its transpose is 5 x 4. Entry (i, j) of (AB)^T is entry (j, i) of AB, the sum over k of A(j,k)B(k,i). Entry (i, j) of B^T A^T is the sum over k of B(k,i)A(j,k), the same terms. A^T B^T is 3 x 4 times 5 x 3, which is not even defined." },
+            { step: 3, q: "Someone asks what an eigenvector is, and wants a picture, not an algorithm. What do you say, and is (1, 1) one for A = [[2, 0], [0, -1]]?",
+              a: "A transformation turns most vectors onto other lines, but an eigenvector stays on its own line and is only scaled by the eigenvalue: Av = λv. Here A(1, 1) = (2, -1), which is not a multiple of (1, 1), so no. (1, 0) and (0, 1) are, with λ = 2 and λ = -1." },
+            { step: 3, q: "Why does the size of an eigenvalue matter when you apply a transformation many times?",
+              a: "A^n v = λ^n v for an eigenvector, so if |λ| is above 1 that direction grows and if below 1 it shrinks. That is the stability question." },
+            { step: 4, q: "In PyTorch a tensor of shape (B, T, D) meets a weight of shape (D, H). Say whether it works, what comes out, and what you do for two 5 x 2 matrices.",
+              a: "Inner sizes match, D drops out, and the result is (B, T, H); the batch axis rides along. Two 5 x 2 matrices cannot multiply in either order, since the inner sizes are 2 and 5. Transpose one: (5 x 2)^T (5 x 2) is 2 x 2, or (5 x 2)(5 x 2)^T is 5 x 5." }
+          ],
           quiz: [
             { q: "A is 4 × 3, B is 3 × 5. What shape is (AB)ᵀ?",
               o: ["4 × 5", "5 × 4", "3 × 3", "5 × 3"], a: 1,
@@ -1613,6 +1751,20 @@
           blurb: "Physics, not machine learning. No rebuilt maths required.",
           intro: "Study guide section 2.1, and the reason a project that juggles four sample rates once produced a result that reversed when the rate was fixed.",
           diagrams: ["nyquist"],
+          revisit: [
+            { step: 0, q: "A colleague records speech at 16 kHz and says it will keep everything up to 10 kHz. Is that right? What would you do?",
+              a: "No. A rate of N represents frequencies only up to N/2, so 16 kHz tops out at 8 kHz. Sample at more than twice the highest frequency you care about; 24 kHz gives a 12 kHz ceiling, which clears 10 kHz with room to spare." },
+            { step: 0, q: "At 24 kHz, what happens to a 15 kHz tone, and why can nobody recover it from the file?",
+              a: "It is recorded as a 9 kHz tone. A tone at f and a tone at N - f give identical readings, so a frequency above N/2 folds down to its mirror image below. This is aliasing, and the list of numbers cannot say which tone was played." },
+            { step: 0, q: "Someone suggests raising the bit depth to fix a muffled recording that lacks highs. Does that help?",
+              a: "No. Bit depth is a separate question: it sets how finely each reading is quantised, so it sets the noise floor, not the frequency ceiling. The ceiling comes from the sample rate." },
+            { step: 1, q: "You analyse 24 kHz corpus audio but your script assumes 16 kHz. What happens to the numbers, and why does nothing error?",
+              a: "Every frequency is scaled by assumed over true, here 16/24, so 1000 Hz reads as about 667 Hz. The file still loads and the waveform looks valid; the rate is stored beside the readings, so nothing checks it against what the analysis assumes." },
+            { step: 1, q: "Why does this project carry four sample rates, and what did the wrong one cost?",
+              a: "Each stage has its own: the corpus at 24 kHz, WavLM at 16 kHz, MioCodec at 44.1 kHz and Sarvam at 22.05 kHz. In S21 phase B, analysing at the wrong assumed rate reversed a result outright, which is worse than added noise because it looked like a finding." },
+            { step: 2, q: "You resample a 24 kHz clip to 16 kHz and plot both spectra on one axis. What do you expect to see, and why a cliff rather than a slope?",
+              a: "The shapes match below 8 kHz, then the resampled one stops dead at exactly 8 kHz while the original runs on toward 12 kHz. The resampler low-pass filters everything above the new ceiling before dropping readings, because otherwise that content would fold back below 8 kHz." }
+          ],
           steps: [
             { t: "Work through sample rate, Nyquist and bit depth", al: [{ p: "plan/s2-1", why: "Sample rate, Nyquist and bit depth, with the one-line intuition." }],
               close: [
@@ -1810,6 +1962,22 @@
               out: "why retries can finish off a struggling service, and the standard fix, named",
               ans: {"lead": "Retries finish off a struggling service because they add load at the moment it has the least spare, and the fix is exponential backoff with jitter.", "pts": ["Already full: a struggling service is at or past capacity, so every retry adds load when there is least capacity to spare.", "Same queue: the retries wait behind the same congestion that caused the timeouts.", "No recovery window: clients keep re-arriving faster than the service can drain, so it never gets the lull it needs. That is the retry storm.", "The fix: backoff spaces out when each client comes back, and jitter stops every client's backoff landing on the same schedule and rebuilding the spike."], "close": "So the answer is backoff with jitter, and neither half works well alone."} }
           ],
+          revisit: [
+            { step: 0, q: "A call to another service times out. What can and can't you conclude, and why is that the defining problem of distributed systems?",
+              a: "A timeout cannot tell a slow response from a lost one, so you do not know whether the work happened. That is partial failure: part of an operation can succeed while another part fails, with no single visible point where it all breaks." },
+            { step: 0, q: "A node pauses for a long time, wakes up, and still writes under a lock it lost. How do you stop the damage, and why can't you rely on timestamps to sort it out?",
+              a: "Use a fencing token: the resource checks the token on write and rejects a stale one. Wall-clock timestamps cannot order events across machines because clocks drift and can jump during resynchronisation." },
+            { step: 1, q: "A thousand clients time out together and retry. Explain why the service never recovers, and what you change.",
+              a: "Retries add load exactly when capacity is lowest, and queue behind the same congestion, so the backlog never drains. Backoff spaces out each client, but plain backoff still brings them back in synchronised waves. Add jitter to randomise the wait; with a hundred contending clients it cut calls by more than half." },
+            { step: 2, q: "Define idempotency for someone who only knows it from payment endpoints, and say what a retry carrying the same key gets back.",
+              a: "An operation is idempotent when it can be retried with no additional side effects: the result happens once however many times it is called. A retry with the same caller-provided token gets the same response as the original, so it is transparent to the caller." },
+            { step: 2, q: "A vendor advertises 'exactly-once delivery'. How do you respond, and how do real systems get the effect?",
+              a: "No network can guarantee exactly-once delivery on its own, so it is mostly a marketing claim. Real systems use at-least-once delivery plus idempotent processing, which gives an exactly-once effect. If the same token arrives with different parameters, reject it as a mismatched intent." },
+            { step: 3, q: "Three percent of a hundred million replays fail mid-run. Lay out the retry and dedup path.",
+              a: "Split by failure signature. What fails the same way every time goes straight to a dead-letter queue, since retrying only burns capacity. Coin-flip failures retry with exponential backoff and jitter, capped at a few attempts. Key dedup on scenario id with the attempt number beside it, so a retry overwrites its own partial result." },
+            { step: 4, q: "In an incident review someone asks why retries sometimes finish off a struggling service. Answer in a few sentences and name the fix.",
+              a: "The service is already at or past capacity, so retries add load when there is least spare, and they wait behind the same congestion. It gets no recovery window to drain its backlog. The fix is exponential backoff with jitter; neither half works well alone." }
+          ],
           quiz: [
             { q: "A service is overloaded and slow. Clients time out and retry immediately. What happens?",
               o: ["It recovers faster", "Load rises on an already failing service and it may never recover", "Retries queue harmlessly", "Nothing changes"], a: 1,
@@ -1928,6 +2096,22 @@
               out: "two sentences, written down",
               ans: {"lead": "A network is a composition of functions and the chain rule differentiates a composition, so backprop is that product computed once, backward.", "pts": ["Composition: a network is functions layered end to end, and the chain rule says the derivative of the whole is the product of the derivatives of each part, evaluated at the values that part actually saw.", "One backward walk: backprop computes that product by going backward through the network once, reusing each layer's local derivative instead of re-deriving the whole composition for every parameter.", "Autograd: it is the same thing, the chain rule applied automatically to a tape recorded during the forward pass."], "close": "The chain rule is what makes the cost of training a network scale with one pass, not one pass per parameter."} }
           ],
+          revisit: [
+            { step: 0, q: "Your colleague says the gradient of a loss points downhill. Correct them, and explain why it points the way it does.",
+              a: "It points uphill, in the direction of steepest increase. For a small step u, f changes by about ∇f · u = |∇f| cos θ, which is biggest when the step lines up with ∇f. Descent therefore steps along −∇f." },
+            { step: 0, q: "For f(w1, w2) = w1^2 + 3 w2^2 at (1, 1), compute the gradient and one descent step with a rate of 0.1.",
+              a: "∇f = (2w1, 6w2) = (2, 6). The step is (1, 1) − 0.1 · (2, 6) = (0.8, 0.4), and f drops from 4 to 1.12. The larger entry says w2 matters three times as much at this point." },
+            { step: 1, q: "Write the update rule and say what the learning rate multiplies. What happens on L = θ^2 with η = 0.1 and with η = 1.1?",
+              a: "θ ← θ − η ∇L(θ), and η multiplies only the gradient. With η = 0.1, each step makes θ 0.8 times as big, so it walks to 0. With η = 1.1, each step makes θ −1.2 times as big, so it flips sign and grows: the direction is right but the step is too large." },
+            { step: 2, q: "A new teammate asks what backprop is, before any calculus. Say it in plain words, and say why it starts at the output.",
+              a: "Backprop works out how much blame each weight carries for the error, so gradient descent knows how to nudge it. A weight's effect on the cost passes through every layer after it, so the blame is handed back from the output one layer at a time." },
+            { step: 3, q: "Walk through the backward pass for w2 and for w1 in x = 2, w1 = 0.5, w2 = 1.5, y = 1, where h = w1 x, a = sigmoid(h), z = w2 a, L = (z − y)^2.",
+              a: "Forward first: h = 1.0, a ≈ 0.731, z ≈ 1.097. Then dL/dz = 2(z − y) ≈ 0.193. dL/dw2 = 0.193 · a ≈ 0.141. For w1 multiply four local derivatives: 0.193 · 1.5 · a(1 − a) · 2 ≈ 0.193 · 1.5 · 0.197 · 2 ≈ 0.114." },
+            { step: 3, q: "How would you check a hand-derived gradient is right, without trusting your algebra?",
+              a: "Nudge the weight by a small amount such as 0.001, rerun the forward pass, and compare the change in L over the nudge with the chain-rule answer. They should agree closely." },
+            { step: 4, q: "Explain in two sentences why the chain rule makes backprop cheap, compared with differentiating for each weight separately.",
+              a: "A network is a composition, and the chain rule makes its derivative a product of local derivatives. A backward walk computes the sensitivity at each layer once and reuses it for every weight at or before that layer, so one pass gives all the gradients instead of one pass per weight." }
+          ],
           quiz: [
             { q: "In the update rule, the learning rate multiplies what?",
               o: ["The loss", "The gradient of the loss with respect to the parameters", "The parameters", "The second derivative"], a: 1,
@@ -1946,6 +2130,20 @@
           blurb: "Where the numbers come from, and why the scores are scaled.",
           intro: "Diagnostic Q3 and Q4, where the answers covered what these things do rather than how they work.",
           diagrams: ["embed", "attention"],
+          revisit: [
+            { step: 0, q: "A reviewer says 'someone must have written the meaning into the embedding table'. Where do the numbers actually come from?",
+              a: "The table starts as small random numbers and is an ordinary weight matrix, because a lookup is a one-hot vector times the matrix. The loss reaches the looked-up row, and gradient descent moves it. Meaning is a side effect of the objective rewarding a useful arrangement." },
+            { step: 0, q: "In one training step, which rows of the table change, and why do similar tokens end up close?",
+              a: "Only the rows of tokens in that example, each moved by minus its gradient toward the vector of the word that really appeared. Tokens in similar contexts get nearly the same pull again and again, so their rows drift together." },
+            { step: 1, q: "Explain query, key and value to someone who thinks V means vector.",
+              a: "All three are learned projections of the same input, x W^Q, x W^K and x W^V. The query is what a position looks for, the key is what each position offers so it can be scored, and the value is the content carried forward. V is value: the key decides how much to read, the value decides what is read." },
+            { step: 1, q: "Why is attention a soft dictionary lookup, and what does the output look like for scores 2, 0, 1?",
+              a: "A dictionary returns the value under one matching key; attention scores the query against every key and returns a blend of the values. Softmax of (2, 0, 1) gives weights about (0.665, 0.090, 0.245), so the output sits nearest the value with the biggest weight." },
+            { step: 2, q: "Your manager asks why attention divides by the square root of d_k and not by d_k. Give the argument.",
+              a: "A score sums d_k products. With unit-variance independent entries each adds variance 1, so the variance is d_k and the spread is the square root of d_k. Dividing by c divides variance by c^2, so c = square root of d_k brings the variance back to 1." },
+            { step: 2, q: "What goes wrong with d_k = 64 and no scaling, and what does the gradient look like?",
+              a: "Scores spread to about 8 either side, so softmax puts nearly all the weight on one position. The softmax gradient α(1 − α) is then near 0 for every weight, so almost no learning signal passes back. Scaling by 8 keeps the weights spread out and the gradient alive." }
+          ],
           steps: [
             { t: "Write where embedding numbers physically come from", al: [{ p: "plan/s3-1", why: "Train a network to tell speakers apart, drop the classifier: that layer is the embedding." }],
               close: [
@@ -2165,6 +2363,24 @@
               links: [ddia("ch. 6 Replication → Problems with Replication Lag")],
               ans: {"lead": "A stale reload has two causes, a read after your own write and a read that goes backward, and each has a one-line fix.", "pts": ["Your own write: the read landed on a follower that has not received it yet. Serve that user's reads from the leader for a short window after they write.", "Going backward: two reads hit followers at different lag. Pin the user to one follower, so their view only moves forward.", "Why not wait for all followers: that makes every read slow for everyone to fix a problem a few users see.", "For the result store: the dedup check reads the leader, the dashboard reads a follower, the closed run's report reads a follower that has caught up.", "What is lost: on a leader failure the last unreplicated writes, which the harness recomputes because the replays are idempotent."], "close": "Then the line I would end on: consistency is chosen per read, and I can say what each costs."} }
           ],
+          revisit: [
+            { step: 0, q: "A client writes to the leader and gets OK, then the leader dies before shipping that write. A follower is promoted. What happened, and what is the cost of making a follower synchronous?",
+              a: "The write is lost although the client was told it succeeded, because replication was asynchronous. A synchronous follower makes every write wait for it, so latency rises and writes stall if it is slow or down. In practice one follower is synchronous and the rest are not." },
+            { step: 0, q: "What is split brain, and why is it worse than having no leader for a moment?",
+              a: "Two nodes both believe they are the leader and both accept writes, so the copies diverge with no single order to merge them. No leader only delays writes. Split brain can corrupt data." },
+            { step: 1, q: "With N = 5, W = 3 and R = 2, is a read guaranteed to see the latest acknowledged write? What setting would you pick for N = 3 when writes are rare and reads are huge?",
+              a: "No: the rule is W + R > N, and 3 + 2 = 5 is not greater than 5, so a read can land on the two replicas the write skipped. For N = 3 with rare writes, W = 3 and R = 1 still overlaps and makes reads cheap, at the cost that one down replica blocks writes." },
+            { step: 1, q: "Even with W + R > N, name two ways a read can still return stale data.",
+              a: "A failed write left on only some replicas is not rolled back. A sloppy quorum sends the write to other nodes. Last write wins on drifting clocks can pick the older value. So a quorum gives fresh most of the time, not linearizable." },
+            { step: 2, q: "Client A's write returns OK, then client B starts a read and gets the old value. Which property is broken, and what does the CAP choice mean in practice?",
+              a: "Linearizability: a read that starts after a write finishes must see it or something newer. CAP is a choice made during a partition: refuse requests on the cut-off side to stay linearizable, or answer from a copy that may be stale." },
+            { step: 2, q: "A five-node consensus group is split three and two. What happens on each side, and why?",
+              a: "Consensus needs a majority. The three-node side can elect a leader and commit, and the two-node side cannot make progress, so it refuses rather than risk two answers. That refusal is the cost of linearizability under a partition." },
+            { step: 3, q: "For the replicated replay result store, say where each of three reads is served and why: the dedup check, the dashboard, and the final report of a closed run.",
+              a: "The dedup check reads the leader, because a stale miss runs a replay twice. The dashboard reads a follower, because a few seconds of staleness changes nothing it shows. The closed run's report reads a follower that has caught up to the run's last write, or the leader." },
+            { step: 4, q: "A user changes a setting, reloads, and sees the old value. Another user refreshes and a comment appears, vanishes, then appears. Name the cause and fix of each.",
+              a: "First: the read hit a lagging follower, so serve that user's reads from the leader for a short window after their write (read-your-writes). Second: reads alternate between followers at different lag, so pin the user to one follower so their view only moves forward (monotonic reads)." }
+          ],
           quiz: [
             { q: "A store has N = 3 replicas, writes wait for W = 2 and reads ask R = 2. What does W + R > N give you?",
               o: ["Every replica always has the latest write", "A read set that includes at least one replica holding the latest acknowledged write", "Protection from a leader dying", "Exactly-once writes"], a: 1,
@@ -2276,6 +2492,24 @@
               links: [{ label: "Session w4a: retries and idempotency", url: "#/s/w4a" }],
               ans: {"lead": "The cap broke because of write skew, and I fix it with a row lock or serializable. The slow dashboard I fix with a partial index, after reading the plan.", "pts": ["Write skew: two workers read 199 under snapshot isolation, wrote different replays, and no conflict was seen. The cap is a rule across rows.", "Fix one: lock the run's row with FOR UPDATE while checking and claiming. Cheap, and only that run waits.", "Fix two: run it serializable and retry on a serialization failure. Simpler to reason about, but it needs the retry loop and costs aborts.", "The dashboard: read the plan first. Then a partial index on (run_id, finished_at) where status is failed, equality column first and the range after. It costs a write only on failures.", "Left out: sharding the table if one machine is not enough, which is the sharding session, and moving old runs to cold storage."], "close": "Anomaly, fix, cost, and what I left out: that is the whole answer."} }
           ],
+          revisit: [
+            { step: 0, q: "Someone says 'the database gives us the C in ACID'. What do you tell them?",
+              a: "Consistency means your own rules hold, such as a balance never going below zero. The database enforces only the rules you declare as constraints. Atomicity and isolation are the tools you use to keep the rest." },
+            { step: 0, q: "Name the three ways to get serializability, and why most databases do not default to it.",
+              a: "Serial execution on one thread, two-phase locking, and serializable snapshot isolation. Each costs something: capped throughput, readers waiting on writers, or aborted transactions that must be retried. Weaker levels are faster and enough if you know what they allow." },
+            { step: 1, q: "Two on-call doctors each read 'two are on call' and each go off call, under snapshot isolation. What happened and what are two fixes?",
+              a: "Write skew: they wrote different rows, so no write conflict was seen, but the rule across rows broke. Fix by locking the rows the rule reads, or by running at serializable and retrying the aborted transaction." },
+            { step: 1, q: "Why does 'UPDATE counters SET n = n + 1' not lose updates when 'read n, add one, write n back' does?",
+              a: "The single statement is atomic and holds the row lock while it reads and writes. In the read-then-write version two transactions can read the same old value, and the later write overwrites the earlier one." },
+            { step: 2, q: "You have an index on (a, b). Which of 'WHERE a = 5 AND b > 10' and 'WHERE b = 5' uses it as an ordered lookup, and why?",
+              a: "The first. The index is sorted by a, then b within each a, so equality on a narrows to one stretch and the range on b walks it in order. b alone skips the leading column, so there is no order to use. Put equality columns first and the range column last." },
+            { step: 2, q: "A table already has four indexes and someone wants a fifth. What do you ask, and when do you pick B-tree or LSM-tree?",
+              a: "Ask what query it serves and what it costs: every insert writes the row plus one entry in each index, so reads get faster and writes pay. B-tree suits rows updated in place and read by key; LSM-tree or object storage suits data written once at a high rate and read in bulk." },
+            { step: 3, q: "Design how workers claim queued replays and write retried results at a hundred million rows, and where you still need a lock.",
+              a: "Claim in one short transaction with SELECT ... FOR UPDATE SKIP LOCKED, then mark rows running, so workers never collide or wait. Retries use INSERT ... ON CONFLICT DO UPDATE on the primary key, so a retry overwrites its own row. A cap on running replays per run spans rows, so lock the run's row for the check." },
+            { step: 4, q: "The failed-replays dashboard is slow. Walk through what you do, in order, and what you say about cost.",
+              a: "Read the query plan to see if it scans. Choose the index from the access pattern, such as a partial index on (run_id, finished_at) where status is failed, equality column first. Say what it costs each write, only on failed rows, and what you left out, such as sharding." }
+          ],
           quiz: [
             { q: "Two transactions under snapshot isolation each read the same rows and each write a different row, breaking a rule that spans both. What is it called?",
               o: ["Dirty read", "Write skew", "Lost update", "Phantom delete"], a: 1,
@@ -2383,6 +2617,22 @@
               out: "three written sentences naming exactly what to change next time — a filler word to cut, a primitive to name earlier, a place the answer ran long",
               ans: {"lead": "Three changes for next time: cut the filler, name partitioning earlier, and trim the cost section.", "pts": ["Cut 'so': stop using it as a connector between sentences, because it is the filler that shows up most under pressure.", "Name partitioning earlier: I reach it only after backpressure, but skew is often the root cause of the saturation I describe first, so naming the partition key up front matches the answer's order to how the failure happens.", "Trim the cost section: it ran long relative to the rest. Cut it to the one line about the tradeoff between resilience and capacity, not three separate examples."], "close": "That brings the whole answer closer to five minutes rather than past it."} }
           ],
+          revisit: [
+            { step: 0, q: "A user writes a setting and an immediate read shows the old value. Your teammate blames the cache. Is that necessarily right?",
+              a: "No. Replication lag alone can do it: the read hit a follower the write had not reached yet. Read-your-writes is the guarantee that fixes it. Caching is a second source of staleness stacked on top." },
+            { step: 0, q: "Why is 'eventually consistent' not enough to tell a customer how stale a read can be?",
+              a: "It only promises that replicas converge once writes stop, with no bound on how long that takes. It cannot bound staleness by itself, so you need a stated lag or a session guarantee." },
+            { step: 1, q: "Compare a TTL with explicit invalidation as a tradeoff, not a list.",
+              a: "A TTL is a bet that staleness up to the window is acceptable, and it costs nothing on the write path. Explicit invalidation is a promise to clear entries on every write path that changes the data, which is costlier to build and keep correct but is the only choice when staleness must be bounded tighter than a TTL can promise." },
+            { step: 1, q: "Why does the cache key matter as much as the invalidation rule?",
+              a: "The key defines what counts as the same request. Too broad and different users' results collide; too narrow and nothing hits. The invalidation rule can only clear entries it can identify by that key." },
+            { step: 2, q: "Your assistant caches vector search per user. A user adds a memory and searches at once. What do you do, and what do you give up?",
+              a: "Key the cache on user id plus query, and invalidate that user's cached searches on the write. You give up cache effectiveness right after every write, since a write-then-search is a guaranteed miss. A TTL would keep answering from a world that no longer exists." },
+            { step: 3, q: "Give the opening of the hundred-million answer, in primitives and with no product names, and say what a bounded queue buys you.",
+              a: "Start with the rate: per second, size, steady or bursty. Then bound the queue on purpose, because an unbounded queue absorbs overload silently and dies all at once, while a bounded one fails early and visibly. Then backpressure upstream or deliberate shedding, a defensible skewed partition key, retries with backoff, jitter and idempotency, and sizing from p99." },
+            { step: 4, q: "You listen back to your five-minute take. What do you listen for in delivery, as opposed to content, and what do you change?",
+              a: "Content asks whether every primitive was said. Delivery asks about filler words, ordering and pacing. Cut the filler that appears most, name a cause such as partition skew before its effect, and trim the cost section to one line that states the tradeoff." }
+          ],
           quiz: [
             { q: "You cache vector-search results per user. The user adds a memory. What must happen?",
               o: ["Nothing, the TTL handles it", "That user's cached results must be invalidated", "Flush the whole cache", "Delay the write until expiry"], a: 1,
@@ -2483,6 +2733,24 @@
               links: [{ label: "Nielsen, ch3 — Softmax", url: "http://neuralnetworksanddeeplearning.com/chap3.html#softmax" }, { label: "Nielsen, ch3 — the cross-entropy cost function", url: "http://neuralnetworksanddeeplearning.com/chap3.html#the_cross-entropy_cost_function" }],
               ans: {"lead": "Softmax exponentiates and normalises, so its outputs are a distribution, and cross-entropy pairs with it because it is the negative log-likelihood of the true class and its gradient is prediction minus label.", "pts": ["Positive: softmax exponentiates every score, and e to anything is strictly positive.", "Sums to one: it divides by the sum of all the exponentials, so the entries add to exactly one. Positive and adding to one is the definition of a distribution.", "Cross-entropy: with a one-hot label it is minus the log of the probability on the true class, the negative log-likelihood, so minimising it is maximum likelihood.", "Clean gradient: on the scores it is p − y, big when wrong and small when right, with no extra factor.", "Why not squared error: its gradient carries p(1 − p) factors that are near zero when softmax saturates. With scores 0 and 6 and the true class on 0, cross-entropy pushes with about 1 and squared error with about 0.005."], "close": "So cross-entropy keeps learning through the cases squared error would stall on, which is why it is the natural loss for softmax."} }
           ],
+          revisit: [
+            { step: 0, q: "A teammate reads 'P(positive | ill) = 0.99' as 'a positive means 99 percent ill'. Where does the reading go wrong, using a die as the example?",
+              a: "P(A | B) and P(B | A) count over different groups. On a die, P(6 | even) = (1/6) / (1/2) = 1/3, but P(even | 6) = 1. Swapping the two ignores how common each condition is on its own." },
+            { step: 0, q: "Derive Bayes' theorem from the definition of conditional probability.",
+              a: "The overlap can be written two ways: P(A and B) = P(A | B) P(B) = P(B | A) P(A). Set them equal and divide by P(B): P(A | B) = P(B | A) P(A) / P(B)." },
+            { step: 1, q: "A test is 99 percent sensitive with a 5 percent false positive rate, and 1 in 1,000 people are ill. A friend tests positive. Work out how worried they should be, with the numbers.",
+              a: "Take 100,000 people: 100 ill, 99,900 healthy. The test catches 99 of the ill and wrongly flags 4,995 of the healthy, so 5,094 positives. P(ill | +) = 99 / 5,094, about 2 percent." },
+            { step: 1, q: "The test looks excellent. Why is a positive still mostly wrong?",
+              a: "The false positives come from a healthy pool about a thousand times larger than the ill one. Even a 5 percent slice of it, 4,995 people, is about 50 times the 99 true positives." },
+            { step: 2, q: "A fraud model catches 90 percent of fraud and wrongly flags 2 percent of good transactions. Fraud is 1 in 500. Your manager wants to auto-block every flag. What do you say?",
+              a: "Per 100,000 transactions, 180 flags are real and 1,996 are false alarms, so only about 8 percent of flags are fraud. Auto-blocking would block mostly good customers, so flags should go to review." },
+            { step: 2, q: "Using the odds form, say what a test does to your belief, and when a positive becomes right more often than wrong.",
+              a: "Posterior odds = prior odds times s/f, about 20 for this test, so 1 to 999 becomes about 1 to 50. A positive is right more often than wrong only when r passes f / (s + f), about 4.8 percent." },
+            { step: 3, q: "Why does softmax produce a probability distribution, and why does that make cross-entropy its natural loss?",
+              a: "Exponentiating makes every score positive and dividing by the sum makes them add to one, which is the definition of a distribution. Cross-entropy with a one-hot label is then -log p of the true class, the negative log-likelihood." },
+            { step: 3, q: "A softmax classifier is confidently wrong: true-class score 0, wrong-class score 6. Compare what cross-entropy and squared error do, and which you would train with.",
+              a: "Cross-entropy's gradient on the scores is p - y, about -0.998 here, so it pushes hard. Squared error carries p(1 - p) factors that vanish when softmax saturates, about -0.005, roughly 200 times weaker. Use cross-entropy." }
+          ],
           quiz: [
             { q: "Prevalence 0.1%, sensitivity 99%, false positives 5%. Someone tests positive. How likely are they ill?",
               o: ["About 99 percent", "About 50 percent", "About 2 percent", "About 0.1 percent"], a: 2,
@@ -2501,6 +2769,22 @@
           blurb: "The single most important idea in Part 2.",
           intro: "Everything Alaap measures sits on this split, which is why a measure that leaks across it fails to separate anything.",
           diagrams: ["source"],
+          revisit: [
+            { step: 0, q: "A speaker raises their pitch from 100 Hz to 200 Hz with the same mouth shape. What moves in the spectrum and what stays, and why?",
+              a: "The harmonics move from 100, 200, 300 Hz to 200, 400, 600 Hz, because they sit at multiples of F0. The formants stay, because they depend only on the shape and length of the vocal tract." },
+            { step: 0, q: "Someone proposes identifying speakers from their average pitch alone. What does the source-filter split say about that?",
+              a: "Pitch lives on the source side, the vocal folds' buzz. Identity is carried by the filter, the tract's resonances, so pitch alone measures the wrong side." },
+            { step: 0, q: "A tube closed at one end and open at the other is 17.5 cm long, with c = 350 m/s. Where are its first formants, and what happens if it shortens to 15 cm?",
+              a: "F_n = (2n - 1) c / (4L), so F1 = 500, F2 = 1500, F3 = 2500 Hz. At 15 cm every formant rises by 17.5/15, to about 583, 1750 and 2917 Hz, while F0 is unchanged." },
+            { step: 1, q: "For each of f0_mean, vocal-tract length and spectral tilt, say which side of the split it should read, and which one fails to stay on its side.",
+              a: "f0_mean is source, since no formant enters it. Tract length is filter, built from F1 and F3. Spectral tilt is meant to read the source's spectral shape but leaks, because its fit weights the low bins that hold the F0 harmonics." },
+            { step: 1, q: "Why does the spectral tilt fit depend on F0 even though F0 is not in its formula?",
+              a: "The least-squares slope weights each bin by its distance from the band's middle on the octave axis. 27 bins below 500 Hz carry 43.2 percent of the weight, and those hold the first few F0 harmonics, so moving F0 moves the heaviest points." },
+            { step: 2, q: "Two speakers have the same filter, one at 250 Hz and one at 90 Hz. The tilt reads flatter for the 250 Hz voice. Explain why.",
+              a: "Harmonics are samples of the envelope every F0 hertz, so the 250 Hz voice has about 2.8 times fewer across the band, with more floor between peaks. A flat floor pulls the fitted slope toward flat although the envelope is the same." },
+            { step: 2, q: "How would you show that the tilt axis is reading pitch, not the filter?",
+              a: "Hold the envelope slope constant by construction, with synthetic voices, and vary F0. Tilt still tracked F0 at r = +0.918, so the axis reads pitch." }
+          ],
           steps: [
             { t: "Work through source against filter", al: [{ p: "plan/s2-3", why: "Source against filter: the single most important idea in Part 2." }],
               close: [
@@ -2617,6 +2901,24 @@
               where: "Amazon page, LLD tab → How the LLD round runs → SOLID, one line each, then The patterns that actually come up, then How to talk",
               out: "said out loud for the coffee-shop system, about 90 seconds: the one pattern you would use and the one you would refuse, each as choice, reason and cost",
               ans: {"lead": "I would use State for the order and a Strategy for pricing, and refuse a Singleton for the shop.", "pts": ["State: each status allows different actions, cancel before making, collect only when ready. A class per state keeps those rules out of one long if-chain; the cost is more classes, worth it here.", "Strategy for pricing: discounts and loyalty vary and will grow. The order calls price(lines) on a strategy, so a new discount is a new class: open-closed in one line.", "Observer, maybe: notifying the customer when the order is ready. Worth it only if more than one thing listens.", "Refused, Singleton: a global shop hides dependencies and makes tests share state. Pass one shop object in.", "SOLID as the check: one reason to change per class, and every new variant added as a class, not as an edit to working code."], "close": "The pattern is the means; the reason and the cost are the answer."} }
+          ],
+          revisit: [
+            { step: 0, q: "An interviewer says 'now do the low-level design'. What do they want that a high-level round did not ask for?",
+              a: "The unit is a class inside one service, not a machine. They want a class sketch with clear responsibilities and core code that runs one example. Requirements first, stated trade-offs and saying what you leave out all carry over." },
+            { step: 0, q: "Name the seven steps of a low-level round in order.",
+              a: "Clarify and elicit requirements, use cases, entities, relationships, class sketch, core code with a dry run, extensions." },
+            { step: 1, q: "You are asked to design a coffee-shop order system with no other detail. What do you ask before drawing anything?",
+              a: "Who the actors are, what it must do, whether orders can be cancelled or edited and until when, whether pricing has sizes or discounts, whether two baristas can pick the same order, and whether it survives a restart. Then say the scope back in three sentences, with what is out, and get a yes." },
+            { step: 1, q: "Why does 'can an order be cancelled after it is placed' matter to the design?",
+              a: "It decides whether the order needs states and which actions are allowed in which state, so it shapes the whole class, not just one method." },
+            { step: 2, q: "Sketch the coffee-shop classes and label each link as has-a, uses or is-a.",
+              a: "Order has-a list of OrderLine, each has-a MenuItem and a size Enum; Order has a status Enum. Payment is an abstract class with CardPayment and CashPayment as the one is-a. Barista uses Order. Money is integer cents." },
+            { step: 2, q: "When do you reach for an abstract base class and when for a dataclass?",
+              a: "A base class for a family of interchangeable variants, like payment types. A dataclass for plain data with no behaviour, like a menu item or an order line." },
+            { step: 3, q: "Which pattern would you use for the order and which would you refuse, and why?",
+              a: "State for the order, since each status allows different actions and a class per state replaces a long if-chain, at the cost of more classes. Refuse Singleton for the shop, since it hides a global and makes tests share state." },
+            { step: 3, q: "A new discount type is added. How does your design absorb it, and which principle is that?",
+              a: "Pricing is a Strategy the order calls, so the discount is a new class and working code is untouched. That is open-closed: add a class instead of editing." }
           ],
           quiz: [
             { q: "What does a low-level design round produce that a high-level round does not?",
@@ -2748,6 +3050,24 @@
               links: [{ label: "Session w4a: retries and idempotency", url: "#/s/w4a" }, { label: "Session w5a: caching", url: "#/s/w5a" }],
               ans: {"lead": "REST at the edge, a layer 7 balancer and a per-tenant token bucket in front, gRPC inside, and a CDN for finished reports only.", "pts": ["The name: DNS points at the balancer. Finished reports and the dashboard's files are served from a CDN, at versioned URLs so they need no invalidation.", "The balancer: layer 7, health-checked shallowly, least connections because replays vary in length. It ends TLS and also fronts any gRPC, which needs HTTP/2-aware balancing.", "The limiter: a per-tenant token bucket, kept in a shared store, admits replays at a fair rate. A five-million-replay run waits in the queue instead of starving others. Fail open if the store is down.", "Inside: the scheduler hands replays to workers over gRPC with a deadline on each and streamed results. At 1,200 a second REST would hold too; the reason is the typed contract and the streaming.", "Outbound: a second bucket set slightly under the model provider's limit, with backoff and jitter for the few 429s that still come, and idempotent replay ids so a retry is harmless."], "close": "The submit call and the status of a live run stay off the cache; everything else I would say is a trade-off I can name."} }
           ],
+          revisit: [
+            { step: 0, q: "You are choosing the protocol for a public API and for an internal service that streams results. Which do you pick for each, and why?",
+              a: "REST for the public one: any client works, caches understand it and curl can debug it. gRPC for the internal one: a typed schema, compact Protocol Buffers over HTTP/2, streaming and a deadline on every call." },
+            { step: 0, q: "A service call can fail in ways a function call cannot. What are they and what does the contract need?",
+              a: "It can be slow, lost, or done with the reply lost. Every contract needs a timeout, a retry rule and idempotency, with an idempotency key for POST." },
+            { step: 1, q: "A gRPC client calls through a layer 4 balancer and one backend gets almost all its calls. Why, and what fixes it?",
+              a: "One HTTP/2 connection carries all the client's calls, and layer 4 balances connections, not requests. Use a layer 7 balancer or client-side balancing." },
+            { step: 1, q: "Requests vary from 5 ms to 5 s. Which balancing algorithm do you choose, and what does a health check do?",
+              a: "Least connections, since round robin assumes equal, short requests. A health check probes on a timer, marks a backend out after K failures and back in after M passes, and should stay shallow." },
+            { step: 2, q: "Walk through a cold DNS lookup, and say why DNS is poor at fast failover.",
+              a: "Browser asks its recursive resolver, which asks a root server, then the TLD server, then the domain's authoritative server, and caches the answer for its TTL. Caches keep a dead address until the TTL ends, so DNS gives coarse routing only." },
+            { step: 2, q: "You deploy a fix to a dashboard file that a CDN serves for an hour. What is the clean way to get users the new one, and what should never go on a CDN?",
+              a: "Version the URL, so the new file is a new key with no invalidation needed. Per-caller or fast-changing responses should not be cached there." },
+            { step: 3, q: "Explain a token bucket, and work the sliding window estimate for 80 requests in the previous minute and 30 in this one, 15 seconds in.",
+              a: "A bucket holds B tokens and refills at r a second; a request spends one, and with none left it gets a 429 with Retry-After. That allows a burst of B and a long-run rate of r. The window estimate is 80 x (1 - 15/60) + 30 = 90." },
+            { step: 4, q: "Say the front door for the eval harness aloud in the order a request travels.",
+              a: "DNS to the balancer, which is layer 7 and ends TLS. A per-tenant token bucket in a shared store admits it, failing open if the store is down. The API queues the run and returns 202 with the run id. Inside, gRPC with deadlines; a CDN only for finished reports." }
+          ],
           quiz: [
             { q: "A gRPC client calls through a layer 4 load balancer, and one backend ends up with nearly all of its calls. Why?",
               o: ["Layer 4 balances connections, and gRPC puts every call on one long HTTP/2 connection", "gRPC cannot use more than one server", "Layer 4 always uses round robin", "Protocol Buffers are too large to split"], a: 0,
@@ -2862,6 +3182,24 @@
               out: "said aloud: when you would pick a queue and when a log, what each costs you, and where event sourcing stops being worth it",
               links: [{ label: "w4a: the exactly-once myth", url: "#/s/w4a" }],
               ans: {"lead": "I pick a queue for work done once and a log for facts many readers need, and I take event sourcing only when the history is the product.", "pts": ["Queue: a job per message, each acknowledged and retried on its own, with a dead-letter queue. Cost: the message is gone afterwards, so no replay and no late joiners.", "Log: ordered events kept for a retention window, one offset per consumer group. Cost: order only within a partition, lag to watch, and one bad event can stall a partition.", "Sync derived stores: CDC from the database's log, not dual writes. Every consumer still dedupes, because delivery is at-least-once.", "Event sourcing: events are the truth and state is a replay. Worth it for audit, ledgers and rebuilding the past; refused when I only need the current state.", "Exactly-once is an effect built from at-least-once delivery and idempotent consumers, not a feature of the broker."], "close": "That is the choice in one line: tasks go on a queue, facts go on a log, and the table stays the truth unless the history is."} }
+          ],
+          revisit: [
+            { step: 0, q: "What does a log keep that a classic message broker does not, and what does that let you do?",
+              a: "A broker deletes a message once it is acknowledged. A log keeps events for a retention period and each consumer holds its own offset. So a new or fixed consumer can replay the past or join late." },
+            { step: 0, q: "Where does ordering hold in a log, and how do you get order for one customer's events?",
+              a: "Only inside a partition. Give the events the same key so they go to the same partition, which gives order per key and no more." },
+            { step: 1, q: "A consumer in a group of two dies mid-batch. Walk through what happens.",
+              a: "Its partitions move to the other consumer, which resumes from the last committed offset. Because the commit follows processing, some events may be seen twice, so the consumer must dedupe." },
+            { step: 1, q: "Name three ways a partitioned log breaks and what you do about each.",
+              a: "A hot key piles up one partition; a slow consumer builds lag and can pass retention, so alert on lag; one bad event stalls a partition, so retry a few times and send it to a dead-letter topic." },
+            { step: 2, q: "A service updates its database and then publishes an event. How do you stop the two drifting apart?",
+              a: "That is a dual write, and a crash between the two leaves them apart. Tail the database's log with change data capture, or write the event to an outbox table in the same transaction and publish from there." },
+            { step: 2, q: "How do change data capture and event sourcing differ, and when would you take event sourcing?",
+              a: "CDC keeps the table as the truth and derives events from its log. Event sourcing keeps the events as the truth and derives state by replaying them. Take it only when the history is the product, such as audit or a ledger." },
+            { step: 3, q: "Design the replay pipeline: what is the event, the key, and how many partitions?",
+              a: "A small event of about 1 KB with scenario id, attempt, status, score and a trace pointer, keyed by scenario id. 1,200 events a second at 2 seconds each is 2,400 in flight; at about 50 per consumer that is 48 consumers, so 64 partitions. The consumer count sets it." },
+            { step: 4, q: "Your manager asks 'queue or log' for a new feature. How do you decide, and what does each cost?",
+              a: "A queue for work done once: each message is acknowledged and retried alone, but it is gone afterwards, so no replay. A log for facts many readers need: order only within a partition and lag to watch. Exactly-once is built from at-least-once plus idempotent consumers." }
           ],
           quiz: [
             { q: "What does a log keep that a classic message queue does not?",
@@ -10357,25 +10695,30 @@
   /* Open questions for the end of a session: why and short closers, pick closers asked
      as open questions, then prompts from the steps themselves. Never blanks or single words. */
   function endQuestions(s) {
+    /* A session's own revisit set wins: up to 8 open questions, each tied to the step it tests
+       (step: its index in s.steps), so the end can send you back to what you lacked. */
+    if (s.revisit && s.revisit.length) {
+      return s.revisit.map(function (r) { return { q: r.q, a: r.a, key: sKey(s.id, r.step) }; });
+    }
     var qs = [];
-    function take(list) {
+    function take(list, key) {
       (list || []).forEach(function (c) {
-        if (c.k === "short" || c.k === "why" || c.k === "figure") { qs.push({ q: c.q, a: c.a }); }
-        else if (c.k === "pick" && typeof c.a === "number" && c.o) { qs.push({ q: c.q, a: c.o[c.a] + (c.why ? ". " + c.why : "") }); }
+        if (c.k === "short" || c.k === "why" || c.k === "figure") { qs.push({ q: c.q, a: c.a, key: key }); }
+        else if (c.k === "pick" && typeof c.a === "number" && c.o) { qs.push({ q: c.q, a: c.o[c.a] + (c.why ? ". " + c.why : ""), key: key }); }
       });
     }
-    s.steps.forEach(function (st) { take(st.close); });
-    (s.study || []).forEach(function (it) { take(it.close); });
+    s.steps.forEach(function (st, i) { take(st.close, sKey(s.id, i)); });
+    (s.study || []).forEach(function (it, i) { take(it.close, s.id + ":s" + i); });
     var seen = {}, uniq = qs.filter(function (q) { if (seen[q.q]) { return false; } seen[q.q] = true; return true; });
     if (uniq.length > 8) {
       var step = uniq.length / 8, spread = [];
       for (var i = 0; i < 8; i++) { spread.push(uniq[Math.floor(i * step)]); }
       uniq = spread;
     }
-    s.steps.forEach(function (st) {
+    s.steps.forEach(function (st, i) {
       if (uniq.length >= 5) { return; }
       var model = modelOf(s, st);
-      if (model) { uniq.push({ q: "In your own words: " + st.t.replace(/\.$/, "") + ".", a: ansText(model) }); }
+      if (model) { uniq.push({ q: "In your own words: " + st.t.replace(/\.$/, "") + ".", a: ansText(model), key: sKey(s.id, i) }); }
     });
     return uniq;
   }
@@ -10467,6 +10810,22 @@
   }
 
   /* One question at a time, in a pop-up. Finishing it counts as the session's quiz. */
+  /* The steps you lacked after a quiz: any step with a question rated Partly or Missed, plus any
+     step whose multiple-choice level is Partly or Not yet. In step order, each with why. */
+  function lackedSteps(s, qs, rated) {
+    var why = {};
+    function add(key, w) { if (!key) { return; } (why[key] = why[key] || []).push(w); }
+    rated.forEach(function (r, k) { if (r > 0) { add(qs[k].key, (r === 2 ? "missed: " : "partly: ") + qs[k].q); } });
+    stepKeysOf(s).forEach(function (key) {
+      var lv = stepLevel(key);
+      if (lv === "not" || lv === "part") { add(key, "multiple choice: " + (lv === "not" ? "not yet" : "partly")); }
+    });
+    var order = (s.study || []).map(function (it, i) { return s.id + ":s" + i; }).concat(s.steps.map(function (st, i) { return sKey(s.id, i); }));
+    return order.filter(function (k) { return why[k]; }).map(function (k) {
+      var m = /:(s?)(\d+)$/.exec(k), it = m[1] ? (s.study || [])[+m[2]] : s.steps[+m[2]];
+      return { key: k, title: (+m[2] + 1) + ". " + (it ? it.t : k), why: why[k] };
+    });
+  }
   function runEndQuiz(s, qs) {
     var dlg = document.getElementById("wbquiz");
     if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "wbquiz"; dlg.className = "wbq"; document.body.appendChild(dlg); }
@@ -10508,18 +10867,34 @@
       var got = rated.filter(function (r) { return r === 0; }).length;
       var missed = [];
       rated.forEach(function (r, k) { if (r === 2) { missed.push(k); } });
-      var qrec = { score: got, passed: true, at: stampNow(), missed: missed, via: "end quiz" };
+      var lacks = lackedSteps(s, qs, rated);
+      var qrec = { score: got, passed: true, at: stampNow(), missed: missed, lacked: lacks.map(function (l) { return l.key; }), via: "end quiz" };
       state.quiz[s.id] = qrec;
       state.quizHistory[s.id] = (state.quizHistory[s.id] || []).concat([qrec]);
       markSession(s); save();
       dlg.innerHTML = "";
       var box = el("div", "wbq-in");
       box.appendChild(el("div", "wbq-q", got + " of " + qs.length + " you had."));
-      if (missed.length) {
-        box.appendChild(el("p", "", "Say these again before moving on:"));
-        var ul = el("ul");
-        missed.forEach(function (k) { ul.appendChild(el("li", "", qs[k].q)); });
+      if (lacks.length) {
+        box.appendChild(el("p", "", "What you lacked, by step. Refresh each, then come back to the quiz:"));
+        var ul = el("ul", "wbq-lack");
+        lacks.forEach(function (l) {
+          var li = el("li");
+          var go = el("button", "wb-link", l.title);
+          go.addEventListener("click", function () { dlg.close(); open[s.id + ":row"] = l.key; rowJump = l.key; draw(); });
+          li.appendChild(go);
+          li.appendChild(el("span", "w", l.why.join("; ")));
+          ul.appendChild(li);
+        });
         box.appendChild(ul);
+        var weakQs = flat(lacks.map(function (l) { return qItems(l.key); }));
+        if (weakQs.length) {
+          var mj = el("button", "wb-btn", "Check these steps with multiple choice (" + weakQs.length + ")");
+          mj.addEventListener("click", function () { dlg.close(); runMcq({ mode: "judge", scope: s.id, title: s.name + ": what you lacked" }, weakQs); });
+          box.appendChild(mj);
+        }
+      } else {
+        box.appendChild(el("p", "", "Nothing lacking: every answer had it, and no step is judged below Know."));
       }
       var close = el("button", "wb-btn primary", "Close");
       close.addEventListener("click", function () { dlg.close(); draw(); });
@@ -11086,6 +11461,17 @@
     if (isFolded(s)) { kick.appendChild(el("span", "folded-note", "Folded into wildcard work on " + state.folded[s.id].at)); }
     var nb = notebookButton(s);
     if (nb) { kick.appendChild(nb); }
+    /* Once a session is done, its quiz rides in the head too, for a quick revisit; before that
+       the quiz stays where it was, at the end. */
+    if (state.done[s.id] || sessionDone(s)) {
+      var rq = endQuestions(s);
+      if (rq.length) {
+        var qbtn = el("button", "sec nlm-copy revisit-q", "Test yourself (" + rq.length + ")");
+        qbtn.title = "The session's open questions, one at a time; ends with what you lacked and links to those steps";
+        qbtn.addEventListener("click", function () { runEndQuiz(s, rq); });
+        kick.appendChild(qbtn);
+      }
+    }
     head.appendChild(kick);
     head.appendChild(el("h1", "", s.name));
     if (s.intro || s.blurb) { head.appendChild(el("p", "intro", s.intro || s.blurb)); }
