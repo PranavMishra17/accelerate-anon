@@ -92,6 +92,18 @@
   }
 })();
 
+/* local-only */
+/* Focus, the private day-by-day plan: private/focus.js on the study server only (gitignored, so absent in a
+   fresh clone and never published). A missing file costs one quiet 404. */
+(function () {
+  if (window.SITE_PUBLIC || location.protocol === "file:" || window.__focusLoaded) { return; }
+  var s = document.createElement("script");
+  s.src = "/private/focus.js?d=" + new Date().toISOString().slice(0, 10);
+  s.async = true;
+  (document.head || document.documentElement).appendChild(s);
+})();
+/* end local-only */
+
 /* AI Engineering from Scratch lessons load from raw.githubusercontent.com, which some networks block. When the
    study server has a local clone of the course (tools/serve.py serves it under /course/), lesson links open
    there instead: probed once at load, rewritten at click time, so every page and every rendered list is covered.

@@ -3,6 +3,7 @@ window.LOOP_CODING = window.LOOP_CODING || { parts: [] };
 window.LOOP_CODING.parts.push({
  "id": "mercor-onsite-build",
  "n": 10,
+ "flow": true,
  "one": true,
  "title": "Optional: the search build (not on the 11 November agenda)",
  "minutes": 150,

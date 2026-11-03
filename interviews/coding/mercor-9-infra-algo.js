@@ -3,6 +3,7 @@ window.LOOP_CODING = window.LOOP_CODING || { parts: [] };
 window.LOOP_CODING.parts.push({
  "id": "mercor-infra-algo",
  "n": 9,
+ "flow": true,
  "one": true,
  "title": "Onsite algorithms: infrastructure and scaling",
  "minutes": 330,

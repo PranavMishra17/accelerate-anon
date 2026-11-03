@@ -3,6 +3,7 @@ window.LOOP_CODING = window.LOOP_CODING || { parts: [] };
 window.LOOP_CODING.parts.push({
  "id": "mercor-onsite-algo",
  "n": 8,
+ "flow": true,
  "title": "Onsite algorithms: the reported problems",
  "minutes": 240,
  "lead": "After this part you can run a 30 minute talk-only algorithms round on the problems candidates reported: the faulty comparator (including the paid one that is right 90 percent of the time), exchange rates, the friend network, the sorting-theory warm-up, a million user IDs and weighted top-k. Each problem goes in the order you solve it: clarify, requirements, entities, the logic in English with numbers, the code for after, and the review. Mercor describes the round as interactive and discussion-based, true algorithms on real architecture challenges. The original prompts are not public; these are rebuilt from candidate reports, and each source is named where it is used.",
