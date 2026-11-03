@@ -1,64 +1,66 @@
-"""Mercor, Software Engineer, Applied AI (Enterprise). Round 2: Friday 23 October 2026, 6:00 PM Eastern.
+"""Mercor, Software Engineer, Applied AI (Enterprise). The onsite: about five hours in person in downtown San Francisco.
 
-A 30-minute conversational technical screen on caching with Sophie Guo, Applied AI Engineer. No
-coding tools and no LLMs. Round 1 (recruiter-arranged, with Neel Taneja) went well: the evaluation
-layer and agents. Todd Dockery at Mercor is the recruiter.
+Date to be set, about a week out (target around 10 November 2026), beside the Amazon loop (6, 9, 10 or
+11 November), which has priority on those days. Mercor's prep email names three parts: an AI-assisted
+coding exercise with a presentation, a practical system design on AI systems, and a behavioral round
+(not in scope for these sessions). Round 1 (Neel Taneja) went well; round 2 (Sophie Guo, the caching
+screen, 23 October) is kept below, unchanged. Todd Dockery at Mercor is the recruiter.
 
-What the screen is: the recruiter's brief (quoted in ROUNDS) and three candidate reports (PracHub,
-May and September 2026) agree: a short cached function to review out loud, then concurrency, memory,
-failures and staleness. The teaching lives in the tracker: week 5's Caching session (w5a, linked, not
-copied) and three wildcard sessions written for this round (wc32 to wc34), shown on the Sessions tab.
-
-Facts about Mercor come from SOURCES, every link opened 19 October 2026. alfred_'s caches were read
-from the code on 19 October (wc34). Pranav's story is his own text from E:/_Resume-Curator/INTRO.md,
-verbatim. Logistics answers (location, relocation, pay, work authorization, start date) stay in chat.
+The teaching lives in the tracker: wc35 (the build), wc36 (AI system design), wc37 (the basics), with
+wc32 to wc34 and week 5's w5a as light review. The Plan tab is the day-by-day work order; two mocks run
+in chat. Facts about Mercor come from SOURCES, every link opened. Pranav's story is his own text from
+E:/_Resume-Curator/INTRO.md, verbatim. Logistics answers stay in chat.
 """
 
 LOOP = {
     "id": "mercor",
     "title": "Mercor, Applied AI (Enterprise)",
     "company": "Mercor",
-    "subtitle": "Round 2: a conversational technical screen on caching",
+    "subtitle": "Onsite: about five hours in person in San Francisco",
     # Brand colour for the hub's wordmark. Mercor publishes no single accent: #3923B1, a deep indigo,
     # is among the inline colours on mercor.com/enterprise (read 2026-10-19); #9FA2FF from the same
     # page for the dark surface.
     "brand": "#3923B1", "brand_dark": "#9FA2FF",
-    "when_iso": "2026-10-23T18:00:00-04:00",
-    "when": "Friday 23 October, 6:00 to 6:30 PM Eastern",
-    "who": ("Sophie Guo, Applied AI Engineer at Mercor (MIT, EECS and Biological Engineering; ML before that at J&J "
-            "and Cellarity). Round 1 was with Neel Taneja; Todd Dockery is the recruiter."),
-    "format": ("Thirty minutes on Google Meet, conversational: no coding tools, no LLMs. Candidates report a short "
-               "function that caches an expensive call, handed over for a spoken code review, then deeper questions "
-               "on concurrency, memory, failures and staleness. One report adds a quick follow-up on another topic "
-               "(retries and idempotency)."),
-    "bar": ("From the brief: clear assumptions, concrete examples of what fails, and trade-offs when you propose a "
-            "fix, as the workload grows and requests run concurrently. Say the assumption, name the failure with an "
-            "example, give the fix and what it costs. Breadth and pace: one report says the screen was rapid-fire."),
-    "plan_kicker": "Before Friday, 6 PM",
-    "extra": ("<b>Work in this order.</b> "
-              "1. Week 5, Caching, in the tracker: <a href=\"../index.html#/s/w5a\" target=\"_blank\" rel=\"noopener\">finish it there</a> "
-              "(placement, keys, TTL against invalidation). It is the base; this page does not repeat it. "
-              "2. Sessions tab: wc32, the code review out loud (the screen itself), then wc33 (stale data, stampedes, failure) "
-              "and wc34 (LLM caches and your own at alfred_). Each step ends on its cheat sheet and key terms. "
-              "3. Prep tab: your intro and why Mercor out loud, with the timer. "
-              "4. Thursday: say 'run the Mercor mock' in chat for a 30-minute screen, critique after. "
-              "5. Friday, an hour before: reread the three cheat sheets of wc32 and the one page of assumptions below."),
+    "when_iso": "",
+    "when": "Date to be set, about a week out; full day, downtown San Francisco",
+    "who": ("Interviewers not named yet. Todd Dockery is the recruiter. Round 1 was with Neel Taneja, round 2 with "
+            "Sophie Guo, Applied AI Engineer."),
+    "format": ("About five hours, in person, downtown San Francisco. From Mercor's prep email: a coding exercise that is "
+               "not an algorithm interview, AI assistance encouraged, then a presentation of what you built; a practical "
+               "system design on AI systems; and a behavioral round on judgment and ownership under ambiguity. Candidates "
+               "report async build time with a 15 to 30 minute debrief after, a whiteboard design, and an algorithms part."),
+    "bar": ("Mercor's one takeaway: show how you think, in a collaborative engineering conversation, not a performance. "
+            "Coding: break the problem down, weigh alternatives, recover when stuck, collaborate, deliver a fast working "
+            "prototype; narrate, write tests, validate assumptions, say what you optimise for. Design: tradeoffs on latency, "
+            "cost, reliability, scale, deployment and observability, plus retrieval, evaluation, failure modes and monitoring. "
+            "Why over tool names. Reviewers penalise code you cannot explain."),
+    "plan_kicker": "Date to be set; about a week out",
+    "extra": ("<b>The work order.</b> "
+              "1. Plan tab: day by day from Tuesday 3 November, one to one and a half hours a day, because the Amazon loop has priority "
+              "and its days (6, 9, 10 or 11 November) are not fixed. "
+              "2. Sessions: wc35, the AI-assisted build and its presentation; wc36, AI system design (candidate search, evaluation, failure); "
+              "wc37, the basics the reports say to drill (complexity, hashing, graph search, cache races). "
+              "3. Light review: wc32 to wc34 (the cache code review, stale data and stampedes, LLM caches) and "
+              "<a href=\"../index.html#/s/w5a\" target=\"_blank\" rel=\"noopener\">week 5's caching</a>. "
+              "4. Two mocks in chat: 'run the Mercor onsite design mock' and 'run the Mercor build mock'. "
+              "5. The day before: reread the cheat sheets and the logistics list on the Plan tab."),
 }
 
-SESSION_IDS = [("wc32", "1"), ("wc33", "2"), ("wc34", "3")]
+SESSION_IDS = [("wc35", "1"), ("wc36", "2"), ("wc37", "3"), ("wc32", "4"), ("wc33", "5"), ("wc34", "6")]   # the onsite first; wc32 to wc34 (round 2) are the light review
 
-PREP_LEAD = ("The teaching is on the Sessions tab and in week 5. Here: how to show up, then your story out loud, "
-             "and two drills: the cache review in two minutes, and the stampede.")
+PREP_LEAD = ("The teaching is on the Sessions tab. Here: how to show up, then your story out loud, and the timed drills: "
+             "the build presentation, the candidate search opening, a complexity answer, and the earlier cache drills.")
 
 SHOW_UP = [
-    ("Assumptions before answers.", "Before you judge the code, say what you assume: one process or many, threads or asyncio, how slow compute is, whether it is pure, how stale an answer may be. The brief asks for exactly this."),
-    ("Review in a fixed order.", "One caller, concurrency, memory, errors, staleness, visibility. Each with a concrete failure ('two requests miss at once and compute runs twice') and its fix."),
-    ("Every fix with its cost.", "A global lock is correct and slows every hit; a TTL bounds staleness and adds misses; a shared cache is consistent and adds a network hop. Say both halves."),
-    ("Read the code literally first.", "One reported snippet has await in a non-async function and a set with no value. Catch the plain bugs before the clever ones."),
-    ("Python, said precisely.", "One dict operation is atomic under the GIL, check-then-set is not; lru_cache can call the function twice; in asyncio cache the Task, not the coroutine; a failed Task must be evicted."),
-    ("Real examples from alfred_.", "The Outlook calendar call shares one in-flight request after Microsoft returned 503s; token refresh has no lock; some maps grow without a cap. Only what you confirmed, and say which you built."),
-    ("Keep the pace.", "Thirty minutes, possibly rapid-fire. Two or three sentences per point, then stop and let her pick the next one."),
-    ("End with a real question.", "One question for Sophie about how Enterprise deployments handle caching or evaluation, then the process question."),
+    ("Make your thinking visible.", "Narrate as you go: what you are about to try, why, and what would change your mind. The brief judges how you break the problem down and recover when stuck."),
+    ("Lead with intent.", "Open the presentation with what you set out to build and why, before any code. Then the tradeoffs you made under time pressure."),
+    ("Own every AI-written line.", "Read what the model gives you to pull-request quality. Reviewers penalise code the candidate cannot explain. Write your own first answer before you ask it."),
+    ("Tests and assumptions, out loud.", "Say the assumption, write the test that checks it, run it. Say what you optimise for: speed to a working prototype, or correctness on the edge cases."),
+    ("Scoping is not failure.", "What you did not reach is a deliberate choice. Name it, say why, and say what you would do next and in what order."),
+    ("End the build with next steps.", "Two or three, ranked: the next test, the next risk, the next feature. Then stop."),
+    ("Think past the code, to production.", "How it scales, where latency or reliability bite, how you know it performs, what happens when an outside service fails, how it is deployed and monitored."),
+    ("A teammate, not a performer.", "Ask questions, take hints, and change your mind when the interviewer gives a good reason. It is a conversation."),
+    ("Ask which parts allow AI tools.", "The brief says encouraged; one candidate report says an early part did not. Ask early, and ask whether the build prompt is shared in advance."),
 ]
 
 STORY_BLURB = "Your intro, why Mercor, why leave alfred_, and logistics."
@@ -81,20 +83,36 @@ SOURCES = [
      "why": "A JavaScript Map cache; the interviewer wanted race conditions, locking, memory and eviction."},
     {"label": "PracHub: a rapid-fire screen (September 2026)", "url": "https://prachub.com/interview-experiences/mercor-software-engineer-interview-experience-30-minute-rapid-fire-technical-screen-rejected-after-three-questions",
      "why": "No eviction, the expensive call repeated, errors and input validation; then idempotency and retries for a payment integration."},
+    {"label": "Jointaro: a senior onsite report (October 2025)", "url": "https://www.jointaro.com/interviews/companies/mercor/experiences/senior-software-engineer-united-states-october-28-2025-no-offer-negative-c87ecf87",
+     "why": "AI tools allowed at the onsite; the design prompt reported as a candidate search system built with RAG."},
+    {"label": "Canva: AI interview success, an interviewer's guide", "url": "https://www.canva.dev/blog/engineering/ai-interview-success/",
+     "why": "How an interviewer scores an AI-assisted build: skeleton ready, scope first, own answer before the model, pull-request quality, three failure modes."},
+    {"label": "Chip Huyen: a generative AI platform", "url": "https://huyenchip.com/2024/07/25/genai-platform.html",
+     "why": "The skeleton for an AI design: retrieval, guardrails, routing, caches, orchestration, observability."},
+    {"label": "Anthropic: demystifying evals for AI agents", "url": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
+     "why": "Code, model and human graders; one judge per rubric dimension; calibrating judges to humans."},
+    {"label": "Anthropic: contextual retrieval", "url": "https://www.anthropic.com/news/contextual-retrieval",
+     "why": "Contextual embeddings, BM25 and reranking; top-20 retrieval failure falls from 5.7% to 1.9%."},
+    {"label": "Dealroom: Mercor at $2B gross run rate", "url": "https://dealroom.co/news/137121-mercor-doubles-to-2b-gross-revenue-run-rate-as-ai-labs-buy-expert-data/",
+     "why": "The $2B figure is gross annualised revenue (June 2026)."},
+    {"label": "The Next Web: the $20B talks and Deeptune", "url": "https://thenextweb.com/news/mercor-20-billion-valuation-deeptune-acquisition",
+     "why": "Contractors keep roughly 60 to 70%, so net revenue is a fraction of the gross figure."},
+    {"label": "TechCrunch: Mercor in talks at a $20B valuation (July 2026)", "url": "https://techcrunch.com/2026/07/09/mercor-is-in-talks-for-a-20b-valuation/",
+     "why": "Reported talks; a close is unconfirmed, so say 'reported in talks'."},
 ]
 
 COMPANY = [
-    "Mercor connects AI labs with vetted domain experts (doctors, lawyers, bankers, engineers) who write training data, tasks, rubrics and RL environments. Founded in 2023 in San Francisco by Brendan Foody, Adarsh Hiremath and Surya Midha. A $350M Series C at a $10B valuation (October 2025). Revenue is reported at about $2B annualised in June 2026; that is gross, and most of it is paid out to experts. Customers include Anthropic and OpenAI. It bought Deeptune in July 2026: simulation environments where agents practise before they touch live systems.",
-    "APEX is its benchmark family for real professional work (banking, consulting, law, medicine; APEX-Agents and APEX-SWE since), graded with rubrics and a judge model. That is the evaluation layer you talked about with Neel.",
-    "Mercor Enterprise, the team you would join, takes the same machinery to large companies: find where agents pay off (Discover), put them in production with custom evaluations wired into the customer's tools (Deploy), review and tune them live (Improve), and license opt-in data to labs (Monetize). It is delivered by business experts and forward deployed engineers on one platform for context, connectors and evaluation. The page cites an incident-response agent that cut median time to mitigation by more than half.",
-    "Know, don't raise: a March 2026 breach through a compromised open-source dependency, followed by contractor lawsuits. If it comes up, it is a reason caching and keys matter (what is cached, and for whom).",
+    "Mercor connects AI labs with vetted domain experts (doctors, lawyers, bankers, engineers) who write training data, tasks, rubrics and RL environments. Founded in 2023 in San Francisco by Brendan Foody, Adarsh Hiremath and Surya Midha. A $350M Series C at a $10B valuation (October 2025). Gross annualised revenue passed $2B in June 2026. Say gross: contractors keep roughly 60 to 70%, so net revenue is far smaller. Talks at about $20B were reported in July 2026 and a close is unconfirmed: say 'reported in talks'. Revenue leans on a few labs, with OpenAI and Anthropic the anchors.",
+    "It bought Deeptune in July 2026: simulation environments where agents practise before they touch live systems. APEX is its benchmark family for real professional work (APEX-Agents and APEX-SWE since), graded with rubrics and a judge model. That is the evaluation layer you talked about with Neel.",
+    "Mercor Enterprise, the team you would join, takes the same machinery to large companies: find where agents pay off (Discover), put them in production with custom evaluations wired into the customer's tools (Deploy), review and tune them live (Improve), and license opt-in data to labs (Monetize). Delivered by business experts and forward deployed engineers on one platform. The posting says engineering, product and customer success in one role. No source describes the team's internal work, so ask.",
+    "Know, don't raise: the March 2026 breach through a compromised open-source dependency (LiteLLM) and the contractor lawsuits, and Scale AI's September 2025 suit over a former employee, which Mercor disputes. If the breach comes up, it bears on how you design for customer data: what is cached, and for whom. Culture reports describe an intense in-person environment; ask about hours directly.",
 ]
 
 POSTING = {
     "url": "https://jobs.generalcatalyst.com/companies/mercor/jobs/77183222-software-engineer-enterprise-applied-ai",
     "lead": "Software Engineer, Applied AI on Mercor's Enterprise team: engineering, product and customer success in one role, builders first, embedded with enterprise clients.",
     "facts": [["Team", "Mercor Enterprise"], ["Offices", "San Francisco, New York or London, in person five days a week"],
-              ["Round 2", "Friday 23 October, 6:00 PM Eastern, 30 minutes"], ["Interviewer", "Sophie Guo, Applied AI Engineer"]],
+              ["Onsite", "About five hours, downtown San Francisco; date to be set, about a week out"], ["Interviewers", "Not named yet"]],
     "does": [
         "Embed with enterprise customers to understand technical requirements and business goals.",
         "Architect and implement custom integrations, APIs and workflows on top of Mercor's platform.",
@@ -174,6 +192,16 @@ ROUNDS = [
                    "How the team is structured across sales, MVP building and forward deployment: very flexible, no fixed lines yet."],
           "keep": [],
           "notes": ["A good set; she answered at length."]}]},
+    {"title": "Round 3: the onsite",
+     "when": "Date to be set, about a week out",
+     "who": "Not named yet",
+     "format": ("About five hours, in person, downtown San Francisco. Mercor's email: a coding exercise (AI assistance encouraged, then a presentation), "
+                "a practical system design on AI systems, and a behavioral round. Candidates report async builds with a 15 to 30 minute debrief after each, "
+                "system design on a whiteboard, and an algorithms part."),
+     "outcome": "To come.",
+     "notes": ["The brief's one takeaway: show how you think; a collaborative engineering conversation, not a performance.",
+               "Open points to ask early: which parts allow AI tools, whether the build prompt is shared in advance, who the interviewers are, and the real hours."],
+     "asked": []},
 ]
 
 SCRIPTS = [
@@ -212,11 +240,25 @@ SCRIPTS = [
 ]
 
 QA = []
-TABS = ["overview", "prep", "sessions", "rounds", "mocks", "coding", "concurrency"]
+TABS = ["overview", "plan", "prep", "sessions", "rounds", "mocks", "coding", "concurrency"]
 SHARED_JS = ["coding/concurrency.js"]   # the Concurrency tab, shared with CODING.html
 
 ASK_3C = [
-    {"id": "sophie", "title": "For Sophie", "when": "The last two or three minutes. One or two.",
+    {"id": "onsite", "title": "For the onsite interviewers", "when": "The last minutes of each part. One or two each.",
+     "why": "They build on Enterprise; a question about the work shows you think past the exercise.",
+     "how": ["Ask one, listen, ask one follow-up on what they said."],
+     "items": [
+         {"to": "Any engineer", "q": "What does a first month look like for someone on the Enterprise team?",
+          "loop": "Early in the day.", "why": "Makes the job concrete and shows you are planning to start."},
+         {"to": "An Applied AI engineer", "q": "How do you build the evaluations for a customer: who writes the rubric, and how do you know the judge can be trusted?",
+          "loop": "After the design part.", "why": "Ties to the evaluation work you own at alfred_ and to what Mercor sells."},
+         {"to": "The coding interviewer", "q": "Which parts of today allow AI tools, and what do you look for in how people use them?",
+          "loop": "Before the build, if not already said.", "why": "The brief says encouraged; one report says an early part did not."},
+         {"to": "Any engineer", "q": "To get to know the product, what are some recent pain points you've solved, and some that are ongoing work?",
+          "loop": "Any time.", "why": "Your question from INTRO.md, reworded only for spelling."},
+         {"to": "The recruiter or last interviewer", "q": "What does the full interview process look like from here, and the rough timeline?",
+          "loop": "Last.", "why": "Your question from INTRO.md."}]},
+    {"id": "sophie", "title": "For Sophie (round 2, kept)", "when": "The last two or three minutes. One or two.",
      "why": "She builds on Enterprise; a question about her work shows you think past the screen.",
      "how": ["Ask one, listen, ask one follow-up on what she said."],
      "items": [
@@ -236,8 +278,69 @@ DRILLS = [
     {"id": "stampede", "prompt": "A hot key expires under load. What happens, and how do you stop it?", "target": "90 seconds", "seconds": 90, "ref": "../index.html#/w/wc33"},
     {"id": "navigate", "prompt": "In mock2_service: where is concurrency capped, where is order kept, and where is the stampede stopped? Go to each line.", "target": "3 minutes", "seconds": 180, "ref": "../index.html#/w/wc33"},
     {"id": "intro", "prompt": "Tell me about yourself.", "target": "45 seconds", "seconds": 45, "ref": "#say-intro"},
+    {"id": "present", "prompt": "Present what you built: intent, the tradeoffs you made under time, what you cut and why, next steps.", "target": "8 minutes", "seconds": 480, "ref": "../index.html#/w/wc35"},
+    {"id": "search", "prompt": "Design a candidate search system with RAG. Open it: requirements, the shape, where it fails, how you would know it works.", "target": "5 minutes", "seconds": 300, "ref": "../index.html#/w/wc36"},
+    {"id": "complexity", "prompt": "State the time and space complexity of what you just wrote, and of the worst sort that still works.", "target": "2 minutes", "seconds": 120, "ref": "../index.html#/w/wc37"},
 ]
 
-MOCK_HOW = ("Say 'run the Mercor mock' in chat: Sophie's caching screen, 30 minutes, a snippet to review, no tools; critique after. "
-            "For the code version, open E:\\mercor-cache-mock: mock1_review (threads, a cache with planted bugs to review) and "
-            "mock2_service (asyncio, a two-tier cache to navigate). The interviewer guide and your map are in private/mercor-mock, local only.")
+MOCK_HOW = ("Two onsite mocks run in chat. Say 'run the Mercor onsite design mock': 45 minutes, candidate search with RAG, then production push-back. "
+            "Say 'run the Mercor build mock': a 60 to 90 minute build brief with your own AI tool, then a 10-minute presentation and debrief questions. "
+            "Critique after each. The interviewer guides are in private/mercor-mock/onsite.html, local only. "
+            "The round 2 caching mock still runs as 'run the Mercor mock'; for its code version open E:\\mercor-cache-mock: "
+            "mock1_review (threads, a cache with planted bugs) and mock2_service (asyncio, a two-tier cache to navigate).")
+
+# ------------------------------------------------------------------ the plan: Tuesday 3 to Monday 9 November
+def _d(date, hours, focus, *items):
+    return {"date": date, "hours": hours, "focus": focus,
+            "items": [dict(zip(("k", "t", "href", "m"), it)) for it in items]}
+
+
+SES = lambda sid, label, m: ("plan", label, "../index.html#/w/" + sid, m)
+REV = lambda sid, label, m="20 min": ("revise", "Light review: " + label, "../index.html#/w/" + sid, m)
+
+PLAN = {
+    "title": "The onsite: Tuesday 3 to Monday 9 November",
+    "lead": ("One to one and a half hours a day, because the Amazon loop has priority on these days and its days (6, 9, 10 or 11 November) are not "
+             "fixed. The Mercor date is also not set, about a week out. If Amazon takes a day, skip that day here and carry its items forward; "
+             "nothing on this page depends on the order of the days except that the build comes before its presentation. Tick items as you go."),
+    "split": [
+        ["The build", "about 35%", "wc35 and the build mock: an AI-assisted prototype, tests said aloud, then the presentation."],
+        ["AI system design", "about 35%", "wc36 and the design mock: candidate search, evaluation, failure modes, production."],
+        ["The basics", "about 20%", "wc37: complexity, hashing, graph search and cache races, the soft spot from round 2."],
+        ["Light review", "about 10%", "wc32 to wc34 and week 5's caching, only the cheat sheets."],
+    ],
+    "weeks": [
+        {"id": "onsite", "title": "Tuesday 3 to Monday 9 November",
+         "note": "Short days on purpose. Amazon comes first; the days are a sequence, not calendar slots.",
+         "days": [
+             _d("2026-11-03", "1 h", "Read what the day is, then the build session.",
+                ("other", "Prep tab: the show-up list, read once", "#/prep", "10 min"),
+                SES("wc35", "Session wc35: the AI-assisted build, steps 1 to 3", "50 min")),
+             _d("2026-11-04", "1.5 h", "Finish the build session and time one presentation.",
+                SES("wc35", "Session wc35: the rest, then its cheat sheets", "40 min"),
+                ("other", "Drill: the build presentation, 8 minutes, aloud", "#/prep", "20 min"),
+                ("other", "Canva's interviewer guide, read for the three failure modes", "https://www.canva.dev/blog/engineering/ai-interview-success/", "15 min")),
+             _d("2026-11-05", "1.5 h", "AI system design: candidate search first.",
+                SES("wc36", "Session wc36: AI system design, candidate search and retrieval", "50 min"),
+                ("other", "Chip Huyen's generative AI platform post, against your search design", "https://huyenchip.com/2024/07/25/genai-platform.html", "25 min"),
+                ("other", "Drill: the candidate search opening, 5 minutes, aloud", "#/prep", "15 min")),
+             _d("2026-11-06", "1 h", "Evaluation and failure modes. Amazon may take this day.",
+                SES("wc36", "Session wc36: evaluation, failure and production, the rest", "40 min"),
+                ("other", "Anthropic on evals: graders, one judge per dimension, calibration", "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents", "20 min")),
+             _d("2026-11-07", "1.5 h", "The basics, and the first mock.",
+                SES("wc37", "Session wc37: the basics (complexity, hashing, graph search, cache races)", "40 min"),
+                ("other", "Drill: complexity, 2 minutes, aloud", "#/prep", "10 min"),
+                ("other", "Mock in chat: say 'run the Mercor onsite design mock' (45 minutes, critique after)", "#/mocks", "60 min")),
+             _d("2026-11-08", "1.5 h", "The build mock, then light review.",
+                ("other", "Mock in chat: say 'run the Mercor build mock' (brief, build with your AI tool, presentation, debrief)", "#/mocks", "75 min"),
+                REV("wc32", "wc32, the cache code review: cheat sheet only", "10 min")),
+             _d("2026-11-09", "1 h", "Light. Rest before the date; Amazon may fall on this day.",
+                REV("wc33", "wc33, stale data and stampedes: cheat sheet only", "10 min"),
+                REV("wc34", "wc34, LLM caches and your own: cheat sheet only", "10 min"),
+                ("revise", "Week 5's caching session, the key terms only", "../index.html#/s/w5a", "10 min"),
+                ("loop", "Logistics for the day: laptop charged with your AI tool signed in and a skeleton repo ready, charger and spare cable, a notebook and pen, water, the address and the way there", "", "15 min"),
+                ("loop", "Questions to ask: reread the onsite list on the Prep tab", "#/prep", "10 min"))
+         ]},
+    ],
+}
+

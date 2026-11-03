@@ -1696,6 +1696,300 @@ window.SHEETS = {
       { t: "Fail open", mem: "When unsure, let it through.", d: "Choosing availability on an error, here publishing every event when the lookup fails." },
       { t: "Cold start", mem: "A fresh instance knows nothing.", d: "A new serverless instance with empty in-memory caches, so its first requests all miss." }
     ]
+  },
+  "wc35:0": {
+    cheat: [
+      "Clarify first: input and how messy, who uses the output, what done means, which parts allow AI, whether tests are expected.",
+      "Assumptions: write them in the repo, say each aloud, fix them when the real data disagrees.",
+      "Thin slice: one real input to one real output through every layer, before any breadth.",
+      "Not now: name what you leave out. It becomes your scoping story.",
+      "Before the clock: skeleton repo, test command, AI tool signed in.",
+      "Pace (a guide, not Mercor's rule): clarify and sketch, thin flow early, a hard stop for building, time kept for the presentation."
+    ],
+    terms: [
+      { t: "Thin slice", mem: "One path, all layers.", d: "The smallest flow that runs from real input to real output through every layer; breadth is added after it works." },
+      { t: "Assumption list", mem: "Written down, said aloud.", d: "The short list of things you are taking as true so you can start; each is checked against the real input and corrected." },
+      { t: "Scoping choice", mem: "Left out on purpose.", d: "A feature you decided not to build in the time, with a reason; framed this way it reads as judgment, not a gap." }
+    ]
+  },
+  "wc35:1": {
+    cheat: [
+      "Your plan first: approach and data shapes in your own words, then ask the model for a bounded piece.",
+      "Bounded prompts: one function or file, with types and an example in and out.",
+      "Review like a pull request: empty, duplicate, bad type, huge input. Check its complexity claims.",
+      "Explain test: with the tool closed, can you say what it does and why this way? If not, rewrite it smaller.",
+      "Stop prompting when: two misses the same way, the fix is a few lines, it is the core of the problem, or you cannot say what the code does.",
+      "Failure modes: AI Showcase, Feature Marathon, Hands-Off.",
+      "Keep a list of the model's mistakes you caught."
+    ],
+    terms: [
+      { t: "AI Showcase", mem: "The tool is the show.", d: "Canva's name for a candidate who demonstrates mastery of the AI tool instead of solving the task." },
+      { t: "Feature Marathon", mem: "Accept fast, pile on.", d: "Canva's name for taking model output quickly to add many features, with little review." },
+      { t: "Hands-Off", mem: "You watch it work.", d: "Canva's name for handing too much to the model and not staying engaged or reviewing critically." },
+      { t: "Explain test", mem: "Tool closed, still clear.", d: "Whether you can say what a block does and why this way over another, without the tool; any line that fails gets rewritten." }
+    ]
+  },
+  "wc35:2": {
+    cheat: [
+      "A few behaviour tests on the core path: input to output, with the awkward cases the prompt hints at.",
+      "Run them after each slice, so a red test points at the last prompt.",
+      "Real input beats made-up input: open the sample, count rows, read the ugliest ten, update the assumptions.",
+      "Say what you optimise for in one line: correctness on the core path, then clarity, then speed.",
+      "Make skips visible: report which records were dropped and why.",
+      "Test your rule, not the model's wiring."
+    ],
+    terms: [
+      { t: "Core path", mem: "Where the answer comes from.", d: "The code that decides what the right output is; the part that gets tests first." },
+      { t: "Behaviour test", mem: "This in, that out.", d: "A test that states an input and the output a user should see, not how the code gets there." },
+      { t: "Optimise for", mem: "What you protect, what you give up.", d: "The one quality you put first under the clock, said aloud together with what it costs." }
+    ]
+  },
+  "wc35:3": {
+    cheat: [
+      "Time box each hard piece when you start it, with its fallback named.",
+      "Stuck: the same kind of fix twice, or you cannot say what the bug is. Stop prompting, shrink the case, print the data.",
+      "Cut in order: polish, extras, edge cases outside the sample, second source. Never the end-to-end flow or the core tests.",
+      "Simplest version: rule over model, exact over fuzzy, one file, a printed table.",
+      "Commit when a slice works, so a bad experiment is a revert.",
+      "Say it: what failed, what you tried, what you chose, what it costs."
+    ],
+    terms: [
+      { t: "Time box", mem: "A budget set before you start.", d: "A fixed time for one hard piece, decided up front, after which you switch to the fallback." },
+      { t: "Fallback", mem: "The simpler thing that still works.", d: "The plan you named before starting, such as exact match when fuzzy match is not working in time." },
+      { t: "Cut scope", mem: "Smaller, but still runs.", d: "Removing features in a chosen order while keeping the end-to-end flow and the core tests." }
+    ]
+  },
+  "wc35:4": {
+    cheat: [
+      "Order: intent, demo, tradeoffs, scoping, next steps. 5 to 10 minutes.",
+      "Intent: what you built, for whom, what good meant. First sentence, before any code.",
+      "Demo: one real run with numbers: records in, merged, skipped.",
+      "Tradeoffs: the decision, the alternative you rejected, what you optimised for.",
+      "Scoping: what you left out, as a choice, with the reason.",
+      "Next steps: top three, ranked, with why that order. The eval comes first.",
+      "Follow-ups: why this over that, how it fails on a bad record, how you know matches are good, what breaks at 100x, walk through a function.",
+      "Say what the AI wrote, what you wrote, where it was wrong."
+    ],
+    terms: [
+      { t: "Precision at k", mem: "Of the top k, how many are right.", d: "The share of the k highest-ranked results that are correct matches; precision at 5 looks at the first five." },
+      { t: "Dedupe key", mem: "What makes two records one.", d: "A normalised value, such as a lowercased email, used to merge duplicate records; exact keys avoid wrong merges, fuzzy keys catch more." },
+      { t: "Labelled set", mem: "Answers you trust.", d: "A small list of inputs with the right answer marked by a person; it is what lets you say a change made matches better." }
+    ]
+  },
+  "wc35:5": {
+    cheat: [
+      "Prompt: 200 messy candidate JSON records, one endpoint, top 10 for a job with score and reason, merge duplicates, tests, present.",
+      "Clock: 5 clarify, 75 build, 10 prepare, 8 present, 5 follow-ups.",
+      "Record yourself and narrate. Silence is the common loss.",
+      "Grade: led with intent; plan before first prompt; caught a model mistake; explained every function with the tool closed.",
+      "Grade: core tests run after slices; an assumption changed by real data; a time box and fallback.",
+      "Grade: Mercor's order, under 10 minutes, scoping as choice, ranked next steps, demo ran.",
+      "After: keep one, change one, one question to ask next time."
+    ],
+    terms: [
+      { t: "Rehearsal", mem: "Full run, real tool, timed.", d: "One complete pass of the build and the presentation under a clock, graded after against a checklist." },
+      { t: "Grade line", mem: "Pass or fail, no maybe.", d: "A checklist item written so you can answer yes or no, such as 'led with intent before showing anything'." }
+    ]
+  },
+  /* ---------------------------------------------------------------- wc36 AI system design the Mercor way */
+  "wc36:0": {
+    cheat: [
+      "Requirements: who uses it, what a good answer is, what a bad one costs; ask for users, requests per second, data size, freshness, latency target.",
+      "Scale in one line: say a number out loud so every choice is sized against it.",
+      "Pipeline: draw the stages first (ingest, index, retrieve, rank, generate or score, check, return), then name tools.",
+      "Per stage: latency, cost, failure, fallback.",
+      "Offline eval: a labelled set and a metric that matches the product, run on every change.",
+      "Online eval: score a sample of live traffic, watch overrides and corrections, shadow before rollout.",
+      "Monitoring: a trace per request (inputs, retrieved items, prompt, model, output, latency, cost) and alerts on drift.",
+      "Deployment: behind a flag, shadow, staged rollout; prompt, model and index versioned together.",
+      "Close with the tradeoff you chose and what you would build next."
+    ],
+    terms: [
+      { t: "Offline evaluation", mem: "Test on a fixed set before shipping.", d: "Scoring the system on a labelled set of examples that does not change, so two versions can be compared fairly." },
+      { t: "Online evaluation", mem: "Watch it on real traffic.", d: "Measuring quality on live requests, by scoring a sample or reading user signals such as clicks and overrides." },
+      { t: "Shadow run", mem: "Run it on real input, show nobody.", d: "A new version processes live requests in parallel with the old one, and its output is recorded but not served." },
+      { t: "Trace", mem: "One request, every step, written down.", d: "A record of a request's inputs, stage outputs, model and prompt versions, timings and cost, used to reproduce and debug an answer." },
+      { t: "Fallback", mem: "What the user gets when a stage fails.", d: "A simpler path used when a stage is down or slow, such as returning the unranked list when the reranker fails." }
+    ]
+  },
+  "wc36:1": {
+    cheat: [
+      "Ingest: parse to fields, normalise titles and dates, dedupe; keep the raw file so you can re-parse.",
+      "One record per person plus one chunk per role; prepend context to each chunk.",
+      "Hybrid: BM25 for exact terms, embeddings for meaning, merge the two ranked lists, take about 100.",
+      "Hard requirements (location, work authorization) are filters, not part of the embedding.",
+      "Rerank the short list with a cross-encoder or LLM; too slow and costly for everything.",
+      "Anthropic: top-20 failure 5.7% to 1.9% with contextual embeddings, BM25 and reranking.",
+      "Freshness: queue for updates, nightly rebuild, deletes must reach the index.",
+      "Fallbacks: reranker down, return the fused list; embeddings down, BM25 alone.",
+      "Eval: recruiter-graded queries, recall at k for retrieval, precision at 10 or NDCG for ranking, per stage.",
+      "Calibrate any LLM judge against recruiter labels before using it."
+    ],
+    terms: [
+      { t: "BM25", mem: "Keyword score that rewards rare terms.", d: "A ranking function over word counts; strong when the query contains exact terms such as a name or a certification." },
+      { t: "Embedding", mem: "Meaning as a list of numbers.", d: "A vector from a model where texts with similar meaning sit close together; found by nearest-neighbour search." },
+      { t: "Reciprocal rank fusion", mem: "Merge lists by rank, not by score.", d: "Combining ranked lists by adding 1 over (a constant plus the rank) for each item; needs no common score scale." },
+      { t: "Cross-encoder reranker", mem: "Reads query and item together.", d: "A model that scores each query and candidate pair jointly; more accurate than a vector match and too slow for the whole corpus." },
+      { t: "Recall at k", mem: "Did the good ones make the top k.", d: "The share of relevant items that appear in the top k results; the measure for the retrieval stage." },
+      { t: "NDCG", mem: "Rewards good items near the top.", d: "A ranking score that gives more credit to relevant results placed higher in the list." }
+    ]
+  },
+  "wc36:2": {
+    cheat: [
+      "30,000 is small: embed everyone once, score all in memory. Say what changes at 3 million.",
+      "Stage 1: hard constraints, then similarity of brief and profile, down to a few hundred.",
+      "Stage 2: ranker over pair features (skill overlap, past quality in similar work, reliability, load, rate). Start with boosted trees.",
+      "Label: accepted and graded well. With few labels, start with a hand-weighted score and log everything.",
+      "Cold start: declared skills, a screening test, a small exploration boost, fast updates.",
+      "Feedback loop: outcomes only for people you picked; keep an exploration slice and a baseline.",
+      "Fairness: no protected traits or proxies, check by group, cap load per person.",
+      "Overrides by the project manager are labels; show the main reasons for each score.",
+      "Eval: replay past projects (precision at 40), then acceptance rate, time to fill, delivered quality against a holdout."
+    ],
+    terms: [
+      { t: "Retrieve then rank", mem: "Cheap to narrow, costly to order.", d: "A first stage cuts a large pool to a few hundred with a fast method; a heavier model orders only those." },
+      { t: "Cold start", mem: "New, so no history to judge by.", d: "The problem of ranking an item or person with no past outcomes; handled with declared attributes, tests and a deliberate exploration share." },
+      { t: "Feedback loop", mem: "You learn only from what you chose.", d: "A bias where the system sees outcomes only for the people it picked, so later models reinforce earlier picks." },
+      { t: "Exploration", mem: "Pick some on purpose to learn.", d: "Giving a small share of choices to items the model is unsure about so it can gather outcomes it would otherwise never see." },
+      { t: "Holdout", mem: "A group kept on the old way.", d: "A set of cases handled by the baseline process so the new system's effect can be measured against it." }
+    ]
+  },
+  "wc36:3": {
+    cheat: [
+      "Two systems: the live conversation needs speed, the scoring needs trust.",
+      "MockFlow-AI: streaming speech to text, model, text to speech; under 400 ms end to end, five times faster than polling.",
+      "Explicit transition tool, a minimum number of questions, a quality exit and a timer as a safety net; stops drift.",
+      "Rubric per skill: dimensions with described levels and example answers, written with experts, versioned.",
+      "One judge per dimension: a level, a quote from the transcript as the reason, and an Unknown option routed to a person.",
+      "Calibrate: experts grade 100 to 200, compare per dimension (agreement, kappa, confusion matrix), fix rubric or prompt, rerun on every change.",
+      "Use deterministic checks where they exist (run the tests, compare to a key).",
+      "Monitor: score mix over time, agreement with humans on a rolling sample, Unknown rate, cost.",
+      "Human stays on borderline, Unknown, a random audit and every appeal.",
+      "Where Mercor would differ: likely async, more volume, scores feed a decision, per-domain calibration."
+    ],
+    terms: [
+      { t: "Rubric", mem: "The levels, written down.", d: "A list of dimensions for a skill, each with described levels and examples, so graders and judges apply the same standard." },
+      { t: "LLM judge", mem: "A model that grades another's output.", d: "A model prompted with a rubric to score an answer; useful at scale and only trustworthy once checked against human graders." },
+      { t: "Calibration", mem: "Check the judge against people.", d: "Comparing a judge's scores with expert labels on a sample and adjusting the rubric or prompt until agreement is acceptable." },
+      { t: "Cohen's kappa", mem: "Agreement beyond chance.", d: "A statistic for how often two graders agree after discounting the agreement expected by luck." },
+      { t: "Unknown option", mem: "Allowed to say 'not enough evidence'.", d: "A judge output meaning the transcript does not support a level; it goes to a person instead of being guessed." },
+      { t: "Judge drift", mem: "Same judge, shifting scores.", d: "A change in score distribution over time, often after a model or prompt update, found by tracking agreement with human graders." }
+    ]
+  },
+  "wc36:4": {
+    cheat: [
+      "List the tricks first: another model's answer, writing to the judge's preferences, resubmission, collusion, shared answer keys.",
+      "Signals: time on task, paste events, answers similar to each other or to a model's, shared device, sudden quality jump.",
+      "Gold tasks: known answer plus a trap, placed at random; failing is strong evidence and measures the cheat rate.",
+      "Fool the judge on purpose: padded, flattering, hidden-instruction answers; if they score high, fix the judge.",
+      "Anomaly detection against peers on the same task type, with median and spread. Outliers are leads, not proof.",
+      "A risk score from several signals sends cases to a human review queue sized to reviewer capacity.",
+      "Require several independent signals or a gold-task failure before action; keep an appeal.",
+      "Eval: reviewer-confirmed cases, precision and recall of the score, precision of the queue; re-measure monthly.",
+      "A falling flag rate may mean cheaters adapted; check against the gold-task failure rate."
+    ],
+    terms: [
+      { t: "Gold task", mem: "A task whose answer you already know.", d: "A task mixed in at random with a known correct answer, used to check a contractor or a judge." },
+      { t: "Honeypot", mem: "Bait that only a cheater takes.", d: "An item built so that honest work passes and a particular kind of cheating fails or shows itself." },
+      { t: "Adversarial eval", mem: "Test it against attacks.", d: "An evaluation set built from inputs designed to fool the system, such as answers written to win a judge's favour." },
+      { t: "Anomaly detection", mem: "Find who differs from peers.", d: "Flagging cases far from the usual pattern for their group; the flag is a lead for review, not a verdict." },
+      { t: "Review queue", mem: "People see what the score is unsure of.", d: "A list of flagged cases sent to human reviewers, sized to what they can handle, with the signals that fired." }
+    ]
+  },
+  "wc36:5": {
+    cheat: [
+      "10x traffic: find the first bottleneck, then cache, batch, queue, scale out stateless parts, degrade low-priority work.",
+      "Outage: timeout, bounded retry with backoff and jitter, circuit breaker, a fallback model already run on the eval set, queue what can wait.",
+      "Idempotency: a request id on every side effect, reused by the retry, so twice has the effect of once.",
+      "Cost: measure per stage; cache responses and the prompt prefix; route easy to a small model; batch; shorten context; cap output.",
+      "Rerun the eval set after a cost change; a saving that lowers quality is a bug.",
+      "Customer data: a customer id on every row and index entry, enforced at the lowest layer (row-level security, per-customer namespaces).",
+      "Dependencies: pin, review, scan, and give third-party code only the access it needs.",
+      "Trace per request with a request id, timings, tokens, cost, model and prompt version.",
+      "Background: Mercor was reported to have a March 2026 breach through an open-source dependency. Know it; do not raise it."
+    ],
+    terms: [
+      { t: "Circuit breaker", mem: "Stop calling what is down.", d: "After repeated failures, calls to a dependency are refused for a while so it can recover and callers fail fast." },
+      { t: "Idempotency key", mem: "Same id, same effect once.", d: "A unique id sent with an operation so that a repeated request is recognised and does not repeat the side effect." },
+      { t: "Model routing", mem: "Small model first, large when needed.", d: "Sending each request to a cheaper or stronger model based on a cheap classifier or confidence score." },
+      { t: "Backoff with jitter", mem: "Wait longer, and not all together.", d: "Retry delays that grow each time, with random variation so many clients do not retry at the same moment." },
+      { t: "Row-level security", mem: "The database refuses the wrong rows.", d: "A database rule that limits each query to rows the caller may see, so an application bug cannot cross a customer boundary." }
+    ]
+  },
+  /* ---------------------------------------------------------------- wc37 The basics they still check (Mercor) */
+  "wc37:0": {
+    cheat: [
+      "Method: count the rounds, then the work in one round, then multiply. Say best, expected or worst.",
+      "Bogosort: n! rounds expected, each O(n) to shuffle and check. Expected O(n · n!), best O(n), worst unbounded.",
+      "Hash lookup: O(1) on average, O(n) worst case. A nested loop around it is O(n²) on average.",
+      "Heapify is O(n). n pushes are O(n log n). Most nodes are near the bottom and barely move.",
+      "Amortised: the average per operation over a long run, no randomness. Append is O(1) amortised.",
+      "n! is about (n/e)^n: factorial grows like n to the n, never like n squared.",
+      "Unsure? Say the count you would make. That is the answer they are listening for."
+    ],
+    terms: [
+      { t: "Expected case", mem: "Averaged over the dice.", d: "The average running time over the algorithm's own random choices, for a fixed input." },
+      { t: "Worst case", mem: "The longest it can ever run.", d: "The maximum time over all inputs of a size n; for a randomised algorithm it may be unbounded." },
+      { t: "Amortised", mem: "Cheap on average over a run.", d: "The total cost of a sequence of operations divided by their number; an occasional costly step is paid for by the cheap ones." },
+      { t: "Heapify", mem: "Build the heap bottom-up.", d: "Turning an array into a heap by sinking each parent from the last one back to the root; O(n) in total." },
+      { t: "Factorial growth", mem: "n! outruns every power of n.", d: "n! = 1 × 2 × ... × n, about (n/e)^n; the number of orderings of n items." }
+    ]
+  },
+  "wc37:1": {
+    cheat: [
+      "Dedupe: key = tuple of the fields that define 'same', normalised. Set of keys seen. One pass, O(n) average.",
+      "Normalise first: strip, lower-case, one Unicode form, one type. Most bugs are two spellings of one thing.",
+      "Say the policy: first wins, latest wins, or merge.",
+      "A million IDs in a Python set: about 60 MB. In a Bloom filter at 1%: about 1.2 MB.",
+      "Bloom filter: no false negatives, some false positives, no delete, size fixed in advance.",
+      "Bits an item: -ln(p) / (ln 2)^2, about 9.6 at 1% and 14.4 at 0.1%. Hashes: about 7 at 1%.",
+      "Need exact and too big: bucket by hash(id) % B, dedupe one bucket at a time."
+    ],
+    terms: [
+      { t: "Composite key", mem: "Several fields as one identity.", d: "A tuple of the fields that together decide two records are the same." },
+      { t: "Normalise", mem: "Make equal things look equal.", d: "Strip, case-fold and canonicalise a value before hashing, so two spellings give one key." },
+      { t: "Bloom filter", mem: "Sure no, probable yes.", d: "A bit array and k hash functions; a lookup finding any 0 bit is a definite no, all 1s means probably present." },
+      { t: "False positive", mem: "Said yes, was wrong.", d: "A Bloom filter claiming an item is present when it was never added; the rate is chosen when it is sized." },
+      { t: "Hash collision", mem: "Two keys, one slot.", d: "Different keys landing in the same slot; many collisions turn an O(1) lookup into O(n)." }
+    ]
+  },
+  "wc37:2": {
+    cheat: [
+      "Problem 1 (my statement): friends(user) costs a call. Find a target and the shortest chain with the fewest calls.",
+      "BFS: queue plus visited dict (also remembers the parent for the path). Calls are at most the people you expand.",
+      "Save calls: cache every answer, stop when the target is seen on adding, depth limit, batch a ring.",
+      "BFS over DFS: shortest chain first, and it can stop at the first hit.",
+      "Problem 2 (my statement): n cars each list acceptable spots; give every car its own spot.",
+      "Backtracking: choose a spot, recurse, undo. Worst case exponential.",
+      "Prune: most constrained car first, and cut a branch when a later car has no free spot.",
+      "Name it after: bipartite matching, augmenting paths, O(V · E)."
+    ],
+    terms: [
+      { t: "BFS", mem: "Ring by ring.", d: "Breadth-first search: visit all nodes at distance 1, then 2, and so on, with a queue; finds shortest paths in an unweighted graph." },
+      { t: "Visited set", mem: "Never go twice.", d: "The nodes already reached, kept so a cycle cannot loop and no one is fetched twice." },
+      { t: "Backtracking", mem: "Choose, explore, undo.", d: "A depth-first search over choices that undoes the last choice when a branch fails." },
+      { t: "Pruning", mem: "Cut a dead branch early.", d: "Stopping a branch as soon as it cannot lead to a solution, before exploring its subtree." },
+      { t: "Bipartite matching", mem: "Pair two sides one to one.", d: "Pairing items of one set (cars) with items of another (spots) through allowed links, no item used twice." }
+    ]
+  },
+  "wc37:3": {
+    cheat: [
+      "Light review: wc32 (lock the miss, single-flight) and wc33 (stale data, stampedes, failure).",
+      "The failure: the provider refunds, the reply is lost, the caller retries, the customer is refunded twice.",
+      "Idempotent: doing it twice has the effect of doing it once. Make it so with a key.",
+      "One key per intended refund, the same on every retry. A new key per attempt defeats it.",
+      "Store the Task under the key before the first await; a retry returns the same Task.",
+      "Same key with a different amount: refuse it.",
+      "Send the key to the provider too: a crash after its success is still safe.",
+      "Do not store a failure as the answer. Expire keys after the longest retry window."
+    ],
+    terms: [
+      { t: "Idempotent", mem: "Twice is the same as once.", d: "An operation whose repeat has no further effect beyond the first." },
+      { t: "Idempotency key", mem: "A name for one intended action.", d: "A client-chosen token sent with every attempt of one action so the server can recognise a retry." },
+      { t: "At-least-once", mem: "Retry until it works.", d: "Delivery that may repeat a request; the receiver must tolerate duplicates." },
+      { t: "Lost reply", mem: "It worked, nobody heard.", d: "A success whose response never reaches the caller, so the caller cannot tell success from failure." },
+      { t: "Single-flight", mem: "One in the air per key.", d: "Callers with the same key share the result of one running operation." }
+    ]
   }
 };
 
@@ -1755,7 +2049,7 @@ window.SHEETS = {
   for (var k in V) { if (window.SHEETS[k]) { window.SHEETS[k].vis = V[k]; } }
 })();
 
-/* Drawn sheets for the Mercor sessions (wc32 to wc34). */
+/* Drawn sheets for the Mercor sessions (wc32 to wc37). */
 (function () {
   var V = {
     "wc32:0": [
@@ -1837,6 +2131,142 @@ window.SHEETS = {
           ["Subscriber lookup", "on failure, caches 'unknown' 60 s", "publishes everything", "fail open, on purpose"],
           ["Notes and model calls", "re-embed only on content-hash change; prompt caching", "none", "cost and latency"]] },
         note: "All per-instance memory; no Redis. Confirm which you built before you name them." }
+    ],
+    "wc35:0": [
+      { rule: "Ask, write down what you assume, run one real input to one real output, and say what you are leaving out." },
+      { title: "A rough plan for the day (a guide, scale it)", flow: ["Clarify and assume", "Sketch the slice", "Thin flow running", "Build and test", "Stop building", "Prepare to present"], note: "From a pacing guide for a 90 minute build round. Not Mercor's rule." },
+      { title: "Before the clock starts", parts: [["repo", "skeleton, git"], ["tests", "one command"], ["AI tool", "signed in, pointed at repo"], ["notes", "assumptions file"]] }
+    ],
+    "wc35:1": [
+      { rule: "Never ship a line you cannot explain with the tool closed." },
+      { title: "Who does what", split: [["You write", ["the approach and data shapes", "the rule that decides the answer", "the tests on that rule", "the sentence that explains each block"]],
+                                         ["The model drafts", ["parsing and glue", "the endpoint shell", "routine transforms", "research on an unfamiliar API"]]] },
+      { title: "Three ways to lose", vs: { cols: ["What it looks like", "Fix"], rows: [
+          ["AI Showcase", "the tool is the demo", "make the task the demo"],
+          ["Feature Marathon", "accept fast, add many features", "one slice, review, run"],
+          ["Hands-Off", "watch it work, cannot explain it", "read every diff, explain it aloud"]] } },
+      { title: "When to stop prompting", ladder: [["1", "two misses the same way", ""], ["2", "the fix is a few lines", ""], ["3", "it is the core of the problem", ""], ["4", "you cannot say what the code does", ""]] }
+    ],
+    "wc35:2": [
+      { rule: "A few tests on the rule that decides the answer, run after every slice, plus a look at the real input." },
+      { title: "A test on the core path", code: "def test_merges_duplicate_email():\n    recs = [{'email': 'A@x.com', 'name': 'Ann'},\n            {'email': 'a@x.com ', 'name': 'Ann L'}]\n    out = dedupe(recs)\n    assert len(out) == 1\n\ndef test_missing_skills_is_empty_list():\n    assert normalise({'email': 'b@x.com'})['skills'] == []",
+        pins: [[1, "behaviour: this in, that out"], [4, "normalised key: case and spaces"], [7, "the awkward case the prompt hints at"]] },
+      { title: "Say it aloud", calc: [["assumed", "ids are unique"], ["checked", "4 of 200 were not"], ["changed", "dedupe on email, not id"]] }
+    ],
+    "wc35:3": [
+      { rule: "Stuck is allowed. Staying stuck quietly is the failure." },
+      { title: "Cut in this order", ladder: [["1", "polish", "first to go"], ["2", "extra features", ""], ["3", "edge cases outside the sample", ""], ["4", "second data source", ""], ["keep", "end to end flow and core tests", "never cut"]] },
+      { title: "Simplest version that works", vs: { cols: ["Ambitious", "Fallback"], rows: [
+          ["matching", "embeddings", "explicit skill and title rules"],
+          ["dedupe", "fuzzy names", "exact match on a normalised key"],
+          ["output", "a UI", "a printed table or JSON"]] } }
+    ],
+    "wc35:4": [
+      { rule: "Lead with intent. Show it running. Tradeoffs, then scoping as a choice, then next steps." },
+      { title: "The order, with a rough clock", flow: ["Intent 1 to 2 min", "Demo 2 min", "Tradeoffs 2 to 3 min", "Scoping 1 to 2 min", "Next steps 1 min"] },
+      { title: "The model build: a matcher over messy resume JSON", lanes: [
+          ["Input", [["200 records, messy", "plain", "2"]]],
+          ["Process", [["normalise", "plain"], ["dedupe", "hot"], ["score", "plain"]]],
+          ["Output", [["endpoint: top 10 + reason", "done", "2"]]]],
+        note: "Rules over embeddings, exact keys over fuzzy: readable and testable in the time. Report merged and skipped counts." },
+      { title: "Match quality, plainly", calc: [["precision at 5", "correct in the top 5 / 5"], ["labelled set", "small: say what that limits"], ["next", "measure fuzzy dedupe against it"]] },
+      { title: "Follow-ups to expect", split: [["About the build", ["why this over that", "walk me through this function", "what did the AI get wrong", "how does a bad record fail"]],
+                                              ["About growth", ["how do you know matches are good", "what breaks at 100 times the data", "what if it must be live next week", "what would you build next, and why"]]] }
+    ],
+    "wc35:5": [
+      { rule: "Run it once, timed, with your real tool and made-up records. Grade it after." },
+      { title: "The clock", lanes: [["Rehearsal", [["clarify 5", "plain"], ["build 75", "hot", "8"], ["prepare 10", "plain", "2"], ["present 8", "done", "2"], ["follow-ups 5", "plain"]]]], note: "About 100 minutes. Record and narrate throughout." },
+      { title: "Grade yourself, yes or no", vs: { cols: ["Check"], rows: [
+          ["Intent", "said what you built and why before showing anything"],
+          ["Steering", "plan before first prompt; caught a model mistake; every function explained with the tool closed"],
+          ["Tests and recovery", "core tests after slices; an assumption changed by real data; a time box and a fallback"],
+          ["Presentation", "Mercor's order, under 10 minutes, scoping as choice, ranked next steps, demo ran"]] } }
+    ],
+    "wc36:0": [
+      { rule: "Requirements and numbers, the pipeline, four questions per stage, evaluation, monitoring, deployment. Give a reason for every choice." },
+      { title: "The generic AI pipeline", flow: ["ingest and clean", "index", "retrieve", "rank", "generate or score", "check", "return"], note: "Draw this before naming a tool. Each box then gets latency, cost, failure and fallback." },
+      { title: "Four questions for every stage", parts: [["latency", "budget out of the total"], ["cost", "per request, what grows"], ["failure", "what breaks, how you notice"], ["fallback", "what the user gets instead"]] },
+      { title: "How you know it is good", split: [["Offline", ["a labelled set of examples", "a metric that matches the product", "run on every change", "compare two versions fairly"]],
+                ["Online", ["score a sample of live traffic", "watch overrides and corrections", "shadow run before rollout", "a trace for every request, alerts on drift"]]] }
+    ],
+    "wc36:1": [
+      { title: "Candidate search with RAG", flow: ["parse and normalise", "index text and vectors", "BM25 plus embeddings", "filters", "rerank top 100", "reasons from the resume"], note: "Hard requirements such as location are filters, not part of the embedding." },
+      { title: "Why both retrievers", vs: { cols: ["Finds", "Misses"], rows: [
+          ["BM25 (keywords)", "exact terms: a name, a certification, 'Kubernetes'", "'server-side' when the resume says 'backend'"],
+          ["Embeddings (meaning)", "same idea in other words", "a rare exact term, a number"],
+          ["Both, merged, then reranked", "most of each", "less; the reranker orders the short list"]] } },
+      { title: "Fallbacks and checks", split: [["When a stage fails", ["reranker down: return the fused list", "embeddings down: BM25 alone", "empty result: relax the softest filter and say so"]],
+                ["How you measure it", ["recruiter-graded query set", "recall at k for retrieval", "precision at 10 or NDCG for ranking", "per stage, to see which one missed"]]] },
+      { title: "Anthropic's contextual retrieval, top-20 failure", ladder: [["5.7%", "embeddings alone"], ["1.9%", "contextual embeddings, BM25 and reranking", "the gain from layering the three"]] }
+    ],
+    "wc36:2": [
+      { title: "Matching about 30,000 contractors", flow: ["hard constraints", "similarity: brief to profile", "top few hundred", "ranker on pair features", "top 40", "manager can override"], note: "At 30,000 you could score everyone in memory. Say so, then say what changes at 3 million." },
+      { title: "What the ranker sees", parts: [["skill overlap", "domain match"], ["past quality", "in similar work"], ["reliability", "on time, acceptance"], ["load and rate", "against budget"]] },
+      { title: "Cold start and the feedback loop", split: [["New contractor", ["declared skills", "a screening test", "a small exploration boost", "update fast from the first results"]],
+                ["Only seeing what you picked", ["keep an exploration slice", "compare to a simple baseline now and then", "treat manager overrides as labels", "check outcomes by group, cap load per person"]]] }
+    ],
+    "wc36:3": [
+      { title: "The live conversation (MockFlow-AI)", flow: ["speech to text", "model decides the move", "text to speech", "stage changes only by a transition tool"], note: "Streaming at each hop gave under 400 ms end to end. A timer is the safety net." },
+      { title: "The scoring, a different budget", flow: ["transcript", "one judge per dimension", "level, quote, or Unknown", "calibrate against experts", "audit sample", "score"], note: "Unknown goes to a person, not to a guess." },
+      { title: "Where each half spends", vs: { cols: ["Live conversation", "Scoring"], rows: [
+          ["Budget", "latency, under 400 ms", "trust, can take minutes"],
+          ["Failure", "switch to text or reschedule", "queue and retry with the same request id"],
+          ["Check", "stage and timer logs", "agreement with human graders per dimension"]] } },
+      { title: "Where Mercor's would differ", split: [["Likely", ["asynchronous, not live", "far larger volume", "scores feed a decision", "audit trail and fairness checks matter more"]],
+                ["What to ask", ["how they calibrate today", "which domains are hardest", "who reviews the Unknowns"]]] }
+    ],
+    "wc36:4": [
+      { title: "From signals to a decision", flow: ["raw events", "several weak signals", "risk score", "review queue", "human decides", "appeal path"], note: "The output is a queue for people, not an automatic ban." },
+      { title: "Planted checks", split: [["Gold tasks", ["known answer plus a trap", "mixed in at random", "failing is strong evidence", "gives the cheat rate directly"]],
+                ["Tests for the judge", ["padded or flattering answers", "a hidden instruction in the text", "if they score high, fix the judge", "an adversarial eval for the grader"]]] },
+      { title: "Cost of a wrong call", ladder: [["flag", "send to review", "cheap"], ["pause", "needs several independent signals", "costly"], ["remove", "needs a gold-task failure or reviewer confirmation, and an appeal", "very costly"]] }
+    ],
+    "wc36:5": [
+      { title: "Provider outage, in order", flow: ["timeout on every call", "retry with backoff and jitter", "circuit breaker opens", "fallback model", "queue what can wait"], note: "A retry carries the same request id, so doing it twice has the effect of once." },
+      { title: "Cost levers", vs: { cols: ["What it does", "Check"], rows: [
+          ["Cache responses and the prompt prefix", "skips repeat work", "key covers everything that changes the answer"],
+          ["Route easy to a small model", "pays less for easy requests", "rerun the eval set"],
+          ["Batch non-urgent work", "better throughput per call", "latency still within budget"],
+          ["Shorten the context", "fewer tokens in", "quality unchanged on the eval set"]] } },
+      { title: "Customer data apart", split: [["Enforce low", ["customer id on every row and index entry", "row-level security, per-customer namespaces", "separate keys and retention per customer"]],
+                ["Keep out", ["customer data in shared logs", "customer data in prompts you do not control", "third-party code with more access than it needs"]]] }
+    ],
+    "wc37:0": [
+      { rule: "Count the rounds, then the work in a round, then multiply. Say best, expected or worst." },
+      { title: "Bogosort, counted", code: "import random\n\ndef bogosort(a):\n    # Returns how many shuffles it took to land on a sorted order.\n    shuffles = 0\n    while any(a[i] > a[i + 1] for i in range(len(a) - 1)):  # O(n) check each round\n        random.shuffle(a)                                   # O(n) shuffle each round\n        shuffles += 1\n    return shuffles",
+          pins: [[6, "one round = a check (n) plus a shuffle (n): O(n) per round"], [8, "rounds: a shuffle is sorted with chance 1/n!, so about n! rounds"]] },
+      { title: "Three drills", calc: [["bogosort: n! rounds × O(n) a round", "expected O(n · n!), best O(n)"], ["n × n rounds × O(1) lookup", "O(n²) on average"], ["heapify: half the nodes move 0, a quarter 1, ...", "O(n); n pushes are O(n log n)"], ["measured: 5 items, 2000 runs", "about 121 shuffles; 5! = 120"], ["measured: heap of 100,000", "99,990 swaps"]] },
+      { title: "Building a heap, bottom-up", code: "def sift_down(a, i, n):\n    # Moves a[i] down until both children are no smaller. Returns the swaps used.\n    swaps = 0\n    while True:\n        small, l, r = i, 2 * i + 1, 2 * i + 2\n        if l < n and a[l] < a[small]: small = l\n        if r < n and a[r] < a[small]: small = r\n        if small == i: return swaps\n        a[i], a[small] = a[small], a[i]\n        i, swaps = small, swaps + 1\n\ndef build_heap(a):\n    n, swaps = len(a), 0\n    for i in range(n // 2 - 1, -1, -1):   # leaves (half the nodes) are skipped\n        swaps += sift_down(a, i, n)\n    return swaps",
+          pins: [[12, "build bottom-up: n/2 leaves are already heaps"], [14, "start at the last parent and walk back to the root"], [15, "a node at height h sinks at most h: the sum is O(n), not O(n log n)"]] },
+      { title: "A ladder of common costs", ladder: [["O(1)", "hash lookup", "average case"], ["O(log n)", "binary search, heap push", "halve or climb a tree"], ["O(n)", "scan, heapify", "touch each once"], ["O(n log n)", "a good sort", "n rounds of log n"], ["O(n²)", "nested loops", "n rounds of n"], ["O(2^n)", "all subsets", "two choices each"], ["O(n!)", "all orderings", "bogosort rounds"]] }
+    ],
+    "wc37:1": [
+      { rule: "Normalise the key, then one pass with a set. Pick exact or Bloom by what a wrong yes costs." },
+      { title: "Dedupe by a composite key", code: "def key_of(rec):\n    # The composite key: what makes two records \"the same\". Normalise first.\n    return (rec[\"email\"].strip().lower(), rec[\"company\"].strip().lower())\n\ndef dedupe(records):\n    seen = set()\n    out = []\n    for rec in records:                # one pass, O(n) average\n        k = key_of(rec)\n        if k not in seen:              # O(1) average lookup\n            seen.add(k)\n            out.append(rec)            # first one wins; keeps input order\n    return out",
+          pins: [[3, "normalise first: ' A@x.com' and 'a@x.com' must be one key"], [3, "a tuple is hashable; a list is not"], [10, "O(1) on average; the whole pass is O(n)"], [12, "first record wins; say so, or say 'latest wins' and overwrite"]] },
+      { title: "A million IDs, two ways", calc: [["exact set, 1M ints (measured)", "≈ 62 MB"], ["Bloom filter, 1M ids × 9.6 bits, 1% error", "≈ 1.2 MB, 7 hashes"], ["Bloom at 100K ids (measured)", "0 false negatives, 1.0% false positives"], ["at 0.1% error", "14.4 bits an id, 10 hashes"]] },
+      { title: "A Bloom filter, small", code: "class Bloom:\n    def __init__(self, n, p):\n        self.m = math.ceil(-n * math.log(p) / math.log(2) ** 2)   # bits\n        self.k = round(self.m / n * math.log(2))                  # hashes\n        self.bits = bytearray(self.m // 8 + 1)\n\n    def _spots(self, item):\n        h = hashlib.sha256(str(item).encode()).digest()\n        a = int.from_bytes(h[:8], \"big\")\n        b = int.from_bytes(h[8:16], \"big\") | 1\n        return [(a + i * b) % self.m for i in range(self.k)]      # k spots from 2 hashes\n\n    def add(self, item):\n        for s in self._spots(item):\n            self.bits[s // 8] |= 1 << (s % 8)\n\n    def might_contain(self, item):\n        return all(self.bits[s // 8] >> (s % 8) & 1 for s in self._spots(item))",
+          pins: [[3, "bits needed: n x -ln(p) / (ln 2)^2, about 9.6 bits an id at 1%"], [4, "hashes: about 7 at 1%"], [7, "k positions from two hashes"], [15, "add: set k bits. There is no delete"], [17, "any bit 0: definitely new. All 1: probably seen"]] },
+      { title: "Exact set or Bloom filter", vs: { cols: ["Exact set", "Bloom filter"], rows: [["Memory", "about 62 MB per million", "about 1.2 MB per million"], ["A wrong answer", "never", "a yes can be wrong"], ["A wrong no", "never", "never"], ["Delete", "yes", "no"], ["Pick it when", "memory is fine, or a wrong yes does harm", "memory or latency is tight and a yes can be confirmed"]] } }
+    ],
+    "wc37:2": [
+      { rule: "Never ask twice, stop when you see the target, and cut a dead branch the moment you can." },
+      { title: "Explore the network with few calls", flow: ["pop a user", "friends(u), cached", "skip anyone seen", "target? stop now", "queue the rest"], note: "The visited dict also keeps who found each person, so the path comes back by walking parents." },
+      { title: "BFS through a call budget", code: "def find_path(api, start, target, max_depth=6):\n    if start == target:\n        return [start]\n    cache = {}                                   # a person is never fetched twice\n    def friends_of(u):\n        if u not in cache:\n            cache[u] = api.friends(u)\n        return cache[u]\n\n    parent = {start: None}                       # doubles as the visited set\n    queue = deque([(start, 0)])\n    while queue:\n        user, depth = queue.popleft()\n        if depth == max_depth:                   # do not expand past the limit\n            continue\n        for f in friends_of(user):\n            if f in parent:\n                continue\n            parent[f] = user\n            if f == target:                      # stop when SEEN, not when popped\n                path = [f]\n                while parent[path[-1]] is not None:\n                    path.append(parent[path[-1]])\n                return path[::-1]\n            queue.append((f, depth + 1))\n    return None",
+          pins: [[4, "never ask for the same person twice"], [10, "visited set and the way back to the path"], [14, "do not pay for a layer you will not use"], [17, "skip people already seen"], [20, "stop when seen, not when popped: it saves a call"]] },
+      { title: "Cars and preferred spots, backtracking with pruning", code: "def assign(prefs):\n    # prefs[i] = the spots car i would accept. Give every car its own spot.\n    order = sorted(range(len(prefs)), key=lambda i: len(prefs[i]))  # fewest options first\n    taken = {}                                    # spot -> car\n\n    def place(k):\n        if k == len(order):\n            return True                           # every car has a spot\n        car = order[k]\n        for spot in prefs[car]:\n            if spot in taken:\n                continue\n            taken[spot] = car\n            if no_car_stranded(k + 1) and place(k + 1):   # prune before going deeper\n                return True\n            del taken[spot]                       # undo, try the next spot\n        return False\n\n    def no_car_stranded(k):\n        # A later car whose spots are all taken can never be placed: stop now.\n        for car in order[k:]:\n            if all(s in taken for s in prefs[car]):\n                return False\n        return True\n\n    if place(0):\n        return {car: spot for spot, car in taken.items()}\n    return None",
+          pins: [[3, "most constrained car first: it fails fast"], [13, "choose"], [14, "prune: a later car with no free spot kills this branch now"], [16, "undo, then try the next spot"]] },
+      { title: "Ways to save a call", calc: [["cache every answer", "no person asked twice"], ["stop when seen, not when popped", "one fewer expansion"], ["depth limit", "no unused ring"], ["batch a ring, if the API allows", "one request a ring"]] }
+    ],
+    "wc37:3": [
+      { rule: "A retry is a second caller. Give each intended refund one key, and store its result before anything can race." },
+      { title: "How the customer is refunded twice", lanes: [
+            ["Caller", [["refund(o1, 500)", "plain"], ["timeout", "hot", "2"], ["retry", "plain"], ["ok", "plain"]]],
+            ["Provider", [["", "gap", "1", "40px"], ["refund done", "done"], ["reply lost", "hot"], ["refund again", "hot", "2"]]]],
+          note: "Without a key, the provider cannot tell the retry from a new refund." },
+      { title: "The idempotent version", code: "stored = {}                                       # idempotency key -> (Task, the request)\n\nasync def refund_once(p, key, order, cents):\n    if key in stored:                             # a retry or a duplicate request\n        task, req = stored[key]\n        if req != (order, cents):\n            raise ValueError(\"key reused with different input\")\n        return await task                         # same Task, same result\n\n    async def attempt():\n        for _ in range(2):\n            try:\n                return await p.refund(order, cents, key)   # the key goes to the provider too\n            except TimeoutError:\n                pass\n        del stored[key]                           # a failure is not remembered as the answer\n        raise TimeoutError(\"gave up\")\n\n    task = asyncio.ensure_future(attempt())\n    stored[key] = (task, (order, cents))          # stored before any await: no gap to race in\n    return await task",
+          pins: [[4, "a retry or a duplicate: do not run it again"], [7, "same key, different request: refuse, do not guess"], [8, "everyone shares one Task, so one result"], [13, "the key goes to the provider too: a lost reply is safe"], [16, "do not store a failure as the answer"], [20, "stored before any await: nothing can slip in"]] },
+      { title: "What each part protects against", vs: { cols: ["Duplicate retry", "Retry while running", "Crash after success", "Wrong amount"], rows: [["Stored result under the key", "yes", "no", "no", "no"], ["Task stored before the first await", "yes", "yes", "no", "no"], ["Key sent to the provider", "yes", "yes", "yes", "no"], ["Request compared with the stored one", "no", "no", "no", "yes"]] } }
     ]
   };
   for (var k in V) { if (window.SHEETS[k]) { window.SHEETS[k].vis = V[k]; } }
