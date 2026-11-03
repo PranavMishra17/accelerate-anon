@@ -656,13 +656,13 @@ const GUIDE = {
       tabPatterns: "Patterns",
       tabDesigns: "Designs",
       frameworkTitle: "System design delivery, worked end to end",
-      frameworkLede: "Fourteen designs run through the six-step delivery framework. Every step shows what should be on your whiteboard when the step ends, how to reason your way there, and what to say out loud. Most are agentic, Ticketmaster and the job scheduler are classic baselines, and Kitaru is an agent-eval product read from its source.",
+      frameworkLede: "Fifteen designs run through the six-step delivery framework. Every step shows what should be on your whiteboard when the step ends, how to reason your way there, and what to say out loud. Most are agentic, Ticketmaster and the job scheduler are classic baselines, and Kitaru is an agent-eval product read from its source.",
       endProduct: "On the board: ",
       onwardTitle: "Where to go next",
       onwardPatterns: "Fifteen recurring deep-dive problems. Each one opens with a diagram, then every technique with its own mechanism diagram.",
-      onwardDesigns: "Fourteen designs worked through all six steps, each ending with the patterns it uses and why.",
+      onwardDesigns: "Fifteen designs worked through all six steps, each ending with the patterns it uses and why.",
       designsTitle: "Worked designs",
-      designsLede: "Each design runs through the same six steps, then lists the deep-dive patterns it uses. Five are agentic, three are compact conversational AI designs (a grounded FAQ assistant, a contact-centre voice line, the analytics and improvement loop) beside the bank virtual assistant, Ticketmaster and a distributed job scheduler are the classic baselines, candidate search and an AI interviewer come from hiring, and Kitaru is an agent-eval product read from its source.",
+      designsLede: "Each design runs through the same six steps, then lists the deep-dive patterns it uses. Five are agentic, three are compact conversational AI designs (a grounded FAQ assistant, a contact-centre voice line, the analytics and improvement loop) beside the bank virtual assistant, Ticketmaster, a distributed job scheduler and contractor payouts are the classic baselines, candidate search and an AI interviewer come from hiring, and Kitaru is an agent-eval product read from its source.",
       designsNav: "Designs",
       allDesigns: "All designs",
       stepsInDesign: "Steps in this design",
@@ -5608,6 +5608,330 @@ POST /review/tasks/{id}/decision         { action: confirm|override|invalid, sco
   ]
 });
 
+GUIDE.examples.push({
+  id: "contractor-payouts",
+  tabLabel: "Contractor payouts",
+  title: "Contractor payouts: a payment endpoint safe against timeouts, retries and crashes",
+  kind: "Reliability design, charge then record",
+  prompt: "Design the payout system for an expert marketplace. Thousands of contractors log hours, a reviewer approves them, and every week each contractor must be paid exactly what was approved, once. Payment goes through an external provider that can time out, return errors, or accept a request and then lose the reply. The service can crash at any moment. Design the payout endpoint, the data behind it, and what happens in every failure.",
+  lens: [
+    "The classic reliability prompt: a charge-then-record payment endpoint, and weekly payouts to thousands of contractors with an append-only ledger. The grading is on correctness under failure, not on scale.",
+    "One sentence carries the whole design: money moves in one system and the record lives in another, and no transaction covers both. Everything below is how to stay correct anyway.",
+    "Two failures are not symmetric. Paying twice is hard to undo. Paying late is annoying and fixable. Design so that when in doubt, the system waits and asks instead of paying again."
+  ],
+  steps: {
+    requirements: {
+      board: [
+        { type: "list", title: "Functional (top 3)", ordered: true, items: [
+          "Turn approved hours into a payout for each contractor for a period, and pay it through the provider. A contractor is paid once per period, however many times anything is retried.",
+          "Show a payout's status to the contractor and to support, and keep a full record of every movement of money.",
+          "Correct mistakes (a wrong rate, an overpayment) without editing history."
+        ]},
+        { type: "list", title: "Out of scope", items: [
+          "Tax forms, identity checks (KYC), currency conversion, card and bank internals, and building the provider. Say them out loud and move on."
+        ]},
+        { type: "defs", title: "Non-functional (quantified, all assumptions)", items: [
+          { term: "Never pay twice", desc: "No sequence of retries, timeouts, crashes, restarts or concurrent runs may create two provider payments for one payout. This outranks every other requirement." },
+          { term: "Never lose an approval", desc: "Approved hours are paid or visibly stuck. Nothing is silently dropped." },
+          { term: "Unknown is a state", desc: "When the provider's answer is lost, the system says unknown, finds out, and records the truth. It does not guess." },
+          { term: "Auditable", desc: "For any cent, answer who approved it, when it was sent, what the provider said, and what was corrected later. Records are append-only." },
+          { term: "Throughput is modest", desc: "About 20,000 active contractors, one weekly batch, plus on-demand payouts. The provider's rate limit, not our database, sets the pace." }
+        ]},
+        { type: "math", title: "Capacity math that changes the design", lines: [
+          "A weekly batch is 20,000 payouts. At an assumed provider limit of 50 requests a second that takes 400 seconds, about 7 minutes. With 10% retried it is still under 10 minutes.",
+          "Ledger rows: about 4 per payout (accrual and payment, two sides each), so 80,000 a week, about 4 million a year at 100 bytes each, which is 400 MB. One Postgres holds it for years.",
+          "Peak load on our side is about 50 writes a second, far below what one Postgres does. The whole design is about correctness, not scale."
+        ], conclusion: "Two numbers decide the design: the provider's rate limit sets how fast we may go, and 20,000 payouts in one batch means a crash mid-batch is certain to happen eventually. Resumable and repeatable beats fast." }
+      ],
+      reasoning: [
+        "Say the delivery promise first, as in any reliability design. Here it is: a payment request is safe to repeat, and the provider is asked at most once per payout.",
+        "Give the asymmetry early: a duplicate payment is worse than a late one, so every doubtful case waits.",
+        "Do math only where it changes a decision. It tells you not to shard and to spend the time on failure."
+      ],
+      script: [
+        "Before I draw anything: there are two systems, mine and the provider's, and no transaction spans both. So I will make every step safe to repeat, and I will treat a lost reply as unknown, not as failed.",
+        "Three things: turn approved hours into one payout per contractor per period, pay it with the provider, and keep an append-only record I can audit and correct.",
+        "For scale I will assume 20,000 contractors and a provider limit of 50 calls a second. That is a seven minute batch. One Postgres is plenty, so I will spend the time on what happens when something dies halfway.",
+        "The rule I will hold to: paying twice is worse than paying late, so when I am unsure, I look up what happened instead of paying again."
+      ],
+      contrast: "Compared with the job scheduler, the same ideas (idempotency key, state machine, outbox) apply, but the cost of a duplicate is money, so the provider's own idempotency and a reconciliation pass become required, not optional."
+    },
+
+    entities: {
+      board: [
+        { type: "defs", title: "Core entities", items: [
+          { term: "ApprovedHours", desc: "One approved block of work: contractor, project, hours, rate in minor units, approver, approved_at, and a nullable payout_id. Once attached to a payout it is sealed." },
+          { term: "Payout", desc: "The unit that must happen once: contractor, period, amount in integer minor units plus currency, state (created, ready, submitting, unknown, succeeded, failed, needs_review, cancelled), attempt, lease, provider_ref. Unique on (contractor, period)." },
+          { term: "LedgerEntry", desc: "Append-only double-entry rows: account, signed amount in minor units, kind, payout_id, reason, actor, reversal_of. Unique on (payout_id, kind). Never updated or deleted." },
+          { term: "IdempotencyKey", desc: "What the client sent: (client, key), a hash of the request, and the stored response. Unique on (client, key)." },
+          { term: "ProviderCall", desc: "One row per request we sent: payout_id, attempt, the key we sent, started_at, outcome (ok, error, unknown), and the provider's reference. Kept for audit and for finding unknown outcomes." },
+          { term: "OutboxEvent", desc: "A message to publish, written in the same transaction as the state change that caused it." }
+        ]}
+      ],
+      reasoning: [
+        "Money is an integer in minor units plus a currency. Say it once; it removes a whole class of bugs.",
+        "Separate Payout (the intent, a mutable state machine) from LedgerEntry (the fact, immutable). The state can be wrong for a moment; the ledger never is.",
+        "Name the contended entity now: workers, the batch job, the sweeper and webhooks can all try to change one Payout row."
+      ],
+      script: [
+        "Payout is the intent and it has a state. LedgerEntry is the fact and it is append-only, so history cannot be edited, only added to.",
+        "ApprovedHours attach to exactly one Payout, so an hour cannot be paid twice. ProviderCall records every request I sent, so after a crash I can see what I may already have asked for.",
+        "Amounts are integers in minor units with a currency. Floats and money do not mix."
+      ],
+      contrast: "Agentic designs add Step, ToolCall and Trace entities. Here the extra entity is the ProviderCall, which exists because the outside call is the part you cannot undo."
+    },
+
+    api: {
+      board: [
+        { type: "code", title: "API", code: `
+POST /v1/payout-batches    body: { period }                       (idempotent on period)
+  -> 202 { batch_id }                      creates one payout per contractor with unpaid approvals
+POST /v1/payouts           header: Idempotency-Key
+                           body: { contractor_id, period }        (on-demand payout)
+  -> 202 { payout_id, state }              same key and body: same answer
+GET  /v1/payouts/{id}      -> state, amount, provider_ref, history
+POST /v1/payouts/{id}/cancel                (only while created or ready)
+POST /v1/payouts/{id}/corrections
+                           header: Idempotency-Key
+                           body: { amount_minor, reason, approver }
+  -> 201 { entries[] }                     compensating ledger entries, never an edit
+GET  /v1/contractors/{id}/ledger?cursor -> LedgerEntry[]
+
+Provider side (ours to call and to receive):
+POST provider/payouts      header: Idempotency-Key = payout_id    (their API)
+GET  provider/payouts?reference=payout_id                         (status lookup)
+POST /webhooks/provider    body: { event_id, type, reference }   (their call to us)
+` },
+        { type: "list", title: "Choices to state out loud", items: [
+          "Creating a payout returns 202 with a payout id, not 200 with a result. The payment happens in the background and the state is read by id.",
+          "The client sends an Idempotency-Key, we store it with a hash of the body, and the same key with a different body is rejected with 422.",
+          "The key we send the provider is the payout id, not a fresh random value per attempt. That is what lets the provider recognise a repeat.",
+          "A correction is its own call with its own key, and it appends entries. There is no endpoint that edits an amount."
+        ]}
+      ],
+      reasoning: [
+        "Three contracts: what the caller sees, what we send the provider, and what the provider sends back. Each needs its own duplicate protection.",
+        "Put the idempotency key on every write and say why the provider's key is the payout id."
+      ],
+      script: [
+        "Creating a payout returns 202 and an id. The caller retries a timed-out request with the same Idempotency-Key and gets the same payout back.",
+        "Toward the provider I send the payout id as their idempotency key, and I put it in their reference field too, so I can look the payment up later.",
+        "Corrections are posted as new entries under their own key. Nothing edits an existing row."
+      ],
+      contrast: "An agentic API usually streams. This one answers fast with an id and does the slow, risky part in the background."
+    },
+
+    dataflow: {
+      board: [
+        { type: "list", title: "The life of one payout", ordered: true, items: [
+          "**Approved.** A reviewer approves hours. In one transaction the hours are saved and an accrual is added to the ledger: the platform owes the contractor.",
+          "**Created.** The batch (or an on-demand call) creates the Payout and, in the same statement, attaches the unpaid approvals to it. Unique (contractor, period) means a repeat does nothing.",
+          "**Ready.** After basic checks (amount above zero, contractor has valid payout details) the payout is ready.",
+          "**Submitting.** A worker claims it with a conditional update, bumps the attempt, sets a lease, and writes a ProviderCall row. All of this is committed before any network call.",
+          "**Provider call.** The worker calls the provider with key = payout id, within a timeout, through a rate limiter.",
+          "**Recorded.** On a definite answer the worker, in one transaction, sets the state, appends the ledger entries and writes the outbox event. On a lost answer the state becomes unknown.",
+          "**Confirmed.** A webhook or the sweeper's status lookup settles unknown payouts. The reconciler compares everything with the provider's report."
+        ]}
+      ],
+      reasoning: [
+        "Walk the arrows and mark where a crash can land. There are five windows, and each deep dive is one or two of them.",
+        "The line to underline: everything is committed before the network call, so after any crash there is a row that says what we meant to do."
+      ],
+      script: [
+        "A payout goes approved, created, ready, submitting, then a provider call, then recorded. Before the call, everything I need to recover is already committed.",
+        "If the reply is lost, the state is unknown. A sweeper asks the provider what happened using the same key, and the webhook tells me too."
+      ],
+      contrast: "In the job scheduler this step was a run's six states. Here there are more states, because the interesting one, unknown, only exists because a payment cannot be rolled back."
+    },
+
+    hld: {
+      board: [
+        { type: "diagram", title: "Contractor payouts high-level design", stagesAll: "The whole system: the endpoint and state in Postgres, paced workers that call the provider, an outbox for events, a sweeper that settles unknown outcomes and reconciles, and a batch planner.", stages: [
+          { title: "The naive endpoint", add: ["client", "api", "db", "worker", "provider"], say: "Start with what most people write: the handler calls the provider, then writes the result. Name its failure out loud: if the process dies between the call and the write, money moved and nothing recorded it, and the retry pays again. Wrapping both in one database transaction does not help, because the provider is not part of the commit." },
+          { title: "Intent first, outbox for events", add: ["outbox", "notify"], say: "Reverse the order. Commit the payout row (state submitting) before calling the provider, with the payout id as the provider's idempotency key. After the call, record the result, the ledger entries and the outbox row in one transaction. Events to the contractor and to accounting go through the outbox, so a crash cannot lose or invent one." },
+          { title: "Recover and reconcile", add: ["sweeper"], say: "A sweeper finds payouts stuck in submitting or unknown, asks the provider for the status by key, and records the truth. It also takes webhook events and compares our ledger with the provider's daily report. This is the safety net under every other step." },
+          { title: "Batch and pace", add: ["batch", "limiter"], say: "A batch planner creates one payout per contractor, idempotently. A shared rate limiter keeps the workers under the provider's limit, so a 20,000 payout batch takes minutes, not a burst of errors." }
+        ], nodes: [
+          { id: "client", label: "Payroll and ops", sub: "approve, pay", col: 0, row: 1, tone: "external" },
+          { id: "api", label: "Payout API", sub: "idempotent writes", col: 1, row: 1, tone: "service" },
+          { id: "db", label: "Postgres", sub: "payouts, ledger, outbox", col: 2, row: 1, tone: "store" },
+          { id: "batch", label: "Batch planner", sub: "one payout each", col: 1, row: 0, tone: "orchestrator" },
+          { id: "limiter", label: "Rate limiter", sub: "under provider cap", col: 3, row: 0, tone: "guard" },
+          { id: "worker", label: "Payout workers", sub: "claim, call, record", col: 3, row: 1, tone: "service" },
+          { id: "provider", label: "Payment provider", sub: "keyed, status, webhook", col: 4, row: 1, tone: "external" },
+          { id: "sweeper", label: "Sweeper and reconciler", sub: "unknown, daily diff", col: 3, row: 2, tone: "orchestrator" },
+          { id: "outbox", label: "Outbox", sub: "events, same txn", col: 2, row: 2, tone: "queue" },
+          { id: "notify", label: "Notify and accounting", sub: "at-least-once", col: 2, row: 3, tone: "external" }
+        ], edges: [
+          { from: "client", to: "api" },
+          { from: "api", to: "db", label: "payout + key" },
+          { from: "batch", to: "db", label: "create payouts" },
+          { from: "worker", to: "db", label: "claim, record" },
+          { from: "worker", to: "limiter", label: "take a token" },
+          { from: "worker", to: "provider", label: "pay, key = id" },
+          { from: "sweeper", to: "provider", label: "status, report" },
+          { from: "sweeper", to: "db", label: "settle unknown" },
+          { from: "db", to: "outbox", label: "same txn" },
+          { from: "outbox", to: "notify", label: "publish", async: true }
+        ]},
+        { type: "list", title: "Walk a request through it", ordered: true, items: [
+          "**Create.** The API checks the Idempotency-Key. A new key inserts the Payout and attaches the approvals in one transaction. A repeat returns the stored answer. See idempotency keys (pattern `idempotency`).",
+          "**Claim.** A worker moves the payout from ready to submitting with a conditional update, sets a 60 second lease and bumps the attempt. If zero rows change, someone else has it. See compare-and-set (pattern `optimistic`) and leases (pattern `leases`).",
+          "**Call.** The worker takes a token from the rate limiter, then calls the provider with key = payout id and a 10 second timeout. No database lock is held during the call. See timeouts and retries (pattern `timeouts-retries`).",
+          "**Record.** On success, one transaction sets state succeeded, appends the ledger entries (unique on payout and kind) and inserts the outbox row. See the outbox (pattern `outbox`) and the state machine (pattern `state-machine`).",
+          "**Unknown.** On a timeout or a crash the state stays submitting or becomes unknown. The sweeper looks the payment up by key, then does the Record step or marks it failed.",
+          "**Reconcile.** Each day the reconciler lists the provider's payouts and compares them with our ledger, key by key. Any difference is a ticket, and a double payment pages someone."
+        ]},
+        { type: "code", title: "The three statements that carry the design (SQL sketch)", code: `
+-- 1. one payout per contractor per period, and seal the approvals in the same step
+INSERT INTO payouts (id, contractor_id, period, amount_minor, state)
+SELECT gen_random_uuid(), $contractor, $period, sum(minor), 'ready'
+  FROM approved_hours WHERE contractor_id = $contractor AND payout_id IS NULL
+ON CONFLICT (contractor_id, period) DO NOTHING
+RETURNING id;                           -- no row back: a payout already exists
+UPDATE approved_hours SET payout_id = $id
+ WHERE contractor_id = $contractor AND payout_id IS NULL;
+
+-- 2. claim: compare-and-set, commit before the network call
+UPDATE payouts SET state = 'submitting', attempt = attempt + 1,
+       lease_expires_at = now() + interval '60 seconds'
+ WHERE id = $id AND state = 'ready' RETURNING attempt;   -- 0 rows: lost the race
+
+-- 3. record the result: state, ledger and outbox commit together
+UPDATE payouts SET state = 'succeeded', provider_ref = $ref
+ WHERE id = $id AND state IN ('submitting', 'unknown') AND attempt = $attempt;
+INSERT INTO ledger_entries (...) VALUES (...)           -- unique (payout_id, kind)
+  ON CONFLICT DO NOTHING;
+INSERT INTO outbox (...) VALUES (...);
+` },
+        { type: "defs", title: "Fields worth writing next to the stores", items: [
+          { term: "payouts (Postgres)", desc: "`id, contractor_id, period, amount_minor, currency, state, attempt, lease_expires_at, provider_ref, created_at`. Unique on `(contractor_id, period)`. Partial index on `state` where state is not terminal, for the claim and the sweeper." },
+          { term: "ledger_entries (Postgres, append-only)", desc: "`id, account, amount_minor, currency, kind, payout_id, reason, actor, reversal_of, created_at`. Unique on `(payout_id, kind)`. Update and delete revoked from the application role. Each posting sums to zero." },
+          { term: "idempotency_keys", desc: "`client_id, key, request_hash, response, created_at`. Unique on `(client_id, key)`. Expire after 7 days." },
+          { term: "provider_calls", desc: "`payout_id, attempt, sent_key, started_at, outcome, provider_ref`. Unique on `(payout_id, attempt)`." }
+        ]}
+      ],
+      reasoning: [
+        "Build in the order the failures show up: the naive handler, then intent before the call, then recovery, then batching. Say what breaks at each stage before you fix it.",
+        "Keep state in Postgres, commit the intent before the network call, and never hold a lock across it. A crash then leaves a row to recover from, and no lock to leak.",
+        "Put the three statements on the board now. The deep dives are those statements under stress."
+      ],
+      script: [
+        "I will start with the naive handler: call the provider, then write the result. It breaks when the process dies after the call. Money moved, nothing recorded, and a retry pays again.",
+        "So I write the payout row first and commit it, marked submitting, and then call the provider with the payout id as the idempotency key. After the call, one transaction records the result, the ledger entries and an outbox row.",
+        "If the reply is lost I do not guess. A sweeper asks the provider what happened using the same key and finishes the job. A daily reconciliation against the provider's report catches anything that slipped through.",
+        "Last, a batch planner creates the payouts, and a rate limiter keeps my workers under the provider's limit."
+      ],
+      probes: [
+        "Why not do the provider call inside the database transaction? The provider is not part of the commit. The transaction would hold a connection and locks for seconds, and if the commit failed after the provider accepted, the rollback cannot unsend the money.",
+        "Why a state machine instead of a boolean paid flag? A boolean cannot say 'I asked and do not know'. That state is the one that matters.",
+        "Why Postgres and not Kafka? The load is tiny and the hard part is a transactional state change plus a ledger. A log gives me neither a unique constraint nor a conditional update."
+      ],
+      contrast: "No model gateway, guard layer or eval store. Safety comes from keys, constraints, a state machine and a reconciliation pass, not from a policy wrapped around a model."
+    },
+
+    deepdives: {
+      board: [
+        { type: "dive", title: "The charge-then-record problem", diagram: {"cap": "The intent is committed before the call. If the worker dies after the provider accepts, the sweeper finds the payout still submitting, asks the provider by key, and records the result.", "fail": "If the record is written only after the call, a crash between them leaves money moved and no trace, and a retry pays a second time.", "actors": [{"id": "w", "label": "Worker", "tone": "service"}, {"id": "db", "label": "Postgres", "tone": "store"}, {"id": "p", "label": "Provider", "tone": "external"}, {"id": "s", "label": "Sweeper", "tone": "orchestrator"}], "steps": [{"from": "w", "to": "db", "label": "1. payout submitting (commit)"}, {"from": "w", "to": "p", "label": "2. pay, key = payout id"}, {"over": "p", "label": "money moves"}, {"over": "w", "label": "crash before recording", "fail": true}, {"over": "db", "label": "lease expires, still submitting"}, {"from": "s", "to": "p", "label": "3. status by key"}, {"from": "s", "to": "db", "label": "4. record succeeded, ledger, outbox"}]}, nfr: "Never pay twice", problem: "The provider is one system and the database is another. The service can die after the provider accepts and before our record is written. A single database transaction cannot cover the external call.", options: [
+          { name: "One database transaction around the call", take: "Looks safe. It holds a connection and row locks for seconds, and if the commit fails after the provider accepted, the rollback cannot unsend the money. There is no two-phase commit with a payment provider." },
+          { name: "Call first, then record", take: "Simple, and a crash between the two loses the only evidence. The retry has nothing to check, so it pays again." },
+          { name: "Record the intent, commit, call, then record the result", take: "A crash at any point leaves a row that says what we meant to do. The provider call carries a key, so repeating it is safe. This is the saga shape: two local steps with a lookup in between. See sagas (pattern `saga`) and cross-service calls (pattern `cross-service`)." },
+          { name: "Hold a lock across the call", take: "A crashed holder leaks the lock, a slow provider blocks everyone behind it. Use a state change with a lease instead, so a crash releases it by expiring." }
+        ], pick: "Commit the payout as submitting first, call with the payout id as the key, then record the result, the ledger entries and the outbox row in one transaction. Never hold a lock or an open transaction across the provider call. A crash in any window is repaired by the sweeper looking up the key." },
+        { type: "dive", title: "Idempotency keys, end to end", diagram: {"cap": "The same intent carries a key at every hop: the client's key at our door, a unique constraint per contractor and period, the payout id as the provider's key, unique ledger rows per payout, and the webhook's event id.", "fail": "A fresh random key on every retry looks idempotent and is not: each attempt is a new payment.", "nodes": [{"id": "client", "label": "Client", "sub": "Idempotency-Key", "col": 0, "row": 0, "tone": "external"}, {"id": "api", "label": "Our API", "sub": "key table, body hash", "col": 1, "row": 0, "tone": "service"}, {"id": "payout", "label": "Payout row", "sub": "unique per period", "col": 2, "row": 0, "tone": "store"}, {"id": "prov", "label": "Provider", "sub": "key = payout id", "col": 3, "row": 0, "tone": "external"}, {"id": "ledger", "label": "Ledger", "sub": "unique per payout", "col": 2, "row": 1, "tone": "store"}, {"id": "hooks", "label": "Webhooks", "sub": "dedupe by event id", "col": 3, "row": 1, "tone": "service"}, {"id": "fresh", "label": "New key per try", "sub": "pays again", "col": 0, "row": 1, "tone": "service", "fail": true}], "edges": [{"from": "client", "to": "api", "label": "retry, same key"}, {"from": "api", "to": "payout", "label": "insert once"}, {"from": "payout", "to": "prov", "label": "same key"}, {"from": "prov", "to": "hooks", "label": "event", "async": true}, {"from": "hooks", "to": "ledger", "label": "insert once"}, {"from": "fresh", "to": "api", "label": "looks new"}]}, nfr: "Never pay twice", problem: "The caller retries after a timeout. A worker retries after a crash. The provider sends the same webhook twice. Each is a place a duplicate can enter.", options: [
+          { name: "Check whether we already paid, then pay", take: "Check-then-act. Two requests both pass the check and both pay. It needs a constraint, not a query." },
+          { name: "A key only at the front door", take: "Protects our API from a repeated request. The worker that calls the provider after a crash is a different path, and the provider sees a new request." },
+          { name: "One key per intent, carried through every hop", take: "The client key dedupes the request. The payout id, unique per contractor and period, is the provider's key, so every retry of the same payout looks the same to them. Unique constraints on the ledger and a processed-events check make each write once. See idempotency (pattern `idempotency`)." },
+          { name: "Store the key with a hash of the request", take: "The same key with a different body is a client bug, so reject it with 422 instead of returning an answer to a different question. A request still in flight with the same key waits or returns 409." }
+        ], pick: "The payout id is the key for the provider and it never changes for one intent. Our own front door stores the client key with a body hash. The ledger and the webhook handler each have a unique key. A genuinely new attempt after a confirmed failure uses a new key derived from the payout id and the attempt, and only then. State the limit: the provider must honour the key for as long as we may retry." },
+        { type: "dive", title: "Timeouts and unknown outcomes", diagram: {"cap": "A timeout moves the payout to unknown, not failed. A status lookup by key, or the webhook, turns it into succeeded or failed. Only a deadline sends it to a person.", "fail": "Treating a timeout as failed and retrying with a new key pays twice when the first call had in fact gone through.", "nodes": [{"id": "ready", "label": "Ready", "sub": "waiting", "col": 0, "row": 0, "tone": "queue"}, {"id": "sub", "label": "Submitting", "sub": "lease 60 s", "col": 1, "row": 0, "tone": "service"}, {"id": "ok", "label": "Succeeded", "sub": "ledger posted", "col": 2, "row": 0, "tone": "store"}, {"id": "unk", "label": "Unknown", "sub": "ask, do not guess", "col": 1, "row": 1, "tone": "orchestrator"}, {"id": "failed", "label": "Failed", "sub": "provider says none", "col": 2, "row": 1, "tone": "store"}, {"id": "review", "label": "Needs review", "sub": "a person decides", "col": 1, "row": 2, "tone": "human"}], "edges": [{"from": "ready", "to": "sub", "label": "claim"}, {"from": "sub", "to": "ok", "label": "2xx"}, {"from": "sub", "to": "unk", "label": "timeout, 5xx, crash"}, {"from": "unk", "to": "ok", "label": "status: paid"}, {"from": "unk", "to": "failed", "label": "status: none"}, {"from": "unk", "to": "review", "label": "deadline passed"}]}, nfr: "Unknown is a state", problem: "The request went out and the reply never came. The payment may have happened, may not have, or may still be in flight.", options: [
+          { name: "Treat a timeout as failure and retry", take: "Right half the time. The other half the first call succeeded, and the retry pays again unless the key protects it." },
+          { name: "Treat a timeout as success", take: "Hides every real failure. The contractor is told they were paid and was not." },
+          { name: "An explicit unknown state, resolved by lookup", take: "Retry with the same key (safe if the provider honours it), or query the status by key or reference, or wait for the webhook. Only a definite answer moves the payout on. See timeouts and retries (pattern `timeouts-retries`) and state machines (pattern `state-machine`)." },
+          { name: "The provider has no key or no status lookup", take: "Then an automatic retry is not safe. Put the payout id in the provider's reference or memo field, search by it, and send unresolved cases to needs_review. Do not auto-retry. This is the case to name when the interviewer removes the key." }
+        ], pick: "Unknown is a first-class state. The sweeper resolves it in order: retry with the same key, status by key, status by reference, then the webhook. After a deadline (say 30 minutes) it goes to needs_review with everything we know. A definite failure may be retried only as a new attempt with a new key. Alert on the age of the oldest unknown." },
+        { type: "dive", title: "Outbox and reconciliation", diagram: {"cap": "Events are written in the payout's own transaction and published afterwards by a relay. Separately, a daily job lists the provider's payouts and diffs them against the ledger by key.", "fail": "Publishing straight after the commit loses the event if the process dies in between, and publishing before the commit announces a payment that rolled back.", "nodes": [{"id": "db", "label": "Postgres", "sub": "state, ledger, outbox", "col": 0, "row": 0, "tone": "store"}, {"id": "relay", "label": "Outbox relay", "sub": "poll unsent", "col": 1, "row": 0, "tone": "service"}, {"id": "bus", "label": "Notify, accounting", "sub": "dedupe by event id", "col": 2, "row": 0, "tone": "external"}, {"id": "recon", "label": "Reconciler", "sub": "diff by key", "col": 1, "row": 1, "tone": "orchestrator"}, {"id": "report", "label": "Provider report", "sub": "daily list", "col": 2, "row": 1, "tone": "external"}, {"id": "direct", "label": "Publish after commit", "sub": "can be lost", "col": 0, "row": 1, "tone": "service", "fail": true}], "edges": [{"from": "db", "to": "relay", "label": "unsent rows"}, {"from": "relay", "to": "bus", "label": "at-least-once", "async": true}, {"from": "report", "to": "recon", "label": "list"}, {"from": "recon", "to": "db", "label": "compare, flag"}, {"from": "direct", "to": "relay", "label": "crash first"}]}, nfr: "Never lose an approval", problem: "Other systems must hear about every payment, and our records and the provider's records must agree. Both can drift without anyone noticing.", options: [
+          { name: "Publish after commit", take: "Simple, and an event is lost when the process dies between the two." },
+          { name: "Publish inside the transaction", take: "Announces payments that then roll back. The two systems can never be made atomic from the outside." },
+          { name: "Transactional outbox", take: "The event row commits with the payout. A relay publishes it at least once and marks it sent; consumers dedupe by event id. See the outbox (pattern `outbox`) and change data capture (pattern `cdc`) for the alternative reader." },
+          { name: "Reconcile against the provider", take: "A daily diff by key finds what no retry logic can: we say paid and they have none, they have two for one key, amounts differ, or they paid something we never recorded. Safe cases are auto-fixed; the rest is a ticket." }
+        ], pick: "Both. Outbox for events, so a crash never loses or invents one. Reconciliation as the independent check, since every other mechanism assumes the provider behaves. Auto-resolve only 'provider paid, we show unknown'. A double payment at the provider pages a person at once." },
+        { type: "dive", title: "Concurrent approvals and double payout", diagram: {"cap": "Two batch runs race to create the same contractor's payout. The unique key lets one insert win; the other reads the existing row and moves on. Approvals are attached by a conditional update, so each hour belongs to one payout.", "fail": "A check-then-insert lets both runs pass the check and creates two payouts for one week.", "actors": [{"id": "a", "label": "Batch run A", "tone": "orchestrator"}, {"id": "b", "label": "Batch run B", "tone": "orchestrator"}, {"id": "db", "label": "Postgres", "tone": "store"}], "steps": [{"from": "a", "to": "db", "label": "insert payout (c1, week 44)"}, {"from": "b", "to": "db", "label": "insert payout (c1, week 44)", "fail": true}, {"over": "db", "label": "unique key: B inserts nothing"}, {"from": "a", "to": "db", "label": "attach unpaid hours"}, {"from": "b", "to": "db", "label": "read existing payout, skip"}, {"over": "db", "label": "late approval waits for next period"}]}, nfr: "Never pay twice", problem: "The weekly job is re-run by hand, runs on two machines after a failover, or a manager approves hours while the batch is reading them. Any of these can pay the same hours twice.", options: [
+          { name: "Read the unpaid hours, then insert a payout", take: "Check-then-act. Two runs read the same rows and both insert." },
+          { name: "Lock the contractor row for the batch", take: "Works, and holds a lock for as long as the batch step takes. Fine for one short transaction, wrong across the provider call." },
+          { name: "Unique constraint plus a conditional update to attach hours", take: "Unique (contractor, period) lets one insert win. The update that sets payout_id only where it is null attaches each hour once. A late approval simply has no payout yet and rolls into the next period. See atomic operations (pattern `atomic`) and compare-and-set (pattern `optimistic`)." },
+          { name: "Workers claiming the same payout", take: "Claim with a conditional update from ready to submitting, or take batches with SKIP LOCKED so workers never queue behind each other. See claim with SKIP LOCKED (pattern `claim-skip-locked`). A lease returns a dead worker's payout." }
+        ], pick: "The unique key and the conditional update, both in the database where they are atomic. The payout's attempt number is a fence: the record step must present the attempt it holds, so a stale worker cannot overwrite a newer one. Hours already attached are never edited; an approval changed later becomes a correction." },
+        { type: "dive", title: "Batching and provider rate limits", diagram: {"cap": "Workers share one token bucket set below the provider's limit, back off on a 429 using Retry-After, and a circuit breaker pauses the batch when the provider is down. Waiting payouts stay ready, so nothing is lost.", "fail": "Sending 20,000 requests at once gets throttled, and retries pile onto the throttle.", "nodes": [{"id": "ready", "label": "Ready payouts", "sub": "20,000 rows", "col": 0, "row": 0, "tone": "store"}, {"id": "bucket", "label": "Token bucket", "sub": "40 a second", "col": 1, "row": 0, "tone": "guard"}, {"id": "workers", "label": "Workers", "sub": "claim, call", "col": 2, "row": 0, "tone": "service"}, {"id": "prov", "label": "Provider", "sub": "50 a second cap", "col": 3, "row": 0, "tone": "external"}, {"id": "breaker", "label": "Circuit breaker", "sub": "open: pause claims", "col": 2, "row": 1, "tone": "guard"}, {"id": "burst", "label": "Unpaced burst", "sub": "429 storm", "col": 3, "row": 1, "tone": "service", "fail": true}], "edges": [{"from": "ready", "to": "bucket", "label": "next"}, {"from": "bucket", "to": "workers", "label": "token"}, {"from": "workers", "to": "prov", "label": "pay"}, {"from": "breaker", "to": "workers", "label": "pause"}, {"from": "burst", "to": "prov", "label": "throttled"}]}, nfr: "Throughput is modest", problem: "The provider caps requests, so the batch must go at their pace, and a provider outage must not turn into failed payouts.", options: [
+          { name: "Send everything as fast as workers allow", take: "Hits the cap, gets 429s, and the retries add to the load." },
+          { name: "A fixed sleep between calls", take: "Wastes the budget when the provider is fast, and still overshoots when several workers each sleep." },
+          { name: "A shared token bucket below the cap", take: "All workers draw from one bucket (a row in Postgres or Redis), set at about 80% of the limit. A 429 is honoured by waiting for Retry-After with jitter and lowering the rate. See rate limiting (pattern `rate-limiting`)." },
+          { name: "A circuit breaker and a bulk endpoint", take: "When the provider is failing, stop claiming instead of failing payouts; payouts stay ready and resume later. If the provider has a bulk payout API, use it, but then every item needs its own key and its own outcome. See circuit breakers (pattern `circuit-breaker`) and batching (pattern `batching`)." }
+        ], pick: "One shared bucket at about 40 a second, workers claim only when they hold a token, a 429 slows everyone down, and a breaker pauses claims when errors pass a threshold. Priority: manual and on-demand payouts ahead of the batch. At 40 a second the batch takes about 8 minutes. Payouts that cannot go yet are waiting, never failed." },
+        { type: "dive", title: "Audit and corrections by compensating entries", diagram: {"cap": "A mistake is fixed by appending: a reversal of the wrong entry and a new correct one, each carrying a reason, an actor and a link to the entry it reverses. Any overpayment becomes a recoverable balance.", "fail": "Editing or deleting a ledger row destroys the proof of what happened and makes the books disagree with the provider's report.", "nodes": [{"id": "wrong", "label": "Wrong payout", "sub": "overpaid 50.00", "col": 0, "row": 0, "tone": "service"}, {"id": "corr", "label": "Correction request", "sub": "reason, approver", "col": 1, "row": 0, "tone": "orchestrator"}, {"id": "ledger", "label": "Ledger", "sub": "reversal and new", "col": 2, "row": 0, "tone": "store"}, {"id": "owed", "label": "Recoverable", "sub": "offset next payout", "col": 2, "row": 1, "tone": "store"}, {"id": "edit", "label": "Edit the row", "sub": "history lost", "col": 1, "row": 1, "tone": "service", "fail": true}], "edges": [{"from": "wrong", "to": "corr", "label": "found"}, {"from": "corr", "to": "ledger", "label": "append"}, {"from": "ledger", "to": "owed", "label": "creates"}, {"from": "edit", "to": "ledger", "label": "never"}]}, nfr: "Auditable", problem: "A rate was wrong, hours were approved by mistake, or a contractor was overpaid. The record must show the mistake and the fix, not hide the mistake.", options: [
+          { name: "Update or delete the row", take: "The books look right and the history is gone. It also breaks the match with the provider's report." },
+          { name: "Soft delete with a flag", take: "Keeps the row but still lets a total change silently. Someone must remember to filter on the flag." },
+          { name: "Compensating entries", take: "Append a reversal that points to the entry it undoes, then the correct entry. A balance is the sum of the entries, so it always reproduces. See event sourcing (pattern `event-sourcing`)." },
+          { name: "Constraints that enforce it", take: "Revoke update and delete on the table from the application role, check that each posting sums to zero, and run a daily job that recomputes balances and compares them with the payout states." }
+        ], pick: "Append-only entries with a reversal_of link, a reason and an actor, enforced by database permissions. A correction that cannot be taken back from the provider is recorded as a receivable and offset against the contractor's next payout, or asked back. Corrections need an approver and their own idempotency key. Optionally chain a hash per entry to detect tampering." },
+        { type: "defs", title: "Failure recovery, one step at a time", items: [
+          { term: "Batch dies halfway", desc: "Payout creation is idempotent (unique contractor and period), so run it again. Existing payouts are skipped, missing ones are created." },
+          { term: "Crash after commit, before the call", desc: "The payout is submitting with no provider call recorded. When the lease expires the sweeper asks the provider by key. Not found means it is safe to call with the same key." },
+          { term: "Timeout or crash during the call", desc: "State is submitting or unknown. Resolve by retry with the same key, status by key or reference, or the webhook. Never a new key." },
+          { term: "Provider paid, crash before the record", desc: "The same: the sweeper finds the payment by key and runs the Record step. This is the case the intent row exists for." },
+          { term: "Provider says declined", desc: "A definite failure. No success entries. By reason: bad bank details pauses that contractor and notifies them; insufficient platform funds pauses the whole batch and pages a person." },
+          { term: "Crash after record, before the event", desc: "The outbox row committed with the record, so the relay publishes it later. Consumers dedupe by event id." },
+          { term: "Webhook lost or repeated", desc: "The sweeper and the daily reconciler do not depend on it. A repeat is dropped by the processed-event check." },
+          { term: "Provider down", desc: "The breaker opens, claims stop, payouts wait as ready. The batch resumes when it closes. Nothing is failed because of an outage." },
+          { term: "Database down", desc: "The API returns 503 and the client retries with its key. Workers stop at their next write. Nothing was accepted that was not written." },
+          { term: "No idempotency or status API at the provider", desc: "No automatic retry after an unknown outcome. Search by reference, reconcile against their report, and send what is left to a person." }
+        ]},
+        { type: "dive", title: "How you know it is healthy", nfr: "Auditable", problem: "A payout system fails quietly: payouts sit in a state, nothing errors, and a contractor writes in on Friday.", options: [
+          { name: "Alert on errors and latency", take: "Catches crashes. Misses the real failure, which is a payout that has not moved." },
+          { name: "Alert on age in state", take: "Count and oldest age for submitting, unknown, ready and needs_review. An unknown older than five minutes or a submitting past its lease means the sweeper is stuck or the provider is." },
+          { name: "Alert on disagreement", take: "Reconciliation mismatches, a provider reference that appears twice, and a ledger posting that does not sum to zero. The double payment alert must be a page, not a dashboard." }
+        ], pick: "Page on any double payment found by reconciliation, an unknown older than 5 minutes, outbox lag, and a batch not finished in 30 minutes. Dashboard payouts by state with age, provider error and 429 rate, and ledger invariants. Send one payment through the provider's test mode every hour, end to end. Test the recovery paths with fault injection: a fake provider that times out after succeeding, and a process killed between each pair of steps. The property to assert is that no sequence produces two provider payments for one payout." },
+        /* local-only */
+        { type: "list", title: "Where this maps at Mercor (my read of the product and the reports, not inside knowledge)", items: [
+          "**The prompt is reported.** Reports describe a charge-then-record endpoint with timeouts, retries and crashes, and weekly payouts to thousands of contractors with an append-only ledger. This design is built to answer both.",
+          "**The marketplace shape.** Experts log hours or deliver tasks, a reviewer approves, and payment follows. Approval is the event that creates a payable. A reviewer who approves the same work twice, or a second batch that runs after a failover, is the double payout case in the fifth dive.",
+          "**Corrections are normal.** Rates change and reviews are overturned. A clean answer on compensating entries and a receivable offset against the next payout is what shows you have thought about real operations.",
+          "**What I can say about myself, plainly.** I have not built a payment system. At alfred_ I work on correct behaviour under retries, partial failures and provider errors, where the Gmail and Outlook APIs fail in different ways. The discipline is the same (a record of intent before an outside call, keys, and a way to find out what happened), and I would say that and not claim payments experience."
+        ]}
+        /* end local-only */
+      ],
+      reasoning: [
+        "Lead with the charge-then-record problem and idempotency keys. They are what the prompt names, and everything else depends on them.",
+        "Then unknown outcomes, outbox and reconciliation, concurrency, rate limits, and corrections. Offer them as a menu if the interviewer wants to choose.",
+        "Walk the recovery list last: one line per step, what dies and what repairs it. It shows the design has no gap.",
+        "Close with how you would know it is healthy, and how you would test the failure paths."
+      ],
+      script: [
+        "The central problem is that the provider and my database cannot commit together. So I commit the intent first, as a payout in submitting, then call the provider with the payout id as the key, then record the result, the ledger entries and the outbox row in one transaction. A crash in any window leaves a row that tells the recovery job what to check.",
+        "A timeout is unknown, not failed. I look the payment up by key, or wait for the webhook, and only a definite answer moves it on. A new key is used only after a confirmed failure.",
+        "Duplicates are blocked where they are atomic: a unique key on contractor and period, a conditional update for claims and for attaching hours, and unique ledger rows per payout. The attempt number is a fence against a stale worker.",
+        "The ledger is append-only. A mistake is a reversal plus a new entry, with a reason and an actor, and an overpayment becomes a balance to recover.",
+        "Because I do not trust any one mechanism, a daily reconciliation compares my ledger with the provider's report by key, and a double payment pages someone."
+      ],
+      probes: [
+        "Can you get exactly-once? Not across a network. You get at-least-once attempts and at-most-once effect by using the same key every time, and by checking the provider's side when the answer is lost. Say where it fails: a provider that ignores the key.",
+        "What if recording fails after the provider succeeded (the failed order after a good charge)? The intent row is already there. The payout stays submitting or unknown, the sweeper finds the payment by key, and records it. Money moved and the record is late, never missing.",
+        "How would you test the timeout and crash paths? A fake provider that can time out after succeeding, reply twice, or reject the key, and kill points between each pair of steps. Assert that the provider's fake never holds two payments for one payout id.",
+        "What would you monitor? Payouts by state with age, unknown over five minutes, outbox lag, 429 rate, and reconciliation mismatches, with double payments as a page.",
+        "No idempotency keys at all? Then I cannot retry safely after unknown. I put the payout id in the reference field, search by it, reconcile against their report, and send the rest to a person. Slower and honest.",
+        "Why not hold a lock across the provider call? A crashed holder leaks it and a slow provider blocks everyone. A state with a lease expires by itself."
+      ],
+      contrast: "Agentic deep dives look different: grounding, action safety, prompt injection, eval gates and cost per task. The shape of each dive (failure, options, pick) is the same, and here the failures are lost replies, crashes and duplicates."
+    }
+  },
+  refs: [
+    { label: "TechInterview: Designing a payment system that never charges a card twice (states, keys, unknown outcomes, outbox, reconciliation)", url: "https://www.techinterview.org/post/3233476895/designing-a-payment-system-that-never-double-charges/" },
+    { label: "ByteByteGo: How to avoid double payment (at-least-once retries plus at-most-once keys)", url: "https://blog.bytebytego.com/p/how-to-avoid-double-payment" },
+    { label: "Stripe API reference: Idempotent requests (what a provider stores and for how long)", url: "https://docs.stripe.com/api/idempotent_requests" },
+    { label: "Video, 17 min: Build a robust Payments service using Idempotency Keys (Arpit Bhayani)", url: "https://www.youtube.com/watch?v=m6DtqSb1BDM" }
+  ]
+});
+
 GUIDE.patternUsage = {
   "notebooklm": {
     uses: [
@@ -6053,6 +6377,7 @@ GUIDE.patternUsage = {
       { groups: ["geo"], why: "Region is a data-residency setting chosen at sign-up; there is no location query." }
     ]
   },
+
   "kitaru": {
     intro: "Kitaru is mostly a durable-execution and evaluation system wrapped around someone else's agent. The patterns below are what it uses today, and where the deep dives would take it.",
     uses: [
@@ -6167,6 +6492,52 @@ GUIDE.patternUsage["convo-analytics"] = {
     { groups: ["scaling-reads"], why: "Dashboards read pre-aggregated tables, and analysts are a handful of users." },
     { groups: ["agent-safety"], why: "The loop calls no tools and takes no actions; its safety work is redaction and the gate." },
     { groups: ["search", "geo"], why: "Clusters and labels are looked up by id and status; no free-text search or location is needed." }
+  ]
+};
+GUIDE.patternUsage["contractor-payouts"] = {
+  uses: [
+    { group: "multi-step", diagram: {"cap": "The intent is committed first, the provider is called with the payout id as its key, and the result, ledger entries and outbox row are recorded together. A lost reply becomes unknown and is settled by lookup.", "nodes": [{"id": "intent", "label": "Payout row", "sub": "submitting, committed", "col": 0, "row": 0, "tone": "store"}, {"id": "call", "label": "Provider call", "sub": "key = payout id", "col": 1, "row": 0, "tone": "external"}, {"id": "record", "label": "Record", "sub": "state, ledger, outbox", "col": 2, "row": 0, "tone": "store"}, {"id": "unknown", "label": "Unknown", "sub": "look up by key", "col": 1, "row": 1, "tone": "orchestrator"}], "edges": [{"from": "intent", "to": "call", "label": "1. then call"}, {"from": "call", "to": "record", "label": "2. answer"}, {"from": "call", "to": "unknown", "label": "lost reply"}, {"from": "unknown", "to": "record", "label": "3. settle"}]}, why: "A payment spans two systems that cannot commit together, so it is a saga with a lookup in the middle and an idempotency key at every hop.", techniques: [
+      { id: "idempotency", how: "A client key at our door with a body hash, the payout id as the provider's key, unique ledger rows per payout, and a processed-events check on webhooks." },
+      { id: "state-machine", how: "A payout moves created, ready, submitting, then succeeded, failed or unknown, with only legal moves allowed in the WHERE clause. Unknown is a state, not an error." },
+      { id: "saga", how: "Commit the intent, call the provider, record the result. A crash between steps is repaired by the sweeper, and a mistake after payment is repaired by compensating entries." },
+      { id: "outbox", how: "Events to the contractor and to accounting are written in the payout's own transaction and published later by a relay." },
+      { id: "orchestration", how: "The sweeper is a small orchestrator: it finds stuck payouts and drives each to a terminal state." }
+    ]},
+    { group: "contention", diagram: {"cap": "Two batch runs race to create the same payout. The unique key lets one insert win and the other skips; hours attach only where payout_id is null.", "fail": "A check-then-insert lets both runs pass and pay the same week twice.", "actors": [{"id": "a", "label": "Batch run A", "tone": "orchestrator"}, {"id": "b", "label": "Batch run B", "tone": "orchestrator"}, {"id": "db", "label": "Postgres", "tone": "store"}], "steps": [{"from": "a", "to": "db", "label": "insert payout (c1, week)"}, {"from": "b", "to": "db", "label": "insert payout (c1, week)", "fail": true}, {"over": "db", "label": "unique key: B does nothing"}]}, why: "The batch job, several workers, the sweeper and webhooks can all try to change one payout row, and a repeat run must not pay twice.", techniques: [
+      { id: "atomic", how: "One statement inserts the payout with ON CONFLICT DO NOTHING, and one conditional update attaches each approved hour to exactly one payout." },
+      { id: "optimistic", how: "Claim and record are compare-and-set updates on state and attempt; zero rows updated means someone else won. The attempt number is a fence against a stale worker." },
+      { id: "claim-skip-locked", how: "Workers take batches of ready payouts with SKIP LOCKED so they never wait on each other." },
+      { id: "pessimistic", how: "Named and rejected across the provider call: a lock held while waiting on a network leaks when the holder dies. Locks are used only in short transactions." }
+    ]},
+    { group: "long-running", why: "Payment happens in the background after a 202, with a lease for a crashed worker and retries that are safe because of the key.", techniques: [
+      { id: "async-job", how: "Creating a payout returns 202 and an id; the work happens later and the state is read by id." },
+      { id: "worker-pool", how: "Stateless workers claim ready payouts and share one rate limiter." },
+      { id: "leases", how: "A 60 second lease on a submitting payout; when it expires the sweeper looks the payment up before anything is sent again." },
+      { id: "retries-dlq", how: "Retries reuse the same key. Payouts out of attempts or past the unknown deadline go to needs_review for a person, with everything known attached." }
+    ]},
+    { group: "reliability", why: "The provider times out, throttles, goes down, and sends the same webhook twice. Each is planned for.", techniques: [
+      { id: "timeouts-retries", how: "A 10 second timeout, jittered backoff, and a timeout treated as unknown and resolved by lookup." },
+      { id: "rate-limiting", how: "One shared token bucket at about 80% of the provider's limit, and a 429 honoured with Retry-After." },
+      { id: "circuit-breaker", how: "When the provider is failing, workers stop claiming; payouts stay ready and resume later instead of failing." },
+      { id: "degradation", how: "An outage delays payouts and shows contractors the real status. Nothing is guessed or marked failed because of it." },
+      { id: "monitoring", how: "Payouts by state with age, unknown older than 5 minutes, outbox lag, 429 rate, and reconciliation mismatches, with a double payment as a page." }
+    ]},
+    { group: "consistency", why: "The ledger must always agree with the payout states and with the provider's report, and history cannot be edited.", techniques: [
+      { id: "exactly-once", how: "Not promised. At-least-once attempts with one key, an at-most-once effect at the provider, and a daily reconciliation to prove it." },
+      { id: "event-sourcing", how: "The ledger is append-only and a balance is the sum of entries. A correction is a reversal plus a new entry, linked by reversal_of." },
+      { id: "cdc", how: "The outbox can be read by a poller or by change data capture on the table; both give at-least-once delivery." }
+    ]},
+    { group: "scaling-writes", why: "Volume is small. The provider's rate limit, not the database, sets how fast a batch of 20,000 payouts can go.", techniques: [
+      { id: "batching", how: "The planner creates payouts in batches, and a bulk provider endpoint is used only if every item has its own key and outcome." },
+      { id: "queue-buffer", how: "Ready payouts wait in the table; workers drain them at the pace of the rate limiter." },
+      { id: "load-shedding", how: "On-demand payouts go ahead of the batch, and a client over its quota gets a 429 at the door." }
+    ]}
+  ],
+  notNeeded: [
+    { groups: ["scaling-reads", "search", "geo"], why: "Reads are a payout by id and a contractor's ledger by cursor. One Postgres serves them." },
+    { groups: ["real-time"], why: "Status is polled or sent by webhook; no live stream is part of the ask." },
+    { groups: ["large-blobs"], why: "Rows are small. Receipts or statements, if any, are a separate export." },
+    { groups: ["llm-cost", "grounding", "agent-safety", "agent-durability"], why: "No model in the loop. Correctness comes from keys, constraints and reconciliation." }
   ]
 };
 GUIDE.patternUsage["candidate-search"] = {

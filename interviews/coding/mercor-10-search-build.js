@@ -2,9 +2,9 @@
 window.LOOP_CODING = window.LOOP_CODING || { parts: [] };
 window.LOOP_CODING.parts.push({
  "id": "mercor-onsite-build",
- "n": 9,
+ "n": 10,
  "one": true,
- "title": "Onsite search build: a job description in, the best candidates out",
+ "title": "Optional: the search build (not on the 11 November agenda)",
  "minutes": 150,
  "lead": "After this part you can do the candidate-search build end to end. A job description and a database of profiles go in; a ranked list of the best candidates and their profiles comes out; you run it against an evaluation endpoint, read where it is wrong, fix retrieval or weights, and run again. You work in your usual order: a) clarify, b) requirements, c) entities, d) core logic in English, e) a complete runnable build with its real score log, then how to use the AI assistant, how to debug, and the 15-minute discussion with fourteen answers. Mercor's prompt is not public; the round's shape comes from candidate reports, cited in section 1, and the rest is a rehearsal. Related: session wc38 (../index.html#/w/wc38) and the guide's case study (../SYSTEM%20DESIGN.html#/designs/candidate-search/requirements).",
  "sections": [

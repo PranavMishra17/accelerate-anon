@@ -2068,6 +2068,84 @@ window.SHEETS = {
       { t: "Calls per query", mem: "The cost of a design.", d: "How many model or embedding calls one search needs; it decides latency and cost." },
       { t: "Line-by-line review", mem: "Explain what you shipped.", d: "A reviewer reads your code and asks why; you must explain model-written lines too." }
     ]
+  },
+  "wc39:0": {
+    cheat: [
+      "Two interviewers on the customer side: would a Fortune 500 stakeholder trust you?",
+      "Ask two or three questions before you propose anything.",
+      "Acknowledge the pain first, then diagnose. Never blame the customer's systems.",
+      "End every plan with a number: how you would know it worked.",
+      "Say the trade-off: what now, what later, why.",
+      "No public report of this round exists. This is built from Mercor's wording and public guides."
+    ],
+    terms: [
+      { t: "Acknowledge, then diagnose", mem: "Their pain first.", d: "Say the customer's problem back to them in a sentence before you start investigating it." },
+      { t: "Product sense", mem: "Why it is built this way.", d: "Knowing what the product does, who it is for, and what would make it succeed or fail for a given customer." },
+      { t: "Targeted question", mem: "Narrow and useful.", d: "A question that changes your plan, such as what success looks like or what a wrong answer costs, asked before proposing anything." }
+    ]
+  },
+  "wc39:1": {
+    cheat: [
+      "Enterprise: Discover, Deploy, Improve, Monetize (opt-in data licensing).",
+      "Custom evaluations tied to the customer's quality bar, run continuously in production.",
+      "Incident-response agent: over 50% lower median time to mitigation.",
+      "HR readiness: 132 expert-graded agent runs before launch.",
+      "Customer-success agent: about 12,000 requests a week. Diagnostic: 25 workflows, 5 agents prioritised.",
+      "APEX-Agents: under 25% of tasks completed; failures from ambiguity and lost context.",
+      "Say 'they report' for every Mercor figure."
+    ],
+    terms: [
+      { t: "Median time to mitigation", mem: "How fast it is contained.", d: "The middle time from an incident starting to its impact being contained; the incident-response agent cut it by over 50%." },
+      { t: "Expert-graded run", mem: "A person scores it.", d: "An agent attempt on a real task that a domain expert marks against a rubric; the HR case used 132 of them." },
+      { t: "APEX-Agents", mem: "Long professional tasks.", d: "Mercor's benchmark of long tasks in banking, consulting and law; frontier models finish under 25% of them." },
+      { t: "Forward deployed engineer", mem: "Embedded builder.", d: "An engineer who works inside a customer's company to build and deploy a solution into their real tools." }
+    ]
+  },
+  "wc39:2": {
+    cheat: [
+      "Ask: the goal and who decides; one real case end to end; what a wrong answer costs; what cannot change.",
+      "One outcome metric plus one guardrail, in numbers.",
+      "Measure the baseline before the pilot.",
+      "Pilot: one request type, a few weeks, an evaluation set built with their experts, a person checking.",
+      "Write expansion criteria and the stop rule before you start.",
+      "A tight scope is cheaper to expand than a loose one is to unwind."
+    ],
+    terms: [
+      { t: "Guardrail metric", mem: "What must not get worse.", d: "A second number, such as error rate, that you watch so the main metric is not won by cutting a corner." },
+      { t: "Baseline", mem: "Before you start.", d: "How the work performs today; without it a pilot cannot show an improvement." },
+      { t: "Expansion criteria", mem: "Numbers that unlock more.", d: "The agreed results that decide the pilot grows to the next request type or team." },
+      { t: "Pilot", mem: "Small, timed, measured.", d: "A limited first deployment with a defined length and success rule, used to learn before scaling." }
+    ]
+  },
+  "wc39:3": {
+    cheat: [
+      "Spine for all three: acknowledge, ask, plan with a number, trade-off.",
+      "Quality dropped: three real examples, replay the same cases before and after, was it the model, the input, or the noticing?",
+      "Wrong request: agree with the goal, ask what sits behind it, be honest about the risk, offer a smaller version that works.",
+      "Output varies: compare to two good analysts; wording varies, facts should not; say how you keep facts stable.",
+      "Say what you tell the customer and what you do technically, in parallel.",
+      "If you are two sentences into a solution with no question, stop and ask one."
+    ],
+    terms: [
+      { t: "Replay", mem: "Same cases, before and after.", d: "Running a fixed set of past cases through the system again to see whether quality actually changed." },
+      { t: "Reframe", mem: "Their goal, a smaller step.", d: "Saying no to a request by agreeing with the goal behind it and proposing a version that will work." },
+      { t: "Output variance", mem: "Wording moves, facts should not.", d: "The model picks among likely answers, so phrasing differs between runs; you bound it by controlling the facts and testing a fixed set." }
+    ]
+  },
+  "wc39:4": {
+    cheat: [
+      "alfred_: over 5,000 active users, everyday people, not engineers.",
+      "Rules made in plain language from chat (about 98%); a check warns when a new rule matches none of recent mail.",
+      "Read-only tool that answers 'why was I notified'.",
+      "Strict-ID memory in plain words: the model picks from real items, code attaches names and owners.",
+      "Matcher in plain words: model for unclear cases, rules for clear ones; about 30% lower cost per user.",
+      "Be honest: a consumer product, not an enterprise engagement. Add one real user moment of your own."
+    ],
+    terms: [
+      { t: "Verify-after-edit", mem: "Warn if it matches nothing.", d: "A check that tells a user when a new rule matches none of their recent mail, so a wrong rule shows up at once." },
+      { t: "Provenance tool", mem: "Why you got this.", d: "A read-only tool that shows the reason a notification was sent, so a user can see why." },
+      { t: "Plain-words trade-off", mem: "What you give up, in their terms.", d: "Explaining a design choice by what the user gains and what flexibility is lost, without technical terms." }
+    ]
   }
 };
 
@@ -2127,7 +2205,7 @@ window.SHEETS = {
   for (var k in V) { if (window.SHEETS[k]) { window.SHEETS[k].vis = V[k]; } }
 })();
 
-/* Drawn sheets for the Mercor sessions (wc32 to wc38). */
+/* Drawn sheets for the Mercor sessions (wc32 to wc39). */
 (function () {
   var V = {
     "wc32:0": [
@@ -2382,6 +2460,40 @@ window.SHEETS = {
       { title: "The order", flow: ["Score story", "LLM use", "Design and cost", "One real bug", "Skipped on purpose", "Next steps"] },
       { title: "Two kinds of LLM use", split: [["As a coding helper", ["small asks", "what you checked", "one thing it got wrong"]],
                                               ["As part of the system", ["embeddings", "rerank or extraction", "cached, sampled by hand"]]] }
+    ],
+    "wc39:0": [
+      { rule: "Ask before you answer. Say their pain, ask two or three questions, end with a number." },
+      { title: "The shape of fifteen minutes", flow: ["Hear the case", "Acknowledge", "Ask two or three", "Plan and a number", "Trade-off"], note: "A reading of public guides, not Mercor's rule." },
+      { title: "Who is listening", parts: [["Engagement Manager", "owns the customer, scope to delivery"], ["Principal, Enterprise AI", "how enterprise AI gets deployed"], ["Both", "would a customer trust you?"]] }
+    ],
+    "wc39:1": [
+      { rule: "Four parts, evaluations tied to the customer's bar, run continuously." },
+      { title: "What Mercor Enterprise sells", flow: ["Discover", "Deploy", "Improve", "Monetize"], note: "Monetize is opt-in data licensing. Delivered by business experts and forward deployed engineers." },
+      { title: "The case studies, as Mercor reports them", vs: { cols: ["Case", "Number"], rows: [
+          ["Incident-response agent", "over 50% lower median time to mitigation"],
+          ["PE value-creation assessment", "$7 to 9M upside run-rate savings"],
+          ["Customer-success agent", "about 12,000 requests a week"],
+          ["HR readiness evaluation", "132 expert-graded runs"],
+          ["Workflow diagnostic", "25 workflows, 5 agents prioritised"]] } }
+    ],
+    "wc39:2": [
+      { rule: "Goal, one real case, cost of a wrong answer, constraints. Then metric, baseline, pilot, expansion rule." },
+      { title: "Discovery questions", ladder: [["1", "what outcome, and who decides?", ""], ["2", "walk me through one real case", ""], ["3", "what does a wrong answer cost?", ""], ["4", "what can we not touch?", ""]] },
+      { title: "A pilot, written before it starts", calc: [["metric", "share handled without a person"], ["guardrail", "errors that should not happen"], ["baseline", "measured first"], ["expand if", "both hold for two weeks"], ["stop if", "guardrail breaks"]] }
+    ],
+    "wc39:3": [
+      { rule: "Acknowledge, ask, plan with a number, trade-off." },
+      { title: "Three scenarios, one spine", vs: { cols: ["Scenario", "First move", "Number to end on"], rows: [
+          ["Quality dropped", "three real examples, replay before and after", "quality on a fixed set"],
+          ["Wrong request", "agree with the goal, ask what sits behind it", "share resolved without a person"],
+          ["Output varies", "two good analysts", "answers on the facts that matter stay the same"]] } },
+      { title: "When quality drops, ask in this order", ladder: [["1", "did it really change? replay the same cases", ""], ["2", "what changed: model, input, their side, prompt", ""], ["3", "which request type or tool fails", ""], ["4", "fix, then keep the cases as a check", ""]] }
+    ],
+    "wc39:4": [
+      { rule: "True facts only. Everyday users, plain words, one honest limit." },
+      { title: "Your material, in plain words", split: [["What users see", ["rules in plain language from chat", "a warning if a rule matches nothing", "a tool that says why they were notified"]],
+                                                        ["What you say about trade-offs", ["the model picks, code attaches names", "model for unclear, rules for clear", "some flexibility given up for no invented people"]]] },
+      { title: "Say honestly", calc: [["it is", "a consumer product"], ["not", "an enterprise engagement"], ["carries over", "ask, measure, explain in their words"]] }
     ]
   };
   for (var k in V) { if (window.SHEETS[k]) { window.SHEETS[k].vis = V[k]; } }

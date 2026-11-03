@@ -16,40 +16,39 @@ LOOP = {
     "id": "mercor",
     "title": "Mercor, Applied AI (Enterprise)",
     "company": "Mercor",
-    "subtitle": "Onsite: about five hours in person in San Francisco",
+    "subtitle": "Onsite, Wednesday 11 November: coding, system design, algorithms, GTM",
     # Brand colour for the hub's wordmark. Mercor publishes no single accent: #3923B1, a deep indigo,
     # is among the inline colours on mercor.com/enterprise (read 2026-10-19); #9FA2FF from the same
     # page for the dark surface.
     "brand": "#3923B1", "brand_dark": "#9FA2FF",
-    "when_iso": "",
-    "when": "Date to be set, about a week out; full day, downtown San Francisco",
-    "who": ("Interviewers not named yet. Todd Dockery is the recruiter. Round 1 was with Neel Taneja, round 2 with "
-            "Sophie Guo, Applied AI Engineer."),
-    "format": ("About five hours, in person, downtown San Francisco. From Mercor's prep email: a coding exercise that is "
-               "not an algorithm interview, AI assistance encouraged, then a presentation of what you built; a practical "
-               "system design on AI systems; and a behavioral round on judgment and ownership under ambiguity. Candidates "
-               "report async build time with a 15 to 30 minute debrief after, a whiteboard design, and an algorithms part."),
-    "bar": ("Mercor's one takeaway: show how you think, in a collaborative engineering conversation, not a performance. "
-            "Coding: break the problem down, weigh alternatives, recover when stuck, collaborate, deliver a fast working "
-            "prototype; narrate, write tests, validate assumptions, say what you optimise for. Design: tradeoffs on latency, "
-            "cost, reliability, scale, deployment and observability, plus retrieval, evaluation, failure modes and monitoring. "
-            "Why over tool names. Reviewers penalise code you cannot explain."),
-    "plan_kicker": "Things to do for round 3",
+    "when_iso": "2026-11-11T10:00:00-08:00",
+    "when": "Wednesday 11 November 2026, 10:00 AM to 2:30 PM Pacific, in person at Mercor HQ, San Francisco",
+    "who": ("Coding review: Bradley Moon, Member of Technical Staff. System design: Ishwari Nalgirkar. Algorithms: Pranav Mereddy, "
+            "Tech Lead Manager. GTM: Will Ledingham, Engagement Manager, and Lily Liu, Principal, both Enterprise AI. Set-up and wrap-up: "
+            "Maggie Cassidy. Leadership chats may be slotted into spare time."),
+    "format": ("The agenda, Pacific time: 10:00 set-up; 10:15 coding challenge, one hour solo and screen-recorded; 11:15 coding review, 30 minutes; "
+               "11:45 break; 12:15 SWE system design, 45 minutes; 1:00 break; 1:15 algorithms, 30 minutes; 1:45 break; 2:00 GTM, 15 minutes; "
+               "2:15 wrap-up. The calendar block runs longer in case leadership chats are added."),
+    "bar": ("Coding: data structures, graph reasoning, correctness under constraints, explaining and extending your code live. No LLM tools, "
+            "no Google search or Gemini, no IDE plugins; any language, Python recommended. System design: a backend system end to end: data "
+            "model and schema, API, block diagram, behaviour under concurrent load, recovery from failures, the trade-offs. No code. "
+            "Algorithms: real architecture and scaling problems, discussion-based; not LeetCode, not system design. GTM: communication, "
+            "product sense, user empathy, how you handle users and stakeholders."),
+    "plan_kicker": "Things to do for round 3, Wednesday 11 November",
     "extra": ("<b>Things to do for round 3, in order.</b> Every item links to where it lives. "
               "<ol>"
               "<li><b>System design brush-up.</b> <a href=\"#/learn/sd-brushup\">Learn: the brush-up</a>: <a href=\"../index.html#/s/w1a\" target=\"_blank\" rel=\"noopener\">w1a</a>, <a href=\"../index.html#/s/w4e\" target=\"_blank\" rel=\"noopener\">w4e</a>, <a href=\"../index.html#/s/w4a\" target=\"_blank\" rel=\"noopener\">w4a</a>, <a href=\"../index.html#/s/w5e\" target=\"_blank\" rel=\"noopener\">w5e</a> first.</li>"
-              "<li><b>The coding round, no AI.</b> <a href=\"#/coding/mercor-onsite-code\">Coding: referral network and task scheduler</a>, timed, real data, no stubs, then defend each line.</li>"
-              "<li><b>The algorithms discussion.</b> <a href=\"#/coding/mercor-onsite-algo\">Coding: comparator, exchange rates, friend network</a>, said aloud before any code.</li>"
-              "<li><b>The build.</b> <a href=\"../index.html#/w/wc35\" target=\"_blank\" rel=\"noopener\">wc35</a> (workflow and presentation), then <a href=\"../index.html#/w/wc38\" target=\"_blank\" rel=\"noopener\">wc38</a> (beat the baseline score), with <a href=\"#/coding/mercor-onsite-build\">Coding: what to pin down in the search build</a>.</li>"
-              "<li><b>System design.</b> <a href=\"#/learn/sd-job-scheduler\">job scheduler</a>, <a href=\"#/learn/sd-candidate-search\">candidate search</a>, <a href=\"#/learn/sd-ai-interviewer\">AI interviewer</a>, then <a href=\"../index.html#/w/wc36\" target=\"_blank\" rel=\"noopener\">wc36</a> and the <a href=\"#/learn/m-related\">related designs</a>.</li>"
-              "<li><b>Basics.</b> <a href=\"../index.html#/w/wc37\" target=\"_blank\" rel=\"noopener\">wc37</a>, and the <a href=\"#/coding\">Coding tab</a>'s concurrency section if threads come up.</li>"
-              "<li><b>Extra practice.</b> <a href=\"#/lld\">LLD: the two agent rounds</a>, not a reported round.</li>"
-              "<li><b>Two mocks in chat.</b> Say 'run the Mercor build mock', then 'run the Mercor onsite design mock'.</li>"
-              "<li><b>The day itself.</b> <a href=\"#/prep\">Prep: the show-up list and your questions</a>. Ask which rounds allow AI tools, the end time, and whether a round can end the day.</li>"
+              "<li><b>Coding challenge, 10:15, no AI and no Google.</b> <a href=\"#/coding/mercor-onsite-code\">Coding 7: referral network and task scheduler</a>, one timed solo hour each in a plain editor, then defend every line. Warm up on <a href=\"#/coding/problems\">Coding 6: four problems</a>; <a href=\"#/coding/concurrency\">Coding 4: concurrency</a> if threads come up in the review.</li>"
+              "<li><b>Algorithms, 1:15.</b> <a href=\"#/coding/mercor-onsite-algo\">Coding 8: the reported problems</a> (comparator, exchange rates, friend network, a million IDs, weighted top-k), then <a href=\"#/coding/mercor-infra-algo\">Coding 9: infrastructure and scaling</a>, said aloud with the numbers. <a href=\"../index.html#/w/wc37\" target=\"_blank\" rel=\"noopener\">wc37</a> for complexity.</li>"
+              "<li><b>System design, 12:15.</b> <a href=\"#/learn/m-round\">Learn: the system design round</a>: how to run 45 minutes, the job scheduler, contractor payouts, Ticketmaster, other prompts. <a href=\"../index.html#/w/wc36\" target=\"_blank\" rel=\"noopener\">wc36</a> step 1 for the checklist.</li>"
+              "<li><b>GTM, 2:00, and a possible leadership chat.</b> <a href=\"../index.html#/w/wc39\" target=\"_blank\" rel=\"noopener\">wc39</a>, then <a href=\"#/prep\">Prep: GTM round, Leadership chat and your questions</a>.</li>"
+              "<li><b>Mocks in chat.</b> Say 'run the Mercor coding mock', 'run the Mercor design mock' or 'run the Mercor GTM mock'.</li>"
+              "<li><b>Optional, not on the agenda.</b> The AI build: <a href=\"../index.html#/w/wc35\" target=\"_blank\" rel=\"noopener\">wc35</a>, <a href=\"../index.html#/w/wc38\" target=\"_blank\" rel=\"noopener\">wc38</a>, <a href=\"#/coding/mercor-onsite-build\">Coding 10</a>; <a href=\"#/lld\">the LLD tab</a>; the AI designs on the Learn tab.</li>"
+              "<li><b>On the day.</b> Photo ID and a charger. Ask early whether any round ends the day early, and confirm the coding rules before you start.</li>"
               "</ol>"),
 }
 
-SESSION_IDS = [("wc35", "1"), ("wc36", "2"), ("wc37", "3"), ("wc38", "4"), ("wc32", "5"), ("wc33", "6"), ("wc34", "7")]   # the onsite first; wc32 to wc34 (round 2) are the light review
+SESSION_IDS = [("wc37", "1"), ("wc36", "2"), ("wc39", "3"), ("wc35", "4"), ("wc38", "5"), ("wc32", "6"), ("wc33", "7"), ("wc34", "8")]   # the 11 Nov agenda first (basics, design, GTM); wc35 and wc38 (the AI build) optional; wc32 to wc34 light review
 
 PREP_LEAD = ("The teaching is on the Sessions tab. Here: how to show up, then your story out loud, and the timed drills: "
              "the build presentation, the candidate search opening, a complexity answer, and the earlier cache drills.")
@@ -201,13 +200,17 @@ ROUNDS = [
           "keep": [],
           "notes": ["A good set; she answered at length."]}]},
     {"title": "Round 3: the onsite",
-     "when": "Date to be set, about a week out",
-     "who": "Not named yet",
-     "format": ("About five hours, in person, downtown San Francisco. Mercor's email: a coding exercise (AI assistance encouraged, then a presentation), "
-                "a practical system design on AI systems, and a behavioral round. Candidates report async builds with a 15 to 30 minute debrief after each, "
-                "system design on a whiteboard, and an algorithms part."),
+     "when": "Wednesday 11 November 2026, 10:00 AM to 2:30 PM Pacific",
+     "who": "Bradley Moon (coding review), Ishwari Nalgirkar (system design), Pranav Mereddy (algorithms), Will Ledingham and Lily Liu (GTM); Maggie Cassidy (set-up, wrap-up)",
+     "format": ("Coding challenge: the link arrives by email on the day; one hour of solo work, no kickoff, screen-recorded; then 30 minutes of live "
+                "review and collaborative coding. No LLM tools, no Google search or Gemini, no IDE plugins. Focus: data structures, graph reasoning, "
+                "correctness under constraints, explaining and iterating. System design, 45 minutes, live: a backend system end to end (schema, API, "
+                "block diagram, concurrent load, failure recovery, trade-offs), whiteboard, no code. Algorithms, 30 minutes, live, discussion: real "
+                "architecture challenges, infrastructure decisions and scaling strategies; not LeetCode, not system design. GTM, 15 minutes: "
+                "communication, product sense, user empathy, users and stakeholders."),
      "outcome": "To come.",
-     "notes": ["The brief's one takeaway: show how you think; a collaborative engineering conversation, not a performance.",
+     "notes": ["Confirmed by Mercor on 3 November: no candidate-search build and no AI anywhere in the coding challenge. The build material on this page is now optional.",
+               "The brief's one takeaway: show how you think; a collaborative engineering conversation, not a performance.",
                "Open points to ask early: which parts allow AI tools, whether the build prompt is shared in advance, who the interviewers are, and the real hours.",
                "From AceOffer's synthesis of 20 candidate reports (3 Nov 2026, https://aceoffer.app/interviews/mercor/interview-process; paraphrased there, not verbatim prompts):",
                "Coding, about 90 minutes: 60 alone and screen-recorded, then 30 of review. In the Applied AI version, Google for syntax but no LLMs in the first hour, and no tests given. Prompts reported: a three-part referral network where 'flow centrality' is deliberately under-specified, and a two-part task scheduler.",
@@ -254,8 +257,89 @@ SCRIPTS = [
      "notes": ["Location, relocation, start date and work authorization: your answers from chat."]},
 ]
 
-QA = []
-TABS = ["overview", "learn", "sessions", "coding", "lld", "prep", "rounds", "mocks"]   # Concurrency folds into Coding
+QA = [
+    {"group": "GTM round", "blurb": "Fifteen minutes with an Engagement Manager and a Principal, Enterprise AI. Pointers, not scripts: remember the bold line, then tell it your way. Session wc39 teaches each one.", "items": [
+        {"q": "What do you know about Mercor Enterprise, and what would you improve in how it is sold or delivered?", "short": "Product sense on Enterprise", "tests": "Did you learn the product, and can you think about it as a customer would.",
+         "a": ["**Four parts, one loop.** Discover finds where agents pay off, Deploy puts them in the customer's tools with custom evaluations, Improve tunes them live, Monetize is opt-in data licensing.",
+               "**Lead with one number.** The incident-response agent cut median time to mitigation by over 50%. Say 'they report'. It shows an evaluation-defined goal with an operational result.",
+               "**Name the hard part.** Mercor's APEX-Agents work found models finish under 25% of long professional tasks, often failing on ambiguity and context. So a customer's messy real work is harder than a demo.",
+               "**Then a customer's questions.** Who grades the agent, what happens when it is unsure, how does it stay good after launch. Ask them as questions, not as criticism."],
+         "land": "I know the offer, one number, the real difficulty, and what a customer would ask.",
+         "notes": ["No public report of this round exists. Mercor's figures are anonymised case studies on its Enterprise page; never present them as yours."]},
+        {"q": "A customer is unhappy: their agent was good last week and is making mistakes now. What do you do?", "short": "Quality dropped", "tests": "Acknowledge, then diagnose, with a plan and a time.",
+         "a": ["**Acknowledge first.** Say it is hitting their team and that you will have a first diagnosis by a time you name.",
+               "**Three real examples.** Ask what worse means, when it started, and for the actual failures.",
+               "**Replay before and after.** Your eval harness replays real traces: run the same cases and see whether quality moved or the input changed.",
+               "**Say it in two tracks.** What you tell the customer, and what you do technically, at the same time."],
+         "land": "Acknowledge, three examples, replay the same cases, report in plain words."},
+        {"q": "How do you handle a stakeholder who wants something that will not solve their problem?", "short": "Handling a stakeholder", "tests": "Can you say no without losing the person.",
+         "a": ["**Agree with the goal.** Start from what they are trying to achieve, not from the feature.",
+               "**Ask what sits behind it.** The request is often a guess at a solution.",
+               "**Be honest about the risk.** An answer-anything box sounds sure and is sometimes wrong, and that loses trust.",
+               "**Offer the version that works, with a number.** A smaller first step, sources shown, and a way to measure it."],
+         "land": "I validate the goal, reframe the scope, and keep the relationship."},
+        {"q": "Tell me about a time you worked with a non-technical user.", "short": "A non-technical user", "tests": "Real empathy, a real example, plain words.",
+         "a": ["**Everyday users, not engineers.** alfred_ has over 5,000 active users who talk to an assistant about email and calendar.",
+               "**Plain-language rules.** About 98% of rules are made from chat. I added a check that warns when a new rule matches none of their recent mail.",
+               "**Show the reason.** I built a read-only tool that answers why was I notified, so trust grows when a user can see why.",
+               "**Say the limit.** It is a consumer product, not an enterprise engagement. What carries over is asking what they need and measuring it."],
+         "land": "Plain-language rules, a check that warns, and a tool that explains why.",
+         "notes": ["Add one real moment of your own: a user report or a non-technical teammate's question. If you have none, say so and use the tool you built; that is true."]},
+        {"q": "How would you measure whether a pilot worked?", "short": "Measuring a pilot", "tests": "Metrics, baseline, expansion rule.",
+         "a": ["**Baseline first.** Measure how the work goes today, or the pilot proves nothing.",
+               "**One outcome and one guardrail.** For example share handled without a person, and the errors that should not happen.",
+               "**An evaluation set made with their experts.** It is what lets you say a change made it better. Mercor's HR case used 132 expert-graded runs.",
+               "**Write the expansion and stop rule before you start.** When both numbers hold for two weeks, add the next request type."],
+         "land": "Baseline, one outcome, one guardrail, and the rule written first."},
+        {"q": "What would you ask a new enterprise customer in the first meeting?", "short": "Discovery questions", "tests": "Ask before solving.",
+         "a": ["**The goal and who decides.** A named person, not a team.",
+               "**One real case, start to finish.** Where it starts, who touches it, where it goes wrong, how long it takes.",
+               "**What a wrong answer costs.** It sets how much a person must check.",
+               "**What cannot change.** Data they cannot share, systems, security review, sign-off."],
+         "land": "Goal, one real case, cost of a wrong answer, constraints."},
+        {"q": "Explain to a non-technical executive why an AI system gives a different answer to the same question.", "short": "Why the output varies", "tests": "Plain words, an analogy from their world.",
+         "a": ["**Say it is expected.** Not a bug.",
+               "**Two good analysts.** Ask both the same question and the wording will differ.",
+               "**Facts stable, wording free.** In your memory work the model picks from real items and code attaches names and owners.",
+               "**Test a fixed set.** So you can see if the answers on the things that matter ever change."],
+         "land": "Wording varies, facts should not, and here is how I check."}]},
+    {"group": "Leadership chat", "blurb": "Why Mercor, why now, why leave, two years out, and pace. Built on your own words in INTRO.md and the scripts on this tab (Your story), which stay as you wrote them. Pointers to weave a story around.", "items": [
+        {"q": "Why Mercor, and why now?", "short": "Why Mercor, why now", "tests": "Fit with Enterprise, and a reason for the timing.",
+         "a": ["Your verbatim answer is in Your story, Why Mercor. These are the INTRO.md pointers to weave in.",
+               "**Evaluations are the product here, and they are my core work.** I built the eval harness and the production-failure scanner. Mercor measures whether AI does real professional work.",
+               "**Engineering, product and customer at once.** Finding where agents pay off, deploying them into real tools, improving them live. It is the vertical slice I already own, across many customers.",
+               "**Reusable systems out of one-off deployments.** Turning each deployment into shared connectors and eval templates.",
+               "**The stakes are real.** Reliability failures cost something, and that is where I get better fastest."],
+         "land": "Evals at the centre, a slice I already own, many customers.",
+         "notes": ["Why now: Enterprise is early and growing; ask them rather than assert it."]},
+        {"q": "Why leave alfred_?", "short": "Why leave", "tests": "Pull toward, not push away.",
+         "a": ["Your verbatim answer is in Your story, Why leave alfred_.",
+               "**Nothing is wrong at alfred_.** I have owned real parts of a production AI product from early on and learned a lot.",
+               "**From agent features to the systems around agents.** Evals, observability, memory, reliability. I want to apply that to many problems and customers, not one product.",
+               "**Own the outcome with the customer.** The customer, the technical solution and the business result together, and Enterprise is built that way."],
+         "land": "Toward customers and ownership of the outcome."},
+        {"q": "Where do you want to be in two years?", "short": "Two years", "tests": "Ambition that fits a hands-on role.",
+         "a": ["From your INTRO.md goals, in your words.",
+               "**Somewhere agentic engineering is at the frontier.** Running against real stakes, where getting it wrong has weight, which is the fastest way I know to get good.",
+               "**Hard, ambiguous problems handed to me.** Someone the team can give a messy problem to without much hand-holding.",
+               "**Still in the code.** I want to be able to call the direction and still build it, because the judgment comes from hitting the failure modes myself."],
+         "land": "Frontier work, trusted with ambiguity, hands still on the code."},
+        {"q": "Mercor moves fast and the hours are intense. How do you feel about the pace?", "short": "The pace question", "tests": "A real example, not a claim.",
+         "a": ["**Answer with an example, not a claim.** Over about three months I shipped dozens of production changes on a live system with paying users.",
+               "**Speed with a safety net.** My eval harness and failure scanner are why I can move quickly and still know what broke.",
+               "**One result.** Notification delivery went from about 90 seconds to about 3, found and fixed in production.",
+               "**Then ask.** What the real hours and rhythm look like on Enterprise. It shows you want the true answer."],
+         "land": "Fast with evidence, and I asked what the pace really is.",
+         "notes": ["Culture reports describe an intense in-person environment. Do not argue with it; answer with how you work."]},
+        {"q": "What questions do you have for us?", "short": "Your questions", "tests": "Curiosity about the work.",
+         "a": ["Your four questions are in INTRO.md and the two groups added under Questions to ask. Pick two.",
+               "**Week to week.** What an Enterprise engagement looks like from discovery to the agent running, and where it gets stuck.",
+               "**Evaluation without ground truth.** Rubrics, expert reviewers, live signals, or a mix.",
+               "**The first 90 days.** What a strong start looks like.",
+               "**The team.** How engineers, forward deployed engineers and business experts are structured, and the next steps."],
+         "land": "Two questions, then your closing line."}]},
+]
+TABS =["overview", "learn", "sessions", "coding", "lld", "prep", "rounds", "mocks"]   # Concurrency folds into Coding
 CONC_N = 4   # the shared concurrency guide, as one part with chapters, after asyncio (part 3)
 SHARED_JS = ["coding/concurrency.js"]   # the Concurrency tab, shared with CODING.html
 
@@ -273,6 +357,34 @@ ASK_3C = [
          {"to": "Any engineer", "q": "To get to know the product, what are some recent pain points you've solved, and some that are ongoing work?",
           "loop": "Any time.", "why": "Your question from INTRO.md, reworded only for spelling."},
          {"to": "The recruiter or last interviewer", "q": "What does the full interview process look like from here, and the rough timeline?",
+          "loop": "Last.", "why": "Your question from INTRO.md."}]},
+    {"id": "gtm", "title": "For the GTM interviewers", "when": "The last two minutes of the fifteen. One or two.",
+     "why": "They sit between the customer and the engineers; a question about their side shows you think about the customer too.",
+     "how": ["Ask one, listen, then say in a sentence how you have seen the same thing."],
+     "items": [
+         {"to": "The Engagement Manager", "q": "What does a good first month with a new enterprise customer look like, and where does it usually get stuck?",
+          "loop": "First choice.", "why": "Your INTRO.md question, aimed at the person who runs the engagement."},
+         {"to": "The Principal, Enterprise AI", "q": "How do you agree what good looks like with a customer, and who grades the agent when there is no ground truth?",
+          "loop": "Second.", "why": "Ties to the evaluation work you own and to what Enterprise sells."},
+         {"to": "The Engagement Manager", "q": "When a customer asks for something that will not solve their problem, how do you handle it, and when do engineers join that conversation?",
+          "loop": "If time.", "why": "Shows you have thought about saying no, and asks how engineers fit in."},
+         {"to": "The Principal, Enterprise AI", "q": "What does a customer have to see in a pilot before they expand it?",
+          "loop": "If time.", "why": "Pilot metrics and expansion criteria, the part you prepared."},
+         {"to": "Either", "q": "What have you seen make a deployment go badly, and what would you want an engineer to do differently?",
+          "loop": "Last.", "why": "Invites a real story and shows you want the honest answer."}]},
+    {"id": "leadership", "title": "For a leadership chat", "when": "When they ask if you have questions. Two, then your closing line.",
+     "why": "About the company, the pace and where you would add, from someone who sets direction.",
+     "how": ["Ask one, listen, then close in your words from INTRO.md."],
+     "items": [
+         {"to": "Leadership", "q": "Why is Enterprise being built now, and what would you want its first engineers to have solved by the end of the year?",
+          "loop": "First choice.", "why": "The company direction, and what you would be measured on."},
+         {"to": "Leadership", "q": "What does a strong first 90 days look like for someone joining Enterprise?",
+          "loop": "Second.", "why": "Your INTRO.md question."},
+         {"to": "Leadership", "q": "What does the real week look like here, hours and rhythm included?",
+          "loop": "If the pace came up.", "why": "Culture reports describe an intense in-person environment; ask directly."},
+         {"to": "Leadership", "q": "How do deployments turn into reusable tools and eval templates, and who owns that?",
+          "loop": "If time.", "why": "Your reusable-systems point from INTRO.md."},
+         {"to": "Leadership", "q": "What is the full interview process from here, and the rough timeline?",
           "loop": "Last.", "why": "Your question from INTRO.md."}]},
     {"id": "sophie", "title": "For Sophie (round 2, kept)", "when": "The last two or three minutes. One or two.",
      "why": "She builds on Enterprise; a question about her work shows you think past the screen.",
@@ -299,8 +411,4 @@ DRILLS = [
     {"id": "complexity", "prompt": "State the time and space complexity of what you just wrote, and of the worst sort that still works.", "target": "2 minutes", "seconds": 120, "ref": "../index.html#/w/wc37"},
 ]
 
-MOCK_HOW = ("Two onsite mocks run in chat. Say 'run the Mercor onsite design mock': 45 minutes, candidate search with RAG, then production push-back. "
-            "Say 'run the Mercor build mock': a 60 to 90 minute build brief with your own AI tool, then a 10-minute presentation and debrief questions. "
-            "Critique after each. The interviewer guides are in private/mercor-mock/onsite.html, local only. "
-            "The round 2 caching mock still runs as 'run the Mercor mock'; for its code version open E:\\mercor-cache-mock: "
-            "mock1_review (threads, a cache with planted bugs) and mock2_service (asyncio, a two-tier cache to navigate).")
+MOCK_HOW = ("Three mocks run in chat, each as the round on 11 November: 'run the Mercor coding mock' (a solo hour on a graph problem, no AI, then a 30-minute review where you extend it), 'run the Mercor design mock' (45 minutes of backend design: schema, API, block diagram, concurrent load, failure recovery) and 'run the Mercor GTM mock' (15 minutes with an engagement manager and a principal). Critique after each.")

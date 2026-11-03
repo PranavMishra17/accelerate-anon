@@ -801,8 +801,8 @@
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
 <script src="data/streams.js?v=d0b499a4"></script>
-<script src="data/reading.js?v=d2cd7643"></script>
-<script src="data/sheets.js?v=550fc356"></script>
+<script src="data/reading.js?v=4866b612"></script>
+<script src="data/sheets.js?v=ed0cc952"></script>
 <script src="site/res.js?v=c33c7564"></script>
 <script src="site/nlm.js?v=2c36ecf8"></script>
 <script src="site/sheet.js?v=d5ed86a7"></script>
@@ -3241,8 +3241,8 @@
       file: "interviews/ecogpt.html", note: "Round 1: a call with Ethan Leonard, founder and CEO. Agents, memory, evals, open models, cost per message." },
     { id: "homedepot", date: "", name: "The Home Depot, Principal Data Scientist - CX", when: "Date to be set", forWhat: "Home Depot",
       file: "interviews/homedepot.html", note: "Recruiter call with Kristen Bernal: agentic AI for customer self-service, evaluation, level." },
-    { id: "mercor", date: "", name: "Mercor, Applied AI (Enterprise)", when: "Onsite, date to be set", forWhat: "Mercor",
-      file: "interviews/mercor.html", note: "Onsite in San Francisco, about five hours: an AI-assisted build and presentation, AI system design, a behavioral. Sessions wc35 to wc37." },
+    { id: "mercor", date: "2026-11-11", name: "Mercor, Applied AI (Enterprise)", when: "Wed 11 Nov, 10 AM PT", forWhat: "Mercor",
+      file: "interviews/mercor.html", note: "Onsite Wed 11 Nov: a solo coding hour with no AI and its review, backend system design, an algorithms discussion, a GTM chat." },
     { id: "vanguard", date: "2026-10-07", name: "Vanguard, Conversational AI", when: "Wed 7 Oct, 3 PM", forWhat: "Vanguard",
       file: "interviews/vanguard.html", note: "Client interview with Vanguard's team, via Mphasis: conversational AI and deep NLP." },
     { id: "commure", date: "2026-10-05", name: "Commure, Voice Agents", when: "Mon 5 Oct", forWhat: "Commure",
@@ -3295,7 +3295,7 @@
   var WILDCARD = {
     title: "Wildcard",
     /* One line: the loop in play. Loops that have happened are parked, not described here. */
-    note: "Mercor, Applied AI (Enterprise): the onsite in San Francisco, date to be set. Sessions wc35 to wc37; wc32 to wc34 are the light review.",
+    note: "Mercor, Applied AI (Enterprise): the onsite in San Francisco, Wednesday 11 November. Sessions wc35 to wc37; wc32 to wc34 are the light review.",
     sessions: [
       {
         id: "wc32", track: "Systems", forWhat: "Mercor, technical screen Fri 23 Oct", len: "50m", est: 50,
@@ -4012,6 +4012,121 @@
                     "A bug: I'd tell one real one, how I found it and how I checked the fix.",
                     "Next: a bigger labelled set first, then the changes that the failures point to."],
               close: "I can explain every line, including the ones the model wrote, because I read them all." } }
+        ]
+      },
+      {
+        id: "wc39", track: "Systems", forWhat: "Mercor, onsite Wed 11 Nov", len: "1h 15m", est: 75,
+        name: "The GTM conversation: customers, stakeholders, product sense",
+        blurb: "Fifteen minutes with an Engagement Manager and a Principal of Enterprise AI: how you talk to a customer, what you ask first, how you say no, and how you explain an AI system to someone who does not write code.",
+        intro: "Mercor describes this round in one line: communication, product sense, user empathy, and how you approach users and stakeholders. The two interviewers are an Engagement Manager and a Principal, Enterprise AI. They sit between the customer and the engineers. So they are asking one thing: would you be safe, and useful, in front of a Fortune 500 stakeholder? No public report of this round exists. Everything here is built from Mercor's own wording, the Enterprise page and the public posts on customer-facing interview rounds, and it is practice, not a leak. The skill is the same in every scenario: ask before you answer, tie the work to a number the customer cares about, and say the hard thing kindly.",
+        steps: [
+          { t: "What the round assesses, and how to show it", m: 12,
+            out: "What are two interviewers from the customer side listening for in fifteen minutes, and what do you do in the first minute?",
+            d: "Fifteen minutes is one or two scenarios and a question about your own work with users. It is a conversation, so they listen to your process more than your conclusion. The public prep guides for customer-facing engineering rounds agree on the pattern: clarifying questions first, a clean breakdown, empathy for the real pain, trade-offs said out loud, and plain words for a non-technical listener. Jumping straight to a solution is the red flag. No public report of Mercor's own GTM round exists, so treat this as the best reading of the invitation text and the role postings, which stress scoping, milestones and explaining technical ideas to non-technical stakeholders.",
+            pts: [
+              "Who is in the room: an Engagement Manager owns the customer relationship from evaluation through delivery; the Principal works on how enterprise AI gets deployed. Neither is checking your code. Both are asking whether a customer would trust you",
+              "Ask first: before you propose anything, ask two or three targeted questions. What does success look like, who decides, what is the cost of getting it wrong",
+              "Acknowledge before you diagnose: say the customer's pain back to them in a sentence, then investigate. Never blame the customer's systems, even when they are the cause",
+              "Tie to a number: every plan ends with how you would know it worked. Mercor sells custom evaluations tied to what good looks like for the customer, so a metric is the language of the building",
+              "Say the trade-off: what you will do, what you will leave for later, and why",
+              "Plain words: if you use a term, say what it means in the customer's world. Test it on someone who does not code",
+              "Use a real example from your own work when they ask about users. One true story beats three claims",
+              "Be brief: with fifteen minutes, an answer is about a minute and a half, then stop and let them steer"
+            ],
+            where: "FDE Academy and Perspective AI, customer-facing FDE interview guides; Mercor job postings for the Enterprise team. No public report of Mercor's GTM round exists.",
+            url: "https://getperspective.ai/blog/forward-deployed-engineer-interview-questions-2026-prep-guide",
+            ans: { lead: "I think this round is about whether a customer would trust me, so I'd ask before I answer and tie everything to a number they care about.",
+              pts: ["Ask first: two or three questions on what success looks like and what a failure costs, before I suggest anything.",
+                    "Acknowledge: I say the customer's problem back in a sentence, then I diagnose.",
+                    "Number: every plan ends with how we'd know it worked.",
+                    "Trade-off: I say what I'd do now, what I'd leave, and why.",
+                    "Plain words: I explain it in their world, not mine."],
+              close: "And if I don't know something, I say so and say how I'd find out." } },
+          { t: "Mercor Enterprise in your own words, and the questions it raises", m: 18,
+            out: "Explain what Mercor Enterprise sells, in your own words, with one case study and its number. What would a customer ask you about it?",
+            d: "Product sense starts with knowing the product. Mercor Enterprise helps large companies put AI agents to work. It has four parts: Discover (find where agents pay off, with a ranked list, workflow maps and ROI estimates), Deploy (build production agents wired into the customer's tools, with evaluations defined by what good looks like for that business), Improve (review live agents and tune architecture, prompts, tools and models), and Monetize (license data to AI labs, always opt in). Custom evaluations run continuously in production. Business experts and forward deployed engineers deliver it on one platform. Customers appear only by industry, so the case studies are anonymous.",
+            pts: [
+              "Incident-response agent (technology company): over 50% reduction in median time to mitigation. Know this one cold: a measurable operational number, set by an evaluation of what good looks like",
+              "Private equity value-creation assessment: $7 to 9M of upside run-rate savings identified. A second PE firm: $20M annual run-rate impact by 2031, about $4M near-term net value. Say these are Mercor's figures: 'they report'",
+              "Customer-success agent (Mercor's own support): about 12,000 support requests a week. Scale is the point, and the customer is Mercor itself",
+              "HR production-readiness evaluation: 132 expert-graded agent runs on real HR tasks. This is the evaluation story in one number: experts grade real runs before the agent goes live",
+              "Enterprise software diagnostic: 25 candidate workflows across seven functions, five agents prioritised for the next twelve months. Discovery turns many ideas into a short ordered list",
+              "APEX-Agents, Mercor's benchmark of long professional tasks: frontier models complete under 25% of tasks, about 40% with eight attempts. Many failures come from handling ambiguity, finding the right file and keeping context. So an agent that works in a demo can still fail on the customer's messy real work",
+              "The questions it raises for a customer: what does good look like and who grades it, what happens when the agent is unsure, how does it stay good after launch, what data does it see and who controls it, what does the first month cost and return",
+              "Why this matters to you: Mercor's evaluation work is the part of your own work that fits, so it is where your answers should land"
+            ],
+            where: "Mercor Enterprise page (mercor.com/enterprise) and the APEX-Agents post; both opened 3 Nov 2026. Case studies are anonymised; no named customers.",
+            url: "https://mercor.com/enterprise",
+            ans: { lead: "From what I read, Mercor Enterprise finds where agents pay off, puts them into the customer's real tools with evaluations built around what good means for that business, and keeps improving them live.",
+              pts: ["Four parts: Discover, Deploy, Improve, and Monetize, which is opt-in data licensing.",
+                    "The case I'd lead with: an incident-response agent that cut median time to mitigation by over 50%. They report it, and I like it because the number is operational, not a vibe.",
+                    "The other one I'd mention is the HR evaluation, 132 runs graded by experts before launch. That's the idea that evaluation comes first.",
+                    "The APEX finding I'd point to: models fail a lot on ambiguity and context, so a customer's messy real work is harder than a demo.",
+                    "Questions I'd expect from a customer: who grades the agent, what happens when it's unsure, and how does it stay good after launch."],
+              close: "That last part, grading and staying good, is the work I do at alfred_, which is why this team fits." } },
+          { t: "Discovery before solutions: the questions, the metrics, the pilot", m: 15,
+            out: "A new enterprise customer says 'we want an agent for support'. What do you ask, what is the success metric, and how do you phase it?",
+            d: "Discovery is how you avoid building the wrong thing well. The public guides give a simple order: acknowledge the customer's goal, ask two or three targeted questions, define what success means in a number, then propose a small pilot with the rule for when to expand. Mercor's own Discover offering is this step turned into a product: a ranked list of opportunities with ROI estimates. Starting small is deliberate. A tight scope is cheaper to expand than a loose one is to unwind.",
+            pts: [
+              "Goal and owner: what outcome do you want, and who decides if it worked? A person with a name, not a team",
+              "The work today: walk me through one real case. Where does it start, who touches it, where does it go wrong, how long does it take",
+              "Failure cost: what happens when the agent is wrong? A wrong answer on a refund costs money, a wrong answer on a medical question costs more. That sets how much a person must check",
+              "Constraints not yet shared: data they cannot share, systems that cannot change, security review, who must sign off",
+              "Success metric, in numbers: one outcome (time to resolve, share handled without a person, cost per case) and one guardrail (error rate, escalations that should not have happened). Agree how it is measured before building",
+              "Baseline: measure how it works today first. A pilot with no baseline cannot prove anything",
+              "Phase the pilot: one team or one request type, a defined length, a real evaluation set made with their experts, a human in the loop at first",
+              "Expansion criteria, written down before you start: 'if resolution without a person is above X and errors below Y for two weeks, we add the next request type'. Agree the stop rule too"
+            ],
+            where: "FDE Academy: scoping and phased rollout; Mercor Enterprise page: the Discover and Deploy offerings",
+            url: "https://fde.academy/blog/forward-deployed-engineer-interview-questions",
+            ans: { lead: "Before I propose anything I'd ask what success looks like, who decides, and what it costs when the agent is wrong.",
+              pts: ["Walk me through one real case today, start to finish, so I see where it actually goes wrong.",
+                    "What can't we touch: data, systems, security review, sign-off.",
+                    "Metric: one outcome and one guardrail, agreed in numbers, with a baseline measured first.",
+                    "Pilot: one request type, a few weeks, a real evaluation set built with their own experts, a person checking at first.",
+                    "Expansion: the numbers that unlock the next phase, written down before we start, and the number that stops it."],
+              close: "That way the customer sees value early and nobody is surprised later." } },
+          { t: "Three practice scenarios, with model answers", m: 20,
+            out: "Say each answer aloud in about 90 seconds, then compare. Where did you jump to a solution before you asked?",
+            d: "These are the three shapes the public guides report most: something broke, someone asks for the wrong thing, and someone needs to understand something technical. Each answer follows the same spine: acknowledge, ask, state the plan with a number, name the trade-off. The model answers are in your voice and use only facts from your work. Change the words until they sound like you, but keep the order.",
+            pts: [
+              "Scenario 1: a customer says their agent's quality dropped. 'Last week it was fine. Now my team says it is making mistakes.' You acknowledge the cost to their team, then separate what changed (a model update, new input types, a change on their side, a prompt change) from what is only noticed more. You ask what 'worse' means with three real examples. You check traces against a fixed evaluation set. You commit to a time for a first answer. Say what you will tell the customer and what you will do technically at the same time",
+              "Model answer 1, in your voice: 'First I'd say I understand this is hitting their team, and that I'll have a first diagnosis by end of day. Then I'd ask for three real examples of the mistakes and when it started. At alfred_ I built an evaluation harness that replays real traces, so the first thing I'd do is run the same cases from before and after and see whether quality actually moved, or whether the input changed. I'd also check the failures from production for a pattern, like one tool or one request type. I'd tell the customer what I found in plain words, what I'm fixing, and how we'll check it stays fixed.'",
+              "Scenario 2: a buyer asks for something that will not solve their problem. 'Add a chat box that answers anything about our policies.' You validate the goal, ask what problem sits behind it, show what would go wrong (answers that sound right but are stale or wrong), and offer a version that works: start with the 20 questions that make up most of the volume, with sources shown and a person for the rest",
+              "Model answer 2, in your voice: 'I'd start by saying I get the goal, fewer repeat questions to your team. Then I'd ask which questions come up most and what happens today when someone gets a wrong answer. I'd be honest that an answer-anything box will sometimes sound sure and be wrong, and that's the thing that loses trust. So I'd suggest we start with the most common questions, show the source for each answer, and measure how many get resolved without a person. If that works, we widen it. I'd rather say that now than ship something that makes their team trust it less.'",
+              "Scenario 3: explain to a non-technical executive why an AI system's output varies. 'Why did it give a different answer to the same question?' Use a comparison from their own world, say it is expected, and then say what you do to bound it",
+              "Model answer 3, in your voice: 'Think of asking two good analysts the same question. Both are competent and the wording will differ, and sometimes one weighs a point differently. The model works like that: it picks among likely answers, so the wording varies. The part that matters for you is whether the facts and the decision are stable. So we keep the facts out of the model's hands: it picks from real records and the system attaches the names and numbers, and we test a fixed set of cases so we can see if the answers on the things that matter ever change.'",
+              "Spine to repeat: acknowledge, ask, plan with a number, trade-off. If you notice you are two sentences into a solution without a question, stop and ask one"
+            ],
+            where: "FDE Academy: the unhappy customer, saying no, and the CFO variance questions; Perspective AI: the sample customer questions. Model answers use facts from your alfred_ work only.",
+            url: "https://fde.academy/blog/forward-deployed-engineer-interview-questions",
+            ans: { lead: "The three go the same way: I acknowledge the problem, I ask before I answer, and I give a plan with a number and a trade-off.",
+              pts: ["Quality dropped: acknowledge the cost, ask for three real examples, replay the same cases before and after to see whether it actually changed, then tell them what I found in plain words.",
+                    "A request that won't solve it: agree with the goal, ask what sits behind it, be honest about the risk, and offer a smaller version that works and a way to measure it.",
+                    "Why it varies: compare it to asking two good analysts, say that wording varies but facts shouldn't, and say how I keep the facts stable.",
+                    "Each has a number at the end, so the customer knows how we'd tell it worked."],
+              close: "I'd rather say the honest thing early than ship something that loses their trust." } },
+          { t: "Your own material: users at alfred_, and explaining trade-offs", m: 10,
+            out: "Tell me about a time you worked with non-technical users, and how you explained a technical trade-off to someone who does not code.",
+            d: "Use what is true. At alfred_ the users are everyday people, not engineers: more than 5,000 active users who talk to an assistant about their email, calendar and tasks. That is a live user base, which is the closest thing to a customer you have. Your facts that fit this round: users make email rules in plain language from chat (about 98% of rules), you added a check that warns when a new rule matches none of the user's recent mail, you built a read-only tool that answers 'why was I notified', you fixed notification bugs such as one email becoming two texts, and your working memory is built so the model cannot invent a name or an owner. Add one real moment of your own: a user report, a message from the team, a question from a non-technical teammate. If you do not have one, say so and use the tool you built, because that is true.",
+            pts: [
+              "Plain-language rules: users never write a filter, they say what they want in chat. The system has to be right about what they meant, so you built a check that warns when a new rule matches nothing in their recent mail. That is empathy turned into a feature",
+              "'Why was I notified': a person gets a text and wonders why. You built a read-only tool that answers it. Trust grows when users can see the reason",
+              "Notification precision: one email became two texts, and OTP alerts fired falsely on tracking links. Fixing these was about what the user feels, not what the code does",
+              "Trade-off in plain words: strict-ID memory. 'The model never writes a name or an owner itself. It picks from real items and the code attaches who owes what. It costs flexibility, and it means the assistant cannot make up a person.' That is a trade-off a non-engineer can follow",
+              "Cost versus quality in plain words: the deterministic matcher cut per-user model cost by about 30%. 'We use the model for the unclear cases and plain rules for the clear ones.' Lead with the user benefit, then the cost",
+              "Pace example, if asked: dozens of production changes in about three months on a live system with paying users, and notification delivery from about 90 seconds to about 3",
+              "Honest limit: alfred_ is a consumer product, not an enterprise engagement. Say that, then say what carries over: ask what the user actually needs, measure it, and explain the trade-off in their words",
+              "Do not claim: customer contracts, named enterprise accounts, or any mechanism that is not yours. Stay with what you built"
+            ],
+            where: "Your master reference (alfred_ section) and the Mercor page; nothing here is invented. Add your own real user moment before the day.",
+            url: "https://mercor.com/enterprise",
+            ans: { lead: "At alfred_ I work with everyday users, not engineers, so I've had to get good at explaining what the system does in their words.",
+              pts: ["Users make email rules in plain language from chat. Since people say what they mean loosely, I added a check that warns when a new rule matches none of their recent mail.",
+                    "People get a text and ask why, so I built a read-only tool that answers 'why was I notified'.",
+                    "I explain trade-offs in plain words: the model never writes a name or owner, it picks from real items and the code attaches the rest. We give up some flexibility and the assistant can't invent a person.",
+                    "I'd be honest that it's a consumer product, not an enterprise one, and the part that carries over is asking what they need and measuring it."],
+              close: "That's the habit I'd bring to an enterprise customer." } }
         ]
       },
       {

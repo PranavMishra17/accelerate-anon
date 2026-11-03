@@ -1,5 +1,5 @@
 {
- "lead": "One path for the Mercor onsite design round. First the brush-up: which of your Accelerate sessions to redo or skim, in order. Then three case studies drawn in full in the guide: a job scheduler and candidate search (both reported), and an AI interviewer with rubric grading (from what Mercor sells). Each topic: learn it, check yourself with multiple choice (say 'I don't know' when you don't, tick 'I'm guessing' when you are), explain the open question aloud, then compare and rate yourself.",
+ "lead": "One path for the Mercor onsite design round, which Mercor describes as a backend system end to end: data model and schema, API, block diagrams, behaviour under concurrent load, recovery from failures and trade-offs. First the brush-up: which of your Accelerate sessions to redo or skim. Then the round itself: how to run the 45 minutes, and the designs it is reported to ask, drawn in full in the guide (a job scheduler, contractor payouts, ticket holds). The AI designs (candidate search, an AI interviewer) are optional now. Each topic: learn it, check yourself with multiple choice (say 'I don't know' when you don't, tick 'I'm guessing' when you are), explain the open question aloud, then compare and rate yourself.",
  "modules": [
   {
    "id": "brushup",
@@ -10,7 +10,7 @@
     {
      "id": "sd-brushup",
      "title": "System design brush-up from your plan",
-     "brief": "The Accelerate sessions to redo or skim before the onsite, in priority order. The two design prompts Mercor is reported to ask, a job scheduler and candidate search, lean on the same few ideas: queues and backpressure, atomic claims, retries that are safe to repeat, and rate limits. Do the first four. Skim the next two. The rest is light.",
+     "brief": "The Accelerate sessions to redo or skim before the onsite, in priority order. The backend design prompts Mercor is reported to ask (a job scheduler, contractor payouts, ticket holds) lean on the same few ideas: queues and backpressure, atomic claims, retries that are safe to repeat, and rate limits. Do the first four. Skim the next two. The rest is light.",
      "points": [
       "Do first, w1a Throughput, latency, queues, backpressure: a scheduler is a queue with workers, and a search endpoint is a service under load. Both need a bound on the queue and a stated answer when it is full (shed load, reject, slow the producer). It also gives the p50 and p99 words to size things aloud",
       "Do, w4e Transactions and indexes: how a worker claims a job with SELECT ... FOR UPDATE SKIP LOCKED so two workers never take the same row and never wait. Also the retry write with ON CONFLICT, the lost update and write skew anomalies, compare-and-set, and partial indexes for the queue and for failed jobs. This is the job scheduler's core",
@@ -86,14 +86,124 @@
    ]
   },
   {
-   "id": "cases",
-   "title": "Three case studies, drawn in full",
-   "blurb": "Each topic opens the design itself from the guide: requirements, the high-level design built in stages, the deep dives, and the patterns used.",
+   "id": "round",
+   "title": "The system design round",
+   "blurb": "Mercor's backend round, end to end: how to run the 45 minutes, then the designs it is reported to ask, each drawn in full in the guide.",
    "sessions": [
-    "wc36",
-    "wc38"
+    "wc36"
    ],
    "topics": [
+    {
+     "id": "sd-run-45",
+     "title": "How to run 45 minutes of backend design",
+     "brief": "Mercor describes the round as a backend system end to end for a realistic scenario, on a whiteboard, no code: data model and schema, API, block diagrams, behaviour under concurrent load, recovery from failures, trade-offs. This topic is the order and the clock. The designs after it are practice for the same order.",
+     "points": [
+      "The order, from Mercor's own list: requirements and numbers, data model and schema, API, block diagram, the concurrency hazard, failure recovery, trade-offs. Follow it and say each name aloud, so the interviewer can see the structure",
+      "The minute plan, 45 in all. Requirements and numbers, 5. Data model and schema, 7. API, 5. Block diagram, built in stages, 8. The concurrency hazard, 8. Failure recovery, 8. Trade-offs and what you would do next, 4. Failure and concurrency get 16, because that is where the round is judged",
+      "Requirements and numbers (5 minutes): three functional requirements, what is out of scope, the delivery promise (at-least-once, with safe repeats), and the one or two numbers that change the design. Say that every number is an assumption. Do math only where it changes a decision",
+      "Data model and schema (7 minutes): the entities, which one is contended (many actors change it), money as integers in minor units, state as a column with legal moves, and the unique constraints that stop duplicates. Draw the tables with their keys, not a diagram of boxes",
+      "API (5 minutes): the write calls with an idempotency key, 202 and a status read for slow work, cursor pagination for lists, and the worker or provider side as its own small contract. Name the one field that makes retries safe",
+      "Block diagram (8 minutes): start with one node that works, name what breaks, and add one box at a time: a queue between choosing and doing, a worker pool, a sweeper, an outbox. State lives in the database; queues hold ids",
+      "The concurrency hazard (8 minutes): name it before you are asked. Two actors, one row. Pick the mechanism and say what the loser does: a unique constraint, a conditional update, SKIP LOCKED, a lease with a fencing token. Never hold a lock across a network call",
+      "Failure recovery (8 minutes): walk the arrows of the data flow and say what happens if the process dies on each one. Then the unknown outcome (a call that may or may not have happened), a sweeper that settles it, and a reconciliation that checks the books",
+      "Trade-offs (4 minutes): latency, cost, reliability, scalability, operational complexity, and what you would monitor. Say what you did not build and why. Mercor asks for why over tool names: justify each choice by the failure it prevents",
+      "Raise one failure case unprompted, state your numbers, and treat the interviewer as a collaborator: ask 'do you want me to go deeper here or move on?' at each stage. A collaborative conversation, not a performance"
+     ],
+     "production": [
+      "A design is judged on what happens when it breaks. The minutes spent on concurrency and failure are the ones that separate a passing answer from a diagram."
+     ],
+     "figs": [],
+     "links": [
+      {
+       "url": "../index.html#/s/w1a",
+       "label": "w1a Throughput, latency, queues, backpressure",
+       "why": "The vocabulary and the numbers for the first five minutes."
+      },
+      {
+       "url": "../index.html#/s/w4e",
+       "label": "w4e Transactions and indexes",
+       "why": "Unique constraints, conditional updates and SKIP LOCKED: the concurrency minute."
+      },
+      {
+       "url": "../index.html#/s/w4a",
+       "label": "w4a Things break at a hundred million",
+       "why": "Retries, timeouts and idempotency: the failure minutes."
+      },
+      {
+       "url": "../index.html#/w/wc36",
+       "label": "wc36 AI system design the Mercor way",
+       "why": "A checklist that also applies to backend designs: failure, operations, evaluation."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/contention/optimistic",
+       "label": "Guide: compare-and-set (contention)",
+       "why": "The standard answer to the concurrency hazard."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/multi-step/idempotency",
+       "label": "Guide: idempotency keys (multi-step)",
+       "why": "The standard answer to retries."
+      }
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Hello Interview: how to deliver a system design answer",
+       "url": "https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery",
+       "m": 15,
+       "why": "The order to run the 45 minutes in: requirements, core entities, API, high level, deep dives."
+      }
+     ],
+     "mcq": [
+      {
+       "q": "You have 45 minutes for a backend design. Which split puts the time where the round is judged?",
+       "o": [
+        "15 minutes requirements, 15 boxes, 15 on scale",
+        "5 requirements, 12 on schema and API, 8 on boxes, 16 on concurrency and failure, 4 on trade-offs",
+        "40 minutes of boxes, 5 for questions",
+        "20 on the schema, 20 on the API, 5 on the rest",
+        "All of it on scale math"
+       ],
+       "a": 1,
+       "why": "Mercor lists concurrent load and recovery from failures as what the design is checked on. Requirements and schema are short and sharp; the failure minutes are the longest block after the diagram."
+      },
+      {
+       "q": "You have drawn the boxes and not mentioned concurrency. What do you do?",
+       "o": [
+        "Say the database handles it",
+        "Name the row two actors both change, say what goes wrong, pick a mechanism, and say what the loser does",
+        "Add a global lock around everything",
+        "Put Redis in front and move on",
+        "Wait for the interviewer to ask"
+       ],
+       "a": 1,
+       "why": "Naming the hazard first shows the design has no gap. A mechanism is a unique key, a conditional update, SKIP LOCKED or a lease with a fence, and the loser retries or skips."
+      }
+     ],
+     "open": {
+      "q": "You are given a backend prompt you have not seen. Walk me through how you spend the 45 minutes, and what you say at each stage.",
+      "probe": "Where do the concurrency hazard and the failures come in, and how do you decide when to go deeper?",
+      "a": [
+       "Requirements and numbers in 5 minutes: three functions, what is out, the delivery promise, one or two numbers that change the design.",
+       "Schema in 7 and API in 5: entities, the contended one, constraints for duplicates, an idempotency key on writes.",
+       "Boxes in 8, built in stages from one node: say what breaks, then add one thing.",
+       "Concurrency in 8 and failure in 8: name the hazard, pick the mechanism, walk each arrow for a crash, handle unknown outcomes, add a sweeper and a reconciliation.",
+       "Trade-offs in 4: latency, cost, reliability, operations, what I did not build and what I would watch. Ask the interviewer where to go deeper at each stage."
+      ]
+     },
+     "say": [
+      "**I'll follow the order: requirements and numbers, schema, API, boxes, then concurrency and failure.**",
+      "**Before I draw:** the delivery promise, three functions, and the number that changes the design. Every number is an assumption.",
+      "**The schema first, not the boxes:** which entity is contended, money as integers, and the unique keys that stop a duplicate.",
+      "**I will name the concurrency hazard myself,** pick one mechanism, and say what the loser does. Then I walk each step and say what happens if the process dies there.",
+      "I'll finish with what I'd monitor, what I did not build, and why."
+     ],
+     "avoid": [
+      "Starting with boxes and a database brand before the requirements and the schema.",
+      "Waiting to be asked about concurrency or failure."
+     ]
+    },
     {
      "id": "sd-job-scheduler",
      "title": "Design a distributed job scheduler",
@@ -204,6 +314,386 @@
      ],
      "design": "job-scheduler"
     },
+    {
+     "id": "sd-contractor-payouts",
+     "title": "Design contractor payouts: a payment endpoint safe against timeouts, retries and crashes",
+     "brief": "Reported for Mercor as a charge-then-record payment endpoint, and as weekly payouts to thousands of contractors with an append-only ledger. Money moves in one system and the record lives in another, and no transaction covers both. Open the design in the guide below.",
+     "points": [
+      "How it is asked: correctness under failure, not scale. The reported follow-ups are a crash between the charge and the record, a timeout where the outcome is unknown, retries, concurrent submissions, and whether one database transaction can cover the external call (it cannot)",
+      "The rule that decides the design: paying twice is worse than paying late. Commit the intent first (a payout row marked submitting), call the provider with the payout id as the idempotency key, then record the result, the ledger entries and the outbox event in one transaction",
+      "Unknown is a state. A timeout means the payment may or may not have happened. Look it up by key or by reference, or wait for the webhook, and move on only on a definite answer. Never retry with a new key after an unknown",
+      "Idempotency at every hop: the client's key at your door with a hash of the body, a unique key on contractor and period, the payout id to the provider, unique ledger rows per payout, and a processed-events check on webhooks",
+      "Concurrency: two batch runs or two workers go for one payout. A unique constraint and a conditional update decide the winner in the database. Do not hold a lock across the provider call; use a state with a lease",
+      "The ledger is append-only. A mistake is a reversal plus a new entry with a reason and an actor, and an overpayment becomes a balance to recover. A daily reconciliation against the provider's report, by key, is the check that does not trust anything else",
+      "Say the limit: if the provider has no idempotency key or no status lookup, automatic retry after an unknown is not safe. Put the payout id in the reference field, search by it, and send what is left to a person"
+     ],
+     "production": [
+      "A double payment found by reconciliation pages a person at once, and an unknown payout older than five minutes means the sweeper or the provider is stuck."
+     ],
+     "figs": [],
+     "links": [
+      {
+       "url": "../index.html#/s/w4a",
+       "label": "w4a Things break at a hundred million",
+       "why": "Idempotency, retries with backoff, timeouts. The payment version of each."
+      },
+      {
+       "url": "../index.html#/s/w4e",
+       "label": "w4e Transactions and indexes",
+       "why": "Unique constraints, ON CONFLICT and conditional updates for the claim and the record."
+      },
+      {
+       "url": "../index.html#/s/w5f",
+       "label": "w5f Streams and events",
+       "why": "The outbox and at-least-once delivery."
+      },
+      {
+       "url": "../index.html#/s/w5e",
+       "label": "w5e APIs and the edge",
+       "why": "Idempotency keys on the front door, and the provider's rate limit as a token bucket."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/multi-step/idempotency",
+       "label": "Guide: idempotency keys",
+       "why": "One key per intent, carried through every hop."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/multi-step/outbox",
+       "label": "Guide: the outbox",
+       "why": "Events committed with the state change."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/multi-step/saga",
+       "label": "Guide: sagas",
+       "why": "Commit the intent, call the outside, record the result."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/multi-step/state-machine",
+       "label": "Guide: state machines",
+       "why": "Why unknown is a state."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/long-running/leases",
+       "label": "Guide: leases",
+       "why": "How a crashed worker's payout is given back."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/contention/atomic",
+       "label": "Guide: atomic operations",
+       "why": "A unique key and a conditional update, not check-then-act."
+      }
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "TechInterview: designing a payment system that never charges a card twice",
+       "url": "https://www.techinterview.org/post/3233476895/designing-a-payment-system-that-never-double-charges/",
+       "m": 12,
+       "why": "States, a unique idempotency key, a timeout as unknown, the outbox and nightly reconciliation."
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "ByteByteGo: how to avoid double payment",
+       "url": "https://blog.bytebytego.com/p/how-to-avoid-double-payment",
+       "m": 6,
+       "why": "At-least-once retries plus an at-most-once key, in one page. It does not cover a lost reply or a crash, which the guide design adds."
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Build a robust payments service using idempotency keys",
+       "url": "https://www.youtube.com/watch?v=m6DtqSb1BDM",
+       "m": 17,
+       "why": "Builds the key table and the retry path step by step.",
+       "yt": {
+        "id": "m6DtqSb1BDM",
+        "ch": "Arpit Bhayani"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "PracHub: make a charge-then-record payment endpoint safe against timeouts, retries and crashes",
+       "url": "https://prachub.com/interview-questions/make-a-charge-then-record-payment-endpoint-safe-against-timeouts-retries-and-crashes",
+       "m": 5,
+       "why": "The reported question as asked, with its follow-ups: no idempotency keys, testing the crash paths, monitoring stuck payments."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Stripe API reference: idempotent requests",
+       "url": "https://docs.stripe.com/api/idempotent_requests",
+       "m": 5,
+       "why": "What a real provider stores for a key, for how long, and what a different body does."
+      }
+     ],
+     "mcq": [
+      {
+       "q": "Your payout call to the provider times out. What state is the payout in?",
+       "o": [
+        "Failed, so retry with a new key",
+        "Succeeded, so record it",
+        "Unknown: look it up by key or reference, or wait for the webhook",
+        "Cancelled, and tell the contractor",
+        "Delete the row and start again"
+       ],
+       "a": 2,
+       "why": "A timeout does not say whether the money moved. A new key on a retry can pay twice. Only a definite answer from the provider moves the payout on."
+      },
+      {
+       "q": "Why not put the provider call inside the same database transaction as the payout record?",
+       "o": [
+        "Transactions are slow in Postgres",
+        "The provider is not part of the commit: a rollback cannot unsend money, and the transaction holds locks across the network",
+        "Providers do not accept payments from transactions",
+        "It would save the record twice",
+        "There is no reason; it is fine for small payments"
+       ],
+       "a": 1,
+       "why": "No transaction spans two systems. If the commit fails after the provider accepted, the money is gone with no record. Commit the intent first, then call, then record."
+      },
+      {
+       "q": "The weekly batch is run twice by mistake. What stops a second payout for the same week?",
+       "o": [
+        "A check that no payout exists, run first",
+        "A unique key on contractor and period, plus a conditional update that attaches each hour to one payout",
+        "A comment in the runbook",
+        "Running the batch only at night",
+        "Paying in smaller amounts"
+       ],
+       "a": 1,
+       "why": "A check-then-insert lets both runs pass the check. The unique key and the conditional update decide in the database, where the decision is atomic."
+      }
+     ],
+     "open": {
+      "q": "Design a payment endpoint that is safe against timeouts, retries and crashes. Start from the failures: what can go wrong between charging the provider and writing your own record?",
+      "probe": "What is the state after a timeout, and what does the system do when it finds a payout stuck in that state?",
+      "a": [
+       "The failure: money moves in the provider and the record is in my database, and nothing commits both. A crash between the two leaves money moved and no record.",
+       "Fix: commit a payout row as submitting first, call the provider with the payout id as the idempotency key, then record the result, the ledger entries and an outbox event in one transaction.",
+       "Unknown: a timeout is unknown, not failed. A sweeper looks the payment up by key or reference, and the webhook tells me too. A new key only after a confirmed failure.",
+       "Concurrency: a unique key on contractor and period, a conditional update for the claim, a lease for a dead worker, a fence on the record. No lock across the call.",
+       "Audit: an append-only ledger, corrections as reversals, and a daily reconciliation against the provider's report. Page on a double payment."
+      ]
+     },
+     "say": [
+      "**The problem is that the provider and my database cannot commit together.** So I commit the intent first, as a payout in submitting.",
+      "**Then I call the provider with the payout id as the key,** and record the result, the ledger entries and the outbox row in one transaction. A crash in any window leaves a row for a sweeper to check.",
+      "**A timeout is unknown, not failed.** I look it up by key, or wait for the webhook, and only a definite answer moves it on.",
+      "**Duplicates are stopped where they are atomic:** a unique key on contractor and period, and a conditional update. The ledger is append-only, and a daily reconciliation checks it against the provider.",
+      "If the provider has no key or no status lookup, I do not retry automatically. I search by reference and send the rest to a person."
+     ],
+     "avoid": [
+      "Promising exactly-once: say at-least-once attempts with one key and an at-most-once effect, and say where it depends on the provider.",
+      "Claiming payments experience you do not have. Say the discipline you do have: a record of intent before an outside call, keys, and a way to find out what happened."
+     ],
+     "design": "contractor-payouts"
+    },
+    {
+     "id": "sd-ticketmaster",
+     "title": "Ticketmaster: contention and holds",
+     "brief": "The classic baseline for two workers or two buyers wanting the same thing. The job scheduler's duplicate-run problem is the same contention: a conditional update, a hold with an expiry, a lock with a lease.",
+     "points": [
+      "Read the deep dives on holding a seat and on the queue in front of a hot event.",
+      "Carry over: a conditional update or a lease decides who wins; the loser retries or moves on.",
+      "Say it in the scheduler: a job is claimed the way a seat is held, with an expiry so a dead worker gives it back.",
+      "Holds: a seat is held with an expiry (a status and a time, or a Redis lock with a TTL), never by keeping a database lock open for the whole checkout. The expiry gives the seat back when a buyer walks away.",
+      "Double booking: the database is the backstop. A conditional update or optimistic concurrency means only one buyer's write succeeds, even if the hold layer fails. The loser is told and offered another seat.",
+      "Payment uncertainty: the same unknown outcome as in contractor payouts. The booking carries a key, the payment webhook is handled idempotently, and a hold that that expires while a payment is in flight is reconciled, not guessed."
+     ],
+     "design": "ticketmaster",
+     "links": [
+      {
+       "url": "https://www.hellointerview.com/learn/system-design/problem-breakdowns/ticketmaster",
+       "label": "Hello Interview: design Ticketmaster",
+       "why": "Holds, double booking, the waiting queue and what happens when the hold layer fails. Free to read."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/contention/reservation",
+       "label": "Guide: reservation (hold, then confirm)",
+       "why": "The hold with an expiry."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/contention/optimistic",
+       "label": "Guide: compare-and-set",
+       "why": "The database backstop against double booking."
+      }
+     ],
+     "mcq": [
+      {
+       "q": "Buyers hold a seat while they pay, which can take minutes. What is the right way to hold it?",
+       "o": [
+        "SELECT ... FOR UPDATE on the seat for the whole checkout",
+        "A status and an expiry (or a lock with a TTL), with a conditional update at confirmation as the backstop",
+        "No hold; whoever pays first wins and the rest get refunds",
+        "Lock the whole event",
+        "Hold the seat in browser storage"
+       ],
+       "a": 1,
+       "why": "A database lock held for minutes ties up connections and leaks if the buyer leaves. A hold with an expiry gives the seat back on its own, and the conditional update at the end keeps the sale correct even if the hold layer fails."
+      }
+     ],
+     "open": {
+      "q": "Design the booking path for a high-demand event so a seat is never sold twice. What happens when a buyer's payment outcome is unknown?",
+      "probe": "What holds the seat, what is the backstop if the hold layer fails, and what does the loser see?",
+      "a": [
+       "A hold: the seat gets a status and an expiry when a buyer starts checkout, so an abandoned checkout gives it back.",
+       "A backstop: confirming is a conditional update on the seat, so only one buyer's write succeeds even if the hold layer is down.",
+       "Payment: the booking has a key, the payment webhook is idempotent, and an unknown outcome is looked up, not guessed.",
+       "Spikes: a waiting queue in front of the hot event, and a clear message to the loser."
+      ]
+     },
+     "say": [
+      "**A seat is held with an expiry, not locked for the whole checkout.**",
+      "**The database is the backstop:** confirming is a conditional update, so only one buyer wins even if the hold layer fails.",
+      "**A payment that times out is unknown.** The booking has a key and the webhook is idempotent, so I look it up instead of guessing.",
+      "For a hot on-sale I'd put a waiting queue in front and tell the loser plainly."
+     ],
+     "avoid": [
+      "Keeping a database row lock open while a person types a card number."
+     ]
+    },
+    {
+     "id": "sd-other-prompts",
+     "title": "Other prompts reported",
+     "brief": "Four more prompts reported for the Mercor backend round, each with a core hazard and a first move. A few lines each, so you recognise the shape in the room and reach for the right guide technique. Not full designs.",
+     "points": [
+      "Social feed (stable pagination, deletions, privacy). Hazard: pages that shift while posts are added or removed, so a reader sees duplicates or skips, and a deleted or private post that keeps showing from a cache. Move: cursor pagination on (created_at, id) instead of offsets; fan out on write for normal accounts and on read for huge ones; check privacy and deletion at read time against the source of truth, with tombstones so caches drop the post",
+      "Dataset deep copy (a dataset with its tasks, responses and grades). Hazard: a duplicate copy request, a worker that dies half way, a stale worker that wakes up and writes, and edits during the copy. Move: an idempotency key on the request, a background job with checkpoints and a stored old-to-new id map, a claim with an expiring lease and a fencing token, the copy hidden until a final atomic flip, and cleanup for failed copies",
+      "Check-and-insert for about a million IDs (latency, memory, accuracy). Hazard: check-then-insert is a race, so two requests both see 'not there' and both insert. Move: the database unique key is the truth, with INSERT ... ON CONFLICT DO NOTHING. A hash set of a million 8-byte IDs is about 8 MB and fits in memory; a Bloom filter (about 1.2 MB at a 1% false-positive rate) only skips lookups for IDs that are surely new, and never replaces the constraint",
+      "Project-to-contractor matching (hard eligibility, capacity, cold start, feedback). Hazard: two projects take the same contractor's last free hours, and new contractors with no history never get shown. Move: hard filters first (skills, availability, rate, region), then a ranked top-k; reserve capacity with a conditional update so only one project wins the hours; leave room for exploration of new contractors; feed outcomes back and evaluate on a held-out set",
+      "The common move: find the row two actors both change, put the decision in the database (unique key, conditional update, lease with a fence), make every retry safe with a key, and say what the loser does"
+     ],
+     "production": [
+      "In each of these the quiet failure is a duplicate or a stale copy that no error reports, so the design needs an invariant check or reconciliation, not only error alerts."
+     ],
+     "figs": [],
+     "links": [
+      {
+       "url": "https://prachub.com/companies/mercor/categories/system-design",
+       "label": "PracHub: reported Mercor system design questions",
+       "why": "The prompts above, with dates. Some pages are thin or locked."
+      },
+      {
+       "url": "https://prachub.com/interview-questions/design-an-api-to-deep-copy-a-dataset-with-its-tasks-model-responses-and-grades",
+       "label": "PracHub: deep-copy a dataset with its tasks, model responses and grades",
+       "why": "The four parts: copy API and id remapping, large copies as jobs, duplicate requests and leases, edits during the copy."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/real-time/fanout-mode",
+       "label": "Guide: fan-out on write or on read (feed)",
+       "why": "How a post reaches readers."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/scaling-reads/invalidation",
+       "label": "Guide: cache invalidation (feed)",
+       "why": "Making a deletion reach every cache."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/long-running/leases",
+       "label": "Guide: leases (deep copy)",
+       "why": "An expiring claim on the copy job."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/long-running/checkpointing",
+       "label": "Guide: checkpointing (deep copy)",
+       "why": "Resume a large copy instead of restarting."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/contention/single-writer",
+       "label": "Guide: single writer (deep copy)",
+       "why": "One worker owns a copy at a time."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/multi-step/idempotency",
+       "label": "Guide: idempotency keys (deep copy, check-and-insert)",
+       "why": "One copy for a repeated request."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/contention/atomic",
+       "label": "Guide: atomic operations (check-and-insert)",
+       "why": "INSERT ... ON CONFLICT instead of check-then-insert."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/scaling-reads/indexing",
+       "label": "Guide: indexing (check-and-insert)",
+       "why": "A unique index is the exact answer."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/contention/reservation",
+       "label": "Guide: reservation (matching capacity)",
+       "why": "Hold a contractor's hours, then confirm."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/patterns/search/topk",
+       "label": "Guide: top-k (matching)",
+       "why": "Rank a short list, not the pool."
+      },
+      {
+       "url": "../SYSTEM%20DESIGN.html#/designs/job-scheduler/deepdives",
+       "label": "Guide design: job scheduler, deep dives",
+       "why": "Leases, fencing and idempotency worked through in full: the deep-copy answer uses the same moves."
+      }
+     ],
+     "mcq": [
+      {
+       "q": "You must check whether an ID exists and insert it if not, for about a million IDs and many concurrent requests. What is the safest core?",
+       "o": [
+        "SELECT, then INSERT if the row is missing",
+        "A unique key and INSERT ... ON CONFLICT DO NOTHING, with a Bloom filter only as an optional shortcut",
+        "A Bloom filter alone",
+        "An in-memory set on each server",
+        "A global lock on the table"
+       ],
+       "a": 1,
+       "why": "Check-then-insert is a race. The unique key decides atomically and is exact. A Bloom filter has false positives, so it can skip lookups for new IDs but cannot be the answer."
+      },
+      {
+       "q": "A deep copy of a large dataset is claimed by a worker that then stalls for a minute. A second worker takes over. What stops the first one from corrupting the copy when it wakes up?",
+       "o": [
+        "Nothing; the last writer wins",
+        "A fencing token: every claim bumps a number, and writes must present the current one",
+        "A longer lease",
+        "Running the copy twice and keeping the better result",
+        "Locking the source dataset"
+       ],
+       "a": 1,
+       "why": "A lease alone cannot tell a paused holder from a dead one. The fence is checked where the write lands, so the stale worker is rejected."
+      }
+     ],
+     "open": {
+      "q": "Pick one of these: a social feed, a deep copy of a dataset, check-and-insert for a million IDs, or matching projects to contractors. Name the core hazard and your first move.",
+      "probe": "What does the loser of the race see, and which part of your answer would break if a retry arrived twice?",
+      "a": [
+       "Feed: shifting pages and deleted content that stays visible. Cursor pagination, privacy and deletion checked at read time.",
+       "Deep copy: duplicates, dead and stale workers, edits during the copy. Idempotency key, checkpoints with an id map, a lease with a fence, a hidden copy and an atomic flip.",
+       "Check-and-insert: a race on check-then-insert. A unique key with ON CONFLICT is the truth; a Bloom filter is a shortcut.",
+       "Matching: two projects take the same hours. Hard filters, ranked top-k, capacity reserved by a conditional update, exploration for new contractors."
+      ]
+     },
+     "say": [
+      "**For any of these I look for the row two actors both change,** and put the decision in the database.",
+      "**A feed:** cursor pagination so pages do not shift, and privacy and deletion checked at read time.",
+      "**A deep copy:** an idempotency key, a background job with checkpoints, a lease with a fence, and the copy hidden until a final atomic flip.",
+      "**Check-and-insert:** a unique key with ON CONFLICT. A Bloom filter only saves lookups and never replaces it.",
+      "**Matching:** hard filters, ranked top-k, and capacity reserved with a conditional update."
+     ],
+     "avoid": [
+      "Using a Bloom filter or an in-memory set as the source of truth for uniqueness."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "optional-ai",
+   "title": "Optional: AI designs",
+   "blurb": "Not on the 11 November agenda, which is a backend round. Kept for the follow-ups if the interviewer asks about AI systems: retrieval, evaluation, model behaviour.",
+   "sessions": [
+    "wc38"
+   ],
+   "topics": [
     {
      "id": "sd-candidate-search",
      "title": "Design candidate search for a job description",
@@ -422,19 +912,8 @@
   {
    "id": "related",
    "title": "Related designs, for the follow-ups",
-   "lead": "Designs already in the guide that cover the follow-ups the two reported prompts lead to. Read the deep dives, not the whole design.",
+   "lead": "Designs already in the guide that cover the AI follow-ups. Read the deep dives, not the whole design.",
    "topics": [
-    {
-     "id": "sd-ticketmaster",
-     "title": "Ticketmaster: contention and holds",
-     "brief": "The classic baseline for two workers or two buyers wanting the same thing. The job scheduler's duplicate-run problem is the same contention: a conditional update, a hold with an expiry, a lock with a lease.",
-     "points": [
-      "Read the deep dives on holding a seat and on the queue in front of a hot event.",
-      "Carry over: a conditional update or a lease decides who wins; the loser retries or moves on.",
-      "Say it in the scheduler: a job is claimed the way a seat is held, with an expiry so a dead worker gives it back."
-     ],
-     "design": "ticketmaster"
-    },
     {
      "id": "sd-notebooklm",
      "title": "NotebookLM: retrieval and grounded answers",
