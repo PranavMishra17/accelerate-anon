@@ -1,0 +1,423 @@
+{
+ "lead": "One path for the Mercor onsite design round. First the brush-up: which of your Accelerate sessions to redo or skim, in order. Then three case studies drawn in full in the guide: a job scheduler and candidate search (both reported), and an AI interviewer with rubric grading (from what Mercor sells). Each topic: learn it, check yourself with multiple choice (say 'I don't know' when you don't, tick 'I'm guessing' when you are), explain the open question aloud, then compare and rate yourself.",
+ "modules": [
+  {
+   "id": "brushup",
+   "title": "Brush up your system design",
+   "blurb": "Your own Accelerate sessions, in the order that pays most for the two reported prompts.",
+   "sessions": [],
+   "topics": [
+    {
+     "id": "sd-brushup",
+     "title": "System design brush-up from your plan",
+     "brief": "The Accelerate sessions to redo or skim before the onsite, in priority order. The two design prompts Mercor is reported to ask, a job scheduler and candidate search, lean on the same few ideas: queues and backpressure, atomic claims, retries that are safe to repeat, and rate limits. Do the first four. Skim the next two. The rest is light.",
+     "points": [
+      "Do first, w1a Throughput, latency, queues, backpressure: a scheduler is a queue with workers, and a search endpoint is a service under load. Both need a bound on the queue and a stated answer when it is full (shed load, reject, slow the producer). It also gives the p50 and p99 words to size things aloud",
+      "Do, w4e Transactions and indexes: how a worker claims a job with SELECT ... FOR UPDATE SKIP LOCKED so two workers never take the same row and never wait. Also the retry write with ON CONFLICT, the lost update and write skew anomalies, compare-and-set, and partial indexes for the queue and for failed jobs. This is the job scheduler's core",
+      "Do, w4a Things break at a hundred million: retries with exponential backoff and jitter, timeouts, dead-letter queues, and idempotency beyond payments. Every external call in both designs (a model, a customer API) fails sometimes, and 'what happens when it fails' is on Mercor's list",
+      "Do, w5e APIs and the edge: the token bucket, 429 with Retry-After, and idempotency keys on the front door. Rate limits matter twice here: protecting your service from tenants, and staying inside a model provider's limits",
+      "Skim, w4d Replication and consistency: leader and failover, fencing and consensus in outline. This is what sits behind 'only one scheduler instance may fire a job' and a lease that expires",
+      "Skim, w5f Streams and events: queue against log, at-least-once delivery, the outbox, dead-letter. Useful when a scheduler publishes events or a search index is fed by changes",
+      "Light review, w5a Caching: round 2 covered it. Reread the key terms and the stampede idea, which returns for cached embeddings and cached model calls",
+      "Skim if time, w2a How work splits and w3a Where a hundred million things live: hot keys and sharding for job ids and tenants, and back-of-envelope sizing for rows and vectors"
+     ],
+     "links": [
+      {
+       "url": "../index.html#/s/w1a",
+       "label": "w1a Throughput, latency, queues, backpressure (do)",
+       "why": "Bounded queues and what to do when full. The vocabulary for both designs."
+      },
+      {
+       "url": "../index.html#/s/w4e",
+       "label": "w4e Transactions and indexes (do)",
+       "why": "Atomic claims with SKIP LOCKED, ON CONFLICT retries, partial indexes. The scheduler's core."
+      },
+      {
+       "url": "../index.html#/s/w4a",
+       "label": "w4a Things break at a hundred million (do)",
+       "why": "Backoff with jitter, timeouts, dead-letter, idempotency. Failure of every external call."
+      },
+      {
+       "url": "../index.html#/s/w5e",
+       "label": "w5e APIs and the edge (do)",
+       "why": "Token bucket, 429 and Retry-After, idempotency keys."
+      },
+      {
+       "url": "../index.html#/s/w4d",
+       "label": "w4d Replication and consistency (skim)",
+       "why": "Leader election, failover and fencing behind a lease."
+      },
+      {
+       "url": "../index.html#/s/w5f",
+       "label": "w5f Streams and events (skim)",
+       "why": "At-least-once, the outbox, dead-letter, replay."
+      },
+      {
+       "url": "../index.html#/s/w5a",
+       "label": "w5a Caching (light review)",
+       "why": "Round 2 covered it; keep the key terms warm."
+      },
+      {
+       "url": "../index.html#/s/w2a",
+       "label": "w2a How work splits (skim if time)",
+       "why": "Hot keys and sharding for job ids and tenants."
+      },
+      {
+       "url": "../index.html#/s/w3a",
+       "label": "w3a Where a hundred million things live (skim if time)",
+       "why": "Sizing rows, vectors and traces out loud."
+      }
+     ],
+     "mcq": [
+      {
+       "q": "Which two Accelerate sessions give the job scheduler its core: the atomic claim and the safe retry?",
+       "o": [
+        "w2a and w3a",
+        "w4e and w4a",
+        "w5a and w5f",
+        "w1a and w5a",
+        "w4d and w5e"
+       ],
+       "a": 1,
+       "why": "w4e has the SKIP LOCKED claim and the ON CONFLICT retry write; w4a has backoff, dead-letter and idempotency. The others support them."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cases",
+   "title": "Three case studies, drawn in full",
+   "blurb": "Each topic opens the design itself from the guide: requirements, the high-level design built in stages, the deep dives, and the patterns used.",
+   "sessions": [
+    "wc36",
+    "wc38"
+   ],
+   "topics": [
+    {
+     "id": "sd-job-scheduler",
+     "title": "Design a distributed job scheduler",
+     "brief": "Reported as a 45 minute system design in the Mercor onsite (three reports). Run jobs now or at a time or on a schedule, across many workers, without losing one or running one twice by mistake. Open the design in the guide below; the lines above it say how Mercor tends to ask.",
+     "points": [
+      "How it is asked: practical over theoretical. They want the tradeoffs on reliability, scale and operations, and what happens when a worker dies mid-job. Start with requirements and numbers, not boxes",
+      "The core loop: jobs are rows with a status and a time to run. A worker claims due jobs, runs them, and records the result. The claim must be atomic, so two workers never take the same job",
+      "Failure: a worker can die after taking a job. A lease with an expiry lets another worker take it back. Delivery is at-least-once, so jobs must be safe to run twice (idempotent), with a key they can check",
+      "Retries and limits: backoff with jitter, a retry cap, then a dead-letter state a person can look at. A per-tenant limit stops one customer from starving the rest",
+      "Scale: partition by job id or tenant, keep the due-jobs query on a partial index, and watch for a hot partition. A single scheduler that fires jobs needs a leader and a fencing token so a stale leader cannot fire twice",
+      "Operate it: queue age, lateness (start time minus due time), failure rate and retries as the dashboard. Late jobs, not CPU, are the user-facing symptom"
+     ],
+     "production": [
+      "Lateness, the gap between due time and start time, is the metric that pages someone; queue depth alone does not say whether jobs are on time."
+     ],
+     "figs": [],
+     "links": [
+      {
+       "url": "../index.html#/s/w4e",
+       "label": "w4e Transactions and indexes",
+       "why": "The claim and the retry write, with the SQL."
+      },
+      {
+       "url": "../index.html#/s/w4a",
+       "label": "w4a Things break at a hundred million",
+       "why": "Retries, backoff, dead-letter and idempotency."
+      },
+      {
+       "url": "../index.html#/s/w4d",
+       "label": "w4d Replication and consistency",
+       "why": "Leader and fencing, for the single scheduler."
+      },
+      {
+       "url": "../index.html#/s/w5e",
+       "label": "w5e APIs and the edge",
+       "why": "Per-tenant rate limits and idempotency keys."
+      },
+      {
+       "url": "../index.html#/w/wc36",
+       "label": "wc36 AI system design the Mercor way",
+       "why": "The checklist to run on any design, including failure and operations."
+      }
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Hello Interview: design a distributed job scheduler",
+       "url": "https://www.hellointerview.com/learn/system-design/problem-breakdowns/job-scheduler",
+       "m": 30,
+       "why": "A commenter in the reports says this walkthrough was enough preparation for the round."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Hello Interview: how to deliver a system design answer",
+       "url": "https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery",
+       "m": 15,
+       "why": "The order to run the 45 minutes in: requirements, API, high level, deep dives."
+      }
+     ],
+     "mcq": [
+      {
+       "q": "Two workers poll the jobs table at the same moment. Which claim keeps them from taking the same job, without one waiting for the other?",
+       "o": [
+        "Read the due rows, then update them by id in a second statement",
+        "SELECT ... FOR UPDATE SKIP LOCKED, then mark them running in the same transaction",
+        "Lock the whole table while claiming",
+        "Add a random sleep before each poll",
+        "Run only one worker"
+       ],
+       "a": 1,
+       "why": "Two statements leave a gap where both read the same rows. A table lock serialises every worker. SKIP LOCKED lets each take rows the other does not hold."
+      },
+      {
+       "q": "A worker takes a job, runs half of it and dies. What makes giving the job to another worker safe?",
+       "o": [
+        "Exactly-once delivery from the queue",
+        "A lease that expires, plus a job that is idempotent and checks its key",
+        "Never retry, and alert a person",
+        "Run every job on two workers at once",
+        "Keep the worker's memory on disk"
+       ],
+       "a": 1,
+       "why": "Delivery is at-least-once in practice, so the lease lets the job be reclaimed and idempotency makes a second run harmless."
+      }
+     ],
+     "open": {
+      "q": "Design a distributed job scheduler. Open with requirements, then walk the claim, a worker dying mid-job, and how you know jobs are running on time.",
+      "probe": "What stops two workers running the same job, and what stops one customer starving the rest?",
+      "a": [
+       "Requirements first: one-off and recurring jobs, how many per second, how late is too late, whether a job may run twice.",
+       "Claim: jobs are rows; a worker takes due rows with SKIP LOCKED in one short transaction and marks them running with a lease.",
+       "Failure: if the lease expires, another worker reclaims the job. Jobs are idempotent with a key, so a second run is harmless. Retries use backoff with jitter, then a dead-letter state.",
+       "Fairness and scale: a per-tenant limit, partitioned by tenant or job id, with the due query on a partial index. One scheduler leader fires recurring jobs, with a fencing token.",
+       "Operate: lateness, queue age, retries and failure rate on a dashboard, with an alert on lateness."
+      ]
+     },
+     "say": [
+      "**I'd start with requirements and numbers, then the claim.**",
+      "**The claim:** jobs are rows, and a worker takes due ones with SKIP LOCKED so two never get the same job and none waits.",
+      "**A dying worker:** a lease expires and the job is reclaimed. Delivery is at-least-once, so jobs are idempotent and carry a key.",
+      "**Retries:** backoff with jitter, a cap, then a dead-letter state a person can inspect.",
+      "I'd watch lateness first, because that is what the user feels."
+     ],
+     "avoid": [
+      "Promising exactly-once execution: say at-least-once with idempotent jobs."
+     ],
+     "design": "job-scheduler"
+    },
+    {
+     "id": "sd-candidate-search",
+     "title": "Design candidate search for a job description",
+     "brief": "Reported both as a 45 minute system design and as a 90 minute build against an evaluation endpoint. Given a job description, return the best candidates from a large pool, and know how good the results are.",
+     "points": [
+      "How it is asked: practical, about AI systems: retrieval, evaluation, model behaviour, failure modes, monitoring. Open with requirements and the numbers (how many candidates, queries per day, how fresh), then the shape",
+      "The shape: filters on hard facts, then keyword and embedding retrieval fused, then a rerank of a short list, with an LLM used where it is worth the cost (extracting fields, rewriting the query, explaining a match)",
+      "Cost and latency: cheap stages cover the whole pool, expensive stages see only the top few dozen. Embeddings are computed once per profile and refreshed on change; per-query model calls are counted and capped",
+      "Evaluation is half the design: a labelled set of jobs and good candidates, precision at 5 and recall, a held-out slice, and failures read by hand. Without it you cannot say a change helped",
+      "Failure modes: a wrong hard filter drops the right person, keyword stuffing wins, a model invents a skill during extraction, stale profiles rank first, a bias in the labels becomes a bias in the results",
+      "In production: monitor result click and hire signals, score drift after a model change, latency by stage, and the share of queries with no good result. Roll out a new ranker behind a comparison on real queries",
+      "For the build version of this, see wc38; for the design checklist, wc36"
+     ],
+     "production": [
+      "A new ranker or embedding model is rolled out against the old one on the same queries first, because a silent model update moves every score."
+     ],
+     "figs": [],
+     "links": [
+      {
+       "url": "../index.html#/w/wc36",
+       "label": "wc36 AI system design the Mercor way",
+       "why": "Candidate search is the first of its four designs."
+      },
+      {
+       "url": "../index.html#/w/wc38",
+       "label": "wc38 The search build: iterate against a score",
+       "why": "The 90 minute build version, with a runnable scorer."
+      },
+      {
+       "url": "../index.html#/w/wc35",
+       "label": "wc35 The build",
+       "why": "The general build workflow and presentation."
+      }
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Eugene Yan: system design for discovery",
+       "url": "https://eugeneyan.com/writing/system-design-for-discovery/",
+       "m": 12,
+       "why": "Retrieval then ranking as separate stages, with the metrics for each."
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Anthropic: contextual retrieval",
+       "url": "https://www.anthropic.com/news/contextual-retrieval",
+       "m": 8,
+       "why": "Keywords, embeddings and a reranker together, with measured results."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Chip Huyen: building a generative AI platform",
+       "url": "https://huyenchip.com/2024/07/25/genai-platform.html",
+       "m": 25,
+       "why": "Where retrieval, guardrails, caching and evaluation sit in a production stack."
+      }
+     ],
+     "mcq": [
+      {
+       "q": "You can afford an LLM call on about 50 candidates per query, from a pool of 100,000. Where does the LLM go?",
+       "o": [
+        "On every candidate, once per query",
+        "On the top 50 from a cheap stage, to rerank or explain them",
+        "Only on the job description, never on candidates",
+        "On a random sample of 50",
+        "Nowhere; LLMs cannot rank"
+       ],
+       "a": 1,
+       "why": "The cheap stages (filters, keywords, embeddings) cover the pool; the expensive model sees only the short list, where order matters most."
+      },
+      {
+       "q": "Your tuning score keeps rising but a held-out set of jobs does not move. What does that suggest?",
+       "o": [
+        "The held-out set is broken",
+        "You are overfitting to the tuning data",
+        "The model needs more parameters",
+        "Precision at 5 is the wrong metric",
+        "Nothing; only the tuning score matters"
+       ],
+       "a": 1,
+       "why": "Gains that do not carry to unseen jobs mean the change fits the tuning data, not the problem."
+      }
+     ],
+     "open": {
+      "q": "Design candidate search: a recruiter pastes a job description and wants the best candidates. How do you build it, and how do you know it works?",
+      "probe": "Where does the LLM earn its cost, and what is your evaluation set?",
+      "a": [
+       "Requirements and numbers: pool size, queries a day, freshness, how bad a miss is.",
+       "Shape: hard filters, then keyword plus embeddings fused, then a rerank of the top few dozen. LLM extraction of fields and query rewriting where messy text hides the signal.",
+       "Cost: embed each profile once and refresh on change; cap model calls per query; cache.",
+       "Evaluation: labelled jobs and candidates, precision at 5 and recall, a held-out slice, failures read by hand.",
+       "Failures and monitoring: wrong filters, keyword stuffing, invented skills, stale profiles; watch score drift and the no-good-result rate."
+      ]
+     },
+     "say": [
+      "**I'd start with the pool size and what a miss costs, then the shape.**",
+      "**The shape:** filters, then keywords and embeddings together, then a rerank on the short list. The LLM goes where it earns its cost.",
+      "**Evaluation:** a labelled set with a held-out slice, and I read the failures by hand. In MetaRAG I measured retrieval changes the same way.",
+      "**Failures:** a wrong filter, keyword stuffing, an invented skill, stale profiles.",
+      "And I'd compare a new ranker to the old on the same queries before it ships."
+     ],
+     "avoid": [
+      "Calling a toy label set a benchmark, or claiming a gain that was not measured."
+     ],
+     "design": "candidate-search"
+    },
+    {
+     "id": "sd-ai-interviewer",
+     "title": "Design an AI interviewer with rubric grading",
+     "brief": "A design taken from what Mercor sells (wc36): an AI that asks a candidate questions, listens, follows up and grades the answers against a rubric. It is not reported as an onsite prompt, so treat it as likely practice for the AI-systems design round.",
+     "points": [
+      "How it would be asked: practical, about model behaviour, evaluation and failure modes. Start with who uses the grade and what a wrong grade costs, then the pipeline",
+      "The pipeline: a rubric of named criteria, a question flow that can follow up, a transcript, a grader that scores each criterion with evidence from the transcript, and a human review path for low-confidence or high-stakes cases",
+      "Grade one criterion at a time, with its own prompt, a short scale with written anchors, and a quote as evidence. One broad 'rate this candidate' call is vague and unstable",
+      "Trusting the grader: compare it with human graders on a labelled sample, measure agreement per criterion, and repeat the same answer to measure consistency. Fix the rubric text before the model",
+      "Failure modes: a long confident answer scores high, bias by accent or style, prompt injection from the candidate's answer, a cheating candidate reading from another tool, and a grader that drifts after a model update",
+      "Cost, latency and ops: a live conversation needs fast turns, grading can run after the call in a queue, and every grade stores the rubric version, the model version and the evidence so it can be replayed and audited",
+      "For the design checklist and the other three Mercor-style designs, see wc36"
+     ],
+     "production": [
+      "Every grade stores the rubric version, model version and transcript evidence, so a disputed grade can be replayed and a rubric change can be tested against past interviews."
+     ],
+     "figs": [],
+     "links": [
+      {
+       "url": "../index.html#/w/wc36",
+       "label": "wc36 AI system design the Mercor way",
+       "why": "The AI interviewer is one of its four designs, with the evaluation checklist."
+      },
+      {
+       "url": "../index.html#/w/wc38",
+       "label": "wc38 The search build",
+       "why": "Same habit: a score, a held-out slice, failures read by hand."
+      }
+     ],
+     "res": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Hamel Husain: using an LLM as a judge",
+       "url": "https://hamel.dev/blog/posts/llm-judge/",
+       "m": 12,
+       "why": "Build the judge by checking it against human labels, one criterion at a time."
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Anthropic: demystifying evals for AI agents",
+       "url": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
+       "m": 15,
+       "why": "Graders, what a score shows, and how to calibrate."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Anthropic: building effective agents",
+       "url": "https://www.anthropic.com/engineering/building-effective-agents",
+       "m": 15,
+       "why": "Workflows against agents: how much the model should decide in the interview flow."
+      }
+     ],
+     "mcq": [
+      {
+       "q": "How do you decide whether an LLM grader can be trusted with a rubric?",
+       "o": [
+        "If it gives confident explanations",
+        "Compare its scores with human graders on a labelled sample and measure agreement per criterion",
+        "If it uses the largest model available",
+        "If it scores the same on a second run, whatever the humans think",
+        "You cannot; use only humans"
+       ],
+       "a": 1,
+       "why": "Agreement with human labels is the test. Consistency alone can mean consistently wrong, and confidence is not evidence."
+      },
+      {
+       "q": "The same answer gets 3 on one run and 5 on another. What do you fix first?",
+       "o": [
+        "Switch to a bigger model",
+        "Tighten the rubric: separate criteria, a short scale with written anchors, and require quoted evidence",
+        "Average ten runs and hide the spread",
+        "Remove the rubric and let the model decide",
+        "Ignore it; scores vary"
+       ],
+       "a": 1,
+       "why": "Vague criteria cause unstable grades. Anchors and per-criterion prompts fix the cause; averaging only hides it."
+      }
+     ],
+     "open": {
+      "q": "Design an AI interviewer that grades candidates against a rubric. How do you make the grades trustworthy?",
+      "probe": "How do you know the grader agrees with a human, and what happens on a low-confidence grade?",
+      "a": [
+       "Who uses the grade and what a wrong one costs, to set the bar.",
+       "Pipeline: rubric, question flow with follow-ups, transcript, a grader per criterion with quoted evidence, and a human review path.",
+       "Trust: compare with human graders on a labelled sample, measure agreement per criterion, measure repeat consistency, and fix the rubric text first.",
+       "Failures: confident long answers, style bias, prompt injection in an answer, cheating, drift after a model update.",
+       "Ops: grade after the call in a queue, store rubric and model versions and evidence, replay old interviews to test a change."
+      ]
+     },
+     "say": [
+      "**I'd start with what a wrong grade costs, then the pipeline.**",
+      "**One criterion at a time:** a short scale with written anchors and a quote as evidence, not one broad rating.",
+      "**Trust the grader by measuring it:** agreement with human graders on a labelled sample, and the same answer repeated for consistency. In MetaRAG I built an automated evaluation framework the same way.",
+      "**Failures:** a long confident answer, style bias, injection from an answer, drift after a model update.",
+      "Low-confidence and high-stakes grades go to a person, with the evidence attached."
+     ],
+     "avoid": [
+      "Saying the grader is accurate without a human-labelled sample to show it."
+     ],
+     "design": "ai-interviewer"
+    }
+   ]
+  }
+ ]
+}

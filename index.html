@@ -789,8 +789,8 @@
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
 <script src="data/streams.js?v=d0b499a4"></script>
-<script src="data/reading.js?v=8b64761f"></script>
-<script src="data/sheets.js?v=185b468b"></script>
+<script src="data/reading.js?v=d2cd7643"></script>
+<script src="data/sheets.js?v=550fc356"></script>
 <script src="site/res.js?v=c33c7564"></script>
 <script src="site/nlm.js?v=2c36ecf8"></script>
 <script src="site/sheet.js?v=d5ed86a7"></script>
@@ -3553,6 +3553,119 @@
                 "The race: if the retry arrives while the first is still running, I'd store the in-flight Task under the key before the first await, so the second caller waits on the same Task. It's the same single-flight idea as the cache.",
                 "Details: pass the key to the provider too, since I might crash after it succeeded. Reject a reused key with a different amount. Don't store a failure as the answer. Expire keys after the longest retry window."],
               close: "So a retry becomes safe to send, which is what I want when the network can drop any reply." } }
+        ]
+      },
+      {
+        id: "wc38", track: "Systems", forWhat: "Mercor, onsite (date to be set)", len: "1h 30m", est: 90,
+        name: "The search build: iterate against a score",
+        blurb: "The reported candidate-search build: a baseline in 15 minutes, then one change at a time against an evaluation endpoint, without overfitting it, and a 15 minute discussion.",
+        intro: "AceOffer's synthesis of 20 Mercor reports describes a build of about 90 minutes: 75 minutes building with LLMs allowed against an evaluation endpoint, then 15 minutes on how you used the LLMs, the design and the debugging. The prompt is paraphrased in those reports, so this is a rehearsal of the loop, not a copy of the task. It is the build version of the guide's candidate search case study (SYSTEM%20DESIGN.html#/designs/candidate-search/requirements), and it comes after wc35 (the general build workflow) and alongside wc36 (the design version). It does not repeat the coding problems on the Coding tab.",
+        steps: [
+          { t: "The round as reported: 75 minutes building against a score, 15 minutes of discussion", m: 10,
+            out: "Describe the candidate-search build round: how long, what you are given, what is scored, and what the last 15 minutes are for.",
+            d: "This is a reported round, not Mercor's published format. AceOffer's synthesis of 20 candidate reports says there is a build of about 90 minutes: 75 building with LLMs allowed, against an evaluation endpoint you call to get a score, then 15 minutes of discussion on how you used the LLMs, the design and debugging. The prompt is paraphrased there, not quoted, so treat the details as likely, not certain. A Blind post from 26 August 2026 describes a second part that used AI to beat a baseline, then a line-by-line review. Read the guide's candidate search case study first: this session is the build version of that design.",
+            pts: [
+              "The shape: a job description comes in, a ranked list of candidate profiles goes out, and an evaluation endpoint tells you how good your ranking is. You submit, you see a number, you improve it",
+              "LLMs are allowed in this round. The first hour of the separate coding round is the one with no LLMs; do not mix the two up. Ask at the start which tools are allowed and what the endpoint returns (one number, or per-query detail)",
+              "What is being judged is how you work, not only the final score: a baseline early, one change at a time, a record of what helped, honest reading of failures",
+              "The last 15 minutes are a conversation about the build. Expect: how you used the LLMs, why this design, what you debugged, and what you would do with another hour",
+              "Unknowns to settle in the first two minutes: how many queries and candidates, whether fields are structured or free text, whether the endpoint is rate limited, and whether there is a call budget on submissions",
+              "Related: wc35 is the general build workflow and presentation; wc36 is the system design version of candidate search. This session is the score-driven loop between them"
+            ],
+            where: "AceOffer, Mercor interview process (20 reports, 3 Nov 2026); Blind, a Mercor candidate, 26 Aug 2026; the guide's candidate search case study",
+            url: "https://aceoffer.app/interviews/mercor/interview-process",
+            ans: { lead: "I understand it as a 75 minute build with LLMs allowed, scored by an evaluation endpoint, then 15 minutes explaining what I did.",
+              pts: ["The task: rank candidate profiles for a job description, and the endpoint returns a score I can improve.",
+                    "My first move: ask what the score measures, how often I can call it, and which tools are allowed.",
+                    "How I work: get a baseline score early, change one thing at a time, and write down what each change did.",
+                    "The last 15 minutes: how I used the LLMs, why the design, what I debugged and what I'd do next."],
+              close: "So the score matters, but how I got it up matters as much." } },
+          { t: "A baseline in the first 15 minutes: filters plus keyword overlap", m: 25,
+            out: "You have 75 minutes and a scoring endpoint. What do you build in the first 15 minutes, and why that before anything clever?",
+            d: "A baseline is the simplest ranker that produces a score. It does two jobs: it shows the endpoint works end to end, and it is the number every later change is judged against. Build it from hard filters (years of experience, location, a required skill) and a keyword score such as word overlap or BM25. BM25 is a ranking function that scores a document by how often the query words appear in it, damped so that repeating a word ten times does not count ten times, and weighted so rare words count more. A plain word count is a weaker version of the same idea, and it is easy to fool by repeating words. The kit in the cheat sheet is a toy you can run now: 30 profiles, 3 jobs, hand labels, a precision at 5 scorer and a baseline ranker.",
+            pts: [
+              "Get a score before you are clever: filters plus keyword overlap, submit, read the number. Fifteen minutes is the target. A candidate who has no score at minute 40 has nothing to compare against",
+              "Hard filters first: they are cheap, exact and explainable. A candidate with 2 years does not fit a job that says 5. Keep filters loose at first; a wrong filter removes the right person and no later step can bring them back",
+              "Keyword score: count the job words found in the profile. BM25 improves on it with term saturation and rarity weights, and a library such as rank_bm25 gives it in a few lines. Know what it misses: synonyms (server-side for backend, psql for Postgres) and meaning",
+              "Precision at 5: of the first five results, how many are right. It is the score in the kit. Say why it suits a recruiter who reads the top of the list",
+              "Run the kit, then break it: look at which wrong candidates reach the top 5. In the toy data one profile repeats words and wins. That failure is your next change",
+              "Log every score from the start: a line in a notes file with the change and the number. This is the log you will use in the discussion",
+              "Make the endpoint call a function you can rerun in one step. Every later minute depends on how cheap one try is"
+            ],
+            where: "Your own rehearsal kit; Eugene Yan on retrieval and ranking stages in a discovery system",
+            url: "https://eugeneyan.com/writing/system-design-for-discovery/",
+            ans: { lead: "I get a baseline score in the first fifteen minutes with simple filters and keyword overlap, because every later change needs something to be compared with.",
+              pts: ["Filters: loose and exact, such as years of experience and a required skill, so I don't drop the right person.",
+                    "Ranking: word overlap or BM25 on the profile. It's weak on synonyms, and I know that going in.",
+                    "Score: precision at 5, because the recruiter reads the top of the list. In my toy set the baseline gets 0.73.",
+                    "Habit: I write the score and the change in a log after every run.",
+                    "Failures: I look at what ranked high and shouldn't have, and that decides my next change."],
+              close: "A working simple version first is what lets me prove that anything fancier helps." } },
+          { t: "Iterating on the score: one change at a time, with a log", m: 25,
+            out: "The baseline scores 0.73 on your labels. List the changes you would try, in order, and how you decide to keep one.",
+            d: "Each change must earn its place by moving the score, and you can only tell which one did it if you change one thing per run. The usual ladder for candidate search, cheapest first: fix the filters and the text you index; add a better keyword scorer; add embeddings so meaning matches (backend and server-side); rerank the top results; rewrite the query; and use an LLM to turn each free-text profile into structured fields. When the signal is hidden in messy text, extracting fields such as skills, seniority and years is often the biggest step. Anthropic's contextual retrieval write-up gives a measured example of why combining keyword search, embeddings and a reranker beats any one alone. Your own MetaRAG work is the same pattern: LLM-generated metadata added to chunks raised precision from 73.3% to 82.5% over a content-only baseline.",
+            pts: [
+              "The ladder, cheapest first: clean the indexed text and the filters; BM25; embeddings on the profile; fuse the keyword and embedding scores; rerank the top 20 to 50; rewrite the job description into a query; LLM extraction of structured fields",
+              "Embeddings: turn the job and each profile into vectors and rank by similarity. They catch synonyms that keywords miss. Cost: one embedding call per profile, once. Cache them to disk so a rerun does not pay again",
+              "Reranking: take the top 20 to 50 from the cheap stage and score each against the job with a stronger model, such as a cross-encoder or an LLM asked for a score. It improves order at the top, which is where precision at 5 looks. Cost grows with the number of pairs, so keep the list short",
+              "Query rewriting: ask an LLM to turn a job description into the must-haves, the nice-to-haves and the synonyms. A messy job post becomes a clean query. Check it did not invent requirements",
+              "LLM extraction: for each profile, extract skills, years, seniority and domain into fields, then filter and score on the fields. It runs once per profile, so batch it and cache it. Check a sample by hand; models guess when a field is missing",
+              "One change per run, every run logged: change, score, time spent, call cost. Keep the change if the score goes up and you can say why. Revert it if not. Never stack two untested changes",
+              "A rise you cannot explain is a warning, not a win. Look at what moved in the top 5 before you keep it",
+              "Budget the time: a change that needs 20 minutes of tokens and waiting must be worth it. Run LLM steps in parallel where the API allows, and test on one job before running all of them"
+            ],
+            where: "Anthropic, Contextual retrieval (retrieve with keywords and embeddings, then rerank); the guide's candidate search case study; your MetaRAG results in the master reference",
+            url: "https://www.anthropic.com/news/contextual-retrieval",
+            ans: { lead: "I change one thing per run, log the score each time, and keep a change only if the score moves and I can say why.",
+              pts: ["Order: clean the text and filters, then BM25, then embeddings, then a reranker on the top few, then query rewriting and LLM field extraction.",
+                    "Why this order: the cheap, explainable steps first, and the expensive model calls only where the cheap ones have stalled.",
+                    "Embeddings catch what keywords miss: server-side and backend are different words and the same job.",
+                    "Extraction: a model turns messy profile text into skills, years and seniority once, and I cache it. I check a sample by hand.",
+                    "My own example: in MetaRAG, adding LLM-generated metadata to chunks lifted precision from 73.3% to 82.5% against a content-only baseline, and I only knew that because I measured it."],
+              close: "The log of score per change is also what I'll talk through in the last fifteen minutes." } },
+          { t: "Not overfitting the endpoint: a held-out slice and failures read by hand", m: 15,
+            out: "Your score keeps rising but you are only tuning against the endpoint. How do you know the system is actually better?",
+            d: "If you tune against one score for 75 minutes, you can end up with a ranker that fits the scorer and not the job. The fix is the same as in any experiment: keep some data aside that you do not tune on, and look at actual failures. You may not control the endpoint's data, but you can make a small labelled set of your own, like the one in the kit, and hold part of it back. Then read the wrong results by hand, because a score tells you how much, and only reading tells you why.",
+            pts: [
+              "Overfitting here means changing the ranker until it wins on the queries you have seen, for reasons that will not hold on new ones. Typical signs: a rule that names a specific job title, or a threshold tuned to one query",
+              "Hold-out: split your jobs or your labels. Tune on one part. Check each kept change on the other part. If the tuning score rises and the held-out score does not, you are fitting the data, not the problem",
+              "If the endpoint gives only one number and no hold-out, build your own small set. Ten jobs and a few labelled candidates each is enough to catch big mistakes. Say plainly how small it is",
+              "Look at failures by hand: print the wrong candidates in the top 5 and the right ones that were missed, with the reason each went wrong. Group them: synonyms, a wrong filter, a repeated word, a missing field",
+              "Fix groups, not single cases. If one fix names one candidate, it is overfit by construction",
+              "Beware of leakage: do not put the labels, or text copied from the answer set, into a prompt or a rule. It lifts the score and proves nothing",
+              "Noise: with a handful of jobs, one flipped result moves precision at 5 by several points. Say that a gap of one or two results is within noise, and that is why you read the failures",
+              "Say it in the discussion: what you tuned on, what you held back, and the failure groups you found. It shows judgment, which is what the round tests"
+            ],
+            where: "Anthropic, Demystifying evals for AI agents (graders, what a score does and does not show); Hamel Husain on validating an LLM judge against human labels",
+            url: "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
+            ans: { lead: "I keep part of my data aside, and I read the failures by hand, so I know a better score means a better ranker and not a better fit to the endpoint.",
+              pts: ["Hold-out: I tune on some jobs and check each kept change on others. If only the tuned score rises, I stop.",
+                    "Failures: I print the wrong results in the top five and group them: synonyms, a wrong filter, repeated words, missing fields.",
+                    "Fixes are for groups, not one case. A fix that names one candidate is overfit.",
+                    "Small numbers: with a few jobs, one result moves the score a lot, so I say how noisy it is.",
+                    "No leakage: the labels never go into a prompt or a rule."],
+              close: "The score tells me how much, and reading the failures tells me why." } },
+          { t: "The 15-minute discussion: how you used the LLMs, the design, the debugging", m: 15,
+            out: "Walk me through how you used LLMs in the build, why you chose this design, and one thing that broke.",
+            d: "After the build, the reviewer asks about your process. This is where the log you kept pays off. The Blind report of a similar Mercor part describes the reverse: a reviewer who read the code line by line and asked about parts the candidate did not fully understand. So you need to be able to explain every piece, including the code an LLM wrote. Answer in this order: the score story, where the LLM helped and where you checked it, the design choices and their cost, one real bug, and what you would do next.",
+            pts: [
+              "Open with the score story from your log: baseline 0.73, then each change and its effect. Numbers first, then reasons. If a change did not help, say so; it shows honest measurement",
+              "How you used LLMs, in two places: as helpers while coding (what you gave them, what you checked, one thing they got wrong) and as parts of the system (embeddings, a reranker, extraction). Keep the two apart in your answer",
+              "Design choices and costs: why a cheap stage then a rerank, how many model calls per query, what was cached, what would change at 100 times the candidates (an index, batch jobs, a vector store)",
+              "Debugging story: pick one real failure. What the symptom was, how you found the cause (a printed wrong result, a log of scores), the fix, and how you checked it. A wrong filter that dropped the right candidate is a good example",
+              "What you did not do, as a choice: no fine-tuning, no UI, no per-job tuning, because there was no time to measure it. Then the top three next steps, with evaluation first",
+              "Own every line: for any function, say what it does and why that way, with the tool closed. If you cannot, say so and say how you would find out",
+              "Do not claim a gain you did not measure, and do not call a toy set a benchmark"
+            ],
+            where: "Blind, a Mercor candidate on the line-by-line review; Canva Engineering on explaining decisions after an AI-assisted build; wc35 step 5",
+            url: "https://www.teamblind.com/post/mercor-swe-interview-experience-vv02w0gy",
+            ans: { lead: "I'd start with the score story, then say where the LLMs helped and where I checked them, then the design, one bug, and what's next.",
+              pts: ["Score story: baseline, then each change and what it did, including the ones that did nothing.",
+                    "LLMs: as a coding helper I gave it small asks and fixed what it got wrong. As part of the system they did embeddings, reranking and extraction, and I checked a sample by hand.",
+                    "Design: cheap stage first, expensive stage on the top few, cached, so cost per query stays low.",
+                    "A bug: I'd tell one real one, how I found it and how I checked the fix.",
+                    "Next: a bigger labelled set first, then the changes that the failures point to."],
+              close: "I can explain every line, including the ones the model wrote, because I read them all." } }
         ]
       },
       {

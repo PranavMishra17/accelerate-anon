@@ -6,8 +6,8 @@ coding exercise with a presentation, a practical system design on AI systems, an
 (not in scope for these sessions). Round 1 (Neel Taneja) went well; round 2 (Sophie Guo, the caching
 screen, 23 October) is kept below, unchanged. Todd Dockery at Mercor is the recruiter.
 
-The teaching lives in the tracker: wc35 (the build), wc36 (AI system design), wc37 (the basics), with
-wc32 to wc34 and week 5's w5a as light review. The Plan tab is the day-by-day work order; two mocks run
+The teaching lives in the tracker: wc35 (the build), wc36 (AI system design), wc37 (the basics), wc38 (the search build), with
+wc32 to wc34 and week 5's w5a as light review. The overview lists the work order; the Learn tab holds the case studies; two mocks run
 in chat. Facts about Mercor come from SOURCES, every link opened. Pranav's story is his own text from
 E:/_Resume-Curator/INTRO.md, verbatim. Logistics answers stay in chat.
 """
@@ -34,19 +34,28 @@ LOOP = {
             "prototype; narrate, write tests, validate assumptions, say what you optimise for. Design: tradeoffs on latency, "
             "cost, reliability, scale, deployment and observability, plus retrieval, evaluation, failure modes and monitoring. "
             "Why over tool names. Reviewers penalise code you cannot explain."),
-    "plan_kicker": "Date to be set; about a week out",
-    "extra": ("<b>The work order.</b> "
-              "1. Plan tab: day by day from Tuesday 3 November, one to one and a half hours a day, because the Amazon loop has priority "
-              "and its days (6, 9, 10 or 11 November) are not fixed. "
-              "2. Sessions: wc35, the AI-assisted build and its presentation; wc36, AI system design (candidate search, evaluation, failure); "
-              "wc37, the basics the reports say to drill (complexity, hashing, graph search, cache races). "
-              "3. Light review: wc32 to wc34 (the cache code review, stale data and stampedes, LLM caches) and "
-              "<a href=\"../index.html#/s/w5a\" target=\"_blank\" rel=\"noopener\">week 5's caching</a>. "
-              "4. Two mocks in chat: 'run the Mercor onsite design mock' and 'run the Mercor build mock'. "
-              "5. The day before: reread the cheat sheets and the logistics list on the Plan tab."),
+    "plan_kicker": "What to do, in order",
+    "extra": ("<b>The work order.</b> No dates and no hours: do these in order, from first to last. "
+              "<ol>"
+              "<li><b>Brush up the system design.</b> The Learn tab, first topic: w1a, w4e, w4a and w5e first, then w4d and w5f, then w5a, w2a and w3a if time.</li>"
+              "<li><b>wc35, the build workflow.</b> The AI-assisted build and its presentation, with the timed rehearsal at the end.</li>"
+              "<li><b>The Coding tab's onsite problems, with no AI.</b> Referral network, faulty comparator, task scheduler, exchange rates "
+              "(interviews/coding/mercor-6-onsite.js). Reports say the first hour of the coding round allows Google for syntax and no LLMs.</li>"
+              "<li><b>wc38, the search build.</b> Run the kit, then beat its baseline score one change at a time.</li>"
+              "<li><b>The three case studies on the Learn tab.</b> Job scheduler, candidate search, AI interviewer.</li>"
+              "<li><b>wc36, AI system design the Mercor way.</b> The checklist run on four designs.</li>"
+              "<li><b>The LLD tab.</b> Its two rounds about an agentic system.</li>"
+              "<li><b>wc37, the basics.</b> Complexity, hashing, graph search, a cache race.</li>"
+              "<li><b>Two mocks in chat.</b> Say 'run the Mercor build mock', then 'run the Mercor onsite design mock'. Critique after each.</li>"
+              "<li><b>The Prep tab.</b> The show-up list and the questions to ask.</li>"
+              "<li><b>Light review, only if time is left.</b> wc32 to wc34 and "
+              "<a href=\"../index.html#/s/w5a\" target=\"_blank\" rel=\"noopener\">week 5's caching</a>.</li>"
+              "<li><b>On the day, ask first.</b> Which rules on AI tools apply in each round, the end time, and whether a round can end the day "
+              "(reports say some rounds are eliminatory).</li>"
+              "</ol>"),
 }
 
-SESSION_IDS = [("wc35", "1"), ("wc36", "2"), ("wc37", "3"), ("wc32", "4"), ("wc33", "5"), ("wc34", "6")]   # the onsite first; wc32 to wc34 (round 2) are the light review
+SESSION_IDS = [("wc35", "1"), ("wc36", "2"), ("wc37", "3"), ("wc38", "4"), ("wc32", "5"), ("wc33", "6"), ("wc34", "7")]   # the onsite first; wc32 to wc34 (round 2) are the light review
 
 PREP_LEAD = ("The teaching is on the Sessions tab. Here: how to show up, then your story out loud, and the timed drills: "
              "the build presentation, the candidate search opening, a complexity answer, and the earlier cache drills.")
@@ -61,6 +70,11 @@ SHOW_UP = [
     ("Think past the code, to production.", "How it scales, where latency or reliability bite, how you know it performs, what happens when an outside service fails, how it is deployed and monitored."),
     ("A teammate, not a performer.", "Ask questions, take hints, and change your mind when the interviewer gives a good reason. It is a conversation."),
     ("Ask which parts allow AI tools.", "The brief says encouraged; one candidate report says an early part did not. Ask early, and ask whether the build prompt is shared in advance."),
+    ("Expect a solo hour, then a review.", "AceOffer's synthesis of 20 reports: about 60 minutes alone and screen-recorded, then 30 minutes of review. In the Applied AI version, Google for syntax but no LLMs in that hour, and no tests given. Write your own tests."),
+    ("Clarify an under-specified prompt before coding.", "Reports say the referral network leaves 'flow centrality' deliberately vague. State your reading, ask, and only then build."),
+    ("The search build allows LLMs, and is scored.", "About 75 minutes building against an evaluation endpoint, then 15 minutes on how you used the LLMs, the design and debugging. Baseline early, one change at a time, a log of score per change (wc38)."),
+    ("Rounds may be eliminatory.", "One report says a candidate who failed system design was sent home at noon. Ask the end time and whether each round decides the day, and do not save your best for the afternoon."),
+    ("Expect a direct question on pace.", "Mercor works fast. Answer with a real example of moving quickly and keeping quality, not a claim."),
 ]
 
 STORY_BLURB = "Your intro, why Mercor, why leave alfred_, and logistics."
@@ -200,7 +214,14 @@ ROUNDS = [
                 "system design on a whiteboard, and an algorithms part."),
      "outcome": "To come.",
      "notes": ["The brief's one takeaway: show how you think; a collaborative engineering conversation, not a performance.",
-               "Open points to ask early: which parts allow AI tools, whether the build prompt is shared in advance, who the interviewers are, and the real hours."],
+               "Open points to ask early: which parts allow AI tools, whether the build prompt is shared in advance, who the interviewers are, and the real hours.",
+               "From AceOffer's synthesis of 20 candidate reports (3 Nov 2026, https://aceoffer.app/interviews/mercor/interview-process; paraphrased there, not verbatim prompts):",
+               "Coding, about 90 minutes: 60 alone and screen-recorded, then 30 of review. In the Applied AI version, Google for syntax but no LLMs in the first hour, and no tests given. Prompts reported: a three-part referral network where 'flow centrality' is deliberately under-specified, and a two-part task scheduler.",
+               "Algorithms, 30 to 45 minutes, discussion only: sorting or top-k with a faulty comparator is the most reported (minimise comparison calls, then wall-clock time when each call is slow); also exchange rates across currency pairs, and friend-network search with few API calls.",
+               "System design, 45 minutes: a distributed job scheduler or work orchestration, and candidate search for a job description.",
+               "Candidate-search build, about 90 minutes: 75 building with LLMs allowed against an evaluation endpoint, 15 discussing how you used the LLMs, the design and the debugging.",
+               "Eliminatory rounds are possible: one report says a candidate who failed system design was sent home at noon. Days ran noon to 4 or 5 pm. An Applied AI variant is three hours: the referral-network coding round plus the search build.",
+               "Expect a direct question on pace, and answer with a real example."],
      "asked": []},
 ]
 
@@ -240,7 +261,7 @@ SCRIPTS = [
 ]
 
 QA = []
-TABS = ["overview", "plan", "prep", "sessions", "rounds", "mocks", "coding", "concurrency"]
+TABS = ["overview", "learn", "sessions", "coding", "lld", "prep", "rounds", "mocks", "concurrency"]
 SHARED_JS = ["coding/concurrency.js"]   # the Concurrency tab, shared with CODING.html
 
 ASK_3C = [
@@ -288,59 +309,3 @@ MOCK_HOW = ("Two onsite mocks run in chat. Say 'run the Mercor onsite design moc
             "Critique after each. The interviewer guides are in private/mercor-mock/onsite.html, local only. "
             "The round 2 caching mock still runs as 'run the Mercor mock'; for its code version open E:\\mercor-cache-mock: "
             "mock1_review (threads, a cache with planted bugs) and mock2_service (asyncio, a two-tier cache to navigate).")
-
-# ------------------------------------------------------------------ the plan: Tuesday 3 to Monday 9 November
-def _d(date, hours, focus, *items):
-    return {"date": date, "hours": hours, "focus": focus,
-            "items": [dict(zip(("k", "t", "href", "m"), it)) for it in items]}
-
-
-SES = lambda sid, label, m: ("plan", label, "../index.html#/w/" + sid, m)
-REV = lambda sid, label, m="20 min": ("revise", "Light review: " + label, "../index.html#/w/" + sid, m)
-
-PLAN = {
-    "title": "The onsite: Tuesday 3 to Monday 9 November",
-    "lead": ("One to one and a half hours a day, because the Amazon loop has priority on these days and its days (6, 9, 10 or 11 November) are not "
-             "fixed. The Mercor date is also not set, about a week out. If Amazon takes a day, skip that day here and carry its items forward; "
-             "nothing on this page depends on the order of the days except that the build comes before its presentation. Tick items as you go."),
-    "split": [
-        ["The build", "about 35%", "wc35 and the build mock: an AI-assisted prototype, tests said aloud, then the presentation."],
-        ["AI system design", "about 35%", "wc36 and the design mock: candidate search, evaluation, failure modes, production."],
-        ["The basics", "about 20%", "wc37: complexity, hashing, graph search and cache races, the soft spot from round 2."],
-        ["Light review", "about 10%", "wc32 to wc34 and week 5's caching, only the cheat sheets."],
-    ],
-    "weeks": [
-        {"id": "onsite", "title": "Tuesday 3 to Monday 9 November",
-         "note": "Short days on purpose. Amazon comes first; the days are a sequence, not calendar slots.",
-         "days": [
-             _d("2026-11-03", "1 h", "Read what the day is, then the build session.",
-                ("other", "Prep tab: the show-up list, read once", "#/prep", "10 min"),
-                SES("wc35", "Session wc35: the AI-assisted build, steps 1 to 3", "50 min")),
-             _d("2026-11-04", "1.5 h", "Finish the build session and time one presentation.",
-                SES("wc35", "Session wc35: the rest, then its cheat sheets", "40 min"),
-                ("other", "Drill: the build presentation, 8 minutes, aloud", "#/prep", "20 min"),
-                ("other", "Canva's interviewer guide, read for the three failure modes", "https://www.canva.dev/blog/engineering/ai-interview-success/", "15 min")),
-             _d("2026-11-05", "1.5 h", "AI system design: candidate search first.",
-                SES("wc36", "Session wc36: AI system design, candidate search and retrieval", "50 min"),
-                ("other", "Chip Huyen's generative AI platform post, against your search design", "https://huyenchip.com/2024/07/25/genai-platform.html", "25 min"),
-                ("other", "Drill: the candidate search opening, 5 minutes, aloud", "#/prep", "15 min")),
-             _d("2026-11-06", "1 h", "Evaluation and failure modes. Amazon may take this day.",
-                SES("wc36", "Session wc36: evaluation, failure and production, the rest", "40 min"),
-                ("other", "Anthropic on evals: graders, one judge per dimension, calibration", "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents", "20 min")),
-             _d("2026-11-07", "1.5 h", "The basics, and the first mock.",
-                SES("wc37", "Session wc37: the basics (complexity, hashing, graph search, cache races)", "40 min"),
-                ("other", "Drill: complexity, 2 minutes, aloud", "#/prep", "10 min"),
-                ("other", "Mock in chat: say 'run the Mercor onsite design mock' (45 minutes, critique after)", "#/mocks", "60 min")),
-             _d("2026-11-08", "1.5 h", "The build mock, then light review.",
-                ("other", "Mock in chat: say 'run the Mercor build mock' (brief, build with your AI tool, presentation, debrief)", "#/mocks", "75 min"),
-                REV("wc32", "wc32, the cache code review: cheat sheet only", "10 min")),
-             _d("2026-11-09", "1 h", "Light. Rest before the date; Amazon may fall on this day.",
-                REV("wc33", "wc33, stale data and stampedes: cheat sheet only", "10 min"),
-                REV("wc34", "wc34, LLM caches and your own: cheat sheet only", "10 min"),
-                ("revise", "Week 5's caching session, the key terms only", "../index.html#/s/w5a", "10 min"),
-                ("loop", "Logistics for the day: laptop charged with your AI tool signed in and a skeleton repo ready, charger and spare cable, a notebook and pen, water, the address and the way there", "", "15 min"),
-                ("loop", "Questions to ask: reread the onsite list on the Prep tab", "#/prep", "10 min"))
-         ]},
-    ],
-}
-

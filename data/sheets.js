@@ -1990,6 +1990,84 @@ window.SHEETS = {
       { t: "Lost reply", mem: "It worked, nobody heard.", d: "A success whose response never reaches the caller, so the caller cannot tell success from failure." },
       { t: "Single-flight", mem: "One in the air per key.", d: "Callers with the same key share the result of one running operation." }
     ]
+  },
+  "wc38:0": {
+    cheat: [
+      "Reported: about 90 minutes. 75 building with LLMs allowed against an evaluation endpoint, 15 minutes of discussion.",
+      "Details come from paraphrased reports. Ask what the endpoint returns, how often you may call it, and which tools are allowed.",
+      "Settle in two minutes: number of queries and candidates, structured or free text, call budget.",
+      "Judged on how you work: early baseline, one change at a time, a log, honest reading of failures.",
+      "Related: wc35 (build workflow), wc36 (design), the guide's candidate search case study."
+    ],
+    terms: [
+      { t: "Evaluation endpoint", mem: "You submit, it scores.", d: "A service the round gives you that scores your ranking, so you can measure each change." },
+      { t: "Build score", mem: "The number you move.", d: "The result the endpoint returns for your ranker; it is only useful against a baseline and a log." },
+      { t: "Discussion", mem: "15 minutes on how.", d: "The part after the build, about LLM use, the design and debugging." }
+    ]
+  },
+  "wc38:1": {
+    cheat: [
+      "Baseline by minute 15: loose filters plus word overlap or BM25. Submit, read the score.",
+      "Filters: cheap and exact. Keep them loose; a wrong filter removes the right person for good.",
+      "BM25: word match with saturation and rarity weights. Weak on synonyms and meaning.",
+      "Precision at 5: of the top five, how many are right. Baseline in the kit: 0.73.",
+      "Read which wrong profiles reach the top five. That is your next change.",
+      "Log every run: change, score. Make one rerun a single command."
+    ],
+    terms: [
+      { t: "BM25", mem: "Word match, damped.", d: "A ranking function that scores a document by how often the query words appear in it, with diminishing returns for repeats and extra weight for rare words." },
+      { t: "Precision at k", mem: "Of the top k, how many right.", d: "The share of the first k results that are correct; precision at 5 looks at the first five." },
+      { t: "Baseline", mem: "The score to beat.", d: "The simplest ranker that produces a number; every later change is judged against it." },
+      { t: "Hard filter", mem: "Exact, cheap, final.", d: "A rule that removes candidates before ranking, such as minimum years; a wrong one cannot be undone by later steps." }
+    ]
+  },
+  "wc38:2": {
+    cheat: [
+      "Ladder, cheapest first: clean text and filters, BM25, embeddings, fuse scores, rerank the top 20 to 50, rewrite the query, LLM field extraction.",
+      "Embeddings catch synonyms. Compute once per profile and cache to disk.",
+      "Rerank only a short list: cost grows with the number of pairs.",
+      "Query rewriting: must-haves, nice-to-haves, synonyms. Check it invented nothing.",
+      "Extraction: skills, years, seniority per profile, once, cached. Check a sample by hand.",
+      "One change per run. Keep if the score moves and you can say why. A rise you cannot explain is a warning."
+    ],
+    terms: [
+      { t: "Embedding", mem: "Meaning as numbers.", d: "A vector for a piece of text so that similar meanings sit close together; ranking by similarity finds matches that share no words." },
+      { t: "Rerank", mem: "Re-score the short list.", d: "Using a stronger model on the top results from a cheap stage to fix their order." },
+      { t: "Query rewriting", mem: "Clean up the question.", d: "Using a model to turn a messy job description into a precise query with synonyms." },
+      { t: "Field extraction", mem: "Free text to fields.", d: "Using a model to read each profile once and write skills, years and seniority as structured data you can filter on." },
+      { t: "Score log", mem: "Change, number, line by line.", d: "A running list of what you changed and what the score did; it is your evidence in the discussion." }
+    ]
+  },
+  "wc38:3": {
+    cheat: [
+      "Overfitting: winning on the queries you have seen for reasons that will not hold on new ones.",
+      "Hold out a slice of jobs or labels. Tune on one part, check each kept change on the other.",
+      "No hold-out from the endpoint? Build your own small labelled set and say how small it is.",
+      "Print wrong top-five results and missed right ones. Group them. Fix groups, not single cases.",
+      "No leakage: labels never go into a prompt or a rule.",
+      "Small sets are noisy: one flipped result moves precision at 5 by several points."
+    ],
+    terms: [
+      { t: "Overfitting", mem: "Fits the test, not the job.", d: "Tuning a system until it scores well on the data you tuned on, while it does no better on new data." },
+      { t: "Hold-out", mem: "Data you do not tune on.", d: "A slice kept aside and used only to check whether a change really helps." },
+      { t: "Leakage", mem: "The answers in the question.", d: "Letting labels or answer-set text reach the ranker, which raises the score and proves nothing." },
+      { t: "Failure grouping", mem: "Cases into causes.", d: "Sorting wrong results by why they were wrong, such as synonyms, a bad filter or repeated words." }
+    ]
+  },
+  "wc38:4": {
+    cheat: [
+      "Order: score story from your log, LLM use, design and cost, one real bug, what you skipped, next steps.",
+      "LLM use in two places: as a coding helper (what you checked, what it got wrong) and as part of the system (embeddings, rerank, extraction).",
+      "Design: cheap stage then rerank, calls per query, what is cached, what changes at 100 times the candidates.",
+      "Bug story: symptom, how you found it, the fix, how you checked.",
+      "Skipped on purpose: no fine-tuning, no UI, no per-job tuning, no time to measure it.",
+      "Own every line. Do not claim an unmeasured gain."
+    ],
+    terms: [
+      { t: "Score story", mem: "Baseline, then each change.", d: "Telling the build as numbers from your log, including changes that did nothing." },
+      { t: "Calls per query", mem: "The cost of a design.", d: "How many model or embedding calls one search needs; it decides latency and cost." },
+      { t: "Line-by-line review", mem: "Explain what you shipped.", d: "A reviewer reads your code and asks why; you must explain model-written lines too." }
+    ]
   }
 };
 
@@ -2049,7 +2127,7 @@ window.SHEETS = {
   for (var k in V) { if (window.SHEETS[k]) { window.SHEETS[k].vis = V[k]; } }
 })();
 
-/* Drawn sheets for the Mercor sessions (wc32 to wc37). */
+/* Drawn sheets for the Mercor sessions (wc32 to wc38). */
 (function () {
   var V = {
     "wc32:0": [
@@ -2267,6 +2345,43 @@ window.SHEETS = {
       { title: "The idempotent version", code: "stored = {}                                       # idempotency key -> (Task, the request)\n\nasync def refund_once(p, key, order, cents):\n    if key in stored:                             # a retry or a duplicate request\n        task, req = stored[key]\n        if req != (order, cents):\n            raise ValueError(\"key reused with different input\")\n        return await task                         # same Task, same result\n\n    async def attempt():\n        for _ in range(2):\n            try:\n                return await p.refund(order, cents, key)   # the key goes to the provider too\n            except TimeoutError:\n                pass\n        del stored[key]                           # a failure is not remembered as the answer\n        raise TimeoutError(\"gave up\")\n\n    task = asyncio.ensure_future(attempt())\n    stored[key] = (task, (order, cents))          # stored before any await: no gap to race in\n    return await task",
           pins: [[4, "a retry or a duplicate: do not run it again"], [7, "same key, different request: refuse, do not guess"], [8, "everyone shares one Task, so one result"], [13, "the key goes to the provider too: a lost reply is safe"], [16, "do not store a failure as the answer"], [20, "stored before any await: nothing can slip in"]] },
       { title: "What each part protects against", vs: { cols: ["Duplicate retry", "Retry while running", "Crash after success", "Wrong amount"], rows: [["Stored result under the key", "yes", "no", "no", "no"], ["Task stored before the first await", "yes", "yes", "no", "no"], ["Key sent to the provider", "yes", "yes", "yes", "no"], ["Request compared with the stored one", "no", "no", "no", "yes"]] } }
+    ],
+    "wc38:0": [
+      { rule: "Seventy-five minutes building against a score, fifteen minutes explaining it. Reported, not published." },
+      { title: "The reported round", lanes: [["Build", [["clarify 2", "plain"], ["baseline 13", "hot", "3"], ["iterate 60", "hot", "8"]]], ["Then", [["discuss 15", "done", "3"]]]], note: "About 90 minutes. From a paraphrase of 20 reports; ask what is real on the day." },
+      { title: "Ask at the start", calc: [["endpoint", "one number or per-query detail?"], ["budget", "how many submissions?"], ["tools", "which LLMs are allowed?"], ["data", "structured fields or free text?"]] }
+    ],
+    "wc38:1": [
+      { rule: "A score at minute 15, then every change is judged against it." },
+      { title: "The rehearsal kit: run it, then beat 0.73", code: "# Rehearsal kit: 30 candidates, 3 jobs, hand labels, a scorer and a baseline ranker.\nimport re\n\nCANDS = [\n    # id, title, years, city, skills text\n    (\"c01\", \"Backend Engineer\", 7, \"San Francisco\", \"python postgres kafka queues distributed systems\"),\n    (\"c02\", \"Senior Software Engineer\", 9, \"San Francisco\", \"server-side python psql rabbitmq sharding replication\"),\n    (\"c03\", \"Backend Engineer\", 5, \"Oakland\", \"python postgres redis workers job scheduling\"),\n    (\"c04\", \"Staff Engineer\", 12, \"San Francisco\", \"go distributed systems consensus postgres kafka\"),\n    (\"c05\", \"Backend Developer\", 2, \"San Francisco\", \"python django postgres\"),\n    (\"c06\", \"Platform Engineer\", 6, \"Seattle\", \"python postgres kubernetes queues distributed systems\"),\n    (\"c07\", \"Data Engineer\", 6, \"San Francisco\", \"python spark airflow postgres kafka\"),\n    (\"c08\", \"Senior Backend Engineer\", 8, \"San Francisco\", \"java postgres kafka microservices distributed systems\"),\n    (\"c09\", \"Software Engineer\", 5, \"San Jose\", \"python python python postgres queues distributed systems backend backend\"),\n    (\"c10\", \"Frontend Engineer\", 6, \"San Francisco\", \"react typescript css\"),\n    (\"c11\", \"ML Engineer\", 4, \"Remote\", \"python pytorch llm evaluation retrieval embeddings\"),\n    (\"c12\", \"Applied Scientist\", 6, \"San Francisco\", \"python rag reranking evaluation metrics llm\"),\n    (\"c13\", \"Research Engineer\", 3, \"Boston\", \"pytorch transformers evaluation python\"),\n    (\"c14\", \"ML Engineer\", 2, \"Remote\", \"python sklearn pandas\"),\n    (\"c15\", \"AI Engineer\", 3, \"New York\", \"python llm agents vector search evaluation harness\"),\n    (\"c16\", \"Data Scientist\", 5, \"Remote\", \"python statistics experiments ab testing sql\"),\n    (\"c17\", \"NLP Engineer\", 7, \"Remote\", \"python bm25 elasticsearch embeddings ranking evaluation\"),\n    (\"c18\", \"Backend Engineer\", 4, \"Remote\", \"node typescript postgres apis\"),\n    (\"c19\", \"ML Platform Engineer\", 5, \"Austin\", \"python pytorch kubernetes model serving llm\"),\n    (\"c20\", \"Search Engineer\", 6, \"Remote\", \"elasticsearch ranking retrieval python relevance evaluation\"),\n    (\"c21\", \"Frontend Engineer\", 5, \"New York\", \"react typescript design systems storybook\"),\n    (\"c22\", \"UI Engineer\", 7, \"New York\", \"typescript web components design system accessibility\"),\n    (\"c23\", \"Frontend Developer\", 3, \"New York\", \"react javascript redux css\"),\n    (\"c24\", \"Full Stack Engineer\", 4, \"New York\", \"react typescript node postgres\"),\n    (\"c25\", \"Senior Frontend Engineer\", 8, \"Brooklyn\", \"react typescript design systems performance\"),\n    (\"c26\", \"Frontend Engineer\", 2, \"New York\", \"react typescript\"),\n    (\"c27\", \"Mobile Engineer\", 5, \"New York\", \"swift kotlin react native typescript\"),\n    (\"c28\", \"Frontend Engineer\", 6, \"New York\", \"react typescript design systems\"),\n    (\"c29\", \"Designer\", 6, \"New York\", \"figma design systems prototyping\"),\n    (\"c30\", \"Frontend Engineer\", 4, \"Remote\", \"vue typescript css testing\"),\n]\n\nJOBS = {\n    \"j1\": {\"text\": \"senior backend engineer python postgres distributed systems queues\", \"city\": \"San Francisco\", \"min_years\": 5},\n    \"j2\": {\"text\": \"ml engineer llm evaluation retrieval python embeddings\", \"city\": \"Remote\", \"min_years\": 3},\n    \"j3\": {\"text\": \"frontend engineer react typescript design systems\", \"city\": \"New York\", \"min_years\": 3},\n}\n\n# Hand labels: who a recruiter would call a good fit. Written before looking at any score.\nLABELS = {\n    \"j1\": {\"c01\", \"c02\", \"c03\", \"c04\", \"c06\", \"c08\"},\n    \"j2\": {\"c11\", \"c12\", \"c15\", \"c17\", \"c20\"},\n    \"j3\": {\"c21\", \"c22\", \"c25\", \"c28\", \"c24\"},\n}\n\n\ndef tokens(s):\n    return re.findall(r\"[a-z0-9]+\", s.lower())\n\n\ndef baseline(job):\n    \"\"\"Filter on years, then rank by shared words between job text and the candidate's profile.\"\"\"\n    want = set(tokens(job[\"text\"]))\n    out = []\n    for cid, title, years, city, skills in CANDS:\n        if years < job[\"min_years\"]:\n            continue\n        have = tokens(title + \" \" + skills)\n        out.append((sum(1 for w in have if w in want), cid))   # counts repeats on purpose: a weakness to find\n    out.sort(key=lambda p: (-p[0], p[1]))\n    return [cid for _, cid in out]\n\n\ndef precision_at_k(ranked, relevant, k=5):\n    return sum(1 for c in ranked[:k] if c in relevant) / k\n\n\ndef score(ranker, k=5):\n    per = {j: precision_at_k(ranker(JOBS[j]), LABELS[j], k) for j in JOBS}\n    return sum(per.values()) / len(per), per\n\n\nif __name__ == \"__main__\":\n    assert len(CANDS) == 30 and len({c[0] for c in CANDS}) == 30\n    mean, per = score(baseline)\n    print(\"baseline precision@5:\", round(mean, 2), {j: round(p, 2) for j, p in per.items()})\n    for j in JOBS:\n        top = baseline(JOBS[j])[:5]\n        print(j, \"top5\", top, \"wrong:\", [c for c in top if c not in LABELS[j]])\n",
+        pins: [[45, "hand labels, written before any score"], [61, "loose filter on years, then word overlap"], [64, "counts repeats on purpose: a weakness to find"], [69, "precision at 5"], [75, "mean over the three jobs"]] },
+      { title: "What it prints", calc: [["baseline P@5", "0.73"], ["j1", "0.80: a profile repeating words reaches the top"], ["j2", "0.60: two wrong profiles in the top five"], ["j3", "0.80: right stack, no design systems"]], note: "Real output of the kit. Add your own ranker and rerun." },
+      { title: "Try this next", flow: ["Count a word once", "Score city and skills", "Add synonyms", "Rerun, log the score"] }
+    ],
+    "wc38:2": [
+      { rule: "One change per run. Log it. Keep it only if the score moves and you can say why." },
+      { title: "The ladder, cheapest first", ladder: [["1", "clean the text and the filters", "free"], ["2", "BM25", "free"], ["3", "embeddings, cached", "one call per profile"], ["4", "fuse keyword and embedding scores", ""], ["5", "rerank the top 20 to 50", "calls grow with pairs"], ["6", "rewrite the query", "one call per job"], ["7", "LLM field extraction", "one call per profile, cached"]] },
+      { title: "A score log (the habit, not results from the kit)", calc: [["baseline", "0.73"], ["count a word once", "up: keep"], ["embeddings fused", "up: keep"], ["rerank top 20", "flat: revert"]] },
+      { title: "Keep or revert", vs: { cols: ["Keep", "Revert"], rows: [
+          ["score up", "and you can say why", "and you cannot explain it"],
+          ["score flat", "if it removes a known failure", "otherwise"],
+          ["cost", "within the time left", "20 minutes for a point of noise"]] } }
+    ],
+    "wc38:3": [
+      { rule: "The score says how much. The failures say why. Keep some data aside." },
+      { title: "Tune and hold out", split: [["Tune on", ["some of the jobs", "read their failures", "change one thing"]],
+                                           ["Check on", ["jobs you never tuned on", "did the gain hold?", "if not, revert"]]] },
+      { title: "Group the failures", vs: { cols: ["Cause", "Fix a group, not a case"], rows: [
+          ["synonyms", "server-side is backend", "embeddings or a synonym list"],
+          ["repeated words", "a profile stuffed with one word", "count each word once"],
+          ["wrong filter", "right person dropped", "loosen or score instead of filter"],
+          ["missing field", "no years given", "extract, or treat as unknown"]] } }
+    ],
+    "wc38:4": [
+      { rule: "Score story, LLM use, design, one bug, what you skipped, next steps." },
+      { title: "The order", flow: ["Score story", "LLM use", "Design and cost", "One real bug", "Skipped on purpose", "Next steps"] },
+      { title: "Two kinds of LLM use", split: [["As a coding helper", ["small asks", "what you checked", "one thing it got wrong"]],
+                                              ["As part of the system", ["embeddings", "rerank or extraction", "cached, sampled by hand"]]] }
     ]
   };
   for (var k in V) { if (window.SHEETS[k]) { window.SHEETS[k].vis = V[k]; } }
