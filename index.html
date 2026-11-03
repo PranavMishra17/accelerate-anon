@@ -347,6 +347,14 @@
   .shead .kicker .nlm-copy { margin-left: auto; }
   .shead .kicker .nlm-copy + .revisit-q { margin-left: var(--s2); }
   .wbq-lack { padding-left: 0; list-style: none; }
+  .rev .rev-top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); color: var(--muted); font-size: var(--fs-sm); margin-bottom: var(--s3); }
+  .rev .rev-opts { display: flex; flex-direction: column; gap: var(--s2); margin: var(--s3) 0; }
+  .rev .rev-o { text-align: left; }
+  .rev .rev-o.right { border-color: var(--ok); color: var(--ok); }
+  .rev .rev-o.wrong { border-color: var(--warn); color: var(--warn); }
+  .rev .rev-guess { display: block; margin: var(--s2) 0; font-size: var(--fs-sm); color: var(--muted); }
+  .rev .rev-clock { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; margin: var(--s3) 0; }
+  .rev .rev-list { padding-left: var(--s4); }
   .wbq-lack li { margin: var(--s2) 0; }
   .wbq-lack li .w { display: block; color: var(--muted); font-size: var(--fs-sm); }
   .sxg { font-size: var(--fs-lg); font-weight: 600; margin: var(--s5) 0 var(--s2); }
@@ -10694,10 +10702,10 @@
 
   /* Open questions for the end of a session: why and short closers, pick closers asked
      as open questions, then prompts from the steps themselves. Never blanks or single words. */
-  function endQuestions(s) {
-    /* A session's own revisit set wins: up to 8 open questions, each tied to the step it tests
-       (step: its index in s.steps), so the end can send you back to what you lacked. */
-    if (s.revisit && s.revisit.length) {
+  function endQuestions(s, revisit) {
+    /* With revisit, a session's own revisit set wins: up to 8 open questions, each tied to the
+       step it tests (step: its index in s.steps). The closing quiz keeps the step questions. */
+    if (revisit && s.revisit && s.revisit.length) {
       return s.revisit.map(function (r) { return { q: r.q, a: r.a, key: sKey(s.id, r.step) }; });
     }
     var qs = [];
@@ -10825,6 +10833,253 @@
       var m = /:(s?)(\d+)$/.exec(k), it = m[1] ? (s.study || [])[+m[2]] : s.steps[+m[2]];
       return { key: k, title: (+m[2] + 1) + ". " + (it ? it.t : k), why: why[k] };
     });
+  }
+  /* ------------------------------------------------ revision: one pass over a finished session
+
+     Five rounds in one pop-up, each drawn from what the session already has, weakest first:
+     key terms (SHEETS terms, recalled then checked), multiple choice (the MCQ bank; recorded as a
+     run, so step levels move), open questions (the session's revisit set, not the closing quiz),
+     say it aloud (the two coldest steps' done-when, a two-minute clock, then the spoken answer;
+     rated into the Drill's recall), and the session's open requeue items. Every round can be
+     skipped. The end: each round's result, then what you lacked by step from all of them, with
+     links back to those steps and one button that sends them to the requeue. */
+  function stepTitleOf(s, key) {
+    var m = /:(s?)(\d+)$/.exec(key || ""), it = m && (m[1] ? (s.study || [])[+m[2]] : s.steps[+m[2]]);
+    return it ? (+m[2] + 1) + ". " + it.t : key;
+  }
+  function revisionParts(s) {
+    var keys = stepKeysOf(s), latest = mcqLatest();
+    function rk(k) { var r = RANK[rated(k)]; return r === undefined ? 2 : r; }
+    var seen = {}, terms = [];
+    keys.forEach(function (key) {
+      var sh = sheetOf(key);
+      ((sh && sh.terms) || []).forEach(function (t) {
+        if (!t.t || seen[t.t]) { return; }
+        seen[t.t] = true;
+        terms.push({ key: key, rk: "term:" + key + ":" + t.t, t: t.t, mem: t.mem, d: t.d });
+      });
+    });
+    terms = terms.map(function (t, i) { return { t: t, i: i }; })
+      .sort(function (a, b) { return rk(a.t.rk) - rk(b.t.rk) || a.i - b.i; }).slice(0, 6).map(function (x) { return x.t; });
+    var mcqs = flat(keys.map(qItems)).map(function (q, i) {
+      var l = latest[q.id], w = !l ? 1 : (!l.ok ? 0 : (l.g ? 1 : 3));
+      return { q: q, w: w, i: i };
+    }).sort(function (a, b) { return a.w - b.w || a.i - b.i; }).slice(0, 6).map(function (x) { return x.q; });
+    /* open questions: the revisit set and the closing quiz's own, one pool, so a second pass is not a
+       rerun; the ones missed or never rated come first, six at a time */
+    var oseen = {}, open = endQuestions(s, true).concat(endQuestions(s)).filter(function (q) {
+      if (oseen[q.q]) { return false; } oseen[q.q] = true; return true;
+    }).map(function (q, i) { q.rk = "open:" + s.id + ":" + qHash(String(q.q)); return { q: q, i: i }; })
+      .sort(function (a, b) { return rk(a.q.rk) - rk(b.q.rk) || a.i - b.i; }).slice(0, 6).map(function (x) { return x.q; });
+    var say = s.steps.map(function (st, i) { return { st: st, key: sKey(s.id, i), i: i }; })
+      .filter(function (x) { return modelOf(s, x.st); })
+      .sort(function (a, b) { return rk(a.key) - rk(b.key) || a.i - b.i; }).slice(0, 2);
+    var req = (state.requeue.added || []).filter(function (q) { return q.session === s.id && !state.requeue.answered[q.id]; });
+    return { rounds: [
+      { id: "terms", name: "Key terms", items: terms },
+      { id: "mcq", name: "Multiple choice", items: mcqs },
+      { id: "open", name: "Open questions", items: open },
+      { id: "say", name: "Say it aloud", items: say },
+      { id: "req", name: "Requeue", items: req }
+    ].filter(function (r) { return r.items.length; }) };
+  }
+  function runRevision(s) {
+    var dlg = document.getElementById("revdlg");
+    if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "revdlg"; dlg.className = "wbq rev"; document.body.appendChild(dlg); }
+    dlg.onclose = function () { stopClock(); };
+    var rounds = revisionParts(s).rounds, ri = 0, ii = 0, results = [], clock = null;
+    var run = { at: Date.now(), mode: "revise", wk: currentWeek(), scope: s.id, fin: true, items: [], qids: [] };
+    function stopClock() { if (clock) { clearInterval(clock); clock = null; } }
+    function shut() { stopClock(); try { dlg.close(); } catch (e) { dlg.removeAttribute("open"); } draw(); }
+    function record(round, key, r, what) { results.push({ round: round, key: key, r: r, what: what }); }
+    function advance() { stopClock(); ii += 1; if (ii >= rounds[ri].items.length) { ri += 1; ii = 0; } if (ri < rounds.length) { card(); } else { finish(); } }
+    function skipRound() { stopClock(); ri += 1; ii = 0; if (ri < rounds.length) { card(); } else { finish(); } }
+    function frame(title) {
+      dlg.innerHTML = "";
+      var box = el("div", "wbq-in");
+      var top = el("div", "rev-top");
+      top.appendChild(el("span", "rev-r", "Round " + (ri + 1) + " of " + rounds.length + ": " + rounds[ri].name + ", " + (ii + 1) + " of " + rounds[ri].items.length));
+      var sk = el("button", "wb-link", "Skip this round");
+      sk.addEventListener("click", skipRound);
+      top.appendChild(sk);
+      box.appendChild(top);
+      if (title) { box.appendChild(el("div", "wbq-q", title)); }
+      dlg.appendChild(box);
+      return box;
+    }
+    function rateRow(box, labels, onRate) {
+      var row = el("div", "wbq-row");
+      labels.forEach(function (lab, r) {
+        var b = el("button", "wb-btn", lab);
+        b.addEventListener("click", function () { onRate(r); advance(); });
+        row.appendChild(b);
+      });
+      var stop = el("button", "wb-link", "Stop");
+      stop.addEventListener("click", finish);
+      row.appendChild(stop);
+      box.appendChild(row);
+    }
+    function revealThen(box, show, after) {
+      var row = el("div", "wbq-row");
+      var rv = el("button", "wb-btn primary", "Show the answer");
+      rv.addEventListener("click", function () { row.remove(); show(box); after(box); });
+      var stop = el("button", "wb-link", "Stop");
+      stop.addEventListener("click", finish);
+      row.appendChild(rv); row.appendChild(stop);
+      box.appendChild(row);
+    }
+    var RATE3 = ["Had it", "Partly", "Missed it"];
+    function card() {
+      var rd = rounds[ri], it = rd.items[ii], box;
+      if (rd.id === "terms") {
+        box = frame("What is " + it.t + "? Say it, then check.");
+        box.appendChild(el("p", "wb-quiet", "From step " + stepTitleOf(s, it.key)));
+        revealThen(box, function (b) {
+          var m = el("div", "wb-model");
+          if (it.mem) { m.appendChild(el("p", "", "Remember: " + it.mem)); }
+          m.appendChild(el("p", "", it.d || ""));
+          b.appendChild(m);
+        }, function (b) { rateRow(b, RATE3, function (r) { rateCard(it.rk, ["got", "shaky", "no"][r]); record("terms", it.key, r, "term: " + it.t); }); });
+      } else if (rd.id === "mcq") {
+        var q = it, order = shuffled(q.x.o.map(function (_, k) { return k; })), guess = false, picked = false;
+        box = frame(q.x.q);
+        var opts = el("div", "rev-opts");
+        var gl = el("label", "rev-guess");
+        var gc = document.createElement("input"); gc.type = "checkbox";
+        gc.addEventListener("change", function () { guess = gc.checked; });
+        gl.appendChild(gc); gl.appendChild(document.createTextNode(" I'm guessing"));
+        function choose(p) {
+          if (picked) { return; }
+          picked = true;
+          var ok = p === q.x.a, rec = { id: q.id, k: q.k, p: p, g: guess, ok: ok };
+          run.items.push(rec); run.qids.push(q.id);
+          state.mcq["v" + run.at] = run; mcqMemo = null; save();
+          [].forEach.call(opts.children, function (b) { b.disabled = true; if (+b.getAttribute("data-k") === q.x.a) { b.className += " right"; } else if (+b.getAttribute("data-k") === p) { b.className += " wrong"; } });
+          box.appendChild(el("div", "wb-model", (ok ? (guess ? "Right, but a guess. " : "Right. ") : (p < 0 ? "The answer: " + q.x.o[q.x.a] + ". " : "Not that one. ")) + (q.x.why || "")));
+          record("mcq", q.k, ok && !guess ? 0 : ok ? 1 : 2, "multiple choice: " + q.x.q);
+          var row = el("div", "wbq-row"), nx = el("button", "wb-btn primary", "Next");
+          nx.addEventListener("click", advance);
+          var stop = el("button", "wb-link", "Stop");
+          stop.addEventListener("click", finish);
+          row.appendChild(nx); row.appendChild(stop);
+          box.appendChild(row);
+          nx.focus();
+        }
+        order.forEach(function (k) {
+          var b = el("button", "wb-btn rev-o", q.x.o[k]);
+          b.setAttribute("data-k", k);
+          b.addEventListener("click", function () { choose(k); });
+          opts.appendChild(b);
+        });
+        var idk = el("button", "wb-link", "I don't know");
+        idk.addEventListener("click", function () { choose(-1); });
+        box.appendChild(opts); box.appendChild(gl); box.appendChild(idk);
+      } else if (rd.id === "open") {
+        box = frame(it.q);
+        var ta = document.createElement("textarea"); ta.placeholder = "Your answer";
+        box.appendChild(ta);
+        revealThen(box, function (b) { b.appendChild(el("div", "wb-model", it.a)); },
+          function (b) { rateRow(b, RATE3, function (r) { rateCard(it.rk, ["got", "shaky", "no"][r]); record("open", it.key, r, (r === 2 ? "missed: " : "partly: ") + it.q); }); });
+        ta.focus();
+      } else if (rd.id === "say") {
+        var st = it.st;
+        box = frame("Say it out loud, no notes: " + (st.out ? st.out.charAt(0).toUpperCase() + st.out.slice(1) : st.t));
+        box.appendChild(el("p", "wb-quiet", "Step " + stepTitleOf(s, it.key) + ". Two minutes; the answer stays shut until you have said it."));
+        var left = 120, tm = el("div", "rev-clock", "2:00");
+        box.appendChild(tm);
+        clock = setInterval(function () {
+          left -= 1;
+          tm.textContent = Math.floor(Math.max(left, 0) / 60) + ":" + ("0" + (Math.max(left, 0) % 60)).slice(-2);
+          if (left <= 0) { stopClock(); tm.textContent = "Time"; }
+        }, 1000);
+        revealThen(box, function (b) { stopClock(); b.appendChild(el("div", "wb-model", ansText(modelOf(s, st)))); },
+          function (b) { rateRow(b, ["Said it clean", "Roughly, with gaps", "Could not say it"], function (r) { rateCard(it.key, ["got", "shaky", "no"][r]); record("say", it.key, r, "said it: " + ["clean", "roughly", "could not"][r]); }); });
+      } else {
+        box = frame(it.t);
+        if (it.w) { box.appendChild(el("p", "wb-quiet", it.w)); }
+        var ra = document.createElement("textarea"); ra.placeholder = "Your answer now";
+        box.appendChild(ra);
+        var row = el("div", "wbq-row");
+        var close1 = el("button", "wb-btn primary", "Answered: close it");
+        close1.addEventListener("click", function () { state.requeue.answered[it.id] = { date: stampNow(), note: ra.value.trim() }; save(); record("req", null, 0, it.t); advance(); });
+        var keep1 = el("button", "wb-btn", "Keep it open");
+        keep1.addEventListener("click", function () { record("req", null, 2, it.t); advance(); });
+        row.appendChild(close1); row.appendChild(keep1);
+        box.appendChild(row);
+      }
+    }
+    function intro() {
+      dlg.innerHTML = "";
+      var box = el("div", "wbq-in");
+      box.appendChild(el("div", "wbq-q", "Revise: " + s.name));
+      box.appendChild(el("p", "", "One pass over everything this session has, weakest first. Skip any round."));
+      var ul = el("ul", "rev-list");
+      rounds.forEach(function (r) { ul.appendChild(el("li", "", r.name + ": " + r.items.length)); });
+      box.appendChild(ul);
+      var row = el("div", "wbq-row"), go = el("button", "wb-btn primary", "Start");
+      go.addEventListener("click", card);
+      var stop = el("button", "wb-link", "Not now");
+      stop.addEventListener("click", shut);
+      row.appendChild(go); row.appendChild(stop);
+      box.appendChild(row);
+      dlg.appendChild(box);
+      go.focus();
+    }
+    function finish() {
+      stopClock();
+      var why = {}, order = stepKeysOf(s);
+      results.forEach(function (x) { if (x.key && x.r > 0) { (why[x.key] = why[x.key] || []).push(x.what); } });
+      var lacks = order.filter(function (k) { return why[k]; }).map(function (k) { return { key: k, title: stepTitleOf(s, k), why: why[k] }; });
+      var hist = { at: stampNow(), via: "revision", score: results.filter(function (x) { return x.r === 0; }).length, of: results.length,
+        lacked: lacks.map(function (l) { return l.key; }) };
+      if (results.length) { state.quizHistory[s.id] = (state.quizHistory[s.id] || []).concat([hist]); save(); }
+      dlg.innerHTML = "";
+      var box = el("div", "wbq-in");
+      box.appendChild(el("div", "wbq-q", results.length ? "Revision done: " + hist.score + " of " + results.length + " clean." : "Nothing answered."));
+      var tb = el("ul", "rev-list");
+      rounds.forEach(function (r) {
+        var rs = results.filter(function (x) { return x.round === r.id; });
+        if (!rs.length) { return; }
+        var c = [0, 0, 0]; rs.forEach(function (x) { c[x.r] += 1; });
+        tb.appendChild(el("li", "", r.name + ": " + c[0] + " had it" + (c[1] ? ", " + c[1] + " partly" : "") + (c[2] ? ", " + c[2] + " missed" : "")));
+      });
+      box.appendChild(tb);
+      if (lacks.length) {
+        box.appendChild(el("p", "", "What you lacked, by step. Open each to refresh it:"));
+        var ul = el("ul", "wbq-lack");
+        lacks.forEach(function (l) {
+          var li = el("li"), go = el("button", "wb-link", l.title);
+          go.addEventListener("click", function () { stopClock(); dlg.close(); open[s.id + ":row"] = l.key; rowJump = l.key; draw(); });
+          li.appendChild(go);
+          var by = {};
+          l.why.forEach(function (w) { var kind = w.split(":")[0]; by[kind] = (by[kind] || 0) + 1; });
+          li.appendChild(el("span", "w", Object.keys(by).map(function (k) { return by[k] + " " + k; }).join(", ")));
+          var dt = document.createElement("details"), sm = el("summary", "", "Which ones");
+          dt.appendChild(sm);
+          var wl = el("ul");
+          l.why.forEach(function (w) { wl.appendChild(el("li", "", w)); });
+          dt.appendChild(wl);
+          li.appendChild(dt);
+          ul.appendChild(li);
+        });
+        box.appendChild(ul);
+        var rq = el("button", "wb-btn", "Send these " + lacks.length + " steps to the requeue");
+        rq.addEventListener("click", function () {
+          lacks.forEach(function (l, n) { state.requeue.added.push({ id: "U" + Date.now() + "-" + n, t: "Revisit " + l.title, w: l.why.join("; "), session: s.id, at: stampNow() }); });
+          save(); rq.disabled = true; rq.textContent = "Sent to the requeue";
+        });
+        box.appendChild(rq);
+      } else if (results.length) {
+        box.appendChild(el("p", "", "Nothing lacking in what you answered."));
+      }
+      var close = el("button", "wb-btn primary", "Close");
+      close.addEventListener("click", shut);
+      box.appendChild(close);
+      dlg.appendChild(box);
+    }
+    if (!rounds.length) { return; }
+    intro();
+    try { dlg.showModal(); } catch (err) { dlg.setAttribute("open", ""); }
   }
   function runEndQuiz(s, qs) {
     var dlg = document.getElementById("wbquiz");
@@ -11464,11 +11719,11 @@
     /* Once a session is done, its quiz rides in the head too, for a quick revisit; before that
        the quiz stays where it was, at the end. */
     if (state.done[s.id] || sessionDone(s)) {
-      var rq = endQuestions(s);
-      if (rq.length) {
-        var qbtn = el("button", "sec nlm-copy revisit-q", "Test yourself (" + rq.length + ")");
-        qbtn.title = "The session's open questions, one at a time; ends with what you lacked and links to those steps";
-        qbtn.addEventListener("click", function () { runEndQuiz(s, rq); });
+      var rv = revisionParts(s), rn = rv.rounds.reduce(function (a, r) { return a + r.items.length; }, 0);
+      if (rn) {
+        var qbtn = el("button", "sec nlm-copy revisit-q", "Revise this session");
+        qbtn.title = "Key terms, multiple choice, open questions, say it aloud and the requeue, in one pass; ends with what you lacked";
+        qbtn.addEventListener("click", function () { runRevision(s); });
         kick.appendChild(qbtn);
       }
     }
