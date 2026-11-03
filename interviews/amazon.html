@@ -546,6 +546,10 @@ details.item > .sbody { padding-left: 0; }
 .cd-sec { margin: var(--s6) 0 0; padding-top: var(--s4); border-top: var(--hair); }
 .cd-sec h3 { font-size: var(--fs-lg); margin-bottom: var(--s3); }
 .cd-blk { margin: var(--s4) 0; max-width: 860px; }
+.dif { font-size: var(--fs-xs); white-space: nowrap; }
+.dif.d-easy { color: var(--ok); } .dif.d-medium { color: var(--muted); } .dif.d-hard { color: var(--warn); }
+.cd-probs table { width: 100%; } .cd-probs td { vertical-align: top; } .cd-probs td.cd-pl { white-space: nowrap; text-align: right; }
+.cd-probs a.ext + a.ext { margin-left: var(--s2); }
 /* A mock turn: the interviewer left, what you say right on the dark sheet, the follow-ups folded under it. */
 .turn { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: var(--s6); margin: var(--s4) 0 var(--s6); align-items: start; }
 .turn + .turn { border-top: var(--hair); padding-top: var(--s5); }
@@ -2460,9 +2464,24 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   function cdState() { try { return JSON.parse(localStorage.getItem(CD_KEY) || "{}") || {}; } catch (e) { return {}; } }
   function cdSave(k, v) { var s = cdState(); s[k] = v; try { localStorage.setItem(CD_KEY, JSON.stringify(s)); } catch (e) {} }
   function cdParts(tab) {
-    /* Shared guides (coding/concurrency.js) bring their own parts, tagged with their tab. */
-    return (window.LOOP_CODING ? LOOP_CODING.parts : []).concat(window.CONCURRENCY ? CONCURRENCY.parts : []).filter(function (p) { return (p.tab || "coding") === (tab || "coding"); })
+    /* Shared guides (coding/concurrency.js) bring their own parts, tagged with their tab. A loop whose TABS
+       has no "concurrency" folds them into Coding as a section after its own parts, numbered on from them. */
+    var own = window.LOOP_CODING ? LOOP_CODING.parts : [], conc = window.CONCURRENCY ? CONCURRENCY.parts : [];
+    if ((tab || "coding") === "coding" && LOOP.tabs && LOOP.tabs.indexOf("concurrency") < 0 && conc.length) {
+      var top = 0;
+      own.forEach(function (p) { if ((p.tab || "coding") === "coding" && p.n > top) { top = p.n; } });
+      conc = conc.map(function (p) { var c = {}; for (var k in p) { c[k] = p[k]; } c.tab = "coding"; c.n = Math.floor(top) + p.n; c.title = "Concurrency: " + p.title; return c; });
+    }
+    return own.concat(conc).filter(function (p) { return (p.tab || "coding") === (tab || "coding"); })
       .sort(function (a, b) { return a.n - b.n; });
+  }
+  /* A difficulty tag and LeetCode / video links, as CODING.html draws them beside Show the solution. */
+  function cdDif(d) { return d ? ' <span class="dif d-' + esc(d) + '">' + esc(d.charAt(0).toUpperCase() + d.slice(1)) + "</span>" : ""; }
+  function cdLinks(e) {
+    var h = "";
+    if (e.lc) { h += ' <a class="ext" target="_blank" rel="noopener" href="https://leetcode.com/problems/' + esc(e.lc) + '/">LeetCode</a>'; }
+    if (e.yt) { h += ' <a class="ext" target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=' + esc(e.yt[0]) + '">Video, ' + esc(e.yt[1]) + ", " + esc(String(e.yt[2])) + " min</a>"; }
+    return h;
   }
   function cdBtn(label, fn) { var b = el("button", "btn", esc(label)); b.type = "button"; b.addEventListener("click", fn); return b; }
   /* Python, coloured: one tokenizer for every code block and for the editor, so what you type looks like what you
@@ -2831,8 +2850,16 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
         var tw = el("div", "cd-blk"); tw.appendChild(t); return tw;
       case "problem": return workbench({ id: b.id, minutes: b.minutes, scenario: b.statement, examples: b.examples, constraints: b.constraints,
         starter: b.starter, hints: b.hints, tests: b.tests, solution: b.solution, complexity: b.complexity, explain: b.explain, followups: b.followups,
-        head: "<strong>" + esc(b.source || "") + "</strong>" + (b.minutes ? ", about " + b.minutes + " minutes" : "") + (b.why ? ". " + inl(b.why) : ""),
+        head: "<strong>" + esc(b.source || "") + "</strong>" + cdDif(b.d) + (b.minutes ? ", about " + b.minutes + " minutes" : "") + (b.why ? ". " + inl(b.why) : "") + cdLinks(b),
         reveal: { topic: b.title } });
+      case "probs":
+        var pw = el("div", "cd-blk cd-probs");
+        if (b.title) { pw.appendChild(el("div", "lab", esc(b.title))); }
+        var pt = el("table");
+        pt.innerHTML = "<tbody>" + b.items.map(function (q) {
+          return "<tr><td><strong>" + esc(q.n) + "</strong>" + cdDif(q.d) + "</td><td>" + inl(q.why || "") + "</td><td class=\"cd-pl\">" + cdLinks(q) + "</td></tr>";
+        }).join("") + "</tbody>";
+        pw.appendChild(pt); return pw;
       case "fig": var fw = el("div", "cd-blk"), fg = figNode(b.key, 0); if (fg) { fw.appendChild(fg); } return fw;
       case "res": var rw = el("div", "cd-blk"), rr = window.Res && Res.render(b.items); if (rr) { rw.appendChild(rr); } return rw;
     }

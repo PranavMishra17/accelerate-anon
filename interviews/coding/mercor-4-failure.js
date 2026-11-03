@@ -1,8 +1,8 @@
-/* Mercor coding tab, part 4: Failure, time and the review. Every code sample was run with Python 3.12. */
+/* Mercor coding tab, part 7: Failure, time and the review. Every code sample was run with Python 3.12. */
 window.LOOP_CODING = window.LOOP_CODING || { parts: [] };
 window.LOOP_CODING.parts.push({
  "id": "failure",
- "n": 4,
+ "n": 7,
  "title": "Failure, time and the review",
  "minutes": 25,
  "lead": "After this part you can say, with confidence, how concurrent code fails (timeouts, cancels, retries, duplicate writes) and what you would change, using a fixed six-step review order.",

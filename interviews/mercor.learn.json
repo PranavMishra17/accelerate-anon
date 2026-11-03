@@ -418,6 +418,46 @@
      "design": "ai-interviewer"
     }
    ]
+  },
+  {
+   "id": "related",
+   "title": "Related designs, for the follow-ups",
+   "lead": "Designs already in the guide that cover the follow-ups the two reported prompts lead to. Read the deep dives, not the whole design.",
+   "topics": [
+    {
+     "id": "sd-ticketmaster",
+     "title": "Ticketmaster: contention and holds",
+     "brief": "The classic baseline for two workers or two buyers wanting the same thing. The job scheduler's duplicate-run problem is the same contention: a conditional update, a hold with an expiry, a lock with a lease.",
+     "points": [
+      "Read the deep dives on holding a seat and on the queue in front of a hot event.",
+      "Carry over: a conditional update or a lease decides who wins; the loser retries or moves on.",
+      "Say it in the scheduler: a job is claimed the way a seat is held, with an expiry so a dead worker gives it back."
+     ],
+     "design": "ticketmaster"
+    },
+    {
+     "id": "sd-notebooklm",
+     "title": "NotebookLM: retrieval and grounded answers",
+     "brief": "Retrieval over a user's own documents with citations. Candidate search reuses its ingestion, chunking and retrieval, then adds hard filters and a ranking you can evaluate.",
+     "points": [
+      "Read the ingestion and retrieval steps, then the deep dive on answer grounding.",
+      "Carry over: hybrid retrieval, reranking, and keeping each customer's data apart.",
+      "Say it in candidate search: retrieval sets the ceiling; a profile never retrieved can't be ranked."
+     ],
+     "design": "notebooklm"
+    },
+    {
+     "id": "sd-kitaru",
+     "title": "Kitaru: an agent-evaluation product",
+     "brief": "An evaluation product read from its source. The AI interviewer's grading and the search build's evaluation endpoint are both evaluation problems: cases, graders, a score you can trust.",
+     "points": [
+      "Read how cases, runs and graders are modelled.",
+      "Carry over: one grader per dimension, a stored baseline, and regressions flagged on every change.",
+      "Pairs with the LLD tab's eval harness round."
+     ],
+     "design": "kitaru"
+    }
+   ]
   }
  ]
 }

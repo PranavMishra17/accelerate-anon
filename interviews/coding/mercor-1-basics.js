@@ -1,8 +1,8 @@
-/* Mercor coding tab, part 1: Python, back in your hands. Every code sample was run with Python 3.12. */
+/* Mercor coding tab, part 4: Python, back in your hands. Every code sample was run with Python 3.12. */
 window.LOOP_CODING = window.LOOP_CODING || { parts: [] };
 window.LOOP_CODING.parts.push({
  "id": "basics",
- "n": 1,
+ "n": 4,
  "title": "Python, back in your hands",
  "minutes": 15,
  "lead": "After this part you can read the dict, OrderedDict and loader code in the mock code, and spot the delete-while-iterating and late-binding lambda bugs, without stopping to look things up.",

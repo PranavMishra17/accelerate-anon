@@ -1,8 +1,8 @@
-/* Mercor coding tab, part 5: Four problems, no internet. Every code sample was run with Python 3.12. */
+/* Mercor coding tab, part 8: Four problems, no internet. Every code sample was run with Python 3.12. */
 window.LOOP_CODING = window.LOOP_CODING || { parts: [] };
 window.LOOP_CODING.parts.push({
  "id": "problems",
- "n": 5,
+ "n": 8,
  "title": "Four problems, no internet",
  "minutes": 120,
  "lead": "After this part you can solve four small problems offline: a dict, an eviction policy, two thread primitives and a sliding window. You write each in the box, use hints only when stuck, and then check why the solution works.",

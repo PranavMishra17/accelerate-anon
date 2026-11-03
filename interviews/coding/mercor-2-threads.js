@@ -1,8 +1,8 @@
-/* Mercor coding tab, part 2: Threads. Every code sample was run with Python 3.12. */
+/* Mercor coding tab, part 5: Threads. Every code sample was run with Python 3.12. */
 window.LOOP_CODING = window.LOOP_CODING || { parts: [] };
 window.LOOP_CODING.parts.push({
  "id": "threads",
- "n": 2,
+ "n": 5,
  "title": "Threads",
  "minutes": 40,
  "lead": "After this part you can find where a thread starts, where it waits, where work is capped and where order is kept, and you can say what is wrong with a threaded cache and fix it.",

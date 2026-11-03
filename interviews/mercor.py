@@ -34,24 +34,18 @@ LOOP = {
             "prototype; narrate, write tests, validate assumptions, say what you optimise for. Design: tradeoffs on latency, "
             "cost, reliability, scale, deployment and observability, plus retrieval, evaluation, failure modes and monitoring. "
             "Why over tool names. Reviewers penalise code you cannot explain."),
-    "plan_kicker": "What to do, in order",
-    "extra": ("<b>The work order.</b> No dates and no hours: do these in order, from first to last. "
+    "plan_kicker": "Things to do for round 3",
+    "extra": ("<b>Things to do for round 3, in order.</b> Every item links to where it lives. "
               "<ol>"
-              "<li><b>Brush up the system design.</b> The Learn tab, first topic: w1a, w4e, w4a and w5e first, then w4d and w5f, then w5a, w2a and w3a if time.</li>"
-              "<li><b>wc35, the build workflow.</b> The AI-assisted build and its presentation, with the timed rehearsal at the end.</li>"
-              "<li><b>The Coding tab's onsite problems, with no AI.</b> Referral network, faulty comparator, task scheduler, exchange rates "
-              "(interviews/coding/mercor-6-onsite.js). Reports say the first hour of the coding round allows Google for syntax and no LLMs.</li>"
-              "<li><b>wc38, the search build.</b> Run the kit, then beat its baseline score one change at a time.</li>"
-              "<li><b>The three case studies on the Learn tab.</b> Job scheduler, candidate search, AI interviewer.</li>"
-              "<li><b>wc36, AI system design the Mercor way.</b> The checklist run on four designs.</li>"
-              "<li><b>The LLD tab.</b> Its two rounds about an agentic system.</li>"
-              "<li><b>wc37, the basics.</b> Complexity, hashing, graph search, a cache race.</li>"
-              "<li><b>Two mocks in chat.</b> Say 'run the Mercor build mock', then 'run the Mercor onsite design mock'. Critique after each.</li>"
-              "<li><b>The Prep tab.</b> The show-up list and the questions to ask.</li>"
-              "<li><b>Light review, only if time is left.</b> wc32 to wc34 and "
-              "<a href=\"../index.html#/s/w5a\" target=\"_blank\" rel=\"noopener\">week 5's caching</a>.</li>"
-              "<li><b>On the day, ask first.</b> Which rules on AI tools apply in each round, the end time, and whether a round can end the day "
-              "(reports say some rounds are eliminatory).</li>"
+              "<li><b>System design brush-up.</b> <a href=\"#/learn/sd-brushup\">Learn: the brush-up</a>: <a href=\"../index.html#/s/w1a\" target=\"_blank\" rel=\"noopener\">w1a</a>, <a href=\"../index.html#/s/w4e\" target=\"_blank\" rel=\"noopener\">w4e</a>, <a href=\"../index.html#/s/w4a\" target=\"_blank\" rel=\"noopener\">w4a</a>, <a href=\"../index.html#/s/w5e\" target=\"_blank\" rel=\"noopener\">w5e</a> first.</li>"
+              "<li><b>The coding round, no AI.</b> <a href=\"#/coding/mercor-onsite-code\">Coding: referral network and task scheduler</a>, timed, real data, no stubs, then defend each line.</li>"
+              "<li><b>The algorithms discussion.</b> <a href=\"#/coding/mercor-onsite-algo\">Coding: comparator, exchange rates, friend network</a>, said aloud before any code.</li>"
+              "<li><b>The build.</b> <a href=\"../index.html#/w/wc35\" target=\"_blank\" rel=\"noopener\">wc35</a> (workflow and presentation), then <a href=\"../index.html#/w/wc38\" target=\"_blank\" rel=\"noopener\">wc38</a> (beat the baseline score), with <a href=\"#/coding/mercor-onsite-build\">Coding: what to pin down in the search build</a>.</li>"
+              "<li><b>System design.</b> <a href=\"#/learn/sd-job-scheduler\">job scheduler</a>, <a href=\"#/learn/sd-candidate-search\">candidate search</a>, <a href=\"#/learn/sd-ai-interviewer\">AI interviewer</a>, then <a href=\"../index.html#/w/wc36\" target=\"_blank\" rel=\"noopener\">wc36</a> and the <a href=\"#/learn/m-related\">related designs</a>.</li>"
+              "<li><b>Basics.</b> <a href=\"../index.html#/w/wc37\" target=\"_blank\" rel=\"noopener\">wc37</a>, and the <a href=\"#/coding\">Coding tab</a>'s concurrency section if threads come up.</li>"
+              "<li><b>Extra practice.</b> <a href=\"#/lld\">LLD: the two agent rounds</a>, not a reported round.</li>"
+              "<li><b>Two mocks in chat.</b> Say 'run the Mercor build mock', then 'run the Mercor onsite design mock'.</li>"
+              "<li><b>The day itself.</b> <a href=\"#/prep\">Prep: the show-up list and your questions</a>. Ask which rounds allow AI tools, the end time, and whether a round can end the day.</li>"
               "</ol>"),
 }
 
@@ -261,7 +255,7 @@ SCRIPTS = [
 ]
 
 QA = []
-TABS = ["overview", "learn", "sessions", "coding", "lld", "prep", "rounds", "mocks", "concurrency"]
+TABS = ["overview", "learn", "sessions", "coding", "lld", "prep", "rounds", "mocks"]   # Concurrency folds into Coding
 SHARED_JS = ["coding/concurrency.js"]   # the Concurrency tab, shared with CODING.html
 
 ASK_3C = [
