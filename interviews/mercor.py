@@ -256,6 +256,7 @@ SCRIPTS = [
 
 QA = []
 TABS = ["overview", "learn", "sessions", "coding", "lld", "prep", "rounds", "mocks"]   # Concurrency folds into Coding
+CONC_N = 4   # the shared concurrency guide, as one part with chapters, after asyncio (part 3)
 SHARED_JS = ["coding/concurrency.js"]   # the Concurrency tab, shared with CODING.html
 
 ASK_3C = [

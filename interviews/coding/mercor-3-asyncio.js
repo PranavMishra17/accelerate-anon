@@ -1,8 +1,8 @@
-/* Mercor coding tab, part 6: asyncio. Every code sample was run with Python 3.12. */
+/* Mercor coding tab, part 3: asyncio. Every code sample was run with Python 3.12. */
 window.LOOP_CODING = window.LOOP_CODING || { parts: [] };
 window.LOOP_CODING.parts.push({
  "id": "asyncio",
- "n": 6,
+ "n": 3,
  "title": "asyncio",
  "minutes": 40,
  "lead": "After this part you can read async code and say, at every line, whether it runs now, waits, or runs later, and you can add a cap or an order to it in a few minutes.",

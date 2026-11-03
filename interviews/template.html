@@ -2460,9 +2460,19 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
        has no "concurrency" folds them into Coding as a section after its own parts, numbered on from them. */
     var own = window.LOOP_CODING ? LOOP_CODING.parts : [], conc = window.CONCURRENCY ? CONCURRENCY.parts : [];
     if ((tab || "coding") === "coding" && LOOP.tabs && LOOP.tabs.indexOf("concurrency") < 0 && conc.length) {
-      var top = 0;
+      /* One Concurrency part; each guide part becomes a chapter (its id kept, so old links land), its own
+         sections run on inside it under their headings. LOOP.concN places it; else after the loop's parts. */
+      var top = 0, mins = 0;
       own.forEach(function (p) { if ((p.tab || "coding") === "coding" && p.n > top) { top = p.n; } });
-      conc = conc.map(function (p) { var c = {}; for (var k in p) { c[k] = p[k]; } c.tab = "coding"; c.n = Math.floor(top) + p.n; c.title = "Concurrency: " + p.title; return c; });
+      var chapters = conc.map(function (p, i) {
+        mins += p.minutes || 0;
+        var blocks = [{ t: "p", text: p.lead }];
+        p.sections.forEach(function (s) { blocks.push({ t: "p", text: "**" + s.title + "**" }); blocks = blocks.concat(s.blocks); });
+        return { id: p.id, title: (i + 1) + ". " + p.title, minutes: p.minutes, blocks: blocks };
+      });
+      conc = [{ tab: "coding", id: "concurrency", one: true, n: LOOP.concN || Math.floor(top) + 1, title: "Concurrency", minutes: mins,
+        lead: "The five ways to run work at once, in one place: processes, threads, multithreading, asyncio and multiprocessing. One chapter each, then the pitfalls when they mix. Shared with the coding page.",
+        sections: chapters }];
     }
     return own.concat(conc).filter(function (p) { return (p.tab || "coding") === (tab || "coding"); })
       .sort(function (a, b) { return a.n - b.n; });

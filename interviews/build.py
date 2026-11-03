@@ -163,7 +163,7 @@ def build(module_name):
         # Overview: the company and the role from its posting; Rounds: what each round asked.
         "company": getattr(m, "COMPANY", []), "posting": getattr(m, "POSTING", None), "rounds": getattr(m, "ROUNDS", []),
         "research": research,
-        "learn": learn, "tabs": getattr(m, "TABS", None),
+        "learn": learn, "tabs": getattr(m, "TABS", None), "concN": getattr(m, "CONC_N", None),
         "plan": getattr(m, "PLAN", None), "lp": getattr(m, "LP", None), "card": getattr(m, "CARD", None),
         "live": getattr(m, "LIVE", []), "liveLead": getattr(m, "LIVE_LEAD", []), "takehomes": getattr(m, "TAKEHOMES", []), "watch": getattr(m, "WATCH", None), "timeline": getattr(m, "TIMELINE", None),
     }
