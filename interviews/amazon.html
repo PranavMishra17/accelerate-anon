@@ -2950,6 +2950,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
         learn.forEach(put);
         if (drill.length) { sec.appendChild(el("div", "lab cd-drill", "Practise")); drill.forEach(put); }
       }
+      var rsec = resFor(cur.id + "/" + s.id, "Watch and read"); if (rsec) { sec.appendChild(rsec); }
       host.appendChild(sec);
       nav.push([s.id, s.title, true, link(tab, s.id)]);
     });

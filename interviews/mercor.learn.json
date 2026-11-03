@@ -81,6 +81,48 @@
        "a": 1,
        "why": "w4e has the SKIP LOCKED claim and the ON CONFLICT retry write; w4a has backoff, dead-letter and idempotency. The others support them."
       }
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Intro to ACID database transactions",
+       "url": "https://www.youtube.com/watch?v=oGmxzUBCYtY",
+       "m": 8,
+       "why": "The four guarantees in plain words, before the claim and lost-update material in w4e.",
+       "yt": {
+        "id": "oGmxzUBCYtY",
+        "ch": "Jordan has no life"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Distributed systems 7.2: linearizability",
+       "url": "https://www.youtube.com/watch?v=noUNH3jDLC0",
+       "m": 19,
+       "why": "What 'one scheduler may fire a job' needs from the store; the idea behind w4d.",
+       "yt": {
+        "id": "noUNH3jDLC0",
+        "ch": "Martin Kleppmann"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "AWS Builders' Library: timeouts, retries and backoff with jitter",
+       "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+       "m": 15,
+       "why": "The retry rules behind w4a: which calls to retry, how long to wait, why jitter."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "PostgreSQL docs: transaction isolation",
+       "url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+       "m": 15,
+       "why": "The anomalies (lost update, write skew) each level allows, from the database itself."
+      }
      ]
     }
    ]
@@ -153,6 +195,38 @@
        "url": "https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery",
        "m": 15,
        "why": "The order to run the 45 minutes in: requirements, core entities, API, high level, deep dives."
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "System design interview: a step-by-step guide",
+       "url": "https://www.youtube.com/watch?v=i7twT3x5yv8",
+       "m": 10,
+       "why": "The four-step frame (scope, high level, deep dive, wrap up) and how to split the time.",
+       "yt": {
+        "id": "i7twT3x5yv8",
+        "ch": "ByteByteGo"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "How to prepare for system design interviews",
+       "url": "https://www.youtube.com/watch?v=Ru54dxzCyD0",
+       "m": 19,
+       "why": "What interviewers grade at each level and where candidates lose time.",
+       "yt": {
+        "id": "Ru54dxzCyD0",
+        "ch": "Hello Interview"
+       }
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Hello Interview: system design in a hurry",
+       "url": "https://www.hellointerview.com/learn/system-design/in-a-hurry/introduction",
+       "m": 10,
+       "why": "The overview page of the same course; read it for the map of what to cover."
       }
      ],
      "mcq": [
@@ -263,6 +337,46 @@
        "url": "https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery",
        "m": 15,
        "why": "The order to run the 45 minutes in: requirements, API, high level, deep dives."
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Distributed job scheduler, systems design interview",
+       "url": "https://www.youtube.com/watch?v=pzDwYHRzEnk",
+       "m": 31,
+       "why": "Claiming, retries and the duplicate-run problem, drawn out with trade-offs.",
+       "yt": {
+        "id": "pzDwYHRzEnk",
+        "ch": "Jordan has no life"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Distributed task scheduler: system design interview",
+       "url": "https://www.youtube.com/watch?v=zl8BPH74GY4",
+       "m": 23,
+       "why": "A shorter pass at the same design; compare how it handles failed workers.",
+       "yt": {
+        "id": "zl8BPH74GY4",
+        "ch": "TechPrep"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Brandur: Postgres job queues and failure by MVCC",
+       "url": "https://brandur.org/postgres-queues",
+       "m": 12,
+       "why": "A database-backed queue works until long transactions bloat it; know the limit before you propose it."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "PostgreSQL docs: SELECT, the locking clause (FOR UPDATE SKIP LOCKED)",
+       "url": "https://www.postgresql.org/docs/current/sql-select.html",
+       "m": 10,
+       "why": "The exact semantics of the claim query; search the page for SKIP LOCKED."
       }
      ],
      "mcq": [
@@ -427,6 +541,18 @@
        "url": "https://docs.stripe.com/api/idempotent_requests",
        "m": 5,
        "why": "What a real provider stores for a key, for how long, and what a different body does."
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Design a payment system",
+       "url": "https://www.youtube.com/watch?v=olfaBgJrUBI",
+       "m": 32,
+       "why": "The full interview shape for payments: ledger, PSP, retries, reconciliation.",
+       "yt": {
+        "id": "olfaBgJrUBI",
+        "ch": "Code with Lucian"
+       }
       }
      ],
      "mcq": [
@@ -553,6 +679,48 @@
      ],
      "avoid": [
       "Keeping a database row lock open while a person types a card number."
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Ticketmaster: system design interview",
+       "url": "https://www.youtube.com/watch?v=_1AF8eZI0RA",
+       "m": 20,
+       "why": "The hold with an expiry and the double-booking guard in one short pass.",
+       "yt": {
+        "id": "_1AF8eZI0RA",
+        "ch": "TechPrep"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Design Ticketmaster, system design interview",
+       "url": "https://www.youtube.com/watch?v=fhdPyoO6aXI",
+       "m": 59,
+       "why": "The long version with the deep dives on holds and the queue for a hot event.",
+       "yt": {
+        "id": "fhdPyoO6aXI",
+        "ch": "Hello Interview"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Hello Interview: design Ticketmaster",
+       "url": "https://www.hellointerview.com/learn/system-design/problem-breakdowns/ticketmaster",
+       "m": 30,
+       "why": "Written breakdown of the seat hold, the distributed lock with a TTL, and the waiting room."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Kleppmann: how to do distributed locking",
+       "url": "https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html",
+       "m": 20,
+       "why": "Why a lock with a lease is not enough alone and what a fencing token adds."
+      }
      ]
     },
     {
@@ -682,6 +850,222 @@
      ],
      "avoid": [
       "Using a Bloom filter or an in-memory set as the source of truth for uniqueness."
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Design a news feed, system design interview",
+       "url": "https://www.youtube.com/watch?v=Qj4-GruzyDU",
+       "m": 27,
+       "why": "Fan-out on write against read, and how pages stay stable while posts change.",
+       "yt": {
+        "id": "Qj4-GruzyDU",
+        "ch": "Hello Interview"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Fencing tokens",
+       "url": "https://www.youtube.com/watch?v=1At8wV8fwp8",
+       "m": 9,
+       "why": "Leases and fencing: why an expired holder must not be able to write.",
+       "yt": {
+        "id": "1At8wV8fwp8",
+        "ch": "Jordan has no life"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Bloom filters",
+       "url": "https://www.youtube.com/watch?v=V3pzxngeLqw",
+       "m": 6,
+       "why": "Check-and-insert for a million IDs: the memory against false positive trade.",
+       "yt": {
+        "id": "V3pzxngeLqw",
+        "ch": "ByteByteGo"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Hello Interview: design a news feed",
+       "url": "https://www.hellointerview.com/learn/system-design/problem-breakdowns/fb-news-feed",
+       "m": 30,
+       "why": "Cursor pagination, hot accounts and what to do with deletions and privacy."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Hello Interview: design a ride-sharing service",
+       "url": "https://www.hellointerview.com/learn/system-design/problem-breakdowns/uber",
+       "m": 30,
+       "why": "Matching a rider to a driver under capacity and contention; the same shape as project to contractor."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Bloom filters by example",
+       "url": "https://llimllib.github.io/bloomfilter-tutorial/",
+       "m": 8,
+       "why": "A worked example of how the bit array and the hashes give a no or a maybe."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "gtm",
+   "title": "The GTM round",
+   "lead": "Fifteen minutes with an engagement manager and a principal from Enterprise AI. How to take it, then session wc39 and the Prep questions.",
+   "topics": [
+    {
+     "id": "gtm-howto",
+     "title": "How to take the GTM interview",
+     "brief": "Fifteen minutes with an Engagement Manager and a Principal, Enterprise AI. It is not a sales test. It checks whether you could be put in front of a Fortune 500 stakeholder: do you listen first, ask before solving, say no with a reason, tie work to a number, and explain AI in plain words. No public report of this round exists, so this is built from the invitation (communication, product sense, user empathy, stakeholders) and from how similar customer-facing rounds are graded. Process is graded over conclusion.",
+     "points": [
+      "What they look for, in one line each: you ask before you propose; you acknowledge the person before you diagnose; you can say no and keep the relationship; you name a measurable result; you use plain words and an analogy from their world; you stay calm when the question changes",
+      "The shape of every answer, five moves: Listen (let them finish, note the impact), Ask (two or three targeted questions), Reflect (say back the goal and the constraint in one sentence), Propose (a small scoped first step, with a time), Measure (the number that says it worked, and the rule for what happens next). Say the moves out loud so they can hear the structure",
+      "Unhappy customer, quality dropped: acknowledge the impact first and name a time for a first diagnosis. Ask for three real failures and when it started. Replay the same cases before and after to separate the model changing from the input changing. Run two tracks at once: what you tell the customer, and what you fix. Never blame their systems",
+      "Customer wants something that will not solve their problem: agree with the goal, ask what sits behind the request, name the risk honestly, offer the smaller version that works with a number to judge it. Validate the goal while you reframe the scope. Disagree, then commit once decided",
+      "Expectations gap (they expect three days, it is six weeks): say the real number early, explain what drives it in a sentence, offer a phased first slice that shows value sooner, and write down what is out of the first phase",
+      "Explaining AI variability to an executive: say it is expected, not a bug. Use an analogy from their domain (two good analysts asked the same question word it differently, the facts should agree). Then say how you check: a fixed set of cases, run on every change, with the facts that matter held steady",
+      "Discovery questions for a new customer: the goal and who decides; one real case from start to finish; what a wrong answer costs; what cannot change (data, systems, security review, sign-off); how success will be judged. Two or three of these, not a list of twelve",
+      "Pilot metrics: baseline first, one outcome, one guardrail, an evaluation set built with their experts, and the expansion and stop rule written before you start. Mercor's own case studies follow this: an evaluation-defined goal and an operational result (an incident-response agent reported a cut of over 50% in median time to mitigation; say 'they report')",
+      "Product sense for Mercor Enterprise: know the four parts (Discover finds and ranks workflows worth automating, Deploy builds agents judged by the customer's own quality bar, Improve tunes live agents, Monetize is opt-in data licensing). Know one number. Then think as a customer: who grades the agent, what it does when it is unsure, how it stays good after launch. Ask these as questions, not as criticism",
+      "Mistakes to avoid: jumping to a solution before asking; defending instead of acknowledging; arguing about the customer's own systems; a technical lecture to a non-technical person; vague claims with no number; presenting Mercor's case-study figures as yours; talking for more than about a minute and a half without checking in. Fifteen minutes is two or three scenarios, so keep answers to a minute or two",
+      "Your honest limit: alfred_ is a consumer product with over 5,000 active users, not an enterprise engagement. Say that once, then carry over what is true: you ask what users need, you built a tool that explains why, and you measure with an evaluation set"
+     ],
+     "production": [
+      "The same five moves answer almost every scenario. If a question surprises you, say 'let me ask two things first' and begin at Ask. It buys time and is exactly what the round rewards."
+     ],
+     "links": [
+      {
+       "url": "../index.html#/w/wc39",
+       "label": "wc39 GTM round session",
+       "why": "The teach-first session for this round: each question with its pointers."
+      },
+      {
+       "url": "#/prep",
+       "label": "Prep tab: GTM round and Leadership chat groups",
+       "why": "Every likely question, with bold pointers and a learn link on each."
+      }
+     ],
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Forward Deployed Engineer | Role & Interview Overview",
+       "url": "https://www.youtube.com/watch?v=qZgErBZk0GY",
+       "m": 22,
+       "why": "What a customer-facing technical round tests and how candidates are scored.",
+       "yt": {
+        "id": "qZgErBZk0GY",
+        "ch": "Aced (formerly Exponent)"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Forward Deployed Engineer Interviews at LangChain",
+       "url": "https://www.youtube.com/watch?v=knEiqlfpV5k",
+       "m": 24,
+       "why": "A real company's loop, including the customer scenario round and what stood out.",
+       "yt": {
+        "id": "knEiqlfpV5k",
+        "ch": "Aced (formerly Exponent)"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "FDE Academy: forward deployed engineer interview questions (free to read)",
+       "url": "https://fde.academy/blog/forward-deployed-engineer-interview-questions",
+       "why": "The deployment-scenario and client-simulation rounds, with a framework and model approaches."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Perspective AI: FDE interview questions, 2026 guide (free to read)",
+       "url": "https://getperspective.ai/blog/forward-deployed-engineer-interview-questions-2026-prep-guide",
+       "why": "What interviewers evaluate, sample questions by category, and red flags."
+      }
+     ],
+     "mcq": [
+      {
+       "q": "A customer says the agent was fine last week and is now making mistakes. What is the best first move?",
+       "o": [
+        "Explain that models change and some variation is normal",
+        "Acknowledge the impact, ask for three real failures and when it started, and name a time for a first diagnosis",
+        "Ask them to check their own data pipeline",
+        "Roll back the model immediately",
+        "Offer a discount"
+       ],
+       "a": 1,
+       "why": "Acknowledge the impact first, then diagnose with real examples and a committed time. Defending or blaming their systems loses the room."
+      },
+      {
+       "q": "A stakeholder asks for a feature you know will not fix their problem. What do you do?",
+       "o": [
+        "Build it, since they are the customer",
+        "Refuse and explain why they are wrong",
+        "Agree with the goal, ask what sits behind the request, name the risk, and offer a smaller version with a number to judge it",
+        "Escalate to your manager",
+        "Say you will think about it and move on"
+       ],
+       "a": 2,
+       "why": "Validate the goal while reframing the scope. You keep the relationship and move to something that can be measured."
+      },
+      {
+       "q": "Which set best defines a pilot that you can later call a success?",
+       "o": [
+        "A demo that went well and a happy sponsor",
+        "Baseline, one outcome, one guardrail, an evaluation set with their experts, and an expansion and stop rule written first",
+        "Number of users who logged in",
+        "Model accuracy on a public benchmark",
+        "A signed contract"
+       ],
+       "a": 1,
+       "why": "Success has to be measurable and agreed before the pilot starts, or the pilot proves nothing."
+      },
+      {
+       "q": "A CFO asks why the AI gives different wording for the same question. Which answer fits best?",
+       "o": [
+        "It is a known bug we are fixing",
+        "Two good analysts asked the same question word it differently; the facts should agree, and we test a fixed set of cases to check that they do",
+        "Randomness cannot be controlled",
+        "You should lower the temperature and the problem goes away",
+        "That is how all software works"
+       ],
+       "a": 1,
+       "why": "Say it is expected, use an analogy from their world, and show how you verify the facts stay steady."
+      }
+     ],
+     "open": {
+      "q": "A new enterprise customer says 'we want an AI agent for support.' You have fifteen minutes. How do you start, and what do you say?",
+      "probe": "What do you ask first, what would you propose, and how would you know it worked?",
+      "a": [
+       "Listen and reflect: say back the goal in one sentence and ask who decides.",
+       "Ask two or three questions: one real case start to finish, what a wrong answer costs, what cannot change.",
+       "Propose a small first slice, such as one request type with a person checking, and a time for a first result.",
+       "Measure: baseline today, one outcome, one guardrail, an evaluation set made with their experts.",
+       "Write the expansion rule first: when both numbers hold for two weeks, add the next request type."
+      ]
+     },
+     "say": [
+      "**Let me ask two things before I suggest anything.**",
+      "**What I am hearing is the goal and the constraint,** is that right?",
+      "**I would start small:** one request type, a person checking, a first result by a date I name.",
+      "**We would know it worked when** one number moves and one guardrail holds, and I would agree both with you now.",
+      "**I can't promise that, but here is what I can do** and how we would measure it."
+     ],
+     "avoid": [
+      "Jumping to a solution or a tool name before asking anything.",
+      "Defending the product or blaming the customer's systems.",
+      "Long technical explanations for a non-technical listener.",
+      "Claims with no number, or Mercor's case-study figures stated as your own."
      ]
     }
    ]
@@ -752,6 +1136,30 @@
        "url": "https://huyenchip.com/2024/07/25/genai-platform.html",
        "m": 25,
        "why": "Where retrieval, guardrails, caching and evaluation sit in a production stack."
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Rerank for better RAG, explained",
+       "url": "https://www.youtube.com/watch?v=K1F8BIgcoNk",
+       "m": 14,
+       "why": "Why a second-stage reranker lifts the top results that embeddings alone miss.",
+       "yt": {
+        "id": "K1F8BIgcoNk",
+        "ch": "vectorize"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Advanced RAG: hybrid search with BM25 and ensembles",
+       "url": "https://www.youtube.com/watch?v=lYxGYXjfrNI",
+       "m": 7,
+       "why": "Keyword and vector scores combined, the retrieval you would use for profiles.",
+       "yt": {
+        "id": "lYxGYXjfrNI",
+        "ch": "Sam Witteveen"
+       }
       }
      ],
      "mcq": [
@@ -856,6 +1264,30 @@
        "url": "https://www.anthropic.com/engineering/building-effective-agents",
        "m": 15,
        "why": "Workflows against agents: how much the model should decide in the interview flow."
+      },
+      {
+       "kind": "video",
+       "req": true,
+       "label": "LLM as a judge: scaling AI evaluation strategies",
+       "url": "https://www.youtube.com/watch?v=trfUBIDeI1Y",
+       "m": 7,
+       "why": "What a judge model can grade, and where it is biased.",
+       "yt": {
+        "id": "trfUBIDeI1Y",
+        "ch": "IBM Technology"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "From LLM as a judge to agent as a judge",
+       "url": "https://www.youtube.com/watch?v=q2JrUKBMf0w",
+       "m": 7,
+       "why": "A conference talk on grading multi-step behaviour, not one answer.",
+       "yt": {
+        "id": "q2JrUKBMf0w",
+        "ch": "AI Engineer"
+       }
       }
      ],
      "mcq": [
@@ -923,7 +1355,49 @@
       "Carry over: hybrid retrieval, reranking, and keeping each customer's data apart.",
       "Say it in candidate search: retrieval sets the ceiling; a profile never retrieved can't be ranked."
      ],
-     "design": "notebooklm"
+     "design": "notebooklm",
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "Google's RAG experiment: NotebookLM",
+       "url": "https://www.youtube.com/watch?v=nK61ZpAS13s",
+       "m": 14,
+       "why": "How NotebookLM answers from your own sources and cites them.",
+       "yt": {
+        "id": "nK61ZpAS13s",
+        "ch": "Sam Witteveen"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "Is RAG still needed?",
+       "url": "https://www.youtube.com/watch?v=UabBYexBD4k",
+       "m": 12,
+       "why": "When retrieval wins over stuffing documents into the context.",
+       "yt": {
+        "id": "UabBYexBD4k",
+        "ch": "IBM Technology"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Google: NotebookLM, an AI-first notebook",
+       "url": "https://blog.google/technology/ai/notebooklm-google-ai/",
+       "m": 5,
+       "why": "The product as launched: source-grounded answers with citations."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Pinecone: rerankers and two-stage retrieval",
+       "url": "https://www.pinecone.io/learn/series/rag/rerankers/",
+       "m": 12,
+       "why": "Retrieve wide, rerank narrow; the step between retrieval and grounded answer."
+      }
+     ]
     },
     {
      "id": "sd-kitaru",
@@ -934,7 +1408,49 @@
       "Carry over: one grader per dimension, a stored baseline, and regressions flagged on every change.",
       "Pairs with the LLD tab's eval harness round."
      ],
-     "design": "kitaru"
+     "design": "kitaru",
+     "res": [
+      {
+       "kind": "video",
+       "req": true,
+       "label": "How to evaluate agents in practice",
+       "url": "https://www.youtube.com/watch?v=vuBvf7ZRKTA",
+       "m": 11,
+       "why": "Cases, graders and trajectories for agent evaluation.",
+       "yt": {
+        "id": "vuBvf7ZRKTA",
+        "ch": "Google Cloud Tech"
+       }
+      },
+      {
+       "kind": "video",
+       "req": false,
+       "label": "How to systematically set up LLM evals",
+       "url": "https://www.youtube.com/watch?v=a3SMraZWNNs",
+       "m": 56,
+       "why": "A long build-along from cases to LLM-as-a-judge; skim the middle.",
+       "yt": {
+        "id": "a3SMraZWNNs",
+        "ch": "Dave Ebbelaar"
+       }
+      },
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Hamel Husain: your AI product needs evals",
+       "url": "https://hamel.dev/blog/posts/evals/",
+       "m": 20,
+       "why": "Three levels of eval and why you build the loop before the fixes."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Eugene Yan: task-specific LLM evals that do and don't work",
+       "url": "https://eugeneyan.com/writing/evals/",
+       "m": 20,
+       "why": "Which metrics hold up for classification, summarisation and retrieval."
+      }
+     ]
     }
    ]
   }
