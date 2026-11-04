@@ -655,6 +655,12 @@ PROBLEM = {
     "summary": ["**One entry class, three graders and a report.** EvalHarness runs each case against the system and asks every grader whether it applies. A system crash scores 0.0, and a grader crash or a judge that can't tell is Unknown, which stays out of the mean and is counted. The Report gives a mean per dimension, and compare flags any dimension that fell by more than the tolerance against a stored baseline.",
                 "**It extends in one place each time:** calibrating a judge is one method on the harness, reruns wrap _run_case, parallel runs are a thread pool in run_suite, and a new grader is a new class in the list."],
 
+    "apart": [
+        "**A crash in the system scores 0; a crash in the grader is Unknown.** One is the system failing, the other is you not knowing.",
+        "**Unknown is left out of the mean and counted in the report,** so it never hides as a pass or a fail.",
+        "**Each grader says whether it applies and grades;** run_suite never checks kinds, so a new grader is a new class.",
+        "**Compare against a stored baseline,** and flag a dimension that can no longer be measured as a regression too."
+    ],
     "golden": [
         ("A system crash scores 0.0 and a grader crash is Unknown.", "it blames the right party: the system for its failure, never the system for ours."),
         ("Unknown is left out of the mean and counted in the report.", "a zero would punish the system for doubt, and hiding the count would make a small sample look big."),

@@ -518,6 +518,12 @@ PROBLEM = {
     "summary": ["**Two classes and two enums.** The VendingMachine holds the slots, a coin box, the customer's coins and a state. Select checks the state, the slot and the price, asks _make_change for the change, and only then moves anything. _make_change walks the denominations from the largest, using the box plus the customer's coins, and returns None when it can't. A None refunds the customer and refuses the sale.",
                 "**It extends in one place each time:** a smarter change search replaces one method, more modes turn the enum into State classes, card payments are a strategy that select asks, and a low-stock report asks each slot for its count."],
 
+    "apart": [
+        "**Check everything before moving anything:** the slot, the stock, the money and whether change can be made.",
+        "**Change is a real loop over the machine's own coins, largest first,** and if exact change cannot be made, the sale is refused and the money returned.",
+        "**The customer's coins are held apart until the sale goes through,** so a cancel returns exactly what they put in.",
+        "**Modes start as an enum with guards.** State classes only when each mode grows its own behaviour."
+    ],
     "golden": [
         ("select checks everything before it moves anything.", "a refusal then leaves the machine as it was, which makes the refund exact and the money never stuck."),
         ("Change is a real loop over the machine's own coins, largest first.", "the interviewer's first probe is what if you can't make change, and the answer is None, refuse and refund."),

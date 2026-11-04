@@ -441,6 +441,12 @@ PROBLEM = {
     "summary": ["**Three classes.** The RateLimiter finds a client's TokenBucket, made full on first sight, and asks it to take a token. The bucket first refills from the time since the last refill, capped at capacity, then takes one token or denies with the wait. The Rule holds the burst and the rate and rejects a bad pair when it is built. Time is passed in, so nothing reads a clock.",
                 "**It extends in one place each time:** a sliding window is a second class with the same call, tiers are a dict of Rules, a lock goes per client around refill and take, and idle buckets are dropped when full."],
 
+    "apart": [
+        "**Refill is worked out from elapsed time when a request arrives.** No timer thread; refill and take are one step.",
+        "**Time is passed in, never read inside the bucket.**",
+        "**allow answers with the decision and how long to wait,** not only yes or no.",
+        "**Know the fixed window's flaw:** up to 2N requests across a window edge. That is why a bucket or a sliding window."
+    ],
     "golden": [
         ("Time is passed in, never read inside the bucket.", "the limiter can be shown, and tested, without sleeping."),
         ("Refill is computed from elapsed time when a request arrives; there is no timer thread.", "no background work, and an idle client costs nothing."),

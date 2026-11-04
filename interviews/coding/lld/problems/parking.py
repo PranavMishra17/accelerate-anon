@@ -464,6 +464,12 @@ PROBLEM = {
     "summary": ["**Three classes and an enum.** The ParkingLot is the entry point: a vehicle enters by size and gets a ticket for the smallest free spot that fits, and exits with the ticket to get the amount owed. A Spot holds its size and who is in it. A Ticket holds the plate, size, spot and entry time, and counts its own started hours.",
                 "**It extends in one place each time:** a new pricing rule is a Pricing class given to the lot, nearest spot changes one helper, and two gates racing for the last spot are one lock around choose-and-park."],
 
+    "apart": [
+        "**Entry and parking are deterministic, and nothing in between needs watching.** A car takes a spot at entry and frees it at exit; no timer marks a spot open.",
+        "**Price at exit.** The ticket remembers what exit needs (spot, size, entry time), and the fee is worked out once, at the end. You can take a planned duration as input, but only exit frees the spot.",
+        "**Ticket is its own class; ParkingLot and Spot are the two big ones.** Vehicle is not a class: it is external, a plate and a size.",
+        "**Payment enforcement and abandoned cars are out of scope, but say them:** like staff clearing a locker, an abandoned car gets towed. Naming it shows the edge without building it."
+    ],
     "golden": [
         ("Choosing a spot and parking in it is one step. With two gates, anything less gives one spot to two cars.", "it is the concurrency headline in the reports, and the senior signal."),
         ("Vehicle isn't a class and Car, Truck aren't subclasses; the size is a parameter and an enum.", "it shows scope judgment: you model behaviour, not nouns."),

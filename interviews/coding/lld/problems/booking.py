@@ -607,6 +607,12 @@ PROBLEM = {
     "summary": ["**Four classes.** The BookingService finds a show and orchestrates. A Show knows which seats are held or booked, and each Hold carries its own expiry. hold_seats takes the show's lock, releases expired holds, checks every seat is free, and only then marks them. Confirm turns a live hold into a Booking, cancel frees the seats, and a Booking can be cancelled once.",
                 "**It extends in one place each time:** prices are a map on Show, refunds a method on Show, many servers move the check into one conditional update, and trains rename Show."],
 
+    "apart": [
+        "**A hold is a class with an expiry.** The seats are held for N minutes, and is_expired is the only place time is compared.",
+        "**Check every seat first, then mark them all, under one lock per show.** That is what stops two people taking the same seat.",
+        "**Expired holds are released when someone looks,** not by a timer. Confirm re-checks the hold is still alive.",
+        "**Pass the time in as now,** so expiry is testable."
+    ],
     "golden": [
         ("A Hold is a class with an expiry, and is_expired is the only place time is compared.", "the rule that makes a hold temporary lives with the data it is about, so confirm and the show's release never disagree."),
         ("hold_seats checks every seat first, then marks them all, inside one lock per show.", "check and mark are one step, so two users can't both win, and a failure holds nothing."),

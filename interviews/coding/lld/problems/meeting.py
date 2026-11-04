@@ -514,6 +514,12 @@ PROBLEM = {
     "summary": ["**Three classes and one error.** The RoomScheduler checks the request, then _find_room loops over the rooms and keeps the smallest one that fits and is free. Each Room asks its bookings whether they overlap, and Booking.overlaps is one line over half-open slots, so back-to-back meetings pass. Cancel pops the booking and removes it from its room.",
                 "**It extends in one place each time:** recurring meetings are a list of slots checked before any booking, notifications are a call after success, threads are a lock around choose-and-add, and equipment is one more skip in the search."],
 
+    "apart": [
+        "**Slots are half-open, [start, end).** Two overlap when a.start < b.end and b.start < a.end, so back-to-back is allowed.",
+        "**The overlap check lives on the booking, is_free on the room,** and book reads like a sentence.",
+        "**Pick the smallest room that fits:** keep the best so far and replace it only on a strictly smaller capacity.",
+        "**Choose the room and add the booking as one step;** a recurring meeting checks every slot first, then books them all."
+    ],
     "golden": [
         ("Slots are half-open: [start, end). They overlap when a.start < b.end and b.start < a.end.", "end equals start is allowed, and it is one line instead of a pile of cases."),
         ("The overlap check lives on Booking, is_free on Room, and book reads like a sentence.", "each class answers a question about itself, and the scheduler only orchestrates."),

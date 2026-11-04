@@ -633,6 +633,12 @@ PROBLEM = {
     "summary": ["**One searcher, a small tree, and a Filter class.** FileSearcher.find checks the start, walks every folder with a stack of (path, entry), and keeps the path of each file a Filter accepts. File knows its extension. Each simple filter answers matches(file) from one value, and And, Or and Not are Filters that hold Filters, so any query is a tree of the same class.",
                 "**It extends in one place each time:** a new condition is a new Filter class, streaming is a yield in the walk, hidden folders and max depth are checks in the walk. find only ever calls matches."],
 
+    "apart": [
+        "**A filter is one question about one file.** Combining filters is a filter that holds filters: And, Or, Not.",
+        "**find is handed a filter and only calls matches.** A new condition is a new class; find never changes.",
+        "**And stops at the first no, Or at the first yes, Not flips.**",
+        "**Walk with an explicit stack, and yield as you go** for a tree too big to hold."
+    ],
     "golden": [
         ("A filter is one question about one file; combining filters is a filter that holds filters.", "any query is built from the same two ideas, so find never changes."),
         ("find is handed a Filter and only calls matches.", "a new condition is a new class, and nothing already written is edited."),

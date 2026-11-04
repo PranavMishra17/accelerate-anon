@@ -788,6 +788,12 @@ PROBLEM = {
     "summary": ["**Five classes and two enums.** Game takes a move, checks the cheap things first, then asks one legality question: the target is not my own piece, the piece's own can_move allows it, and simulating it on the board does not leave my king attacked. Each piece is a subclass that answers only for its own shape; the board answers whether a line is clear or a square is attacked.",
                 "**After every move the same king question is asked about the next player.** Any legal move left means CHECK or ACTIVE; none means CHECKMATE if the king is attacked, else STALEMATE. It extends in one place each time: promotion is a field and a swap, castling is a flag on the pieces, undo pops a Move, and a clock is a field on Game."],
 
+    "apart": [
+        "**Each piece owns its movement rule.** Piece is abstract and the game never asks what kind it is; it asks can_move.",
+        "**A move is legal if the target is not your own piece, the piece allows it, and your king is safe afterwards.** Test the last one by making the move, asking is_attacked, and undoing it.",
+        "**The board knows positions and clear paths, not rules.** Rules live in the pieces and the game.",
+        "**Checkmate and stalemate are one test: no legal move.** Checkmate is when the king is also attacked."
+    ],
     "golden": [
         ("Piece is abstract and each kind owns its movement rule; Game never asks what kind it is.", "adding a piece changes one class, and it is the reason interviewers probe placement."),
         ("A move is legal if the target is not my own piece, the piece's can_move allows it, and my own king is safe afterwards.", "three tests in that order, one method, shared by make_move and the mate search."),

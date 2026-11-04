@@ -508,6 +508,12 @@ PROBLEM = {
     "summary": ["**Four classes.** A FileSystem holds the root and turns an absolute path into an entry. File and Directory share a base, so a folder's size and a search over the tree work without asking which kind of entry they have. Make, add, list, size and find are each a short method on top of one resolve step.",
                 "**It grows in one place at a time:** more kinds of condition make find take a Filter, delete and move reuse the split helper, a cached size per folder fixes huge trees, and permissions become one check before every operation."],
 
+    "apart": [
+        "**The prompt is one line, so your questions are the design.** Ask what operations, what a path looks like, and what find must filter by, before any class.",
+        "**A file and a folder are both an Entry.** A folder holds entries, so its size is the sum of its children's, asked without checking their type: that is the whole tree.",
+        "**Every path rule lives in one resolve step.** No other method splits a string; mkdir, add and ls all start from resolve.",
+        "**Name the trap before they do:** moving a folder into itself. And for a million entries, keep a size per folder up the parent chain."
+    ],
     "golden": [
         ("Ask first. The prompt is one line, so the questions are the first thing marked.", "no requirements given means scope is the test; designing at once skips what they are grading."),
         ("File and Directory are both Entries: a folder's size adds up its children without asking their type.", "that is the Composite, justified by one requirement instead of dropped in as a pattern."),

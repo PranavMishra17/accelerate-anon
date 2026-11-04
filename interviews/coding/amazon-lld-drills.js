@@ -9,6 +9,12 @@ window.LOOP_CODING.parts.push({
  "title": "Parking lot",
  "minutes": 40,
  "lead": "A parking lot round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. Three classes and an enum, then a second pricing rule and two gates racing for the last spot. Try each box before you open the answer.",
+ "apart": [
+  "**Entry and parking are deterministic, and nothing in between needs watching.** A car takes a spot at entry and frees it at exit; no timer marks a spot open.",
+  "**Price at exit.** The ticket remembers what exit needs (spot, size, entry time), and the fee is worked out once, at the end. You can take a planned duration as input, but only exit frees the spot.",
+  "**Ticket is its own class; ParkingLot and Spot are the two big ones.** Vehicle is not a class: it is external, a plate and a size.",
+  "**Payment enforcement and abandoned cars are out of scope, but say them:** like staff clearing a locker, an abandoned car gets towed. Naming it shows the edge without building it."
+ ],
  "sections": [
   {
    "id": "parking-prompt",
@@ -412,27 +418,6 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "parking-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Choosing a spot and parking in it is one step. With two gates, anything less gives one spot to two cars.** Why: it is the concurrency headline in the reports, and the senior signal.",
-      "**Vehicle isn't a class and Car, Truck aren't subclasses; the size is a parameter and an enum.** Why: it shows scope judgment: you model behaviour, not nouns.",
-      "**The ticket stores everything exit needs, and tickets live in a map by id.** Why: exit is one lookup, and a used ticket is an error because it is gone.",
-      "**The fee sits in one helper, so a new rule changes one place.** Why: interviewers always ask for a second pricing rule, and the answer is a swap, not a rewrite.",
-      "**fits() is the one rule for both allocation and free counts.** Why: the count can't disagree with what enter does.",
-      "**Fee is computed before the spot is freed, so an error never leaves a half-closed ticket.** Why: it shows you thought about order of steps, not only the happy path."
-     ]
-    }
-   ]
-  },
-  {
    "id": "parking-final",
    "title": "The final code, in one file",
    "blocks": [
@@ -468,6 +453,12 @@ window.LOOP_CODING.parts.push({
  "title": "File management system (no requirements given)",
  "minutes": 40,
  "lead": "The prompt is one line and nothing else is given: asking is the test. A full round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design, e) implementation, f) extensibility. Files and folders are one kind of entry (a Composite), and the file system looks things up by path. Try each box before you open the answer.",
+ "apart": [
+  "**The prompt is one line, so your questions are the design.** Ask what operations, what a path looks like, and what find must filter by, before any class.",
+  "**A file and a folder are both an Entry.** A folder holds entries, so its size is the sum of its children's, asked without checking their type: that is the whole tree.",
+  "**Every path rule lives in one resolve step.** No other method splits a string; mkdir, add and ls all start from resolve.",
+  "**Name the trap before they do:** moving a folder into itself. And for a million entries, keep a size per folder up the parent chain."
+ ],
  "sections": [
   {
    "id": "filesystem-prompt",
@@ -915,27 +906,6 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "filesystem-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Ask first. The prompt is one line, so the questions are the first thing marked.** Why: no requirements given means scope is the test; designing at once skips what they are grading.",
-      "**File and Directory are both Entries: a folder's size adds up its children without asking their type.** Why: that is the Composite, justified by one requirement instead of dropped in as a pattern.",
-      "**Every path rule lives in one resolve step; no other method splits a string.** Why: relative paths or '..' later change one helper.",
-      "**find walks with a generator and takes a Filter; each condition is a subclass.** Why: new conditions arrive without touching the file system.",
-      "**Name the trap before they do: a folder moved into itself.** Why: it shows you thought about the tree, not only the happy path.",
-      "**A size per folder, kept up the parent chain, answers the million-entry follow-up.** Why: it trades writes for reads and says what each costs."
-     ]
-    }
-   ]
-  },
-  {
    "id": "filesystem-final",
    "title": "The final code, in one file",
    "blocks": [
@@ -971,6 +941,12 @@ window.LOOP_CODING.parts.push({
  "title": "Shopping cart with discounts",
  "minutes": 40,
  "lead": "A full cart round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. Money is integer cents. Discounts stay one small class until buy-one-get-one forces a family of them.",
+ "apart": [
+  "**Money is integer cents, and you say your rounding rule where you divide.**",
+  "**The cart does not know which discount it has.** Checkout hands the discount a total and takes a total back; a new discount is a new class, not an edit.",
+  "**Each rule lives in one place:** 'never below zero' in the discount, the stacking order said back to them before you code it.",
+  "**Pass the time in;** a discount with an end date never reads the clock itself."
+ ],
  "sections": [
   {
    "id": "cart-prompt",
@@ -1371,27 +1347,6 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "cart-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Money is integer cents, and I name my rounding rule where I divide: the discount rounds down.** Why: it is the first thing they check, and floats hide the question instead of answering it.",
-      "**The cart doesn't know which discount it was given; checkout hands it the total and takes back a total.** Why: every new rule is a new subclass and Cart stays the same.",
-      "**The 'never below zero' rule lives in the discount, in one place.** Why: callers can't forget it, and a new rule has one obvious home.",
-      "**Stacking order is part of the requirement: I say it back before I code it.** Why: 10 percent then 500 off differs from 500 off then 10 percent.",
-      "**The time is passed in, not read inside the discount.** Why: expiry becomes testable with a fixed date.",
-      "**No factory, no event system, no tax or payment classes.** Why: it shows you built what the requirements need and nothing speculative."
-     ]
-    }
-   ]
-  },
-  {
    "id": "cart-final",
    "title": "The final code, in one file",
    "blocks": [
@@ -1427,6 +1382,12 @@ window.LOOP_CODING.parts.push({
  "title": "Library management",
  "minutes": 40,
  "lead": "A full library round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. A title and its copies are different things, and a loan is a thing too: it owns the due date and the lateness. Dates are passed in, so fines can be traced by hand.",
+ "apart": [
+  "**A title and a copy are different things.** The title is searched and reserved; a copy is what you borrow.",
+  "**A loan is a class:** a copy, a member and a due date, and it answers days late. The fine follows from it.",
+  "**Today's date is a parameter,** so the same input always gives the same due date and the same fine.",
+  "**Check the copy is free and open the loan as one step,** or two desks can lend the same copy."
+ ],
  "sections": [
   {
    "id": "library-prompt",
@@ -1857,27 +1818,6 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "library-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**A title and a copy are different things: the title is searched and reserved, the copy is borrowed.** Why: it is the first modelling call, and it is what makes reservations possible later.",
-      "**Loan is a class: a copy, a member and a due date, and it answers days_late.** Why: the rule sits next to the date it reads, so the library only orchestrates, and loan history has a home.",
-      "**Every rule sits in the Library: the loan length, the limit and the rate, and the rate is its own helper.** Why: a per-member fine changes one function and nothing else.",
-      "**Today's date is a parameter, so the same input gives the same due date and fine.** Why: you can trace a demo by hand, and a test needs no fake clock.",
-      "**Check-free and open-the-loan happen as one step, or two desks can both borrow the same copy.** Why: it is the senior signal: the concurrency answer, not only the happy path.",
-      "**No Librarian class, no LoanFactory, no Singleton for the library.** Why: nothing in the scope uses them."
-     ]
-    }
-   ]
-  },
-  {
    "id": "library-final",
    "title": "The final code, in one file",
    "blocks": [
@@ -1913,6 +1853,14 @@ window.LOOP_CODING.parts.push({
  "title": "Elevator system",
  "minutes": 45,
  "lead": "An elevator round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. A deterministic simulation: one step() moves every elevator one tick. Dispatch is three tiers; movement is SCAN inside the elevator. Implementation starts with the most interesting method and names its helpers before writing them.",
+ "apart": [
+  "**A step() function is time.** One call moves every elevator one tick; know this first and everything else is deterministic.",
+  "**In one step an elevator either moves one floor or stops with its doors open; the next step it carries on.** The elevator owns its status, its direction and what it is serving now.",
+  "**A request is its own type: a hall call says come to me (with up or down), a car call says get me there.** Different buttons, different rules for stopping.",
+  "**Pick the elevator by abstraction:** select the best, which is find one moving towards you, else the nearest idle, else the nearest. Moving ones arrive sooner; an idle one spends a step turning towards you.",
+  "**A plain loop over the elevators is enough.** There are never many, so two or three passes are fine; say it so nobody asks for a heap.",
+  "**When an elevator finishes and goes idle, it can change direction.** Keep that in mind even if you defer it."
+ ],
  "sections": [
   {
    "id": "elevator-prompt",
@@ -2360,27 +2308,6 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "elevator-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Request is a class: a floor and a type. The type decides whether a passing elevator stops.** Why: without it an elevator going up stops for someone going down, which is the bug interviewers look for.",
-      "**Dispatch reads as three tiers, each a named finder: moving towards, nearest idle, nearest.** Why: the high-level method says the rule out loud; the interesting finder is one O(n) loop.",
-      "**Stopping is direction-aware, travelling is not.** Why: that one sentence is SCAN, and it is all of Elevator.step.",
-      "**The controller's step is a loop; each elevator owns its own step.** Why: the controller chooses, the elevator moves, so a new dispatch rule never touches movement.",
-      "**Tier 1 checks the elevator has a stop at or beyond the caller.** Why: otherwise the chosen elevator turns around before it arrives.",
-      "**One step() moves everything one tick, with no threads and no real clock.** Why: the run is deterministic, so you can trace it by hand."
-     ]
-    }
-   ]
-  },
-  {
    "id": "elevator-final",
    "title": "The final code, in one file",
    "blocks": [
@@ -2416,6 +2343,12 @@ window.LOOP_CODING.parts.push({
  "title": "A key-value cache, built in layers",
  "minutes": 45,
  "lead": "A cache grows one layer at a time: a dict, then a TTL, then a capacity with eviction. A full round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design, e) implementation, f) extensibility. Four classes and one interface: the Cache, an Entry that knows when it dies, an EvictionPolicy with LRU written on a hand-made linked list, and its Node. The eviction rule is abstracted away from the cache because the interviewer says LFU is next: that split is half the design. Threads, hot keys, shards, a backing database and memory limits are the extensions, argued as trade-offs. Try each box before you open the answer. The usual references land here: a Cache facade, a pluggable eviction policy, a doubly linked list, a lazy TTL check (the lld-cache repo on GitHub, and the techinterview.org cache write-up).",
+ "apart": [
+  "**Abstract the eviction policy away from the cache.** Everything about which key leaves and when a key counts as used is the policy, behind an interface; the cache only reports what happened and asks who goes. That swap is half the win.",
+  "**The value is not in the Node.** Entry holds the value and its expiry in the cache's map; the policy's nodes hold only key, prev and next. You need O(1) lookup (a map) and O(1) reordering (a doubly linked list), and they are two structures with two jobs.",
+  "**Time is a clock you pass in, and the default ttl can be None.** That makes expiry testable and optional.",
+  "**An expired key found on get is handled on that read:** drop it and return None, or return it once and mark it for refresh. Lazy expiry needs no background job."
+ ],
  "sections": [
   {
    "id": "kvcache-prompt",
@@ -3081,26 +3014,6 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "kvcache-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Eviction is abstracted away from the cache: it asks the policy three things, record_use, remove, victim.** Why: that split is half the design, and a second class (LFU) behind the same three calls is the proof.",
-      "**Build the layers in order: a dict, then expiry, then capacity with a policy. Say what each one costs.** Why: interviewers add layers on purpose, and over-building layer three first is the common failure.",
-      "**LRU is a dict plus a doubly linked list with sentinels: a use moves a node to the front, the victim is the one before the tail.** Why: every operation stays O(1), and the sentinels remove every end-of-list case.",
-      "**With threads, even get takes the lock, because it reorders; a hot key gets single-flight and jitter.** Why: reads are writes here, and a stampede is the follow-up every cache round ends on.",
-      "**For scale, name the cost with the fix: a lock per shard, a hash ring, a near cache, cache-aside.** Why: each fix has a price (uneven eviction, stale reads, write fan-out) and saying it is the answer."
-     ]
-    }
-   ]
-  },
-  {
    "id": "kvcache-final",
    "title": "The final code, in one file",
    "blocks": [
@@ -3136,6 +3049,12 @@ window.LOOP_CODING.parts.push({
  "title": "Chess",
  "minutes": 45,
  "lead": "A chess round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. The pieces are real polymorphism: one subclass per kind, each with its own can_move. The hard parts are a move that leaves your own king in check, and telling checkmate from stalemate. Implementation starts with the most interesting method and names its helpers before writing them.",
+ "apart": [
+  "**Each piece owns its movement rule.** Piece is abstract and the game never asks what kind it is; it asks can_move.",
+  "**A move is legal if the target is not your own piece, the piece allows it, and your king is safe afterwards.** Test the last one by making the move, asking is_attacked, and undoing it.",
+  "**The board knows positions and clear paths, not rules.** Rules live in the pieces and the game.",
+  "**Checkmate and stalemate are one test: no legal move.** Checkmate is when the king is also attacked."
+ ],
  "sections": [
   {
    "id": "chess-prompt",
@@ -3649,27 +3568,6 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "chess-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Piece is abstract and each kind owns its movement rule; Game never asks what kind it is.** Why: adding a piece changes one class, and it is the reason interviewers probe placement.",
-      "**A move is legal if the target is not my own piece, the piece's can_move allows it, and my own king is safe afterwards.** Why: three tests in that order, one method, shared by make_move and the mate search.",
-      "**To test king safety, make the move on the board, ask is_attacked, and undo.** Why: pins, a king stepping into attack and capturing the attacker all fall out with no special case.",
-      "**The board knows what is on each square and whether a path is clear; it does not know the rules.** Why: rules in pieces, geometry in the board, turns in the game: each class has one job.",
-      "**Checkmate and stalemate are the same test: no legal move. Checkmate is when the king is attacked.** Why: one search, one extra question, and a reason to keep Status an enum.",
-      "**An illegal move is rejected before anything changes, so the turn and the board stay valid.** Why: the caller can try again, and simulation never leaves a half-moved board."
-     ]
-    }
-   ]
-  },
-  {
    "id": "chess-final",
    "title": "The final code, in one file",
    "blocks": [
@@ -3705,6 +3603,12 @@ window.LOOP_CODING.parts.push({
  "title": "Splitwise",
  "minutes": 45,
  "lead": "A Splitwise round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. Money is integer cents. The split kind carries the rule for computing shares; one ledger keeps the net per pair. Implementation starts with add_expense and names the share computation before writing it.",
+ "apart": [
+  "**Money is integer cents, and you say where the leftover cent goes.**",
+  "**The split kind decides how shares are computed:** equal, exact or percent. Every split returns shares that add up to the amount, or refuses.",
+  "**Expenses are an append-only record; balances are derived.** A correction is a new entry, and settling up is a debt the other way, no special path.",
+  "**Simplifying debts is a read over net balances,** not a change to what is stored."
+ ],
  "sections": [
   {
    "id": "splitwise-prompt",
@@ -4169,27 +4073,6 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "splitwise-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Money is integer cents, and I say where the leftover cent goes: to the first people in the order given.** Why: it is the first thing they probe, and floats hide it.",
-      "**Split is a class: a kind and who is in it. The kind decides how shares are computed.** Why: add_expense never knows the rules, so a new split kind touches one class.",
-      "**Settling up is a debt the other way, so there is no special path.** Why: the ledger has one write, which keeps balances easy to trust.",
-      "**Every split returns shares that total the amount to the cent, or raises.** Why: bad data is rejected at the one place that understands it.",
-      "**Expenses are append-only records; balances are derived from the ledger, and a correction is a new entry.** Why: history stays true, and you can answer 'how did we get here'.",
-      "**Simplify debts is a read over net positions, not a change to what is stored.** Why: it shows the ledger design pays off."
-     ]
-    }
-   ]
-  },
-  {
    "id": "splitwise-final",
    "title": "The final code, in one file",
    "blocks": [
@@ -4225,6 +4108,12 @@ window.LOOP_CODING.parts.push({
  "title": "Ticket booking (movie or train)",
  "minutes": 45,
  "lead": "A booking round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. The heart is the hold: seats kept for a few minutes, released by themselves, and taken by one user even when two click at once. Time is passed in as now, so a run is deterministic. Implementation starts with hold_seats and names its helpers before writing them.",
+ "apart": [
+  "**A hold is a class with an expiry.** The seats are held for N minutes, and is_expired is the only place time is compared.",
+  "**Check every seat first, then mark them all, under one lock per show.** That is what stops two people taking the same seat.",
+  "**Expired holds are released when someone looks,** not by a timer. Confirm re-checks the hold is still alive.",
+  "**Pass the time in as now,** so expiry is testable."
+ ],
  "sections": [
   {
    "id": "booking-prompt",
@@ -4660,27 +4549,6 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "booking-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**A Hold is a class with an expiry, and is_expired is the only place time is compared.** Why: the rule that makes a hold temporary lives with the data it is about, so confirm and the show's release never disagree.",
-      "**hold_seats checks every seat first, then marks them all, inside one lock per show.** Why: check and mark are one step, so two users can't both win, and a failure holds nothing.",
-      "**Expired holds are released when anyone looks, not by a timer.** Why: no thread, no second lock, and the run is deterministic; abandoned carts free themselves.",
-      "**Confirm releases expired holds, then re-checks the hold is still alive.** Why: someone else may have taken the seat after the hold lapsed.",
-      "**Booking.cancel refuses a second cancel, and the lock stops two cancels freeing the seats twice.** Why: a cancel that works twice would put a seat on sale that someone else holds.",
-      "**Time is passed in as now.** Why: tests and the whiteboard trace need no real clock."
-     ]
-    }
-   ]
-  },
-  {
    "id": "booking-final",
    "title": "The final code, in one file",
    "blocks": [
@@ -4716,6 +4584,12 @@ window.LOOP_CODING.parts.push({
  "title": "Vending machine",
  "minutes": 45,
  "lead": "A vending machine round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. The modes are a State enum with guards, not State classes. Implementation starts with select, names the change-making as a helper, then writes it as a loop over the machine's own coins.",
+ "apart": [
+  "**Check everything before moving anything:** the slot, the stock, the money and whether change can be made.",
+  "**Change is a real loop over the machine's own coins, largest first,** and if exact change cannot be made, the sale is refused and the money returned.",
+  "**The customer's coins are held apart until the sale goes through,** so a cancel returns exactly what they put in.",
+  "**Modes start as an enum with guards.** State classes only when each mode grows its own behaviour."
+ ],
  "sections": [
   {
    "id": "vending-prompt",
@@ -5165,26 +5039,6 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "vending-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**select checks everything before it moves anything.** Why: a refusal then leaves the machine as it was, which makes the refund exact and the money never stuck.",
-      "**Change is a real loop over the machine's own coins, largest first.** Why: the interviewer's first probe is what if you can't make change, and the answer is None, refuse and refund.",
-      "**The customer's coins are held apart until the sale goes through.** Why: a cancel is then a plain hand-back, and it can never fail for lack of change.",
-      "**An enum with guards first; State classes only when the modes grow their own behaviour.** Why: it shows you don't reach for a pattern before the requirements need it.",
-      "**_make_change only plans; select commits.** Why: that separation is the senior signal: a failure in the middle can't charge a customer without giving the product."
-     ]
-    }
-   ]
-  },
-  {
    "id": "vending-final",
    "title": "The final code, in one file",
    "blocks": [
@@ -5220,6 +5074,12 @@ window.LOOP_CODING.parts.push({
  "title": "Rate limiter",
  "minutes": 45,
  "lead": "A rate limiter round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. Time is passed into every call, so a run is deterministic. Token bucket is the core: refill from elapsed time, then take. The follow-up is always to swap the algorithm, so the sliding window log is an extension with code.",
+ "apart": [
+  "**Refill is worked out from elapsed time when a request arrives.** No timer thread; refill and take are one step.",
+  "**Time is passed in, never read inside the bucket.**",
+  "**allow answers with the decision and how long to wait,** not only yes or no.",
+  "**Know the fixed window's flaw:** up to 2N requests across a window edge. That is why a bucket or a sliding window."
+ ],
  "sections": [
   {
    "id": "ratelimiter-prompt",
@@ -5640,27 +5500,6 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "ratelimiter-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Time is passed in, never read inside the bucket.** Why: the limiter can be shown, and tested, without sleeping.",
-      "**Refill is computed from elapsed time when a request arrives; there is no timer thread.** Why: no background work, and an idle client costs nothing.",
-      "**allow returns the decision and the wait, not only a bool.** Why: the caller can send a retry-after, which was in the requirements.",
-      "**Refill and take are one step.** Why: it is the race in this design, and the one the follow-up goes after.",
-      "**The bucket sits behind one call, try_consume(now).** Why: swapping to a sliding window then touches no other class, which is the usual follow-up.",
-      "**Name the boundary problem of a fixed window: 2N requests across a window edge.** Why: it shows you know why the other algorithms exist."
-     ]
-    }
-   ]
-  },
-  {
    "id": "ratelimiter-final",
    "title": "The final code, in one file",
    "blocks": [
@@ -5696,6 +5535,12 @@ window.LOOP_CODING.parts.push({
  "title": "Meeting room reservation",
  "minutes": 45,
  "lead": "A meeting room round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. The interesting method is book, which names the room search as a helper. The overlap rule is one line on Booking over half-open slots, so back-to-back meetings pass.",
+ "apart": [
+  "**Slots are half-open, [start, end).** Two overlap when a.start < b.end and b.start < a.end, so back-to-back is allowed.",
+  "**The overlap check lives on the booking, is_free on the room,** and book reads like a sentence.",
+  "**Pick the smallest room that fits:** keep the best so far and replace it only on a strictly smaller capacity.",
+  "**Choose the room and add the booking as one step;** a recurring meeting checks every slot first, then books them all."
+ ],
  "sections": [
   {
    "id": "meeting-prompt",
@@ -6167,27 +6012,6 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "meeting-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**Slots are half-open: [start, end). They overlap when a.start < b.end and b.start < a.end.** Why: end equals start is allowed, and it is one line instead of a pile of cases.",
-      "**The overlap check lives on Booking, is_free on Room, and book reads like a sentence.** Why: each class answers a question about itself, and the scheduler only orchestrates.",
-      "**The search keeps the best so far and replaces it only on a strictly smaller capacity.** Why: that is the smallest room and the tie-break in one comparison, so the result is deterministic.",
-      "**Validate start before end first.** Why: bad input never reaches the room logic.",
-      "**Choose a room and add the booking as one step under a lock.** Why: it is the senior signal for two people on the last room.",
-      "**Recurring meetings: check every slot first, then book them all.** Why: all or none, with no rollback code."
-     ]
-    }
-   ]
-  },
-  {
    "id": "meeting-final",
    "title": "The final code, in one file",
    "blocks": [
@@ -6223,6 +6047,12 @@ window.LOOP_CODING.parts.push({
  "title": "File search (find)",
  "minutes": 45,
  "lead": "A find round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. The tree is small and built by hand. The question is the filters: a Filter base class, concrete filters, and And, Or and Not that combine them, so a new condition never edits find. Implementation starts with find, then the walk, then the filters.",
+ "apart": [
+  "**A filter is one question about one file.** Combining filters is a filter that holds filters: And, Or, Not.",
+  "**find is handed a filter and only calls matches.** A new condition is a new class; find never changes.",
+  "**And stops at the first no, Or at the first yes, Not flips.**",
+  "**Walk with an explicit stack, and yield as you go** for a tree too big to hold."
+ ],
  "sections": [
   {
    "id": "filesearch-prompt",
@@ -6696,27 +6526,6 @@ window.LOOP_CODING.parts.push({
      "check": [
       "Under a minute?",
       "Do you end on what it can grow into?"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "filesearch-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**A filter is one question about one file; combining filters is a filter that holds filters.** Why: any query is built from the same two ideas, so find never changes.",
-      "**find is handed a Filter and only calls matches.** Why: a new condition is a new class, and nothing already written is edited.",
-      "**And stops at the first no, Or at the first yes, Not flips.** Why: short-circuit is the whole logic, and an empty And is true while an empty Or is false.",
-      "**Walk with an explicit stack of (path, entry); push children in reverse name order.** Why: a deep tree cannot overflow, and the output is in name order every run.",
-      "**File answers extension() itself.** Why: behaviour sits with its data, so ExtensionFilter is one line.",
-      "**To stream, yield in the walk and return a generator from find.** Why: results start at once and memory stays flat; check the start folder eagerly."
      ]
     }
    ]

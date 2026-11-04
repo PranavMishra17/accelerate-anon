@@ -554,6 +554,14 @@ details.item > .sbody { padding-left: 0; }
 .cd-sec { margin: var(--s6) 0 0; padding-top: var(--s4); border-top: var(--hair); }
 .cd-sec h3 { font-size: var(--fs-lg); margin-bottom: var(--s3); }
 .cd-blk { margin: var(--s4) 0; max-width: 860px; }
+.cd-toprow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s5); align-items: start; margin: var(--s4) 0; max-width: 1100px; }
+.cd-toprow > .am-res, .cd-toprow > .cd-apart { margin: 0; }
+@media (max-width: 900px) { .cd-toprow { grid-template-columns: minmax(0, 1fr); } }
+.cd-apart { margin: var(--s4) 0; max-width: 860px; padding: var(--s4) var(--s5); border-radius: var(--radius-lg); background: var(--ink); color: var(--bg); }
+.cd-apart-h { font-weight: var(--w-strong); margin-bottom: var(--s2); }
+.cd-apart ol { margin: 0; padding-left: var(--s5); }
+.cd-apart li { margin: var(--s2) 0; line-height: 1.5; }
+.cd-apart strong { color: inherit; }
 .dif { font-size: var(--fs-xs); white-space: nowrap; }
 .dif.d-easy { color: var(--ok); } .dif.d-medium { color: var(--muted); } .dif.d-hard { color: var(--warn); }
 .cd-probs table { width: 100%; } .cd-probs td { vertical-align: top; } .cd-probs td.cd-pl { white-space: nowrap; text-align: right; }
@@ -903,7 +911,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
 <script src="coding/mercor-7-onsite-code.js?v=2567e7ff"></script>
 <script src="coding/mercor-8-onsite-algo.js?v=e5841e42"></script>
 <script src="coding/mercor-9-infra-algo.js?v=28429cd7"></script>
-<script src="coding/mercor-lld.js?v=a460bcaa"></script>
+<script src="coding/mercor-lld.js?v=f25cba85"></script>
 <script src="coding/mercor-mock.js?v=a8209c87"></script>
 <script src="coding/mercor-res.js?v=6dd43cef"></script>
 <script src="../coding/concurrency.js?v=657528be"></script>
@@ -2909,7 +2917,19 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       a.href = link(tab, p.id); li.appendChild(a); ol.appendChild(li);
     });
     top.appendChild(ol);
-    var rs = resFor(cur.id); if (rs) { top.appendChild(rs); }
+    var rs = resFor(cur.id);
+    /* What sets you apart: the few thinking cues that crack the problem, in reversed colours, beside the videos at the
+       top of the part, so it is one scroll up from any chapter. */
+    if (cur.apart && cur.apart.length) {
+      var row = el("div", "cd-toprow"), ap = el("div", "cd-apart");
+      ap.appendChild(el("div", "cd-apart-h", "What sets you apart"));
+      var al = el("ol");
+      cur.apart.forEach(function (t) { al.appendChild(el("li", "", inl(t))); });
+      ap.appendChild(al);
+      if (rs) { row.appendChild(rs); }
+      row.appendChild(ap);
+      top.appendChild(row);
+    } else if (rs) { top.appendChild(rs); }
     if (cur.id === "lld-round") { var rp = resFor("patterns", "Design patterns: watch and read"); if (rp) { top.appendChild(rp); } }
     host.appendChild(top);
     nav.push([cur.id, "Parts"]);

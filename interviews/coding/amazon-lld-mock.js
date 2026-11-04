@@ -9,6 +9,12 @@ window.LOOP_CODING.parts.push({
  "title": "Mock: Amazon Locker, the whole round",
  "minutes": 45,
  "lead": "A full locker round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. Three classes and an enum. Try each box before you open the answer.",
+ "apart": [
+  "**The code the user gets and the key you store are separate.** They map to the same deposit, but you never hand out your internal key: the access code is what leaves the system.",
+  "**The Locker holds the access tokens: a map from code to token.** Anything about the locker as a whole, which codes are live and whether it is working, lives in the Locker class.",
+  "**A Compartment is the organiser of one slot:** its size and whether it is occupied, and the small operations on it. The Locker decides; the compartment does.",
+  "**Abandoned packages are a staff action, not a timer.** A token expires, and staff clear the compartment; say it, don't build a background job."
+ ],
  "sections": [
   {
    "id": "locker-prompt",
@@ -403,27 +409,6 @@ window.LOOP_CODING.parts.push({
      "check": [
       "Under a minute?",
       "Do you end on what it can grow into?"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "locker-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**The compartment owns what's physically inside it; the token is only a key. Deposit sets occupied, and only pickup or staff clear it.** Why: an expired code still means a package is in the box; interviewers probe exactly that.",
-      "**Package isn't a class; its size is a parameter. Carrier and user are external.** Why: it shows scope judgment and keeps it to three classes in 40 minutes.",
-      "**Tokens live in a map by code; codes are one-time and errors are specific (invalid, expired).** Why: pickup is one lookup, codes can't be reused, and requirement 3 asks for specific errors.",
-      "**Every allocation decision goes through one helper, _get_available_compartment.** Why: size fallback, broken doors and indexing by size each change only that function.",
-      "**Finding a compartment and marking it occupied happen as one step; a door that never closes needs reserve, confirm and a timeout.** Why: it's the senior signal: two drivers and a driver who walks away, not only the happy path.",
-      "**Expired doesn't mean deleted: open the doors for staff, clear state only after the package is out.** Why: it follows the requirement exactly and ties back to the first line."
      ]
     }
    ]

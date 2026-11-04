@@ -211,15 +211,14 @@ def mock_part(P):
     S.append({"id": f"{pid}-extend", "title": "f) Extensibility", "blocks": ext})
     S.append({"id": f"{pid}-explain", "title": "Explain it back", "blocks": [
         turn("Give me a summary.", P["summary"], check=["Under a minute?", "Do you end on what it can grow into?"])]})
-    S.append({"id": f"{pid}-standout", "title": "Lines that set you apart", "blocks": [
-        {"t": "p", "text": "If these come through in how you talk, you've cracked it."},
-        {"t": "list", "items": golden_list(P)}]})
     fin = [{"t": "p", "text": P["final_intro"]}, {"t": "svg", "svg": mp, "alt": "Class map"},
            code(f"{pid}-final-code", P["final_title"], P["final_code"] + P["final_demo"]),
            {"t": "p", "text": "The run prints: " + P["final_out_note"]}]
     S.append({"id": f"{pid}-final", "title": "The final code, in one file", "blocks": fin})
+    # what sets you apart: the few thinking cues that crack the problem, shown as a panel at the top of the round
+    apart = P.get("apart") or [f"**{line}** {why}" for line, why in P["golden"]]
     return {"tab": "lld", "id": P["part_id"], "n": P["n"], "one": True, "title": P["part_title"],
-            "minutes": P.get("minutes", 45), "lead": P["lead"], "sections": S}
+            "minutes": P.get("minutes", 45), "lead": P["lead"], "apart": apart, "sections": S}
 
 
 # ---------- the one-screen cheat sheet ----------
@@ -240,7 +239,7 @@ def cheat_tab(P, number):
         {"t": "p", "text": "**Extensibility**"},
         {"t": "list", "items": [f"{e['short_q']}: {e['short_a']}" for e in P["extensions"]]},
     ] + design_check_blocks(P) + [
-        {"t": "p", "text": "**Lines that set you apart**"},
-        {"t": "list", "items": golden_list(P)[:4]},
+        {"t": "p", "text": "**What sets you apart**"},
+        {"t": "list", "items": P.get("apart") or golden_list(P)[:4]},
     ]
     return {"id": f"t10-{P['id']}", "title": f"{number} {P['title']}", "blocks": blocks}

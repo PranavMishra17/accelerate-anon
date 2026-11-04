@@ -587,6 +587,12 @@ PROBLEM = {
     "summary": ["**Five classes.** The Library is the entry point: add a copy, search titles, borrow a copy for 14 days up to two at a time, and return it with a fine of 25 cents a day if late. A Book is the title, a Copy is one physical copy that knows its open loan, a Loan holds the copy, the member and the due date and works out its own days late, and a Member holds their loans and fines. Today's date is passed in.",
                 "**It grows in one place each time:** reservations add a queue on the title and a hold on the copy, a notification is one callable, and a different fine per member changes only _rate_for."],
 
+    "apart": [
+        "**A title and a copy are different things.** The title is searched and reserved; a copy is what you borrow.",
+        "**A loan is a class:** a copy, a member and a due date, and it answers days late. The fine follows from it.",
+        "**Today's date is a parameter,** so the same input always gives the same due date and the same fine.",
+        "**Check the copy is free and open the loan as one step,** or two desks can lend the same copy."
+    ],
     "golden": [
         ("A title and a copy are different things: the title is searched and reserved, the copy is borrowed.", "it is the first modelling call, and it is what makes reservations possible later."),
         ("Loan is a class: a copy, a member and a due date, and it answers days_late.", "the rule sits next to the date it reads, so the library only orchestrates, and loan history has a home."),

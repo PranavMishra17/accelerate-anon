@@ -488,6 +488,12 @@ PROBLEM = {
     "summary": ["**Three classes and an enum.** The Locker is the entry point: deposit by size returns a code, pickup by code opens the door, and staff open expired compartments and clear them. An AccessToken holds the code, its expiry and its compartment. A Compartment holds its size and whether it's occupied.",
                 "**It extends in one place each time:** size fallback changes one helper, broken doors turn occupied into a status, and a two-phase deposit or a lock handles a door that never closes or two drivers at once."],
 
+    "apart": [
+        "**The code the user gets and the key you store are separate.** They map to the same deposit, but you never hand out your internal key: the access code is what leaves the system.",
+        "**The Locker holds the access tokens: a map from code to token.** Anything about the locker as a whole, which codes are live and whether it is working, lives in the Locker class.",
+        "**A Compartment is the organiser of one slot:** its size and whether it is occupied, and the small operations on it. The Locker decides; the compartment does.",
+        "**Abandoned packages are a staff action, not a timer.** A token expires, and staff clear the compartment; say it, don't build a background job."
+    ],
     "golden": [
         ("The compartment owns what's physically inside it; the token is only a key. Deposit sets occupied, and only pickup or staff clear it.", "an expired code still means a package is in the box; interviewers probe exactly that."),
         ("Package isn't a class; its size is a parameter. Carrier and user are external.", "it shows scope judgment and keeps it to three classes in 40 minutes."),

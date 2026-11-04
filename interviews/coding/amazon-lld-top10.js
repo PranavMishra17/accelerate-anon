@@ -354,15 +354,15 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Lines that set you apart**"
+     "text": "**What sets you apart**"
     },
     {
      "t": "list",
      "items": [
-      "**The compartment owns what's physically inside it; the token is only a key. Deposit sets occupied, and only pickup or staff clear it.** Why: an expired code still means a package is in the box; interviewers probe exactly that.",
-      "**Package isn't a class; its size is a parameter. Carrier and user are external.** Why: it shows scope judgment and keeps it to three classes in 40 minutes.",
-      "**Tokens live in a map by code; codes are one-time and errors are specific (invalid, expired).** Why: pickup is one lookup, codes can't be reused, and requirement 3 asks for specific errors.",
-      "**Every allocation decision goes through one helper, _get_available_compartment.** Why: size fallback, broken doors and indexing by size each change only that function."
+      "**The code the user gets and the key you store are separate.** They map to the same deposit, but you never hand out your internal key: the access code is what leaves the system.",
+      "**The Locker holds the access tokens: a map from code to token.** Anything about the locker as a whole, which codes are live and whether it is working, lives in the Locker class.",
+      "**A Compartment is the organiser of one slot:** its size and whether it is occupied, and the small operations on it. The Locker decides; the compartment does.",
+      "**Abandoned packages are a staff action, not a timer.** A token expires, and staff clear the compartment; say it, don't build a background job."
      ]
     }
    ]
@@ -597,15 +597,15 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Lines that set you apart**"
+     "text": "**What sets you apart**"
     },
     {
      "t": "list",
      "items": [
-      "**Choosing a spot and parking in it is one step. With two gates, anything less gives one spot to two cars.** Why: it is the concurrency headline in the reports, and the senior signal.",
-      "**Vehicle isn't a class and Car, Truck aren't subclasses; the size is a parameter and an enum.** Why: it shows scope judgment: you model behaviour, not nouns.",
-      "**The ticket stores everything exit needs, and tickets live in a map by id.** Why: exit is one lookup, and a used ticket is an error because it is gone.",
-      "**The fee sits in one helper, so a new rule changes one place.** Why: interviewers always ask for a second pricing rule, and the answer is a swap, not a rewrite."
+      "**Entry and parking are deterministic, and nothing in between needs watching.** A car takes a spot at entry and frees it at exit; no timer marks a spot open.",
+      "**Price at exit.** The ticket remembers what exit needs (spot, size, entry time), and the fee is worked out once, at the end. You can take a planned duration as input, but only exit frees the spot.",
+      "**Ticket is its own class; ParkingLot and Spot are the two big ones.** Vehicle is not a class: it is external, a plate and a size.",
+      "**Payment enforcement and abandoned cars are out of scope, but say them:** like staff clearing a locker, an abandoned car gets towed. Naming it shows the edge without building it."
      ]
     }
    ]
@@ -871,15 +871,15 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Lines that set you apart**"
+     "text": "**What sets you apart**"
     },
     {
      "t": "list",
      "items": [
-      "**Piece is abstract and each kind owns its movement rule; Game never asks what kind it is.** Why: adding a piece changes one class, and it is the reason interviewers probe placement.",
-      "**A move is legal if the target is not my own piece, the piece's can_move allows it, and my own king is safe afterwards.** Why: three tests in that order, one method, shared by make_move and the mate search.",
-      "**To test king safety, make the move on the board, ask is_attacked, and undo.** Why: pins, a king stepping into attack and capturing the attacker all fall out with no special case.",
-      "**The board knows what is on each square and whether a path is clear; it does not know the rules.** Why: rules in pieces, geometry in the board, turns in the game: each class has one job."
+      "**Each piece owns its movement rule.** Piece is abstract and the game never asks what kind it is; it asks can_move.",
+      "**A move is legal if the target is not your own piece, the piece allows it, and your king is safe afterwards.** Test the last one by making the move, asking is_attacked, and undoing it.",
+      "**The board knows positions and clear paths, not rules.** Rules live in the pieces and the game.",
+      "**Checkmate and stalemate are one test: no legal move.** Checkmate is when the king is also attacked."
      ]
     }
    ]
@@ -1116,15 +1116,15 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Lines that set you apart**"
+     "text": "**What sets you apart**"
     },
     {
      "t": "list",
      "items": [
-      "**Money is integer cents, and I say where the leftover cent goes: to the first people in the order given.** Why: it is the first thing they probe, and floats hide it.",
-      "**Split is a class: a kind and who is in it. The kind decides how shares are computed.** Why: add_expense never knows the rules, so a new split kind touches one class.",
-      "**Settling up is a debt the other way, so there is no special path.** Why: the ledger has one write, which keeps balances easy to trust.",
-      "**Every split returns shares that total the amount to the cent, or raises.** Why: bad data is rejected at the one place that understands it."
+      "**Money is integer cents, and you say where the leftover cent goes.**",
+      "**The split kind decides how shares are computed:** equal, exact or percent. Every split returns shares that add up to the amount, or refuses.",
+      "**Expenses are an append-only record; balances are derived.** A correction is a new entry, and settling up is a debt the other way, no special path.",
+      "**Simplifying debts is a read over net balances,** not a change to what is stored."
      ]
     }
    ]
@@ -1365,15 +1365,15 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Lines that set you apart**"
+     "text": "**What sets you apart**"
     },
     {
      "t": "list",
      "items": [
-      "**A Hold is a class with an expiry, and is_expired is the only place time is compared.** Why: the rule that makes a hold temporary lives with the data it is about, so confirm and the show's release never disagree.",
-      "**hold_seats checks every seat first, then marks them all, inside one lock per show.** Why: check and mark are one step, so two users can't both win, and a failure holds nothing.",
-      "**Expired holds are released when anyone looks, not by a timer.** Why: no thread, no second lock, and the run is deterministic; abandoned carts free themselves.",
-      "**Confirm releases expired holds, then re-checks the hold is still alive.** Why: someone else may have taken the seat after the hold lapsed."
+      "**A hold is a class with an expiry.** The seats are held for N minutes, and is_expired is the only place time is compared.",
+      "**Check every seat first, then mark them all, under one lock per show.** That is what stops two people taking the same seat.",
+      "**Expired holds are released when someone looks,** not by a timer. Confirm re-checks the hold is still alive.",
+      "**Pass the time in as now,** so expiry is testable."
      ]
     }
    ]
@@ -1614,15 +1614,15 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Lines that set you apart**"
+     "text": "**What sets you apart**"
     },
     {
      "t": "list",
      "items": [
-      "**select checks everything before it moves anything.** Why: a refusal then leaves the machine as it was, which makes the refund exact and the money never stuck.",
-      "**Change is a real loop over the machine's own coins, largest first.** Why: the interviewer's first probe is what if you can't make change, and the answer is None, refuse and refund.",
-      "**The customer's coins are held apart until the sale goes through.** Why: a cancel is then a plain hand-back, and it can never fail for lack of change.",
-      "**An enum with guards first; State classes only when the modes grow their own behaviour.** Why: it shows you don't reach for a pattern before the requirements need it."
+      "**Check everything before moving anything:** the slot, the stock, the money and whether change can be made.",
+      "**Change is a real loop over the machine's own coins, largest first,** and if exact change cannot be made, the sale is refused and the money returned.",
+      "**The customer's coins are held apart until the sale goes through,** so a cancel returns exactly what they put in.",
+      "**Modes start as an enum with guards.** State classes only when each mode grows its own behaviour."
      ]
     }
    ]
@@ -1863,15 +1863,17 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Lines that set you apart**"
+     "text": "**What sets you apart**"
     },
     {
      "t": "list",
      "items": [
-      "**Request is a class: a floor and a type. The type decides whether a passing elevator stops.** Why: without it an elevator going up stops for someone going down, which is the bug interviewers look for.",
-      "**Dispatch reads as three tiers, each a named finder: moving towards, nearest idle, nearest.** Why: the high-level method says the rule out loud; the interesting finder is one O(n) loop.",
-      "**Stopping is direction-aware, travelling is not.** Why: that one sentence is SCAN, and it is all of Elevator.step.",
-      "**The controller's step is a loop; each elevator owns its own step.** Why: the controller chooses, the elevator moves, so a new dispatch rule never touches movement."
+      "**A step() function is time.** One call moves every elevator one tick; know this first and everything else is deterministic.",
+      "**In one step an elevator either moves one floor or stops with its doors open; the next step it carries on.** The elevator owns its status, its direction and what it is serving now.",
+      "**A request is its own type: a hall call says come to me (with up or down), a car call says get me there.** Different buttons, different rules for stopping.",
+      "**Pick the elevator by abstraction:** select the best, which is find one moving towards you, else the nearest idle, else the nearest. Moving ones arrive sooner; an idle one spends a step turning towards you.",
+      "**A plain loop over the elevators is enough.** There are never many, so two or three passes are fine; say it so nobody asks for a heap.",
+      "**When an elevator finishes and goes idle, it can change direction.** Keep that in mind even if you defer it."
      ]
     }
    ]
@@ -2113,15 +2115,15 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Lines that set you apart**"
+     "text": "**What sets you apart**"
     },
     {
      "t": "list",
      "items": [
-      "**Time is passed in, never read inside the bucket.** Why: the limiter can be shown, and tested, without sleeping.",
-      "**Refill is computed from elapsed time when a request arrives; there is no timer thread.** Why: no background work, and an idle client costs nothing.",
-      "**allow returns the decision and the wait, not only a bool.** Why: the caller can send a retry-after, which was in the requirements.",
-      "**Refill and take are one step.** Why: it is the race in this design, and the one the follow-up goes after."
+      "**Refill is worked out from elapsed time when a request arrives.** No timer thread; refill and take are one step.",
+      "**Time is passed in, never read inside the bucket.**",
+      "**allow answers with the decision and how long to wait,** not only yes or no.",
+      "**Know the fixed window's flaw:** up to 2N requests across a window edge. That is why a bucket or a sliding window."
      ]
     }
    ]
@@ -2379,15 +2381,15 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Lines that set you apart**"
+     "text": "**What sets you apart**"
     },
     {
      "t": "list",
      "items": [
-      "**Slots are half-open: [start, end). They overlap when a.start < b.end and b.start < a.end.** Why: end equals start is allowed, and it is one line instead of a pile of cases.",
-      "**The overlap check lives on Booking, is_free on Room, and book reads like a sentence.** Why: each class answers a question about itself, and the scheduler only orchestrates.",
-      "**The search keeps the best so far and replaces it only on a strictly smaller capacity.** Why: that is the smallest room and the tie-break in one comparison, so the result is deterministic.",
-      "**Validate start before end first.** Why: bad input never reaches the room logic."
+      "**Slots are half-open, [start, end).** Two overlap when a.start < b.end and b.start < a.end, so back-to-back is allowed.",
+      "**The overlap check lives on the booking, is_free on the room,** and book reads like a sentence.",
+      "**Pick the smallest room that fits:** keep the best so far and replace it only on a strictly smaller capacity.",
+      "**Choose the room and add the booking as one step;** a recurring meeting checks every slot first, then books them all."
      ]
     }
    ]
@@ -2636,15 +2638,15 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Lines that set you apart**"
+     "text": "**What sets you apart**"
     },
     {
      "t": "list",
      "items": [
-      "**A filter is one question about one file; combining filters is a filter that holds filters.** Why: any query is built from the same two ideas, so find never changes.",
-      "**find is handed a Filter and only calls matches.** Why: a new condition is a new class, and nothing already written is edited.",
-      "**And stops at the first no, Or at the first yes, Not flips.** Why: short-circuit is the whole logic, and an empty And is true while an empty Or is false.",
-      "**Walk with an explicit stack of (path, entry); push children in reverse name order.** Why: a deep tree cannot overflow, and the output is in name order every run."
+      "**A filter is one question about one file.** Combining filters is a filter that holds filters: And, Or, Not.",
+      "**find is handed a filter and only calls matches.** A new condition is a new class; find never changes.",
+      "**And stops at the first no, Or at the first yes, Not flips.**",
+      "**Walk with an explicit stack, and yield as you go** for a tree too big to hold."
      ]
     }
    ]

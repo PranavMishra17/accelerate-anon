@@ -9,6 +9,12 @@ window.LOOP_CODING.parts.push({
  "title": "Agent runtime: tools, a loop, budgets",
  "minutes": 45,
  "lead": "An agent-runtime round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. The model is a fake with a script, so a run is deterministic and needs no network. Implementation starts with run(), the loop, and names its helpers before writing them; the retry cap gets its own box.",
+ "apart": [
+  "**The loop is the agent:** ask the model for the next action, run the tool, record it, stop on a final answer or a budget.",
+  "**A bad call goes back to the model as text and is never retried; a failing tool is retried up to a cap.** Two different failures, two different answers.",
+  "**The budget is checked before every model call,** and every call is charged in one place.",
+  "**The model is anything with next(history),** so a fake makes every run the same."
+ ],
  "sections": [
   {
    "id": "agentrun-prompt",
@@ -438,27 +444,6 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "agentrun-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**A bad call goes back to the model as text and is never retried; a failing tool is retried up to a cap.** Why: the model can fix its own mistake, but retrying the same wrong call only wastes time.",
-      "**run() reads like the description of an agent, and names _next_action, _execute_tool and _within_budget.** Why: the loop says the rule out loud, and each hard part has one place.",
-      "**Every model call is charged in one place, and the budget is checked before the call.** Why: a run cannot skip the limit, so it always ends.",
-      "**Tool.validate compares types exactly and does not coerce.** Why: True is an int in Python, and guessing hides the model's mistake from the model.",
-      "**The model is anything with next(history), and the demo uses a fake.** Why: the whole runtime runs offline and the same every time.",
-      "**A new Budget for each run, with limits from the agent.** Why: two runs never share a count."
-     ]
-    }
-   ]
-  },
-  {
    "id": "agentrun-final",
    "title": "The final code, in one file",
    "blocks": [
@@ -494,6 +479,12 @@ window.LOOP_CODING.parts.push({
  "title": "Eval harness: cases, graders, a report",
  "minutes": 45,
  "lead": "An evaluation-harness round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design as state and behaviour, e) implementation as logic, edge cases, then code, f) extensibility. The system under test and the judge are fakes, so a run is deterministic. Implementation starts with run_suite(), names _run_case before writing it, and keeps the system's crash (a zero) apart from a grader's crash (Unknown).",
+ "apart": [
+  "**A crash in the system scores 0; a crash in the grader is Unknown.** One is the system failing, the other is you not knowing.",
+  "**Unknown is left out of the mean and counted in the report,** so it never hides as a pass or a fail.",
+  "**Each grader says whether it applies and grades;** run_suite never checks kinds, so a new grader is a new class.",
+  "**Compare against a stored baseline,** and flag a dimension that can no longer be measured as a regression too."
+ ],
  "sections": [
   {
    "id": "evalharness-prompt",
@@ -952,27 +943,6 @@ window.LOOP_CODING.parts.push({
      "check": [
       "Under a minute?",
       "Do you end on what it can grow into?"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "evalharness-standout",
-   "title": "Lines that set you apart",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "If these come through in how you talk, you've cracked it."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**A system crash scores 0.0 and a grader crash is Unknown.** Why: it blames the right party: the system for its failure, never the system for ours.",
-      "**Unknown is left out of the mean and counted in the report.** Why: a zero would punish the system for doubt, and hiding the count would make a small sample look big.",
-      "**run_suite reads like the description of a run, and names _run_case.** Why: the loop says the rule out loud and the hard part has one place.",
-      "**Each grader says if it applies and grades; run_suite never checks kinds.** Why: a new grader type is a new class, not an edit.",
-      "**A dimension that can no longer be measured is flagged by compare.** Why: silence would hide a lost measurement.",
-      "**The system and the judge are fakes, so a run is the same every time.** Why: you can check the report by hand."
      ]
     }
    ]

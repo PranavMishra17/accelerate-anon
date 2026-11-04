@@ -664,6 +664,12 @@ PROBLEM = {
     "summary": ["**Five classes and one enum.** Splitwise checks the group and the amount, asks the Split for each share, and records the Expense. The Split's kind decides the rule: equal divides with the leftover cents going to the first people, exact checks its total, percent floors and hands out the lost cents. The Ledger holds one net number per pair, and settling is an entry the other way.",
                 "**It extends in one place each time:** simplifying debts is a read over the ledger, a new split kind is one branch in Split, currencies are a rate on the Expense, and threads are one lock."],
 
+    "apart": [
+        "**Money is integer cents, and you say where the leftover cent goes.**",
+        "**The split kind decides how shares are computed:** equal, exact or percent. Every split returns shares that add up to the amount, or refuses.",
+        "**Expenses are an append-only record; balances are derived.** A correction is a new entry, and settling up is a debt the other way, no special path.",
+        "**Simplifying debts is a read over net balances,** not a change to what is stored."
+    ],
     "golden": [
         ("Money is integer cents, and I say where the leftover cent goes: to the first people in the order given.", "it is the first thing they probe, and floats hide it."),
         ("Split is a class: a kind and who is in it. The kind decides how shares are computed.", "add_expense never knows the rules, so a new split kind touches one class."),

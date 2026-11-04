@@ -807,6 +807,12 @@ PROBLEM = {
     "summary": ["**Four classes and one interface.** The Cache holds a dict from key to Entry, a clock and an eviction policy. put stores an Entry with its expiry, tells the policy, and drops the policy's victim while it is over capacity; get removes an expired key, or tells the policy about a hit. The cache never looks at recency: it tells the policy what happened and asks who goes. LRUPolicy keeps a dict of nodes and a doubly linked list with a sentinel at each end, so every call is O(1).",
                 "**It grows one place at a time:** LFU is a second policy, a lock for threads, single-flight and jitter for a hot key, shards with a lock each for contention and a hash ring when shards move, a near cache for a key too hot for one shard, a cache-aside write path for a database, a cost per entry for memory, and counters to see whether any of it helps. A CDN is a different tier in front. Each one costs something, and I say what."],
 
+    "apart": [
+        "**Abstract the eviction policy away from the cache.** Everything about which key leaves and when a key counts as used is the policy, behind an interface; the cache only reports what happened and asks who goes. That swap is half the win.",
+        "**The value is not in the Node.** Entry holds the value and its expiry in the cache's map; the policy's nodes hold only key, prev and next. You need O(1) lookup (a map) and O(1) reordering (a doubly linked list), and they are two structures with two jobs.",
+        "**Time is a clock you pass in, and the default ttl can be None.** That makes expiry testable and optional.",
+        "**An expired key found on get is handled on that read:** drop it and return None, or return it once and mark it for refresh. Lazy expiry needs no background job."
+    ],
     "golden": [
         ("Eviction is abstracted away from the cache: it asks the policy three things, record_use, remove, victim.", "that split is half the design, and a second class (LFU) behind the same three calls is the proof."),
         ("Build the layers in order: a dict, then expiry, then capacity with a policy. Say what each one costs.", "interviewers add layers on purpose, and over-building layer three first is the common failure."),

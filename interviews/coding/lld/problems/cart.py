@@ -475,6 +475,12 @@ PROBLEM = {
     "summary": ["**Four small classes and an enum.** A Cart holds a Line per item; each Line is an Item and a quantity. Checkout takes the subtotal and lets one Discount, a kind and a value, change it. Money is integer cents and a percentage rounds down.",
                 "**It grows by adding classes, not editing the cart:** buy-one-get-one turns Discount into a family that sees the lines, stacking is a loop over a list, and an expiring coupon is one field plus the time passed in."],
 
+    "apart": [
+        "**Money is integer cents, and you say your rounding rule where you divide.**",
+        "**The cart does not know which discount it has.** Checkout hands the discount a total and takes a total back; a new discount is a new class, not an edit.",
+        "**Each rule lives in one place:** 'never below zero' in the discount, the stacking order said back to them before you code it.",
+        "**Pass the time in;** a discount with an end date never reads the clock itself."
+    ],
     "golden": [
         ("Money is integer cents, and I name my rounding rule where I divide: the discount rounds down.", "it is the first thing they check, and floats hide the question instead of answering it."),
         ("The cart doesn't know which discount it was given; checkout hands it the total and takes back a total.", "every new rule is a new subclass and Cart stays the same."),

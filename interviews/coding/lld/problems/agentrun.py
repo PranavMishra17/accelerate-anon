@@ -647,6 +647,12 @@ PROBLEM = {
     "summary": ["**One loop and a few small classes.** The Agent asks the model for an action, and a final answer ends the run. A tool call goes through the registry, the Tool checks its own typed arguments, and a failing tool is retried up to a cap. A bad call or a final failure goes back to the model as text. A fresh Budget per run ends a run that never finishes, and the trace records every step.",
                 "**It extends in one place each time:** parallel calls map _execute_tool over a list, approval is one check before the call, memory is a list at the front of the history, and a new model is an adapter."],
 
+    "apart": [
+        "**The loop is the agent:** ask the model for the next action, run the tool, record it, stop on a final answer or a budget.",
+        "**A bad call goes back to the model as text and is never retried; a failing tool is retried up to a cap.** Two different failures, two different answers.",
+        "**The budget is checked before every model call,** and every call is charged in one place.",
+        "**The model is anything with next(history),** so a fake makes every run the same."
+    ],
     "golden": [
         ("A bad call goes back to the model as text and is never retried; a failing tool is retried up to a cap.", "the model can fix its own mistake, but retrying the same wrong call only wastes time."),
         ("run() reads like the description of an agent, and names _next_action, _execute_tool and _within_budget.", "the loop says the rule out loud, and each hard part has one place."),

@@ -629,6 +629,14 @@ PROBLEM = {
     "summary": ["**Three classes and two enums.** The ElevatorController takes hall calls and picks an elevator in three tiers: one already coming the caller's way that will reach the floor, else the nearest idle, else the nearest. Each elevator holds a set of Requests and moves itself with SCAN: it stops for requests that match its direction, keeps going while any are ahead, turns when none are.",
                 "**It extends in one place each time:** cancelling is remove_request, express cars are a filter before the tiers, threads are one lock, and a fire recall replaces the requests."],
 
+    "apart": [
+        "**A step() function is time.** One call moves every elevator one tick; know this first and everything else is deterministic.",
+        "**In one step an elevator either moves one floor or stops with its doors open; the next step it carries on.** The elevator owns its status, its direction and what it is serving now.",
+        "**A request is its own type: a hall call says come to me (with up or down), a car call says get me there.** Different buttons, different rules for stopping.",
+        "**Pick the elevator by abstraction:** select the best, which is find one moving towards you, else the nearest idle, else the nearest. Moving ones arrive sooner; an idle one spends a step turning towards you.",
+        "**A plain loop over the elevators is enough.** There are never many, so two or three passes are fine; say it so nobody asks for a heap.",
+        "**When an elevator finishes and goes idle, it can change direction.** Keep that in mind even if you defer it."
+    ],
     "golden": [
         ("Request is a class: a floor and a type. The type decides whether a passing elevator stops.", "without it an elevator going up stops for someone going down, which is the bug interviewers look for."),
         ("Dispatch reads as three tiers, each a named finder: moving towards, nearest idle, nearest.", "the high-level method says the rule out loud; the interesting finder is one O(n) loop."),
