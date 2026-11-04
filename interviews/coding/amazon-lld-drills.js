@@ -2592,6 +2592,19 @@ window.LOOP_CODING.parts.push({
     {
      "t": "turn",
      "who": "Interviewer",
+     "ask": "Why is the value not a member of Node: key, prev, next, value?",
+     "say": [
+      "Because in this design **the list only keeps the order, not the data.** The cache's entries map holds the data, key to Entry with its value and expiry; the policy's nodes hold only key, prev and next. When the cache is full the policy names a key, and the cache removes that key's value itself."
+     ],
+     "explain": [
+      "Keeping the value out of Node is what makes the policy swappable. LRU never needs the value, it only answers which key was used longest ago. LFU has no linked list at all, it counts uses per key; with the value inside Node, switching to LFU would mean moving the data too.",
+      "The cost: two maps, two O(1) lookups instead of one, and _drop keeps them in step.",
+      "When value does belong in Node: the LeetCode-style LRU cache, one class, one map from key to node, no swappable policy. There the node is both the order and the data, key, value, prev and next. That is simpler and fine when LRU is the only rule; once the interviewer says the rule will change, you split them."
+     ]
+    },
+    {
+     "t": "turn",
+     "who": "Interviewer",
      "ask": "Why a dict and a linked list, and not a dict plus a list of keys?",
      "say": [
       "Because the list makes every get O(n): finding the key to move. **The dict gives me the node, and the node already knows its neighbours, so unlinking it and putting it first is O(1).** Eviction is O(1) too: the node before the tail."
@@ -2656,17 +2669,26 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "write",
+     "id": "kvcache-m-Entry-is_expired",
+     "q": "Quick win first: Entry.is_expired(now). When is an entry dead?",
+     "starter": "def is_expired(self, now: float) -> bool:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
+     "hint": "No expiry means never. Otherwise once the clock reaches the expiry time.",
+     "solution": "def is_expired(self, now: float) -> bool:\n    \"\"\"\n    Core logic:\n      1. No expiry -> never expired\n      2. Otherwise expired once the clock reaches the expiry time\n    Edge cases:\n      1. A ttl of 10 means gone at exactly 10 seconds, so >= and not >\n    \"\"\"\n    return self.expires_at is not None and now >= self.expires_at   # Step 1, Step 2, Edge 1",
+     "why": "One line, and it banks a working piece in the first minute. The entry answers about itself. Say which side of the boundary you chose before they ask."
+    },
+    {
+     "t": "write",
      "id": "kvcache-m-put",
-     "q": "Start with the most interesting method: put(key, value, ttl). Core logic and edge cases as comments, then the code. Name the eviction as a helper.",
+     "q": "The moat, the part to get right: put(key, value, ttl). Core logic and edge cases as comments, then the code. Name the eviction as a helper.",
      "starter": "def put(self, key, value, ttl: float | None = None) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
      "hint": "Work out the expiry, store a new Entry, tell the policy, self._evict_if_full(). Edges: ttl of zero, replace.",
      "solution": "def put(self, key, value, ttl: float | None = None) -> None:\n    \"\"\"\n    Core logic:\n      1. Work out when the entry dies: the put's ttl, else the default, else never\n      2. Store a new Entry under the key; a replace restarts the ttl\n      3. Tell the policy the key was used\n      4. If that put the cache over capacity, evict until it fits\n    Edge cases:\n      1. A ttl of zero or less -> error\n      2. A put on an existing key does not grow the cache, so nothing is evicted\n    \"\"\"\n    ttl = self.default_ttl if ttl is None else ttl             # Step 1\n    if ttl is not None and ttl <= 0:                           # Edge 1\n        raise CacheError(\"ttl must be positive\")\n    expires_at = None if ttl is None else self.clock() + ttl\n    self.entries[key] = Entry(value, expires_at)               # Step 2: the old Entry, if any, is replaced\n    self.policy.record_use(key)                                # Step 3: a put counts as a use\n    self._evict_if_full()                                      # Step 4: the hard part, named now and written next",
-     "why": "A replace is the same lines as a new key, because a new Entry overwrites the old one. Eviction has a name here and its own box next."
+     "why": "A replace is the same lines as a new key, because a new Entry overwrites the old one. The cache only tells the policy what happened; it never touches recency itself."
     },
     {
      "t": "write",
      "id": "kvcache-m-get",
-     "q": "get(key): core logic, edge cases, code.",
+     "q": "The moat: get(key). Core logic, edge cases, code.",
      "starter": "def get(self, key):\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
      "hint": "Look up, ask the entry if it is expired, tell the policy, return. Edge: missing.",
      "solution": "def get(self, key):\n    \"\"\"\n    Core logic:\n      1. Look the key up\n      2. An expired entry is removed and counts as a miss\n      3. A live entry is a use: tell the policy, then return the value\n    Edge cases:\n      1. Missing or expired -> None\n    \"\"\"\n    entry = self.entries.get(key)                              # Step 1\n    if entry is None:                                          # Edge 1\n        return None\n    if entry.is_expired(self.clock()):                         # Step 2: the entry knows, the cache does not\n        self._drop(key)\n        return None\n    self.policy.record_use(key)                                # Step 3: a hit changes the order\n    return entry.value",
@@ -2675,56 +2697,47 @@ window.LOOP_CODING.parts.push({
     {
      "t": "write",
      "id": "kvcache-m-_evict_if_full",
-     "q": "_evict_if_full(): when does eviction run, and who chooses the victim?",
+     "q": "The moat: _evict_if_full(). When does eviction run, and who chooses the victim?",
      "starter": "def _evict_if_full(self) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
      "hint": "While over capacity, ask the policy for a victim and drop it. Stop if there is none.",
      "solution": "def _evict_if_full(self) -> None:\n    \"\"\"\n    Core logic:\n      1. While there are more entries than the capacity\n      2. Ask the policy which key goes, and drop it\n    Edge cases:\n      1. The policy has no victim -> stop, so a broken policy cannot spin forever\n    \"\"\"\n    while len(self.entries) > self.capacity:                   # Step 1: a loop, so a smaller capacity later still works\n        victim = self.policy.victim()                          # Step 2: the policy decides, the cache removes\n        if victim is None:                                     # Edge 1\n            return\n        self._drop(victim)",
-     "why": "The cache never looks at recency. It asks, then removes, so a new policy changes nothing here."
+     "why": "The cache asks, then removes. It does not know or care which policy answers, so LRU, LFU or anything else changes nothing here. That is the moat."
     },
     {
      "t": "write",
-     "id": "kvcache-m-LRUPolicy-victim",
-     "q": "LRUPolicy.victim(): which key was used longest ago?",
-     "starter": "def victim(self):\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
-     "hint": "The node before the tail. None if the list is empty.",
-     "solution": "def victim(self):\n    \"\"\"\n    Core logic:\n      1. The node before the tail was used longest ago\n      2. Return its key; the cache removes it\n    Edge cases:\n      1. Nothing tracked -> None\n    \"\"\"\n    last = self.tail.prev                                      # Step 1: most recent is after the head, oldest before the tail\n    if last is self.head:                                      # Edge 1: only the two sentinels\n        return None\n    return last.key                                            # Step 2",
-     "why": "O(1) because the oldest use is always at the back. It only names the key; the cache removes it, so the policy never deletes a value by itself."
+     "id": "kvcache-helpers-w",
+     "q": "Helpers: the cache's plain ones, delete, size and _drop.",
+     "starter": "",
+     "hint": "delete finds the key and drops it. size is the dict length. _drop removes from the dict and the policy together.",
+     "solution": "def delete(self, key) -> bool:\n    if key not in self.entries:\n        return False\n    self._drop(key)\n    return True\n\ndef size(self) -> int:\n    return len(self.entries)                                   # expired entries nobody touched still count\n\ndef _drop(self, key) -> None:\n    # the one way a key leaves, so the dict and the policy never disagree\n    del self.entries[key]\n    self.policy.remove(key)",
+     "why": "_drop is the one way a key leaves, so the dict and the policy never disagree. size includes expired entries nobody touched. Say it before they ask."
     },
     {
      "t": "write",
-     "id": "kvcache-m-LRUPolicy-record_use",
-     "q": "LRUPolicy.record_use(key): what is a use, in terms of the list?",
-     "starter": "def record_use(self, key) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
+     "id": "kvcache-helpers-w1",
+     "q": "The add-on: LRUPolicy.record_use(key). The cache works with any policy; LRU is one you plug in. What is a use, in terms of the list?",
+     "starter": "",
      "hint": "New key: make a node. Known key: unlink it. Then link it first.",
      "solution": "def record_use(self, key) -> None:\n    \"\"\"\n    Core logic:\n      1. A key never seen gets a new node\n      2. A key already tracked is unlinked from where it is\n      3. Either way the node goes first: most recently used\n    Edge cases:\n      1. The very first key: the list is empty, and the sentinels make it the same lines\n    \"\"\"\n    node = self.nodes.get(key)\n    if node is None:                                           # Step 1\n        node = Node(key)\n        self.nodes[key] = node\n    else:\n        self._unlink(node)                                     # Step 2: O(1), the node knows its neighbours\n    self._link_first(node)                                     # Step 3",
      "why": "A put and a hit are the same event to the policy. The sentinels mean the first key needs no special case."
     },
     {
      "t": "write",
-     "id": "kvcache-m-Entry-is_expired",
-     "q": "Entry.is_expired(now): when is an entry dead?",
-     "starter": "def is_expired(self, now: float) -> bool:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
-     "hint": "No expiry means never. Otherwise once the clock reaches the expiry time.",
-     "solution": "def is_expired(self, now: float) -> bool:\n    \"\"\"\n    Core logic:\n      1. No expiry -> never expired\n      2. Otherwise expired once the clock reaches the expiry time\n    Edge cases:\n      1. A ttl of 10 means gone at exactly 10 seconds, so >= and not >\n    \"\"\"\n    return self.expires_at is not None and now >= self.expires_at   # Step 1, Step 2, Edge 1",
-     "why": "The entry answers about itself. Say which side of the boundary you chose before they ask."
+     "id": "kvcache-helpers-w2",
+     "q": "The add-on: LRUPolicy.victim(). Which key was used longest ago?",
+     "starter": "",
+     "hint": "The node before the tail. None if the list is empty.",
+     "solution": "def victim(self):\n    \"\"\"\n    Core logic:\n      1. The node before the tail was used longest ago\n      2. Return its key; the cache removes it\n    Edge cases:\n      1. Nothing tracked -> None\n    \"\"\"\n    last = self.tail.prev                                      # Step 1: most recent is after the head, oldest before the tail\n    if last is self.head:                                      # Edge 1: only the two sentinels\n        return None\n    return last.key                                            # Step 2",
+     "why": "O(1) because the oldest use is always at the back. It only names the key; the cache removes it, so the policy never deletes a value by itself."
     },
     {
      "t": "write",
-     "id": "kvcache-helpers-w",
-     "q": "The policy's helpers: remove, _link_first and _unlink.",
+     "id": "kvcache-helpers-w3",
+     "q": "The add-on's helpers: remove, _link_first and _unlink.",
      "starter": "",
      "hint": "remove forgets a key and unlinks its node. link first: four links. unlink: join the two neighbours.",
      "solution": "def remove(self, key) -> None:\n    node = self.nodes.pop(key, None)                           # a key never tracked is fine\n    if node is not None:\n        self._unlink(node)\n\ndef _link_first(self, node: Node) -> None:\n    first = self.head.next                                     # always there: the tail, when the list is empty\n    node.prev = self.head\n    node.next = first\n    self.head.next = node\n    first.prev = node\n\ndef _unlink(self, node: Node) -> None:\n    node.prev.next = node.next                                 # no case for first or last: their neighbours are sentinels\n    node.next.prev = node.prev",
      "why": "Because of the sentinels the old first node always exists, and unlinking has no case for the first or last node."
-    },
-    {
-     "t": "write",
-     "id": "kvcache-helpers-w1",
-     "q": "The cache's plain ones: delete, size and _drop.",
-     "starter": "",
-     "hint": "delete finds the key and drops it. size is the dict length. _drop removes from the dict and the policy together.",
-     "solution": "def delete(self, key) -> bool:\n    if key not in self.entries:\n        return False\n    self._drop(key)\n    return True\n\ndef size(self) -> int:\n    return len(self.entries)                                   # expired entries nobody touched still count\n\ndef _drop(self, key) -> None:\n    # the one way a key leaves, so the dict and the policy never disagree\n    del self.entries[key]\n    self.policy.remove(key)",
-     "why": "_drop is the one way a key leaves, so the dict and the policy never disagree. size includes expired entries nobody touched. Say it before they ask."
     }
    ]
   },
