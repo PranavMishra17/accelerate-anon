@@ -259,6 +259,14 @@ SCRIPTS = [
 
 QA = [
     {"group": "GTM round", "blurb": "Fifteen minutes with an Engagement Manager and a Principal, Enterprise AI. Pointers, not scripts: remember the bold line, then tell it your way. Session wc39 teaches each one.", "items": [
+        {"q": "The four stories to have ready (yours, about 90 seconds each)", "short": "Four stories",
+         "a": ["**A 30 to 60 second introduction.** Current role, the most relevant experience, one or two depth areas, why this role. Your intro on this page is the base.",
+               "**A stakeholder story.** A time you listened, clarified what they needed, and changed course. Pick it from your work; tell it in your words.",
+               "**A plain-language story.** A time you explained a technical constraint simply to a non-technical person.",
+               "**An honest-no story.** A time you said no or reset expectations and kept their trust.",
+               "**The shape for each:** situation in one sentence, task in one, action in two or three short sentences, a result with one number. Then close: 'Does that answer it?'"],
+         "land": "Four stories, reused across questions, each about 90 seconds with one number.",
+         "notes": ["These are prompts, not answers: each story has to be yours. Say 'capture' in chat with the story in your words and it goes in as you said it.", "Practise aloud with a 90-second timer; if one runs long, cut a point, do not speed up."]},
         {"q": "What do you know about Mercor Enterprise, and what would you improve in how it is sold or delivered?", "short": "Product sense on Enterprise", "learn": {"read": [{"url": "https://mercor.com/enterprise", "label": "Mercor Enterprise (the product page)", "why": "Discover, Deploy, Improve, Monetize in Mercor's own words. Read it once before the call."}, {"url": "https://www.youtube.com/watch?v=MtZTf-2JH2g", "label": "Learn Product Sense in 9 Minutes (DataInterview)", "why": "10 minutes. A frame for thinking about a product as its user would: user, pain, options, trade-off."}]}, "tests": "Did you learn the product, and can you think about it as a customer would.",
          "a": ["**Four parts, one loop.** Discover finds where agents pay off, Deploy puts them in the customer's tools with custom evaluations, Improve tunes them live, Monetize is opt-in data licensing.",
                "**Lead with one number.** The incident-response agent cut median time to mitigation by over 50%. Say 'they report'. It shows an evaluation-defined goal with an operational result.",

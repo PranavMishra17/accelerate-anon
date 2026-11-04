@@ -2674,6 +2674,28 @@ window.LOOP_CODING.parts.push({
         18
        ],
        "why": "The harder follow-up: breadth-first over a graph that is built as you go, and the shortest number of steps. Normalise and mark seen when queued."
+      },
+      {
+       "n": "Shortest Path in Binary Matrix",
+       "d": "medium",
+       "lc": "shortest-path-in-binary-matrix",
+       "yt": [
+        "YnxUdAO7TAo",
+        "NeetCodeIO",
+        13
+       ],
+       "why": "Grid BFS with a visited set: the base for the next one."
+      },
+      {
+       "n": "Shortest Path in a Grid with Obstacles Elimination",
+       "d": "hard",
+       "lc": "shortest-path-in-a-grid-with-obstacles-elimination",
+       "yt": [
+        "ID9YJXy3OJk",
+        "Algorithms Made Easy",
+        17
+       ],
+       "why": "Practice only: its title appears in a Mercor question bank (30 Aug 2026) with no spec. BFS where the state is (row, column, eliminations left)."
       }
      ]
     }
@@ -3253,8 +3275,226 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
+   "id": "onsite-carpark",
+   "title": "12. Car parking, forward only",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "**What it is.** A one-way street of spots. Each car tries its preferred spot and, if it is taken, only moves forward. The question is whether everyone parks, and where. It looks like a loop, and it is one, until the input is large: then the walk forward is the cost. PracHub lists it as a Mercor question (a reconstruction, 25 Sep 2026); the round it belonged to is not stated, so practise it here and do not assume it is the solo hour."
+    },
+    {
+     "t": "p",
+     "text": "**The prompt, as a real one would give it.** \"Cars arrive one at a time on a one-way street with numbered spots. Each car tries its preferred spot first and moves only forward when it is taken. Decide whether every car can park.\""
+    },
+    {
+     "t": "p",
+     "text": "**What is left unsaid.** Each line changes the code."
+    },
+    {
+     "t": "list",
+     "items": [
+      "How many spots and how many cars? Can there be more cars than spots?",
+      "What happens to a car that reaches the end: it leaves, or is that an error?",
+      "Is a preference always a valid spot? What if it is not?",
+      "Do you return only yes or no, or the spot each car got?",
+      "Can cars leave? (The live extension.)",
+      "How large is the input: is walking forward spot by spot fast enough?"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**a) Clarify.** Three buckets."
+    },
+    {
+     "t": "write",
+     "id": "onsite-carpark-clarify",
+     "q": "Write your questions under each bucket, each with the answer you expect.",
+     "starter": "1. Primary capabilities\n- \n\n2. Error handling\n- \n\n3. Scope boundaries\n- \n",
+     "hint": "Spots and cars, what the output is, the end of the street, invalid preferences, departures, input size.",
+     "solution": "1. Primary capabilities\n- n spots numbered 0 to n-1, m cars in arrival order, each with a preferred spot. -> yes\n- Output: the spot each car got (None if it could not park), and whether all parked. -> both\n\n2. Error handling\n- A car that runs off the end does not park; it is not an error. -> None for that car\n- A preference outside 0..n-1 is invalid input. -> raise ValueError\n\n3. Scope boundaries\n- Cars never leave in the base problem. -> departures are the extension\n- n and m up to about a million: walking forward may be too slow. -> needs the fast version",
+     "why": "The end-of-street rule and the input size decide the code: one says None instead of an error, the other says the walk forward needs a shortcut.",
+     "say": "**I want to pin down the output and the scale first.** Do you want yes or no, or where each car parked? And how big can this get, because walking forward spot by spot is fine for a hundred cars and not for a million."
+    },
+    {
+     "t": "p",
+     "text": "**b) Requirements.**"
+    },
+    {
+     "t": "write",
+     "id": "onsite-carpark-reqs",
+     "q": "Write the requirements, numbered, each one testable.",
+     "starter": "1. \n2. \n3. ",
+     "hint": "Preferred spot first, forward only, None off the end, all_park, invalid input.",
+     "solution": "1. Each car takes its preferred spot if free.\n2. Otherwise it takes the first free spot after it, never one before.\n3. A car with no free spot at or after its preference gets None.\n4. all_park(n, prefs) is True exactly when no car gets None.\n5. A preference outside 0..n-1 raises ValueError.\n6. Fast enough for about a million cars.\nOut of scope: cars leaving (extension), spot sizes.",
+     "why": "Requirement 2 is the whole rule; requirement 6 is why the fast version exists.",
+     "say": "**Six requirements; the second is the rule and the sixth is the trap.** Forward only, never back, and it has to be fast for big inputs."
+    },
+    {
+     "t": "p",
+     "text": "**c) Entities.**"
+    },
+    {
+     "t": "write",
+     "id": "onsite-carpark-entities",
+     "q": "List the nouns. For each: keep or drop, why, and the data structure.",
+     "starter": "Spot: \nCar: \nStreet: \n",
+     "hint": "No class is needed. What remembers which spots are taken, and how do you find the next free one quickly?",
+     "solution": "Spot: a number 0..n-1. Taken or free: a list of booleans (slow), or a next-free pointer per spot (fast).\nCar: only its preference; a number in a list. Drop as a class.\nStreet: the n spots. A function's state, not a class, in the base problem.\nNext-free pointer: nxt[i] = the first free spot at or after i, with n as 'off the end'. This is the structure that makes it fast.",
+     "why": "Choosing no class is a decision to say out loud. The one structure that matters is the next-free pointer.",
+     "say": "**I don't think this needs classes: it's a function over a list.** The interesting structure is a pointer per spot to the next free one, so a car can jump there."
+    },
+    {
+     "t": "p",
+     "text": "**d) Core logic in English.**"
+    },
+    {
+     "t": "write",
+     "id": "onsite-carpark-logic",
+     "q": "Write the steps for the slow version, then the fast one, then the insight about yes or no.",
+     "starter": "Slow:\n1. \n\nFast:\n1. \n\nInsight:\n",
+     "hint": "Slow: walk forward. Fast: union-find on 'next free'. Insight: count how many cars prefer each prefix of spots.",
+     "solution": "Slow:\n1. For each car, start at its preference and step forward while the spot is taken.\n2. Take the first free spot, or None if you pass the end.\nCost: O(n x m) in the worst case (every car prefers spot 0).\n\nFast:\n1. nxt[i] starts as i for every spot, and nxt[n] = n is the end.\n2. A car finds the root of its preference: follow nxt until a spot points to itself.\n3. Compress the path so the next car jumps straight there.\n4. Taking spot s sets nxt[s] = s + 1.\nCost: about O(m + n) (union-find with path compression).\n\nInsight (n cars, n spots): everyone parks if and only if, for every k, at least k cars prefer one of the first k spots. So arrival order never changes the yes or no; only the counts do.",
+     "why": "Saying the slow version and its worst case first earns the fast one. The counting insight is the line that sets you apart.",
+     "say": "**First the obvious version: walk forward. Its worst case is everyone wanting spot zero, which is quadratic.** So I keep a pointer to the next free spot and compress it as I go, which is union-find. And for yes or no there's a neat fact: it only depends on how many cars want each prefix, not on the order they arrive."
+    },
+    {
+     "t": "p",
+     "text": "**e) Code.** Main function first."
+    },
+    {
+     "t": "write",
+     "id": "onsite-carpark-code",
+     "q": "Write park_fast, then all_park. Name the helper, then write it.",
+     "starter": "def park_fast(n, prefs):\n    ...\n",
+     "hint": "A list nxt of n + 1 pointers; first_free(i) follows and compresses; taking s sets nxt[s] = s + 1.",
+     "solution": "import random\n\n\ndef park_slow(n: int, prefs: list) -> list:\n    \"\"\"Spots 0..n-1 on a one-way street. Car i tries prefs[i], then only moves forward.\n    Returns the spot each car got, None for a car that could not park.\"\"\"\n    taken = [False] * n\n    got = []\n    for p in prefs:\n        if not 0 <= p < n:\n            raise ValueError(f\"no spot {p}\")\n        s = p\n        while s < n and taken[s]:          # walk forward past taken spots\n            s += 1\n        if s < n:\n            taken[s] = True\n            got.append(s)\n        else:\n            got.append(None)                # fell off the end of the street\n    return got\n\n\ndef park_fast(n: int, prefs: list) -> list:\n    \"\"\"Same rule. nxt[i] points at the first free spot at or after i (n means past the end),\n    so a car jumps straight there instead of walking spot by spot.\"\"\"\n    nxt = list(range(n + 1))                # every spot is free at first; n is the sentinel\n\n    def first_free(i: int) -> int:\n        root = i\n        while nxt[root] != root:            # follow the pointers to a free spot\n            root = nxt[root]\n        while nxt[i] != root:               # path compression: point the whole chain at it\n            nxt[i], i = root, nxt[i]\n        return root\n\n    got = []\n    for p in prefs:\n        if not 0 <= p < n:\n            raise ValueError(f\"no spot {p}\")\n        s = first_free(p)\n        if s == n:\n            got.append(None)\n        else:\n            got.append(s)\n            nxt[s] = s + 1                  # taken: the next free spot is at or after s + 1\n    return got\n\n\ndef all_park(n: int, prefs: list) -> bool:\n    return None not in park_fast(n, prefs)\n\n\ndef all_park_by_counting(n: int, prefs: list) -> bool:\n    \"\"\"The insight: for n cars and n spots, everyone parks iff, for every k,\n    at least k cars prefer one of the first k spots. Order of arrival does not matter.\"\"\"\n    if len(prefs) != n:\n        return all_park(n, prefs)\n    count = [0] * n\n    for p in prefs:\n        count[p] += 1\n    seen = 0\n    for k in range(n):\n        seen += count[k]\n        if seen < k + 1:\n            return False\n    return True\n",
+     "why": "Both versions are kept so the review can compare them, and all_park_by_counting shows the insight in code.",
+     "say": "**The slow one is the spec; the fast one must give the same answers.** I check them against each other on random inputs."
+    },
+    {
+     "t": "p",
+     "text": "**f) Review.**"
+    },
+    {
+     "t": "write",
+     "id": "onsite-carpark-review",
+     "q": "What would the reviewer ask, line by line?",
+     "starter": "",
+     "hint": "Why n + 1 pointers? Why path compression? What if a preference is invalid? Prove the counting rule.",
+     "solution": "Why n + 1 pointers? The extra one is 'off the end', so first_free never needs a bounds check.\nWhy compress the path? Without it, the pointers form long chains and the worst case is quadratic again.\nWhy set nxt[s] = s + 1 and not find the next free now? Lazy: the next car that needs it finds it and compresses.\nInvalid preference? Raises ValueError: a typo in the input should not silently park a car somewhere.\nWhy does order not matter for yes or no? Every spot ends up taken by someone whenever enough cars want it or an earlier spot; the counting rule depends only on the multiset of preferences. Tested by shuffling.\nHow did you test it? 500 random cases, slow against fast, counting against simulation, and a shuffle check.",
+     "why": "These are the questions a reviewer asks when the code is right: why each line exists.",
+     "say": "**The n plus one is the end-of-street sentinel, and compression is what keeps it fast.** I tested fast against slow on random inputs, and shuffled the arrival order to check the yes-or-no never changes."
+    },
+    {
+     "t": "p",
+     "text": "**Live extension: cars leave.** Union-find cannot un-take a spot, so the structure changes: a sorted set of free spots, where 'first free at or after p' is a search. With a balanced tree or a segment tree each arrival and departure is O(log n)."
+    },
+    {
+     "t": "write",
+     "id": "onsite-carpark-ext",
+     "q": "Cars can now leave. What changes, and what is the cost?",
+     "starter": "",
+     "hint": "Union-find only merges. Keep the free spots sorted.",
+     "solution": "import bisect\n\n\nclass Street:\n    \"\"\"Cars arrive and leave. A sorted list of free spots answers 'first free at or after p'.\"\"\"\n\n    def __init__(self, n: int):\n        self.n = n\n        self.free = list(range(n))           # sorted; a balanced tree or segment tree makes each step O(log n)\n        self.where = {}                      # car id -> spot, so leaving is one lookup\n\n    def arrive(self, car, pref: int):\n        i = bisect.bisect_left(self.free, pref)   # first free spot at or after pref\n        if i == len(self.free):\n            return None\n        spot = self.free.pop(i)\n        self.where[car] = spot\n        return spot\n\n    def leave(self, car) -> None:\n        spot = self.where.pop(car)\n        bisect.insort(self.free, spot)       # the spot is free again; later cars can take it\n\n\nst = Street(4)\nprint(st.arrive(\"a\", 1), st.arrive(\"b\", 1), st.arrive(\"c\", 1))   # 1 2 3\nst.leave(\"b\")\nprint(st.arrive(\"d\", 1), st.arrive(\"e\", 3))                       # 2 None\n",
+     "why": "The extension changes the data structure, not the rule: that is the point to say.",
+     "say": "**Departures break union-find, because it can only merge.** So I keep the free spots sorted and search for the first one at or after the preference: log n each way with a proper tree."
+    },
+    {
+     "t": "problem",
+     "id": "onsite-carpark-p",
+     "title": "Car parking, forward only",
+     "source": "PracHub reconstruction, 25 Sep 2026 (round not stated)",
+     "minutes": "45",
+     "d": "medium",
+     "why": "Rule-following and efficient spot handling for large inputs.",
+     "statement": "Cars arrive one at a time on a one-way street with spots 0 to n-1. Each car tries its preferred spot and moves only forward when it is taken. Return the spot each car got (None if it could not park), and decide whether all cars parked.",
+     "examples": [
+      {
+       "input": "n = 5, prefs = [2, 2, 0, 4, 4]",
+       "output": "[2, 3, 0, 4, None]",
+       "note": "The second car wanted 2 and moved to 3; the last car found 4 taken and fell off the end."
+      },
+      {
+       "input": "n = 3, prefs = [1, 1, 2] and [1, 0, 0]",
+       "output": "all_park: False, True",
+       "note": "Only one car wants spot 0 or earlier in the first case, but spot 0 needs a car."
+      }
+     ],
+     "constraints": [
+      "standard library only",
+      "up to about a million cars",
+      "no AI; search for syntax only",
+      "write your own checks"
+     ],
+     "starter": "def park(n, prefs):\n    ...\n",
+     "hints": [
+      "Level 1: write the walk-forward version first; it is your spec.",
+      "Level 2: keep a pointer from each spot to the next free one, with n meaning off the end.",
+      "Level 3: follow the pointers and compress the path (union-find); taking s sets its pointer to s + 1."
+     ],
+     "solution": "import random\n\n\ndef park_slow(n: int, prefs: list) -> list:\n    \"\"\"Spots 0..n-1 on a one-way street. Car i tries prefs[i], then only moves forward.\n    Returns the spot each car got, None for a car that could not park.\"\"\"\n    taken = [False] * n\n    got = []\n    for p in prefs:\n        if not 0 <= p < n:\n            raise ValueError(f\"no spot {p}\")\n        s = p\n        while s < n and taken[s]:          # walk forward past taken spots\n            s += 1\n        if s < n:\n            taken[s] = True\n            got.append(s)\n        else:\n            got.append(None)                # fell off the end of the street\n    return got\n\n\ndef park_fast(n: int, prefs: list) -> list:\n    \"\"\"Same rule. nxt[i] points at the first free spot at or after i (n means past the end),\n    so a car jumps straight there instead of walking spot by spot.\"\"\"\n    nxt = list(range(n + 1))                # every spot is free at first; n is the sentinel\n\n    def first_free(i: int) -> int:\n        root = i\n        while nxt[root] != root:            # follow the pointers to a free spot\n            root = nxt[root]\n        while nxt[i] != root:               # path compression: point the whole chain at it\n            nxt[i], i = root, nxt[i]\n        return root\n\n    got = []\n    for p in prefs:\n        if not 0 <= p < n:\n            raise ValueError(f\"no spot {p}\")\n        s = first_free(p)\n        if s == n:\n            got.append(None)\n        else:\n            got.append(s)\n            nxt[s] = s + 1                  # taken: the next free spot is at or after s + 1\n    return got\n\n\ndef all_park(n: int, prefs: list) -> bool:\n    return None not in park_fast(n, prefs)\n\n\ndef all_park_by_counting(n: int, prefs: list) -> bool:\n    \"\"\"The insight: for n cars and n spots, everyone parks iff, for every k,\n    at least k cars prefer one of the first k spots. Order of arrival does not matter.\"\"\"\n    if len(prefs) != n:\n        return all_park(n, prefs)\n    count = [0] * n\n    for p in prefs:\n        count[p] += 1\n    seen = 0\n    for k in range(n):\n        seen += count[k]\n        if seen < k + 1:\n            return False\n    return True\n",
+     "tests": "print(park_fast(5, [2, 2, 0, 4, 4]))    # [2, 3, 0, 4, None]\nprint(park_fast(3, [0, 0, 0]))          # [0, 1, 2]\nprint(all_park(3, [1, 1, 2]), all_park(3, [1, 0, 0]))   # False True\n",
+     "complexity": "Slow: O(n x m) worst case. Fast: about O(n + m) with path compression. The counting check is O(n).",
+     "explain": [
+      "The sentinel spot n means no bounds check.",
+      "Path compression keeps every later car's jump short.",
+      "For n cars and n spots, all park iff for every k at least k cars prefer one of the first k spots, so arrival order never changes the yes or no."
+     ],
+     "followups": [
+      {
+       "q": "Cars can leave.",
+       "a": "Union-find cannot un-take a spot; use a sorted set of free spots (a balanced tree or segment tree), O(log n) per arrival or departure."
+      },
+      {
+       "q": "Cars may also move backward when the end is full.",
+       "a": "Wrap around: treat the street as a circle, nxt of n - 1 points to 0, and stop when you return to the start."
+      }
+     ]
+    },
+    {
+     "t": "probs",
+     "title": "Related, then harder",
+     "items": [
+      {
+       "n": "Find if Path Exists in Graph",
+       "d": "easy",
+       "lc": "find-if-path-exists-in-graph",
+       "yt": [
+        "knLFe7hEp3Y",
+        "Greg Hogg",
+        13
+       ],
+       "why": "Union-find warm-up: the same find with path compression."
+      },
+      {
+       "n": "Redundant Connection",
+       "d": "medium",
+       "lc": "redundant-connection",
+       "yt": [
+        "FXWRE67PLL0",
+        "NeetCode",
+        17
+       ],
+       "why": "Union-find as the main idea, with the same find."
+      },
+      {
+       "n": "Accounts Merge",
+       "d": "medium",
+       "lc": "accounts-merge",
+       "yt": [
+        "6st4IxEF-90",
+        "NeetCodeIO",
+        18
+       ],
+       "why": "Harder: union-find over keys you discover as you go."
+      }
+     ]
+    }
+   ]
+  },
+  {
    "id": "onsite-review",
-   "title": "12. What the reviewer asks",
+   "title": "13. What the reviewer asks",
    "blocks": [
     {
      "t": "p",

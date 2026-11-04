@@ -18,6 +18,14 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
+     "text": "**Not this round:** sorting theory (merge sort against a factorial or random sort), a coffee probability puzzle, a threaded-cache code review, a CSV writer review and an idempotent payment call are reported for the verbal phone screen, not the 30-minute onsite block. The onsite objects are the comparator, chained rates and the friend network, each with one well-posed question, a correctness argument and a cost or budget analysis, and no data model or diagram."
+    },
+    {
+     "t": "p",
+     "text": "**The pattern across all three:** each hides its difficulty in a model you must pin down first: the error model, the consistency assumption, or the restriction. Jump to an algorithm before clarifying it and you answer an easier problem than the one being graded. Open every prompt with three minutes of: what exactly is wrong or limited, deterministic or random, what is capped (count, rate or page size), what counts as success, what may be assumed. Then state the cost twice: total work, then elapsed time given parallelism and limits."
+    },
+    {
+     "t": "p",
      "text": "**What a talk round grades.** The same things the coding round grades, said aloud: do you break the problem down, do you count, do you compare alternatives, do you recover when pushed. AceOffer says the candidates who passed the comparator question clarified the error model first and treated calls and wall-clock time as two separate goals. Two PracHub reports describe verbal sorting-theory warm-ups. A Mercor software engineer interviewed in May 2026 (published 19 Sep 2026, a technical phone screen of about 50 minutes) was asked how to beat n squared, what quicksort's worst case is, and to design a sort slower than n squared; the interviewer defined subsequences, asked how many there are (2 to the n, minus 1) and how many permutations (n factorial), and wanted: try every permutation until one is sorted, O(n!). A second candidate (interviewed Sep 2026, published 1 Oct 2026, a 30 minute screen) got the same pair: a sort faster than n squared (merge sort) and one slower (shuffle and compare, which the candidate called O(n times n!)). Both were screens, not the onsite, so read them as the likely warm-up and not as a promise."
     },
     {
@@ -130,6 +138,20 @@ window.LOOP_CODING.parts.push({
     {
      "t": "p",
      "text": "**What it is.** You get a function you cannot see inside, and you must sort or pick the best k. It is the most reported question of the round (four reports in AceOffer's synthesis): sorting or finding the top items with a comparison function that is wrong some of the time, then minimise the comparison calls, then account for wall-clock time when each call is slow. PracHub lists a fuller version (a software engineer question, Hard, listed 12 Sep 2026): n objects and a paid comparison API that is right with probability 0.9 and costs 1 cent a call. Part 1 is one call per comparison: which errors are fatal, and how does accuracy behave as n grows? Part 2 spends more calls (repeat and vote) to raise accuracy: give accuracy and cost as functions of n and your parameter, and reach the same accuracy with fewer calls. Its follow-ups are: if a pair always gets the same answer, what is achievable; if accuracy means few out-of-order pairs, which algorithm; if only the greatest or the top few are needed, how do accuracy and cost change. PracHub says a strong answer states the noise model first and notes that an inconsistent comparator can break a standard sort. It is close to a real job: ranking with a model as a judge, where every comparison is a slow, paid, sometimes wrong call. In my eval harness I used a model as a judge next to deterministic checks, so I can talk about that."
+    },
+    {
+     "t": "p",
+     "text": "**Do not invent parameters.** No report states a fixed error rate, n, k or a success criterion (one site's version uses 90 percent and 1 cent a call, below, labelled as that site's). If the interviewer does not give the error model, asking whether errors are deterministic or random is itself part of the expected answer. Reports stress the deterministic case as the lead move: re-asking the same pair returns the same wrong answer, so repetition never helps."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**A spoken shape for 30 minutes:** 1. clarify the error model (deterministic or random, adversarial or bounded, what guarantee is needed);",
+      "2. state the insight about repetition and what it rules out;",
+      "3. give a strategy for sort or top-k under that model;",
+      "4. argue correctness and a lower bound on comparisons;",
+      "5. re-optimise for wall-clock: which comparisons are independent and can run in parallel, and the depth that leaves."
+     ]
     },
     {
      "t": "p",
@@ -482,6 +504,21 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
+     "text": "**The reported spec (PracHub, 13 Sep 2026, a reconstruction; the round was described as an algorithm round without code):** given rates as [from, to, rate] triples, where 1 unit of from equals rate units of to, return the rate from a source to a target, chaining through intermediates and using a rate in reverse as its reciprocal."
+    },
+    {
+     "t": "list",
+     "items": [
+      "The table is consistent, so the answer is unique apart from floating-point rounding: that is why a plain traversal is enough.",
+      "Source equals target: return 1.0, even if the currency is absent.",
+      "No chain: return -1.0 exactly.",
+      "Accepted within a relative error of 1e-6. At most 10,000 rates, 3-letter codes, each rate between 1e-3 and 1e3.",
+      "Worked example: USD to GBP 0.77 and GBP to EUR 1.2 gives USD to EUR 0.924.",
+      "What it tests: chained conversion, unreachable currencies, and a clear complexity analysis. Name the graph model and why consistency makes a simple traversal enough."
+     ]
+    },
+    {
+     "t": "p",
      "text": "**a) Clarify.** The question that matters most: is the reverse rate always one over the rate, or a separate quote with a spread? It decides whether the best path matters at all."
     },
     {
@@ -717,6 +754,19 @@ window.LOOP_CODING.parts.push({
     {
      "t": "p",
      "text": "**What it is.** You can see a social network only through an API, and each call costs something. PracHub lists the fuller version as a machine learning engineer onsite question, Medium (listed 25 Sep 2026): get_friends(user_id), each call a network round trip, and collect everyone within k hops of a start user s. Its outline is a layered breadth-first search with a visited set that expands only the users at distance below k. The call count is then the number of users with distance below k, which is a lower bound for the version that wants only the set. If the edges among the users at distance k are needed, those are expanded too. For the API's restrictions it lists pagination (about ceil(d / c) calls for a user with d friends and a page of c), a token bucket or pacing, exponential backoff with jitter, checkpointing, partial results, and caching with staleness. Its follow-ups are: the shortest path between two users (bidirectional breadth-first search, expanding the smaller frontier), huge friend lists, a changing graph, and a shared global rate limit (a central scheduler or a shared token bucket). AceOffer's synthesis lists the same question with no more detail. Below, the shortest-path version is worked first, then the k-hop set version the page describes."
+    },
+    {
+     "t": "p",
+     "text": "**The reported spec (PracHub, 25 Sep 2026, a reconstruction; a whiteboard discussion):** the only access is get_friends(user_id), a list of user ids; each call is a network round trip and the API has an unspecified restriction. Goal: collect every user within k hops of a start user s with as few calls as possible."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**Clarify first:** what is the restriction, a per-call cap with pagination, a rate limit or a total budget? One neighbourhood, or a path between two users? Are the edges among the neighbourhood needed, or only the users? Is friendship symmetric? Can results be cached, and how stale may they be?",
+      "**Part 1, waste no call:** explore in layers with deduplication, never fetch a user twice; state the call count in terms of the graph and argue no call is wasted, including which boundary users can be skipped; show how needing the edges changes the count.",
+      "**Part 2, adapt to the named restriction:** pagination (cost per user, the order you expand), a rate limit (pacing, backoff, parallelism within the limit, resumable progress), a budget too small (what you return, and how you choose what to cover first).",
+      "**Reported follow-ups:** the shortest path between two users with fewest calls (bidirectional search), users with enormous friend lists eating the budget, the graph changing during exploration, and several workers sharing one global rate limit."
+     ]
     },
     {
      "t": "p",
