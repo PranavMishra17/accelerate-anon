@@ -2414,8 +2414,8 @@ window.LOOP_CODING.parts.push({
  "n": 7,
  "one": true,
  "title": "A key-value cache, built in layers",
- "minutes": 40,
- "lead": "A cache grows one layer at a time: a dict, then a TTL, then an LRU capacity, then thread safety when the interviewer asks. A full round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design, e) implementation, f) extensibility. Two classes. The LRU is a doubly linked list you write, beside the dict. Try each box before you open the answer.",
+ "minutes": 45,
+ "lead": "A cache grows one layer at a time: a dict, then a TTL, then a capacity with eviction, then protection for a hot key. A full round in your order: a) clarify in three buckets, b) requirements, c) entities, d) class design, e) implementation, f) extensibility. Five classes and one interface: the Cache, an Entry that knows when it dies, an InFlight that makes a miss compute once, an EvictionPolicy with LRU written on a hand-made linked list, and its Node. The eviction rule is a part you can swap because the interviewer says LFU is next. Shards, a backing database and memory limits are the extensions, argued as trade-offs. Try each box before you open the answer. The usual references land here: a Cache facade, a pluggable eviction policy, a doubly linked list, a lazy TTL check (the lld-cache repo on GitHub, and the techinterview.org cache write-up).",
  "sections": [
   {
    "id": "kvcache-prompt",
@@ -2428,7 +2428,7 @@ window.LOOP_CODING.parts.push({
     {
      "t": "turn",
      "who": "Interviewer",
-     "ask": "Design an in-memory key-value cache. Then add a time to live, then a capacity with least recently used eviction.",
+     "ask": "Design an in-memory key-value cache. Then add a time to live, then a capacity with least recently used eviction. Then one popular key expires and a thousand callers miss it at once.",
      "say": [
       "Sounds good. **Before requirements, I'd like to clarify a few things in three areas: what the system must do, how it handles errors, and where the scope stops.** Then I'll list requirements, pull out the entities, design the classes and implement the main methods."
      ],
@@ -2452,10 +2452,10 @@ window.LOOP_CODING.parts.push({
      "id": "kvcache-clarify-w",
      "q": "Write your questions under each bucket.",
      "starter": "1. Primary capabilities\n- \n\n2. Error handling\n- \n\n3. Scope boundaries\n- ",
-     "hint": "The operations, what the ttl counts from, what capacity counts. Missing, expired, put on an existing key, bad numbers. Does expiry need a background job? Threads?",
-     "solution": "1. Primary capabilities\n- What operations?\n- What is the time to live measured from?\n- What counts toward capacity, and what is evicted?\n\n2. Error handling\n- What does get return for a missing or expired key?\n- Put on a key that exists?\n- A bad capacity or a time to live of zero?\n\n3. Scope boundaries\n- Do expired entries have to disappear on their own?\n- Threads, persistence, a network?",
-     "why": "Each answer is a layer. A ttl gives an expiry on each entry, capacity gives a recency list that evicts from one end, and 'checked when touched' means no background thread yet.",
-     "say": "**I sort my questions into three buckets: what it must do, what goes wrong, where scope stops.** I ask what the time to live counts from and what capacity counts, because each one is a layer. Then missing and expired keys, and last whether expiry needs a background job or threads."
+     "hint": "The operations, what the ttl counts from, what capacity counts, whether the eviction rule changes. What happens when a hot key expires, and when a batch expires together. Missing, expired, bad numbers, a failing loader. Threads?",
+     "solution": "1. Primary capabilities\n- What operations?\n- What is the time to live measured from?\n- What counts toward capacity, and what is evicted?\n- Will the eviction rule change?\n- A popular key expires and many callers ask at once?\n- A batch of keys written together?\n\n2. Error handling\n- What does get return for a missing or expired key?\n- Put on a key that exists?\n- A bad capacity, a time to live of zero, a bad jitter?\n- The loader fails while others wait?\n\n3. Scope boundaries\n- Do expired entries have to disappear on their own?\n- Threads?\n- A CDN or edge caching?",
+     "why": "Each answer is a layer or a class. A ttl gives an expiry on each entry, capacity gives a recency list, 'the rule will change' is the only reason eviction becomes its own class, and the hot key gives a loader with one load in flight per key. Callers are threads, so the lock is in the core.",
+     "say": "**I sort my questions into three buckets: what it must do, what goes wrong, where scope stops.** I ask what the time to live counts from and what capacity counts, because each one is a layer. I ask whether the eviction rule will change, because that decides whether eviction is a part of its own. And I ask what happens when a popular key expires, because that is the hot-key layer: one load, many waiters."
     }
    ]
   },
@@ -2470,9 +2470,9 @@ window.LOOP_CODING.parts.push({
     {
      "t": "turn",
      "who": "Interviewer",
-     "ask": "put, get, delete and a count of entries. The time to live counts from the put: one default, and a put can override it. Capacity counts keys, and the least recently used key goes first; reads and writes both count as a use. A missing or expired key returns None. A put on an existing key replaces the value and restarts its ttl. A bad capacity or a ttl of zero is an error. Expiry is checked when a key is touched, not by a background job. Single-threaded to start; threads are a follow-up.",
+     "ask": "put, get, delete and a count of entries. The time to live counts from the put: one default, and a put can override it, spread by up to 10 percent either way so a batch does not expire together. Capacity counts keys, and the least recently used key goes first; reads and writes both count as a use. The eviction rule will change, LFU is likely next. A missing or expired key returns None. A put on an existing key replaces the value and restarts its ttl. get_or_load(key, loader): on a miss one caller loads and the rest wait for that result; if the load fails they all get the error and nothing is cached. A bad capacity, ttl or jitter is an error. Expiry is checked when a key is touched. Callers are threads in one process. Shards, a database behind the cache and edge caching are out of scope.",
      "say": [
-      "Thanks, that's clear. **So: a dict that expires entries when they are touched and evicts the least recently used key when it is full.** Out of scope: persistence, networking, a background thread for expiry. Threads come as the follow-up."
+      "Thanks, that's clear. **So: a map that expires entries when they are touched, spreads their expiry, evicts through a swappable policy, and loads a missing key once while the other callers wait.** Out of scope: persistence, networking, a background thread for expiry, shards, a CDN."
      ]
     },
     {
@@ -2499,6 +2499,21 @@ window.LOOP_CODING.parts.push({
        "The number of keys. Evict the least recently used one; a get and a put both count as a use"
       ],
       [
+       "Primary capabilities",
+       "Will the eviction rule change?",
+       "Yes. LRU now, LFU is a likely follow-up, so the cache must take the rule as a part"
+      ],
+      [
+       "Primary capabilities",
+       "A popular key expires and many callers ask at once?",
+       "Only one should compute the value. The others wait for that result. Give the cache a loader: get_or_load(key, loader)"
+      ],
+      [
+       "Primary capabilities",
+       "A batch of keys written together?",
+       "They must not all expire together. Spread each ttl by up to 10 percent either way"
+      ],
+      [
        "Error handling",
        "What does get return for a missing or expired key?",
        "None. Values are never None"
@@ -2510,8 +2525,13 @@ window.LOOP_CODING.parts.push({
       ],
       [
        "Error handling",
-       "A bad capacity or a time to live of zero?",
-       "Reject it with an error"
+       "A bad capacity, a time to live of zero, a bad jitter?",
+       "Reject them with an error"
+      ],
+      [
+       "Error handling",
+       "The loader fails while others wait?",
+       "Every waiter gets that same error. Nothing is cached, and the next call tries again"
       ],
       [
        "Scope boundaries",
@@ -2520,8 +2540,13 @@ window.LOOP_CODING.parts.push({
       ],
       [
        "Scope boundaries",
-       "Threads, persistence, a network?",
-       "Start single-threaded. Threads are a follow-up. No persistence, no network"
+       "Threads?",
+       "Yes: callers are threads in one process, so one lock. Shards, a network and persistence are follow-ups"
+      ],
+      [
+       "Scope boundaries",
+       "A CDN or edge caching?",
+       "Out of scope: that is an HTTP tier in front of the system, not this class"
       ]
      ]
     },
@@ -2534,10 +2559,10 @@ window.LOOP_CODING.parts.push({
      "id": "kvcache-reqs-w",
      "q": "Write the requirements, numbered, then out of scope.",
      "starter": "1. \n2. \n3. \n",
-     "hint": "Store with an expiry, read, the capacity limit, delete and count.",
-     "solution": "1. User stores a value under a key.\n   - The system keeps it with an expiry time (the put's ttl, else the default)\n   - A put on an existing key replaces it and restarts the ttl; a ttl of zero or less is an error\n2. User reads a key.\n   - The system returns the value and marks the key most recently used\n   - A missing or expired key returns None; an expired one is removed\n3. The cache holds at most a set number of keys.\n   - A put that goes over drops the least recently used key\n   - A capacity under 1 is an error\n4. User deletes a key or asks how many entries there are.\n   - Delete says whether the key was there\n   - Expired entries that nobody touched still count\n5. Out of scope: persistence and networking, a background thread that removes expired entries, threads (an extension), values that are None.",
-     "why": "Each requirement is a layer or a method: 1 is put and the ttl, 2 is get, 3 is the LRU eviction in put, 4 is delete and size.",
-     "say": "From your answers I get four requirements. **Each one is a layer or a method: put with a ttl, get, the capacity limit inside put, and delete with size.** I say the error case with each one, like a ttl of zero."
+     "hint": "Store with a spread expiry, read, the capacity limit with a swappable rule, load once on a miss, delete and count.",
+     "solution": "1. User stores a value under a key.\n   - The system keeps it with an expiry time: the put's ttl, else the default, spread by the jitter\n   - A put on an existing key replaces it and restarts the ttl; a ttl of zero or less is an error\n2. User reads a key.\n   - The system returns the value and marks the key as used\n   - A missing or expired key returns None; an expired one is removed\n3. The cache holds at most a set number of keys.\n   - A put that goes over evicts the key the policy names; the policy is LRU now and can be swapped\n   - A capacity under 1 is an error\n4. User reads a key with a loader.\n   - On a miss one caller runs the loader and caches the result; concurrent callers of the same key wait for that result\n   - A failing loader gives every waiter the same error and caches nothing\n5. User deletes a key or asks how many entries there are.\n   - Delete says whether the key was there\n   - Expired entries that nobody touched still count\n6. Out of scope: persistence and networking, a background thread that removes expired entries, shards and a backing store (extensions), edge caching and a CDN, values that are None.",
+     "why": "Each requirement is a layer or a method: 1 is put and the ttl, 2 is get, 3 is eviction through the policy, 4 is get_or_load, 5 is delete and size.",
+     "say": "From your answers I get five requirements. **Each one is a layer or a method: put with a jittered ttl, get, the capacity limit inside put with a policy behind it, get_or_load, and delete with size.** I say the error case with each one, like a ttl of zero or a loader that fails."
     }
    ]
   },
@@ -2553,11 +2578,11 @@ window.LOOP_CODING.parts.push({
      "t": "write",
      "id": "kvcache-ent-w",
      "q": "List the nouns. For each, keep or drop, and why.",
-     "starter": "User / caller: \nKey and value: \nEntry / list node: \nCache: \nClock: \nEviction policy: ",
-     "hint": "What does an entry need besides its value? What does the recency list need from each entry? Is the clock a class?",
-     "solution": "User / caller: drop. External; not modelled\nKey and value: drop. A string and anything else; the key is the dict key, the value sits in the node\nEntry / list node: keep. A value, when it expires, its key and two neighbours; one class, so the dict and the list share the same object\nCache: keep. Holds the dict and the list, and runs put, get, delete\nClock: drop. A function passed in, so a test can fake time; not a class\nEviction policy: drop. Only LRU is asked for; it becomes a class only if another policy is requested",
-     "why": "Two classes. One Node serves as entry and list node, so a dict hit gives the node to move in O(1). The clock is a function and eviction is a method; neither earns a class yet.",
-     "say": "I underline the nouns. **The entry stays, and it doubles as the list node, because expiry belongs to each value and the list links the same objects the dict finds.** The cache stays to hold them. Keys and values sit in the dict, the clock is a function I pass in, and eviction is a method, not a class, until a second policy is asked for."
+     "starter": "User / caller: \nKey and value: \nEntry: \nCache: \nEviction policy: \nLoad in flight: \nLRU list node: \nClock, random source: \nStorage: \nBacking store, shard, CDN: ",
+     "hint": "What does an entry need besides its value? Does the eviction rule change? What does a waiting caller wait on? What does the recency list need from each key?",
+     "solution": "User / caller: drop. External; not modelled\nKey and value: drop. A key is the dict key and a value is any object; neither has behaviour\nEntry: keep. A value and when it expires; it answers is_expired, so the ttl rule lives with the data\nCache: keep. Holds the entries, the policy and the loads in flight, and runs put, get, get_or_load, delete, size\nEviction policy: keep. The requirements say the rule changes (LRU now, LFU next), so it is a part with three calls\nLoad in flight: keep. One load in progress for a key: the first caller runs it and the rest wait on its result or its error\nLRU list node: keep. A key with two neighbours; the policy's own record, so the cache never sees the list\nClock, random source: drop. Functions passed in, so a test can fake time and the jitter; not classes\nStorage: drop. A dict inside Cache. It becomes a class only if another store is asked for\nBacking store, shard, CDN: drop. Extensions or another tier; not in this scope",
+     "why": "Five classes and one interface. The policy earns its place only because the requirements make it vary. Entry holds the expiry rule, and InFlight holds the wait-for-the-leader rule. The clock and the storage stay out until something asks for them.",
+     "say": "I underline the nouns. **The entry, the cache, the eviction policy and the load in flight stay.** The entry carries its expiry and answers whether it is dead. The policy stays because you told me the rule will change. The load in flight stays because waiting callers need one thing to wait on, which holds the result or the error. The list node is the policy's own detail, and the clock is a function I pass in."
     }
    ]
   },
@@ -2573,11 +2598,11 @@ window.LOOP_CODING.parts.push({
      "t": "write",
      "id": "kvcache-classes-w",
      "q": "Write each class as − state and + behaviour.",
-     "starter": "class Cache\n- \n+ \n\nclass Node\n- \n+ ",
-     "hint": "Cache holds a dict of nodes, a clock, and a list with a sentinel at each end. A node holds a key, a value, an expiry time and two neighbours.",
-     "solution": "class Cache\n- capacity: int  # put compares the size to this to evict\n- default_ttl: seconds | None  # used when a put gives no ttl\n- now: function returning seconds  # a passed-in clock, so time can be faked\n- nodes: Map<key, Node>  # O(1) lookup, and the way back from a node to its key\n- head, tail: Node  (sentinels)  # list ends that are never real entries, so no edge cases\n- (list order)  # head.next is the most recently used, tail.prev the least\n+ put(key, value, ttl) -> void | error  # req 1 and 3: store, then evict if over capacity\n+ get(key) -> value | None  # req 2: miss, expiry, and marks a use\n+ delete(key) -> boolean  # req 4: says whether the key was there\n+ size() -> int  # req 4: expired but untouched entries still count\n+ _move_to_front(node) -> void  # a use: unlink, then add first\n+ _evict_lru() -> void  # the node before the tail goes, from list and dict\n+ _add_to_front(node), _remove(node) -> void  # the two list operations\n\nclass Node\n- key: any  # eviction finds the dict entry from the node\n- value: any  # what the caller stored\n- expires_at: seconds | None  # expiry is per entry, set at put\n- prev, next: Node  # the neighbours in the recency list\n+ is_expired(now) -> boolean  # get asks the node, not the cache",
-     "why": "The dict finds a node, the list orders the nodes, and both point at the same objects. Sentinels at both ends remove every empty-list and end-of-list case.",
-     "say": "**I start from the four methods and ask what each one has to read.** Get and put find a key in O(1), so the cache keeps a dict of nodes. Eviction needs the least recently used key and a use needs to move an entry to the other end, both in O(1), so the nodes also form a doubly linked list. Expiry needs the time, so I pass in a clock, and each node stores when it expires."
+     "starter": "class Cache\n- \n+ \n\nclass Entry\n- \n+ \n\nclass InFlight\n- \n+ \n\nclass EvictionPolicy\n- \n+ \n\nclass LRUPolicy\n- \n+ \n\nclass Node\n- \n+ ",
+     "hint": "Cache holds a dict of entries, a dict of loads in flight, a lock, a clock and a policy. Entry holds a value and an expiry. InFlight holds an event, a value and an error. The policy takes three calls. LRU keeps a dict of nodes and a list with a sentinel at each end.",
+     "solution": "class Cache\n- capacity: int  # put compares the size to this to evict\n- default_ttl: seconds | None  # used when a put gives no ttl\n- policy: EvictionPolicy  # who goes when full; passed in, LRU by default\n- clock: function returning seconds  # a passed-in clock, so time can be faked\n- jitter: float, rand: function  # the spread on each ttl, and a random source a test can fix\n- entries: Map<key, Entry>  # O(1) lookup of a value and its expiry\n- inflight: Map<key, InFlight>  # the load running now for a key; the second caller finds it here\n- lock: reentrant lock  # entries, policy and inflight change together\n+ get_or_load(key, loader, ttl) -> value | error  # req 4: one load per miss, the rest wait\n+ put(key, value, ttl) -> void | error  # req 1 and 3: store, then evict if over capacity\n+ get(key) -> value | None  # req 2: miss, expiry, and marks a use\n+ delete(key) -> boolean  # req 5: says whether the key was there\n+ size() -> int  # req 5: expired but untouched entries still count\n+ _expiry(ttl) -> time | None  # req 1: now plus the ttl, spread by the jitter\n+ _evict_if_full() -> void  # while over capacity, drop the policy's victim\n+ _drop(key) -> void  # the one way a key leaves: entries and policy together\n\nclass Entry\n- value: any  # what the caller stored\n- expires_at: seconds | None  # expiry is per entry, set at put\n+ is_expired(now) -> boolean  # get asks the entry, not the cache\n\nclass InFlight\n- done: Event  # set when the leader has a result\n- value, error  # what the leader produced\n+ wait() -> value | error  # a follower blocks, then gets the leader's result\n+ finish(value, error) -> void  # the leader publishes, and wakes every follower\n\nclass EvictionPolicy\n- (none)  # an interface: three calls the cache makes\n+ record_use(key) -> void  # a put or a hit\n+ remove(key) -> void  # the key left the cache, for any reason\n+ victim() -> key | None  # who to evict next\n\nclass LRUPolicy\n- nodes: Map<key, Node>  # O(1) from a key to its place in the list\n- head, tail: Node  (sentinels)  # list ends that are never real keys, so no edge cases\n- (list order)  # head.next is the most recently used, tail.prev the least\n+ record_use(key) -> void  # new node, or unlink the old one, then link first\n+ victim() -> key | None  # the key before the tail\n+ remove(key) -> void  # unlink and forget\n+ _link_first(node), _unlink(node) -> void  # the two list operations\n\nclass Node\n- key: any  # eviction names the key to remove\n- prev, next: Node  # the neighbours in the recency list\n+ (none)  # a link; the policy joins and splits them",
+     "why": "The cache owns the data, the ttl and the in-flight map. The policy owns the order. They meet at three calls, record_use, remove and victim, which LFU also needs. InFlight is the only thing callers share while a load runs. Sentinels in the list remove every empty-list and end-of-list case.",
+     "say": "**I start from the methods and ask what each one has to read.** Get and put find a key in O(1), so the cache keeps a dict. Expiry needs the time and a deadline per value, so a clock I pass in and an entry with its expiry. Get_or_load must find a load already running for the key, so a second dict, and something for followers to wait on: that is InFlight. Eviction has to change later, so the cache tells a policy what happened and asks who goes. LRU gets O(1) from a dict of nodes plus a doubly linked list."
     },
     {
      "t": "turn",
@@ -2597,6 +2622,50 @@ window.LOOP_CODING.parts.push({
      "say": [
       "So no link is ever None. **Adding to an empty list and removing the first or last node run the same lines as any other case,** which is where hand-written linked lists usually break."
      ]
+    },
+    {
+     "t": "turn",
+     "who": "Interviewer",
+     "ask": "Why is eviction its own class when you only have LRU?",
+     "say": [
+      "Because you told me the rule will change. **The cache only needs three calls from it, and LFU is a second class behind the same three,** so put and get never change. If you had said LRU forever, I would have kept it as two private methods on the cache."
+     ],
+     "explain": [
+      "An interface with one implementation is a guess about the future. Here the requirement is the reason."
+     ]
+    },
+    {
+     "t": "turn",
+     "who": "Interviewer",
+     "ask": "Why does the loader run outside the lock?",
+     "say": [
+      "Because it is slow: a database call. **If it ran under the lock, every other key would wait behind one slow load.** So the leader registers its InFlight under the lock, releases it, loads, and only takes the lock again to cache the value and remove the flight."
+     ],
+     "explain": [
+      "The cost: between registering and finishing, followers of that one key block on the event. Other keys proceed."
+     ]
+    },
+    {
+     "t": "turn",
+     "who": "Interviewer",
+     "ask": "Why jitter the TTL by a random amount?",
+     "say": [
+      "Because **keys written together with the same ttl die together, and the next wave of misses hits the database together.** A spread of 10 percent turns one cliff into a slope. The random source is passed in so a test can fix it."
+     ],
+     "explain": [
+      "The cost: a key can live up to 10 percent shorter or longer than the ttl you asked for. Say that, and keep the jitter small."
+     ]
+    },
+    {
+     "t": "turn",
+     "who": "Interviewer",
+     "ask": "The cache has a map of entries and the policy has a map of nodes. Is that one map too many?",
+     "say": [
+      "It is two maps with different jobs. **The cache's map answers 'what is the value and is it dead'; the policy's map answers 'where is this key in the order'.** Merging them would put list links into Entry and make LFU carry fields it does not use."
+     ],
+     "explain": [
+      "The cost is a second lookup per call. Both are O(1), and _drop keeps the two in step."
+     ]
     }
    ]
   },
@@ -2606,7 +2675,7 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "svg",
-     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"A key-value cache class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">Cache</text><text class=\"d-s\" x=\"125\" y=\"44\">put, get, delete, size</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Node</text><text class=\"d-s\" x=\"30\" y=\"138\">key, value, prev, next</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Dict</text><text class=\"d-s\" x=\"234\" y=\"138\">key -> Node</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">now()</text><text class=\"d-s\" x=\"234\" y=\"210\">the clock, a function</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
+     "svg": "<svg viewBox=\"0 0 420 316\" role=\"img\" aria-label=\"A key-value cache class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">Cache</text><text class=\"d-s\" x=\"125\" y=\"44\">get_or_load, put, get</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Entry</text><text class=\"d-s\" x=\"30\" y=\"138\">value, expires_at</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">InFlight</text><text class=\"d-s\" x=\"30\" y=\"210\">done, value, error</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-box\" x=\"20\" y=\"244\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"264\">EvictionPolicy</text><text class=\"d-s\" x=\"30\" y=\"282\">record_use, victim</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 268 L18 268\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">LRUPolicy</text><text class=\"d-s\" x=\"234\" y=\"138\">dict + linked list</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">now(), rand()</text><text class=\"d-s\" x=\"234\" y=\"210\">the clock, jitter</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
      "alt": "Class map"
     },
     {
@@ -2616,74 +2685,119 @@ window.LOOP_CODING.parts.push({
     {
      "t": "write",
      "id": "kvcache-skeleton-w",
-     "q": "First the small pieces: Node and the cache's __init__, with the two sentinels linked to each other. Each line from the class design.",
+     "q": "First the small pieces: Entry, InFlight, Node, the EvictionPolicy interface, LRUPolicy's __init__ with the two sentinels linked, and the cache's __init__.",
      "starter": "",
-     "hint": "Node holds a key, a value, an expiry and two neighbours, and answers is_expired. The cache holds a capacity, a default ttl, a clock, a dict, and a head and tail node pointing at each other.",
-     "solution": "import time\n\n\nclass Node:\n    \"\"\"One cache entry and its place in the recency list: a value, when it expires, and its two neighbours.\"\"\"\n\n    def __init__(self, key, value, expires_at: float | None):\n        self.key = key                       # eviction knows only the node, so it needs the key to leave the dict\n        self.value = value\n        self.expires_at = expires_at         # None means it never expires\n        self.prev = None                     # towards the most recently used end\n        self.next = None                     # towards the least recently used end\n\n    def is_expired(self, now: float) -> bool:\n        # >= so a ttl of 10 means gone at exactly 10 seconds\n        return self.expires_at is not None and now >= self.expires_at\n\n\nclass Cache:\n    \"\"\"A dict for lookup and a doubly linked list for recency: the front is the latest use, the back is the oldest.\"\"\"\n\n    def __init__(self, capacity: int, default_ttl: float | None = None, now=time.monotonic):\n        if capacity < 1:                     # a cache that holds nothing makes put meaningless\n            raise ValueError(\"capacity must be at least 1\")\n        self.capacity = capacity             # put compares the size to this to evict\n        self.default_ttl = default_ttl       # used when a put gives no ttl\n        self.now = now                       # a clock we can fake in a test\n        self.nodes = {}                      # key -> Node: O(1) lookup\n        self.head = Node(None, None, None)   # sentinels, so no link is ever None and no edge case exists\n        self.tail = Node(None, None, None)\n        self.head.next = self.tail           # empty list: head and tail point at each other\n        self.tail.prev = self.head",
+     "hint": "Entry holds a value and an expiry. InFlight holds an event, a value and an error. Node holds a key and two neighbours. The policy has record_use, remove and victim. LRU holds a dict and a head and tail pointing at each other. The cache holds a capacity, a default ttl, a policy, a clock, a jitter, a random source, two dicts and a lock.",
+     "solution": "import random\nimport threading\nimport time\nfrom abc import ABC, abstractmethod\n\n\nclass CacheError(Exception):       # one error type the caller can catch for every refusal\n    pass\n\n\nclass Entry:\n    \"\"\"A stored value and when it dies. It answers is_expired; the cache never reads expires_at itself.\"\"\"\n\n    def __init__(self, value, expires_at: float | None):\n        self.value = value             # whatever the caller stored; None is not allowed as a value\n        self.expires_at = expires_at   # clock seconds, or None for never\n\n\nclass InFlight:\n    \"\"\"One load in progress for a key. The first caller runs it; every other caller waits on it.\"\"\"\n\n    def __init__(self):\n        self.done = threading.Event()  # set once the leader has a value or an error\n        self.value = None\n        self.error = None\n\n\nclass Node:\n    \"\"\"One key in the recency list. The policy's, not the cache's.\"\"\"\n\n    def __init__(self, key):\n        self.key = key                 # so eviction can name the key to remove\n        self.prev = None               # the neighbours; linked by the policy\n        self.next = None\n\n\nclass EvictionPolicy(ABC):\n    \"\"\"Decides who goes when the cache is full. The cache tells it what happens; it never touches the values.\"\"\"\n\n    @abstractmethod\n    def record_use(self, key) -> None:     # a put or a hit\n        ...\n\n    @abstractmethod\n    def remove(self, key) -> None:         # the key left the cache, for any reason\n        ...\n\n    @abstractmethod\n    def victim(self):                      # the key to evict next, or None\n        ...\n\n\nclass LRUPolicy(EvictionPolicy):\n    \"\"\"Least recently used: a dict to find a node in O(1), a doubly linked list to order the nodes.\"\"\"\n\n    def __init__(self):\n        self.nodes = {}                    # key -> Node\n        self.head = Node(None)             # sentinels: never real keys, so no link is ever None\n        self.tail = Node(None)\n        self.head.next = self.tail\n        self.tail.prev = self.head\n\n\nclass Cache:\n    \"\"\"The entry point: a map of entries with a ttl, and a policy that keeps it within capacity.\"\"\"\n\n    def __init__(self, capacity: int, default_ttl: float | None = None,\n                 policy: EvictionPolicy | None = None, clock=time.monotonic,\n                 jitter: float = 0.1, rand=random.random):\n        if capacity < 1:\n            raise CacheError(\"capacity must be at least 1\")\n        if default_ttl is not None and default_ttl <= 0:\n            raise CacheError(\"ttl must be positive\")\n        if not 0 <= jitter < 1:\n            raise CacheError(\"jitter must be from 0 up to 1\")\n        self.capacity = capacity                               # put compares the size to this\n        self.default_ttl = default_ttl                         # used when a put gives no ttl\n        self.policy = policy if policy is not None else LRUPolicy()   # passed in, so LFU is a new class and not an edit\n        self.clock = clock                                     # a function, so a test can fake time\n        self.jitter = jitter                                   # every ttl varies by up to this fraction, either way\n        self.rand = rand                                       # passed in, so a test can fix the \"random\" factor\n        self.entries = {}                                      # key -> Entry\n        self.inflight = {}                                     # key -> the InFlight being loaded right now\n        self.lock = threading.RLock()                          # entries, policy and inflight change together; reentrant for get_or_load",
      "why": "These come straight from the - state lines. Writing them first means every method after only has to do its steps."
     },
     {
      "t": "write",
+     "id": "kvcache-m-get_or_load",
+     "q": "Start with the most interesting method: get_or_load(key, loader). A hot key expires and many callers ask at once. Core logic and edge cases as comments, then the code.",
+     "starter": "def get_or_load(self, key, loader, ttl: float | None = None):\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
+     "hint": "Under the lock: a live value is the answer; else look for an InFlight; if there is none, register yours. Followers wait on the flight. The leader loads outside the lock, puts the value, finishes the flight, and always removes it.",
+     "solution": "def get_or_load(self, key, loader, ttl: float | None = None):\n    \"\"\"\n    Core logic:\n      1. Under the lock, a live cached value is the answer\n      2. Else see whether a load for this key is already in flight\n      3. If one is, wait for its result: this caller never runs the loader\n      4. If not, this caller is the leader: register an InFlight, then run the loader outside the lock\n      5. Cache the value, hand it to every waiter, and unregister the flight\n    Edge cases:\n      1. A hundred callers miss one key at once -> the loader runs once\n      2. The loader raises -> every waiter gets that error, nothing is cached, the next call tries again\n    \"\"\"\n    with self.lock:                                            # reentrant: get() takes it again\n        value = self.get(key)                                  # Step 1\n        if value is not None:\n            return value\n        flight = self.inflight.get(key)                        # Step 2\n        leader = flight is None\n        if leader:                                             # Step 4: the check and the register are one step\n            flight = InFlight()\n            self.inflight[key] = flight\n    if not leader:\n        return flight.wait()                                   # Step 3, Edge 1: no second load\n    try:\n        value = loader(key)                                    # the slow part, outside the lock\n        self.put(key, value, ttl)                              # Step 5\n        flight.finish(value)\n        return value\n    except Exception as error:                                 # Edge 2\n        flight.finish(None, error)\n        raise\n    finally:\n        with self.lock:\n            del self.inflight[key]                             # the next miss starts a fresh flight",
+     "why": "The check for a flight and the registration happen under one lock hold, so two callers cannot both become the leader. The loader runs outside it. The finally clause removes the flight even on failure."
+    },
+    {
+     "t": "write",
+     "id": "kvcache-m-InFlight-wait",
+     "q": "InFlight.wait(): what does a follower get?",
+     "starter": "def wait(self):\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
+     "hint": "Block on the event. If the leader failed, raise its error. Else return its value.",
+     "solution": "def wait(self):\n    \"\"\"\n    Core logic:\n      1. Block until the leader finishes\n      2. If the leader failed, raise its error\n      3. Otherwise return its value\n    Edge cases:\n      1. Many waiters -> every one gets the same value or the same error\n    \"\"\"\n    self.done.wait()                                           # Step 1\n    if self.error is not None:                                 # Step 2\n        raise self.error\n    return self.value                                          # Step 3",
+     "why": "Every follower gets the same value or the same error, and none of them runs the loader."
+    },
+    {
+     "t": "write",
+     "id": "kvcache-m-_expiry",
+     "q": "_expiry(ttl): when does an entry die, with the jitter?",
+     "starter": "def _expiry(self, ttl: float | None) -> float | None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
+     "hint": "No ttl is never. Else now plus the ttl times a factor between 1 minus jitter and 1 plus jitter.",
+     "solution": "def _expiry(self, ttl: float | None) -> float | None:\n    \"\"\"\n    Core logic:\n      1. No ttl -> never expires\n      2. Otherwise stretch or shrink the ttl by a random factor within plus or minus jitter\n      3. The expiry is now plus that ttl\n    Edge cases:\n      1. jitter of 0 -> the exact ttl\n    \"\"\"\n    if ttl is None:                                            # Step 1\n        return None\n    spread = 1 + self.jitter * (2 * self.rand() - 1)           # Step 2: rand() in [0, 1) gives 1 - jitter up to 1 + jitter\n    return self.clock() + ttl * spread                         # Step 3: keys written together now die at different times",
+     "why": "rand() is in [0, 1), so 2r - 1 is in [-1, 1). With a jitter of 0 the ttl is exact."
+    },
+    {
+     "t": "write",
      "id": "kvcache-m-put",
-     "q": "Start with the most interesting method: put(key, value, ttl). Core logic and edge cases as comments, then the code. Name the list work as helpers.",
-     "starter": "def put(self, key: str, value, ttl: float | None = None) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
-     "hint": "Work out the expiry. Existing key: update it and self._move_to_front(node). New key: make a node, add it to the dict and the front, and self._evict_lru() if over capacity. Edges: replace, ttl of zero.",
-     "solution": "def put(self, key: str, value, ttl: float | None = None) -> None:\n    \"\"\"\n    Core logic:\n      1. Work out when the entry expires: now plus its ttl, or the default ttl\n      2. Key already present: replace the value and expiry, and mark it most recently used\n      3. Otherwise add a new node at the front of the list and in the dict\n      4. If the cache is over capacity, evict the least recently used node\n    Edge cases:\n      1. Key already present -> replace the value and restart its ttl\n      2. ttl of zero or less -> error\n    \"\"\"\n    ttl = self.default_ttl if ttl is None else ttl     # Step 1: a put's own ttl beats the default\n    if ttl is not None and ttl <= 0:                   # Edge 2: would be expired on arrival\n        raise ValueError(\"ttl must be positive\")\n    expires_at = None if ttl is None else self.now() + ttl     # an absolute time, so get compares to now\n    node = self.nodes.get(key)\n    if node is not None:                               # Step 2 / Edge 1: same node, new value, ttl restarts\n        node.value, node.expires_at = value, expires_at\n        self._move_to_front(node)                      # a put counts as a use\n        return\n    node = Node(key, value, expires_at)                # Step 3: the node carries its key, so eviction can find the dict entry\n    self.nodes[key] = node\n    self._add_to_front(node)\n    if len(self.nodes) > self.capacity:                # Step 4: at most one over, since each put adds one\n        self._evict_lru()",
-     "why": "Replacing a key moves it to the front too, so a put counts as a use. The list work has names here, and gets its own boxes next."
+     "q": "put(key, value, ttl): core logic and edge cases as comments, then the code. Name the eviction as a helper.",
+     "starter": "def put(self, key, value, ttl: float | None = None) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
+     "hint": "Work out the expiry. Under the lock, store a new Entry, tell the policy, self._evict_if_full(). Edges: ttl of zero, replace.",
+     "solution": "def put(self, key, value, ttl: float | None = None) -> None:\n    \"\"\"\n    Core logic:\n      1. Work out when the entry dies: the put's ttl, else the default, jittered; else never\n      2. Under the lock, store a new Entry under the key; a replace restarts the ttl\n      3. Tell the policy the key was used\n      4. If that put the cache over capacity, evict until it fits\n    Edge cases:\n      1. A ttl of zero or less -> error\n      2. A put on an existing key does not grow the cache, so nothing is evicted\n    \"\"\"\n    ttl = self.default_ttl if ttl is None else ttl             # Step 1\n    if ttl is not None and ttl <= 0:                           # Edge 1\n        raise CacheError(\"ttl must be positive\")\n    expires_at = self._expiry(ttl)                             # Step 1: jitter has its own helper\n    with self.lock:                                            # the checks above need no lock; the shared state does\n        self.entries[key] = Entry(value, expires_at)           # Step 2: the old Entry, if any, is replaced\n        self.policy.record_use(key)                            # Step 3: a put counts as a use\n        self._evict_if_full()                                  # Step 4: named now, written below",
+     "why": "A replace is the same lines as a new key, because a new Entry overwrites the old one. Eviction has a name here and its own box next."
     },
     {
      "t": "write",
      "id": "kvcache-m-get",
      "q": "get(key): core logic, edge cases, code.",
-     "starter": "def get(self, key: str):\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
-     "hint": "Look up, check expiry, move to the front, return. Edge: missing.",
-     "solution": "def get(self, key: str):\n    \"\"\"\n    Core logic:\n      1. Look the key up in the dict\n      2. If it has expired, remove it and treat it as missing\n      3. Otherwise move it to the front and return the value\n    Edge cases:\n      1. Missing key -> None (values are never None)\n    \"\"\"\n    node = self.nodes.get(key)                         # Step 1: O(1), .get gives None instead of a KeyError\n    if node is None:                                   # Edge 1\n        return None\n    if node.is_expired(self.now()):                    # Step 2: the node knows its own expiry\n        self._drop(node)                               # remove it on this read; no background job\n        return None\n    self._move_to_front(node)                          # Step 3: a read counts as a use\n    return node.value",
-     "why": "An expired key is removed on the read, which is why size() can count dead entries. A hit changes the order, which matters for threads."
+     "starter": "def get(self, key):\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
+     "hint": "Under the lock: look up, ask the entry if it is expired, tell the policy, return. Edge: missing.",
+     "solution": "def get(self, key):\n    \"\"\"\n    Core logic:\n      1. Under the lock, look the key up\n      2. An expired entry is removed and counts as a miss\n      3. A live entry is a use: tell the policy, then return the value\n    Edge cases:\n      1. Missing or expired -> None\n    \"\"\"\n    with self.lock:                                            # reads too: a hit reorders the policy\n        entry = self.entries.get(key)                          # Step 1\n        if entry is None:                                      # Edge 1\n            return None\n        if entry.is_expired(self.clock()):                     # Step 2: the entry knows, the cache does not\n            self._drop(key)\n            return None\n        self.policy.record_use(key)                            # Step 3: a hit changes the order\n        return entry.value",
+     "why": "An expired key is removed on the read, which is why size() can count dead entries. A hit changes the order, so even a read takes the lock."
     },
     {
      "t": "write",
-     "id": "kvcache-m-_move_to_front",
-     "q": "_move_to_front(node): what is a use, in terms of the list?",
-     "starter": "def _move_to_front(self, node: Node) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
-     "hint": "Unlink the node, then add it first.",
-     "solution": "def _move_to_front(self, node: Node) -> None:\n    \"\"\"Mark a node most recently used: unlink it, then put it first.\"\"\"\n    self._remove(node)\n    self._add_to_front(node)",
-     "why": "Two calls to the list operations, so there is one place that says what a use means."
+     "id": "kvcache-m-_evict_if_full",
+     "q": "_evict_if_full(): when does eviction run, and who chooses the victim?",
+     "starter": "def _evict_if_full(self) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
+     "hint": "While over capacity, ask the policy for a victim and drop it. Stop if there is none.",
+     "solution": "def _evict_if_full(self) -> None:\n    \"\"\"\n    Core logic:\n      1. While there are more entries than the capacity\n      2. Ask the policy which key goes, and drop it\n    Edge cases:\n      1. The policy has no victim -> stop, so a broken policy cannot spin forever\n    \"\"\"\n    while len(self.entries) > self.capacity:                   # Step 1: a loop, so a smaller capacity later still works\n        victim = self.policy.victim()                          # Step 2: the policy decides, the cache removes\n        if victim is None:                                     # Edge 1\n            return\n        self._drop(victim)",
+     "why": "The cache never looks at recency. It asks, then removes, so a new policy changes nothing here."
     },
     {
      "t": "write",
-     "id": "kvcache-m-_evict_lru",
-     "q": "_evict_lru(): which node goes, and what must you remove it from?",
-     "starter": "def _evict_lru(self) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
-     "hint": "The node right before the tail. Both the list and the dict.",
-     "solution": "def _evict_lru(self) -> None:\n    \"\"\"\n    Core logic:\n      1. The least recently used node is the one right before the tail\n      2. Unlink it and delete its key from the dict\n    Edge cases:\n      1. Called on an empty list -> never: capacity is at least 1 and put calls it only when over\n    \"\"\"\n    lru = self.tail.prev                               # Step 1: the back of the list is the oldest use\n    self._drop(lru)                                    # Step 2: both structures, or the dict would keep a dead node",
-     "why": "The LRU is O(1) because the oldest use is always at the back. Forgetting the dict entry leaves a dead node that get would still find."
+     "id": "kvcache-m-LRUPolicy-victim",
+     "q": "LRUPolicy.victim(): which key was used longest ago?",
+     "starter": "def victim(self):\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
+     "hint": "The node before the tail. None if the list is empty.",
+     "solution": "def victim(self):\n    \"\"\"\n    Core logic:\n      1. The node before the tail was used longest ago\n      2. Return its key; the cache removes it\n    Edge cases:\n      1. Nothing tracked -> None\n    \"\"\"\n    last = self.tail.prev                                      # Step 1: most recent is after the head, oldest before the tail\n    if last is self.head:                                      # Edge 1: only the two sentinels\n        return None\n    return last.key                                            # Step 2",
+     "why": "O(1) because the oldest use is always at the back. It only names the key; the cache removes it, so the policy never deletes a value by itself."
     },
     {
      "t": "write",
-     "id": "kvcache-m-_add_to_front",
-     "q": "_add_to_front(node): link it between the head and the old first node.",
-     "starter": "def _add_to_front(self, node: Node) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
-     "hint": "Four links: the node's prev and next, the head's next, the old first node's prev.",
-     "solution": "def _add_to_front(self, node: Node) -> None:\n    \"\"\"\n    Core logic:\n      1. Point the node at the old first node and at the head\n      2. Point the head and the old first node back at it\n    Edge cases:\n      1. Empty list -> the old first node is the tail, and the same four links work\n    \"\"\"\n    first = self.head.next                             # the sentinels mean first always exists\n    node.prev, node.next = self.head, first            # Step 1\n    self.head.next = node                              # Step 2: four links in all, order matters\n    first.prev = node",
-     "why": "Because of the sentinels the old first node always exists, even in an empty list."
+     "id": "kvcache-m-LRUPolicy-record_use",
+     "q": "LRUPolicy.record_use(key): what is a use, in terms of the list?",
+     "starter": "def record_use(self, key) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
+     "hint": "New key: make a node. Known key: unlink it. Then link it first.",
+     "solution": "def record_use(self, key) -> None:\n    \"\"\"\n    Core logic:\n      1. A key never seen gets a new node\n      2. A key already tracked is unlinked from where it is\n      3. Either way the node goes first: most recently used\n    Edge cases:\n      1. The very first key: the list is empty, and the sentinels make it the same lines\n    \"\"\"\n    node = self.nodes.get(key)\n    if node is None:                                           # Step 1\n        node = Node(key)\n        self.nodes[key] = node\n    else:\n        self._unlink(node)                                     # Step 2: O(1), the node knows its neighbours\n    self._link_first(node)                                     # Step 3",
+     "why": "A put and a hit are the same event to the policy. The sentinels mean the first key needs no special case."
     },
     {
      "t": "write",
-     "id": "kvcache-m-_remove",
-     "q": "_remove(node): unlink it from the list.",
-     "starter": "def _remove(self, node: Node) -> None:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
-     "hint": "Join its two neighbours to each other.",
-     "solution": "def _remove(self, node: Node) -> None:\n    \"\"\"\n    Core logic:\n      1. Link the node's neighbours to each other\n    Edge cases:\n      1. First or last real node -> its neighbour is a sentinel, so there is no special case\n    \"\"\"\n    node.prev.next = node.next                         # skip over the node in both directions\n    node.next.prev = node.prev",
-     "why": "Two lines, and no case for the first or last node: their neighbours are sentinels."
+     "id": "kvcache-m-Entry-is_expired",
+     "q": "Entry.is_expired(now): when is an entry dead?",
+     "starter": "def is_expired(self, now: float) -> bool:\n    \"\"\"\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    \"\"\"\n",
+     "hint": "No expiry means never. Otherwise once the clock reaches the expiry time.",
+     "solution": "def is_expired(self, now: float) -> bool:\n    \"\"\"\n    Core logic:\n      1. No expiry -> never expired\n      2. Otherwise expired once the clock reaches the expiry time\n    Edge cases:\n      1. A ttl of 10 means gone at exactly 10 seconds, so >= and not >\n    \"\"\"\n    return self.expires_at is not None and now >= self.expires_at   # Step 1, Step 2, Edge 1",
+     "why": "The entry answers about itself. Say which side of the boundary you chose before they ask."
     },
     {
      "t": "write",
      "id": "kvcache-helpers-w",
-     "q": "Last, the plain ones: _drop, delete and size.",
-     "starter": "def _drop(self, node):\n    ...\n",
-     "hint": "_drop unlinks the node and deletes its key from the dict. delete finds the node and drops it. size is the dict length.",
-     "solution": "def _drop(self, node: Node) -> None:\n    self._remove(node)                                 # out of the list...\n    del self.nodes[node.key]                           # ...and out of the dict\n\ndef delete(self, key: str) -> bool:\n    \"\"\"\n    Core logic:\n      1. Remove the key if it is there\n      2. Say whether anything was removed\n    Edge cases:\n      1. Missing key -> False\n    \"\"\"\n    node = self.nodes.get(key)\n    if node is None:                                   # Edge 1\n        return False\n    self._drop(node)\n    return True\n\ndef size(self) -> int:\n    \"\"\"\n    Core logic:\n      1. Count the entries held\n    Edge cases:\n      1. Expired entries nobody has touched yet still count\n    \"\"\"\n    return len(self.nodes)                             # no scan for expired ones: that is Edge 1, by design",
-     "why": "_drop is the one way a node leaves, so list and dict never disagree. size includes expired entries nobody touched. Say it before they ask."
+     "q": "InFlight.finish: how does the leader publish?",
+     "starter": "",
+     "hint": "Set the value and the error, then set the event.",
+     "solution": "def finish(self, value, error: Exception | None = None) -> None:\n    self.value = value                                         # set before the event, so a waiter never sees half a result\n    self.error = error\n    self.done.set()",
+     "why": "The result is written before the event is set, so a woken follower never sees half a result."
+    },
+    {
+     "t": "write",
+     "id": "kvcache-helpers-w1",
+     "q": "The policy's helpers: remove, _link_first and _unlink.",
+     "starter": "",
+     "hint": "remove forgets a key and unlinks its node. link first: four links. unlink: join the two neighbours.",
+     "solution": "def remove(self, key) -> None:\n    node = self.nodes.pop(key, None)                           # a key never tracked is fine\n    if node is not None:\n        self._unlink(node)\n\ndef _link_first(self, node: Node) -> None:\n    first = self.head.next                                     # always there: the tail, when the list is empty\n    node.prev = self.head\n    node.next = first\n    self.head.next = node\n    first.prev = node\n\ndef _unlink(self, node: Node) -> None:\n    node.prev.next = node.next                                 # no case for first or last: their neighbours are sentinels\n    node.next.prev = node.prev",
+     "why": "Because of the sentinels the old first node always exists, and unlinking has no case for the first or last node."
+    },
+    {
+     "t": "write",
+     "id": "kvcache-helpers-w2",
+     "q": "The cache's plain ones: delete, size and _drop.",
+     "starter": "",
+     "hint": "delete finds the key and drops it. size is the dict length. _drop removes from the dict and the policy together. The first two take the lock.",
+     "solution": "def delete(self, key) -> bool:\n    with self.lock:\n        if key not in self.entries:\n            return False\n        self._drop(key)\n        return True\n\ndef size(self) -> int:\n    with self.lock:\n        return len(self.entries)                               # expired entries nobody touched still count\n\ndef _drop(self, key) -> None:\n    # the one way a key leaves, so the dict and the policy never disagree\n    del self.entries[key]\n    self.policy.remove(key)",
+     "why": "_drop is the one way a key leaves, so the dict and the policy never disagree. size includes expired entries nobody touched. Say it before they ask."
     }
    ]
   },
@@ -2697,7 +2811,7 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "p",
-     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies."
+     "text": "**Design check.** SOLID is not a stage. You design small first, then check each choice against it in a minute, and a pattern appears only where something varies. Scale shows up as 'what varies', and each answer costs something."
     },
     {
      "t": "table",
@@ -2708,23 +2822,23 @@ window.LOOP_CODING.parts.push({
      "rows": [
       [
        "Single responsibility",
-       "Node knows its own expiry; Cache owns the dict, the list order, the capacity and put, get, delete, size."
+       "Entry knows its expiry; InFlight carries one load's result; the Cache owns the maps, the lock, the ttl and the capacity; the policy owns the order."
       ],
       [
        "Open/closed",
-       "Today a new eviction rule edits _evict_lru and _move_to_front. Pulling eviction into a policy makes it a new class instead."
+       "LFU is a new class behind record_use, remove and victim. put, get and _evict_if_full are not edited."
       ],
       [
        "Liskov substitution",
-       "Nothing to substitute yet: no subclasses. An LFU policy would have to honour on_use and victim like the LRU one."
+       "Any policy must honour the same three calls: victim names a tracked key or None, remove forgets a key. LFUPolicy does."
       ],
       [
        "Interface segregation",
-       "Nothing to segregate yet: no interfaces, and callers use all four public Cache methods."
+       "EvictionPolicy has the three calls the cache uses and nothing else. Callers use only Cache's five public methods."
       ],
       [
        "Dependency inversion",
-       "Cache is handed its clock now instead of calling time itself; eviction is still built in."
+       "Cache is handed its policy, its clock and its random source; it builds none of them."
       ]
      ]
     },
@@ -2741,51 +2855,45 @@ window.LOOP_CODING.parts.push({
      ],
      "rows": [
       [
-       "The eviction policy (LFU)",
-       "Strategy",
-       "a policy with on_use(key) and victim() that Cache asks"
+       "The eviction rule (LFU, FIFO, TTL only)",
+       "Strategy: it is already one",
+       "LRUPolicy and LFUPolicy behind EvictionPolicy"
       ],
       [
-       "Several threads",
-       "No pattern: a lock",
-       "self.lock around every public method, reads too"
+       "One lock is the bottleneck",
+       "Sharding, a lock per shard (lock striping)",
+       "ShardedCache; a hot key still lands on one shard"
       ],
       [
-       "Expired entries piling up",
-       "No pattern: a method",
-       "purge_expired() called on a timer"
+       "Shards added or removed",
+       "Consistent hashing with virtual nodes",
+       "HashRing; about 1/N of the keys move, not nearly all"
       ],
       [
-       "Load on a miss",
-       "No pattern: a function passed in",
-       "get_or_load(key, loader), one caller loads and the rest wait"
+       "A hot key beyond one process",
+       "A near cache in front, or replicas of the key",
+       "NearCache, stale up to its short ttl"
+      ],
+      [
+       "A database behind the cache",
+       "Cache-aside, write-through or write-back",
+       "a store beside the cache, never inside it"
+      ],
+      [
+       "Memory pressure, not entry count",
+       "A cost per entry, negative caching, warming",
+       "Entry.cost and a byte limit in _evict_if_full"
+      ],
+      [
+       "Edge caching of HTTP responses",
+       "A CDN: another tier, not this class",
+       "in front of the whole service"
+      ],
+      [
+       "Knowing whether it helps",
+       "No pattern: counters",
+       "hits, misses and evictions in stats()"
       ]
-     ]
-    },
-    {
-     "t": "turn",
-     "who": "Interviewer",
-     "ask": "Now several threads use the cache at once. What goes wrong and what do you do?",
-     "say": [
-      "Unlinking and relinking a node, and the dict update beside it, are not atomic, and **even get changes the list, so reads need the lock too.** One lock around each public method keeps it simple and correct. Contention is the cost."
-     ],
-     "explain": [
-      "A reader-writer lock does not help here, because every read is also a write to the list."
-     ]
-    },
-    {
-     "t": "code",
-     "id": "kvcache-ext-6",
-     "title": "Thread safety: one lock, taken by every public method",
-     "code": "import threading\n\n\nclass Cache:\n    def __init__(self, capacity, default_ttl=None, now=time.monotonic):\n        ...\n        self.lock = threading.Lock()    # one lock for the whole cache\n\n    def get(self, key):\n        with self.lock:              # get changes the list, so reads lock too\n            node = self.nodes.get(key)\n            ...\n\n    def put(self, key, value, ttl=None):\n        with self.lock:              # find, store and evict as one step\n            ...\n\n    # delete and size take the lock the same way\n",
-     "notes": {}
-    },
-    {
-     "t": "turn",
-     "who": "Interviewer",
-     "ask": "Expired entries pile up if nobody reads them. How do you clean up?",
-     "say": [
-      "Add purge_expired(), which drops every expired entry and returns how many. **Something calls it on a timer,** a background thread or the caller. Until then, size counts them and LRU still bounds memory."
      ]
     },
     {
@@ -2793,15 +2901,142 @@ window.LOOP_CODING.parts.push({
      "who": "Interviewer",
      "ask": "Evict the least frequently used key instead. What changes?",
      "say": [
-      "The eviction methods. **Pull them into one small class with two calls, on_use(key) and victim(),** and let the cache ask it. LRU keeps the list, LFU keeps counts. Put and get stay the same."
+      "One new class. **LFUPolicy answers the same three calls, record_use, remove and victim, so put, get and _evict_if_full do not change.** LRU keeps a list, LFU keeps a count per key, with keys of the same count in arrival order so ties go to the oldest."
+     ],
+     "explain": [
+      "LFU wins when a few keys are hot for a long time, and loses when popularity moves: an old favourite keeps its count and blocks new keys. LRU adapts faster, LFU resists a one-time scan. A TTL-only cache needs no policy at all, but memory is bounded only by how fast keys die."
+     ]
+    },
+    {
+     "t": "code",
+     "id": "kvcache-ext-6",
+     "title": "LFU as a second policy",
+     "code": "class LFUPolicy(EvictionPolicy):\n    \"\"\"Least frequently used: evict the key with the fewest uses; the oldest of those on a tie.\"\"\"\n\n    def __init__(self):\n        self.counts = {}                   # key -> number of uses\n        self.buckets = {}                  # uses -> the keys with that count; a dict keeps insertion order, so oldest first\n\n    def record_use(self, key) -> None:\n        n = self.counts.get(key, 0)\n        if n:\n            self._leave_bucket(key, n)\n        self.counts[key] = n + 1\n        self.buckets.setdefault(n + 1, {})[key] = None\n\n    def remove(self, key) -> None:\n        n = self.counts.pop(key, None)\n        if n is not None:\n            self._leave_bucket(key, n)\n\n    def victim(self):\n        if not self.counts:\n            return None\n        return next(iter(self.buckets[min(self.buckets)]))     # min over distinct counts; a tracked min makes it O(1)\n\n    def _leave_bucket(self, key, n: int) -> None:\n        del self.buckets[n][key]\n        if not self.buckets[n]:\n            del self.buckets[n]\n",
+     "notes": {}
+    },
+    {
+     "t": "turn",
+     "who": "Interviewer",
+     "ask": "One lock is the bottleneck. How do you scale it?",
+     "say": [
+      "Every call takes one lock, reads too, because a hit reorders the policy; a reader-writer lock would not help. So split the cache by key: **hash the key to one of N small caches, each with its own lock,** and two keys on different shards never wait for each other. Each shard evicts on its own, so the total capacity is N times the shard capacity. That is lock striping, and single-flight keeps working because one key lives on one shard."
+     ],
+     "explain": [
+      "Costs: a hot key still lands on one shard, so it only moves the queue; eviction is only approximately global, since a shard can evict while another has room.",
+      "Use a stable hash. Python's hash() of a string changes on every run."
+     ]
+    },
+    {
+     "t": "code",
+     "id": "kvcache-ext-8",
+     "title": "Sharding: a Cache and a lock per shard",
+     "code": "class ShardedCache:\n    \"\"\"Many small caches, each with its own lock. A key always lands on the same one.\"\"\"\n\n    def __init__(self, shards: int, capacity_per_shard: int, policy_factory=LRUPolicy, **options):\n        self.shards = [Cache(capacity_per_shard, policy=policy_factory(), **options) for _ in range(shards)]\n\n    def _shard(self, key) -> Cache:\n        # crc32, not hash(): str hashes change on every run, so a key would move between runs\n        return self.shards[zlib.crc32(str(key).encode()) % len(self.shards)]\n\n    def put(self, key, value, ttl=None) -> None:\n        self._shard(key).put(key, value, ttl)\n\n    def get(self, key):\n        return self._shard(key).get(key)\n\n    def get_or_load(self, key, loader, ttl=None):\n        return self._shard(key).get_or_load(key, loader, ttl)   # single-flight per key still works: one key, one shard\n\n    def delete(self, key) -> bool:\n        return self._shard(key).delete(key)\n\n    def size(self) -> int:\n        return sum(s.size() for s in self.shards)\n",
+     "notes": {}
+    },
+    {
+     "t": "turn",
+     "who": "Interviewer",
+     "ask": "The shards are separate servers now, and we add one. What happens to the keys?",
+     "say": [
+      "With hash % N, **changing N moves almost every key, so the whole cache goes cold at once.** A hash ring puts each node at many points (virtual nodes); a key belongs to the next point clockwise, so adding a node takes keys only from its neighbours, about 1 in N."
+     ],
+     "explain": [
+      "Virtual nodes even out the load and let a bigger machine take more points.",
+      "In one process, shards rarely change and hash % N is fine. The ring matters when shards are servers. The guide has a consistent-hashing technique under Scaling writes."
+     ]
+    },
+    {
+     "t": "code",
+     "id": "kvcache-ext-10",
+     "title": "Consistent hashing with virtual nodes",
+     "code": "from bisect import bisect_right\nimport zlib\n\n\nclass HashRing:\n    \"\"\"Which node owns a key. Adding a node moves only the keys that fall in its arcs, about 1/N of them.\"\"\"\n\n    def __init__(self, nodes: list, vnodes: int = 100):\n        # each node sits on the ring at many points (virtual nodes), so load spreads evenly\n        self.ring = sorted((zlib.crc32(f\"{n}#{i}\".encode()), n) for n in nodes for i in range(vnodes))\n        self.points = [h for h, _ in self.ring]\n\n    def node_for(self, key) -> str:\n        i = bisect_right(self.points, zlib.crc32(str(key).encode())) % len(self.ring)   # next point clockwise\n        return self.ring[i][1]\n",
+     "notes": {}
+    },
+    {
+     "t": "turn",
+     "who": "Interviewer",
+     "ask": "That one key is so hot that even one shard cannot serve it. What now?",
+     "say": [
+      "Take the reads away from the shard. **A near cache: the same Cache class, a few dozen entries and a TTL of a second or so, in each process,** so the hot key is answered with no network at all. The price is staleness: after an update, a process may serve the old value for up to that TTL. The other option is replicating the key to several shards, which spreads reads but multiplies every write and invalidation."
+     ],
+     "explain": [
+      "Single-flight and jitter, already in the core, stop the stampede; this is for sheer read volume.",
+      "The stampede and stale-data cases are in Mercor sessions wc32 and wc33 and week 5's caching session w5a; the guide's hot-keys technique sits under Scaling reads."
+     ]
+    },
+    {
+     "t": "code",
+     "id": "kvcache-ext-12",
+     "title": "A near cache in front of the shared one",
+     "code": "class NearCache:\n    \"\"\"A tiny cache in each process, in front of the shared one. A hot key is answered here, with no network.\"\"\"\n\n    def __init__(self, shared, size: int = 64, ttl: float = 1.0):\n        self.local = Cache(size, default_ttl=ttl)    # the same class; the short ttl bounds how stale it can be\n        self.shared = shared\n\n    def get(self, key):\n        value = self.local.get(key)\n        if value is None:\n            value = self.shared.get(key)\n            if value is not None:\n                self.local.put(key, value)\n        return value\n",
+     "notes": {}
+    },
+    {
+     "t": "turn",
+     "who": "Interviewer",
+     "ask": "The cache sits in front of a database. How do writes work?",
+     "say": [
+      "Four choices, each a trade-off. **Cache-aside with invalidation: write the store, delete the key, let the next read refill it.** Write-through writes both, store first: consistent, but every write pays for two. Write-back writes the cache and flushes later: fast, but a crash loses what was not flushed, and an evicted dirty key must be saved first. I would start with cache-aside."
+     ],
+     "explain": [
+      "Stale reads: a reader loads the old value, a writer updates the store and deletes the key, then the reader fills the cache with the old value. A short TTL bounds it; a version number on the entry closes it.",
+      "Delete beats update on write: two concurrent writers can apply their cache puts in the opposite order to their store writes. See the guide's cache-aside and invalidation techniques."
+     ]
+    },
+    {
+     "t": "code",
+     "id": "kvcache-ext-14",
+     "title": "Cache-aside, invalidation, write-through, write-back",
+     "code": "# cache-aside: the caller reads the cache, falls back to the store, then fills the cache\ndef read(key):\n    value = cache.get(key)\n    if value is None:\n        value = store.load(key)\n        if value is not None:\n            cache.put(key, value)\n    return value\n\n# write with invalidation: change the store, then delete the cache key; the next read refills it\ndef update(key, value):\n    store.save(key, value)\n    cache.delete(key)                # delete, not put: two writers cannot leave the cache in the wrong order\n\n# write-through: both on every write, the store first, so a failed save leaves the cache untouched\ndef write_through(key, value):\n    store.save(key, value)\n    cache.put(key, value)\n\n# write-back: the cache takes the write now, the store gets it later\ndef write_back(key, value):\n    cache.put(key, value)\n    dirty[key] = value               # lost if we crash before flush(), and if the key is evicted first\n\ndef flush():\n    for key, value in list(dirty.items()):\n        store.save(key, value)\n        del dirty[key]\n",
+     "notes": {}
+    },
+    {
+     "t": "turn",
+     "who": "Interviewer",
+     "ask": "Values vary from 100 bytes to 10 MB. Memory is the limit. What changes?",
+     "say": [
+      "Capacity counts cost, not entries. **Each Entry gets a cost, the cache keeps a running total, and _evict_if_full loops while the total is over the limit.** One large value may push out several small ones. Also remember misses for a short TTL (negative caching) so a missing key does not hit the database every time, and warm the cache from the store or a snapshot after a restart."
+     ],
+     "explain": [
+      "Costs: you must measure size, which is approximate in Python. Negative entries use space and hide a key created a moment later, so keep their TTL short. Warming delays startup and can itself cause a database spike, so do it gradually."
+     ]
+    },
+    {
+     "t": "code",
+     "id": "kvcache-ext-16",
+     "title": "Size-aware capacity and negative caching",
+     "code": "class Entry:\n    def __init__(self, value, expires_at, cost: int = 1):\n        ...\n        self.cost = cost                 # bytes, or 1 to keep counting entries\n\n\nclass Cache:\n    def __init__(self, max_cost: int, ...):\n        ...\n        self.used = 0                    # the sum of cost over entries; put adds, _drop subtracts\n\n    def _evict_if_full(self):\n        while self.used > self.max_cost:           # was: len(self.entries) > self.capacity\n            ...                                    # one big value may now evict several small ones\n\n\nMISSING = object()                       # negative caching: remember \"the store has no such key\"\ncache.put(key, MISSING, ttl=5)           # short ttl, so a key created a moment later is found soon\n",
+     "notes": {}
+    },
+    {
+     "t": "turn",
+     "who": "Interviewer",
+     "ask": "Expired entries pile up if nobody reads them. How do you clean up?",
+     "say": [
+      "Add purge_expired(), which drops every expired entry through _drop and returns how many. **Something calls it on a timer,** a background thread or the caller. Until then, size counts them and the capacity still bounds memory."
      ]
     },
     {
      "t": "turn",
      "who": "Interviewer",
-     "ask": "On a miss, load the value from a database. Many callers miss the same key at once.",
+     "ask": "How would you know the cache is helping?",
      "say": [
-      "Add get_or_load(key, loader). **Only the first caller runs the loader; the others wait for its result** (a per-key lock or a pending future), so one popular key does not send a hundred queries."
+      "Count three things: **hits, misses and evictions, and report the hit ratio,** as stats() does in the final file. Add latency percentiles for get (p50, p99). A falling hit ratio with rising evictions says the cache is too small or the policy is wrong; a high ratio on few keys says look for hot keys."
+     ],
+     "explain": [
+      "Costs: counters under the same lock add contention; per-shard counters summed on read avoid it.",
+      "Judge the cache by what it saves downstream: database load and p99 latency, not the ratio alone."
+     ]
+    },
+    {
+     "t": "turn",
+     "who": "Interviewer",
+     "ask": "Would a CDN help here?",
+     "say": [
+      "Not for this class. **A CDN caches HTTP responses at the edge, near the user, in front of the whole service,** so it answers a request before it reaches our servers or this cache. It suits public, cacheable pages and files. This cache sits behind the service and holds computed values by key, which a CDN cannot see. They stack: CDN, then the service, then this cache, then the database."
+     ],
+     "explain": [
+      "The costs are the same kind: stale content until the edge entry expires or is purged, and a hot URL needs cache headers right. The guide has a CDN technique under Scaling reads."
      ]
     },
     {
@@ -2809,7 +3044,7 @@ window.LOOP_CODING.parts.push({
      "items": [
       {
        "q": "Why not an OrderedDict?",
-       "a": "It is the shortcut I would name, not use: move_to_end and popitem(last=False) do the whole LRU in a few lines. If the interviewer allows it, say so after the linked list, and mention it is the same idea built in."
+       "a": "It is the shortcut I would name, not use: move_to_end and popitem(last=False) do the whole LRU in a few lines. I write the linked list first so the O(1) argument is visible, then say OrderedDict is the same idea built in."
       },
       {
        "q": "Why now >= expires_at and not >?",
@@ -2817,7 +3052,27 @@ window.LOOP_CODING.parts.push({
       },
       {
        "q": "A different ttl for each key?",
-       "a": "Already there: the put's ttl overrides the default."
+       "a": "Already there: the put's ttl overrides the default, and the jitter spreads it."
+      },
+      {
+       "q": "Why no Storage interface, like some references have?",
+       "a": "There is one storage, a dict, and nothing in the requirements makes it vary. It becomes a class when a second store is asked for: a database behind the cache, or a file. Then it sits beside the cache, as the backing store."
+      },
+      {
+       "q": "What do the usual references agree on?",
+       "a": "A Cache facade, a pluggable eviction policy (LRU on a doubly linked list), a lazy TTL check on read, then write policies, locking and sharding as follow-ups. Written ones: the lld-cache repo on GitHub and the cache write-up at techinterview.org. To watch: Jordan has no life, Google SWE Teaches Low Level Design, episode 2 (Cache), and Udit Agarwal's Cache low level design. Single-flight and jitter are the hot-key layer added here."
+      },
+      {
+       "q": "Where do I read more on the scale side?",
+       "a": "Mercor sessions wc32 and wc33 (cache code review, stampedes, stale data), week 5's caching session w5a, and the guide's hot-keys, cache-aside, invalidation and consistent-hashing techniques."
+      },
+      {
+       "q": "Why do the followers wait and not get a stale value?",
+       "a": "Because there is none: the key has expired. Serving the old value while one caller refreshes it (stale-while-revalidate) is a choice for later; it trades freshness for latency."
+      },
+      {
+       "q": "Real time and threads?",
+       "a": "The clock is a function, so a real run passes time.monotonic and a test passes a counter. The lock goes around the maps and the policy, never around the loader."
       }
      ]
     }
@@ -2832,8 +3087,8 @@ window.LOOP_CODING.parts.push({
      "who": "Interviewer",
      "ask": "Give me a summary.",
      "say": [
-      "**Two classes.** The Cache holds a dict from key to node, and a doubly linked list of the same nodes with a sentinel at each end, most recently used first. put stores the value with an expiry and evicts the node before the tail when it is over capacity; get removes an expired key, or moves a live one to the front. A Node holds a value, its key, its expiry time and its neighbours, and the clock is a function we pass in.",
-      "**It grows by layer:** one lock around every method for threads (reads too, because get reorders), a purge for entries nobody touches, an eviction policy pulled out if LFU is asked for, and a loader so one miss fills the key once."
+      "**Five classes and one interface.** The Cache holds a dict from key to Entry, a dict of loads in flight, a lock, a clock and an eviction policy. put spreads the ttl, stores an Entry, tells the policy, and drops the policy's victim while it is over capacity; get removes an expired key, or tells the policy about a hit. get_or_load makes the first missing caller the leader: it loads outside the lock and publishes through an InFlight, and every other caller waits for that result. LRUPolicy keeps a dict of nodes and a doubly linked list with a sentinel at each end, so every call is O(1).",
+      "**It grows one place at a time:** LFU is a second policy, shards with a lock each for contention and a hash ring when shards move, a near cache for a key too hot for one shard, a cache-aside write path for a database, a cost per entry for memory, and counters to see whether any of it helps. A CDN is a different tier in front. Each one costs something, and I say what."
      ],
      "check": [
       "Under a minute?",
@@ -2853,12 +3108,12 @@ window.LOOP_CODING.parts.push({
     {
      "t": "list",
      "items": [
-      "**Build the layers in order: a dict, then expiry, then capacity. Say what each one costs.** Why: interviewers add layers on purpose, and over-building layer three first is the common failure.",
-      "**The LRU is a dict plus a doubly linked list with sentinels: a use moves a node to the front, eviction drops the one before the tail.** Why: every operation stays O(1), and the sentinels remove every end-of-list case.",
-      "**The node carries its key, so evicting a node can delete its dict entry.** Why: forgetting this leaves the dict pointing at an unlinked node.",
-      "**Time is a function passed in, so the demo and the tests fake it.** Why: ttl logic cannot be shown any other way without sleeping.",
-      "**Expiry is checked when a key is touched, and size() admits that expired entries count.** Why: it follows the agreed scope and shows you know the edge before they ask.",
-      "**Even get takes the lock, because it reorders.** Why: it is the senior answer to threads: reads are writes here."
+      "**Build the layers in order: a dict, then expiry, then capacity with a policy, then the hot key. Say what each one costs.** Why: interviewers add layers on purpose, and over-building layer three first is the common failure.",
+      "**A miss computes once: the first caller registers an InFlight, loads outside the lock, and the rest wait on it.** Why: it is the cache stampede answer, and the check-and-register under one lock hold is what makes it correct.",
+      "**Eviction is a policy only because the rule will change; the cache asks it three things: record_use, remove, victim.** Why: an interface needs a reason, and a second class (LFU) behind the same three calls is the proof.",
+      "**LRU is a dict plus a doubly linked list with sentinels: a use moves a node to the front, the victim is the one before the tail.** Why: every operation stays O(1), and the sentinels remove every end-of-list case.",
+      "**Even get takes the lock, because it reorders. The loader never runs under it.** Why: reads are writes here, and a slow load under the lock would stall every other key.",
+      "**For scale, name the cost with the fix: a lock per shard, a hash ring, a near cache, cache-aside.** Why: each fix has a price (uneven eviction, stale reads, write fan-out) and saying it is the answer."
      ]
     }
    ]
@@ -2869,23 +3124,23 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "p",
-     "text": "The core with thread safety and the expiry purge applied, and a run at the bottom: eight threads hammer a small cache, then the fake clock moves past the ttl."
+     "text": "The core with LFU as a second policy, hit and eviction counters, and shards with a lock each, and a run at the bottom: an LFU cache, then eight threads writing into four shards."
     },
     {
      "t": "svg",
-     "svg": "<svg viewBox=\"0 0 420 244\" role=\"img\" aria-label=\"A key-value cache class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">Cache</text><text class=\"d-s\" x=\"125\" y=\"44\">put, get, delete, size</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Node</text><text class=\"d-s\" x=\"30\" y=\"138\">key, value, prev, next</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">Dict</text><text class=\"d-s\" x=\"234\" y=\"138\">key -> Node</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">now()</text><text class=\"d-s\" x=\"234\" y=\"210\">the clock, a function</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
+     "svg": "<svg viewBox=\"0 0 420 316\" role=\"img\" aria-label=\"A key-value cache class map\">\n<rect class=\"d-acc\" x=\"115\" y=\"6\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"125\" y=\"26\">Cache</text><text class=\"d-s\" x=\"125\" y=\"44\">get_or_load, put, get</text>\n<rect class=\"d-box\" x=\"20\" y=\"100\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"120\">Entry</text><text class=\"d-s\" x=\"30\" y=\"138\">value, expires_at</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 124 L18 124\"/>\n<rect class=\"d-box\" x=\"20\" y=\"172\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"192\">InFlight</text><text class=\"d-s\" x=\"30\" y=\"210\">done, value, error</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 196 L18 196\"/>\n<rect class=\"d-box\" x=\"20\" y=\"244\" width=\"190\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"30\" y=\"264\">EvictionPolicy</text><text class=\"d-s\" x=\"30\" y=\"282\">record_use, victim</text>\n<path class=\"d-ar\" d=\"M115 30 L10 30 L10 268 L18 268\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"100\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"120\">LRUPolicy</text><text class=\"d-s\" x=\"234\" y=\"138\">dict + linked list</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 124 L406 124\"/>\n<rect class=\"d-dashbox\" x=\"224\" y=\"172\" width=\"180\" height=\"48\" rx=\"6\"/><text class=\"d-b\" x=\"234\" y=\"192\">now(), rand()</text><text class=\"d-s\" x=\"234\" y=\"210\">the clock, jitter</text>\n<path class=\"d-ar\" d=\"M305 30 L412 30 L412 196 L406 196\"/>\n<text class=\"d-a\" x=\"14\" y=\"22\">owns</text>\n<text class=\"d-a\" x=\"352\" y=\"22\">uses</text>\n</svg>",
      "alt": "Class map"
     },
     {
      "t": "code",
      "id": "kvcache-final-code",
      "title": "kvcache.py",
-     "code": "import threading\nimport time\n\n\nclass Node:\n    \"\"\"One cache entry and its place in the recency list: a value, when it expires, and its two neighbours.\"\"\"\n\n    def __init__(self, key, value, expires_at: float | None):\n        self.key = key                       # eviction knows only the node, so it needs the key to leave the dict\n        self.value = value\n        self.expires_at = expires_at         # None means it never expires\n        self.prev = None                     # towards the most recently used end\n        self.next = None                     # towards the least recently used end\n\n    def is_expired(self, now: float) -> bool:\n        # >= so a ttl of 10 means gone at exactly 10 seconds\n        return self.expires_at is not None and now >= self.expires_at\n\n\nclass Cache:\n    \"\"\"A dict for lookup and a doubly linked list for recency: the front is the latest use, the back is the oldest.\"\"\"\n\n    def __init__(self, capacity: int, default_ttl: float | None = None, now=time.monotonic):\n        if capacity < 1:                     # a cache that holds nothing makes put meaningless\n            raise ValueError(\"capacity must be at least 1\")\n        self.capacity = capacity             # put compares the size to this to evict\n        self.default_ttl = default_ttl       # used when a put gives no ttl\n        self.now = now                       # a clock we can fake in a test\n        self.nodes = {}                      # key -> Node: O(1) lookup\n        self.head = Node(None, None, None)   # sentinels, so no link is ever None and no edge case exists\n        self.tail = Node(None, None, None)\n        self.head.next = self.tail           # empty list: head and tail point at each other\n        self.tail.prev = self.head\n        self.lock = threading.Lock()         # one lock around every change\n\n    def put(self, key: str, value, ttl: float | None = None) -> None:\n        \"\"\"Same steps; the store and the eviction happen under one lock.\"\"\"\n        ttl = self.default_ttl if ttl is None else ttl\n        if ttl is not None and ttl <= 0:                   # checked before the lock: it touches no shared state\n            raise ValueError(\"ttl must be positive\")\n        with self.lock:                                    # store and evict as one step\n            expires_at = None if ttl is None else self.now() + ttl\n            node = self.nodes.get(key)\n            if node is not None:\n                node.value, node.expires_at = value, expires_at\n                self._move_to_front(node)\n                return\n            node = Node(key, value, expires_at)\n            self.nodes[key] = node\n            self._add_to_front(node)\n            if len(self.nodes) > self.capacity:            # inside the lock, so no thread sees it over capacity\n                self._evict_lru()\n\n    def get(self, key: str):\n        \"\"\"Same steps; the whole read is under the lock because a hit reorders.\"\"\"\n        with self.lock:                      # get changes the list, so reads lock too\n            node = self.nodes.get(key)\n            if node is None:\n                return None\n            if node.is_expired(self.now()):\n                self._drop(node)             # removing is a write too\n                return None\n            self._move_to_front(node)\n            return node.value\n\n    def _move_to_front(self, node: Node) -> None:\n        \"\"\"Mark a node most recently used: unlink it, then put it first.\"\"\"\n        self._remove(node)\n        self._add_to_front(node)\n\n    def _evict_lru(self) -> None:\n        \"\"\"\n        Core logic:\n          1. The least recently used node is the one right before the tail\n          2. Unlink it and delete its key from the dict\n        Edge cases:\n          1. Called on an empty list -> never: capacity is at least 1 and put calls it only when over\n        \"\"\"\n        lru = self.tail.prev                               # Step 1: the back of the list is the oldest use\n        self._drop(lru)                                    # Step 2: both structures, or the dict would keep a dead node\n\n    def _add_to_front(self, node: Node) -> None:\n        \"\"\"\n        Core logic:\n          1. Point the node at the old first node and at the head\n          2. Point the head and the old first node back at it\n        Edge cases:\n          1. Empty list -> the old first node is the tail, and the same four links work\n        \"\"\"\n        first = self.head.next                             # the sentinels mean first always exists\n        node.prev, node.next = self.head, first            # Step 1\n        self.head.next = node                              # Step 2: four links in all, order matters\n        first.prev = node\n\n    def _remove(self, node: Node) -> None:\n        \"\"\"\n        Core logic:\n          1. Link the node's neighbours to each other\n        Edge cases:\n          1. First or last real node -> its neighbour is a sentinel, so there is no special case\n        \"\"\"\n        node.prev.next = node.next                         # skip over the node in both directions\n        node.next.prev = node.prev\n\n    def _drop(self, node: Node) -> None:\n        self._remove(node)                                 # callers already hold the lock\n        del self.nodes[node.key]\n\n    def delete(self, key: str) -> bool:\n        \"\"\"Same steps, under the lock.\"\"\"\n        with self.lock:\n            node = self.nodes.get(key)\n            if node is None:\n                return False\n            self._drop(node)\n            return True\n\n    def size(self) -> int:\n        \"\"\"Same steps, under the lock so the count never lands mid-change.\"\"\"\n        with self.lock:\n            return len(self.nodes)\n\n    def purge_expired(self) -> int:\n        \"\"\"Drop every expired entry and say how many. A timer or a background thread calls this.\"\"\"\n        with self.lock:\n            now = self.now()                               # read the clock once, so every entry is judged at one moment\n            # collect first: unlinking while looping over the dict would change it under the loop\n            dead = [n for n in self.nodes.values() if n.is_expired(now)]\n            for n in dead:\n                self._drop(n)\n            return len(dead)                               # lets the caller log how much was cleaned\n\n\n# ---- a quick run ----\nclass FakeClock:                             # time we move by hand, so the run needs no sleeping\n    def __init__(self):\n        self.t = 0.0\n\n    def __call__(self):\n        return self.t\n\n\ndef hammer(cache, base):                     # each thread writes its own keys and reads recent ones\n    for i in range(1000):\n        cache.put(f\"{base}-{i}\", i)\n        cache.get(f\"{base}-{i // 2}\")\n\n\nclock = FakeClock()\ncache = Cache(capacity=100, default_ttl=10, now=clock)\nthreads = [threading.Thread(target=hammer, args=(cache, n)) for n in range(8)]    # 8 threads, one shared cache\nfor t in threads:\n    t.start()\nfor t in threads:\n    t.join()\nprint(cache.size())\nclock.t += 11                                # every entry is now past its ttl\nprint(cache.purge_expired(), cache.size())\n",
+     "code": "import random\nimport threading\nimport time\nimport zlib\nfrom abc import ABC, abstractmethod\n\n\nclass CacheError(Exception):       # one error type the caller can catch for every refusal\n    pass\n\n\nclass Entry:\n    \"\"\"A stored value and when it dies. It answers is_expired; the cache never reads expires_at itself.\"\"\"\n\n    def __init__(self, value, expires_at: float | None):\n        self.value = value             # whatever the caller stored; None is not allowed as a value\n        self.expires_at = expires_at   # clock seconds, or None for never\n\n    def is_expired(self, now: float) -> bool:\n        \"\"\"\n        Core logic:\n          1. No expiry -> never expired\n          2. Otherwise expired once the clock reaches the expiry time\n        Edge cases:\n          1. A ttl of 10 means gone at exactly 10 seconds, so >= and not >\n        \"\"\"\n        return self.expires_at is not None and now >= self.expires_at   # Step 1, Step 2, Edge 1\n\n\nclass InFlight:\n    \"\"\"One load in progress for a key. The first caller runs it; every other caller waits on it.\"\"\"\n\n    def __init__(self):\n        self.done = threading.Event()  # set once the leader has a value or an error\n        self.value = None\n        self.error = None\n\n    def wait(self):\n        \"\"\"\n        Core logic:\n          1. Block until the leader finishes\n          2. If the leader failed, raise its error\n          3. Otherwise return its value\n        Edge cases:\n          1. Many waiters -> every one gets the same value or the same error\n        \"\"\"\n        self.done.wait()                                           # Step 1\n        if self.error is not None:                                 # Step 2\n            raise self.error\n        return self.value                                          # Step 3\n\n    def finish(self, value, error: Exception | None = None) -> None:\n        self.value = value                                         # set before the event, so a waiter never sees half a result\n        self.error = error\n        self.done.set()\n\n\nclass Node:\n    \"\"\"One key in the recency list. The policy's, not the cache's.\"\"\"\n\n    def __init__(self, key):\n        self.key = key                 # so eviction can name the key to remove\n        self.prev = None               # the neighbours; linked by the policy\n        self.next = None\n\n\nclass EvictionPolicy(ABC):\n    \"\"\"Decides who goes when the cache is full. The cache tells it what happens; it never touches the values.\"\"\"\n\n    @abstractmethod\n    def record_use(self, key) -> None:     # a put or a hit\n        ...\n\n    @abstractmethod\n    def remove(self, key) -> None:         # the key left the cache, for any reason\n        ...\n\n    @abstractmethod\n    def victim(self):                      # the key to evict next, or None\n        ...\n\n\nclass LRUPolicy(EvictionPolicy):\n    \"\"\"Least recently used: a dict to find a node in O(1), a doubly linked list to order the nodes.\"\"\"\n\n    def __init__(self):\n        self.nodes = {}                    # key -> Node\n        self.head = Node(None)             # sentinels: never real keys, so no link is ever None\n        self.tail = Node(None)\n        self.head.next = self.tail\n        self.tail.prev = self.head\n\n    def victim(self):\n        \"\"\"\n        Core logic:\n          1. The node before the tail was used longest ago\n          2. Return its key; the cache removes it\n        Edge cases:\n          1. Nothing tracked -> None\n        \"\"\"\n        last = self.tail.prev                                      # Step 1: most recent is after the head, oldest before the tail\n        if last is self.head:                                      # Edge 1: only the two sentinels\n            return None\n        return last.key                                            # Step 2\n\n    def record_use(self, key) -> None:\n        \"\"\"\n        Core logic:\n          1. A key never seen gets a new node\n          2. A key already tracked is unlinked from where it is\n          3. Either way the node goes first: most recently used\n        Edge cases:\n          1. The very first key: the list is empty, and the sentinels make it the same lines\n        \"\"\"\n        node = self.nodes.get(key)\n        if node is None:                                           # Step 1\n            node = Node(key)\n            self.nodes[key] = node\n        else:\n            self._unlink(node)                                     # Step 2: O(1), the node knows its neighbours\n        self._link_first(node)                                     # Step 3\n\n    def remove(self, key) -> None:\n        node = self.nodes.pop(key, None)                           # a key never tracked is fine\n        if node is not None:\n            self._unlink(node)\n\n    def _link_first(self, node: Node) -> None:\n        first = self.head.next                                     # always there: the tail, when the list is empty\n        node.prev = self.head\n        node.next = first\n        self.head.next = node\n        first.prev = node\n\n    def _unlink(self, node: Node) -> None:\n        node.prev.next = node.next                                 # no case for first or last: their neighbours are sentinels\n        node.next.prev = node.prev\n\n\nclass LFUPolicy(EvictionPolicy):\n    \"\"\"Least frequently used: evict the key with the fewest uses; the oldest of those on a tie.\"\"\"\n\n    def __init__(self):\n        self.counts = {}                   # key -> number of uses\n        self.buckets = {}                  # uses -> the keys with that count; a dict keeps insertion order, so oldest first\n\n    def record_use(self, key) -> None:\n        n = self.counts.get(key, 0)\n        if n:\n            self._leave_bucket(key, n)\n        self.counts[key] = n + 1\n        self.buckets.setdefault(n + 1, {})[key] = None\n\n    def remove(self, key) -> None:\n        n = self.counts.pop(key, None)\n        if n is not None:\n            self._leave_bucket(key, n)\n\n    def victim(self):\n        if not self.counts:\n            return None\n        return next(iter(self.buckets[min(self.buckets)]))     # min over distinct counts; a tracked min makes it O(1)\n\n    def _leave_bucket(self, key, n: int) -> None:\n        del self.buckets[n][key]\n        if not self.buckets[n]:\n            del self.buckets[n]\n\n\nclass Cache:\n    \"\"\"The entry point: a map of entries with a ttl, and a policy that keeps it within capacity.\"\"\"\n\n    def __init__(self, capacity: int, default_ttl: float | None = None,\n                 policy: EvictionPolicy | None = None, clock=time.monotonic,\n                 jitter: float = 0.1, rand=random.random):\n        if capacity < 1:\n            raise CacheError(\"capacity must be at least 1\")\n        if default_ttl is not None and default_ttl <= 0:\n            raise CacheError(\"ttl must be positive\")\n        if not 0 <= jitter < 1:\n            raise CacheError(\"jitter must be from 0 up to 1\")\n        self.capacity = capacity                               # put compares the size to this\n        self.default_ttl = default_ttl                         # used when a put gives no ttl\n        self.policy = policy if policy is not None else LRUPolicy()   # passed in, so LFU is a new class and not an edit\n        self.clock = clock                                     # a function, so a test can fake time\n        self.jitter = jitter                                   # every ttl varies by up to this fraction, either way\n        self.rand = rand                                       # passed in, so a test can fix the \"random\" factor\n        self.entries = {}                                      # key -> Entry\n        self.inflight = {}                                     # key -> the InFlight being loaded right now\n        self.lock = threading.RLock()                          # entries, policy and inflight change together; reentrant for get_or_load\n        self.hits = 0                                              # new: counters, so you can tell whether the cache helps\n        self.misses = 0\n        self.evictions = 0\n\n    def get_or_load(self, key, loader, ttl: float | None = None):\n        \"\"\"\n        Core logic:\n          1. Under the lock, a live cached value is the answer\n          2. Else see whether a load for this key is already in flight\n          3. If one is, wait for its result: this caller never runs the loader\n          4. If not, this caller is the leader: register an InFlight, then run the loader outside the lock\n          5. Cache the value, hand it to every waiter, and unregister the flight\n        Edge cases:\n          1. A hundred callers miss one key at once -> the loader runs once\n          2. The loader raises -> every waiter gets that error, nothing is cached, the next call tries again\n        \"\"\"\n        with self.lock:                                            # reentrant: get() takes it again\n            value = self.get(key)                                  # Step 1\n            if value is not None:\n                return value\n            flight = self.inflight.get(key)                        # Step 2\n            leader = flight is None\n            if leader:                                             # Step 4: the check and the register are one step\n                flight = InFlight()\n                self.inflight[key] = flight\n        if not leader:\n            return flight.wait()                                   # Step 3, Edge 1: no second load\n        try:\n            value = loader(key)                                    # the slow part, outside the lock\n            self.put(key, value, ttl)                              # Step 5\n            flight.finish(value)\n            return value\n        except Exception as error:                                 # Edge 2\n            flight.finish(None, error)\n            raise\n        finally:\n            with self.lock:\n                del self.inflight[key]                             # the next miss starts a fresh flight\n\n    def _expiry(self, ttl: float | None) -> float | None:\n        \"\"\"\n        Core logic:\n          1. No ttl -> never expires\n          2. Otherwise stretch or shrink the ttl by a random factor within plus or minus jitter\n          3. The expiry is now plus that ttl\n        Edge cases:\n          1. jitter of 0 -> the exact ttl\n        \"\"\"\n        if ttl is None:                                            # Step 1\n            return None\n        spread = 1 + self.jitter * (2 * self.rand() - 1)           # Step 2: rand() in [0, 1) gives 1 - jitter up to 1 + jitter\n        return self.clock() + ttl * spread                         # Step 3: keys written together now die at different times\n\n    def put(self, key, value, ttl: float | None = None) -> None:\n        \"\"\"\n        Core logic:\n          1. Work out when the entry dies: the put's ttl, else the default, jittered; else never\n          2. Under the lock, store a new Entry under the key; a replace restarts the ttl\n          3. Tell the policy the key was used\n          4. If that put the cache over capacity, evict until it fits\n        Edge cases:\n          1. A ttl of zero or less -> error\n          2. A put on an existing key does not grow the cache, so nothing is evicted\n        \"\"\"\n        ttl = self.default_ttl if ttl is None else ttl             # Step 1\n        if ttl is not None and ttl <= 0:                           # Edge 1\n            raise CacheError(\"ttl must be positive\")\n        expires_at = self._expiry(ttl)                             # Step 1: jitter has its own helper\n        with self.lock:                                            # the checks above need no lock; the shared state does\n            self.entries[key] = Entry(value, expires_at)           # Step 2: the old Entry, if any, is replaced\n            self.policy.record_use(key)                            # Step 3: a put counts as a use\n            self._evict_if_full()                                  # Step 4: named now, written below\n\n    def get(self, key):\n        with self.lock:                        # reads too: a hit reorders the policy\n            entry = self.entries.get(key)\n            if entry is None:\n                self.misses += 1\n                return None\n            if entry.is_expired(self.clock()):\n                self._drop(key)\n                self.misses += 1\n                return None\n            self.policy.record_use(key)\n            self.hits += 1\n            return entry.value\n\n    def _evict_if_full(self) -> None:\n        while len(self.entries) > self.capacity:\n            victim = self.policy.victim()\n            if victim is None:\n                return\n            self._drop(victim)\n            self.evictions += 1\n\n    def delete(self, key) -> bool:\n        with self.lock:\n            if key not in self.entries:\n                return False\n            self._drop(key)\n            return True\n\n    def size(self) -> int:\n        with self.lock:\n            return len(self.entries)\n\n    def stats(self) -> dict:\n        with self.lock:\n            total = self.hits + self.misses\n            ratio = round(self.hits / total, 2) if total else 0.0\n            return {\"hits\": self.hits, \"misses\": self.misses, \"evictions\": self.evictions,\n                    \"size\": len(self.entries), \"hit_ratio\": ratio}\n\n    def _drop(self, key) -> None:\n        del self.entries[key]\n        self.policy.remove(key)\n\n\nclass ShardedCache:\n    \"\"\"Many small caches, each with its own lock. A key always lands on the same one.\"\"\"\n\n    def __init__(self, shards: int, capacity_per_shard: int, policy_factory=LRUPolicy, **options):\n        self.shards = [Cache(capacity_per_shard, policy=policy_factory(), **options) for _ in range(shards)]\n\n    def _shard(self, key) -> Cache:\n        # crc32, not hash(): str hashes change on every run, so a key would move between runs\n        return self.shards[zlib.crc32(str(key).encode()) % len(self.shards)]\n\n    def put(self, key, value, ttl=None) -> None:\n        self._shard(key).put(key, value, ttl)\n\n    def get(self, key):\n        return self._shard(key).get(key)\n\n    def get_or_load(self, key, loader, ttl=None):\n        return self._shard(key).get_or_load(key, loader, ttl)   # single-flight per key still works: one key, one shard\n\n    def delete(self, key) -> bool:\n        return self._shard(key).delete(key)\n\n    def size(self) -> int:\n        return sum(s.size() for s in self.shards)\n\n\n# ---- a quick run ----\nc = Cache(capacity=2, policy=LFUPolicy())      # the same Cache, a different rule\nc.put(\"a\", 1)\nc.put(\"b\", 2)\nc.get(\"a\")\nc.get(\"a\")\nc.put(\"c\", 3)                                  # a has 3 uses, b and c have 1: b is older, so b goes\nprint(c.get(\"b\"), c.get(\"a\"))                  # None 1\nprint(c.stats())\n\ns = ShardedCache(shards=4, capacity_per_shard=100)\ndef work(t):\n    for i in range(1000):\n        s.put(f\"k{t}-{i}\", i)\nthreads = [threading.Thread(target=work, args=(t,)) for t in range(8)]\nfor t in threads:\n    t.start()\nfor t in threads:\n    t.join()\nprint(s.size())                                # 4 shards of 100: the shards never overfill\n",
      "notes": {}
     },
     {
      "t": "p",
-     "text": "The run prints: 100 (eight threads wrote 8,000 keys into a cache of 100, and it never went over), then purge_expired removed all 100 and left 0 after the clock moved past the ttl."
+     "text": "The run prints: b is evicted and a survives under LFU (None 1), then the counters (3 hits, 1 miss, 1 eviction, ratio 0.75), then 400: eight threads wrote 8,000 keys into four shards of 100 and no shard went over."
     }
    ]
   }
