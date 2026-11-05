@@ -95,9 +95,16 @@ details.sol { border-top: var(--hair); padding-top: 10px; }
 .draft-h { display: flex; gap: var(--s3); align-items: baseline; font-size: var(--fs-sm); margin-bottom: var(--s1); }
 .draft-h span { color: var(--muted); font-size: var(--fs-xs); }
 .draft-r { margin-left: auto; font: inherit; font-size: var(--fs-xs); color: var(--accent); background: none; border: 0; cursor: pointer; padding: 0; }
-.draft textarea { display: block; width: 100%; box-sizing: border-box; resize: vertical; tab-size: 4; padding: var(--s3) var(--s4); background: var(--code-bg); color: var(--code-ink);
-  border: var(--hair); border-radius: var(--radius); font: var(--fs-code)/1.6 var(--mono); white-space: pre; overflow-x: auto; }
-.draft textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* The editor: a textarea over a coloured copy of its text, line numbers beside, the same colours as the code you read. */
+.lc { display: grid; grid-template-columns: auto minmax(0, 1fr); background: var(--code-bg); color: var(--code-ink); border: var(--hair); border-radius: var(--radius);
+  overflow: hidden; font: var(--fs-code)/1.6 var(--mono); }
+.lc:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.lc-gut { margin: 0; padding: var(--s3) var(--s2) var(--s3) var(--s3); color: var(--muted); text-align: right; user-select: none; border: 0; border-right: var(--hair); border-radius: 0; font: inherit; background: none; }
+.lc-body { position: relative; min-width: 0; }
+.lc-view, .lc-ta { margin: 0; padding: var(--s3) var(--s4); border: 0; font: inherit; line-height: inherit; tab-size: 4; white-space: pre; letter-spacing: 0; box-sizing: border-box; }
+.lc-view { position: absolute; inset: 0; overflow: hidden; pointer-events: none; background: none; }
+.lc-ta { display: block; width: 100%; resize: none; outline: none; overflow-x: auto; overflow-y: hidden; background: transparent; color: transparent; caret-color: var(--code-ink); }
+.lc-ta::selection { background: rgba(47, 101, 216, .22); }
 details.sol > summary { list-style: none; cursor: pointer; display: inline-block; color: var(--accent); font-size: var(--fs-sm); font-weight: var(--w-strong); }
 details.sol > summary a.ext { margin-left: var(--s4); font-weight: var(--w-regular); }
 details.prob > summary .dif { font-size: var(--fs-xs); white-space: nowrap; min-width: 4.5em; text-align: right; }
@@ -243,54 +250,77 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
   function probHtml(p, q) {
     var e = lcOf(p, q);
     return '<details class="prob" data-text="' + esc((p.title + " " + q.n + " " + q.task).toLowerCase()) + '"><summary>' + tick(p.id + "/" + q.n, q.n) + '<span class="pn">' + esc(q.n) +
-      '</span>' + difHtml(e, q.l) + '</summary><div class="pb">' + CS.partsHtml(q, [CS.hintRow(md(q.hint))], p.drill) + (p.drill ? draftHtml(p.id + "/" + q.n, CS.stubOf(q.sol)) : "") +
+      '</span>' + difHtml(e, q.l) + '</summary><div class="pb">' + CS.partsHtml(q, [["Your answer", draftHtml(p.id + "/" + q.n, CS.stubOf(q.sol))], CS.hintRow(md(q.hint))], true) +
       '<details class="sol"><summary>Show the solution' + linksHtml(e) + "</summary>" + CS.solHtml(q, q.sol, q.c) + "</details></div></details>";
   }
   function varHtml(p, v) {
     var e = lcOf(p, v);
     return '<details class="prob var" data-text="' + esc((p.title + " " + v.n + " " + v.t).toLowerCase()) + '"><summary>' + tick(p.id + "/v/" + v.n, v.n) + '<span class="pn">' + esc(v.n) +
-      '</span><span class="pl">variation</span>' + difHtml(e) + '</summary><div class="pb">' + CS.partsHtml(v, [v.st ? CS.hintRow(md(v.t)) : ["What changes", md(v.t)]]) +
+      '</span><span class="pl">variation</span>' + difHtml(e) + '</summary><div class="pb">' + CS.partsHtml(v, v.st ? [["Your answer", draftHtml(p.id + "/v/" + v.n, CS.stubOf(v.code))], CS.hintRow(md(v.t))] :
+        [["What changes", md(v.t)], ["Your answer", draftHtml(p.id + "/v/" + v.n, CS.stubOf(v.code))]], true) +
       '<details class="sol"><summary>Show the code' + linksHtml(e) + "</summary>" + CS.solHtml(v, v.code) + "</details></div></details>";
   }
-  // A drill's answer box: starts from the stub, saved in this browser as you type (coding.drafts.v1), Reset back to the stub.
+  // Every problem's answer box, in the spirit of Amazon LiveCode: starts from the stub, coloured as you type, line numbers,
+  // indentation that keeps up, no autocomplete, nothing that runs. Saved in this browser as you type (coding.drafts.v1).
   var DKEY = "coding.drafts.v1", drafts = {};
   try { drafts = JSON.parse(window.localStorage.getItem(DKEY) || "{}"); } catch (e) { drafts = {}; }
+  function gutter(v) { return v.split("\n").map(function (x, i) { return i + 1; }).join("\n"); }
   function draftHtml(k, stub) {
     var v = drafts[k] != null ? drafts[k] : stub;
-    return '<div class="draft"><div class="draft-h"><b>Your answer</b><span>saved as you type, in this browser</span><button type="button" class="draft-r">Reset to the stub</button></div>' +
-      '<textarea spellcheck="false" autocapitalize="off" autocomplete="off" data-dk="' + esc(k) + '" data-stub="' + esc(stub) + '" rows="' + Math.max(8, v.split("\n").length + 3) + '">' + esc(v) + "</textarea></div>";
+    return '<div class="draft"><div class="draft-h"><span>saved as you type, in this browser</span><button type="button" class="draft-r">Reset to the stub</button></div>' +
+      '<div class="lc"><pre class="lc-gut" aria-hidden="true">' + gutter(v) + '</pre><div class="lc-body"><pre class="lc-view" aria-hidden="true">' + hl(v) + "\n </pre>" +
+      '<textarea class="lc-ta" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="Your answer, Python" data-dk="' + esc(k) + '" data-stub="' + esc(stub) +
+      '" rows="' + Math.max(8, v.split("\n").length + 2) + '">' + esc(v) + "</textarea></div></div></div>";
   }
   function saveDrafts() {
     try { window.localStorage.setItem(DKEY, JSON.stringify(drafts)); } catch (e) { /* storage blocked: the answer lasts until the page closes */ }
   }
-  function grow(t) { t.rows = Math.max(8, t.value.split("\n").length + 3); }
+  function paint(t) {
+    var lc = t.closest(".lc");
+    t.rows = Math.max(8, t.value.split("\n").length + 2);
+    lc.querySelector(".lc-view").innerHTML = hl(t.value) + "\n ";
+    lc.querySelector(".lc-gut").textContent = gutter(t.value);
+  }
+  function isDraft(t) { return t && t.getAttribute && t.getAttribute("data-dk"); }
   document.addEventListener("input", function (e) {
-    var t = e.target, k = t.getAttribute && t.getAttribute("data-dk");
+    var t = e.target, k = isDraft(t);
     if (!k) { return; }
     drafts[k] = t.value;
-    grow(t);
+    paint(t);
     saveDrafts();
   });
-  // Tab and Shift+Tab indent by four spaces; Enter keeps the indent, and adds four after a colon.
+  // A long line scrolls the box sideways; the coloured copy follows.
+  document.addEventListener("scroll", function (e) {
+    if (isDraft(e.target)) { e.target.closest(".lc").querySelector(".lc-view").scrollLeft = e.target.scrollLeft; }
+  }, true);
+  // Replace a range the way typing would, so Ctrl+Z still undoes it.
+  function put(t, text, a, b) {
+    t.setSelectionRange(a, b);
+    if (!document.execCommand || !document.execCommand("insertText", false, text)) {
+      t.setRangeText(text, a, b, "end");
+      t.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  }
+  // Tab and Shift+Tab indent or outdent by four spaces (the whole selection when it spans lines); Enter keeps the
+  // indent and adds four after a colon; Backspace in the indent removes a level.
   document.addEventListener("keydown", function (e) {
     var t = e.target;
-    if (!t.getAttribute || !t.getAttribute("data-dk")) { return; }
-    var v = t.value, a = t.selectionStart, b = t.selectionEnd, ls = v.lastIndexOf("\n", a - 1) + 1, ins = null;
-    if (e.key === "Tab" && !e.shiftKey) { ins = "    "; }
-    else if (e.key === "Tab") {
+    if (!isDraft(t)) { return; }
+    var v = t.value, a = t.selectionStart, b = t.selectionEnd, ls = v.lastIndexOf("\n", a - 1) + 1, line = v.slice(ls, a);
+    if (e.key === "Tab") {
       e.preventDefault();
-      var n = /^ {1,4}/.exec(v.slice(ls));
-      if (n) { t.value = v.slice(0, ls) + v.slice(ls + n[0].length); t.selectionStart = t.selectionEnd = Math.max(ls, a - n[0].length); t.dispatchEvent(new Event("input", { bubbles: true })); }
-      return;
-    } else if (e.key === "Enter") {
-      var line = v.slice(ls, a), ind = /^ */.exec(line)[0];
-      ins = "\n" + ind + (/:\s*$/.test(line) ? "    " : "");
+      if (v.slice(a, b).indexOf("\n") < 0 && !e.shiftKey) { put(t, "    ", a, b); return; }
+      var le = v.indexOf("\n", b - (b > a && v[b - 1] === "\n" ? 1 : 0)); if (le < 0) { le = v.length; }
+      var out = v.slice(ls, le).split("\n").map(function (x) { return e.shiftKey ? x.replace(/^ {1,4}/, "") : (x ? "    " + x : x); }).join("\n");
+      put(t, out, ls, le);
+      t.setSelectionRange(ls, ls + out.length);
+    } else if (e.key === "Enter" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      put(t, "\n" + /^ */.exec(line)[0] + (/:\s*(#.*)?$/.test(line) ? "    " : ""), a, b);
+    } else if (e.key === "Backspace" && a === b && a > ls && /^ +$/.test(line) && line.length % 4 === 0) {
+      e.preventDefault();
+      put(t, "", a - 4, a);
     }
-    if (ins === null) { return; }
-    e.preventDefault();
-    t.value = v.slice(0, a) + ins + v.slice(b);
-    t.selectionStart = t.selectionEnd = a + ins.length;
-    t.dispatchEvent(new Event("input", { bubbles: true }));
   });
   document.addEventListener("click", function (e) {
     if (!e.target.classList || !e.target.classList.contains("draft-r")) { return; }
@@ -299,7 +329,7 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
     t.value = t.getAttribute("data-stub");
     delete drafts[t.getAttribute("data-dk")];
     saveDrafts();
-    grow(t);
+    paint(t);
   });
   // Visitor progress: which problems and variations this browser has ticked. Keys are
   // "<pattern>/<problem>" and "<pattern>/v/<variation>"; the landing page counts them.
