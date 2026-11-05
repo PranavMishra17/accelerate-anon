@@ -3830,6 +3830,471 @@ window.CODING = {
    "g": "techniques"
   },
   {
+   "id": "fluency",
+   "title": "Dict and graph fluency",
+   "group": "Techniques",
+   "g": "techniques",
+   "drill": true,
+   "ex": {
+    "i": "experts[\"e1\"][\"skills\"]",
+    "o": "a list of str",
+    "w": "experts is id -> dict, the dict's skills is a list"
+   },
+   "spot": "Six timed drills for the moves that cost time in a live coding hour: nested reach, merging, validating, caching, BFS and ranking. Write each one in its box from the stub, no AI and no autocomplete. Stuck for three minutes: open the hint, not the solution. <b>Read the type at each level</b> before any loop, as a comment: <code># level: id -> dict -> list of str</code>. Most dict bugs are type confusion: treating a dict like a list, or losing track of which level you are on.",
+   "cx": "Self-check, any no means re-drill it: items() and a 3-level .get chain without pausing; setdefault grouping and .get(w, 0) + 1 counting; the key (-score, hops, id) without looking; BFS with deque, visited on enqueue and a parent dict in under 10 minutes; validate (empty, missing, self-loop, duplicate) before the happy path.",
+   "tpl": "# The five iteration moves, learnt cold\nfor k in d: ...                        # 1. keys (the default loop)\nfor v in d.values(): ...               #    values\nfor k, v in d.items(): ...             #    both: never d[k] inside a key loop\nd.get(k, default)                      # 2. safe reach: a default, not a KeyError\nd.get(k, {}).get(inner)                #    the default is a dict, so the next .get still works\nexperts[eid][\"skills\"]                 # 3. nested reach, outside in: dict, then its field\nd.setdefault(k, []).append(x)          # 4. build or append: first sight makes the list\nlen(required & set(skills))            # 5. set overlap: how many in common\n\n# Sorting with a key: a tuple compares left to right, the first difference decides\nrows.sort(key=lambda r: (-r[\"score\"], r[\"hops\"], r[\"id\"]))   # score desc, hops asc, id asc\nsorted(d.items(), key=lambda kv: -kv[1])                     # dict by value, biggest first\nbest = max(rows, key=lambda r: r[\"score\"])                    # only the best one: no full sort\nmerged = {**a, **b}                                           # merge, right wins (or a | b)\ncounts[w] = counts.get(w, 0) + 1                              # count\nflat = [x for lst in d.values() for x in lst]                 # flatten one level\n",
+   "sheet": {
+    "spot": "Nested dicts, merging, grouping, BFS and ranking under a clock.",
+    "move": "Name the type at each level, then loop with items(), reach with .get, sort with one tuple key.",
+    "code": "d.get(a, {}).get(b, [])\nd.setdefault(k, []).append(x)\nrows.sort(key=lambda r: (-r[2], r[1], r[0]))",
+    "notes": [
+     "<b>Three rules:</b> sort with a tuple key, never chained sorts; minus for a descending number, reverse=True only when everything descends; max() when you need only the best one.",
+     "<b>BFS:</b> deque.popleft() is O(1), list.pop(0) is O(n) and makes BFS quadratic; mark visited on enqueue."
+    ]
+   },
+   "probs": [
+    {
+     "n": "1. Reach into nested data without crashing (10 min)",
+     "l": "easy",
+     "task": "Return an employee's skills from a dict of dicts, or [] if anything along the way is missing.",
+     "hint": "Chain `.get` with dict-shaped defaults: each default must be a dict so the next `.get` still works. Only the last default is a list.",
+     "sol": "def skill_of(data, dept, emp_id):\n    # level: dept -> emp_id -> dict -> list of str\n    # Each missing level falls back to {} so the next .get still has a dict to call it on;\n    # only the last level falls back to [], because that is what we return.\n    return data.get(dept, {}).get(emp_id, {}).get(\"skills\", [])",
+     "c": "O(1): three dict lookups. Say: I name the type at each level first, then each .get falls back to the shape the next step expects.",
+     "st": {
+      "p": "`data` maps a department to a dict of employees; each employee is a dict that may have a `skills` list. Write `skill_of(data, dept, emp_id)` that returns that employee's skills, or `[]` if the department, the employee or the skills key is missing at any level.\n\nNo try and except: use `.get`. Name the levels first, in a comment: `# dept -> emp_id -> dict -> list of str`.",
+      "ex": [
+       {
+        "i": "data = {\"eng\": {\"e1\": {\"name\": \"Ana\", \"skills\": [\"python\"]}, \"e2\": {\"name\": \"Ben\"}}, \"ops\": {\"e3\": {\"name\": \"Cid\", \"skills\": [\"go\", \"aws\"]}}}, dept = \"eng\", emp_id = \"e1\"",
+        "o": "[\"python\"]",
+        "why": "every level is there"
+       },
+       {
+        "i": "data = {\"eng\": {\"e2\": {\"name\": \"Ben\"}}}, dept = \"eng\", emp_id = \"e2\"",
+        "o": "[]",
+        "why": "Ben has no skills key; a missing department would also give []"
+       }
+      ],
+      "k": [
+       "no try and except",
+       "do not change `data`"
+      ]
+     }
+    },
+    {
+     "n": "2. Merge two dicts of dicts (12 min)",
+     "l": "easy",
+     "task": "Merge two profile dicts: b's name wins, skills are unioned and sorted.",
+     "hint": "Copy a first, one new dict and one new list per entry. Then loop over `b.items()` and branch on `if eid in result`. The union is `sorted(set(x) | set(y))`.",
+     "sol": "def merge_profiles(a, b):\n    # Copy a: a new dict per entry and a new skills list, so changing the result never touches a.\n    result = {eid: {\"name\": info[\"name\"], \"skills\": list(info[\"skills\"])} for eid, info in a.items()}\n    for eid, info in b.items():\n        if eid in result:\n            # In both: b's name wins, the skills are unioned with no duplicates, sorted.\n            result[eid][\"name\"] = info[\"name\"]\n            result[eid][\"skills\"] = sorted(set(result[eid][\"skills\"]) | set(info[\"skills\"]))\n        else:\n            # Only in b: copy it, again with its own list.\n            result[eid] = {\"name\": info[\"name\"], \"skills\": list(info[\"skills\"])}\n    return result",
+     "c": "O(total skills, plus a sort per merged entry). Say: copying first is what keeps the inputs untouched; a shallow {**a} would share the inner dicts.",
+     "st": {
+      "p": "`a` and `b` map an id to `{\"name\": str, \"skills\": list}`. Write `merge_profiles(a, b)`. If an id is in both, keep b's name and the union of both skill lists, sorted, with no duplicates. If an id is in only one, copy it as it is.\n\nDo not mutate the inputs: the result must not share a skills list with `a` or `b`.",
+      "ex": [
+       {
+        "i": "a = {\"e1\": {\"name\": \"Ana\", \"skills\": [\"python\"]}}, b = {\"e1\": {\"name\": \"Ana M.\", \"skills\": [\"evals\", \"python\"]}, \"e2\": {\"name\": \"Ben\", \"skills\": [\"go\"]}}",
+        "o": "{\"e1\": {\"name\": \"Ana M.\", \"skills\": [\"evals\", \"python\"]}, \"e2\": {\"name\": \"Ben\", \"skills\": [\"go\"]}}",
+        "why": "e1 is in both: b's name, skills unioned and sorted; e2 is only in b"
+       },
+       {
+        "i": "a = {\"e1\": {\"name\": \"Ana\", \"skills\": [\"sql\"]}}, b = {}",
+        "o": "{\"e1\": {\"name\": \"Ana\", \"skills\": [\"sql\"]}}",
+        "why": "nothing to merge: a copy of a"
+       }
+      ],
+      "k": [
+       "the inputs are not changed",
+       "skills in a merged entry are sorted"
+      ]
+     }
+    },
+    {
+     "n": "3. Validate edges and count what you dropped (12 min)",
+     "l": "easy",
+     "task": "Keep edges whose ids exist, are not self-loops and are not duplicates; count the rejected ones.",
+     "hint": "A `seen` set of tuples finds duplicates. Order matters: check self-loop and unknown first (counted), duplicate second (not counted).",
+     "sol": "def clean_edges(ids, edges):\n    clean, seen, dropped = [], set(), 0\n    for a, b in edges:\n        # Invalid first: these are counted.\n        if a == b or a not in ids or b not in ids:\n            dropped += 1\n            continue\n        # A duplicate is collapsed, not counted.\n        if (a, b) in seen:\n            continue\n        seen.add((a, b))\n        clean.append((a, b))\n    return clean, dropped",
+     "c": "O(E) time and space. Say: validate before the happy path; a set of tuples makes the duplicate check O(1).",
+     "st": {
+      "p": "Write `clean_edges(ids, edges)` returning `(clean, dropped)`. Keep an edge only if both ids are in `ids`, it is not a self-loop, and it is not a duplicate of an edge already kept. `dropped` counts edges rejected for an unknown id or a self-loop; duplicates are collapsed silently and not counted.\n\nKeep the clean edges in their first-seen order.",
+      "ex": [
+       {
+        "i": "ids = {\"e1\", \"e2\", \"e3\"}, edges = [(\"e1\", \"e2\"), (\"e1\", \"e2\"), (\"e2\", \"e2\"), (\"e1\", \"e9\"), (\"e2\", \"e3\")]",
+        "o": "([(\"e1\", \"e2\"), (\"e2\", \"e3\")], 2)",
+        "why": "the self-loop and the unknown e9 are counted; the repeated e1 to e2 is collapsed"
+       },
+       {
+        "i": "ids = set(), edges = []",
+        "o": "([], 0)",
+        "why": "empty in, empty out"
+       }
+      ],
+      "k": [
+       "an edge is a pair (a, b); (a, b) and (b, a) are different",
+       "order of first sight is kept"
+      ]
+     }
+    },
+    {
+     "n": "4. A cache is a dict you check first (12 min)",
+     "l": "easy",
+     "task": "A class Lookup whose get(key) fetches once per key and serves repeats from a dict.",
+     "hint": "Four lines: check `in`, return if hit; compute, store, return if miss. The same shape is memoisation, API caching and a BFS visited set.",
+     "sol": "class Lookup:\n    def __init__(self):\n        self.cache = {}   # key -> value already fetched\n        self.calls = 0    # how many real fetches happened\n\n    def get(self, key):\n        if key in self.cache:          # hit: no fetch\n            return self.cache[key]\n        self.calls += 1                # miss: fetch once, remember it\n        self.cache[key] = key.upper()\n        return self.cache[key]",
+     "c": "O(1) per get. Say: one idea, three costumes: memoisation, an API cache and BFS's visited set all check a dict before doing work.",
+     "st": {
+      "p": "Write class `Lookup` with `get(key)`, holding `self.cache = {}` and `self.calls = 0`. On a hit, return the cached value without fetching. On a miss, fetch with `value = key.upper()` (the stand-in for a slow call), add one to `calls`, store it and return it.\n\n`lk.get(\"ana\")` returns `\"ANA\"` with `calls == 1`; a second `lk.get(\"ana\")` returns `\"ANA\"` with `calls` still 1; `lk.get(\"ben\")` makes it 2.",
+      "ex": [],
+      "k": [
+       "a key is fetched at most once"
+      ]
+     }
+    },
+    {
+     "n": "5. Build a graph, then one BFS gives distances and the path (15 min)",
+     "l": "medium",
+     "task": "Build adjacency from an edge list, then BFS for hops from the start; keep parents to rebuild a path.",
+     "hint": "There is no separate BFS and shortest-path function: BFS is the engine. Record `parent[nb] = cur` when you first discover a node, then walk parents back from the target.",
+     "sol": "from collections import deque\n\n\ndef build_adj(graph_edges):\n    # Undirected: each edge goes in both lists. setdefault makes the list on first sight.\n    adj = {}\n    for a, b in graph_edges:\n        adj.setdefault(a, []).append(b)\n        adj.setdefault(b, []).append(a)\n    return adj\n\n\ndef bfs(adj, start):\n    dist = {start: 0}          # doubles as the visited set\n    parent = {start: None}\n    q = deque([start])\n    while q:\n        cur = q.popleft()\n        for nb in adj.get(cur, []):\n            if nb not in dist:                 # visited on enqueue: never queued twice\n                dist[nb] = dist[cur] + 1\n                parent[nb] = cur               # recorded at discovery\n                q.append(nb)\n    return dist, parent                        # one traversal, both outputs\n\n\ndef distances(graph_edges, start):\n    return bfs(build_adj(graph_edges), start)[0]\n\n\ndef path(graph_edges, start, target):\n    dist, parent = bfs(build_adj(graph_edges), start)\n    if target not in dist:\n        return []\n    out = []\n    while target is not None:                  # walk parents back to the start\n        out.append(target)\n        target = parent[target]\n    return out[::-1]",
+     "c": "O(V + E) time and space. Say: BFS explores level by level, so first discovery is fewest hops; I keep distances for ranking and parents for the path in the same traversal.",
+     "st": {
+      "p": "`graph_edges` is a list of undirected edges `(a, b)`. Write `distances(graph_edges, start)`: build adjacency as a dict of lists, then BFS with a `deque` and return a dict `id -> hops from start`. Unreachable nodes are absent.\n\nThen write `path(graph_edges, start, target)` returning the list of ids on a shortest path, or `[]` if there is none, from the same BFS with a `parent` dict.",
+      "ex": [
+       {
+        "i": "graph_edges = [(\"a\", \"b\"), (\"a\", \"c\"), (\"b\", \"d\"), (\"c\", \"d\"), (\"d\", \"e\")], start = \"a\"",
+        "o": "{\"a\": 0, \"b\": 1, \"c\": 1, \"d\": 2, \"e\": 3}",
+        "why": "level by level: b and c at 1, d at 2, e at 3"
+       },
+       {
+        "i": "graph_edges = [(\"a\", \"b\"), (\"x\", \"y\")], start = \"a\"",
+        "o": "{\"a\": 0, \"b\": 1}",
+        "why": "x and y are not reachable, so they are absent"
+       }
+      ],
+      "k": [
+       "mark a node visited when you enqueue it, not when you pop it",
+       "deque.popleft(), never list.pop(0)"
+      ]
+     }
+    },
+    {
+     "n": "6. Rank the eligible pool, and do not filter silently (15 min)",
+     "l": "medium",
+     "task": "Score candidates within max_hops by 2 times matching skills minus hops; sort score desc, hops asc, id asc.",
+     "hint": "Matching is `len(set(required) & set(experts[eid][\"skills\"]))`. One tuple key does the three-way sort: `(-score, hops, id)`.",
+     "sol": "def rank(experts, dist, required, max_hops):\n    req = set(required)                 # once, not per candidate\n    out = []\n    for eid, hops in dist.items():\n        if hops == 0 or hops > max_hops:   # the start, or too far\n            continue\n        m = len(req & set(experts[eid][\"skills\"]))\n        out.append((eid, hops, 2 * m - hops))\n    # One tuple key: score desc (minus), then hops asc, then id asc.\n    out.sort(key=lambda t: (-t[2], t[1], t[0]))\n    return out",
+     "c": "O(V log V) for the sort; for the top 10 only, a heap gives O(V log k). Say: never precompute all-pairs distances, referrals change and cached distances go stale. Weighted edges: swap the queue for a heap and it is Dijkstra.",
+     "st": {
+      "p": "Using drill 5's distances, write `rank(experts, dist, required, max_hops)`. Keep every candidate with `hops <= max_hops`, leaving out the start (hops 0). Score is `2 * matching_skills - hops`. Return `(id, hops, score)` tuples sorted by score descending, then hops ascending, then id ascending. A negative score stays in the list.",
+      "ex": [
+       {
+        "i": "experts = {\"a\": {\"skills\": []}, \"b\": {\"skills\": [\"python\"]}, \"c\": {\"skills\": [\"evals\"]}, \"d\": {\"skills\": [\"python\", \"evals\"]}, \"e\": {\"skills\": []}}, dist = {\"a\": 0, \"b\": 1, \"c\": 1, \"d\": 2, \"e\": 3}, required = [\"python\", \"evals\"], max_hops = 3",
+        "o": "[(\"d\", 2, 2), (\"b\", 1, 1), (\"c\", 1, 1), (\"e\", 3, -3)]",
+        "why": "b and c both score 1 at 1 hop, so id decides; e scores -3 and stays"
+       },
+       {
+        "i": "experts = {\"a\": {\"skills\": []}, \"b\": {\"skills\": [\"go\"]}}, dist = {\"a\": 0, \"b\": 1}, required = [\"python\"], max_hops = 0",
+        "o": "[]",
+        "why": "max_hops 0 leaves only the start, which is never ranked"
+       }
+      ],
+      "k": [
+       "every id in dist is in experts"
+      ]
+     }
+    }
+   ],
+   "vars": []
+  },
+  {
+   "id": "fluency-heap",
+   "title": "Heap fluency",
+   "group": "Techniques",
+   "g": "techniques",
+   "drill": true,
+   "ex": {
+    "i": "heapq.heappush(h, (-score, name))",
+    "o": "h[0] is the highest score",
+    "w": "negate for a max-heap"
+   },
+   "spot": "Five timed drills for heapq: top k, a stream, merging, scheduling and a running median. Write each one in its box from the stub. heapq is a min-heap in a plain list; everything else is a tuple key or a minus sign.",
+   "cx": "Self-check: write heappush, heappop and heapify without looking; negate for a max-heap; keep a size-k min-heap for the k largest; put a counter before any value that cannot be compared.",
+   "tpl": "import heapq\n# heapq keeps a min-heap inside a plain list: h[0] is always the smallest\nh = []\nheapq.heappush(h, (score, name))      # tuples compare left to right\nsmallest = heapq.heappop(h)\nheapq.heapify(rows)                   # a list into a heap in O(n), in place\nheapq.heappush(h, (-score, name))     # max-heap: negate the number\nheapq.heapreplace(h, x)               # pop then push, one step (size stays k)\nheapq.heappushpop(h, x)               # push then pop: x itself comes back if it is smallest\nheapq.nlargest(k, rows, key=lambda r: r[\"score\"])   # fine for a one-off top k\n# Ties: put a tie-breaker before any value that cannot be compared (a dict, an object)\nheapq.heappush(h, (priority, seq, task))            # seq is a counter, so dicts never compare\n",
+   "sheet": {
+    "spot": "Top k, a stream, k-way merge, rooms, a running median.",
+    "move": "Min-heap in a list; negate for max; size k for top k; tuples for ties.",
+    "code": "heapq.heappush(h, (-s, name))\nheapq.heapreplace(h, x)\nh[0]  # the smallest",
+    "notes": [
+     "<b>Costs:</b> push and pop O(log n), heapify O(n), h[0] O(1)."
+    ]
+   },
+   "probs": [
+    {
+     "n": "1. Top k by score, ties by name (10 min)",
+     "l": "easy",
+     "task": "Return the k names with the highest scores, ties by name ascending, using a heap.",
+     "hint": "Negate the score so the min-heap pops the biggest first; the name as the second item breaks ties in ascending order for free.",
+     "sol": "import heapq\n\n\ndef top_k(scores, k):\n    # (-score, name): the min-heap pops the highest score first, and equal scores by name ascending.\n    heap = [(-s, name) for name, s in scores.items()]\n    heapq.heapify(heap)                    # O(n), in place\n    out = []\n    while heap and len(out) < k:\n        out.append(heapq.heappop(heap)[1])  # O(log n) each\n    return out",
+     "c": "O(n + k log n) time, O(n) space. For a stream, keep a size-k min-heap instead: O(n log k), O(k) space.",
+     "st": {
+      "p": "`scores` maps a name to an integer score. Write `top_k(scores, k)` returning the k names with the highest scores, highest first; equal scores are ordered by name ascending. If k is larger than the number of names, return them all.\n\nUse heapq, not a full sort.",
+      "ex": [
+       {
+        "i": "scores = {\"ana\": 5, \"ben\": 9, \"cid\": 5, \"dev\": 1}, k = 3",
+        "o": "[\"ben\", \"ana\", \"cid\"]",
+        "why": "ben 9 first; ana and cid tie on 5, so name order"
+       },
+       {
+        "i": "scores = {\"ana\": 2}, k = 5",
+        "o": "[\"ana\"]",
+        "why": "k larger than the dict: all of it"
+       }
+      ],
+      "k": [
+       "k >= 0",
+       "n names, O(n + k log n)"
+      ]
+     },
+     "alt": {
+      "code": "import heapq\n\n\ndef top_k(scores, k):\n    # nsmallest on the same key: one call, same order.\n    return [name for _, name in heapq.nsmallest(k, ((-s, name) for name, s in scores.items()))]\n",
+      "note": "One line once you know the key; in the room, write the heapify version first."
+     }
+    },
+    {
+     "n": "2. The kth largest in a stream (10 min)",
+     "l": "easy",
+     "task": "A class that keeps the kth largest value seen so far, one add at a time.",
+     "hint": "Keep only the k largest in a min-heap. Its smallest, h[0], is the kth largest. When it grows past k, pop the smallest.",
+     "sol": "import heapq\n\n\nclass KthLargest:\n    def __init__(self, k, nums):\n        self.k = k\n        self.h = []                      # min-heap of the k largest so far\n        for x in nums:\n            self.add(x)\n\n    def add(self, val):\n        heapq.heappush(self.h, val)\n        if len(self.h) > self.k:         # one too many: drop the smallest\n            heapq.heappop(self.h)\n        return self.h[0]                 # the smallest of the k largest is the kth largest",
+     "c": "O(log k) per add, O(k) space. Say: a min-heap of size k for the k largest; the counter-intuitive part is min, not max.",
+     "st": {
+      "p": "Write class `KthLargest(k, nums)` with `add(val)` that adds a value and returns the kth largest value seen so far (duplicates count). There are always at least k values once `add` is called.\n\n`KthLargest(3, [4, 5, 8, 2])` then `add(3)` returns 4, `add(5)` returns 5, `add(10)` returns 5, `add(9)` returns 8.",
+      "ex": [],
+      "k": [
+       "O(log k) per add",
+       "O(k) memory, whatever the stream length"
+      ]
+     }
+    },
+    {
+     "n": "3. Merge k sorted lists (12 min)",
+     "l": "medium",
+     "task": "Merge k sorted lists into one sorted list with a heap of each list's next value.",
+     "hint": "Seed the heap with each non-empty list's first value. Pop the smallest, append it, push the next value from the same list.",
+     "sol": "import heapq\n\n\ndef merge_sorted(lists):\n    # One entry per list: (value, which list, position in it). The list index breaks ties.\n    heap = [(lst[0], i, 0) for i, lst in enumerate(lists) if lst]\n    heapq.heapify(heap)\n    out = []\n    while heap:\n        val, i, j = heapq.heappop(heap)\n        out.append(val)\n        if j + 1 < len(lists[i]):           # that list has a next value\n            heapq.heappush(heap, (lists[i][j + 1], i, j + 1))\n    return out",
+     "c": "O(N log k) time, O(k) heap. Say: the heap holds one frontier value per list, so it never grows past k; this is the merge step of an external sort.",
+     "st": {
+      "p": "`lists` is a list of sorted lists of integers. Write `merge_sorted(lists)` returning one sorted list holding every value.\n\nKeep a heap of `(value, list index, position)`, one entry per list.",
+      "ex": [
+       {
+        "i": "lists = [[1, 4, 7], [2, 5], [3, 6, 9]]",
+        "o": "[1, 2, 3, 4, 5, 6, 7, 9]",
+        "why": "always take the smallest head, then push that list's next"
+       },
+       {
+        "i": "lists = [[], [1], []]",
+        "o": "[1]",
+        "why": "empty lists never enter the heap"
+       }
+      ],
+      "k": [
+       "N values over k lists: O(N log k)"
+      ]
+     }
+    },
+    {
+     "n": "4. Meeting rooms: how many at once (12 min)",
+     "l": "medium",
+     "task": "The fewest rooms for a list of meetings, with a min-heap of end times.",
+     "hint": "Sort by start. Keep a min-heap of the end times of rooms in use. If the earliest end is at or before this start, that room is free: replace its end.",
+     "sol": "import heapq\n\n\ndef min_rooms(meetings):\n    ends = []                                   # end time of each room in use; ends[0] frees first\n    for start, end in sorted(meetings):         # by start time\n        if ends and ends[0] <= start:\n            heapq.heapreplace(ends, end)        # reuse the room that frees first\n        else:\n            heapq.heappush(ends, end)           # no room free: open one\n    return len(ends)                            # rooms never close, so this is the peak",
+     "c": "O(n log n) time, O(n) space. Say: the heap is the set of busy rooms keyed by when they free up; the same shape schedules workers in a job scheduler.",
+     "st": {
+      "p": "`meetings` is a list of `[start, end]` with start < end. Write `min_rooms(meetings)`: the fewest rooms so that no two overlapping meetings share one. A meeting ending at 10 frees its room for one starting at 10.",
+      "ex": [
+       {
+        "i": "meetings = [[0, 30], [5, 10], [15, 20]]",
+        "o": "2",
+        "why": "the long one overlaps both short ones, which do not overlap each other"
+       },
+       {
+        "i": "meetings = [[1, 5], [5, 9], [9, 12]]",
+        "o": "1",
+        "why": "each starts as the last ends, so one room"
+       }
+      ],
+      "k": [
+       "O(n log n)"
+      ]
+     }
+    },
+    {
+     "n": "5. Running median with two heaps (15 min)",
+     "l": "medium",
+     "task": "A class that takes numbers one at a time and returns the median so far.",
+     "hint": "Two heaps: a max-heap (negated) for the lower half, a min-heap for the upper half. Push into low, move low's top to high, and if high is bigger, move one back.",
+     "sol": "import heapq\n\n\nclass MedianFinder:\n    def __init__(self):\n        self.low = []     # max-heap of the lower half, stored negated\n        self.high = []    # min-heap of the upper half\n\n    def add(self, num):\n        heapq.heappush(self.low, -num)\n        heapq.heappush(self.high, -heapq.heappop(self.low))   # the biggest of low moves up\n        if len(self.high) > len(self.low):                     # keep low the same size or one bigger\n            heapq.heappush(self.low, -heapq.heappop(self.high))\n\n    def median(self):\n        if len(self.low) > len(self.high):\n            return float(-self.low[0])\n        return (-self.low[0] + self.high[0]) / 2",
+     "c": "O(log n) per add, O(1) per median. Say: every add passes through both heaps, which keeps every low value at or below every high value.",
+     "st": {
+      "p": "Write class `MedianFinder` with `add(num)` and `median()`. `median()` returns the middle value, or the mean of the two middle values when the count is even, as a float.\n\nAdd 1 then 2: median is 1.5. Add 3: median is 2.0.",
+      "ex": [],
+      "k": [
+       "O(log n) per add, O(1) per median"
+      ]
+     }
+    }
+   ],
+   "vars": []
+  },
+  {
+   "id": "fluency-collections",
+   "title": "Dict and collections extras",
+   "group": "Techniques",
+   "g": "techniques",
+   "drill": true,
+   "ex": {
+    "i": "out.setdefault(a, {}).setdefault(b, []).append(x)",
+    "o": "a two-level group",
+    "w": "one setdefault per level"
+   },
+   "spot": "Five timed drills for the collections moves: grouping on two keys, an inverted index, counting, inverting and an LRU. Write the plain-dict version first; defaultdict, Counter and OrderedDict are the faster versions once you can.",
+   "cx": "Self-check: two-level setdefault in one line; a dict of sets while building, sorted lists at the end; count with .get(w, 0) + 1; say why {v: k} loses keys; move_to_end and popitem(last=False).",
+   "tpl": "from collections import defaultdict, Counter, OrderedDict, deque\ngroups = defaultdict(list); groups[k].append(x)      # the same as setdefault, without the call\nnested = defaultdict(lambda: defaultdict(list))       # two levels: nested[a][b].append(x)\ncounts = Counter(words); counts.most_common(3)        # the fast version, after you can write it by hand\nod = OrderedDict(); od.move_to_end(k); od.popitem(last=False)   # LRU in two calls\ninv = {}\nfor k, v in d.items():                               # invert, keeping duplicates\n    inv.setdefault(v, []).append(k)\ndict(sorted(d.items()))                              # a dict ordered by key (dicts keep insertion order)\n{k: v for k, v in d.items() if v}                    # filter with a comprehension\n",
+   "sheet": {
+    "spot": "Group, index, count, invert, LRU.",
+    "move": "Plain dict and setdefault first; defaultdict, Counter, OrderedDict after.",
+    "code": "defaultdict(list)\nCounter(words).most_common(3)\nod.move_to_end(k); od.popitem(last=False)",
+    "notes": [
+     "<b>Counter ties:</b> most_common breaks ties by first seen, not by key."
+    ]
+   },
+   "probs": [
+    {
+     "n": "1. Group by two keys (10 min)",
+     "l": "easy",
+     "task": "Group rows into a dict of dicts of lists by two fields.",
+     "hint": "Two setdefaults in one line: the first makes the inner dict, the second makes the list.",
+     "sol": "def group_by_two(rows, k1, k2):\n    # level: k1 value -> k2 value -> list of ids\n    out = {}\n    for r in rows:\n        out.setdefault(r[k1], {}).setdefault(r[k2], []).append(r[\"id\"])\n    return out",
+     "c": "O(n). Say: name the levels, then one setdefault per level.",
+     "st": {
+      "p": "`rows` is a list of dicts. Write `group_by_two(rows, k1, k2)` returning `{row[k1]: {row[k2]: [row[\"id\"], ...]}}`, with ids in input order.\n\nWrite it with `setdefault` first; the `defaultdict` version is below the solution.",
+      "ex": [
+       {
+        "i": "rows = [{\"id\": 1, \"team\": \"ai\", \"level\": \"sr\"}, {\"id\": 2, \"team\": \"ai\", \"level\": \"jr\"}, {\"id\": 3, \"team\": \"ai\", \"level\": \"sr\"}, {\"id\": 4, \"team\": \"web\", \"level\": \"sr\"}], k1 = \"team\", k2 = \"level\"",
+        "o": "{\"ai\": {\"sr\": [1, 3], \"jr\": [2]}, \"web\": {\"sr\": [4]}}",
+        "why": "team first, then level, ids in order"
+       },
+       {
+        "i": "rows = [], k1 = \"team\", k2 = \"level\"",
+        "o": "{}",
+        "why": "no rows, no groups"
+       }
+      ],
+      "k": [
+       "every row has k1, k2 and id"
+      ]
+     },
+     "alt": {
+      "code": "from collections import defaultdict\n\n\ndef group_by_two(rows, k1, k2):\n    out = defaultdict(lambda: defaultdict(list))\n    for r in rows:\n        out[r[k1]][r[k2]].append(r[\"id\"])\n    return {a: dict(b) for a, b in out.items()}   # back to plain dicts for printing and comparing\n",
+      "note": "defaultdict needs a factory per level, and converting back at the end so the result prints and compares as plain dicts."
+     }
+    },
+    {
+     "n": "2. An inverted index (12 min)",
+     "l": "easy",
+     "task": "Map each word to the sorted ids of the documents that contain it.",
+     "hint": "A dict of sets while building, so repeats in one document collapse; sort into lists at the end.",
+     "sol": "def inverted_index(docs):\n    idx = {}                                      # word -> set of ids while building\n    for doc_id, text in docs.items():\n        for w in text.lower().split():\n            idx.setdefault(w, set()).add(doc_id)\n    return {w: sorted(ids) for w, ids in idx.items()}   # sets to sorted lists at the end",
+     "c": "O(total words) plus the sorts. Say: this is the core of keyword search; the next steps are an AND query as a set intersection and ranking by count.",
+     "st": {
+      "p": "`docs` maps a document id to its text. Write `inverted_index(docs)` returning a dict from each lowercase word to the sorted list of ids containing it, each id once. Words are split on whitespace.",
+      "ex": [
+       {
+        "i": "docs = {1: \"the cat sat\", 2: \"The dog\", 3: \"cat and dog and cat\"}",
+        "o": "{\"the\": [1, 2], \"cat\": [1, 3], \"sat\": [1], \"dog\": [2, 3], \"and\": [3]}",
+        "why": "lowercased; 3 has cat twice but appears once"
+       },
+       {
+        "i": "docs = {}",
+        "o": "{}",
+        "why": "nothing to index"
+       }
+      ],
+      "k": [
+       "ids are comparable"
+      ]
+     }
+    },
+    {
+     "n": "3. Most common words, ties alphabetical (10 min)",
+     "l": "easy",
+     "task": "Count words by hand with .get, then return the k most common, ties alphabetical.",
+     "hint": "Count, then sort the items with the key `(-count, word)` and slice.",
+     "sol": "def most_common(text, k):\n    counts = {}\n    for w in text.lower().split():\n        counts[w] = counts.get(w, 0) + 1          # count by hand\n    # One tuple key: count desc (minus), then word asc.\n    return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:k]",
+     "c": "O(n + u log u) for u distinct words; a size-k heap makes it O(n + u log k). Counter.most_common breaks ties by first seen, not alphabetically: say so if you use it.",
+     "st": {
+      "p": "Write `most_common(text, k)` returning a list of `(word, count)` for the k most frequent lowercase words, highest count first, equal counts alphabetical. Count with a plain dict and `.get(w, 0) + 1`; Counter is the version to mention after.",
+      "ex": [
+       {
+        "i": "text = \"b a c a b a\", k = 2",
+        "o": "[(\"a\", 3), (\"b\", 2)]",
+        "why": "a three times, b twice"
+       },
+       {
+        "i": "text = \"x y z\", k = 2",
+        "o": "[(\"x\", 1), (\"y\", 1)]",
+        "why": "all tie on 1, so alphabetical"
+       }
+      ],
+      "k": [
+       "k >= 1"
+      ]
+     }
+    },
+    {
+     "n": "4. Invert a dict, keeping duplicates (8 min)",
+     "l": "easy",
+     "task": "Swap keys and values; values that repeat collect their keys in a sorted list.",
+     "hint": "A plain `{v: k}` loses keys when values repeat. Build a list per value with setdefault, sort at the end.",
+     "sol": "def invert(d):\n    out = {}\n    for k, v in d.items():\n        out.setdefault(v, []).append(k)      # a list per value: repeats are kept\n    return {v: sorted(ks) for v, ks in out.items()}",
+     "c": "O(n log n) for the sorts. Say: {v: k for k, v in d.items()} is the trap, it keeps only the last key per value.",
+     "st": {
+      "p": "Write `invert(d)` returning a dict from each value of `d` to the sorted list of keys that had it.",
+      "ex": [
+       {
+        "i": "d = {\"ana\": \"ai\", \"ben\": \"web\", \"cid\": \"ai\"}",
+        "o": "{\"ai\": [\"ana\", \"cid\"], \"web\": [\"ben\"]}",
+        "why": "ai had two owners"
+       },
+       {
+        "i": "d = {}",
+        "o": "{}",
+        "why": "empty"
+       }
+      ],
+      "k": [
+       "values are hashable"
+      ]
+     }
+    },
+    {
+     "n": "5. LRU cache with OrderedDict (12 min)",
+     "l": "medium",
+     "task": "get and put with a capacity, evicting the least recently used key, in O(1) with OrderedDict.",
+     "hint": "OrderedDict keeps order and moves a key to the end in O(1). The front is the least recently used: `popitem(last=False)`.",
+     "sol": "from collections import OrderedDict\n\n\nclass LRU:\n    def __init__(self, capacity):\n        self.cap = capacity\n        self.d = OrderedDict()        # front = least recently used, end = most recent\n\n    def get(self, key):\n        if key not in self.d:\n            return -1\n        self.d.move_to_end(key)       # a use: to the end\n        return self.d[key]\n\n    def put(self, key, value):\n        self.d[key] = value\n        self.d.move_to_end(key)\n        if len(self.d) > self.cap:\n            self.d.popitem(last=False)   # evict from the front",
+     "c": "O(1) per call. Say: the interview version is a dict plus a doubly linked list; OrderedDict is that pair, already built. The full version is under Heaps, LRU cache.",
+     "st": {
+      "p": "Write class `LRU(capacity)` with `get(key)` returning the value or -1, and `put(key, value)`. Both count as a use. When a put adds a new key beyond capacity, evict the least recently used key.\n\n`LRU(2)`: put(1, 1), put(2, 2), get(1) is 1, put(3, 3) evicts 2, get(2) is -1.",
+      "ex": [],
+      "k": [
+       "O(1) per call"
+      ]
+     }
+    }
+   ],
+   "vars": []
+  },
+  {
    "id": "numpy",
    "title": "NumPy and matrix basics",
    "group": "AI systems",

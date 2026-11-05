@@ -91,6 +91,13 @@ details.ask > summary .pn { font-weight: var(--w-regular); }
 /* The code under a problem: a toggle on a hairline, then the code on cream */
 .pb .st { --bleed: var(--s4); }
 details.sol { border-top: var(--hair); padding-top: 10px; }
+.draft { margin: var(--s3) 0; }
+.draft-h { display: flex; gap: var(--s3); align-items: baseline; font-size: var(--fs-sm); margin-bottom: var(--s1); }
+.draft-h span { color: var(--muted); font-size: var(--fs-xs); }
+.draft-r { margin-left: auto; font: inherit; font-size: var(--fs-xs); color: var(--accent); background: none; border: 0; cursor: pointer; padding: 0; }
+.draft textarea { display: block; width: 100%; box-sizing: border-box; resize: vertical; tab-size: 4; padding: var(--s3) var(--s4); background: var(--code-bg); color: var(--code-ink);
+  border: var(--hair); border-radius: var(--radius); font: var(--fs-code)/1.6 var(--mono); white-space: pre; overflow-x: auto; }
+.draft textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 details.sol > summary { list-style: none; cursor: pointer; display: inline-block; color: var(--accent); font-size: var(--fs-sm); font-weight: var(--w-strong); }
 details.sol > summary a.ext { margin-left: var(--s4); font-weight: var(--w-regular); }
 details.prob > summary .dif { font-size: var(--fs-xs); white-space: nowrap; min-width: 4.5em; text-align: right; }
@@ -202,8 +209,8 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
   <div class="cs-grid"></div>
 </div>
 <script src="coding/concurrency.js?v=657528be"></script>
-<script src="coding/data.js?v=7473f15d"></script>
-<script src="coding/sheet.js?v=44693eb2"></script>
+<script src="coding/data.js?v=4a9da508"></script>
+<script src="coding/sheet.js?v=3139aa19"></script>
 <script>
 (function () {
   "use strict";
@@ -236,7 +243,7 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
   function probHtml(p, q) {
     var e = lcOf(p, q);
     return '<details class="prob" data-text="' + esc((p.title + " " + q.n + " " + q.task).toLowerCase()) + '"><summary>' + tick(p.id + "/" + q.n, q.n) + '<span class="pn">' + esc(q.n) +
-      '</span>' + difHtml(e, q.l) + '</summary><div class="pb">' + CS.partsHtml(q, [CS.hintRow(md(q.hint))]) +
+      '</span>' + difHtml(e, q.l) + '</summary><div class="pb">' + CS.partsHtml(q, [CS.hintRow(md(q.hint))], p.drill) + (p.drill ? draftHtml(p.id + "/" + q.n, CS.stubOf(q.sol)) : "") +
       '<details class="sol"><summary>Show the solution' + linksHtml(e) + "</summary>" + CS.solHtml(q, q.sol, q.c) + "</details></div></details>";
   }
   function varHtml(p, v) {
@@ -245,6 +252,55 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
       '</span><span class="pl">variation</span>' + difHtml(e) + '</summary><div class="pb">' + CS.partsHtml(v, [v.st ? CS.hintRow(md(v.t)) : ["What changes", md(v.t)]]) +
       '<details class="sol"><summary>Show the code' + linksHtml(e) + "</summary>" + CS.solHtml(v, v.code) + "</details></div></details>";
   }
+  // A drill's answer box: starts from the stub, saved in this browser as you type (coding.drafts.v1), Reset back to the stub.
+  var DKEY = "coding.drafts.v1", drafts = {};
+  try { drafts = JSON.parse(window.localStorage.getItem(DKEY) || "{}"); } catch (e) { drafts = {}; }
+  function draftHtml(k, stub) {
+    var v = drafts[k] != null ? drafts[k] : stub;
+    return '<div class="draft"><div class="draft-h"><b>Your answer</b><span>saved as you type, in this browser</span><button type="button" class="draft-r">Reset to the stub</button></div>' +
+      '<textarea spellcheck="false" autocapitalize="off" autocomplete="off" data-dk="' + esc(k) + '" data-stub="' + esc(stub) + '" rows="' + Math.max(8, v.split("\n").length + 3) + '">' + esc(v) + "</textarea></div>";
+  }
+  function saveDrafts() {
+    try { window.localStorage.setItem(DKEY, JSON.stringify(drafts)); } catch (e) { /* storage blocked: the answer lasts until the page closes */ }
+  }
+  function grow(t) { t.rows = Math.max(8, t.value.split("\n").length + 3); }
+  document.addEventListener("input", function (e) {
+    var t = e.target, k = t.getAttribute && t.getAttribute("data-dk");
+    if (!k) { return; }
+    drafts[k] = t.value;
+    grow(t);
+    saveDrafts();
+  });
+  // Tab and Shift+Tab indent by four spaces; Enter keeps the indent, and adds four after a colon.
+  document.addEventListener("keydown", function (e) {
+    var t = e.target;
+    if (!t.getAttribute || !t.getAttribute("data-dk")) { return; }
+    var v = t.value, a = t.selectionStart, b = t.selectionEnd, ls = v.lastIndexOf("\n", a - 1) + 1, ins = null;
+    if (e.key === "Tab" && !e.shiftKey) { ins = "    "; }
+    else if (e.key === "Tab") {
+      e.preventDefault();
+      var n = /^ {1,4}/.exec(v.slice(ls));
+      if (n) { t.value = v.slice(0, ls) + v.slice(ls + n[0].length); t.selectionStart = t.selectionEnd = Math.max(ls, a - n[0].length); t.dispatchEvent(new Event("input", { bubbles: true })); }
+      return;
+    } else if (e.key === "Enter") {
+      var line = v.slice(ls, a), ind = /^ */.exec(line)[0];
+      ins = "\n" + ind + (/:\s*$/.test(line) ? "    " : "");
+    }
+    if (ins === null) { return; }
+    e.preventDefault();
+    t.value = v.slice(0, a) + ins + v.slice(b);
+    t.selectionStart = t.selectionEnd = a + ins.length;
+    t.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  document.addEventListener("click", function (e) {
+    if (!e.target.classList || !e.target.classList.contains("draft-r")) { return; }
+    var t = e.target.closest(".draft").querySelector("textarea");
+    if (t.value !== t.getAttribute("data-stub") && !window.confirm("Clear your answer and start from the stub?")) { return; }
+    t.value = t.getAttribute("data-stub");
+    delete drafts[t.getAttribute("data-dk")];
+    saveDrafts();
+    grow(t);
+  });
   // Visitor progress: which problems and variations this browser has ticked. Keys are
   // "<pattern>/<problem>" and "<pattern>/v/<variation>"; the landing page counts them.
   var KEY = "coding.progress.v1", done = {};
@@ -265,10 +321,10 @@ nav.side a.on { color: var(--accent); font-weight: var(--w-strong); }
   }
   function patHtml(p) {
     if (p.parts) { return topicHtml(p); }
-    return head(p, p.probs.length + " problems, " + p.vars.length + " variations") +
-      "<h4>Template</h4><pre><code>" + hl(p.tpl) + '</code></pre><p class="cx">' + esc(p.cx) + "</p>" +
-      "<h4>Classic problems</h4>" + p.probs.map(function (q) { return probHtml(p, q); }).join("") +
-      "<h4>Variations<span>the same idea, asked differently</span></h4>" + p.vars.map(function (v) { return varHtml(p, v); }).join("") +
+    return head(p, p.drill ? p.probs.length + " drills" : p.probs.length + " problems, " + p.vars.length + " variations") +
+      "<h4>" + (p.drill ? "The moves, learnt cold" : "Template") + "</h4><pre><code>" + hl(p.tpl) + '</code></pre><p class="cx">' + esc(p.cx) + "</p>" +
+      "<h4>" + (p.drill ? "Drills<span>timed, from a blank stub, no AI</span>" : "Classic problems") + "</h4>" + p.probs.map(function (q) { return probHtml(p, q); }).join("") +
+      (p.vars.length ? "<h4>Variations<span>the same idea, asked differently</span></h4>" + p.vars.map(function (v) { return varHtml(p, v); }).join("") : "") +
       sideBySide(p) + "</div></details>";
   }
   // An AI topic: the design, a figure, the whole thing, each component, what to remember, what they ask, variations.

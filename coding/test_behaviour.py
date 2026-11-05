@@ -587,6 +587,56 @@ def _timemap(ns):
 
 
 # ---- the Algorithms tab (D["algos"]) ----
+# The fluency drills: the classes and the path, which the examples cannot call directly.
+
+@check("fluency", "4.")
+def _(ns):
+    lk = ns["Lookup"]()
+    assert (lk.get("ana"), lk.calls) == ("ANA", 1)
+    assert (lk.get("ana"), lk.calls) == ("ANA", 1)
+    assert (lk.get("ben"), lk.calls) == ("BEN", 2)
+
+
+@check("fluency", "5.")
+def _(ns):
+    e = [("a", "b"), ("a", "c"), ("b", "d"), ("c", "d"), ("d", "e")]
+    p = ns["path"](e, "a", "e")
+    assert len(p) == 4 and p[0] == "a" and p[-1] == "e", p
+    assert all((x, y) in e or (y, x) in e for x, y in zip(p, p[1:])), p
+    assert ns["path"](e + [("x", "y")], "a", "y") == []
+
+
+@check("fluency-heap", "2.")
+def _(ns):
+    k = ns["KthLargest"](3, [4, 5, 8, 2])
+    assert [k.add(x) for x in (3, 5, 10, 9, 4)] == [4, 5, 5, 8, 8]
+
+
+@check("fluency-heap", "5.")
+def _(ns):
+    rnd = random.Random(7)
+    for _ in range(50):
+        m, xs = ns["MedianFinder"](), []
+        for _ in range(rnd.randint(1, 30)):
+            x = rnd.randint(-20, 20)
+            m.add(x)
+            xs.append(x)
+            assert m.median() == float(statistics.median(xs))
+
+
+@check("fluency-collections", "5.")
+def _(ns):
+    c = ns["LRU"](2)
+    c.put(1, 1)
+    c.put(2, 2)
+    assert c.get(1) == 1
+    c.put(3, 3)
+    assert c.get(2) == -1 and c.get(3) == 3
+    c.put(1, 10)
+    c.put(4, 4)
+    assert c.get(3) == -1 and c.get(1) == 10 and c.get(4) == 4
+
+
 #
 # Every block of every algorithm runs on its own (a "# needs" first line lets a variant use the block above it).
 # TreeNode and ListNode are the two classes the page assumes. Each algorithm must have a check below; a check

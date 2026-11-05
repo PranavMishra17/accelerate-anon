@@ -75,9 +75,9 @@
     return h ? '<div class="st">' + h + "</div>" : "";
   }
   // A problem or variation: its statement, or, without one, its task and its one example; then the extra parts.
-  function partsHtml(q, extra) {
+  function partsHtml(q, extra, noStub) {
     var rows = q.st ? [] : [q.task && ["Problem", "<p>" + md(q.task) + "</p>"], q.ex && ["Example", ioHtml(q.ex), "r-ex"]];
-    return stHtml(q.st, rows.filter(Boolean).concat(extra || []), q.st ? stubOf(q.sol || q.code) : "");
+    return stHtml(q.st, rows.filter(Boolean).concat(extra || []), q.st && !noStub ? stubOf(q.sol || q.code) : "");
   }
   // A shared figure from figures/figures.js, when the page loads the registry.
   function figHtml(key) {
@@ -271,6 +271,6 @@
     try { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { document.exitFullscreen(); } } catch (e) { /* not supported */ }
   }
 
-  var CS = window.CS = { data: D, byId: byId, esc: esc, md: md, hl: hl, exLine: exLine, ioHtml: ioHtml, stHtml: stHtml, partsHtml: partsHtml, hintRow: hintRow, solHtml: solHtml, figHtml: figHtml, cardHtml: cardHtml,
+  var CS = window.CS = { data: D, byId: byId, esc: esc, md: md, hl: hl, exLine: exLine, ioHtml: ioHtml, stHtml: stHtml, partsHtml: partsHtml, stubOf: stubOf, hintRow: hintRow, solHtml: solHtml, figHtml: figHtml, cardHtml: cardHtml,
     mountSheet: mountSheet, openPop: openPop, closePop: closePop, popOpen: popOpen, fullScreen: fullScreen, pageBase: "", onPopClose: null };
 }());
