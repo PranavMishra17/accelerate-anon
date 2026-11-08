@@ -819,6 +819,10 @@ dialog.st-view { width: min(1320px, 96vw); height: min(900px, 94vh); max-width: 
 .mm-d0 { background: var(--ink); color: var(--bg); border-color: var(--ink); font-size: var(--fs-md); font-weight: var(--w-strong); }
 .mm-d1 { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 40%, transparent); font-size: var(--fs-md); font-weight: var(--w-strong); }
 .mm-d3 { color: var(--soft); }
+.mm-sub { display: block; margin-top: .3em; padding-top: .3em; border-top: 1px dashed color-mix(in srgb, var(--muted) 35%, transparent); font-size: var(--fs-sm); font-weight: var(--w-regular); color: var(--soft); }
+.mm-d0 .mm-sub { color: var(--bg); }
+.mm-lines { margin: .35em 0 0; padding: .35em 0 0 1.1em; border-top: 1px dashed color-mix(in srgb, var(--muted) 35%, transparent); font-weight: var(--w-regular); color: var(--soft); }
+.mm-lines li { margin: .15em 0; }
 .mm-c { position: absolute; right: .55em; top: 50%; transform: translateY(-50%); min-width: 1.4em; padding: 0 .3em; border-radius: 999px; background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--ink); font-size: var(--fs-xs); font-weight: var(--w-strong); text-align: center; line-height: 1.5; }
 .mm-d0 .mm-c { background: color-mix(in srgb, var(--bg) 25%, transparent); color: var(--bg); }
 .mm-tools { position: absolute; right: var(--s3); top: var(--s3); display: flex; gap: var(--s2); }
@@ -3569,8 +3573,20 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     var wrap = el("div", "mm"), stage = el("div", "mm-stage"), svg = document.createElementNS(NS, "svg");
     svg.setAttribute("class", "mm-links"); stage.appendChild(svg); wrap.appendChild(stage);
     var tools = el("div", "mm-tools");
-    var view = { x: 24, y: 24, k: 1 }, root = { t: title, k: nodes, d: 0, open: true }, all = [];
-    (function walk(n, d) { n.d = d; n.open = d < 1; all.push(n); (n.k || []).forEach(function (c) { walk(c, d + 1); }); }(root, 0));
+    var view = { x: 24, y: 24, k: 1 }, all = [];
+    /* Compact: a node with a single child absorbs it as a second line (and adopts its children). */
+    function compact(src) {
+      var n = { t: src.t, sub: [], lines: [], k: (src.k || []).map(compact) };
+      while (n.k.length === 1) { var c = n.k[0]; n.sub.push(c.t); n.sub = n.sub.concat(c.sub); n.lines = n.lines.concat(c.lines); n.k = c.k; }
+      /* When every child is a final detail, the details live inside the node as short lines. */
+      if (n.k.length && n.k.every(function (c) { return !c.k.length && !c.sub.length && !c.lines.length; })) { n.lines = n.lines.concat(n.k.map(function (c) { return c.t; })); n.k = []; }
+      return n;
+    }
+    var root = compact({ t: title, k: nodes });
+    (function walk(n, d) { n.d = d; n.open = false; all.push(n); n.k.forEach(function (c) { walk(c, d + 1); }); }(root, 0));
+    /* Small branches (one or two children) open with their parent; three or more wait for a click. */
+    function cascade(n) { n.k.forEach(function (c) { if (c.k.length && c.k.length <= 2) { c.open = true; cascade(c); } }); }
+    root.open = true; cascade(root);
     function xOf(d) { var x = 0; for (var i = 0; i < d; i++) { x += W[i] + GX; } return x; }
     function apply() { stage.style.transform = "translate(" + view.x + "px," + view.y + "px) scale(" + view.k + ")"; }
     function render() {
@@ -3580,8 +3596,8 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
         vis.push(n);
         var kids = n.k || [], b = el("div", "mm-n mm-d" + Math.min(n.d, 3) + (kids.length ? " mm-p" : ""));
         b.style.width = W[Math.min(n.d, W.length - 1)] + "px";
-        b.innerHTML = inl(n.t) + (kids.length ? '<span class="mm-c">' + (n.open ? "&minus;" : kids.length) + "</span>" : "");
-        if (kids.length) { b.addEventListener("click", function () { var y0 = n.y; n.open = !n.open; render(); view.y -= (n.y - y0) * view.k; apply(); }); }
+        b.innerHTML = inl(n.t) + n.sub.map(function (x) { return '<span class="mm-sub">' + inl(x) + "</span>"; }).join("") + (n.lines.length ? '<ul class="mm-lines">' + n.lines.map(function (x) { return "<li>" + inl(x) + "</li>"; }).join("") + "</ul>" : "") + (kids.length ? '<span class="mm-c">' + (n.open ? "&minus;" : kids.length) + "</span>" : "");
+        if (kids.length) { b.addEventListener("click", function () { var y0 = n.y; n.open = !n.open; if (n.open) { cascade(n); } render(); view.y -= (n.y - y0) * view.k; apply(); }); }
         stage.appendChild(b); n.el = b;
         if (n.open) { kids.forEach(walk); }
       }(root));
@@ -3619,7 +3635,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     }
     tools.appendChild(cdBtn("Fit", fit));
     tools.appendChild(cdBtn("Open all", function () { all.forEach(function (n) { n.open = true; }); fit(); }));
-    tools.appendChild(cdBtn("Fold to chapters", function () { all.forEach(function (n) { n.open = n.d < 1; }); fit(); }));
+    tools.appendChild(cdBtn("Fold to chapters", function () { all.forEach(function (n) { n.open = false; }); root.open = true; cascade(root); fit(); }));
     var drag = null;
     wrap.addEventListener("pointerdown", function (e) {
       if (e.target.closest(".mm-n") || e.target.closest(".mm-tools")) { return; }
