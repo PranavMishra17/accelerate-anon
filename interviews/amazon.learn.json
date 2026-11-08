@@ -6,7 +6,7 @@
    "id": "ask",
    "title": "1. The questions they actually ask",
    "day": "Sun 8 Nov",
-   "blurb": "Every question reported firsthand from 2026 SDE I GenAI rounds, grouped into twelve answers, each from what you built: a number, a failure, a trade-off. Your strongest ground; most candidates answer these from coursework.",
+   "blurb": "Every question reported firsthand from 2026 SDE I GenAI rounds, grouped into thirteen answers, each from what you built: a number, a failure, a trade-off. Your strongest ground; most candidates answer these from coursework.",
    "topics": [
     {
      "id": "q-project",
@@ -433,6 +433,45 @@
       "Anything that runs the company down."
      ],
      "links": []
+    },
+    {
+     "id": "q-measure",
+     "title": "How should a team measure its use of AI? Are token leaderboards a good metric?",
+     "brief": "From the loop brief: some teams now rank engineers by tokens spent. They want to hear whether you can tell activity from value.",
+     "points": [
+      "Tokens measure activity, not value: a leaderboard rewards spending.",
+      "A real case where a lot of AI work did not move the outcome, and what did.",
+      "What to track instead: lead time to a proven fix, change failure rate, cost per completed outcome.",
+      "Latency as p50 and p90, with cost next to it."
+     ],
+     "figs": [],
+     "open": {
+      "q": "Are token leaderboards a good way to measure how a team uses AI?",
+      "probe": "That you measure outcomes, and can name the metrics you would use instead.",
+      "a": [
+       "Your answer in one line.",
+       "A case where activity was high and the outcome did not move.",
+       "The change that did move it, with its number.",
+       "The three metrics you would track."
+      ]
+     },
+     "say": [],
+     "avoid": [
+      "Praising AI use for its own sake.",
+      "Criticising the metric with no alternative."
+     ],
+     "links": [
+      {
+       "url": "#/learn/s-cost",
+       "label": "GenAI tab: cost, caching and routing",
+       "why": ""
+      },
+      {
+       "url": "#/learn/e-online",
+       "label": "GenAI tab: online evaluation",
+       "why": ""
+      }
+     ]
     }
    ]
   },
