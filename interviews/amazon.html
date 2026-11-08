@@ -802,6 +802,15 @@ dialog.st-view { width: min(1320px, 96vw); height: min(900px, 94vh); max-width: 
 .stv-p { margin: 0 0 var(--s2); font-size: var(--fs-md); line-height: 1.65; }
 .stv-ans strong, .stv-fa strong { font-weight: var(--w-strong); box-shadow: inset 0 -.38em color-mix(in srgb, var(--accent) 45%, transparent); }
 .stv-tx { margin-top: var(--s2); }
+.stv-mtools { display: flex; gap: var(--s2); margin: var(--s1) 0 var(--s2); }
+.stv-mind { font-size: var(--fs-sm); line-height: 1.55; margin-bottom: var(--s3); }
+.stv-mind ul { list-style: none; margin: 0; padding-left: var(--s4); border-left: 1px solid color-mix(in srgb, var(--bg) 25%, transparent); }
+.stv-mind > ul { padding-left: 0; border-left: 0; }
+.stv-mind li { margin: var(--s1) 0; }
+.stv-mind summary { cursor: pointer; }
+.stv-mind > ul > li > details > summary { font-size: var(--fs-md); font-weight: var(--w-strong); }
+.stv-gate { margin-top: var(--s2); }
+.stv-pts { margin: var(--s1) 0 var(--s2); padding-left: 1.4em; font-size: var(--fs-sm); line-height: 1.55; }
 .stv-ans .transcript { background: transparent; color: inherit; padding: 0; margin: var(--s2) 0 0; }
 .stv-f { border-bottom: var(--hair); padding: var(--s2) 0; }
 .stv-f summary { cursor: pointer; font-weight: var(--w-strong); }
@@ -898,10 +907,10 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
 <dialog id="convo" class="convo" aria-label="Mock conversation"></dialog>
 <script src="../figures/icons.js?v=f5a48822"></script>
 <script src="../figures/figures.js?v=0e01e061"></script>
-<script src="../private/figures.js?v=38a55080"></script>
+<script src="../private/figures.js?v=0bdbc163"></script>
 <script src="../figures/notes.js?v=82a7302c"></script>
 <script src="../private/notes.js?v=23086437"></script>
-<script src="../private/loops/amazon.js?v=e2b77197"></script>
+<script src="../private/loops/amazon.js?v=3b943fdb"></script>
 <script src="coding/amazon-daily-a.js?v=415d9715"></script>
 <script src="coding/amazon-daily-b.js?v=8adbda6c"></script>
 <script src="coding/amazon-lld-0.js?v=104350bd"></script>
@@ -3536,6 +3545,22 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   }
   /* o: { title, sub, label, count, row(i) -> html for the rail, draw(i, pane), start } */
   /* One story per screen: the question on top, the answer to say on the left, the follow-ups on the right. */
+  /* A story's mind map: nodes {t, k: [children]}; chapters open, deeper branches folded. */
+  function mindList(nodes, depth) {
+    var ul = el("ul", "");
+    nodes.forEach(function (n) {
+      var li = el("li", "");
+      if (n.k && n.k.length) {
+        var d = el("details", ""); d.open = depth === 1;
+        d.appendChild(el("summary", "", inl(n.t)));
+        d.appendChild(mindList(n.k, depth + 1));
+        li.appendChild(d);
+      } else { li.innerHTML = inl(n.t); }
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+
   function openStory(list, start, hubName) {
     var cur = start;
     convo.innerHTML = ""; convo.className = "convo st-view";
@@ -3558,13 +3583,34 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       shell.appendChild(head);
       var cols = el("div", "stv-cols");
       var L = el("div", "cv-col cv-say stv-ans"), R = el("div", "cv-col stv-fu");
+      if (s.mind && s.mind.length) {
+        /* The mind map: the whole story as a book (chapters, sub-chapters, branches), to recall before telling it. */
+        L.appendChild(el("div", "stv-k", "Mind map: recall everything first"));
+        var mind = el("div", "stv-mind"), mt = el("div", "stv-mtools");
+        var setAll = function (open) { Array.prototype.forEach.call(mind.querySelectorAll("details"), function (d) { d.open = open; }); };
+        mt.appendChild(cdBtn("Open all", function () { setAll(true); }));
+        mt.appendChild(cdBtn("Fold all", function () { setAll(false); }));
+        mind.appendChild(mindList(s.mind, 1));
+        L.appendChild(mt); L.appendChild(mind);
+      }
       if (s.star && s.star.length) {
-        L.appendChild(el("div", "stv-time", "Say it in " + esc(s.time || "about 3 minutes")));
-        if (s.remember && s.remember.length) { var ol = el("ol", "stv-rem"); s.remember.forEach(function (x) { ol.appendChild(el("li", "", inl(x))); }); L.appendChild(ol); }
+        var box = L;
+        if (s.mind && s.mind.length) {
+          L.appendChild(el("div", "stv-k", "Now tell it yourself, out loud, then open the answer"));
+          box = el("div", "stv-gate"); box.hidden = true;
+          var gb = cdBtn("Show the STAR answer", function () { box.hidden = !box.hidden; gb.textContent = box.hidden ? "Show the STAR answer" : "Hide the STAR answer"; });
+          L.appendChild(gb); L.appendChild(box);
+        }
+        box.appendChild(el("div", "stv-time", "Say it in " + esc(s.time || "about 3 minutes")));
+        if (!s.points && s.remember && s.remember.length) { var ol = el("ol", "stv-rem"); s.remember.forEach(function (x) { ol.appendChild(el("li", "", inl(x))); }); box.appendChild(ol); }
         s.star.forEach(function (p, j) {
-          if (!j || s.star[j - 1].k !== p.k) { L.appendChild(el("div", "stv-k", esc(p.k))); }
-          L.appendChild(el("p", "stv-p", inl(p.say)));
+          if (!j || s.star[j - 1].k !== p.k) { box.appendChild(el("div", "stv-k", esc(p.k))); }
+          box.appendChild(el("p", "stv-p", inl(p.say)));
         });
+        if (s.points && s.points.length) {
+          box.appendChild(el("div", "stv-k", "The STAR in pointers"));
+          var po = el("ol", "stv-pts"); s.points.forEach(function (x) { po.appendChild(el("li", "", inl(x))); }); box.appendChild(po);
+        }
       } else {
         L.appendChild(el("p", "stv-p", "Not written yet. In chat, say <code>capture " + esc(s.id) + "</code> and tell it the way you remember it."));
       }
