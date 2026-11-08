@@ -946,6 +946,38 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   main { padding: 0; }
   body { background: #fff; color: #000; }
 }
+/* My answers: a question you can type over, and the answer on the reversed sheet. */
+.mn-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4); margin: var(--s4) 0 var(--s5); }
+.mn-add { font: inherit; font-weight: var(--w-strong); background: var(--ink); color: var(--bg); border: 0; border-radius: var(--radius); padding: var(--s2) var(--s4); cursor: pointer; }
+.mn-add:hover { background: var(--accent); }
+.mn-status { margin-left: auto; color: var(--muted); font-size: var(--fs-sm); }
+.mn-list { max-width: var(--measure); }
+.mn-item { margin: 0 0 var(--s5); }
+.mn-head { display: flex; align-items: flex-start; gap: var(--s2); }
+.mn-tog { flex: none; width: 1.6em; height: 1.6em; margin-top: 0.1em; border: 0; background: none; color: var(--muted); cursor: pointer; border-radius: var(--radius-sm); }
+.mn-tog::before { content: ""; display: inline-block; width: 0.45em; height: 0.45em; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform 0.15s; }
+.mn-item.shut .mn-tog::before { transform: rotate(-45deg); }
+.mn-tog:hover { color: var(--ink); background: var(--sunken); }
+.mn-q { flex: 1; min-width: 0; font-size: var(--fs-lg); font-weight: var(--w-strong); line-height: var(--lh-tight); padding: var(--s1) 0; outline: none; border-bottom: 1px solid transparent; }
+.mn-q:focus { border-bottom-color: var(--rule); }
+.mn-tools { display: flex; gap: var(--s3); padding-top: var(--s2); opacity: 0; transition: opacity 0.15s; }
+.mn-item:hover .mn-tools, .mn-item:focus-within .mn-tools { opacity: 1; }
+.mn-tools .linkish:disabled { color: var(--muted); opacity: 0.5; cursor: default; text-decoration: none; }
+.mn-fmt { display: flex; gap: var(--s1); margin: var(--s2) 0 0 2.1em; visibility: hidden; }
+.mn-item:focus-within .mn-fmt { visibility: visible; }
+.mn-f { font: inherit; font-size: var(--fs-sm); background: var(--surface); color: var(--ink); border: var(--hair); border-radius: var(--radius-sm); padding: 0 var(--s2); cursor: pointer; }
+.mn-f:hover { background: var(--sunken); }
+.mn-a { margin: var(--s1) 0 0 2.1em; background: var(--ink); color: var(--bg); border-radius: var(--radius-lg); padding: var(--s4) var(--s5); min-height: 4.5em; line-height: var(--lh-body); outline: none; overflow-wrap: anywhere; }
+.mn-a:focus { box-shadow: 0 0 0 2px var(--accent); }
+.mn-a ul, .mn-a ol { margin: var(--s2) 0; padding-left: var(--s5); }
+.mn-a li { margin: var(--s1) 0; }
+.mn-a b { font-weight: var(--w-strong); }
+.mn-item.shut .mn-a, .mn-item.shut .mn-fmt { display: none; }
+[data-ph]:empty::before { content: attr(data-ph); color: var(--muted); pointer-events: none; }
+.mn-a[data-ph]:empty::before { color: color-mix(in srgb, var(--bg) 55%, transparent); }
+.mn-empty { color: var(--soft); }
+@media (max-width: 640px) { .mn-a, .mn-fmt { margin-left: 0; } .mn-tools { opacity: 1; } .mn-status { margin-left: 0; width: 100%; } }
+@media print { .mn-bar, .mn-tools, .mn-fmt, .mn-tog { display: none !important; } .mn-item.shut .mn-a { display: block; } .mn-a { background: none; color: inherit; border: var(--hair); margin-left: 0; } }
 </style>
 </head>
 <body>
@@ -1076,6 +1108,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   /* ---------------------------------------------------------------- tabs */
   var TABS = [
     { id: "overview", label: "Overview", show: function () { return true; } },
+    { id: "mine", label: "My answers", show: function () { return true; } },
     { id: "plan", label: "Plan", show: function () { return !!LOOP.plan; } },
     { id: "learn", label: (LOOP.learn && LOOP.learn.label) || "Learn", show: function () { return !!(LOOP.learn && LOOP.learn.modules); } },
     { id: "prep", label: "Prep", show: function () { return LOOP.scripts.length || LOOP.drills.length || LOOP.qa.length || LOOP.ask.length || (LOOP.ask3 || []).length; } },
@@ -1092,8 +1125,12 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     { id: "daily", label: "Daily two", show: function () { return !!(window.LOOP_DAILY && LOOP_DAILY.days.length); } },
     { id: "lp", label: "Leadership", show: function () { return !!LOOP.lp; } },
     { id: "card", label: "Loop day", show: function () { return !!LOOP.card; } }
-  ].filter(function (t) { return t.show() && (!LOOP.tabs || LOOP.tabs.indexOf(t.id) >= 0); })
-    .sort(function (a, b) { return LOOP.tabs ? LOOP.tabs.indexOf(a.id) - LOOP.tabs.indexOf(b.id) : 0; });
+  ].filter(function (t) { return t.show() && (t.id === "mine" || !LOOP.tabs || LOOP.tabs.indexOf(t.id) >= 0); })
+    .sort(function (a, b) {
+      /* "My answers" is on every loop page, right after Overview, whatever the module's TABS say. */
+      function at(t) { return t.id === "mine" ? LOOP.tabs.indexOf("overview") + 0.5 : LOOP.tabs.indexOf(t.id); }
+      return LOOP.tabs ? at(a) - at(b) : 0;
+    });
   var main = document.getElementById("main");
   var side = document.getElementById("side");
   var nav = [];            /* side links for the current tab: [anchor, label, sub] */
@@ -1105,6 +1142,156 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     host.appendChild(s);
     nav.push([id, title || kicker, !!sub]);
     return s;
+  }
+
+  /* ---------------------------------------------------------------- my answers
+     Your own answers to read before the call: a question and an answer sheet in reversed colours,
+     each editable, foldable and movable, with + to add one. Kept in this browser only
+     (localStorage, one list per loop page); nothing is written to the page or the repo. */
+  var MINE_KEY = "accelerate.answers." + LOOP.id;
+  var MINE_TAGS = { B: "b", STRONG: "b", I: "i", EM: "i", U: "u", UL: "ul", OL: "ol", LI: "li", BR: "br", P: "div", DIV: "div" };
+  function mineLoad() { try { var v = JSON.parse(localStorage.getItem(MINE_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function mineSave(list) { try { localStorage.setItem(MINE_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
+  /* Keep only bold, italic, underline, lists and line breaks: pasted text from Docs, mail or a page comes in clean. */
+  function mineClean(html) {
+    var src = document.createElement("template"); src.innerHTML = html || "";
+    var out = document.createElement("div");
+    (function walk(from, to) {
+      Array.prototype.forEach.call(from.childNodes, function (n) {
+        if (n.nodeType === 3) { to.appendChild(document.createTextNode(n.nodeValue)); return; }
+        if (n.nodeType !== 1 || /^(SCRIPT|STYLE|META|LINK|TITLE|HEAD)$/.test(n.tagName)) { return; }
+        var st = n.getAttribute("style") || "", tag = MINE_TAGS[n.tagName];
+        if (tag === "b" && /font-weight:\s*(normal|400)/.test(st)) { tag = null; }   /* Docs wraps a whole paste in <b style="font-weight:normal"> */
+        if (!tag && /font-weight:\s*(bold|[6-9]00)/.test(st)) { tag = "b"; }
+        else if (!tag && /font-style:\s*ital/.test(st)) { tag = "i"; }
+        if (!tag) { walk(n, to); return; }
+        var e = document.createElement(tag); to.appendChild(e);
+        if (tag !== "br") { walk(n, e); }
+      });
+    })(src.content, out);
+    return out.innerHTML;
+  }
+  /* Plain text for Copy all: **bold**, _italic_, "- " bullets, one line per line. */
+  function mineText(html) {
+    var box = document.createElement("div"); box.innerHTML = html || "";
+    function txt(n, ol) {
+      if (n.nodeType === 3) { return n.nodeValue; }
+      if (n.nodeType !== 1) { return ""; }
+      var t = n.tagName, inner = "";
+      Array.prototype.forEach.call(n.childNodes, function (c, i) { inner += txt(c, t === "OL" ? i + 1 : 0); });
+      if (t === "BR") { return "\n"; }
+      if (t === "B") { return "**" + inner + "**"; }
+      if (t === "I") { return "_" + inner + "_"; }
+      if (t === "LI") { return (ol ? ol + ". " : "- ") + inner.trim() + "\n"; }
+      if (t === "DIV" || t === "UL" || t === "OL") { return "\n" + inner + "\n"; }
+      return inner;
+    }
+    return txt(box).replace(/\n{3,}/g, "\n\n").trim();
+  }
+  function tabMine(host) {
+    var list = mineLoad();
+    var s = heading(host, "mine", "", "My answers");
+    s.appendChild(el("p", "lead", "Your own answers, to read before the call. They stay in this browser only. Ctrl+B for bold, Ctrl+I for italic, a line that starts with - or 1. becomes a list, and pasted text keeps its bold and bullets."));
+    var bar = el("div", "mn-bar"), wrap = el("div", "mn-list"), status = el("span", "mn-status", "");
+    s.appendChild(bar); s.appendChild(wrap);
+    try { document.execCommand("defaultParagraphSeparator", false, "div"); } catch (e) {}
+    function save() {
+      status.textContent = mineSave(list) ? "Saved in this browser" : "Not saved: browser storage is blocked or full. Use Copy all to keep a copy.";
+    }
+    function addOne(q) {
+      var x = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), q: q || "", html: "" };
+      list.push(x); save(); draw(); return x;
+    }
+    var add = el("button", "mn-add", "+ New question");
+    add.addEventListener("click", function () {
+      var x = addOne("");
+      var q = document.querySelector("#mn-" + x.id + " .mn-q"); if (q) { q.focus(); q.scrollIntoView({ block: "center" }); }
+    });
+    var fold = el("button", "linkish", "");
+    function foldLabel() { fold.textContent = list.length && list.every(function (x) { return x.shut; }) ? "Open all" : "Fold all"; }
+    fold.addEventListener("click", function () {
+      var shut = !list.every(function (x) { return x.shut; });
+      list.forEach(function (x) { x.shut = shut; }); save(); draw();
+    });
+    var copy = el("button", "linkish", "Copy all");
+    copy.addEventListener("click", function () {
+      var text = list.map(function (x) { return (x.q || "Untitled") + "\n\n" + mineText(x.html); }).join("\n\n\n");
+      try { navigator.clipboard.writeText(text).then(function () { status.textContent = "Copied " + list.length + " answers as text"; }); }
+      catch (e) { status.textContent = "Copy is not available in this browser"; }
+    });
+    [add, fold, copy, status].forEach(function (b) { bar.appendChild(b); });
+
+    function fmtBtn(label, title, cmd) {
+      var b = el("button", "mn-f", label); b.type = "button"; b.title = title;
+      b.addEventListener("mousedown", function (e) { e.preventDefault(); document.execCommand(cmd); });
+      return b;
+    }
+    function block(x, i) {
+      var b = el("div", "mn-item" + (x.shut ? " shut" : "")); b.id = "mn-" + x.id;
+      var head = el("div", "mn-head");
+      var tog = el("button", "mn-tog", ""); tog.type = "button";
+      tog.setAttribute("aria-expanded", x.shut ? "false" : "true"); tog.setAttribute("aria-label", x.shut ? "Open the answer" : "Fold the answer");
+      tog.addEventListener("click", function () { x.shut = !x.shut; save(); draw(); });
+      var q = el("div", "mn-q"); q.contentEditable = "true"; q.setAttribute("data-ph", "Write the question"); q.textContent = x.q || "";
+      q.addEventListener("input", function () { x.q = q.textContent; save(); });
+      q.addEventListener("paste", function (e) { e.preventDefault(); document.execCommand("insertText", false, (e.clipboardData.getData("text/plain") || "").replace(/\s+/g, " ")); });
+      q.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); if (x.shut) { x.shut = false; save(); draw(); } else { ans.focus(); } } });
+      var tools = el("span", "mn-tools");
+      function move(d) { var j = i + d; if (j < 0 || j >= list.length) { return; } list.splice(j, 0, list.splice(i, 1)[0]); save(); draw(); }
+      var up = el("button", "linkish", "Up"), dn = el("button", "linkish", "Down"), del = el("button", "linkish", "Delete");
+      up.disabled = i === 0; dn.disabled = i === list.length - 1;
+      up.addEventListener("click", function () { move(-1); });
+      dn.addEventListener("click", function () { move(1); });
+      del.addEventListener("click", function () {
+        if ((x.html || "").replace(/<[^>]+>/g, "").trim() && !window.confirm("Delete this question and its answer?")) { return; }
+        list.splice(i, 1); save(); draw();
+      });
+      [up, dn, del].forEach(function (t) { tools.appendChild(t); });
+      head.appendChild(tog); head.appendChild(q); head.appendChild(tools);
+      b.appendChild(head);
+      var fmt = el("div", "mn-fmt");
+      fmt.appendChild(fmtBtn("<b>B</b>", "Bold (Ctrl+B)", "bold"));
+      fmt.appendChild(fmtBtn("<i>I</i>", "Italic (Ctrl+I)", "italic"));
+      fmt.appendChild(fmtBtn("&bull; List", "Bulleted list", "insertUnorderedList"));
+      fmt.appendChild(fmtBtn("1. List", "Numbered list", "insertOrderedList"));
+      var ans = el("div", "mn-a"); ans.contentEditable = "true"; ans.setAttribute("data-ph", "Drop your answer here");
+      ans.innerHTML = mineClean(x.html);
+      ans.addEventListener("input", function () { x.html = ans.innerHTML; save(); });
+      ans.addEventListener("paste", function (e) {
+        e.preventDefault();
+        var h = e.clipboardData.getData("text/html"), t = e.clipboardData.getData("text/plain");
+        document.execCommand("insertHTML", false, h ? mineClean(h) : esc(t).replace(/\r?\n/g, "<br>"));
+      });
+      ans.addEventListener("keydown", function (e) {
+        if (e.key !== " ") { return; }
+        /* "- " or "* " at the start of a line starts a bulleted list; "1. " a numbered one. */
+        var sel = window.getSelection(), n = sel.anchorNode;
+        if (!n || n.nodeType !== 3 || (n.previousSibling && n.previousSibling.nodeName !== "BR")) { return; }
+        var before = n.nodeValue.slice(0, sel.anchorOffset);
+        var cmd = /^[-*]$/.test(before) ? "insertUnorderedList" : /^1\.$/.test(before) ? "insertOrderedList" : null;
+        if (!cmd) { return; }
+        e.preventDefault(); n.deleteData(0, before.length); document.execCommand(cmd);
+      });
+      b.appendChild(fmt); b.appendChild(ans);
+      return b;
+    }
+    function draw() {
+      wrap.innerHTML = "";
+      list.forEach(function (x, i) { wrap.appendChild(block(x, i)); });
+      if (!list.length) {
+        var empty = el("div", "mn-empty");
+        empty.appendChild(el("p", "", "No answers yet. Add a question with + New question, or start from this page's Prep questions."));
+        var seed = el("button", "linkish", "Add the Prep questions");
+        seed.addEventListener("click", function () {
+          LOOP.scripts.forEach(function (x) { if (x.id !== "logistics") { list.push({ id: x.id + "-" + Date.now().toString(36), q: x.title, html: "" }); } });
+          save(); draw();
+        });
+        if (LOOP.scripts.length) { empty.appendChild(seed); }
+        wrap.appendChild(empty);
+      }
+      foldLabel();
+    }
+    draw();
   }
 
   /* ---------------------------------------------------------------- overview
@@ -4087,6 +4274,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     try {
       main.innerHTML = ""; nav = []; document.body.removeAttribute("data-wide");
       if (r.tab === "overview") { tabOverview(main); }
+      else if (r.tab === "mine") { tabMine(main); }
       else if (r.tab === "prep") { tabPrep(main, r.anchor); }
       else if (r.tab === "rounds") { tabRounds(main); }
       else if (r.tab === "research") { tabResearch(main); }
