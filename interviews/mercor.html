@@ -351,6 +351,43 @@ details.pq > summary .rs-brief { max-width: var(--measure); }
 .pq-tests { font-size: var(--fs-sm); color: var(--soft); margin: 0 0 var(--s2); }
 .pq-tests b { color: var(--ink); font-weight: var(--w-strong); }
 details.pq.rev > summary .qt::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-right: var(--s2); vertical-align: middle; }
+/* prep: the list of rows, and one card per question with its follow-ups stepped on the right */
+.prows { list-style: none; margin: 0; padding: 0; }
+.prows li { border-bottom: var(--hair); }
+.prow { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s1) var(--s4); flex-wrap: wrap; padding: var(--s2) 0; text-decoration: none; }
+.prow .qm { margin: 0; white-space: nowrap; }
+.prow:hover .qt { color: var(--sec, var(--accent)); }
+.prow.rev .qt::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-right: var(--s2); vertical-align: middle; }
+.pc { margin: 0; padding-top: var(--s3); }
+main .block.pc { margin-bottom: 0; }
+.shell:has(.pc) { padding-bottom: var(--s4); }
+.pc-head h2 { margin: var(--s2) 0 var(--s1); }
+.pc-nav, .pc-acts { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--s1); }
+.pc-n { font-size: var(--fs-sm); color: var(--muted); margin-left: var(--s3); }
+.pc-acts .pc-n { margin: 0 var(--s3) 0 0; }
+.pc-off { font-size: var(--fs-sm); color: var(--muted); }
+.pc-cols { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s6); margin-top: var(--s4); }
+.pc-cols.one { grid-template-columns: minmax(0, 1fr); max-width: var(--measure); }
+.pc-ans .transcript { max-width: none; }
+.pc-fu { border-left: var(--hair); padding-left: var(--s5); }
+.stp-q { font-weight: var(--w-strong); margin: var(--s1) 0; }
+.stp-why { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--s3); }
+.stp-nav { display: flex; justify-content: space-between; gap: var(--s4); margin-top: var(--s4); }
+.stp-nav .linkish:disabled { color: var(--muted); cursor: default; }
+details.pc-more { border-top: var(--hair); margin-top: var(--s3); }
+details.pc-more > summary { cursor: pointer; padding: var(--s2) 0; font-size: var(--fs-sm); color: var(--muted); }
+#ask.bank-sec { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 var(--s6); }
+#ask.bank-sec > h2 { grid-column: 1 / -1; }
+#ask .c3 { margin: 0 0 var(--s3); }
+#ask .c3-t { margin-top: var(--s2); }
+#ask .c3-q { margin-bottom: var(--s2); padding-top: var(--s1); padding-bottom: var(--s1); }
+@media (max-width: 960px) { #ask.bank-sec { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 961px) and (min-height: 520px) {
+  .pc { display: flex; flex-direction: column; height: calc(100vh - var(--top) - var(--s4)); }
+  .pc-cols { flex: 1; min-height: 0; }
+  .pc-ans, .pc-fu { overflow-y: auto; min-height: 0; padding-bottom: var(--s4); }
+}
+@media (max-width: 960px) { .pc-cols { grid-template-columns: minmax(0, 1fr); } .pc-fu { border-left: 0; padding-left: 0; border-top: var(--hair); padding-top: var(--s3); } }
 @media (max-width: 760px) { .pq-cols, .pq-cols.has-code, .role-cols { grid-template-columns: minmax(0, 1fr); } .pq-cols .cv-col { padding: var(--s3); } }
 .c3 { margin: var(--s1) 0 var(--s6); }
 .c3-t { font-size: var(--fs-lg); margin: var(--s4) 0 var(--s1); }
@@ -1222,18 +1259,19 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   }
 
   /* ---------------------------------------------------------------- prep: the question bank
-     Sections in order: your intro and story, each bank of questions, logistics, practising
-     aloud, and the questions you ask. A question opens in place, one at a time: how to
-     understand it on the left, what to say on the dark sheet. */
+     #/prep is a short list: each bank's questions as rows, the timed drills, the questions to ask.
+     A row opens one card at #/prep/<id>: the answer on the left, the follow-ups stepped one at a
+     time on the right, previous and next across every question. */
   function scriptItem(x) {
     return { id: "say-" + x.id, q: x.title, short: x.short || x.title, tests: x.when, a: x.say, land: x.land, never: x.never, notes: x.notes,
-      probes: x.probes, swaps: x.swaps, variants: x.variants, vname: x.vname, parts: x.parts, learn: x.learn || (x.figs ? { figs: x.figs } : null),
+      probes: x.probes, swaps: x.swaps, variants: x.variants, vname: x.vname, parts: x.parts, chain: x.chain, learn: x.learn || (x.figs ? { figs: x.figs } : null),
       meta: x.length ? x.length.charAt(0).toUpperCase() + x.length.slice(1) + "." : "",
       drill: LOOP.drills.some(function (d) { return d.id === x.id; }) ? x.id : null };
   }
   function prepBanks() {
     /* Project stories about alfred_ internals live in the gitignored private/loops/<module>.js, never in the public module.
-       There, `variants[id]` adds versions to a public script and `scripts` adds whole items, each placed after its `after` id. */
+       There, `variants[id]` adds versions to a public script, `scripts` adds whole items, each placed after its `after` id,
+       and `chains[id]` (id without "say-") replaces an item's follow-ups. */
     var priv = window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id];
     var story = [];
     LOOP.scripts.filter(function (x) { return x.id !== "logistics"; }).forEach(function (x) {
@@ -1257,36 +1295,55 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     LOOP.qa.forEach(function (g, gi) { banks.push({ id: "qa-" + gi, title: g.group, blurb: g.blurb || "", items: g.items }); });
     var lg = LOOP.scripts.filter(function (x) { return x.id === "logistics"; });
     if (lg.length) { banks.push({ id: "logistics", title: "Logistics", blurb: "Your answers stay in chat; how to handle each is here.", items: lg.map(scriptItem) }); }
+    var pc = (priv && priv.chains) || {};
+    banks.forEach(function (b) {
+      b.items = b.items.map(function (x) {
+        var c = pc[x.id.replace(/^say-/, "")];
+        if (!c) { return x; }
+        var y = {}; for (var k in x) { y[k] = x[k]; } y.chain = c; return y;
+      });
+    });
     return banks;
   }
-  function prepBody(x) {
-    var c = el("div", "cv-cols pq-cols");
-    var left = el("div", "cv-col cv-said"), right = el("div", "pq-work");
-    c.appendChild(left); c.appendChild(right);
-    if (x.tests) { left.appendChild(el("p", "pq-tests", "<b>They are testing:</b> " + inl(x.tests))); }
-    panelSection(left, "What they may probe", panelList(x.probes));
-    (x.parts || []).forEach(function (p) {
-      left.appendChild(el("h4", "cv-part", inl(p.title)));
-      if (p.lead) { left.appendChild(el("p", "cv-part-lead", inl(p.lead))); }
-      panelList(p.items).forEach(function (u) { left.appendChild(u); });
-      if (p.code) { var pre = el("pre", "cv-code"); pre.appendChild(el("code", "", esc(p.code))); left.appendChild(pre); }
-      if (p.after) { panelList(p.after).forEach(function (u) { left.appendChild(u); }); }
-    });
-    panelSection(left, "The nuance", panelList(x.notes));
-    panelSection(left, "Avoid", panelList(x.never, "mk-bad"));
-    learn(left, x.learn || {});
-    var acts = el("p", "ex-links");
-    var rv = el("button", "linkish");
-    function label() { rv.innerHTML = isRevised(x.id) ? "Revised. Undo" : "Mark as revised"; }
-    label();
-    rv.addEventListener("click", function () {
-      setRevised(x.id, !isRevised(x.id)); label();
-      var d = document.getElementById(x.id);
-      if (d) { d.classList.toggle("rev", isRevised(x.id)); }
-    });
-    acts.appendChild(rv);
-    if (x.drill) { acts.appendChild(el("span", "sep")); acts.appendChild(el("a", "", "Practise it aloud, timed")).href = link("prep", "drill-" + x.drill); }
-    left.appendChild(acts);
+  /* The follow-ups an interviewer asks next, one at a time: a chain if the item has one, else its parts, else its probes. */
+  var CHAIN_SHOWN = {};
+  function chainSteps(x) {
+    if (x.chain && x.chain.length) { return x.chain; }
+    if (x.parts && x.parts.length) { return x.parts.map(function (p) { return { q: p.title, why: p.lead, list: p.items }; }); }
+    return (x.probes || []).map(function (p) { return { q: p }; });
+  }
+  function stepper(id, steps) {
+    var box = el("div", "stp"), i = 0;
+    function draw() {
+      box.innerHTML = "";
+      var s = steps[i], k = id + ":" + i;
+      box.appendChild(el("div", "lab", "Follow-up " + (i + 1) + " of " + steps.length));
+      box.appendChild(el("p", "stp-q", inl(s.q)));
+      if (s.why) { box.appendChild(el("p", "stp-why", inl(s.why))); }
+      var has = (s.say && s.say.length) || (s.list && s.list.length);
+      if (has && CHAIN_SHOWN[k]) {
+        if (s.say && s.say.length) { box.appendChild(transcript(s.say, "", "")); }
+        panelList(s.list).forEach(function (u) { box.appendChild(u); });
+      } else if (has) {
+        var sh = el("button", "btn", "Show the answer");
+        sh.addEventListener("click", function () { CHAIN_SHOWN[k] = true; draw(); });
+        box.appendChild(sh);
+      } else {
+        box.appendChild(el("p", "stp-why", "Yours to answer out loud."));
+      }
+      var nv = el("div", "stp-nav");
+      var pv = el("button", "linkish", "Previous probe"), nx = el("button", "linkish", "Next probe");
+      pv.disabled = i === 0; nx.disabled = i === steps.length - 1;
+      pv.addEventListener("click", function () { if (i > 0) { i--; draw(); } });
+      nx.addEventListener("click", function () { if (i < steps.length - 1) { i++; draw(); } });
+      nv.appendChild(pv); nv.appendChild(nx);
+      box.appendChild(nv);
+    }
+    if (steps.length) { draw(); }
+    return box;
+  }
+  function prepAnswer(x, host) {
+    if (x.tests) { host.appendChild(el("p", "pq-tests", "<b>They are testing:</b> " + inl(x.tests))); }
     if (x.variants && x.variants.length && x.a && x.a.length) {
       /* Versions of one answer: click between them; the one left selected is remembered as your pick. */
       var vs = [{ name: x.vname || "A", say: x.a, land: x.land }].concat(x.variants);
@@ -1294,7 +1351,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       try { picks = JSON.parse(localStorage.getItem("accelerate.picks") || "{}") || {}; } catch (e) { picks = {}; }
       var cur = Math.min(picks[pk] || 0, vs.length - 1);
       var bar = el("div", "vpick"), body = el("div", "");
-      right.appendChild(bar); right.appendChild(body);
+      host.appendChild(bar); host.appendChild(body);
       var drawV = function () {
         bar.innerHTML = "";
         bar.appendChild(el("span", "vp-lab", "Versions"));
@@ -1315,19 +1372,148 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       };
       drawV();
     } else {
-      if (x.land) { right.appendChild(el("p", "pq-land", "<b>Land on this.</b> " + inl(x.land))); }
-      if (x.a && x.a.length) { right.appendChild(transcript(x.a, "What you would say", "")); }
+      if (x.land) { host.appendChild(el("p", "pq-land", "<b>Land on this.</b> " + inl(x.land))); }
+      if (x.a && x.a.length) { host.appendChild(transcript(x.a, "What you would say", "")); }
     }
     if (x.swaps && x.swaps.length) {
-      right.appendChild(el("div", "lab", "Lines you can swap in"));
+      host.appendChild(el("div", "lab", "Lines you can swap in"));
       x.swaps.forEach(function (w) {
-        right.appendChild(el("div", "swap", '<span class="sw-when">' + inl(w.when) + '</span><span class="sw-line">' + emph(inl(w.line)) + "</span>"));
+        host.appendChild(el("div", "swap", '<span class="sw-when">' + inl(w.when) + '</span><span class="sw-line">' + emph(inl(w.line)) + "</span>"));
       });
     }
-    if (x.meta) { right.appendChild(el("p", "cv-meta", esc(x.meta))); }
-    if (!right.children.length) { right.remove(); c.classList.add("one"); }
-    if (left.querySelector(".cv-code")) { c.classList.add("has-code"); }
-    return c;
+    /* Notes, avoid lines, reading, and the parts when they are not already the follow-ups: one fold, shut. */
+    var f = el("details", "pc-more"), fb = el("div", "");
+    f.appendChild(el("summary", "", "Notes and what to avoid"));
+    if (x.chain && x.chain.length) {
+      (x.parts || []).forEach(function (p) {
+        fb.appendChild(el("h4", "cv-part", inl(p.title)));
+        if (p.lead) { fb.appendChild(el("p", "cv-part-lead", inl(p.lead))); }
+        panelList(p.items).forEach(function (u) { fb.appendChild(u); });
+        if (p.code) { var pre = el("pre", "cv-code"); pre.appendChild(el("code", "", esc(p.code))); fb.appendChild(pre); }
+      });
+    }
+    panelSection(fb, "The nuance", panelList(x.notes));
+    panelSection(fb, "Avoid", panelList(x.never, "mk-bad"));
+    learn(fb, x.learn || {});
+    if (fb.children.length) { f.appendChild(fb); host.appendChild(f); }
+  }
+  function prepCard(host, all, at) {
+    var x = all[at], prev = all[at - 1], next = all[at + 1];
+    document.body.setAttribute("data-wide", "1");
+    var s = el("section", "block pc"); s.id = x.id;
+    var hd = el("div", "pc-head");
+    var nv = el("p", "ex-links pc-nav");
+    var bk = el("a", "", "All questions"); bk.href = link("prep"); nv.appendChild(bk);
+    nv.appendChild(el("span", "sep"));
+    if (prev) { var pa = el("a", "", "Previous"); pa.href = link("prep", prev.id); pa.setAttribute("data-step", "prev"); pa.title = prev.q.replace(/<[^>]+>/g, ""); nv.appendChild(pa); }
+    else { nv.appendChild(el("span", "pc-off", "Previous")); }
+    nv.appendChild(el("span", "sep"));
+    if (next) { var na = el("a", "", "Next"); na.href = link("prep", next.id); na.setAttribute("data-step", "next"); na.title = next.q.replace(/<[^>]+>/g, ""); nv.appendChild(na); }
+    else { nv.appendChild(el("span", "pc-off", "Next")); }
+    nv.appendChild(el("span", "pc-n", (at + 1) + " of " + all.length));
+    hd.appendChild(nv);
+    hd.appendChild(el("h2", "", inl(x.q)));
+    var acts = el("p", "ex-links pc-acts");
+    if (x.meta) { acts.appendChild(el("span", "pc-n", esc(x.meta))); }
+    var rv = el("button", "linkish");
+    function label() { rv.innerHTML = isRevised(x.id) ? "Revised. Undo" : "Mark as revised"; }
+    label();
+    rv.addEventListener("click", function () { setRevised(x.id, !isRevised(x.id)); label(); });
+    acts.appendChild(rv);
+    if (x.drill) { acts.appendChild(el("span", "sep")); acts.appendChild(el("a", "", "Practise it aloud, timed")).href = link("prep", "drill-" + x.drill); }
+    hd.appendChild(acts);
+    s.appendChild(hd);
+    var cols = el("div", "pc-cols"), left = el("div", "pc-ans"), right = el("div", "pc-fu");
+    cols.appendChild(left); cols.appendChild(right); s.appendChild(cols);
+    prepAnswer(x, left);
+    var steps = chainSteps(x);
+    if (steps.length) { right.appendChild(stepper(x.id, steps)); } else { right.remove(); cols.classList.add("one"); }
+    host.appendChild(s);
+    /* One screen on a wide display: the card takes what is left of the window, and each column scrolls inside it. */
+    var wide = window.matchMedia("(min-width: 961px) and (min-height: 520px)");
+    function fit() {
+      if (!s.isConnected) { window.removeEventListener("resize", fit); if (ro) { ro.disconnect(); } return; }
+      if (!wide.matches) { s.style.height = ""; return; }
+      var top = s.getBoundingClientRect().top + window.scrollY;
+      var sh = s.parentElement.parentElement, below = sh.getBoundingClientRect().bottom + window.scrollY - (top + s.offsetHeight);
+      var h = Math.max(400, Math.round(window.innerHeight - top - below));
+      if (Math.abs(h - s.offsetHeight) > 1) { s.style.height = h + "px"; }
+    }
+    /* The site strip above the header arrives after the first draw, so fit again whenever the page above moves. */
+    var ro = window.ResizeObserver ? new ResizeObserver(fit) : null;
+    if (ro) { ro.observe(document.body); }
+    setTimeout(fit, 0); window.addEventListener("resize", fit);
+  }
+  function tabPrep(host, anchor) {
+    var banks = prepBanks(), all = [];
+    banks.forEach(function (b) { b.items.forEach(function (x) { all.push(x); }); });
+    var at = -1;
+    all.forEach(function (x, i) { if (x.id === anchor) { at = i; } });
+    if (at >= 0) { prepCard(host, all, at); return; }
+    if (anchor && anchor.indexOf("drill-") === 0 && LOOP.drills.length) {
+      var ds = heading(host, "practise", "", "Practise aloud");
+      var bk = el("p", "ex-links"); var ba = el("a", "", "All questions"); ba.href = link("prep"); bk.appendChild(ba); ds.appendChild(bk);
+      drills(ds);
+      return;
+    }
+    var s = heading(host, "prep", "", "Prep");
+    if (LOOP.prepLead) { s.appendChild(el("p", "lead", inl(LOOP.prepLead))); }
+    var f = el("input", "filter"); f.type = "search"; f.placeholder = "Search every question and answer";
+    s.appendChild(f);
+    var rows = [];
+    banks.forEach(function (b, bi) {
+      var sec = card(heading(host, b.id, "", b.title), bi, 0);
+      var ul = el("ul", "prows");
+      b.items.forEach(function (x) {
+        var li = el("li", ""), a = el("a", "prow" + (isRevised(x.id) ? " rev" : ""));
+        a.href = link("prep", x.id);
+        a.innerHTML = '<span class="qt">' + inl(x.q) + "</span>" + (x.meta ? '<span class="qm">' + inl(x.meta) + "</span>" : "");
+        li.appendChild(a); ul.appendChild(li);
+        rows.push({ li: li, sec: sec, text: (x.q + " " + (x.a || []).join(" ") + " " + (x.notes || []).join(" ") + " " + (x.probes || []).join(" ") + " " +
+          (x.swaps || []).map(function (w) { return w.when + " " + w.line; }).join(" ") + " " +
+          (x.chain || []).map(function (c) { return c.q + " " + (c.say || []).join(" "); }).join(" ") + " " +
+          (x.parts || []).map(function (p) { return p.title + " " + (p.items || []).join(" "); }).join(" ")).toLowerCase() });
+      });
+      sec.appendChild(ul);
+    });
+    f.addEventListener("input", function () {
+      var v = f.value.trim().toLowerCase(), shown = {};
+      rows.forEach(function (r) { var hit = !v || r.text.indexOf(v) >= 0; r.li.hidden = !hit; if (hit) { shown[r.sec.id] = true; } });
+      rows.forEach(function (r) { r.sec.hidden = !shown[r.sec.id]; });
+    });
+    if (LOOP.drills.length) {
+      var pr = card(heading(host, "practise", "", "Practise aloud"), banks.length, 0);
+      var dl = el("p", "ex-links");
+      dl.appendChild(document.createTextNode("Timed, out loud: "));
+      LOOP.drills.forEach(function (d, i) {
+        if (i) { dl.appendChild(el("span", "sep")); }
+        var a = el("a", "", esc(d.prompt)); a.href = link("prep", "drill-" + d.id); dl.appendChild(a);
+      });
+      pr.appendChild(dl);
+    }
+    if ((LOOP.ask3 || []).length || LOOP.ask.length) { askSection(card(heading(host, "ask", "", "Questions to ask"), banks.length + 1, 0)); }
+  }
+  /* Questions to ask, by who is across from you: the question and when to use it, nothing more. */
+  function askSection(a3) {
+    var three = LOOP.ask3 || [];
+    three.forEach(function (k) {
+      var sec = el("div", "c3"); sec.id = "ask-" + k.id;
+      sec.appendChild(el("h3", "c3-t", esc(k.title) + '<span class="c3-w">' + inl(k.when) + "</span>"));
+      if (k.id === "avoid" || k.id === "contribute") {
+        var ul = el("ul", "mk-list" + (k.id === "avoid" ? " mk-bad" : ""));
+        k.items.forEach(function (x) { ul.appendChild(el("li", "", inl(x.q) + (x.loop ? " " + inl(x.loop) : ""))); });
+        sec.appendChild(ul);
+      } else {
+        k.items.forEach(function (x) {
+          sec.appendChild(el("div", "c3-q",
+            '<span class="q">' + inl(x.q) + "</span>" +
+            (x.loop ? '<span class="lp"><b>When.</b> ' + inl(x.loop) + "</span>" : "") +
+            (x.why ? '<span class="wy">' + inl(x.why) + "</span>" : "")));
+        });
+      }
+      a3.appendChild(sec);
+    });
+    if (!three.length) { LOOP.ask.forEach(function (x) { a3.appendChild(el("div", "ask", '<span class="to">' + esc(x.to) + "</span><span>" + inl(x.q) + "</span>")); }); }
   }
   /* After a question opens (and the one above closes), scroll to it so the reader keeps their place. */
   function glideTo(node) {
@@ -1341,64 +1527,6 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     var h = sec.querySelector("h2");
     if (h && n) { h.appendChild(el("span", "bank-n", n + (n === 1 ? " question" : " questions"))); }
     return sec;
-  }
-  function prepItem(x) {
-    var d = el("details", "item pq" + (isRevised(x.id) ? " rev" : "")); d.id = x.id;
-    d.setAttribute("name", "prep");   /* native: opening one closes the others */
-    d.appendChild(el("summary", "", '<span class="qt">' + inl(x.q) + "</span>" + (x.tests || x.meta ? '<span class="qm">' + inl(x.meta || x.tests) + "</span>" : "")));
-    var drawn = false;
-    d.addEventListener("toggle", function () {
-      if (!d.open) { return; }
-      if (!drawn) { drawn = true; d.appendChild(prepBody(x)); }
-      glideTo(d);
-    });
-    return d;
-  }
-  function tabPrep(host) {
-    var banks = prepBanks();
-    var s = heading(host, "prep", "", "Prep");
-    if (LOOP.prepLead) { s.appendChild(el("p", "lead", inl(LOOP.prepLead))); }
-    var f = el("input", "filter"); f.type = "search"; f.placeholder = "Search every question and answer";
-    s.appendChild(f);
-    var all = [];
-    banks.forEach(function (b) {
-      var sec = card(heading(host, b.id, b.blurb ? b.blurb.replace(/<[^>]+>/g, "") : "", b.title), banks.indexOf(b), b.items.length);
-      b.items.forEach(function (x) {
-        var d = prepItem(x);
-        all.push({ d: d, sec: sec, text: (x.q + " " + (x.a || []).join(" ") + " " + (x.notes || []).join(" ") + " " + (x.probes || []).join(" ") + " " +
-          (x.swaps || []).map(function (w) { return w.when + " " + w.line; }).join(" ") + " " +
-          (x.parts || []).map(function (p) { return p.title + " " + (p.items || []).join(" "); }).join(" ")).toLowerCase() });
-        sec.appendChild(d);
-      });
-    });
-    f.addEventListener("input", function () {
-      var v = f.value.trim().toLowerCase(), shown = {};
-      all.forEach(function (r) { var hit = !v || r.text.indexOf(v) >= 0; r.d.hidden = !hit; if (hit) { shown[r.sec.id] = true; } });
-      all.forEach(function (r) { r.sec.hidden = !shown[r.sec.id]; });
-    });
-    if (LOOP.drills.length) { drills(card(heading(host, "practise", LOOP.drills.length + " timed questions, out loud", "Practise aloud"), banks.length, 0)); }
-    if ((LOOP.ask3 || []).length || LOOP.ask.length) { askSection(card(heading(host, "ask", "", "Questions to ask"), banks.length + 1, 0)); }
-  }
-  function askSection(a3) {
-    var three = LOOP.ask3 || [];
-    {
-      three.forEach(function (k) {
-        var sec = el("div", "c3"); sec.id = "ask-" + k.id;
-        sec.appendChild(el("h3", "c3-t", esc(k.title) + '<span class="c3-w">' + inl(k.when) + "</span>"));
-        sec.appendChild(el("p", "c3-why", inl(k.why)));
-        var how = el("ul", "mk-list c3-how");
-        k.how.forEach(function (t) { how.appendChild(el("li", "", inl(t))); });
-        sec.appendChild(how);
-        k.items.forEach(function (x) {
-          sec.appendChild(el("div", "c3-q",
-            '<span class="to">' + esc(x.to) + '</span><span class="q">' + inl(x.q) + "</span>" +
-            '<span class="lp"><b>Loop it in.</b> ' + inl(x.loop) + "</span>" +
-            '<span class="wy"><b>What it shows.</b> ' + inl(x.why) + "</span>"));
-        });
-        a3.appendChild(sec);
-      });
-      if (!three.length) { LOOP.ask.forEach(function (x) { a3.appendChild(el("div", "ask", '<span class="to">' + esc(x.to) + "</span><span>" + inl(x.q) + "</span>")); }); }
-    }
   }
 
   /* ---------------------------------------------------------------- research: the industry pass
@@ -1745,6 +1873,8 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
         return;
       }
       sayBox.appendChild(transcript(said, "What you would say", ""));
+      var ch = (pvs && pvs.chains && pvs.chains[t.id]) || t.chain;
+      if (ch && ch.length) { sayBox.appendChild(stepper("learn-" + t.id, ch)); }
       panelSection(sayBox, "Avoid", panelList(t.avoid, "mk-bad"));
     }
     if (t.open) {
@@ -3962,7 +4092,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     try {
       main.innerHTML = ""; nav = []; document.body.removeAttribute("data-wide");
       if (r.tab === "overview") { tabOverview(main); }
-      else if (r.tab === "prep") { tabPrep(main); }
+      else if (r.tab === "prep") { tabPrep(main, r.anchor); }
       else if (r.tab === "rounds") { tabRounds(main); }
       else if (r.tab === "research") { tabResearch(main); }
       else if (r.tab === "learn") { tabLearn(main, r.anchor); }
