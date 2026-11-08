@@ -1214,15 +1214,32 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
      understand it on the left, what to say on the dark sheet. */
   function scriptItem(x) {
     return { id: "say-" + x.id, q: x.title, short: x.short || x.title, tests: x.when, a: x.say, land: x.land, never: x.never, notes: x.notes,
-      probes: x.probes, swaps: x.swaps, variants: x.variants, vname: x.vname, learn: x.learn || (x.figs ? { figs: x.figs } : null),
+      probes: x.probes, swaps: x.swaps, variants: x.variants, vname: x.vname, parts: x.parts, learn: x.learn || (x.figs ? { figs: x.figs } : null),
       meta: x.length ? x.length.charAt(0).toUpperCase() + x.length.slice(1) + "." : "",
       drill: LOOP.drills.some(function (d) { return d.id === x.id; }) ? x.id : null };
   }
   function prepBanks() {
-    var banks = [], story = LOOP.scripts.filter(function (x) { return x.id !== "logistics"; });
-    if (story.length) { banks.push({ id: "story", title: "Your intro and story", blurb: LOOP.storyBlurb || "", items: story.map(scriptItem) }); }
-    /* Project stories about alfred_ internals live in the gitignored private/loops/<module>.js, never in the public module. */
+    /* Project stories about alfred_ internals live in the gitignored private/loops/<module>.js, never in the public module.
+       There, `variants[id]` adds versions to a public script and `scripts` adds whole items, each placed after its `after` id. */
     var priv = window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id];
+    var story = [];
+    LOOP.scripts.filter(function (x) { return x.id !== "logistics"; }).forEach(function (x) {
+      var pv = priv && priv.variants && priv.variants[x.id], pw = priv && priv.swaps && priv.swaps[x.id];
+      if (pv || pw) {
+        var y = {}; for (var k in x) { y[k] = x[k]; }
+        if (pv) { y.variants = (x.variants || []).concat(pv); y.vname = x.vname || "Yours"; }
+        if (pw) { y.swaps = (x.swaps || []).concat(pw); }
+        x = y;
+      }
+      story.push(x);
+    });
+    ((priv && priv.scripts) || []).forEach(function (x) {
+      var at = -1;
+      story.forEach(function (s, i) { if (s.id === x.after) { at = i; } });
+      if (at < 0) { story.push(x); } else { story.splice(at + 1, 0, x); }
+    });
+    var banks = [];
+    if (story.length) { banks.push({ id: "story", title: "Your intro and story", blurb: LOOP.storyBlurb || "", items: story.map(scriptItem) }); }
     if (priv && priv.projects && priv.projects.length) { banks.push({ id: "projects", title: "Your projects", blurb: priv.projectsBlurb || "", items: priv.projects.map(scriptItem) }); }
     LOOP.qa.forEach(function (g, gi) { banks.push({ id: "qa-" + gi, title: g.group, blurb: g.blurb || "", items: g.items }); });
     var lg = LOOP.scripts.filter(function (x) { return x.id === "logistics"; });
@@ -1686,7 +1703,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     if (t.links && t.links.length) {
       mat.appendChild(el("div", "lab", "In Accelerate"));
       var lk = el("ul", "reading");
-      t.links.forEach(function (q) { lk.appendChild(el("li", "", '<a href="' + esc(q.url) + '" target="_blank" rel="noopener">' + inl(q.label) + "</a>" + (q.why ? '<span class="why">' + inl(q.why) + "</span>" : ""))); });
+      t.links.forEach(function (q) { lk.appendChild(el("li", "", '<a href="' + esc(q.url) + '"' + (q.url.charAt(0) === "#" ? "" : ' target="_blank" rel="noopener"') + ">" + inl(q.label) + "</a>" + (q.why ? '<span class="why">' + inl(q.why) + "</span>" : ""))); });
       mat.appendChild(lk);
     }
 
@@ -1705,14 +1722,16 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     var sayBox = el("div", "ln-saybox");
     function drawSay() {
       sayBox.innerHTML = "";
-      if (!(t.say && t.say.length)) { return; }
+      /* A spoken answer from alfred_ internals lives in the private file, keyed by topic id. */
+      var pvs = window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id], said = (pvs && pvs.say && pvs.say[t.id]) || t.say;
+      if (!(said && said.length)) { return; }
       var s2 = learnStore();
       if (t.open && !(s2.tried[t.id] && s2.tried[t.id].shown)) {
         sayBox.appendChild(el("div", "lab", "What you would say"));
         sayBox.appendChild(el("p", "ln-note", "Shut until you have tried the question above."));
         return;
       }
-      sayBox.appendChild(transcript(t.say, "What you would say", ""));
+      sayBox.appendChild(transcript(said, "What you would say", ""));
       panelSection(sayBox, "Avoid", panelList(t.avoid, "mk-bad"));
     }
     if (t.open) {

@@ -37,7 +37,7 @@ LOOP = {
 
 SESSION_IDS = []
 
-PREP_LEAD = "Your intro, why Amazon, the AI-tools answer, last year, and the questions to ask. The GenAI round has its own tab; the stories are on Leadership."
+PREP_LEAD = "Your intro, why Amazon, why leave and its follow-ups (why now, why not scale it yourself, five layers deep), how to say hard things, and the questions to ask by who is across from you. The GenAI round has its own tab, question by question; the stories are on Leadership."
 
 SHOW_UP = [
     ("Think out loud from the first second.", "Silence is the most reported way to fail a coding round. Say the brute force, get a nod, then improve. A 2026 candidate froze for five minutes, coded the brute force, found the better answer late, and still got the offer."),
@@ -45,11 +45,11 @@ SHOW_UP = [
     ("Dry-run before you say done.", "There may be no way to run code. Walk a small example through your code out loud, then state time and space without being asked."),
     ("Expect three layers.", "After the solve: make it faster, change a constraint (a stream, duplicates, out-of-order times), then justify. That is where rounds are won."),
     ("Spend each story once.", "Interviewers compare notes. Keep the matrix on the Loop day card and cross off what you used."),
-    ("GenAI questions: answer from what you built.", "If a round turns to GenAI, it is talk, not code: hallucinations, RAG, how you check AI output, how you use the tools. Give the mechanism, then what you did and the number. The coding in that round is still LeetCode."),
+    ("GenAI questions: answer from what you built.", "As reported for SDE I, the round is practical: your project, how you check output, hallucinations, model choice, input security and personal data, agents, and when you chose not to use AI. Each answer: a number, a failure, a trade-off. The coding in that round is still LeetCode."),
     ("No AI, anywhere.", "Amazon's rule for the live rounds. If an interviewer asks how you use AI tools at work, answer it as a conversation; never open one."),
 ]
 
-STORY_BLURB = "Your intro, why Amazon, the AI-tools question, last year, and logistics."
+STORY_BLURB = "Your intro, why Amazon, why leave and the follow-ups behind it, last year, and logistics. Your own words are version A; the other versions follow the loop brief."
 
 # Every outside link opened 2026-10-21 and 2026-10-29. Medium and LeetCode refuse scripted requests; the 2026 reports below
 # were read through a text reader on 29 Oct and their round breakdowns checked against what they say.
@@ -157,15 +157,6 @@ SCRIPTS = [
                   "Since then I've owned a production AI system end to end, and I'd like to bring that here."]}],
      "land": "Scale and a hard engineering bar, and a way of working you already share.",
      "notes": ["Written in your voice; INTRO.md has no Amazon line. Make it yours. Version C only if last year comes up naturally."]},
-    {"id": "ai-tools", "title": "How do you use AI tools in your development work?", "length": "about 60 seconds",
-     "when": "Reported in some 2026 hiring-manager rounds. A conversation; never open a tool.",
-     "probes": ["Where do they fail?", "How do you check what they write?", "Would you trust AI-written code in production?"],
-     "say": [
-         "Every day, but as a tool I check, not an author I trust. I use coding agents for the parts that are well specified: a migration, a test scaffold, a refactor I've already decided on. I read every diff, and nothing ships without tests or a real run against production-shaped data.",
-         "Where they fail is the same place my own agent at work fails: they're confident about things they never checked. They'll say a function exists or a test passed when it didn't. So I ask for evidence, the command and its output, and I keep the design decisions myself.",
-         "Building an AI product also taught me to measure it like a product: an eval set of real cases before a change ships, not a vibe check."],
-     "land": "AI speeds up the well-specified parts; the design and the checking stay yours.",
-     "notes": ["Your own practice; adjust to what you actually do. Never offer to use AI in the loop."]},
     {"id": "last-year", "title": "You interviewed with us last year. What happened?", "length": "about 20 seconds",
      "when": "Possible if an interviewer sees your history.",
      "probes": ["What did you learn from it?"],
@@ -194,7 +185,85 @@ SCRIPTS = [
      "notes": ["Location, start date, work authorization: your answers from chat."]},
 ]
 
-QA = []  # the GenAI round lives on the GenAI tab: interviews/amazon.learn.json
+QA = [
+    {"group": "Hard moments: how to say them",
+     "blurb": "The professional language for conflict, disagreement and failure, and the drill every answer must survive. Your stories carry the content; this is how they sound.",
+     "items": [
+         {"id": "hm-layers", "q": "Five layers: the drill for every answer", "short": "Five layers",
+          "tests": "Whether it really happened to you. The first answer is the setup; the follow-ups audit it, and rehearsed answers collapse around the third.",
+          "probes": ["What was your specific role?", "What was the exact metric?", "What did you do next?", "What would you do differently?", "Who disagreed?"],
+          "parts": [
+              {"title": "The five layers", "items": [
+                  "1. The core answer: say it, then stop and let them probe.",
+                  "2. Your specific part: I, not we. Name who owned the parts that were not yours.",
+                  "3. The data: the number, and how you knew. No number? Say so plainly, then what changed and how you saw it.",
+                  "4. Differently: a real alternative with a real cost. 'In hindsight I would have done X two weeks earlier; I waited because Y, and it cost Z.' Never 'nothing', never a humble brag.",
+                  "5. The lesson, and what it makes you want next: a habit the team gets from you on day one."]},
+              {"title": "Each follow-up, the same loop", "items": [
+                  "Restate the constraint, state the decision, the action, then the outcome you observed. Treat it like debugging: clarify, then facts.",
+                  "'I don't remember the exact number, but it was roughly half' beats a guess. Never invent a metric."]}],
+          "notes": ["Three layers deep on any decision is the firsthand test (a candidate through 14 Amazon rounds); five is that test with margin.",
+                    "Run it on every story on Leadership and on the leave answer: Prep has the leave answer worked five layers deep."],
+          "never": ["A layer answered with 'we', a generality, or no name, number, date or decision."]},
+         {"id": "hm-conflict", "q": "A conflict with a teammate or your manager", "short": "Conflict",
+          "tests": "Level-headedness: that you can state the other side fairly, disagree with evidence, and end with both a business result and a relationship result.",
+          "probes": ["What exactly did you say?", "How did they take it?", "What is the relationship like now?"],
+          "parts": [
+              {"title": "The lines, as sentence starters", "items": [
+                  "Slow it down: 'I want to make sure I understand your concern before we decide.'",
+                  "Acknowledge first: 'I understood why you said that: (their reason, fairly). My concern is different: (yours, with the data).'",
+                  "Separate facts from assumptions: 'Can we align on what happened and what we each expected?'",
+                  "Redirect to the shared goal: 'We both want what is best for the product. The options I see are X or Y; I would propose X because (the customer reason).'",
+                  "Move forward: 'What outcome would feel fair to you, and what constraints should we consider?'",
+                  "Confirm: 'So you will handle X by Thursday, and I will deliver Y by Friday.'",
+                  "Own your part: 'My part in it was... here is what I changed.'"]},
+              {"title": "The shape (CALM)", "items": [
+                  "Clarify the issue, Acknowledge the impact, Listen for their interests and constraints, Move to an agreement with next steps."]}],
+          "learn": {"read": [{"url": "#/lp/story-onegate", "label": "Your story: Pushing back on the founder", "why": "On Leadership."}, {"url": "#/lp/story-teammed", "label": "Your story: TeamMedAgents from scratch", "why": "On Leadership."}]},
+          "notes": ["Tell one of your two stories; keep the other for a second conflict question."],
+          "never": ["'I never have conflict.'", "Judgments about the person ('stubborn', 'lazy'); describe what was observable: 'we had different assumptions about the deadline'.",
+                    "'It wasn't my fault.'"]},
+         {"id": "hm-commit", "q": "Disagree and commit: both halves are scored", "short": "Disagree and commit",
+          "tests": "The first half (you challenged, with evidence, in the room) and the second (once decided, you committed and made it work). Most candidates prepare only the first.",
+          "probes": ["What exactly did you say, and to whom?", "What did you do after you were overruled?", "Did your team know you disagreed?", "Were you right?", "What would make you reopen a decision?"],
+          "parts": [
+              {"title": "How to do it", "items": [
+                  "Disagree in the meeting where the decision is made, not in a side channel afterwards.",
+                  "Bring the reason and the evidence: 'this doubles our write load, here is the benchmark', not 'I think this is wrong'.",
+                  "Disagree with the decision, not the person.",
+                  "Know when to stop: only new information reopens a decision, not more time or more frustration.",
+                  "Commit visibly: tell your team the decision and its reasons as if they were yours.",
+                  "Keep the receipt without using it: if it goes badly, help fix it; never 'I told you so'."]},
+              {"title": "The line to borrow", "items": [
+                  "'I said I still thought the risk was high, but their reason was better than mine, and that I was in.' Then say what you owned to make it work."]}],
+          "learn": {"read": [{"url": "#/lp/story-onegate", "label": "Your story: Pushing back on the founder", "why": "On Leadership."}, {"url": "#/lp/story-teammed", "label": "Your story: TeamMedAgents from scratch", "why": "On Leadership."}]},
+          "never": ["A story where you only stood your ground and won.", "Committing in words and slow-walking it."]},
+         {"id": "hm-failure", "q": "Tell me about a time you failed", "short": "Failure",
+          "tests": "Ownership, Learn and Be Curious: a material consequence, your own decision or assumption as the cause, and an observable change that stuck. Asked in almost every loop.",
+          "probes": ["What was your part in it?", "What did it cost, in numbers?", "How do you know the change stuck?"],
+          "parts": [
+              {"title": "STAR-L, with the time split", "items": [
+                  "Situation 15%: briefly.", "Task 10%: what was yours.",
+                  "Action 40%: the specific decision, assumption or omission of yours that caused it. This is the bulk.",
+                  "Result 15%: the consequence, with a number.",
+                  "Learning 20%: the mechanism you put in place, evidence it stuck, and how it applies to this role."]},
+              {"title": "The language", "items": [
+                  "First person: 'I made the decision', 'I missed the signal', 'I didn't escalate when I should have'.",
+                  "The learning is a mechanism, not 'I became more careful': a check, a test, a preview, a harness."]}],
+          "learn": {"read": [{"url": "#/lp/story-mockflow", "label": "Your story: MockFlow-AI", "why": "On Leadership."}, {"url": "#/lp/story-funnel", "label": "Your story: Email rules funnel", "why": "On Leadership."}]},
+          "notes": ["For the email rules version, the failure is the pre-pass you sized on your own team's mail."],
+          "never": ["A fake failure ('I worked too hard').", "A failure from the last three months: the lesson is not stable yet.", "'The team underperformed.'", "Blaming another team or the tools."]},
+         {"id": "hm-reuse", "q": "One project, two rounds", "short": "Story reuse",
+          "tests": "Notes are shared and compared at the debrief: the same project can serve two rounds, the identical telling cannot.",
+          "parts": [
+              {"title": "The rule", "items": [
+                  "Same project, different angle: different beats, different numbers, a different principle.",
+                  "In a Leadership round: what you decided, what you owned, the number you checked.",
+                  "In the GenAI round: the architecture choice, the failure modes, the eval and its threshold.",
+                  "If your best story for a question was spent in another round, use your second best and keep the first where it fits most."]}],
+          "notes": ["Your projects, each tagged for both rounds, are under Your projects below."]},
+     ]},
+]  # the GenAI round lives on the GenAI tab: interviews/amazon.learn.json
 TABS = ["overview", "plan", "daily", "learn", "lld", "lp", "prep", "rounds", "card"]
 
 ASK_3C = [
@@ -207,62 +276,71 @@ ASK_3C = [
           "loop": "Every coding problem.", "why": "Three facts that change the solution."},
          {"to": "Interviewer", "q": "Who uses this system, and what are the two or three things they must be able to do? What can I leave out for now?",
           "loop": "The design round, first minute.", "why": "Eliciting requirements is the test when none are given."}]},
-    {"id": "collab", "title": "At the end of a round: about the work", "when": "When they ask for your questions. One.",
-     "why": "Shows you want the job, not only the offer.",
-     "how": ["Ask one, listen, and say in a sentence what you would bring."],
+    {"id": "engineer", "title": "An engineer or senior engineer (the coding rounds)", "when": "When they ask for your questions. Two or three; never one you asked in an earlier round.",
+     "why": "A peer. Interviewers keep scoring while you ask, and they compare notes: ask about the real work, on-call and who decides.",
+     "how": ["Ask one, listen, ask one follow-up on what they said, then say in a sentence what you would bring."],
      "items": [
-         {"to": "Any interviewer", "q": "What's a problem your team is working on right now that you find interesting?",
-          "loop": "Coding rounds.", "why": "Engineers like talking about their work."},
-         {"to": "Hiring manager", "q": "What does a new engineer on your team own in the first six months?",
-          "loop": "If the manager runs a round.", "why": "The real job."},
-         {"to": "Any interviewer", "q": "How do you decide when something is ready to ship on your team: what has to be true?",
-          "loop": "The design round.", "why": "Insist on the Highest Standards, asked back."}]},
-    {"id": "coding-sde", "title": "For a coding round (an SDE)", "when": "When they ask for your questions at the end of the round. One or two.",
-     "why": "A peer engineer. Ask about the work and how the team writes software.",
-     "how": ["Ask one, listen, and say in a sentence what you would bring."],
-     "items": [
+         {"to": "An SDE", "q": "What's the last thing that paged you, and what happened after?",
+          "loop": "First choice.", "why": "Real on-call load, and whether incidents lead to fixes. Follow-up: how are failures of a probabilistic system paged, compared with deterministic ones?"},
          {"to": "An SDE", "q": "To get to know the product, what are some recent pain points you've solved, and some that are ongoing work?",
-          "loop": "First choice.", "why": "Your question from INTRO.md, reworded only for spelling."},
-         {"to": "An SDE", "q": "What does a normal week look like for you: how much is building, reviewing, and being on call?",
-          "loop": "Second.", "why": "Makes the job concrete."},
-         {"to": "An SDE", "q": "What did you learn in your first three months that you wish you had known on day one?",
-          "loop": "If time.", "why": "A friendly question that gets honest advice."},
-         {"to": "An SDE", "q": "How does your team decide something is ready to ship, and who can say no?",
-          "loop": "If time.", "why": "Insist on the Highest Standards, asked back."}]},
-    {"id": "coding-senior", "title": "For a coding round (a senior SDE or manager)", "when": "When they ask for your questions. One or two.",
-     "why": "Someone who has seen many engineers grow. Ask about growth, decisions and how the team is run.",
-     "how": ["Ask one, listen, ask one follow-up on what they said."],
+          "loop": "Second.", "why": "Your question from INTRO.md."},
+         {"to": "An SDE", "q": "Walk me through how a technical decision got made recently: who had the pen?",
+          "loop": "If time.", "why": "Ownership and decision authority at your level."},
+         {"to": "An SDE", "q": "How much of a typical week is building, and how much is fixing things that break?",
+          "loop": "If time.", "why": "Speed, quality and operational excellence, made concrete."},
+         {"to": "A senior SDE", "q": "Where does tech debt actually get paid down here: is there a mechanism, or heroics?",
+          "loop": "Pick one of these three.", "why": "Or: 'What's a decision the team got wrong lately, and what changed after?' or 'Who reviews the hard designs, and what does pushback look like?'"}]},
+    {"id": "manager", "title": "The hiring manager", "when": "When they ask for your questions. Two or three.",
+     "why": "The person you would work for. Ask about the job, growth and risk; the 30-60-90 question is the strongest, so use it here and nowhere else.",
+     "how": ["Ask one, listen, follow up on the specifics."],
      "items": [
-         {"to": "A senior SDE or manager", "q": "What does a new engineer on your team own in the first six months?",
-          "loop": "First choice.", "why": "The real job."},
-         {"to": "A senior SDE or manager", "q": "What would a strong first 90 days look like for someone joining your team now?",
-          "loop": "Second.", "why": "Your INTRO.md question."},
-         {"to": "A senior SDE or manager", "q": "How do technical decisions get made on your team: who proposes, who pushes back, and how does a disagreement end?",
-          "loop": "If time.", "why": "Ownership and disagreement, from their side."},
-         {"to": "A senior SDE or manager", "q": "How is the team structured, and what are the next steps and timeline from here?",
+         {"to": "Hiring manager", "q": "What does success look like for this role in the first six months, concretely at 30, 60 and 90 days?",
+          "loop": "First choice; once in the whole loop.", "why": "Called the most consistently effective question in the guides."},
+         {"to": "Hiring manager", "q": "Tell me about the last person you promoted: what tipped it?",
+          "loop": "Second.", "why": "Growth from SDE I to II. Follow-up: 'Is that the kind of ownership this role has on day one, or does it get earned?'"},
+         {"to": "Hiring manager", "q": "What's the team's biggest risk this year, and what part of it would land on me?",
+          "loop": "If time.", "why": "Ownership, asked forward."},
+         {"to": "Hiring manager", "q": "What would make you concerned about a new hire in this role in the first six months?",
+          "loop": "Closer, only if the round has been candid.", "why": "Surfaces the failure modes the manager has actually seen."},
+         {"to": "Hiring manager", "q": "How is the team structured, and what are the next steps and timeline from here?",
           "loop": "Last.", "why": "Your INTRO.md question, whole."}]},
-    {"id": "ood", "title": "For the object-oriented design round", "when": "After the design. One.",
+    {"id": "bar-raiser", "title": "The Bar Raiser", "when": "After the stories. One, maybe two.",
+     "why": "A trained interviewer from another team who has seen many loops. Questions about the principles in practice and about growth read as ownership, not flattery.",
+     "how": ["Tailor it to something said in the round. Keep it short; do not ask how you did."],
+     "items": [
+         {"to": "The Bar Raiser", "q": "Which leadership principle does your team lean on the most, and why?",
+          "loop": "First choice.", "why": "A former five-year Bar Raiser's recommendation: shows you understand the principles beyond memorising them."},
+         {"to": "The Bar Raiser", "q": "Which of the principles do you see new engineers struggle with most once they're on the job?",
+          "loop": "Second.", "why": "Takes the principles as working rules."},
+         {"to": "The Bar Raiser", "q": "What separates the engineers who grow fastest here from those who plateau?",
+          "loop": "If time.", "why": "Growth, asked of someone who has judged it many times."}]},
+    {"id": "genai", "title": "The GenAI round, or a design specialist", "when": "Only if the interviewer is a specialist; asking a peer about strategy wastes it. One or two.",
+     "why": "Lets your agent and evaluation background land as a peer conversation.",
+     "how": ["Ask one; when they answer, say in a sentence how you drew the same line."],
+     "items": [
+         {"to": "The GenAI or design interviewer", "q": "Where does GenAI actually fit in your architecture, and where have you deliberately kept a deterministic system instead: what made you draw that line?",
+          "loop": "First choice.", "why": "Your best specialist question: it is the line you draw every day at alfred_."},
+         {"to": "The GenAI or design interviewer", "q": "How do you know an AI feature is working in production: which signal do you alarm on first?",
+          "loop": "Second.", "why": "Keep it to one metrics question."},
+         {"to": "The GenAI or design interviewer", "q": "When you design for this team's scale, which trade-off do you argue about most: cost against latency, or availability against consistency?",
+          "loop": "If time.", "why": "Ask for a recent example."}]},
+    {"id": "ood", "title": "The object-oriented design round", "when": "After the design. One.",
      "why": "They have watched you shape classes and rules. Ask what makes a design last on their team.",
      "how": ["Ask one, listen, then say in a sentence how you would have changed your design for it."],
      "items": [
          {"to": "The design interviewer", "q": "What is a design on your team that held up well as requirements changed, and what made it hold?",
           "loop": "First choice.", "why": "Shows you judge a design by how it changes."},
-         {"to": "The design interviewer", "q": "How do you review a design before anyone writes code, and who has to sign off?",
-          "loop": "Second.", "why": "How engineering decisions get made."},
-         {"to": "The design interviewer", "q": "How do you decide when something is ready to ship on your team: what has to be true?",
-          "loop": "If time.", "why": "Insist on the Highest Standards, asked back."}]},
-    {"id": "bar-raiser", "title": "For the Bar Raiser (behavioural)", "when": "When they ask for your questions, after the stories. One, maybe two.",
-     "why": "A trained interviewer from another team who has seen many loops. Questions about the culture and about growth read as ownership, not flattery.",
-     "how": ["Keep it short. Ask one, listen, thank them. Do not ask how you did."],
+         {"to": "The design interviewer", "q": "If you redesigned the system you work on today, what would you change first, and what's stopping the team?",
+          "loop": "Second.", "why": "Honest architecture talk, and where the work is."}]},
+    {"id": "avoid", "title": "Questions to avoid", "when": "Every round.",
+     "why": "Saying nothing is the worst response; the wrong question is the second worst.",
+     "how": ["Two or three per round, never more than about five, never over time. Never the same question in two rounds."],
      "items": [
-         {"to": "The Bar Raiser", "q": "Which of the leadership principles do you see people struggle with most once they are on the job, and why?",
-          "loop": "First choice.", "why": "Shows you take the principles as working rules."},
-         {"to": "The Bar Raiser", "q": "What separates the engineers who grow fastest at Amazon from those who plateau?",
-          "loop": "Second.", "why": "Growth, asked of someone who has judged it many times."},
-         {"to": "The Bar Raiser", "q": "What would a strong first 90 days look like for someone joining a team now?",
-          "loop": "If time.", "why": "Your INTRO.md question, shortened for the company."},
-         {"to": "The Bar Raiser", "q": "What are the next steps and the timeline from here?",
-          "loop": "Last.", "why": "Your INTRO.md question."}]},
+         {"to": "Never", "q": "Salary, compensation or equity", "loop": "In a loop round.", "why": "That conversation belongs with the recruiter."},
+         {"to": "Never", "q": "What does the team do? What's the culture like? What does a typical day look like?", "loop": "Anywhere.",
+          "why": "Answered in the posting, or invites a scripted reply and reads as passive."},
+         {"to": "Never", "q": "Is there a lot of bureaucracy? Is on-call bad?", "loop": "Anywhere.",
+          "why": "Grievance-shaped. Ask the falsifiable version: 'Tell me about the last time a small change took surprisingly long.'"}]},
     {"id": "contribute", "title": "Closing", "when": "The last minute of each round.",
      "why": "A clean exit; each round is scored on its own.",
      "how": ["Thank them, one line on what you enjoyed, then let them close. Then reset before the next round: water, stand up, breathe."],
@@ -276,7 +354,7 @@ TRAPS = []
 DRILLS = [
     {"id": "intro", "prompt": "Tell me about yourself.", "target": "45 seconds", "seconds": 45, "ref": "#say-intro"},
     {"id": "why-amazon", "prompt": "Why Amazon?", "target": "30 seconds", "seconds": 30, "ref": "#say-why-amazon"},
-    {"id": "ai-tools", "prompt": "How do you use AI tools in your development work?", "target": "60 seconds", "seconds": 60, "ref": "#say-ai-tools"},
+    {"id": "leave", "prompt": "Why are you leaving alfred_?", "target": "45 seconds", "seconds": 45, "ref": "#say-leave"},
 ]
 
 # ------------------------------------------------------------------ Leadership

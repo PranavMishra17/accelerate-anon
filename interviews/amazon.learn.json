@@ -1,10 +1,444 @@
 {
  "label": "GenAI",
- "lead": "<b>Your strongest round, brushed up in order.</b> Seven modules from how an LLM works to production, then your two tool-use stories. Each topic: learn it (with what you built on it and where it lives elsewhere in Accelerate), check yourself, explain the interview question aloud, then compare with what you would say. The plan gives you one module a day. The squares show where you stand.",
+ "lead": "<b>The round as reported is your project and your judgment, not theory.</b> Module 1 is every question 2026 SDE I candidates were actually asked, each answered from what you built, with a number, a failure and a trade-off. The concepts behind them follow as modules 2 to 8, and the last module is the upside if an interviewer pushes deeper. The round often ends with one plain LeetCode problem: keep the daily two going.",
  "modules": [
   {
+   "id": "ask",
+   "title": "1. The questions they actually ask",
+   "day": "Sun 8 Nov",
+   "blurb": "Every question reported firsthand from 2026 SDE I GenAI rounds, grouped into twelve answers, each from what you built: a number, a failure, a trade-off. Your strongest ground; most candidates answer these from coursework.",
+   "topics": [
+    {
+     "id": "q-project",
+     "title": "Walk me through a GenAI system you built",
+     "brief": "Reported firsthand in 2026 SDE I and intern loops (\"Have you built something using AI?\", \"Explain your GenAI project\"). Every later question in the round hangs off this one, so scope it to your part.",
+     "points": [
+      "Scope: one system, your part of it, one sentence on who owned the rest.",
+      "Shape: what it does for the user, the loop, the one design rule, a number, what you would change.",
+      "Hook: end on the rule you can defend five layers deep; that is what they pick up next."
+     ],
+     "figs": [],
+     "open": {
+      "q": "Walk me through a GenAI system you built. What was your part?",
+      "probe": "Your specific part (I, not we), and whether you can explain the design, not only the stack.",
+      "a": [
+       "What it does for the user, and the scale.",
+       "The loop and its limits.",
+       "The one design rule underneath it.",
+       "A number for the result.",
+       "What you would change."
+      ]
+     },
+     "say": [],
+     "avoid": [
+      "The whole company's product as if you built all of it.",
+      "A stack list with no decision in it."
+     ],
+     "links": [
+      {
+       "url": "#/learn/a-loop",
+       "label": "GenAI tab: the agent loop and tool calling",
+       "why": ""
+      }
+     ]
+    },
+    {
+     "id": "q-halluc",
+     "title": "How do you reduce hallucinations?",
+     "brief": "Firsthand, SDE I, March 2026, asked about the candidate's own project; also in a June 2026 GenAI round's topic set. They want a real one you caught, not the textbook list.",
+     "points": [
+      "Name it: a hallucination is a claim nobody checked.",
+      "A real case: what it said, what was true, how you caught it, what you changed, a number.",
+      "Mechanisms that stack: grounding, code owning facts and numbers, ids validated by code, 'I could not confirm' instead of a guess.",
+      "Measure on real rows, not on how the reply reads."
+     ],
+     "figs": [],
+     "open": {
+      "q": "How do you reduce hallucinations in a system you built?",
+      "probe": "That you have caught one in production and changed the structure, not only the prompt.",
+      "a": [
+       "Your definition in one line.",
+       "One real hallucination and how you caught it.",
+       "The structural fix and its number.",
+       "A second mechanism.",
+       "How you measure it."
+      ]
+     },
+     "say": [],
+     "avoid": [
+      "Only 'better prompts' or 'lower temperature'.",
+      "A list of techniques with no case."
+     ],
+     "links": [
+      {
+       "url": "#/learn/l-halluc",
+       "label": "GenAI tab: why models hallucinate",
+       "why": ""
+      },
+      {
+       "url": "#/learn/s-reduce",
+       "label": "GenAI tab: reducing hallucinations in production",
+       "why": ""
+      }
+     ]
+    },
+    {
+     "id": "q-verify",
+     "title": "How do you check the output is correct and reliable?",
+     "brief": "The most reported question: firsthand in at least four 2026 SDE I reports (\"How do you verify that the output is correct?\", \"How do you evaluate whether an AI response is correct?\", \"How do you ensure the output is reliable?\"). Your strongest one.",
+     "points": [
+      "Two layers: each action before it runs, and the system before a change ships.",
+      "Before an action: stakes decide what asks; a yes checked by code; a threshold you chose and its trade-off.",
+      "Before a change ships: an eval set graded on what happened (rows, state), not on reply text.",
+      "In production: scanning real traffic, and checking your own detectors first."
+     ],
+     "figs": [],
+     "open": {
+      "q": "How do you verify that the output of an AI system is correct before it reaches a customer?",
+      "probe": "Practical evaluation: a mechanism, a threshold, a number. Not a definition of evals.",
+      "a": [
+       "The two layers.",
+       "Before an action: what asks, the threshold, the trade-off.",
+       "Before shipping: the bench and why it grades state.",
+       "In production: the scanner.",
+       "One line on what reliable means."
+      ]
+     },
+     "say": [],
+     "avoid": [
+      "'We test it manually.'",
+      "An LLM judge with no word on how you know the judge is right."
+     ],
+     "links": [
+      {
+       "url": "#/learn/e-validate",
+       "label": "GenAI tab: checking AI output",
+       "why": ""
+      },
+      {
+       "url": "#/learn/e-harness",
+       "label": "GenAI tab: eval sets and replay",
+       "why": ""
+      },
+      {
+       "url": "#/learn/e-judge",
+       "label": "GenAI tab: LLM-as-judge",
+       "why": ""
+      }
+     ]
+    },
+    {
+     "id": "q-model",
+     "title": "Which model did you use, and why?",
+     "brief": "Firsthand, SDE I, March 2026. Needs a model name, a reason, cost and latency numbers, and what would make you switch.",
+     "points": [
+      "Different jobs, different models: say which job gets which and why.",
+      "Numbers: cost, accuracy on your own set, latency.",
+      "A case where the smaller model lost, and what you did instead.",
+      "What makes you switch: a blinded eval on real cases, then a staged rollout with a rollback."
+     ],
+     "figs": [],
+     "open": {
+      "q": "Which model did you use, and why that one?",
+      "probe": "That model choice is an eval result with cost and latency behind it, not a preference.",
+      "a": [
+       "The rule: choice is an eval result.",
+       "The main model and why.",
+       "A switch to a smaller model, with numbers.",
+       "A time the smaller model lost.",
+       "What would make you switch."
+      ]
+     },
+     "say": [],
+     "avoid": [
+      "'The best one available.'",
+      "No cost or latency number."
+     ],
+     "links": [
+      {
+       "url": "#/learn/s-cost",
+       "label": "GenAI tab: cost, caching and routing",
+       "why": ""
+      },
+      {
+       "url": "#/learn/s-latency",
+       "label": "GenAI tab: latency",
+       "why": ""
+      }
+     ]
+    },
+    {
+     "id": "q-secure",
+     "title": "How do you secure the input, and keep personal data out?",
+     "brief": "Firsthand, SDE I, March 2026 (\"How did you secure the input?\", \"How do you make sure sensitive information isn't unnecessarily sent to or returned from the model?\"); an October 2026 intern loop adds PII masking and prompt injection.",
+     "points": [
+      "Untrusted input: anything a stranger wrote is data, and some injection gets through; make the worst action impossible, not unlikely.",
+      "Taint: once a turn reads stranger text, actions that leave the user's account need an explicit yes.",
+      "Minimise: each component sees only what its job needs; the deciders never read the untrusted text.",
+      "Personal data: say honestly what you redact and what you do not, and why."
+     ],
+     "figs": [],
+     "open": {
+      "q": "How do you secure the input to your system, and keep personal data from going to or coming back from the model?",
+      "probe": "Input security and personal data from production, where most candidates answer from coursework.",
+      "a": [
+       "The stance: design for the injection that gets through.",
+       "Taint and the explicit yes.",
+       "Who sees what.",
+       "Personal data, honestly.",
+       "A miss and what changed."
+      ]
+     },
+     "say": [],
+     "avoid": [
+      "Claiming a filter stops injection.",
+      "Claiming a PII scrubber you do not run."
+     ],
+     "links": [
+      {
+       "url": "#/learn/a-inject",
+       "label": "GenAI tab: prompt injection and tool safety",
+       "why": ""
+      }
+     ]
+    },
+    {
+     "id": "q-prompt",
+     "title": "How did you approach prompt engineering?",
+     "brief": "Firsthand, SDE I, March 2026; prompt engineering fundamentals also in a June 2026 round's topic set. For you: prompting an agent that acts, not a chatbot that answers.",
+     "points": [
+      "The principle: prompts for judgment, code for rules.",
+      "A finding that proves it: instructions that lived only in the prompt and were not honoured.",
+      "Structure: a stable cached core, a capped turn block, tool descriptions kept small.",
+      "Iteration driven by failures and a bench, and knowing when to stop."
+     ],
+     "figs": [],
+     "open": {
+      "q": "How did you approach prompt engineering for your system?",
+      "probe": "Whether you iterate from failures with measurement, and know the limits of a prompt.",
+      "a": [
+       "The principle.",
+       "The finding that proves it.",
+       "How the prompt is structured.",
+       "How you iterate, with a number.",
+       "The close."
+      ]
+     },
+     "say": [],
+     "avoid": [
+      "Prompt tricks with no measurement.",
+      "'I tell it to be careful.'"
+     ],
+     "links": [
+      {
+       "url": "#/learn/p-prompt",
+       "label": "GenAI tab: what works in prompting",
+       "why": ""
+      },
+      {
+       "url": "#/learn/p-struct",
+       "label": "GenAI tab: structured output and validation",
+       "why": ""
+      },
+      {
+       "url": "#/learn/p-context",
+       "label": "GenAI tab: context engineering",
+       "why": ""
+      }
+     ]
+    },
+    {
+     "id": "q-agents",
+     "title": "Agents you built, and what you chose not to automate",
+     "brief": "Firsthand, SDE I, August 2026: \"Have you automated any tasks using AI agents? Have you built or used agent-based workflows?\" The first explicit agent questions in an SDE I report, and the set you are best placed to answer.",
+     "points": [
+      "What you shipped, briefly: the agents and what each does.",
+      "What stays with a person, and the rule behind it: errors cheap and visible versus irreversible.",
+      "Something you deliberately did not automate yet, with the number that made you wait."
+     ],
+     "figs": [],
+     "open": {
+      "q": "Have you built agent-based workflows? What did you automate, and what did you deliberately not?",
+      "probe": "Agents shipped, and the judgment about where a human stays in the loop.",
+      "a": [
+       "What you shipped.",
+       "What always asks a person.",
+       "What you held back, and why.",
+       "The rule."
+      ]
+     },
+     "say": [],
+     "avoid": [
+      "Only praise for autonomy.",
+      "A demo agent with no users."
+     ],
+     "links": [
+      {
+       "url": "#/learn/a-loop",
+       "label": "GenAI tab: the agent loop",
+       "why": ""
+      },
+      {
+       "url": "#/learn/a-multi",
+       "label": "GenAI tab: multi-agent systems",
+       "why": ""
+      }
+     ]
+    },
+    {
+     "id": "q-daily",
+     "title": "How do you use AI in your work day to day?",
+     "brief": "Firsthand in most 2026 reports, often the first GenAI question (\"How do you use AI in your work?\", \"Which tools?\", \"Would you trust AI-generated code in production?\", \"Are you dependent on it or using it as a tool?\"). Amazon's scheduling email also flags it.",
+     "points": [
+      "What you hand it: well-specified work.",
+      "What you keep: design, decisions, checks.",
+      "How you check it: evidence, not claims.",
+      "What you do without it, and your line on AI-written code in production."
+     ],
+     "figs": [],
+     "open": {
+      "q": "How do you use AI tools in your engineering work, and would you trust AI-written code in production?",
+      "probe": "That you use the tools critically, not blindly, and are not dependent on them.",
+      "a": [
+       "Every day, as a tool you check.",
+       "What you hand it, with an example.",
+       "What you keep.",
+       "How you check it.",
+       "What you do without it; production trust."
+      ]
+     },
+     "say": [
+      "Every day, but as a tool I check, not an author I trust. I use coding agents for the parts that are well specified: a migration, a test scaffold, a refactor I've already decided on. I read every diff, and nothing ships without tests or a real run against production-shaped data.",
+      "Where they fail is the same place my own agent at work fails: they're confident about things they never checked. They'll say a function exists or a test passed when it didn't. So I ask for evidence, the command and its output, and I keep the design decisions myself.",
+      "Building an AI product also taught me to measure it like a product: an eval set of real cases before a change ships, not a vibe check."
+     ],
+     "avoid": [
+      "Offering to use AI in the loop.",
+      "Claiming it wrote the system for you."
+     ],
+     "links": []
+    },
+    {
+     "id": "q-notai",
+     "title": "A time you chose not to use AI, or found it unnecessary",
+     "brief": "The separator question. Firsthand, SDE I, a hiring-manager round with about 30 minutes of GenAI (\"Where have you used GenAI and later felt it was unnecessary?\"); reported by coaches as \"in virtually every Amazon loop in 2026\" as a behavioural question, often from the Bar Raiser. Also a trap inside the round: a task that sounds like an LLM job where rules or a classifier win.",
+     "points": [
+      "Tell it as a story with a decision, not an opinion.",
+      "Name the simpler mechanism and quantify why it won: cost, latency, reliability.",
+      "Keep the model where the judgment is.",
+      "An honest limit makes it believable."
+     ],
+     "figs": [],
+     "open": {
+      "q": "Tell me about a time you chose not to use AI, or used it and later felt it was unnecessary.",
+      "probe": "Judgment: naming the simpler alternative and the numbers. Candidates who can only praise GenAI fail it.",
+      "a": [
+       "The task and why it looked like a model's job.",
+       "What you saw.",
+       "The decision: code for rules, the model for judgment.",
+       "The number, and an honest limit.",
+       "The lesson."
+      ]
+     },
+     "say": [],
+     "avoid": [
+      "Vague enthusiasm for AI.",
+      "The same telling you gave in a Leadership round."
+     ],
+     "links": [
+      {
+       "url": "#/learn/s-cost",
+       "label": "GenAI tab: calling the model less",
+       "why": ""
+      }
+     ]
+    },
+    {
+     "id": "g-tool-wrong",
+     "title": "A time a GenAI tool got it wrong",
+     "brief": "Reported firsthand in 2026 (\"How did you verify AI-generated suggestions?\") and Amazon's scheduling email asks for it: the situation, what went well, what you would do differently. The situation, how you caught it, what you did, what you do differently now. About two minutes.",
+     "points": [
+      "Situation: the tool, the task, why you used it.",
+      "Caught: the check you ran that showed it was wrong, not luck.",
+      "Did: verified, redid, changed how you use it.",
+      "Effect: time saved or lost, and the habit you kept.",
+      "Candidates: a deep research run where a second, checking pass refuted 17 of 18 claims from the first; a coding agent reporting a test passed or a function existed when it did not."
+     ],
+     "open": {
+      "q": "Tell me about a time a GenAI tool gave you something wrong. What did you do?",
+      "probe": "That you use the tools critically, not blindly.",
+      "a": [
+       "The tool and the task, in one sentence.",
+       "How you noticed: the check, the evidence.",
+       "What you did about it.",
+       "What you changed for next time, and the effect."
+      ]
+     },
+     "say": [],
+     "avoid": [
+      "A story where you trusted the output and it shipped.",
+      "Blaming the tool without saying what you changed."
+     ],
+     "mine": []
+    },
+    {
+     "id": "g-tool-win",
+     "title": "A time a GenAI tool made you faster",
+     "brief": "What the tool took on, what you kept for yourself, the effect with a number, what you would change.",
+     "points": [
+      "Situation: the task the tool took on, well specified (a migration, tests, a refactor already decided).",
+      "Kept: the design, the review, the check against real data.",
+      "Effect: hours saved, how much shipped.",
+      "Change: what you would do differently next time."
+     ],
+     "open": {
+      "q": "How has a GenAI tool changed your outcome or speed? Give me an example.",
+      "probe": "From Amazon's own email: situation, what went well, what you would do differently, the effect.",
+      "a": [
+       "The task and why it suited the tool.",
+       "What you kept: design and checking.",
+       "The effect with a number.",
+       "What you would do differently."
+      ]
+     },
+     "say": [],
+     "avoid": [
+      "Claiming it wrote the system for you.",
+      "No number for the effect."
+     ],
+     "mine": []
+    },
+    {
+     "id": "q-opportunity",
+     "title": "Where is a GenAI opportunity your team hasn't explored?",
+     "brief": "Firsthand, SDE I, a hiring-manager round, 2026. A concrete workflow, its risk, and where a human stays in the loop.",
+     "points": [
+      "One concrete workflow, why it is not done yet, the number that shows the risk.",
+      "How you would do it safely: code decides when, the model words it, a measured rollout."
+     ],
+     "figs": [],
+     "open": {
+      "q": "Where in your current team do you see a GenAI opportunity that hasn't been explored yet?",
+      "probe": "Product sense with risk awareness.",
+      "a": [
+       "The workflow.",
+       "Why it is not simple, with a number.",
+       "How you would ship it safely.",
+       "A second one."
+      ]
+     },
+     "say": [],
+     "avoid": [
+      "An idea with no risk named.",
+      "Anything that runs the company down."
+     ],
+     "links": []
+    }
+   ]
+  },
+  {
    "id": "llm",
-   "title": "1. How LLMs work",
+   "title": "2. How LLMs work",
    "blurb": "Tokens, attention, training stages, sampling and why models hallucinate: the mechanism behind every later topic.",
    "topics": [
     {
@@ -764,7 +1198,7 @@
   },
   {
    "id": "prompt",
-   "title": "2. Prompting and structured output",
+   "title": "3. Prompting and structured output",
    "blurb": "How to ask, how to get data back that code can use, and how to fill the context window well.",
    "topics": [
     {
@@ -1213,7 +1647,7 @@
   },
   {
    "id": "rag",
-   "title": "3. Embeddings and RAG",
+   "title": "4. Embeddings and RAG",
    "blurb": "How text becomes vectors, how vectors are searched, how retrieval feeds the model, and how you tell which half broke.",
    "topics": [
     {
@@ -1994,7 +2428,7 @@
   },
   {
    "id": "agent",
-   "title": "4. Agents and tools",
+   "title": "5. Agents and tools",
    "blurb": "How an agent loops, how tools and MCP are designed, when several agents beat one, and how prompt injection limits what an agent may do.",
    "topics": [
     {
@@ -2620,7 +3054,7 @@
   },
   {
    "id": "eval",
-   "title": "5. Evaluation and validation",
+   "title": "6. Evaluation and validation",
    "blurb": "How you know AI output is right: checks in code, a judge you have calibrated, a test set you run on every change, and signals from live traffic.",
    "topics": [
     {
@@ -3250,7 +3684,7 @@
   },
   {
    "id": "prod",
-   "title": "6. Production",
+   "title": "7. Production",
    "blurb": "What changes when an LLM feature meets real users: fewer hallucinations, faster replies, lower cost, visible failures, and how it is added to a product.",
    "topics": [
     {
@@ -4038,7 +4472,7 @@
   },
   {
    "id": "ft",
-   "title": "7. Fine-tuning",
+   "title": "8. Fine-tuning",
    "blurb": "When to tune instead of prompting or retrieving, and how LoRA makes tuning cheap.",
    "topics": [
     {
@@ -4350,71 +4784,161 @@
    "day": "Thu 5 Nov"
   },
   {
-   "id": "stories",
-   "title": "8. Your stories with GenAI tools",
-   "blurb": "Amazon's scheduling email says you may be asked about your experience with GenAI tools. Two stories, in your words.",
+   "id": "upside",
+   "title": "9. If they push deeper",
+   "day": "If time",
+   "blurb": "SDE II and prep-site questions, not verified at SDE I: a five-minute RAG sketch, operating a model in production, agent design. Upside only.",
    "topics": [
     {
-     "id": "g-tool-wrong",
-     "title": "A time a GenAI tool got it wrong",
-     "brief": "The situation, how you caught it, what you did, what you do differently now. About two minutes.",
+     "id": "u-rag",
+     "title": "Sketch a RAG system in five minutes, and where it breaks",
+     "brief": "Not a verified SDE I question: reported for SDE II and on prep sites (design RAG for internal docs; what breaks first; reviews at scale; a knowledge base that updates every five minutes; per-user permissions). Upside only: frame it as how you would build it and where it breaks, not definitions.",
      "points": [
-      "Situation: the tool, the task, why you used it.",
-      "Caught: the check you ran that showed it was wrong, not luck.",
-      "Did: verified, redid, changed how you use it.",
-      "Effect: time saved or lost, and the habit you kept.",
-      "Candidates: a deep research run where a second, checking pass refuted 17 of 18 claims from the first; a coding agent reporting a test passed or a function existed when it did not."
+      "Ingest: chunk by structure, keep title and permissions on every chunk.",
+      "Retrieve: hybrid keyword and vector, rerank, filter by permissions at query time.",
+      "Generate: answer only from passages, cite, 'I don't know' on low scores.",
+      "Breaks: retrieval misses first, stale chunks, grounded-sounding answers that are not; measure each."
      ],
+     "figs": [],
      "open": {
-      "q": "Tell me about a time a GenAI tool gave you something wrong. What did you do?",
-      "probe": "That you use the tools critically, not blindly.",
+      "q": "Design a RAG system over internal documents. Walk me through it, and tell me what breaks first.",
+      "probe": "Why each choice, and that you know where it fails.",
       "a": [
-       "The tool and the task, in one sentence.",
-       "How you noticed: the check, the evidence.",
-       "What you did about it.",
-       "What you changed for next time, and the effect."
+       "Ingest.",
+       "Retrieve.",
+       "Generate.",
+       "Where it breaks and how you measure it."
       ]
      },
-     "say": [],
-     "avoid": [
-      "A story where you trusted the output and it shipped.",
-      "Blaming the tool without saying what you changed."
+     "say": [
+      "**Here's how I'd build it, and where it breaks.**",
+      "**Ingest.** Split documents by their structure, headings and sections, a few hundred tokens with a little overlap, and keep the title, the source and the permissions on every chunk. Re-index on change events, so a page edited five minutes ago is not served stale.",
+      "**Retrieve.** Hybrid: keyword search for names, codes and exact terms, vectors for meaning, merge them, then a reranker takes the top fifty down to five. Permissions are filtered at query time, never after generation.",
+      "**Generate.** Answer only from those passages, cite them, and say I don't know when the best score is low.",
+      "**Where it breaks.** Retrieval misses first, so I'd measure recall on a labelled set before touching the prompt. Then stale chunks, and answers that sound grounded but aren't, checked with a judge I've calibrated against people. In my research project, MetaRAG, we judged it that way: 82.5% precision and 0.925 Hit@10 on a gold set."
      ],
-     "mine": [
-      "Yours to tell: in chat, say capture genai-wrong and tell it the way you remember it; it goes in word for word."
+     "avoid": [
+      "Definitions with no trade-offs.",
+      "Filtering permissions after generation."
+     ],
+     "links": [
+      {
+       "url": "#/learn/r-rag",
+       "label": "GenAI tab: the RAG pipeline",
+       "why": ""
+      },
+      {
+       "url": "#/learn/r-hybrid",
+       "label": "GenAI tab: hybrid search and reranking",
+       "why": ""
+      },
+      {
+       "url": "#/learn/r-debug",
+       "label": "GenAI tab: measuring RAG",
+       "why": ""
+      },
+      {
+       "url": "#/learn/f-when",
+       "label": "GenAI tab: fine-tune, RAG or prompt",
+       "why": ""
+      }
      ]
     },
     {
-     "id": "g-tool-win",
-     "title": "A time a GenAI tool made you faster",
-     "brief": "What the tool took on, what you kept for yourself, the effect with a number, what you would change.",
+     "id": "u-ops",
+     "title": "Operate it: p99 doubled, cost too high, ready to launch?",
+     "brief": "Synthesised operations questions, not reported Amazon SDE I questions, that map straight onto your work: p99 doubled after a deploy with the weights unchanged; cut inference cost without losing quality; decide an assistant is ready to launch to millions; model tiers and cost at scale.",
      "points": [
-      "Situation: the task the tool took on, well specified (a migration, tests, a refactor already decided).",
-      "Kept: the design, the review, the check against real data.",
-      "Effect: hours saved, how much shipped.",
-      "Change: what you would do differently next time."
+      "Latency: it is the system around the model; diff the deploy.",
+      "Cost: cache the stable prefix, route easy cases to a small model behind an eval, call the model less.",
+      "Launch: an eval set from real traffic with a bar per failure type, staged rollout, alarms on what users feel, a human gate on anything irreversible."
      ],
+     "figs": [],
      "open": {
-      "q": "How has a GenAI tool changed your outcome or speed? Give me an example.",
-      "probe": "From Amazon's own email: situation, what went well, what you would do differently, the effect.",
+      "q": "p99 latency doubled after a deploy and the model didn't change. How do you debug it?",
+      "probe": "Operational instinct: measure, diff, isolate.",
       "a": [
-       "The task and why it suited the tool.",
-       "What you kept: design and checking.",
-       "The effect with a number.",
-       "What you would do differently."
+       "Diff the deploy: prompt length, tools, retrieval size, cache, retries.",
+       "Cost levers.",
+       "Launch readiness."
       ]
      },
-     "say": [],
-     "avoid": [
-      "Claiming it wrote the system for you.",
-      "No number for the effect."
+     "say": [
+      "**p99 doubled with the weights unchanged: it's the system around the model.** I'd diff the deploy: prompt length, number of tools loaded, retrieval size, a cache that stopped hitting, a new retry or a serial call that used to be parallel. On our system I once found cache reads at zero because the system prompt had gone in as one flat string with no cache markers.",
+      "**Cost too high without losing quality:** cache the stable prefix, route easy cases to a small model behind a blinded eval, and call the model less by letting code do what code can. Our email triage went from $3.26 to about a dollar per thousand emails that way, and accuracy went up.",
+      "**Ready to launch to millions:** an eval set drawn from real traffic with a bar per failure type, a staged rollout with a rollback trigger, alarms on what users feel (latency, refusals, wrong actions), and a person confirming anything irreversible."
      ],
-     "mine": [
-      "Yours to tell: in chat, say capture genai-win. The general answer to how you use AI tools is on Prep."
+     "avoid": [
+      "Blaming the provider before checking your own diff."
+     ],
+     "links": [
+      {
+       "url": "#/learn/s-latency",
+       "label": "GenAI tab: latency",
+       "why": ""
+      },
+      {
+       "url": "#/learn/s-cost",
+       "label": "GenAI tab: cost",
+       "why": ""
+      },
+      {
+       "url": "#/learn/s-observe",
+       "label": "GenAI tab: observability and incidents",
+       "why": ""
+      }
+     ]
+    },
+    {
+     "id": "u-agentic",
+     "title": "Agent design: orchestration, loops, irreversible actions",
+     "brief": "Prep-site, claimed SDE II: multi-agent orchestration, supervisor versus peer agents, tool-call loops, context exhaustion, agents inventing tool outputs; and a synthesised browser agent with checkpoints and human gates. Not reported at SDE I.",
+     "points": [
+      "One agent with tools first; split only for a different trust level or a long job.",
+      "Loops: cap calls and time, detect repeats, summarise into state code owns.",
+      "Invented tool output: receipts written by code.",
+      "Irreversible actions: the agent proposes, a person confirms, code executes the stored proposal."
+     ],
+     "figs": [],
+     "open": {
+      "q": "When would you use multiple agents, and how do you stop an agent looping or acting on something it made up?",
+      "probe": "That you design agents around failure, not around the demo.",
+      "a": [
+       "When to split.",
+       "Loops and context.",
+       "Invented outputs.",
+       "Irreversible actions."
+      ]
+     },
+     "say": [
+      "**Start with one agent and good tools; add agents only when a context must be separated.** I'd split a worker off when it needs a different trust level, say it reads untrusted documents, or when the job runs longer than a request can.",
+      "**Loops and context.** Cap model calls and wall time per turn, detect the same tool call repeating, and when the context fills, summarise into state that code owns rather than piling on more chat.",
+      "**Made-up tool output.** Tool results come back as receipts code writes, and the reply is checked against them, so the agent can't report an action that didn't run.",
+      "**Irreversible actions.** Checkpoints and a person: the agent proposes, the user confirms, and code executes the stored proposal, not whatever the model says next."
+     ],
+     "avoid": [
+      "Multi-agent by default.",
+      "Trusting the model's account of what a tool did."
+     ],
+     "links": [
+      {
+       "url": "#/learn/a-multi",
+       "label": "GenAI tab: multi-agent systems",
+       "why": ""
+      },
+      {
+       "url": "#/learn/a-loop",
+       "label": "GenAI tab: the agent loop",
+       "why": ""
+      },
+      {
+       "url": "#/learn/a-mcp",
+       "label": "GenAI tab: MCP and designing tools",
+       "why": ""
+      }
      ]
     }
-   ],
-   "day": "Sun 1 and Mon 2 Nov, in chat"
+   ]
   }
  ]
 }

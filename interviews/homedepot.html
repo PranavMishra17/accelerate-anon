@@ -802,6 +802,33 @@ dialog.st-view { width: min(1320px, 96vw); height: min(900px, 94vh); max-width: 
 .stv-p { margin: 0 0 var(--s2); font-size: var(--fs-md); line-height: 1.65; }
 .stv-ans strong, .stv-fa strong { font-weight: var(--w-strong); box-shadow: inset 0 -.38em color-mix(in srgb, var(--accent) 45%, transparent); }
 .stv-tx { margin-top: var(--s2); }
+.stv-views { display: flex; gap: var(--s2); margin-top: var(--s3); }
+.stv-views .btn.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.stv-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.stv-body > .stv-cols { flex: 1; min-height: 0; }
+.stv-body > .stv-cols[hidden], .mm[hidden] { display: none; }
+.mm { position: relative; flex: 1; min-height: 0; overflow: hidden; margin: var(--s3) var(--s4) var(--s4); border-radius: var(--radius-lg); background: var(--sunken); background-image: radial-gradient(color-mix(in srgb, var(--muted) 28%, transparent) 1px, transparent 1px); background-size: 22px 22px; cursor: grab; touch-action: none; user-select: none; }
+.mm.mm-drag { cursor: grabbing; }
+.mm-stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.mm-links { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.mm-links path { fill: none; stroke: color-mix(in srgb, var(--accent) 45%, transparent); stroke-width: 1.6; }
+.mm-n { position: absolute; box-sizing: border-box; padding: .5em .8em; border-radius: var(--radius); background: var(--surface); border: var(--hair); box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 8%, transparent); font-size: var(--fs-sm); line-height: 1.4; cursor: default; }
+.mm-n.mm-p { cursor: pointer; padding-right: 2.2em; }
+.mm-n.mm-p:hover { border-color: var(--accent); }
+.mm-n strong { font-weight: var(--w-strong); box-shadow: inset 0 -.38em color-mix(in srgb, var(--accent) 35%, transparent); }
+.mm-d0 { background: var(--ink); color: var(--bg); border-color: var(--ink); font-size: var(--fs-md); font-weight: var(--w-strong); }
+.mm-d1 { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 40%, transparent); font-size: var(--fs-md); font-weight: var(--w-strong); }
+.mm-d3 { color: var(--soft); }
+.mm-sub { display: block; margin-top: .3em; padding-top: .3em; border-top: 1px dashed color-mix(in srgb, var(--muted) 35%, transparent); font-size: var(--fs-sm); font-weight: var(--w-regular); color: var(--soft); }
+.mm-d0 .mm-sub { color: var(--bg); }
+.mm-lines { margin: .35em 0 0; padding: .35em 0 0 1.1em; border-top: 1px dashed color-mix(in srgb, var(--muted) 35%, transparent); font-weight: var(--w-regular); color: var(--soft); }
+.mm-lines li { margin: .15em 0; }
+.mm-c { position: absolute; right: .55em; top: 50%; transform: translateY(-50%); min-width: 1.4em; padding: 0 .3em; border-radius: 999px; background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--ink); font-size: var(--fs-xs); font-weight: var(--w-strong); text-align: center; line-height: 1.5; }
+.mm-d0 .mm-c { background: color-mix(in srgb, var(--bg) 25%, transparent); color: var(--bg); }
+.mm-tools { position: absolute; right: var(--s3); top: var(--s3); display: flex; gap: var(--s2); }
+.mm-hint { position: absolute; left: var(--s3); bottom: var(--s2); font-size: var(--fs-xs); color: var(--muted); pointer-events: none; }
+.stv-gate { margin-top: var(--s2); }
+.stv-pts { margin: var(--s1) 0 var(--s2); padding-left: 1.4em; font-size: var(--fs-sm); line-height: 1.55; }
 .stv-ans .transcript { background: transparent; color: inherit; padding: 0; margin: var(--s2) 0 0; }
 .stv-f { border-bottom: var(--hair); padding: var(--s2) 0; }
 .stv-f summary { cursor: pointer; font-weight: var(--w-strong); }
@@ -816,6 +843,9 @@ dialog.st-view { width: min(1320px, 96vw); height: min(900px, 94vh); max-width: 
   .stv-cols .cv-col { overflow: visible; }
   .stv-fu { margin-top: var(--s3); }
   .stv-rem { columns: 1; }
+  .stv-body { display: block; }
+  .mm { height: 72vh; margin: var(--s3); }
+  .mm-tools { left: var(--s3); right: auto; flex-wrap: wrap; }
 }
 .am-spend.reserve { color: var(--muted); }
 .am-reveal { margin: 0 0 var(--s3); }
@@ -898,7 +928,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
 <dialog id="convo" class="convo" aria-label="Mock conversation"></dialog>
 <script src="../figures/icons.js?v=f5a48822"></script>
 <script src="../figures/figures.js?v=0e01e061"></script>
-<script src="../private/figures.js?v=38a55080"></script>
+<script src="../private/figures.js?v=0bdbc163"></script>
 <script src="../figures/notes.js?v=82a7302c"></script>
 <script src="../private/notes.js?v=23086437"></script>
 <script src="../private/loops/homedepot.js?v=a1752936"></script>
@@ -1184,15 +1214,32 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
      understand it on the left, what to say on the dark sheet. */
   function scriptItem(x) {
     return { id: "say-" + x.id, q: x.title, short: x.short || x.title, tests: x.when, a: x.say, land: x.land, never: x.never, notes: x.notes,
-      probes: x.probes, swaps: x.swaps, variants: x.variants, vname: x.vname, learn: x.learn || (x.figs ? { figs: x.figs } : null),
+      probes: x.probes, swaps: x.swaps, variants: x.variants, vname: x.vname, parts: x.parts, learn: x.learn || (x.figs ? { figs: x.figs } : null),
       meta: x.length ? x.length.charAt(0).toUpperCase() + x.length.slice(1) + "." : "",
       drill: LOOP.drills.some(function (d) { return d.id === x.id; }) ? x.id : null };
   }
   function prepBanks() {
-    var banks = [], story = LOOP.scripts.filter(function (x) { return x.id !== "logistics"; });
-    if (story.length) { banks.push({ id: "story", title: "Your intro and story", blurb: LOOP.storyBlurb || "", items: story.map(scriptItem) }); }
-    /* Project stories about alfred_ internals live in the gitignored private/loops/<module>.js, never in the public module. */
+    /* Project stories about alfred_ internals live in the gitignored private/loops/<module>.js, never in the public module.
+       There, `variants[id]` adds versions to a public script and `scripts` adds whole items, each placed after its `after` id. */
     var priv = window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id];
+    var story = [];
+    LOOP.scripts.filter(function (x) { return x.id !== "logistics"; }).forEach(function (x) {
+      var pv = priv && priv.variants && priv.variants[x.id], pw = priv && priv.swaps && priv.swaps[x.id];
+      if (pv || pw) {
+        var y = {}; for (var k in x) { y[k] = x[k]; }
+        if (pv) { y.variants = (x.variants || []).concat(pv); y.vname = x.vname || "Yours"; }
+        if (pw) { y.swaps = (x.swaps || []).concat(pw); }
+        x = y;
+      }
+      story.push(x);
+    });
+    ((priv && priv.scripts) || []).forEach(function (x) {
+      var at = -1;
+      story.forEach(function (s, i) { if (s.id === x.after) { at = i; } });
+      if (at < 0) { story.push(x); } else { story.splice(at + 1, 0, x); }
+    });
+    var banks = [];
+    if (story.length) { banks.push({ id: "story", title: "Your intro and story", blurb: LOOP.storyBlurb || "", items: story.map(scriptItem) }); }
     if (priv && priv.projects && priv.projects.length) { banks.push({ id: "projects", title: "Your projects", blurb: priv.projectsBlurb || "", items: priv.projects.map(scriptItem) }); }
     LOOP.qa.forEach(function (g, gi) { banks.push({ id: "qa-" + gi, title: g.group, blurb: g.blurb || "", items: g.items }); });
     var lg = LOOP.scripts.filter(function (x) { return x.id === "logistics"; });
@@ -1656,7 +1703,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     if (t.links && t.links.length) {
       mat.appendChild(el("div", "lab", "In Accelerate"));
       var lk = el("ul", "reading");
-      t.links.forEach(function (q) { lk.appendChild(el("li", "", '<a href="' + esc(q.url) + '" target="_blank" rel="noopener">' + inl(q.label) + "</a>" + (q.why ? '<span class="why">' + inl(q.why) + "</span>" : ""))); });
+      t.links.forEach(function (q) { lk.appendChild(el("li", "", '<a href="' + esc(q.url) + '"' + (q.url.charAt(0) === "#" ? "" : ' target="_blank" rel="noopener"') + ">" + inl(q.label) + "</a>" + (q.why ? '<span class="why">' + inl(q.why) + "</span>" : ""))); });
       mat.appendChild(lk);
     }
 
@@ -1675,14 +1722,16 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     var sayBox = el("div", "ln-saybox");
     function drawSay() {
       sayBox.innerHTML = "";
-      if (!(t.say && t.say.length)) { return; }
+      /* A spoken answer from alfred_ internals lives in the private file, keyed by topic id. */
+      var pvs = window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id], said = (pvs && pvs.say && pvs.say[t.id]) || t.say;
+      if (!(said && said.length)) { return; }
       var s2 = learnStore();
       if (t.open && !(s2.tried[t.id] && s2.tried[t.id].shown)) {
         sayBox.appendChild(el("div", "lab", "What you would say"));
         sayBox.appendChild(el("p", "ln-note", "Shut until you have tried the question above."));
         return;
       }
-      sayBox.appendChild(transcript(t.say, "What you would say", ""));
+      sayBox.appendChild(transcript(said, "What you would say", ""));
       panelSection(sayBox, "Avoid", panelList(t.avoid, "mk-bad"));
     }
     if (t.open) {
@@ -3528,6 +3577,94 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   }
   /* o: { title, sub, label, count, row(i) -> html for the rail, draw(i, pane), start } */
   /* One story per screen: the question on top, the answer to say on the left, the follow-ups on the right. */
+  /* A story's mind map: a horizontal tree you drag and zoom. Root on the left, chapters next, branches to the right.
+     Nodes {t, k: [children]}. Click a node to open or fold its branch. */
+  function mindMap(title, nodes) {
+    var W = [190, 230, 250, 260, 260, 260], GX = 48, GY = 10, NS = "http://www.w3.org/2000/svg";
+    var wrap = el("div", "mm"), stage = el("div", "mm-stage"), svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("class", "mm-links"); stage.appendChild(svg); wrap.appendChild(stage);
+    var tools = el("div", "mm-tools");
+    var view = { x: 24, y: 24, k: 1 }, all = [];
+    /* Compact: a node with a single child absorbs it as a second line (and adopts its children). */
+    function compact(src) {
+      var n = { t: src.t, sub: [], lines: [], k: (src.k || []).map(compact) };
+      while (n.k.length === 1) { var c = n.k[0]; n.sub.push(c.t); n.sub = n.sub.concat(c.sub); n.lines = n.lines.concat(c.lines); n.k = c.k; }
+      /* When every child is a final detail, the details live inside the node as short lines. */
+      if (n.k.length && n.k.every(function (c) { return !c.k.length && !c.sub.length && !c.lines.length; })) { n.lines = n.lines.concat(n.k.map(function (c) { return c.t; })); n.k = []; }
+      return n;
+    }
+    var root = compact({ t: title, k: nodes });
+    (function walk(n, d) { n.d = d; n.open = false; all.push(n); n.k.forEach(function (c) { walk(c, d + 1); }); }(root, 0));
+    /* Small branches (one or two children) open with their parent; three or more wait for a click. */
+    function cascade(n) { n.k.forEach(function (c) { if (c.k.length && c.k.length <= 2) { c.open = true; cascade(c); } }); }
+    root.open = true; cascade(root);
+    function xOf(d) { var x = 0; for (var i = 0; i < d; i++) { x += W[i] + GX; } return x; }
+    function apply() { stage.style.transform = "translate(" + view.x + "px," + view.y + "px) scale(" + view.k + ")"; }
+    function render() {
+      Array.prototype.slice.call(stage.querySelectorAll(".mm-n")).forEach(function (e) { e.remove(); });
+      var vis = [];
+      (function walk(n) {
+        vis.push(n);
+        var kids = n.k || [], b = el("div", "mm-n mm-d" + Math.min(n.d, 3) + (kids.length ? " mm-p" : ""));
+        b.style.width = W[Math.min(n.d, W.length - 1)] + "px";
+        b.innerHTML = inl(n.t) + n.sub.map(function (x) { return '<span class="mm-sub">' + inl(x) + "</span>"; }).join("") + (n.lines.length ? '<ul class="mm-lines">' + n.lines.map(function (x) { return "<li>" + inl(x) + "</li>"; }).join("") + "</ul>" : "") + (kids.length ? '<span class="mm-c">' + (n.open ? "&minus;" : kids.length) + "</span>" : "");
+        if (kids.length) { b.addEventListener("click", function () { var y0 = n.y; n.open = !n.open; if (n.open) { cascade(n); } render(); view.y -= (n.y - y0) * view.k; apply(); }); }
+        stage.appendChild(b); n.el = b;
+        if (n.open) { kids.forEach(walk); }
+      }(root));
+      vis.forEach(function (n) { n.h = n.el.offsetHeight; });
+      (function block(n) {
+        var kids = n.open ? (n.k || []) : [], s = 0;
+        kids.forEach(function (c, i) { s += block(c) + (i ? GY : 0); });
+        n.kh = s; n.bh = Math.max(s, n.h); return n.bh;
+      }(root));
+      (function place(n, top) {
+        n.x = xOf(n.d); n.y = top + (n.bh - n.h) / 2;
+        var cur = top + (n.bh - n.kh) / 2;
+        (n.open ? (n.k || []) : []).forEach(function (c) { place(c, cur); cur += c.bh + GY; });
+        n.el.style.left = n.x + "px"; n.el.style.top = n.y + "px";
+      }(root, 0));
+      var maxX = 0, d = "";
+      vis.forEach(function (n) {
+        maxX = Math.max(maxX, n.x + W[Math.min(n.d, W.length - 1)]);
+        if (!n.open) { return; }
+        (n.k || []).forEach(function (c) {
+          var x1 = n.x + W[Math.min(n.d, W.length - 1)], y1 = n.y + n.h / 2, x2 = c.x, y2 = c.y + c.h / 2, m = (x1 + x2) / 2;
+          d += "M" + x1 + " " + y1 + " C" + m + " " + y1 + " " + m + " " + y2 + " " + x2 + " " + y2 + " ";
+        });
+      });
+      svg.setAttribute("width", maxX); svg.setAttribute("height", root.bh);
+      svg.innerHTML = '<path d="' + d + '"/>';
+      stage.style.width = maxX + "px"; stage.style.height = root.bh + "px";
+      return { w: maxX, h: root.bh };
+    }
+    function fit() {
+      var size = render(), r = wrap.getBoundingClientRect();
+      view.k = Math.min(1, (r.width - 48) / size.w, (r.height - 48) / size.h);
+      view.k = Math.max(view.k, 0.8);
+      view.x = 24; view.y = Math.max(24, (r.height - size.h * view.k) / 2); apply();
+    }
+    tools.appendChild(cdBtn("Fit", fit));
+    tools.appendChild(cdBtn("Open all", function () { all.forEach(function (n) { n.open = true; }); fit(); }));
+    tools.appendChild(cdBtn("Fold to chapters", function () { all.forEach(function (n) { n.open = false; }); root.open = true; cascade(root); fit(); }));
+    var drag = null;
+    wrap.addEventListener("pointerdown", function (e) {
+      if (e.target.closest(".mm-n") || e.target.closest(".mm-tools")) { return; }
+      drag = { x: e.clientX - view.x, y: e.clientY - view.y }; wrap.setPointerCapture(e.pointerId); wrap.classList.add("mm-drag");
+    });
+    wrap.addEventListener("pointermove", function (e) { if (drag) { view.x = e.clientX - drag.x; view.y = e.clientY - drag.y; apply(); } });
+    wrap.addEventListener("pointerup", function () { drag = null; wrap.classList.remove("mm-drag"); });
+    wrap.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      var r = wrap.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, k0 = view.k;
+      view.k = Math.min(1.6, Math.max(0.35, view.k * (e.deltaY < 0 ? 1.1 : 0.9)));
+      view.x = px - (px - view.x) * view.k / k0; view.y = py - (py - view.y) * view.k / k0; apply();
+    }, { passive: false });
+    wrap.appendChild(tools);
+    wrap.appendChild(el("div", "mm-hint", "Drag to move, scroll to zoom, click a node to open or fold it"));
+    return { el: wrap, fit: fit };
+  }
+
   function openStory(list, start, hubName) {
     var cur = start;
     convo.innerHTML = ""; convo.className = "convo st-view";
@@ -3551,12 +3688,23 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       var cols = el("div", "stv-cols");
       var L = el("div", "cv-col cv-say stv-ans"), R = el("div", "cv-col stv-fu");
       if (s.star && s.star.length) {
-        L.appendChild(el("div", "stv-time", "Say it in " + esc(s.time || "about 3 minutes")));
-        if (s.remember && s.remember.length) { var ol = el("ol", "stv-rem"); s.remember.forEach(function (x) { ol.appendChild(el("li", "", inl(x))); }); L.appendChild(ol); }
+        var box = L;
+        if (s.mind && s.mind.length) {
+          L.appendChild(el("div", "stv-k", "Now tell it yourself, out loud, then open the answer"));
+          box = el("div", "stv-gate"); box.hidden = true;
+          var gb = cdBtn("Show the STAR answer", function () { box.hidden = !box.hidden; gb.textContent = box.hidden ? "Show the STAR answer" : "Hide the STAR answer"; });
+          L.appendChild(gb); L.appendChild(box);
+        }
+        box.appendChild(el("div", "stv-time", "Say it in " + esc(s.time || "about 3 minutes")));
+        if (!s.points && s.remember && s.remember.length) { var ol = el("ol", "stv-rem"); s.remember.forEach(function (x) { ol.appendChild(el("li", "", inl(x))); }); box.appendChild(ol); }
         s.star.forEach(function (p, j) {
-          if (!j || s.star[j - 1].k !== p.k) { L.appendChild(el("div", "stv-k", esc(p.k))); }
-          L.appendChild(el("p", "stv-p", inl(p.say)));
+          if (!j || s.star[j - 1].k !== p.k) { box.appendChild(el("div", "stv-k", esc(p.k))); }
+          box.appendChild(el("p", "stv-p", inl(p.say)));
         });
+        if (s.points && s.points.length) {
+          box.appendChild(el("div", "stv-k", "The STAR in pointers"));
+          var po = el("ol", "stv-pts"); s.points.forEach(function (x) { po.appendChild(el("li", "", inl(x))); }); box.appendChild(po);
+        }
       } else {
         L.appendChild(el("p", "stv-p", "Not written yet. In chat, say <code>capture " + esc(s.id) + "</code> and tell it the way you remember it."));
       }
@@ -3575,7 +3723,17 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
         R.appendChild(d);
       });
       cols.appendChild(L); cols.appendChild(R);
-      shell.appendChild(cols);
+      if (s.mind && s.mind.length) {
+        /* Two views: the mind map first (recall everything), then the story and follow-ups. */
+        var mm = mindMap(s.short || s.title, s.mind), body = el("div", "stv-body"), tabs = el("div", "stv-views");
+        var bm = cdBtn("1. Mind map", function () { pick(true); }), bs = cdBtn("2. Tell it, then the STAR", function () { pick(false); });
+        var pick = function (map) { mm.el.hidden = !map; cols.hidden = map; bm.classList.toggle("on", map); bs.classList.toggle("on", !map); if (map) { requestAnimationFrame(mm.fit); } };
+        tabs.appendChild(bm); tabs.appendChild(bs); head.appendChild(tabs);
+        body.appendChild(mm.el); body.appendChild(cols); shell.appendChild(body);
+        pick(true);
+      } else {
+        shell.appendChild(cols);
+      }
       L.scrollTop = 0; R.scrollTop = 0; shell.scrollTop = 0;
     }
     convo.onkeydown = function (e) {
