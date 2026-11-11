@@ -548,3 +548,148 @@ LOOP_RES["lld-thu/thu-unseen"] = [
   "why": "A list of Amazon LLD prompts with approach hints, for picking cold practice problems."
  }
 ];
+/* The same videos and articles on each drill's own page and on the top-ten tabs (shared, not copied). */
+LOOP_RES["lld-splitwise"] = LOOP_RES["lld-thu/thu-split"];
+LOOP_RES["lld-ratelimiter"] = LOOP_RES["lld-thu/thu-rate"];
+LOOP_RES["lld-filesearch"] = LOOP_RES["lld-files"];
+LOOP_RES["lld-mock-locker"] = LOOP_RES["lld-thu/thu-locker"];
+LOOP_RES["lld-parking/parking-extend"] = LOOP_RES["lld-thu/thu-parking"];
+LOOP_RES["lld-top10/t10-locker"] = LOOP_RES["lld-thu/thu-locker"];
+LOOP_RES["lld-top10/t10-parking"] = LOOP_RES["lld-parking"];
+LOOP_RES["lld-top10/t10-splitwise"] = LOOP_RES["lld-thu/thu-split"];
+LOOP_RES["lld-top10/t10-booking"] = LOOP_RES["lld-booking"];
+LOOP_RES["lld-top10/t10-vending"] = LOOP_RES["lld-vending"];
+LOOP_RES["lld-top10/t10-elevator"] = LOOP_RES["lld-elevator"];
+LOOP_RES["lld-top10/t10-ratelimiter"] = LOOP_RES["lld-thu/thu-rate"];
+LOOP_RES["lld-top10/t10-filesearch"] = LOOP_RES["lld-files"];
+/* Chess, meeting room and the OOP basics: opened 11 Nov 2026. */
+LOOP_RES["lld-chess"] = [
+ {
+  "kind": "video",
+  "req": true,
+  "label": "Design chess game, LLD mock interview (Concept && Coding)",
+  "url": "https://www.youtube.com/watch?v=kk6QkWxz5jM",
+  "yt": {
+   "id": "kk6QkWxz5jM",
+   "ch": "Concept && Coding - by Shrayansh"
+  },
+  "m": 68,
+  "why": "A full mock interview that builds the board, piece move rules, game state and turn handling step by step."
+ },
+ {
+  "kind": "video",
+  "req": false,
+  "label": "Chess full system design and LLD, OOP design and coding",
+  "url": "https://www.youtube.com/watch?v=Mmw-sEUuCNs",
+  "yt": {
+   "id": "Mmw-sEUuCNs",
+   "ch": "codeWithAryan"
+  },
+  "m": 40,
+  "why": "A shorter second walkthrough of the class design and code, useful to compare against the mock."
+ },
+ {
+  "kind": "read",
+  "req": true,
+  "label": "Design Chess, low-level design guide (codefarm)",
+  "url": "https://codefarm.in/guides/lld/06-lld-interview-problems/chess",
+  "m": 15,
+  "why": "Free guide with a strategy object per piece, turn checks, check and checkmate detection and a game status state machine."
+ },
+ {
+  "kind": "read",
+  "req": false,
+  "label": "Design Chess game (awesome-low-level-design)",
+  "url": "https://github.com/ashishps1/awesome-low-level-design/blob/main/problems/chess-game.md",
+  "m": 6,
+  "why": "Requirements, abstract piece with per-piece subclasses, and a game class that owns turns and results, with a link to Python code."
+ }
+];
+LOOP_RES["lld-meeting"] = [
+ {
+  "kind": "video",
+  "req": true,
+  "label": "Meeting room reservation system, machine coding round",
+  "url": "https://www.youtube.com/watch?v=0_GxR3yQZLg",
+  "yt": {
+   "id": "0_GxR3yQZLg",
+   "ch": "Code design by Naman"
+  },
+  "m": 57,
+  "why": "Builds the booking flow with overlap prevention and double-booking protection."
+ },
+ {
+  "kind": "video",
+  "req": false,
+  "label": "Design meeting scheduler, low level design",
+  "url": "https://www.youtube.com/watch?v=5F-3BzCuUS0",
+  "yt": {
+   "id": "5F-3BzCuUS0",
+   "ch": "Khauf se coder - System Design Interviews"
+  },
+  "m": 56,
+  "why": "A second take on rooms, calendars and slot conflicts to compare design choices."
+ },
+ {
+  "kind": "read",
+  "req": true,
+  "label": "Meeting room scheduler, case study (Low Level Design Mastery)",
+  "url": "https://www.lowleveldesignmastery.com/interview-guide/case-studies/medium/meeting-room-scheduler-list-bookings/",
+  "m": 10,
+  "why": "States the overlap rule and the locking approach for concurrent bookings; full code sits behind a playground."
+ },
+ {
+  "kind": "read",
+  "req": false,
+  "label": "Hotel booking system, low-level design guide (codefarm)",
+  "url": "https://codefarm.in/guides/lld/06-lld-interview-problems/hotel-booking-system",
+  "m": 15,
+  "why": "The same room-and-time-range problem: half-open overlap check, per-room locking and a database exclusion constraint."
+ }
+];
+LOOP_RES["lld-0-oop"] = [
+ {
+  "kind": "video",
+  "req": true,
+  "label": "Python object oriented programming for beginners",
+  "url": "https://www.youtube.com/watch?v=JeznW_7DlB0",
+  "yt": {
+   "id": "JeznW_7DlB0",
+   "ch": "Tech With Tim"
+  },
+  "m": 54,
+  "why": "Covers classes, objects, constructors, inheritance, polymorphism and encapsulation in Python."
+ },
+ {
+  "kind": "video",
+  "req": false,
+  "label": "Uncle Bob's SOLID principles made easy in Python",
+  "url": "https://www.youtube.com/watch?v=pTB30aXS77U",
+  "yt": {
+   "id": "pTB30aXS77U",
+   "ch": "ArjanCodes"
+  },
+  "m": 20,
+  "why": "Walks through all five SOLID principles with Python code."
+ },
+ {
+  "kind": "read",
+  "req": true,
+  "label": "Python OOP concepts (GeeksforGeeks)",
+  "url": "https://www.geeksforgeeks.org/python/python-oops-concepts/",
+  "m": 15,
+  "why": "Classes, objects, constructors and the four pillars with short Python examples; static methods are not covered."
+ },
+ {
+  "kind": "read",
+  "req": false,
+  "label": "SOLID principles tutorial for Python lovers",
+  "url": "https://dev.to/fayomihorace/solid-principles-tutorial-for-python-lovers-54i8",
+  "m": 12,
+  "why": "Each SOLID principle shown as a flawed Python design and then its fix."
+ }
+];
+LOOP_RES["lld-0-pillars"] = LOOP_RES["lld-0-oop"];
+LOOP_RES["lld-0-solid"] = LOOP_RES["lld-0-oop"];
+LOOP_RES["lld-top10/t10-chess"] = LOOP_RES["lld-chess"];
+LOOP_RES["lld-top10/t10-meeting"] = LOOP_RES["lld-meeting"];

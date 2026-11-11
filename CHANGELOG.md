@@ -1611,6 +1611,12 @@ copy and what a failover loses; w4d draws it and its first and last steps point 
 
 What: every Amazon LLD example now follows the flow from his notes: a) clarify in three buckets, b) numbered requirements, c) entities kept or dropped, d) classes as state and behaviour, e) implementation as logic comments, edge cases, then code, f) extensibility, then the lines that set you apart and the final code. One builder (interviews/coding/lld/build.py, lib.py) renders thirteen problem files (lld/problems/*.py) into the Locker mock (part 8), the drills (parts 2 to 7, now amazon-lld-drills.js; the old hand-written parts and amazon-lld-b.js are gone) and the part 0.5 cheat sheets (one screen each, ending in four golden lines). Every piece of code is run by the build. Sized a little above the minimum answer, far below the old pattern-heavy versions. Why: he found the old examples too much to start from. Charter deviation: none (wildcard, Amazon loop).
 
+## 11 Nov 2026: videos and articles on every LLD drill
+
+- What: every LLD part now shows its videos and articles at the top: Splitwise, rate limiter, file search and the Locker mock share the Before Thursday sets; chess, meeting room and the OOP basics (parts 0.1 to 0.3) got new opened sets; each of the top-ten tabs shows its drill's set.
+- Why: he could not find the videos; they sat only under Before Thursday's tabs.
+- Charter: no deviation.
+
 ## 11 Nov 2026: Amazon daily two, Final and Extra days
 
 - What: Daily two day 16, 'Final' (rotting oranges, LRU cache with a TTL follow-up, course schedule II with Kahn and three-colour DFS, job scheduling), and day 17, 'Extra', the nine swap-ins (safest path, redundant connection, house robber II, jump game, rotated search, max consecutive ones III, car pooling, LCA II, evaluate division); 200, 295 and 560 link to their earlier days. Every solution, test and follow-up code ran under Python. Wednesday's two coding blocks and the LLD tab's Coding section point at them. Day dots show a day's label; fenced code in a follow-up answer renders as code.
