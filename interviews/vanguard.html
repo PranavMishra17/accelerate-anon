@@ -3142,10 +3142,15 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       /* Prose is a one-line paragraph starting with a capital; consecutive code paragraphs join into one block. */
       var code = [];
       function flush() { if (code.length) { d.appendChild(cdPre(code.join("\n\n"))); code = []; } }
-      String(x.a).split(/\n\n/).forEach(function (c) {
+      /* A fenced block (```...```) is always code; the text around it splits as below. */
+      String(x.a).split(/```[a-z]*\n?([\s\S]*?)```/).forEach(function (seg, si) {
+        if (si % 2) { flush(); if (seg.trim()) { d.appendChild(cdPre(seg.replace(/^\n+|\n+$/g, ""))); } return; }
+        seg.split(/\n\n/).forEach(function (c) { c = c.replace(/^\n+|\n+$/g, ""); if (c) { para(c); } });
+      });
+      function para(c) {
         var prose = allProse || !/\n/.test(c) && /^[A-Z"'(]/.test(c) && !/^[A-Z]\w*(\(|\s*=|\.)/.test(c) && !/^(If|For|While|With|From|Import|Class|Def)\b.*:$/.test(c);
         if (prose) { flush(); d.appendChild(el("p", "", inl(c))); } else if (c.trim()) { code.push(c.replace(/^\n+|\n+$/g, "")); }
-      });
+      }
       flush();
       w.appendChild(d);
     });
@@ -3564,7 +3569,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     head.appendChild(el("h1", "", "Day " + cur.n + ", " + esc(dayLabel(cur.date)) + (cur.date === today ? " (today)" : "")));
     var dots = el("div", "wb-days");
     days.forEach(function (d) {
-      var n = solvedOf(d), a = el("a", "wb-dot" + (n === d.problems.length ? " done" : n ? " half" : "") + (d.date === today ? " today" : "") + (d === cur ? " on" : ""), String(d.n));
+      var n = solvedOf(d), a = el("a", "wb-dot" + (n === d.problems.length ? " done" : n ? " half" : "") + (d.date === today ? " today" : "") + (d === cur ? " on" : ""), String(d.label || d.n));
       a.href = link("daily", d.date); a.title = dayLabel(d.date) + (n ? ", " + n + " of " + d.problems.length + " solved" : "");
       dots.appendChild(a);
     });

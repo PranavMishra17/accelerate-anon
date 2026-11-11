@@ -16,11 +16,11 @@ window.LOOP_CODING.parts.push({
     ["1", "Delivery framework: say the seven steps without looking", "30 min", "[How the LLD round runs](#/lld/lld-round)"],
     ["2", "File search, like Unix find, with AND and OR filters", "50 min", "[File search](#/lld/lld-filesearch)"],
     ["3", "Parking lot, then the multi-threaded version", "70 min", "[Parking lot](#/lld/lld-parking)"],
-    ["", "Coding block 1: two design-flavoured mediums", "60 min", "[Coding](#/lld/thu-code)"],
+    ["", "Coding block 1: Final day, problems 1 and 2", "60 min", "[Final day](#/daily/2026-11-11)"],
     ["4", "Amazon Locker, the whole round, timed", "45 min", "[Locker mock](#/lld/lld-mock-locker)"],
     ["5", "Rate limiter, then make it thread-safe", "50 min", "[Rate limiter](#/lld/lld-ratelimiter)"],
     ["6", "Splitwise", "45 min", "[Splitwise](#/lld/lld-splitwise)"],
-    ["", "Coding block 2: redo the two you found hardest", "60 min", "[Daily two](#/daily)"],
+    ["", "Coding block 2: Final day, problems 3 and 4", "60 min", "[Final day](#/daily/2026-11-11)"],
     ["7", "Thursday morning: pizza billing, then the breadth skim", "45 min", "[Breadth](#/lld/thu-breadth)"],
     ["8", "Thursday morning: one unseen Amazon prompt, cold, timed", "35 min", "[Unseen](#/lld/thu-unseen)"]]},
    {"t": "p", "text": "**Every design runs the same shape:** requirements said aloud, functional then non-functional; entities; classes and how they relate; the core flow in code; then extensions, naming which class changes. Breaks between blocks, not inside them."}]},
@@ -33,9 +33,18 @@ window.LOOP_CODING.parts.push({
   {"id": "thu-parking", "title": "3 Parking lot", "blocks": [
    {"t": "p", "text": "**70 minutes.** 40 on [Parking lot](#/lld/lld-parking): allocation, pricing as a Strategy passed to the lot. Then 30 on the multi-threaded version: two cars must never get the same spot."},
    {"t": "list", "items": ["Threaded version: say where the race is (find a free spot, then take it), then fix it with a lock per level or a per-spot try-acquire; never one global lock without saying its cost.", "Python: threading.Lock, with lock: around the check and the take; a queue of free spots per size makes the take one atomic pop.", "Concurrency basics if needed: the [concurrency guide on the coding page](../CODING.html#conc)."]}]},
-  {"id": "thu-code", "title": "Coding block 1", "blocks": [
-   {"t": "p", "text": "**60 minutes, out loud, timed, in a plain editor.** Two mediums that are small designs in themselves."},
-   {"t": "list", "items": ["[LRU Cache (146)](https://leetcode.com/problems/lru-cache/): 30 minutes; a dict plus a doubly linked list, then say the OrderedDict version.", "[Insert Delete GetRandom O(1) (380)](https://leetcode.com/problems/insert-delete-getrandom-o1/): 30 minutes; a list plus an index map, swap with the last on delete."]}]},
+  {"id": "thu-code", "title": "Coding", "blocks": [
+   {"t": "p", "text": "**Two blocks of 60 minutes, out loud, timed, in a plain editor.** The four core problems are the Daily two's [Final day](#/daily/2026-11-11), with hints, solutions and follow-ups: rotting oranges (multi-source BFS), LRU cache (your own linked list, then a TTL), course schedule II (Kahn, then three-colour DFS), job scheduling (sort, binary search, DP). Block 1 is the first two, block 2 the last two."},
+   {"t": "p", "text": "**Swap-ins**, if one of the four is too fresh or you finish early. Each opens on the Daily two with hints and a solution: the [Extra day](#/daily/2026-11-12), or the earlier day that already has it."},
+   {"t": "list", "items": [
+    "Graphs: [Number of Islands (200)](#/daily/d01-a), iterative DFS; [Find the Safest Path in a Grid (2812)](#/daily/d17-a), multi-source BFS plus binary search or Dijkstra; [Redundant Connection (684)](#/daily/d17-b), union-find over streaming edges.",
+    "Streams and heaps: [Find Median from Data Stream (295)](#/daily/d12-b), two heaps, then heap internals.",
+    "DP: [House Robber II (213)](#/daily/d17-c) or [Jump Game (55)](#/daily/d17-d), a quick check that your DP narration is smooth.",
+    "Binary search: [Search in Rotated Sorted Array (33)](#/daily/d17-e), then the duplicates follow-up.",
+    "Prefix sums and windows: [Subarray Sum Equals K (560)](#/daily/d07-b); [Max Consecutive Ones III (1004)](#/daily/d17-f), then return the flipped indices.",
+    "Intervals: [Car Pooling (1094)](#/daily/d17-g), a sorted-map version, then a difference array, then how it scales to a database.",
+    "Trees: [Lowest Common Ancestor of a Binary Tree II (1644)](#/daily/d17-h), where the nodes may not exist (Premium on LeetCode; free here).",
+    "Weighted graphs: [Evaluate Division (399)](#/daily/d17-i), the currency conversion problem reported at SDE 2."]}]},
   {"id": "thu-locker", "title": "4 Amazon Locker", "blocks": [
    {"t": "p", "text": "**45 minutes, timed, as the real round.** [The Locker mock](#/lld/lld-mock-locker) is the most reported Amazon LLD ask: the same allocation skeleton as the parking lot, plus size fallback, pickup codes and expiry."},
    {"t": "list", "items": ["Done when: deposit picks the smallest free locker that fits, pickup checks the code and frees it, expired packages go back to the carrier, and you can say which class changes for a new locker size."]}]},
