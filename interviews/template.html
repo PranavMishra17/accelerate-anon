@@ -3561,7 +3561,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     var cur = days.filter(function (d) { return d.date === anchor; })[0];
     if (!cur && anchor) { days.forEach(function (d) { d.problems.forEach(function (p, i) { if (p.id === anchor) { cur = d; pi = i; } }); }); }
     cur = cur || days.filter(function (d) { return d.date === today; })[0] || days.filter(function (d) { return d.date > today; })[0] || days[days.length - 1];
-    if (sub === "2") { pi = 1; }
+    var si = parseInt(sub, 10); if (si >= 1 && si <= cur.problems.length) { pi = si - 1; }
     var p = cur.problems[pi];
     var solvedOf = function (d) { return d.problems.filter(function (q) { return ticks()["solved:" + q.id]; }).length; };
 
