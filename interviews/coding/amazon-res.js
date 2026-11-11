@@ -168,3 +168,383 @@ window.LOOP_RES = {
   {"kind": "read", "req": true, "label": "Hello Interview: design patterns for low level design interviews", "url": "https://www.hellointerview.com/learn/low-level-design/in-a-hurry/patterns", "m": 15, "why": "Factory method, builder, singleton, decorator, facade, strategy, observer and state machine, each with when to reach for it."}
  ]
 };
+
+/* Before Thursday (lld-thu): opened 10 Nov 2026. Items the drills already carry are shared by reference, not copied. */
+LOOP_RES["lld-thu/thu-frame"] = LOOP_RES["lld-round"];
+LOOP_RES["lld-thu/thu-find"] = LOOP_RES["lld-files"];
+LOOP_RES["lld-thu/thu-parking"] = [
+ {
+  "kind": "video",
+  "req": true,
+  "label": "Parking lot in a multi-threaded environment (Java)",
+  "url": "https://www.youtube.com/watch?v=JfMciz7lC3M",
+  "yt": {
+   "id": "JfMciz7lC3M",
+   "ch": "System Design and Gossip"
+  },
+  "m": 26,
+  "why": "Walks through spot allocation under concurrent park and unpark, with where the locks go."
+ },
+ {
+  "kind": "video",
+  "req": false,
+  "label": "Concurrency in low-level design interviews",
+  "url": "https://www.youtube.com/watch?v=d8rmosXttTE",
+  "yt": {
+   "id": "d8rmosXttTE",
+   "ch": "Hello Interview"
+  },
+  "m": 23,
+  "why": "Names the race patterns (check-then-act, scarce resources) and how to answer them in an LLD round."
+ },
+ {
+  "kind": "read",
+  "req": true,
+  "label": "Parking lot design: class model, pricing and the two-gate race",
+  "url": "https://prachub.com/resources/parking-lot-system-design",
+  "m": 23,
+  "why": "Explains the check-then-act race on a spot and compares one lock, per-level locks and atomic claims."
+ },
+ {
+  "kind": "read",
+  "req": false,
+  "label": "Module A5: concurrency in LLD",
+  "url": "https://ajay3007.github.io/learning/system-design/lld/module-a5-notes/",
+  "m": 17,
+  "why": "Covers lost updates, check-then-act bugs and locks, with a thread-safe parking lot exercise (Java, maps to threading.Lock)."
+ }
+];
+LOOP_RES["lld-thu/thu-locker"] = [
+ {
+  "kind": "video",
+  "req": true,
+  "label": "Amazon Locker LLD with OTP verification",
+  "url": "https://www.youtube.com/watch?v=Lw9X8SaB6iA",
+  "yt": {
+   "id": "Lw9X8SaB6iA",
+   "ch": "Shubh Patel"
+  },
+  "m": 38,
+  "why": "Covers the delivery and pickup flow, locker size matching and OTP checks."
+ },
+ {
+  "kind": "video",
+  "req": false,
+  "label": "Amazon Locker system low-level design",
+  "url": "https://www.youtube.com/watch?v=_V191nQYp4g",
+  "yt": {
+   "id": "_V191nQYp4g",
+   "ch": "Prateek Singhal"
+  },
+  "m": 34,
+  "why": "A second full walkthrough of the locker classes and allocation, useful to compare against the first."
+ },
+ {
+  "kind": "read",
+  "req": true,
+  "label": "Amazon Locker low level design (Hello Interview)",
+  "url": "https://www.hellointerview.com/learn/low-level-design/problem-breakdowns/amazon-locker",
+  "m": 18,
+  "why": "Covers size fallback (exact size, then larger, never smaller), per-package access tokens and 7-day expiry."
+ },
+ {
+  "kind": "read",
+  "req": false,
+  "label": "Amazon Locker problem and Python solution",
+  "url": "https://ankur-glitchtracer.github.io/docs/machine_coding/systems/amazon_locker/PROBLEM",
+  "m": 7,
+  "why": "Python code for the token, pickup and expiry logic; its size matching is exact only, so add the fallback yourself."
+ }
+];
+LOOP_RES["lld-thu/thu-rate"] = [
+ {
+  "kind": "video",
+  "req": true,
+  "label": "Rate limiter LLD: token bucket, fixed and sliding window with thread safety",
+  "url": "https://www.youtube.com/watch?v=7y0KWxaUn-E",
+  "yt": {
+   "id": "7y0KWxaUn-E",
+   "ch": "Shubh Patel"
+  },
+  "m": 33,
+  "why": "Builds the algorithms behind one interface and makes each thread-safe."
+ },
+ {
+  "kind": "video",
+  "req": false,
+  "label": "Five rate limiting algorithms",
+  "url": "https://www.youtube.com/watch?v=mQCJJqUfn9Y",
+  "yt": {
+   "id": "mQCJJqUfn9Y",
+   "ch": "Hello Byte"
+  },
+  "m": 18,
+  "why": "Compares token bucket, leaky bucket and the window variants so you can justify your choice."
+ },
+ {
+  "kind": "read",
+  "req": true,
+  "label": "Design a rate limiter: machine coding walkthrough",
+  "url": "https://anudeepsamaiya.github.io/blog/2024-03-22-lld-rate-limiter-machine-coding",
+  "m": 10,
+  "why": "Python Strategy interface with token bucket and window limiters, each guarded by a threading.Lock."
+ },
+ {
+  "kind": "read",
+  "req": false,
+  "label": "Sliding window rate limiting: design and implementation",
+  "url": "https://arpitbhayani.me/blogs/sliding-window-ratelimiter",
+  "m": 12,
+  "why": "Explains how the sliding window works and where it differs from the fixed window."
+ }
+];
+LOOP_RES["lld-thu/thu-split"] = [
+ {
+  "kind": "video",
+  "req": true,
+  "label": "Splitwise simplify debt algorithm and LLD",
+  "url": "https://www.youtube.com/watch?v=6UeDb7ORVPI",
+  "yt": {
+   "id": "6UeDb7ORVPI",
+   "ch": "Concept && Coding - by Shrayansh"
+  },
+  "m": 33,
+  "why": "Covers the Splitwise design and the debt simplification algorithm."
+ },
+ {
+  "kind": "video",
+  "req": false,
+  "label": "Splitwise LLD: simplify debts, Strategy pattern and code",
+  "url": "https://www.youtube.com/watch?v=2QvlBrhLLHc",
+  "yt": {
+   "id": "2QvlBrhLLHc",
+   "ch": "Shubh Patel"
+  },
+  "m": 47,
+  "why": "Shows the split Strategy for equal, exact and percent, and the balance sheet, in Java."
+ },
+ {
+  "kind": "read",
+  "req": true,
+  "label": "Design Splitwise: expense splitting and debt simplification",
+  "url": "https://anudeepsamaiya.github.io/blog/2024-08-10-lld-splitwise",
+  "m": 10,
+  "why": "Python split strategies, net balance per user and greedy debt simplification, with why greedy is not always optimal."
+ },
+ {
+  "kind": "read",
+  "req": false,
+  "label": "Low-level design: Splitwise expense sharing app",
+  "url": "https://www.techinterview.org/post/3233464323/lld-splitwise-expense-sharing/",
+  "m": 7,
+  "why": "Covers equal, exact and percent strategies, a balance matrix and greedy debt simplification; the code is garbled on the page, so check it elsewhere."
+ }
+];
+LOOP_RES["lld-thu/thu-breadth"] = [
+ {
+  "kind": "video",
+  "req": true,
+  "label": "Decorator design pattern with a Python example",
+  "url": "https://www.youtube.com/watch?v=3m1TyiKk5eg",
+  "yt": {
+   "id": "3m1TyiKk5eg",
+   "ch": "Code and Debug"
+  },
+  "m": 13,
+  "why": "Shows the Decorator pattern in Python, the shape you would use for toppings that wrap a base pizza."
+ },
+ {
+  "kind": "video",
+  "req": false,
+  "label": "Decorator pattern, pizza shop example",
+  "url": "https://www.youtube.com/watch?v=c1I_xZ9-nR4",
+  "yt": {
+   "id": "c1I_xZ9-nR4",
+   "ch": "Roshan Adhav"
+  },
+  "m": 16,
+  "why": "Walks the pizza and toppings case directly, useful to see sizes and toppings stacked."
+ },
+ {
+  "kind": "read",
+  "req": true,
+  "label": "LLD: Design pizza pricing system",
+  "url": "https://programmingappliedai.substack.com/p/lld-design-pizza-pricing-system",
+  "m": 10,
+  "why": "Weighs Decorator against Strategy and pricing rules for sizes, toppings and combo deals (Java code)."
+ },
+ {
+  "kind": "read",
+  "req": false,
+  "label": "Refactoring.guru: Decorator",
+  "url": "https://refactoring.guru/design-patterns/decorator",
+  "m": 8,
+  "why": "The clean structure and pseudocode of Decorator, to name the parts when you defend the choice."
+ },
+ {
+  "kind": "video",
+  "req": true,
+  "label": "Topological sort: dependency resolve tool",
+  "url": "https://www.youtube.com/watch?v=RQsxlZlz1LE",
+  "yt": {
+   "id": "RQsxlZlz1LE",
+   "ch": "Kartik Arora"
+  },
+  "m": 24,
+  "why": "Applies topological sort to a dependency resolver, the closest match to the installer prompt."
+ },
+ {
+  "kind": "video",
+  "req": false,
+  "label": "Topological sort algorithm",
+  "url": "https://www.youtube.com/watch?v=eL-KzMXSXXI",
+  "yt": {
+   "id": "eL-KzMXSXXI",
+   "ch": "WilliamFiset"
+  },
+  "m": 15,
+  "why": "A clear account of the algorithm itself and how it fails on a cycle."
+ },
+ {
+  "kind": "read",
+  "req": true,
+  "label": "Java machine coding: a dependency resolver with topological sort",
+  "url": "https://dev.to/machinecodingmaster/java-machine-coding-building-a-dependency-resolver-with-topological-sort-3gpj",
+  "m": 8,
+  "why": "Frames it as a design: Task, DependencyGraph, DependencyResolver, with Kahn's algorithm and the size check for cycles."
+ },
+ {
+  "kind": "read",
+  "req": false,
+  "label": "Topological sort: detecting cycles in dependency graphs",
+  "url": "https://www.resumelens.org/blog/dsa/topological-sort-detecting-cycles-in-dependency-graphs",
+  "m": 10,
+  "why": "Kahn and DFS versions with cycle detection, explained without code."
+ }
+];
+LOOP_RES["lld-vending"] = [
+ {
+  "kind": "video",
+  "req": true,
+  "label": "Design a vending machine with the State pattern",
+  "url": "https://www.youtube.com/watch?v=8CcB3xAt9p4",
+  "yt": {
+   "id": "8CcB3xAt9p4",
+   "ch": "Riddhi Dutta"
+  },
+  "m": 27,
+  "why": "Builds the vending machine as state classes with transitions (Java, but the structure carries to Python)."
+ },
+ {
+  "kind": "video",
+  "req": false,
+  "label": "System design mock interview: design a vending machine",
+  "url": "https://www.youtube.com/watch?v=D0kDMUgo27c",
+  "yt": {
+   "id": "D0kDMUgo27c",
+   "ch": "Aced (formerly Exponent)"
+  },
+  "m": 19,
+  "why": "A full mock showing how the requirements, states and follow-ups are talked through."
+ },
+ {
+  "kind": "read",
+  "req": true,
+  "label": "State design pattern (GeeksforGeeks)",
+  "url": "https://www.geeksforgeeks.org/system-design/state-design-pattern/",
+  "m": 10,
+  "why": "A vending machine with Ready, Product Selected, Payment Pending and Out of Stock states, in runnable Python."
+ },
+ {
+  "kind": "read",
+  "req": false,
+  "label": "awesome-low-level-design: vending machine",
+  "url": "https://github.com/ashishps1/awesome-low-level-design/blob/main/problems/vending-machine.md",
+  "m": 5,
+  "why": "Requirements and the Idle, Ready, Dispense class design, with a linked Python solution."
+ }
+];
+LOOP_RES["lld-booking"] = [
+ {
+  "kind": "video",
+  "req": true,
+  "label": "Concurrency in low-level design interviews",
+  "url": "https://www.youtube.com/watch?v=d8rmosXttTE",
+  "yt": {
+   "id": "d8rmosXttTE",
+   "ch": "Hello Interview"
+  },
+  "m": 23,
+  "why": "Explains check-then-act races and locks, the exact bug in double booking a seat."
+ },
+ {
+  "kind": "video",
+  "req": false,
+  "label": "BookMyShow low level design with code and concurrency",
+  "url": "https://www.youtube.com/watch?v=t2FiaSThCw8",
+  "yt": {
+   "id": "t2FiaSThCw8",
+   "ch": "Mrunmai Dahare"
+  },
+  "m": 34,
+  "why": "Designs the movie booking system end to end and handles concurrent seat booking in code."
+ },
+ {
+  "kind": "read",
+  "req": true,
+  "label": "Designing a movie ticket booking system: the LLD interview, explained",
+  "url": "https://dev.to/gowthampotureddi/designing-a-movie-ticket-booking-system-the-low-level-design-interview-explained-2m3e",
+  "m": 10,
+  "why": "Covers a seat lock manager with expiring holds and an atomic check-and-set against double booking."
+ },
+ {
+  "kind": "read",
+  "req": false,
+  "label": "Ticket booking system low-level design",
+  "url": "https://www.techinterview.org/post/3233467045/lld-ticket-booking/",
+  "m": 9,
+  "why": "Compares pessimistic locking, optimistic version checks and timed holds for seats."
+ }
+];
+LOOP_RES["lld-thu/thu-unseen"] = [
+ {
+  "kind": "video",
+  "req": true,
+  "label": "Low level design interview: Zomato with Keerti Purswani",
+  "url": "https://www.youtube.com/watch?v=F13kHddazzo",
+  "yt": {
+   "id": "F13kHddazzo",
+   "ch": "Gaurav Sen"
+  },
+  "m": 44,
+  "why": "A real interview on an unfamiliar delivery prompt, showing how ambiguity is clarified before designing."
+ },
+ {
+  "kind": "video",
+  "req": false,
+  "label": "Amazon SDE-1 interview secrets: LLD and OOP rounds",
+  "url": "https://www.youtube.com/watch?v=-UyDjynYBTQ",
+  "yt": {
+   "id": "-UyDjynYBTQ",
+   "ch": "Vishal Unplugged"
+  },
+  "m": 11,
+  "why": "What the Amazon LLD round looks like and how it is scored."
+ },
+ {
+  "kind": "read",
+  "req": true,
+  "label": "Amazon L5 interview guide (Hello Interview)",
+  "url": "https://www.hellointerview.com/guides/amazon/l5",
+  "m": 10,
+  "why": "The Amazon LLD round format, common prompts such as pizza billing and locker, and what is evaluated."
+ },
+ {
+  "kind": "read",
+  "req": false,
+  "label": "Amazon low level design questions asked in 2026",
+  "url": "https://codezym.com/blog/18-amazon-low-level-design-lld-interview-questions-2026",
+  "m": 10,
+  "why": "A list of Amazon LLD prompts with approach hints, for picking cold practice problems."
+ }
+];

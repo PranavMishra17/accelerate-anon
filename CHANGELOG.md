@@ -1611,6 +1611,12 @@ copy and what a failover loses; w4d draws it and its first and last steps point 
 
 What: every Amazon LLD example now follows the flow from his notes: a) clarify in three buckets, b) numbered requirements, c) entities kept or dropped, d) classes as state and behaviour, e) implementation as logic comments, edge cases, then code, f) extensibility, then the lines that set you apart and the final code. One builder (interviews/coding/lld/build.py, lib.py) renders thirteen problem files (lld/problems/*.py) into the Locker mock (part 8), the drills (parts 2 to 7, now amazon-lld-drills.js; the old hand-written parts and amazon-lld-b.js are gone) and the part 0.5 cheat sheets (one screen each, ending in four golden lines). Every piece of code is run by the build. Sized a little above the minimum answer, far below the old pattern-heavy versions. Why: he found the old examples too much to start from. Charter deviation: none (wildcard, Amazon loop).
 
+## 10 Nov 2026: Amazon, before Thursday
+
+- What: a first LLD part, 'Before Thursday: the order of work' (lld-thu): Wednesday's eight hours in order (framework, file search, parking lot and its threaded version, Locker, rate limiter, Splitwise, two coding blocks) and Thursday morning's breadth skim and one unseen prompt; 36 opened videos and articles (two and two per item, Required and Optional), shared by reference where a drill already had them; Plan days for 11 and 12 Nov. Loop pages' inline text now renders [label](#route) links.
+- Why: rounds 3 and 4 are Thursday 12 Nov; his list of LLD priorities.
+- Charter: no deviation.
+
 ## 10 Nov 2026: Amazon rounds 1 and 2 recorded
 
 - What: the Rounds tab now has round 1 (Bar Raiser, three leadership questions) and round 2 (two GenAI questions and the duplicate-orders coding problem, with his code and a corrected version that also catches ORD-1004).

@@ -1063,7 +1063,8 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   /* ---------------------------------------------------------------- helpers */
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function inl(s) {
-    return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\[([^\]]+)\]\(((?:#|\.\.\/|https:\/\/)[^)\s]+)\)/g, '<a href="$2">$1</a>');
   }
   function paras(host, list) { list.forEach(function (p) { host.appendChild(el("p", "", inl(p))); }); }
 
