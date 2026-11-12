@@ -16,13 +16,13 @@ LOOP = {
     "id": "mercor",
     "title": "Mercor, Applied AI (Enterprise)",
     "company": "Mercor",
-    "subtitle": "Onsite, Wednesday 11 November: coding, system design, algorithms, GTM",
+    "subtitle": "Onsite, Monday 16 November: coding, system design, algorithms, GTM",
     # Brand colour for the hub's wordmark. Mercor publishes no single accent: #3923B1, a deep indigo,
     # is among the inline colours on mercor.com/enterprise (read 2026-10-19); #9FA2FF from the same
     # page for the dark surface.
     "brand": "#3923B1", "brand_dark": "#9FA2FF",
-    "when_iso": "2026-11-11T10:00:00-08:00",
-    "when": "Wednesday 11 November 2026, 10:00 AM to 2:30 PM Pacific, in person at Mercor HQ, San Francisco",
+    "when_iso": "2026-11-16T10:00:00-08:00",
+    "when": "Monday 16 November 2026 (moved from 11 November; times as first sent, 10:00 AM to 2:30 PM Pacific), in person at Mercor HQ, San Francisco",
     "who": ("Coding review: Bradley Moon, Member of Technical Staff. System design: Ishwari Nalgirkar. Algorithms: Pranav Mereddy, "
             "Tech Lead Manager. GTM: Will Ledingham, Engagement Manager, and Lily Liu, Principal, both Enterprise AI. Set-up and wrap-up: "
             "Maggie Cassidy. Leadership chats may be slotted into spare time."),
@@ -34,7 +34,7 @@ LOOP = {
             "model and schema, API, block diagram, behaviour under concurrent load, recovery from failures, the trade-offs. No code. "
             "Algorithms: real architecture and scaling problems, discussion-based; not LeetCode, not system design. GTM: communication, "
             "product sense, user empathy, how you handle users and stakeholders."),
-    "plan_kicker": "Things to do for round 3, Wednesday 11 November",
+    "plan_kicker": "Things to do for round 3, Monday 16 November",
     "extra": ("<b>Things to do for round 3, in order.</b> Every item links to where it lives. "
               "<ol>"
               "<li><b>System design brush-up.</b> <a href=\"#/learn/sd-brushup\">Learn: the brush-up</a>: <a href=\"../index.html#/s/w1a\" target=\"_blank\" rel=\"noopener\">w1a</a>, <a href=\"../index.html#/s/w4e\" target=\"_blank\" rel=\"noopener\">w4e</a>, <a href=\"../index.html#/s/w4a\" target=\"_blank\" rel=\"noopener\">w4a</a>, <a href=\"../index.html#/s/w5e\" target=\"_blank\" rel=\"noopener\">w5e</a> first.</li>"
@@ -200,7 +200,7 @@ ROUNDS = [
           "keep": [],
           "notes": ["A good set; she answered at length."]}]},
     {"title": "Round 3: the onsite",
-     "when": "Wednesday 11 November 2026, 10:00 AM to 2:30 PM Pacific",
+     "when": "Monday 16 November 2026 (moved from 11 November), 10:00 AM to 2:30 PM Pacific as first sent",
      "who": "Bradley Moon (coding review), Ishwari Nalgirkar (system design), Pranav Mereddy (algorithms), Will Ledingham and Lily Liu (GTM); Maggie Cassidy (set-up, wrap-up)",
      "format": ("Coding challenge: the link arrives by email on the day; one hour of solo work, no kickoff, screen-recorded; then 30 minutes of live "
                 "review and collaborative coding. No LLM tools, no Google search or Gemini, no IDE plugins. Focus: data structures, graph reasoning, "
@@ -455,4 +455,4 @@ DRILLS = [
     {"id": "complexity", "prompt": "State the time and space complexity of what you just wrote, and of the worst sort that still works.", "target": "2 minutes", "seconds": 120, "ref": "../index.html#/w/wc37"},
 ]
 
-MOCK_HOW = ("Three mocks run in chat, each as the round on 11 November: 'run the Mercor coding mock' (a solo hour on a graph problem, no AI, then a 30-minute review where you extend it), 'run the Mercor design mock' (45 minutes of backend design: schema, API, block diagram, concurrent load, failure recovery) and 'run the Mercor GTM mock' (15 minutes with an engagement manager and a principal). Critique after each.")
+MOCK_HOW = ("Three mocks run in chat, each as the round on 16 November: 'run the Mercor coding mock' (a solo hour on a graph problem, no AI, then a 30-minute review where you extend it), 'run the Mercor design mock' (45 minutes of backend design: schema, API, block diagram, concurrent load, failure recovery) and 'run the Mercor GTM mock' (15 minutes with an engagement manager and a principal). Critique after each.")

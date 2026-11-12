@@ -2132,6 +2132,21 @@ window.SHEETS = {
       { t: "Output variance", mem: "Wording moves, facts should not.", d: "The model picks among likely answers, so phrasing differs between runs; you bound it by controlling the facts and testing a fixed set." }
     ]
   },
+  "wc39:5": {
+    cheat: [
+      "Clarity, not accent: two thirds speed, one idea per sentence, pause after numbers and names.",
+      "Signpost: say how many, then first, second.",
+      "Play back before you answer: so if I have it right... is that it?",
+      "Missed it: could you say that part again? I want to get the number right.",
+      "Lost the word: describe it and keep going. Correct once: let me put that better.",
+      "Open with the plan, close with the next step, the owner and the date."
+    ],
+    terms: [
+      { t: "Signposting", mem: "Say how many, then number them.", d: "Telling the listener the shape of what you will say before you say it, so they can follow even if one word is wrong." },
+      { t: "Play-back", mem: "Their words, back to them.", d: "Restating the customer's problem and goal before answering, to show you listened and to catch a misunderstanding early." },
+      { t: "Repair", mem: "Ask for the part, not the whole.", d: "Recovering when you missed something or lost a word: ask for the specific number or name, or describe the thing and move on." }
+    ]
+  },
   "wc39:4": {
     cheat: [
       "alfred_: over 5,000 active users, everyday people, not engineers.",
@@ -2488,6 +2503,11 @@ window.SHEETS = {
           ["Wrong request", "agree with the goal, ask what sits behind it", "share resolved without a person"],
           ["Output varies", "two good analysts", "answers on the facts that matter stay the same"]] } },
       { title: "When quality drops, ask in this order", ladder: [["1", "did it really change? replay the same cases", ""], ["2", "what changed: model, input, their side, prompt", ""], ["3", "which request type or tool fails", ""], ["4", "fix, then keep the cases as a check", ""]] }
+    ],
+    "wc39:5": [
+      { rule: "Clarity, not accent: slower, shorter, structured." },
+      { title: "The first thirty seconds after they finish", flow: ["play it back", "is that it?", "say how many points", "first, second", "next step, owner, date"] },
+      { title: "Three ready lines", calc: [["missed a part", "could you say the number again?"], ["lost the word", "describe it, keep going"], ["said it badly", "let me put that better"]] }
     ],
     "wc39:4": [
       { rule: "True facts only. Everyday users, plain words, one honest limit." },

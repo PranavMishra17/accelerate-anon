@@ -801,8 +801,8 @@
 <script src="private/figures.js"></script>
 <script src="private/notes.js"></script>
 <script src="data/streams.js?v=d0b499a4"></script>
-<script src="data/reading.js?v=a37530bc"></script>
-<script src="data/sheets.js?v=ed0cc952"></script>
+<script src="data/reading.js?v=a0f9b557"></script>
+<script src="data/sheets.js?v=d7fa0ecf"></script>
 <script src="site/res.js?v=c33c7564"></script>
 <script src="site/nlm.js?v=2c36ecf8"></script>
 <script src="site/sheet.js?v=d5ed86a7"></script>
@@ -3243,8 +3243,8 @@
       file: "interviews/ecogpt.html", note: "Round 1: a call with Ethan Leonard, founder and CEO. Agents, memory, evals, open models, cost per message." },
     { id: "homedepot", date: "", name: "The Home Depot, Principal Data Scientist - CX", when: "Date to be set", forWhat: "Home Depot",
       file: "interviews/homedepot.html", note: "Recruiter call with Kristen Bernal: agentic AI for customer self-service, evaluation, level." },
-    { id: "mercor", date: "2026-11-11", name: "Mercor, Applied AI (Enterprise)", when: "Wed 11 Nov, 10 AM PT", forWhat: "Mercor",
-      file: "interviews/mercor.html", note: "Onsite Wed 11 Nov: a solo coding hour with no AI and its review, backend system design, an algorithms discussion, a GTM chat." },
+    { id: "mercor", date: "2026-11-16", name: "Mercor, Applied AI (Enterprise)", when: "Mon 16 Nov, 10 AM PT", forWhat: "Mercor",
+      file: "interviews/mercor.html", note: "Onsite Mon 16 Nov: a solo coding hour with no AI and its review, backend system design, an algorithms discussion, a GTM chat." },
     { id: "vanguard", date: "2026-10-07", name: "Vanguard, Conversational AI", when: "Wed 7 Oct, 3 PM", forWhat: "Vanguard",
       file: "interviews/vanguard.html", note: "Client interview with Vanguard's team, via Mphasis: conversational AI and deep NLP." },
     { id: "commure", date: "2026-10-05", name: "Commure, Voice Agents", when: "Mon 5 Oct", forWhat: "Commure",
@@ -3297,7 +3297,7 @@
   var WILDCARD = {
     title: "Wildcard",
     /* One line: the loop in play. Loops that have happened are parked, not described here. */
-    note: "Mercor, Applied AI (Enterprise): the onsite in San Francisco, Wednesday 11 November. Sessions wc35 to wc37; wc32 to wc34 are the light review.",
+    note: "Mercor, Applied AI (Enterprise): the onsite in San Francisco, Monday 16 November. Sessions wc35 to wc37; wc32 to wc34 are the light review.",
     sessions: [
       {
         id: "wc32", track: "Systems", forWhat: "Mercor, technical screen Fri 23 Oct", len: "50m", est: 50,
@@ -4017,7 +4017,7 @@
         ]
       },
       {
-        id: "wc39", track: "Systems", forWhat: "Mercor, onsite Wed 11 Nov", len: "1h 15m", est: 75,
+        id: "wc39", track: "Systems", forWhat: "Mercor, onsite Mon 16 Nov", len: "1h 30m", est: 90,
         name: "The GTM conversation: customers, stakeholders, product sense",
         blurb: "Fifteen minutes with an Engagement Manager and a Principal of Enterprise AI: how you talk to a customer, what you ask first, how you say no, and how you explain an AI system to someone who does not write code.",
         intro: "Mercor describes this round in one line: communication, product sense, user empathy, and how you approach users and stakeholders. The two interviewers are an Engagement Manager and a Principal, Enterprise AI. They sit between the customer and the engineers. So they are asking one thing: would you be safe, and useful, in front of a Fortune 500 stakeholder? No public report of this round exists. Everything here is built from Mercor's own wording, the Enterprise page and the public posts on customer-facing interview rounds, and it is practice, not a leak. The skill is the same in every scenario: ask before you answer, tie the work to a number the customer cares about, and say the hard thing kindly.",
@@ -4128,7 +4128,28 @@
                     "People get a text and ask why, so I built a read-only tool that answers 'why was I notified'.",
                     "I explain trade-offs in plain words: the model never writes a name or owner, it picks from real items and the code attaches the rest. We give up some flexibility and the assistant can't invent a person.",
                     "I'd be honest that it's a consumer product, not an enterprise one, and the part that carries over is asking what they need and measuring it."],
-              close: "That's the habit I'd bring to an enterprise customer." } }
+              close: "That's the habit I'd bring to an enterprise customer." } },
+          { t: "Running the call in your second language: pace, structure, repair", m: 15,
+            out: "A customer has described their problem for two minutes. What do you say in the next thirty seconds, and what do you do if you missed part of it?",
+            d: "Two people from the customer side are asking whether a customer would follow you and trust you. They grade clarity, not accent. A second language costs you in two places: speed, because you translate under pressure, and recovery, when a word or a sentence goes missing. Neither is fixed by more vocabulary. Slow down and keep sentences short; let structure carry the meaning (say how many points, then number them); play back what they said before you answer; and have three ready lines for the moment you did not understand or lost the word. Good customer-facing engineers who are native speakers do the same things, so they read as skill, not as a gap.",
+            pts: [
+              "Pace: about two thirds of your normal speed, one idea per sentence, a pause after a number or a name. A pause reads as thinking; rushing reads as nerves",
+              "Signpost: 'Two things I'd want to know first.' Then 'first', 'second'. The count holds the listener even when one word comes out wrong",
+              "Play back before you answer: 'So if I have it right, the reviewers disagree on about one case in five, and you need it under one in ten. Is that it?' It shows you listened, buys you time and catches a misunderstanding early",
+              "Did not catch it: 'Sorry, could you say that part again? I want to get the number right.' Asking for a number or a name sounds careful, never lost",
+              "Lost the word: describe it ('the step where a person checks the output') and keep going. Never stop mid-sentence to search",
+              "Correct yourself once: 'Let me put that better.' Then the short version. No apology",
+              "Lead it: open with the plan ('can I ask a few questions about where you are, then suggest a first step?') and close with the next step, who owns it and by when",
+              "Rehearse the five sentences you will use most (the opener, the play-back, the trade-off, saying no, the close) aloud ten times each, so they come out without translating"
+            ],
+            where: "This is how you deliver steps 3 to 5 of this session; the scenarios themselves are under Prep, GTM round, on the Mercor page.",
+            url: "https://www.youtube.com/watch?v=BAJMNQXzrgg",
+            ans: { lead: "Before I answer, I play it back.",
+              pts: ["'So if I have it right, the problem is this, and success looks like that. Is that it?'",
+                    "Then I say how many things I'll cover and number them, so they can follow even if I phrase one badly.",
+                    "If I missed a part I ask for it by name: 'could you say the number again? I want to get it right.'",
+                    "And I close with the next step, who owns it and by when."],
+              close: "Short sentences, a play-back, and a clear next step: that's what makes a customer trust the call." } }
         ]
       },
       {
