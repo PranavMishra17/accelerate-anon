@@ -23,16 +23,16 @@ LOOP = {
     "brand": "#3923B1", "brand_dark": "#9FA2FF",
     "when_iso": "2026-11-16T10:00:00-08:00",
     "when": "Monday 16 November 2026 (moved from 11 November; times as first sent, 10:00 AM to 2:30 PM Pacific), in person at Mercor HQ, San Francisco",
-    "who": ("Coding review: Bradley Moon, Member of Technical Staff. System design: Ishwari Nalgirkar. Algorithms: Pranav Mereddy, "
-            "Tech Lead Manager. GTM: Will Ledingham, Engagement Manager, and Lily Liu, Principal, both Enterprise AI. Set-up and wrap-up: "
-            "Maggie Cassidy. Leadership chats may be slotted into spare time."),
+    "who": ("As of the 16 November agenda: coding review, Ben Hunsberger, Tech Lead Manager, Deployments. System design: Drew Kringel, "
+            "Member of Technical Staff, Security. Algorithms: Jack Jenkins. GTM: Alex Gonzalez, Principal, Enterprise AI, alone. Set-up and "
+            "wrap-up: Maggie Cassidy."),
     "format": ("The agenda, Pacific time: 10:00 set-up; 10:15 coding challenge, one hour solo and screen-recorded; 11:15 coding review, 30 minutes; "
                "11:45 break; 12:15 SWE system design, 45 minutes; 1:00 break; 1:15 algorithms, 30 minutes; 1:45 break; 2:00 GTM, 15 minutes; "
                "2:15 wrap-up. The calendar block runs longer in case leadership chats are added."),
     "bar": ("Coding: data structures, graph reasoning, correctness under constraints, explaining and extending your code live. No LLM tools, "
             "no Google search or Gemini, no IDE plugins; any language, Python recommended. System design: a backend system end to end: data "
             "model and schema, API, block diagram, behaviour under concurrent load, recovery from failures, the trade-offs. No code. "
-            "Algorithms: real architecture and scaling problems, discussion-based; not LeetCode, not system design. GTM: communication, "
+            "Algorithms: real architecture and scaling problems, discussion-based; not LeetCode, not system design; \"true algorithms\". GTM: communication, "
             "product sense, user empathy, how you handle users and stakeholders."),
     "plan_kicker": "Things to do for round 3, Monday 16 November",
     "extra": ("<b>Things to do for round 3, in order.</b> Every item links to where it lives. "
@@ -201,7 +201,7 @@ ROUNDS = [
           "notes": ["A good set; she answered at length."]}]},
     {"title": "Round 3: the onsite",
      "when": "Monday 16 November 2026 (moved from 11 November), 10:00 AM to 2:30 PM Pacific as first sent",
-     "who": "Bradley Moon (coding review), Ishwari Nalgirkar (system design), Pranav Mereddy (algorithms), Will Ledingham and Lily Liu (GTM); Maggie Cassidy (set-up, wrap-up)",
+     "who": "Ben Hunsberger (coding review), Drew Kringel, Security (system design), Jack Jenkins (algorithms), Alex Gonzalez (GTM); Maggie Cassidy (set-up, wrap-up)",
      "format": ("Coding challenge: the link arrives by email on the day; one hour of solo work, no kickoff, screen-recorded; then 30 minutes of live "
                 "review and collaborative coding. No LLM tools, no Google search or Gemini, no IDE plugins. Focus: data structures, graph reasoning, "
                 "correctness under constraints, explaining and iterating. System design, 45 minutes, live: a backend system end to end (schema, API, "
@@ -258,7 +258,7 @@ SCRIPTS = [
 ]
 
 QA = [
-    {"group": "GTM round", "blurb": "Fifteen minutes with an Engagement Manager and a Principal, Enterprise AI. Pointers, not scripts: remember the bold line, then tell it your way. Session wc39 teaches each one.", "items": [
+    {"group": "GTM round", "blurb": "Fifteen minutes with a Principal, Enterprise AI. Pointers, not scripts: remember the bold line, then tell it your way. Session wc39 teaches each one.", "items": [
         {"q": "The four stories to have ready (yours, about 90 seconds each)", "short": "Four stories",
          "a": ["**A 30 to 60 second introduction.** Current role, the most relevant experience, one or two depth areas, why this role. Your intro on this page is the base.",
                "**A stakeholder story.** A time you listened, clarified what they needed, and changed course. Pick it from your work; tell it in your words.",

@@ -1720,3 +1720,11 @@ a what-varies table that names a pattern only where something varies. Fields `sk
 **9 Nov 2026: Story panels are editable.** On any loop with a story bank (the Leadership tab), Edit on a story panel turns the hook, the STAR paragraphs and their part labels, the pointers, the cues and the follow-ups (question, what it tests, answer) into editable text, with Add and Remove for each list. Edits save as he types in localStorage accelerate.stories.<loop>, override the bank everywhere it shows (hub table hooks, loop day card), and reset per story; Copy all my edits gives the JSON to fold into the private bank. Why: he wanted to edit and add to the stories himself. No charter deviation.
 
 **12 Nov 2026: Mercor GTM, a step on running the call in a second language; the onsite moved to 16 November.** wc39 gains a sixth step: pace, signposting, playing the customer's words back, asking for the part you missed, and opening and closing a call. Its two videos (Vinh Giang; Maria Sheeran) and two articles (Babel Group; Gong) were all opened and checked. The step has a cheat sheet and key terms. The Mercor page and LOOPS now read Monday 16 November, with times as first sent. Why: he asked for help leading a customer-facing call when English is not his first language. No charter deviation.
+
+**12 Nov 2026: Mercor panel for 16 November.** From the new agenda email, the panel is:
+- coding review: Ben Hunsberger, Tech Lead Manager, Deployments;
+- system design: Drew Kringel, Member of Technical Staff, Security;
+- algorithms: Jack Jenkins;
+- GTM: Alex Gonzalez, Principal, Enterprise AI, alone.
+
+The times are unchanged, 10:00 to 2:30 Pacific. The GTM wording in wc39 and on Prep now addresses one interviewer instead of two. No charter deviation.
