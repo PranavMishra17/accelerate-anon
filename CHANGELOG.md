@@ -1611,6 +1611,10 @@ copy and what a failover loses; w4d draws it and its first and last steps point 
 
 What: every Amazon LLD example now follows the flow from his notes: a) clarify in three buckets, b) numbered requirements, c) entities kept or dropped, d) classes as state and behaviour, e) implementation as logic comments, edge cases, then code, f) extensibility, then the lines that set you apart and the final code. One builder (interviews/coding/lld/build.py, lib.py) renders thirteen problem files (lld/problems/*.py) into the Locker mock (part 8), the drills (parts 2 to 7, now amazon-lld-drills.js; the old hand-written parts and amazon-lld-b.js are gone) and the part 0.5 cheat sheets (one screen each, ending in four golden lines). Every piece of code is run by the build. Sized a little above the minimum answer, far below the old pattern-heavy versions. Why: he found the old examples too much to start from. Charter deviation: none (wildcard, Amazon loop).
 
+## 2026-11-12: Amazon round 3 recorded
+
+The Rounds tab has round 3 from his account: the wrong-midway question (V7, then V8 as what he would do differently), the who-can-answer LLD with its weekly-limit extension and a runnable sketch of his sliding window, and his closing question with her answer. His rating: A+. No charter deviation.
+
 ## 2026-11-11: Amazon LLD tab, duplicates merged and his six first
 
 File management and File search are one drill, File system and find: the tree, then find with AND, OR and NOT filters. Ticket booking, Meeting room and Library are one drill, Reservations, with rooms by time overlap, recurring bookings and library copies as its extensions. The tab now lists the six for Thursday first (framework, file system and find, parking, Locker, rate limiter, Splitwise), then Breadth, then Foundations, under group headings. The ten Amazon asks is an index linking each ask to its drill; its ten cheat-sheet tabs repeated the drills and are gone. Why: he found the same problem twice and the order did not follow his list. No charter deviation.
