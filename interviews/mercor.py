@@ -347,7 +347,7 @@ QA = [
                "**The team.** How engineers, forward deployed engineers and business experts are structured, and the next steps."],
          "land": "Two questions, then your closing line."}]},
 ]
-TABS =["overview", "learn", "sessions", "coding", "lld", "prep", "rounds", "mocks"]   # Concurrency folds into Coding
+TABS =["overview", "reported", "learn", "sessions", "coding", "lld", "prep", "rounds", "mocks"]   # Concurrency folds into Coding
 CONC_N = 4   # the shared concurrency guide, as one part with chapters, after asyncio (part 3)
 SHARED_JS = ["coding/concurrency.js"]   # the Concurrency tab, shared with CODING.html
 
@@ -456,3 +456,5 @@ DRILLS = [
 ]
 
 MOCK_HOW = ("Three mocks run in chat, each as the round on 16 November: 'run the Mercor coding mock' (a solo hour on a graph problem, no AI, then a 30-minute review where you extend it), 'run the Mercor design mock' (45 minutes of backend design: schema, API, block diagram, concurrent load, failure recovery) and 'run the Mercor GTM mock' (15 minutes with an engagement manager and a principal). Critique after each.")
+
+from _mercor_reported import REPORTED   # the Reported tab: every reported question, by round

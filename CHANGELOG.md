@@ -1728,3 +1728,13 @@ a what-varies table that names a pattern only where something varies. Fields `sk
 - GTM: Alex Gonzalez, Principal, Enterprise AI, alone.
 
 The times are unchanged, 10:00 to 2:30 Pacific. The GTM wording in wc39 and on Prep now addresses one interviewer instead of two. No charter deviation.
+
+**12 Nov 2026: Mercor Reported tab, his worked solutions, and every reported gap built.**
+- **The Reported tab** (`interviews/_mercor_reported.py`; `tabReported` and `rpCard` in the template) starts with a 13-step baseline: w4e, w5f, the Hello Interview 2PC-versus-saga video and multi-step article, the 45-minute plan, the three guide designs, the coding kit, the talk round, locks, retries and wc39. Then 47 questions by round: solo coding and review, algorithms, system design, GTM (likely, since none has been reported) and the pace and hiring-manager chat. Each has an evidence count, what it tests, the approach, links to its solution, and its sources. A question opens as one card: try it, write the outline, then show the approach.
+- **His Muse write-ups** (Q1 referral, Q2 exchange rate, Q4 faulty comparator, Q5 Lost Tree, Q8 RandomizedSet) are Coding 11. That part is now the home for those problems, and Coding 7 and 8 link to it.
+- **Coding 12** covers the four algorithm prompts the page lacked: k-hop path, acceptable-spot parking, usernames, and the paid comparator.
+- **Coding 13** covers six designs: dataset copy, tenant-fair orchestration, multi-thread chat, prompt injection, ML pipelines, and the payments deltas.
+- All code ran.
+- The private Focus pop-up now plans 12 to 16 November as baseline first, then every Reported question.
+
+Why: he wants every reported question, solvable, before Monday. No charter deviation.

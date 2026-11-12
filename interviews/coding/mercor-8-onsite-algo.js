@@ -137,21 +137,15 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "p",
+     "text": "**Your worked version, the comparator that lies, is in [Your worked solutions, Q4 faulty comparator](#/coding/yours-q4).** It has the four clarifications, the story, the graph and cycle answer, the branches and the Q&A. This section keeps the top-k, slow-call and paid-comparator material and all its answer boxes."
+    },
+    {
+     "t": "p",
      "text": "**What it is.** You get a function you cannot see inside, and you must sort or pick the best k. It is the most reported question of the round (four reports in AceOffer's synthesis): sorting or finding the top items with a comparison function that is wrong some of the time, then minimise the comparison calls, then account for wall-clock time when each call is slow. PracHub lists a fuller version (a software engineer question, Hard, listed 12 Sep 2026): n objects and a paid comparison API that is right with probability 0.9 and costs 1 cent a call. Part 1 is one call per comparison: which errors are fatal, and how does accuracy behave as n grows? Part 2 spends more calls (repeat and vote) to raise accuracy: give accuracy and cost as functions of n and your parameter, and reach the same accuracy with fewer calls. Its follow-ups are: if a pair always gets the same answer, what is achievable; if accuracy means few out-of-order pairs, which algorithm; if only the greatest or the top few are needed, how do accuracy and cost change. PracHub says a strong answer states the noise model first and notes that an inconsistent comparator can break a standard sort. It is close to a real job: ranking with a model as a judge, where every comparison is a slow, paid, sometimes wrong call. In my eval harness I used a model as a judge next to deterministic checks, so I can talk about that."
     },
     {
      "t": "p",
      "text": "**Do not invent parameters.** No report states a fixed error rate, n, k or a success criterion (one site's version uses 90 percent and 1 cent a call, below, labelled as that site's). If the interviewer does not give the error model, asking whether errors are deterministic or random is itself part of the expected answer. Reports stress the deterministic case as the lead move: re-asking the same pair returns the same wrong answer, so repetition never helps."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**A spoken shape for 30 minutes:** 1. clarify the error model (deterministic or random, adversarial or bounded, what guarantee is needed);",
-      "2. state the insight about repetition and what it rules out;",
-      "3. give a strategy for sort or top-k under that model;",
-      "4. argue correctness and a lower bound on comparisons;",
-      "5. re-optimise for wall-clock: which comparisons are independent and can run in parallel, and the depth that leaves."
-     ]
     },
     {
      "t": "p",
@@ -500,22 +494,11 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "p",
-     "text": "**What it is.** A list of quotes between currency pairs and the question 'how much of B do I get for one A'. PracHub lists it as a software engineer question, Medium, tagged onsite (listed 13 Sep 2026): a list of [from, to, rate]; each entry works both ways, so the reverse is 1 over the rate; rates multiply along a chain; the table is consistent, so any chain gives the same product; the same currency returns 1.0; no chain returns -1.0; up to 10,000 entries. Its outline is an undirected graph with edges of weight r and 1/r, a breadth-first or depth-first walk from the source that multiplies the weights, O(R + V). AceOffer says one version of this question was entirely spoken. PracHub gives no follow-ups, so part 2 (the best rate, which brings in logarithms and Bellman-Ford, then arbitrage and stale quotes) is the harder problem the question leads to, not reported wording. Do the reported version first, in two minutes, then say what changes if the table is not consistent."
+     "text": "**Your worked version is in [Your worked solutions, Q2 exchange rate](#/coding/yours-q2).** It has the problem with its rules, the model, the traps and the code with its output. This section keeps the answer boxes and the follow-ups."
     },
     {
      "t": "p",
-     "text": "**The reported spec (PracHub, 13 Sep 2026, a reconstruction; the round was described as an algorithm round without code):** given rates as [from, to, rate] triples, where 1 unit of from equals rate units of to, return the rate from a source to a target, chaining through intermediates and using a rate in reverse as its reciprocal."
-    },
-    {
-     "t": "list",
-     "items": [
-      "The table is consistent, so the answer is unique apart from floating-point rounding: that is why a plain traversal is enough.",
-      "Source equals target: return 1.0, even if the currency is absent.",
-      "No chain: return -1.0 exactly.",
-      "Accepted within a relative error of 1e-6. At most 10,000 rates, 3-letter codes, each rate between 1e-3 and 1e3.",
-      "Worked example: USD to GBP 0.77 and GBP to EUR 1.2 gives USD to EUR 0.924.",
-      "What it tests: chained conversion, unreachable currencies, and a clear complexity analysis. Name the graph model and why consistency makes a simple traversal enough."
-     ]
+     "text": "**What it is.** A list of quotes between currency pairs and the question 'how much of B do I get for one A'. PracHub lists it as a software engineer question, Medium, tagged onsite (listed 13 Sep 2026): a list of [from, to, rate]; each entry works both ways, so the reverse is 1 over the rate; rates multiply along a chain; the table is consistent, so any chain gives the same product; the same currency returns 1.0; no chain returns -1.0; up to 10,000 entries. Its outline is an undirected graph with edges of weight r and 1/r, a breadth-first or depth-first walk from the source that multiplies the weights, O(R + V). AceOffer says one version of this question was entirely spoken. PracHub gives no follow-ups, so part 2 (the best rate, which brings in logarithms and Bellman-Ford, then arbitrage and stale quotes) is the harder problem the question leads to, not reported wording. Do the reported version first, in two minutes, then say what changes if the table is not consistent."
     },
     {
      "t": "p",

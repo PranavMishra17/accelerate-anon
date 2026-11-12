@@ -351,6 +351,16 @@ details.pq > summary .rs-brief { max-width: var(--measure); }
 .pq-tests { font-size: var(--fs-sm); color: var(--soft); margin: 0 0 var(--s2); }
 .pq-tests b { color: var(--ink); font-weight: var(--w-strong); }
 details.pq.rev > summary .qt::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-right: var(--s2); vertical-align: middle; }
+/* reported: every question reported for this loop, by round; one card each: try first, then the approach */
+.rp-base { list-style: none; margin: 0; padding: 0; }
+.rp-base li { display: flex; gap: var(--s2); align-items: baseline; padding: var(--s1) 0; border-bottom: var(--hair); }
+.rp-base .qm { margin-left: auto; white-space: nowrap; }
+.rp-base li.done a, .prow.done .qt { color: var(--muted); text-decoration: line-through; }
+.rp-ev { font-size: var(--fs-sm); color: var(--muted); }
+.rp-try { width: 100%; min-height: 9em; font: inherit; padding: var(--s2); border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface); color: var(--ink); resize: vertical; }
+.rp-sol[hidden] { display: none; }
+.rp-sol ul { margin: var(--s1) 0 var(--s3); padding-left: var(--s5); }
+.rp-sol li { margin-bottom: var(--s1); }
 /* prep: the list of rows, and one card per question with its follow-ups stepped on the right */
 .prows { list-style: none; margin: 0; padding: 0; }
 .prows li { border-bottom: var(--hair); }
@@ -1117,6 +1127,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     { id: "overview", label: "Overview", show: function () { return true; } },
     { id: "mine", label: "My answers", show: function () { return true; } },
     { id: "plan", label: "Plan", show: function () { return !!LOOP.plan; } },
+    { id: "reported", label: "Reported", show: function () { return !!LOOP.reported; } },
     { id: "learn", label: (LOOP.learn && LOOP.learn.label) || "Learn", show: function () { return !!(LOOP.learn && LOOP.learn.modules); } },
     { id: "prep", label: "Prep", show: function () { return LOOP.scripts.length || LOOP.drills.length || LOOP.qa.length || LOOP.ask.length || (LOOP.ask3 || []).length; } },
     { id: "rounds", label: "Rounds", show: function () { return (LOOP.rounds || []).length; } },
@@ -1632,6 +1643,105 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     var ro = window.ResizeObserver ? new ResizeObserver(fit) : null;
     if (ro) { ro.observe(document.body); }
     setTimeout(fit, 0); window.addEventListener("resize", fit);
+  }
+  /* ---------------------------------------------------------------- reported
+     Every question candidates reported for this loop, round by round (LOOP.reported), with the
+     baseline to do first. A row opens one card: the question, your own attempt (kept in this
+     browser), then what it tests, the approach and where the full solution lives, shut until shown. */
+  var RP_KEY = "accelerate.reported." + LOOP.id;
+  function rpState() { try { return JSON.parse(localStorage.getItem(RP_KEY) || "{}") || {}; } catch (e) { return {}; } }
+  function rpSave(st) { try { localStorage.setItem(RP_KEY, JSON.stringify(st)); } catch (e) {} }
+  function rpAll() { var all = []; LOOP.reported.rounds.forEach(function (r) { r.items.forEach(function (x) { all.push({ x: x, r: r }); }); }); return all; }
+  function rpLinks(list) {
+    var p = el("p", "ex-links");
+    (list || []).forEach(function (l, i) {
+      if (i) { p.appendChild(el("span", "sep")); }
+      var a = el("a", "", esc(l.label)); a.href = l.href;
+      if (/^https?:/.test(l.href)) { a.target = "_blank"; a.rel = "noopener"; }
+      p.appendChild(a);
+    });
+    return p;
+  }
+  function tabReported(host, anchor) {
+    var R = LOOP.reported, st = rpState(), all = rpAll(), at = -1;
+    st.done = st.done || {}; st.base = st.base || {}; st.try = st.try || {};
+    all.forEach(function (o, i) { if (o.x.id === anchor) { at = i; } });
+    if (at >= 0) { rpCard(host, all, at, st); return; }
+    var s = heading(host, "reported", "", "Reported");
+    if (R.lead) { s.appendChild(el("p", "lead", inl(R.lead))); }
+    var nd = 0; all.forEach(function (o) { if (st.done[o.x.id]) { nd += 1; } });
+    s.appendChild(el("p", "rp-ev", nd + " of " + all.length + " questions done. Open one, try it out loud, then show the approach."));
+    if ((R.baseline || []).length) {
+      var b = card(heading(host, "rp-baseline", R.baselineLead || "", "Baseline first"), 0, 0);
+      var ul = el("ul", "rp-base");
+      R.baseline.forEach(function (x) {
+        var li = el("li", st.base[x.id] ? "done" : ""), c = el("input"); c.type = "checkbox"; c.checked = !!st.base[x.id]; c.setAttribute("aria-label", "Done");
+        c.addEventListener("change", function () { if (c.checked) { st.base[x.id] = 1; } else { delete st.base[x.id]; } rpSave(st); li.className = c.checked ? "done" : ""; });
+        var a = el("a", "", inl(x.t)); a.href = x.href; if (/^https?:/.test(x.href)) { a.target = "_blank"; a.rel = "noopener"; }
+        li.appendChild(c); li.appendChild(a);
+        if (x.why) { li.appendChild(el("span", "qm", inl(x.why))); }
+        ul.appendChild(li);
+      });
+      b.appendChild(ul);
+    }
+    R.rounds.forEach(function (r, ri) {
+      var sec = card(heading(host, "rp-" + r.id, r.blurb || "", r.title), ri + 1, r.items.length);
+      var ul = el("ul", "prows");
+      r.items.forEach(function (x) {
+        var li = el("li", ""), a = el("a", "prow" + (st.done[x.id] ? " done" : ""));
+        a.href = link("reported", x.id);
+        a.innerHTML = '<span class="qt">' + inl(x.q) + '</span><span class="qm">' + esc(x.ev || "") + "</span>";
+        li.appendChild(a); ul.appendChild(li);
+      });
+      sec.appendChild(ul);
+    });
+    if ((R.sources || []).length) {
+      var so = heading(host, "rp-sources", "Every report above comes from these. First-hand accounts first.", "Sources");
+      so.appendChild(rpLinks(R.sources.map(function (x) { return { label: x.label, href: x.url }; })));
+    }
+  }
+  function rpCard(host, all, at, st) {
+    var o = all[at], x = o.x, prev = all[at - 1], next = all[at + 1];
+    document.body.setAttribute("data-wide", "1");
+    var s = el("section", "block pc"); s.id = x.id;
+    var hd = el("div", "pc-head"), nv = el("p", "ex-links pc-nav");
+    var bk = el("a", "", "All reported"); bk.href = link("reported"); nv.appendChild(bk);
+    nv.appendChild(el("span", "sep"));
+    if (prev) { var pa = el("a", "", "Previous"); pa.href = link("reported", prev.x.id); pa.setAttribute("data-step", "prev"); nv.appendChild(pa); } else { nv.appendChild(el("span", "pc-off", "Previous")); }
+    nv.appendChild(el("span", "sep"));
+    if (next) { var na = el("a", "", "Next"); na.href = link("reported", next.x.id); na.setAttribute("data-step", "next"); nv.appendChild(na); } else { nv.appendChild(el("span", "pc-off", "Next")); }
+    nv.appendChild(el("span", "pc-n", o.r.title + ", " + (at + 1) + " of " + all.length));
+    hd.appendChild(nv);
+    hd.appendChild(el("h2", "", inl(x.q)));
+    var acts = el("p", "ex-links pc-acts");
+    if (x.ev) { acts.appendChild(el("span", "pc-n", esc(x.ev))); }
+    var dn = el("button", "linkish");
+    function lab() { dn.textContent = st.done[x.id] ? "Done. Undo" : "Mark done"; }
+    lab();
+    dn.addEventListener("click", function () { if (st.done[x.id]) { delete st.done[x.id]; } else { st.done[x.id] = 1; } rpSave(st); lab(); });
+    acts.appendChild(dn);
+    hd.appendChild(acts);
+    s.appendChild(hd);
+    var cols = el("div", "pc-cols"), left = el("div", "pc-ans"), right = el("div", "pc-fu");
+    cols.appendChild(left); cols.appendChild(right); s.appendChild(cols);
+    if (x.detail) { left.appendChild(el("p", "", inl(x.detail))); }
+    left.appendChild(el("div", "lab", "Your attempt: say it aloud first, then the outline here"));
+    var ta = el("textarea", "rp-try"); ta.value = st.try[x.id] || "";
+    ta.addEventListener("input", function () { st.try[x.id] = ta.value; rpSave(st); });
+    left.appendChild(ta);
+    var show = el("button", "linkish", "Show what it tests and the approach");
+    var sol = el("div", "rp-sol"); sol.hidden = true;
+    show.addEventListener("click", function () { sol.hidden = !sol.hidden; show.textContent = sol.hidden ? "Show what it tests and the approach" : "Hide the approach"; });
+    right.appendChild(show);
+    if (x.tests) { sol.appendChild(el("div", "lab", "What it tests")); sol.appendChild(el("p", "", inl(x.tests))); }
+    if ((x.approach || []).length) {
+      sol.appendChild(el("div", "lab", "The approach"));
+      var ul = el("ul", ""); x.approach.forEach(function (a) { ul.appendChild(el("li", "", inl(a))); }); sol.appendChild(ul);
+    }
+    if ((x.solve || []).length) { sol.appendChild(el("div", "lab", "The full solution")); sol.appendChild(rpLinks(x.solve)); }
+    if ((x.src || []).length) { sol.appendChild(el("div", "lab", "Reported in")); sol.appendChild(rpLinks(x.src.map(function (l) { return { label: l.label, href: l.url }; }))); }
+    right.appendChild(sol);
+    host.appendChild(s);
   }
   function tabPrep(host, anchor) {
     var banks = prepBanks(), all = [];
@@ -4379,6 +4489,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       else if (r.tab === "mine") { tabMine(main); }
       else if (r.tab === "prep") { tabPrep(main, r.anchor); }
       else if (r.tab === "rounds") { tabRounds(main); }
+      else if (r.tab === "reported") { tabReported(main, r.anchor); }
       else if (r.tab === "research") { tabResearch(main); }
       else if (r.tab === "learn") { tabLearn(main, r.anchor); }
       else if (r.tab === "design") { tabDesign(main); }

@@ -380,6 +380,10 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "p",
+     "text": "**Your worked version of a referral-network round is in [Your worked solutions, Q1 Referral network](#/coding/yours-q1).** It has the try-first box, your thinking and what to say, and the full code with its output. This section keeps the three-part event-and-flow version with its answer boxes."
+    },
+    {
+     "t": "p",
      "text": "**What it is.** Three parts that build on each other. Part 1 builds a network from referral events and has to survive messy data. Part 2 answers queries on it. Part 3 adds a 'flow centrality' score, and the prompt does not say what that means. That gap is deliberate: the round is checking whether you ask before you code. The prompt is not public, so the shape is right and the numbers are mine."
     },
     {
