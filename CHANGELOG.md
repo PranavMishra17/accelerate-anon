@@ -1738,3 +1738,16 @@ The times are unchanged, 10:00 to 2:30 Pacific. The GTM wording in wc39 and on P
 - The private Focus pop-up now plans 12 to 16 November as baseline first, then every Reported question.
 
 Why: he wants every reported question, solvable, before Monday. No charter deviation.
+
+**12 Nov 2026: Reported tab redesigned after his feedback.** He found the first version hard to use:
+- the tab jumped between screens and the approach read like a hint;
+- the full solution sat on another page, reached by a link that lost his place;
+- coloured-edge sections and heavy bold.
+
+The changes:
+- Each question is now a plain box that opens in place, one at a time: the question, his attempt, then "Show the approach" and "Show the full solution".
+- The full solution draws the linked coding sections inside the box. Guide designs and pages from elsewhere on the site are embedded in the box too.
+- Questions are in regular weight, there are no coloured edges, and the baseline is one boxed checklist.
+- `#/reported/<id>` opens that box in place.
+
+No charter deviation.
