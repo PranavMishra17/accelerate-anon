@@ -28,13 +28,6 @@ window.LOOP_RES = {
   {"kind": "read", "req": true, "label": "Strategy (refactoring.guru)", "url": "https://refactoring.guru/design-patterns/strategy", "m": 8, "why": "Swappable algorithms behind one interface, which is how discounts stay out of the cart."},
   {"kind": "read", "req": false, "label": "Codemia: design an online shopping cart", "url": "https://codemia.io/courses/ood_fundamentals/design_an_online_shopping_cart", "m": 11, "why": "Pricing model, a discount and promotion engine, inventory holds and checkout in one lesson."}
  ],
- "lld-library": [
-  {"kind": "video", "req": true, "label": "Library management system LLD, step by step", "url": "https://www.youtube.com/watch?v=diaZDSR5N7g", "yt": {"id": "diaZDSR5N7g", "ch": "Jhabar Singh Bhati"}, "m": 13, "why": "Splits the book from its copies, then the issue and return flow: the split this drill asks for."},
-  {"kind": "video", "req": false, "label": "Library management system, low level design", "url": "https://www.youtube.com/watch?v=fVqv4B8sG1s", "yt": {"id": "fVqv4B8sG1s", "ch": "Reactify Labs"}, "m": 22, "why": "A second full walkthrough with a different class breakdown."},
-  {"kind": "video", "req": false, "label": "Observer pattern in Python: events", "url": "https://www.youtube.com/watch?v=oNalXg67XEE", "yt": {"id": "oNalXg67XEE", "ch": "ArjanCodes"}, "m": 16, "why": "The listener shape behind the notification you add to the library."},
-  {"kind": "read", "req": true, "label": "Observer (refactoring.guru)", "url": "https://refactoring.guru/design-patterns/observer", "m": 8, "why": "Subscribers told when something happens, which is how due-date and hold notices stay out of the loan code."},
-  {"kind": "read", "req": false, "label": "Library management system in Python, reference solution", "url": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/python/librarymanagementsystem", "m": 10, "why": "Python classes with copies, loans, item states and search strategies; compare with yours after you try."}
- ],
  "lld-elevator": [
   {"kind": "video", "req": true, "label": "Elevator system in Python with the State pattern", "url": "https://www.youtube.com/watch?v=dCjWFcE1mZ4", "yt": {"id": "dCjWFcE1mZ4", "ch": "System Design and Gossip"}, "m": 29, "why": "Python with each lift as a state machine, the model this drill builds."},
   {"kind": "video", "req": true, "label": "Elevator system, Google SWE teaches low level design", "url": "https://www.youtube.com/watch?v=4OjHA-BcJhw", "yt": {"id": "4OjHA-BcJhw", "ch": "Jordan has no life"}, "m": 22, "why": "A second design of the same system; compare how requests reach a car."},
@@ -551,17 +544,8 @@ LOOP_RES["lld-thu/thu-unseen"] = [
 /* The same videos and articles on each drill's own page and on the top-ten tabs (shared, not copied). */
 LOOP_RES["lld-splitwise"] = LOOP_RES["lld-thu/thu-split"];
 LOOP_RES["lld-ratelimiter"] = LOOP_RES["lld-thu/thu-rate"];
-LOOP_RES["lld-filesearch"] = LOOP_RES["lld-files"];
 LOOP_RES["lld-mock-locker"] = LOOP_RES["lld-thu/thu-locker"];
 LOOP_RES["lld-parking/parking-extend"] = LOOP_RES["lld-thu/thu-parking"];
-LOOP_RES["lld-top10/t10-locker"] = LOOP_RES["lld-thu/thu-locker"];
-LOOP_RES["lld-top10/t10-parking"] = LOOP_RES["lld-parking"];
-LOOP_RES["lld-top10/t10-splitwise"] = LOOP_RES["lld-thu/thu-split"];
-LOOP_RES["lld-top10/t10-booking"] = LOOP_RES["lld-booking"];
-LOOP_RES["lld-top10/t10-vending"] = LOOP_RES["lld-vending"];
-LOOP_RES["lld-top10/t10-elevator"] = LOOP_RES["lld-elevator"];
-LOOP_RES["lld-top10/t10-ratelimiter"] = LOOP_RES["lld-thu/thu-rate"];
-LOOP_RES["lld-top10/t10-filesearch"] = LOOP_RES["lld-files"];
 /* Chess, meeting room and the OOP basics: opened 11 Nov 2026. */
 LOOP_RES["lld-chess"] = [
  {
@@ -605,7 +589,7 @@ LOOP_RES["lld-chess"] = [
   "why": "Requirements, abstract piece with per-piece subclasses, and a game class that owns turns and results, with a link to Python code."
  }
 ];
-LOOP_RES["lld-meeting"] = [
+LOOP_RES["lld-booking/booking-extend"] = [   /* the rooms-by-time extension of Reservations */
  {
   "kind": "video",
   "req": true,
@@ -691,5 +675,3 @@ LOOP_RES["lld-0-oop"] = [
 ];
 LOOP_RES["lld-0-pillars"] = LOOP_RES["lld-0-oop"];
 LOOP_RES["lld-0-solid"] = LOOP_RES["lld-0-oop"];
-LOOP_RES["lld-top10/t10-chess"] = LOOP_RES["lld-chess"];
-LOOP_RES["lld-top10/t10-meeting"] = LOOP_RES["lld-meeting"];

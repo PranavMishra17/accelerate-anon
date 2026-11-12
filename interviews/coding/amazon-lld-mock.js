@@ -4,7 +4,7 @@ window.LOOP_CODING = window.LOOP_CODING || { parts: [] };
 window.LOOP_CODING.parts.push({
  "tab": "lld",
  "id": "lld-mock-locker",
- "n": 8,
+ "n": 4,
  "one": true,
  "title": "Mock: Amazon Locker, the whole round",
  "minutes": 45,
@@ -439,5 +439,6 @@ window.LOOP_CODING.parts.push({
     }
    ]
   }
- ]
+ ],
+ "group": "For Thursday: your six"
 });

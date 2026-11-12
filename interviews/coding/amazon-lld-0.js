@@ -4,7 +4,8 @@ window.LOOP_CODING = window.LOOP_CODING || { parts: [] };
 window.LOOP_CODING.parts.push({
  "tab": "lld",
  "id": "lld-0-oop",
- "n": 0.1,
+ "n": "14.1",
+ "group": "Foundations",
  "one": true,
  "title": "OOP basics",
  "minutes": 60,
@@ -807,7 +808,8 @@ window.LOOP_CODING.parts.push({
 window.LOOP_CODING.parts.push({
  "tab": "lld",
  "id": "lld-0-pillars",
- "n": 0.2,
+ "n": "14.2",
+ "group": "Foundations",
  "one": true,
  "title": "Pillars and relationships",
  "minutes": 60,
@@ -1718,7 +1720,8 @@ window.LOOP_CODING.parts.push({
 window.LOOP_CODING.parts.push({
  "tab": "lld",
  "id": "lld-0-solid",
- "n": 0.3,
+ "n": "14.3",
+ "group": "Foundations",
  "one": true,
  "title": "SOLID and patterns",
  "minutes": 75,
@@ -2752,7 +2755,8 @@ window.LOOP_CODING.parts.push({
 window.LOOP_CODING.parts.push({
  "tab": "lld",
  "id": "lld-0-problems",
- "n": 0.4,
+ "n": "14.4",
+ "group": "Foundations",
  "one": true,
  "title": "Practice problems",
  "minutes": 90,

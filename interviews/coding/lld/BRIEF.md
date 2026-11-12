@@ -57,10 +57,7 @@ the cheat sheet, so put the strongest first), and the final file (core with the 
   `final_code`, `final_demo`, `final_out`, `final_out_note`. Assemble CORE from the method strings like
   locker.py does, so the page shows exactly the code that runs. Check with:
   `python interviews/coding/lld/build.py check <id>` (must print `ok <id>`).
-- **Cheat only** (one screen in part 0.5): `id, title, prompt, evidence, clarify, requirements, out_of_scope,
-  entities, classes, map, methods, extensions, golden` (and `drill` if a full practice exists). Methods have
-  `name` and `logic` (a list of steps) and no code. Check with:
-  `python -c "import sys; sys.path.insert(0,'interviews/coding/lld'); import lib, importlib.util as u; s=u.spec_from_file_location('p','interviews/coding/lld/problems/<id>.py'); m=u.module_from_spec(s); s.loader.exec_module(m); lib.cheat_tab(m.PROBLEM,1); print('ok')"`
+- **Order**: `ORDER` in build.py sets each drill's number and group on the LLD tab. One home per problem: a near-duplicate ask becomes an extension of the drill that owns its shape (meeting rooms and library copies live in Reservations; file search lives in File system and find), never a second drill.
 
 ## Writing rules
 - Plain sentence case, short sentences. No em dashes, no emojis, no "just" or "simply", no marketing words.

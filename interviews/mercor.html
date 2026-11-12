@@ -587,6 +587,8 @@ details.item > .sbody { padding-left: 0; }
 .cd-parts a { display: flex; gap: var(--s3); align-items: baseline; color: var(--ink); }
 .cd-parts a.on { color: var(--accent); font-weight: var(--w-strong); }
 .cd-parts .cd-n { color: var(--muted); font-size: var(--fs-sm); min-width: 1.5em; }
+.cd-parts .cd-grp { font-size: var(--fs-sm); font-weight: var(--w-strong); color: var(--muted); margin-top: var(--s3); }
+.cd-parts .cd-grp:first-child { margin-top: 0; }
 .cd-parts .cd-m { color: var(--muted); font-size: var(--fs-sm); margin-left: auto; white-space: nowrap; }
 .cd-sec { margin: var(--s6) 0 0; padding-top: var(--s4); border-top: var(--hair); }
 .cd-sec h3 { font-size: var(--fs-lg); margin-bottom: var(--s3); }
@@ -3292,10 +3294,11 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       parts.filter(function (p) { return p.id === st["last:" + tab]; })[0] || parts[0];
     cdSave("last:" + tab, cur.id);
     var top = el("section", "block"); top.id = cur.id;
-    top.appendChild(el("h1", "", esc(cur.n + (cur.n % 1 ? " " : ". ") + cur.title)));
+    top.appendChild(el("h1", "", esc(cur.n + (String(cur.n).indexOf(".") > -1 ? " " : ". ") + cur.title)));
     top.appendChild(el("p", "hsub", "About " + cur.minutes + " minutes. " + inl(cur.lead)));
-    var ol = el("ol", "cd-parts");
+    var ol = el("ol", "cd-parts"), grp = null;
     parts.forEach(function (p) {
+      if (p.group && p.group !== grp) { grp = p.group; ol.appendChild(el("li", "cd-grp lab", esc(grp))); }
       var li = el("li"), a = el("a", p === cur ? "on" : "",
         '<span class="cd-n">' + p.n + '</span><span>' + esc(p.title) + '</span><span class="cd-m">' + (done[p.id] ? '<span class="cd-ok">&#10003;</span> ' : "") + p.minutes + " min</span>");
       a.href = link(tab, p.id); li.appendChild(a); ol.appendChild(li);
@@ -3574,7 +3577,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     var cur = days.filter(function (d) { return d.date === anchor; })[0];
     if (!cur && anchor) { days.forEach(function (d) { d.problems.forEach(function (p, i) { if (p.id === anchor) { cur = d; pi = i; } }); }); }
     cur = cur || days.filter(function (d) { return d.date === today; })[0] || days.filter(function (d) { return d.date > today; })[0] || days[days.length - 1];
-    if (sub === "2") { pi = 1; }
+    var si = parseInt(sub, 10); if (si >= 1 && si <= cur.problems.length) { pi = si - 1; }
     var p = cur.problems[pi];
     var solvedOf = function (d) { return d.problems.filter(function (q) { return ticks()["solved:" + q.id]; }).length; };
 

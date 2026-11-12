@@ -1,8 +1,8 @@
 """Builds the Amazon LLD pages from interviews/coding/lld/problems/*.py:
-  amazon-lld-mock.js    part 8, the Locker mock
-  amazon-lld-drills.js  parts 2 to 7 and 9 to 15, each a staged round
+  amazon-lld-mock.js    part 4, the Locker mock
+  amazon-lld-drills.js  every other drill, each a staged round, numbered and grouped by ORDER
   mercor-lld.js         the two Mercor rounds (agent runtime, eval harness)
-  amazon-lld-top10.js   part 0.5, an overview and ten one-screen cheat sheets
+  amazon-lld-top10.js   part 13, the ten asks as an index linking to the drills
 Run: python interviews/coding/lld/build.py            (all; checks every piece of code first)
      python interviews/coding/lld/build.py check <id> (one problem's code only)"""
 import importlib.util, json, os, sys
@@ -12,10 +12,13 @@ sys.path.insert(0, HERE)
 import lib  # noqa: E402
 
 CODING = os.path.dirname(HERE)
-DRILLS = ["parking", "filesystem", "cart", "library", "elevator", "kvcache",   # parts 2..7, in order
-          "chess", "splitwise", "booking", "vending", "ratelimiter", "meeting", "filesearch"]   # parts 9..15 (8 is the Locker mock)
+SIX, BREADTH = "For Thursday: your six", "Breadth"
+# (problem, number, group): the order of the LLD tab. Parts 0 and 1 are hand-written; 13 is the index of the ten asks.
+ORDER = [("filesystem", 2, SIX), ("parking", 3, SIX), ("locker", 4, SIX), ("ratelimiter", 5, SIX), ("splitwise", 6, SIX),
+         ("elevator", 7, BREADTH), ("vending", 8, BREADTH), ("booking", 9, BREADTH), ("chess", 10, BREADTH),
+         ("cart", 11, BREADTH), ("kvcache", 12, BREADTH)]
+DRILLS = [i for i, _, _ in ORDER if i != "locker"]
 MERCOR = ["agentrun", "evalharness"]   # the Mercor page's LLD tab
-TOP10 = ["locker", "parking", "chess", "splitwise", "booking", "vending", "elevator", "ratelimiter", "meeting", "filesearch"]
 
 
 def load(pid):
@@ -40,20 +43,24 @@ def main():
         lib.check(load(sys.argv[2]))
         print("ok", sys.argv[2])
         return
-    ids = sorted(set(DRILLS + TOP10 + MERCOR))
+    ids = sorted(set([i for i, _, _ in ORDER] + MERCOR))
     P = {i: load(i) for i in ids}
     for p in P.values():
         lib.check(p)
-    write("amazon-lld-mock.js", "Amazon loop, LLD mock: Amazon Locker end to end.", [lib.mock_part(P["locker"])])
-    write("amazon-lld-drills.js", "Amazon loop, LLD drills, parts 2 to 7 and 9 to 15, each a staged round.", [lib.mock_part(P[i]) for i in DRILLS])
+    for i, n, g in ORDER:
+        P[i]["n"], P[i]["group"] = n, g
+    def part(i):
+        d = lib.mock_part(P[i])
+        d["group"] = P[i]["group"]
+        return d
+    write("amazon-lld-mock.js", "Amazon loop, LLD mock: Amazon Locker end to end.", [part("locker")])
+    write("amazon-lld-drills.js", "Amazon loop, LLD drills, each a staged round; order and numbers from ORDER in build.py.", [part(i) for i in DRILLS])
     write("mercor-lld.js", "Mercor onsite, LLD rounds: an agent runtime and an evaluation harness.", [lib.mock_part(P[i]) for i in MERCOR])
     import overview
-    tabs = [overview.SECTION] + [lib.cheat_tab(P[i], k) for k, i in enumerate(TOP10, 1)]
-    write("amazon-lld-top10.js", "Amazon loop, LLD part 0.5: the ten most reported Amazon LLD questions.",
-          [{"tab": "lld", "id": "lld-top10", "n": 0.5, "one": True, "title": "The ten Amazon asks, as patterns", "minutes": 60,
-            "lead": "The ten LLD questions Amazon candidates actually reported, one screen each in the order you'd answer: clarify in three buckets, requirements, entities, classes as state and behaviour, the core flow, extensibility, and the few lines that set you apart. The first tab groups them into five shapes.",
-            "sections": tabs}])
-
+    write("amazon-lld-top10.js", "Amazon loop, LLD part 13: the ten most reported Amazon LLD asks, each linked to its drill.",
+          [{"tab": "lld", "id": "lld-top10", "n": 13, "group": BREADTH, "one": True, "title": "The ten Amazon asks: an index", "minutes": 10,
+            "lead": "The ten LLD questions Amazon candidates actually reported, grouped into five shapes. Each links to the drill that teaches it; nothing is repeated here.",
+            "sections": [overview.SECTION]}])
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,5 @@
 """Renders one LLD problem (a dict, see problems/locker.py) two ways:
 mock_part(): the staged round a) clarify .. f) extensibility, the lines that set you apart, the final code.
-cheat_tab(): one screen for part 0.5.
 check(): runs every piece of code and compares its output."""
 import os, subprocess, sys, tempfile, textwrap
 
@@ -104,21 +103,6 @@ def class_text(P):
     return "\n".join(out).strip()
 
 
-def logic_of(m):
-    """The numbered 'Core logic' steps from the method's docstring, or m['logic'] when there is no code."""
-    if "logic" in m:
-        return m["logic"]
-    lines = norm(m["code"]).splitlines()
-    i = next(k for k, s in enumerate(lines) if s.strip() == "Core logic:")
-    out = []
-    for s in lines[i + 1:]:
-        s = s.strip()
-        if not s or s.endswith(":") or s.startswith('"""'):
-            break
-        out.append(s.split(". ", 1)[1] if s[:1].isdigit() and ". " in s else s)
-    return out
-
-
 def starter(m):
     first = norm(m["code"]).splitlines()[0]
     return first + '\n    """\n    Core logic:\n      1.\n    Edge cases:\n      1.\n    """\n'
@@ -133,10 +117,6 @@ def turn(ask, say, check=None, explain=None, who="Interviewer"):
 
 def code(cid, title, src):
     return {"t": "code", "id": cid, "title": title, "code": norm(src) + "\n", "notes": {}}
-
-
-def golden_list(P):
-    return [f"**{line}** Why: {why}" for line, why in P["golden"]]
 
 
 # ---------- the staged mock ----------
@@ -219,27 +199,3 @@ def mock_part(P):
     apart = P.get("apart") or [f"**{line}** {why}" for line, why in P["golden"]]
     return {"tab": "lld", "id": P["part_id"], "n": P["n"], "one": True, "title": P["part_title"],
             "minutes": P.get("minutes", 45), "lead": P["lead"], "apart": apart, "sections": S}
-
-
-# ---------- the one-screen cheat sheet ----------
-def cheat_tab(P, number):
-    blocks = [
-        {"t": "p", "text": f"**What they ask:** {P['prompt']}"},
-        {"t": "p", "text": f"**Reported:** {P['evidence']}" + (f" **Full practice:** {P['drill']}" if P.get("drill") else "")},
-        {"t": "table", "head": ["Bucket", "Ask", "Usual answer"], "rows": clarify_rows(P)},
-        {"t": "p", "text": "**Requirements**"},
-        {"t": "list", "items": [r[0] + (" " + "; ".join(r[1:]) + "." if len(r) > 1 else "") for r in P["requirements"]]
-            + ["Out of scope: " + ", ".join(P["out_of_scope"]) + "."]},
-        {"t": "table", "head": ["Noun", "Keep?", "Why"], "rows": [[n, "keep" if k else "drop", w] for n, k, w in P["entities"]]},
-        {"t": "code", "id": f"t10-{P['id']}-classes", "title": "Classes: − state, + behaviour", "code": class_text(P) + "\n", "notes": {}},
-    ] + ([{"t": "say", "lines": [P["class_say"]]}] if P.get("class_say") else []) + [
-        {"t": "svg", "svg": class_map(P["title"] + " class map", P["map"]), "alt": "Class map"},
-        {"t": "p", "text": "**Core flow**"},
-        {"t": "list", "items": [f"{m['name']}: " + "; ".join(logic_of(m)) + "." for m in P["methods"]]},
-        {"t": "p", "text": "**Extensibility**"},
-        {"t": "list", "items": [f"{e['short_q']}: {e['short_a']}" for e in P["extensions"]]},
-    ] + design_check_blocks(P) + [
-        {"t": "p", "text": "**What sets you apart**"},
-        {"t": "list", "items": P.get("apart") or golden_list(P)[:4]},
-    ]
-    return {"id": f"t10-{P['id']}", "title": f"{number} {P['title']}", "blocks": blocks}

@@ -6,6 +6,7 @@ window.LOOP_CODING.parts.push({
  "tab": "lld",
  "id": "lld-thu",
  "n": 0,
+ "group": "For Thursday: your six",
  "one": true,
  "title": "Before Thursday: the order of work",
  "minutes": 480,
@@ -13,13 +14,13 @@ window.LOOP_CODING.parts.push({
  "sections": [
   {"id": "thu-day", "title": "The day", "blocks": [
    {"t": "table", "head": ["#", "What", "Time", "Drill"], "rows": [
-    ["1", "Delivery framework: say the seven steps without looking", "30 min", "[How the LLD round runs](#/lld/lld-round)"],
-    ["2", "File search, like Unix find, with AND and OR filters", "50 min", "[File search](#/lld/lld-filesearch)"],
-    ["3", "Parking lot, then the multi-threaded version", "70 min", "[Parking lot](#/lld/lld-parking)"],
+    ["1", "Delivery framework: say the seven steps without looking", "30 min", "[1 How the LLD round runs](#/lld/lld-round)"],
+    ["2", "File system and find: the tree, then search with AND and OR filters", "50 min", "[2 File system and find](#/lld/lld-files)"],
+    ["3", "Parking lot, then the multi-threaded version", "70 min", "[3 Parking lot](#/lld/lld-parking)"],
     ["", "Coding block 1: Final day, problems 1 and 2", "60 min", "[Final day](#/daily/2026-11-11)"],
-    ["4", "Amazon Locker, the whole round, timed", "45 min", "[Locker mock](#/lld/lld-mock-locker)"],
-    ["5", "Rate limiter, then make it thread-safe", "50 min", "[Rate limiter](#/lld/lld-ratelimiter)"],
-    ["6", "Splitwise", "45 min", "[Splitwise](#/lld/lld-splitwise)"],
+    ["4", "Amazon Locker, the whole round, timed", "45 min", "[4 Locker mock](#/lld/lld-mock-locker)"],
+    ["5", "Rate limiter, then make it thread-safe", "50 min", "[5 Rate limiter](#/lld/lld-ratelimiter)"],
+    ["6", "Splitwise", "45 min", "[6 Splitwise](#/lld/lld-splitwise)"],
     ["", "Coding block 2: Final day, problems 3 and 4", "60 min", "[Final day](#/daily/2026-11-11)"],
     ["7", "Thursday morning: pizza billing, then the breadth skim", "45 min", "[Breadth](#/lld/thu-breadth)"],
     ["8", "Thursday morning: one unseen Amazon prompt, cold, timed", "35 min", "[Unseen](#/lld/thu-unseen)"]]},
@@ -27,8 +28,8 @@ window.LOOP_CODING.parts.push({
   {"id": "thu-frame", "title": "1 Framework", "blocks": [
    {"t": "p", "text": "**30 minutes.** Read [How the LLD round runs](#/lld/lld-round) once, then close it and say the seven steps aloud with a minute budget for each. Watch the first video at 1.5x if time allows."},
    {"t": "list", "items": ["Done when: you can say requirements, entities, classes, core flow, code, extensions in order, and what you ask in the first five minutes when no requirements are given."]}]},
-  {"id": "thu-find", "title": "2 File search", "blocks": [
-   {"t": "p", "text": "**50 minutes.** Do [File search](#/lld/lld-filesearch) from a blank editor first, then compare. It teaches Strategy (one class per filter) and Specification (filters combined with AND and OR) in under 100 lines."},
+  {"id": "thu-find", "title": "2 File system and find", "blocks": [
+   {"t": "p", "text": "**50 minutes.** Do [File system and find](#/lld/lld-files) from a blank editor first, then compare. The tree is Composite (a folder and a file answer the same calls); the search is Strategy (one class per filter) and Specification (filters combined with AND and OR)."},
    {"t": "list", "items": ["Done when: a new filter is one new class, and AND, OR and NOT compose any two filters without touching the walker.", "Follow-up to have ready: a deep tree, so walk with an explicit stack instead of recursion."]}]},
   {"id": "thu-parking", "title": "3 Parking lot", "blocks": [
    {"t": "p", "text": "**70 minutes.** 40 on [Parking lot](#/lld/lld-parking): allocation, pricing as a Strategy passed to the lot. Then 30 on the multi-threaded version: two cars must never get the same spot."},
@@ -56,7 +57,7 @@ window.LOOP_CODING.parts.push({
    {"t": "list", "items": ["Done when: a new split type is one class, validation lives in the split, and you can explain simplify-debts as net balance per person, then match the largest debtor with the largest creditor."]}]},
   {"id": "thu-breadth", "title": "7 Breadth", "blocks": [
    {"t": "p", "text": "**Thursday morning, 45 minutes, skim not build.** For each: the classes, the one pattern, and the one hard follow-up."},
-   {"t": "list", "items": ["Pizza billing: Decorator (each topping wraps the pizza) against a rules class (a price table and one total()); say why rules win once toppings have combos or discounts.", "Elevator: [the drill](#/lld/lld-elevator); State per car plus a scheduler choosing which car takes a request.", "Vending machine: [the drill](#/lld/lld-vending); State: idle, has money, dispensing.", "Booking: [the drill](#/lld/lld-booking); hold a seat with an expiry, confirm on payment, the double-booking race.", "Package installer: dependencies as a graph, install in topological order, a cycle is an error you report with its path."]}]},
+   {"t": "list", "items": ["Pizza billing: Decorator (each topping wraps the pizza) against a rules class (a price table and one total()); say why rules win once toppings have combos or discounts.", "Elevator: [the drill](#/lld/lld-elevator); State per car plus a scheduler choosing which car takes a request.", "Vending machine: [the drill](#/lld/lld-vending); State: idle, has money, dispensing.", "Reservations: [the drill](#/lld/lld-booking); hold a seat with an expiry, confirm on payment, the double-booking race; rooms by time overlap and library copies are its extensions.", "Package installer: dependencies as a graph, install in topological order, a cycle is an error you report with its path."]}]},
   {"id": "thu-unseen", "title": "8 Unseen prompt", "blocks": [
    {"t": "p", "text": "**Thursday morning, 35 minutes, cold, with a timer.** Pick one you have not seen and run the full shape. The point is handling ambiguity: ask, write the requirements down, decide."},
    {"t": "list", "items": ["Delivery-time estimation: what inputs, what rules, how a new carrier or region plugs in.", "Customer reviews: a review, ratings, helpful votes, moderation states, sorting.", "Issue management with escalations: tickets, states, an escalation policy on a timer, who is notified."]}]}

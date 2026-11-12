@@ -4,6 +4,7 @@ window.LOOP_CODING.parts.push({
  "tab": "lld",
  "id": "lld-round",
  "n": 1,
+ "group": "For Thursday: your six",
  "title": "How the LLD round runs",
  "minutes": 30,
  "lead": "After this part you can run the 45 minutes of a design round in order, turn a vague prompt into a scope by asking, write clean Python classes in a shared editor, and say which pattern you used and what you left out.",
