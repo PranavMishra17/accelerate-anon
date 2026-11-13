@@ -362,3 +362,10 @@ REPORTED = {
     "sources": [BLIND_AUG, BLIND_JUL, BLIND_HOW, GD_SWE, GD_ALL, GD_IN, GD_NOON, P13_TAG, P13_AAI, P13_CTO, TARO_SR, PH_MLE,
                 PH_MAY, PH_AAI, PH_FX, PH_CO, ACE, FAST, IQ, GH_REF, DG_BEH, ACED_SCALE, ACED_PAL, ACED_DS, HARVARD, ADASCI, FRAI, DEVTO],
 }
+
+# The question itself, written out once per reported question: interviews/_mercor_statements.py.
+from _mercor_statements import STATEMENTS
+for _r in REPORTED["rounds"]:
+    for _x in _r["items"]:
+        if _x["id"] in STATEMENTS:
+            _x["statement"] = STATEMENTS[_x["id"]]

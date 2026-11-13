@@ -374,6 +374,12 @@ details.pq.rev > summary .qt::before { content: ""; display: inline-block; width
 .rp-res { margin: var(--s3) 0 var(--s4); }
 .rp-in > .rp-res { margin-top: 0; }
 .rp-in { padding: var(--s4); max-width: 920px; }
+.rp-q { border: 1px solid var(--rule); border-radius: var(--radius); padding: var(--s3) var(--s4); background: var(--surface); margin: 0 0 var(--s3); }
+.rp-q > p { margin: 0 0 var(--s2); }
+.rp-q .rp-ql { font-size: var(--fs-sm); color: var(--muted); margin: var(--s3) 0 var(--s1); }
+.rp-q ul, .rp-q ol { margin: 0; padding-left: var(--s5); }
+.rp-q li { margin-bottom: var(--s1); }
+.rp-q pre { margin: 0; padding: var(--s2) var(--s3); background: var(--code-bg); color: var(--code-ink); border-radius: var(--radius-sm); font-family: var(--mono); font-size: var(--fs-code); white-space: pre-wrap; }
 .rp-in .rp-h { font-size: var(--fs-sm); color: var(--muted); margin: var(--s4) 0 var(--s1); }
 .rp-in .rp-h:first-child { margin-top: 0; }
 .rp-try { width: 100%; min-height: 8em; font: inherit; padding: var(--s2) var(--s3); border: 1px solid var(--rule); border-radius: var(--radius); background: var(--bg); color: var(--ink); resize: vertical; box-sizing: border-box; }
@@ -1705,7 +1711,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       if (hit) {
         secs.push({ label: l.label, node: w, fill: function () {
           if (filled) { return; } filled = true;
-          hit.sec.blocks.forEach(function (b) { try { w.appendChild(cdBlock(b)); } catch (e) { console.error("reported block", hit.sec.id, e); } });
+          hit.sec.blocks.forEach(function (b) { if (x.statement && isProblemPara(b)) { return; } try { w.appendChild(cdBlock(b)); } catch (e) { console.error("reported block", hit.sec.id, e); } });
         } });
       } else if (/^(\.\.\/|#\/)/.test(l.href)) {
         /* Pages of this site (the guide, a session, another tab of this page) are drawn inside the box too. */
@@ -1751,6 +1757,33 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     var all = ((window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id]) || {}).assets || {};
     return (x.asset || []).map(function (k) { return all[k]; }).filter(Boolean);
   }
+  /* The question itself, written out once per reported question (x.statement, from the module), drawn at the top
+     of its Reported box and in place of the opening 'The problem' paragraph of the Coding section that answers it. */
+  function rpStatement(q) {
+    var w = el("div", "rp-q");
+    w.appendChild(el("div", "rp-ql", "The question"));
+    if (q.ask) { w.appendChild(el("p", "", inl(q.ask))); }
+    [["parts", "In parts", "ol"], ["given", "You are given", "ul"], ["must", "It must", "ul"], ["scale", "Scale and limits", "ul"], ["out", "Out of scope", "ul"]].forEach(function (f) {
+      var v = q[f[0]]; if (!(v || []).length) { return; }
+      w.appendChild(el("div", "rp-ql", f[1]));
+      var l = el(f[2], ""); v.forEach(function (t) { l.appendChild(el("li", "", inl(t))); }); w.appendChild(l);
+    });
+    if (q.example) { w.appendChild(el("div", "rp-ql", "Example")); var pr = el("pre", ""); pr.textContent = q.example; w.appendChild(pr); }
+    return w;
+  }
+  function isProblemPara(b) { return b && b.t === "p" && /^\*\*The problem/.test(b.text || ""); }
+  var RP_STMT_BY_SEC = null;
+  function stmtForSection(id) {
+    if (!RP_STMT_BY_SEC) {
+      RP_STMT_BY_SEC = {};
+      ((LOOP.reported || {}).rounds || []).forEach(function (r) { r.items.forEach(function (x) {
+        if (!x.statement) { return; }
+        var first = (x.solve || []).filter(function (l) { return /^#\/(coding|lld)\//.test(l.href); })[0];
+        if (first) { RP_STMT_BY_SEC[first.href.replace(/^#\/(coding|lld)\//, "")] = x.statement; }
+      }); });
+    }
+    return RP_STMT_BY_SEC[id];
+  }
   function rpBox(x, st, onDone) {
     var d = el("details", "rp-box" + (st.done[x.id] ? " done" : "")); d.id = x.id; d.setAttribute("name", "reported");
     var sum = el("summary", "", '<span class="rp-dot" aria-hidden="true"></span><span class="rp-qt">' + inl(x.q) + '</span><span class="rp-ev">' + esc(x.ev || "") + "</span>");
@@ -1764,7 +1797,8 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
         var inn = el("div", "rp-in");
         var vid = (x.video || []).length && window.Res && Res.render(x.video);
         if (vid) { var vw = el("div", "rp-res"); vw.appendChild(vid); inn.appendChild(vw); }
-        if (x.detail) { inn.appendChild(el("p", "", inl(x.detail))); }
+        if (x.statement) { inn.appendChild(rpStatement(x.statement)); }
+        else if (x.detail) { inn.appendChild(el("p", "", inl(x.detail))); }
         inn.appendChild(el("div", "rp-h", "Your attempt. Say it aloud first, then the outline here."));
         var ta = el("textarea", "rp-try"); ta.value = st["try"][x.id] || "";
         ta.addEventListener("input", function () { st["try"][x.id] = ta.value; rpSave(st); });
@@ -3571,7 +3605,9 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
         else if (/^(predict|mcq|write|problem)$/.test(b.t)) { drill.push(b); }
         else { learn.push(b); }
       });
-      function put(b) { try { sec.appendChild(cdBlock(b)); } catch (e) { console.error("coding block", s.id, b, e); } }
+      var stmt = stmtForSection(s.id);
+      function put(b) { if (stmt && isProblemPara(b)) { sec.appendChild(rpStatement(stmt)); stmt = null; return; } try { sec.appendChild(cdBlock(b)); } catch (e) { console.error("coding block", s.id, b, e); } }
+      if (stmt && !s.blocks.some(isProblemPara)) { sec.appendChild(rpStatement(stmt)); stmt = null; }
       /* A part with flow: true is a sequence of stages (clarify, requirements, entities, logic, code):
          every box stays under its own stage heading, in the order written. */
       if (cur.flow) { s.blocks.forEach(function (b) { put(b); if (b.t === "p" && /^\*\*[a-f]\) /.test(b.text || "") && sec.lastChild) { sec.lastChild.classList.add("cd-stage"); } }); }
