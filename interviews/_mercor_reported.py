@@ -55,7 +55,7 @@ ALGO = C + "mercor-reported-algo"
 DESIGN = C + "mercor-reported-design"
 
 # Guide designs that have landed. Until a design is here, its box opens the Coding 13 section instead.
-LIVE = {"job-scheduler", "candidate-search", "contractor-payouts", "ticketmaster"}
+LIVE = {"job-scheduler", "candidate-search", "contractor-payouts", "ticketmaster", "dataset-copy"}
 
 
 def L(label, href):

@@ -5944,6 +5944,283 @@ INSERT INTO outbox (...) VALUES (...);
   ]
 });
 
+GUIDE.examples.push({
+  id: "dataset-copy",
+  tabLabel: "Dataset copy",
+  title: "Dataset copy API",
+  kind: "Classic backend design, reported for Mercor",
+  prompt: "Design an API to copy a dataset together with its tasks, model responses and grades, so that the copy can be changed independently of the original.",
+  lens: [
+    "Reported by candidates as a Mercor design prompt. It is a classic backend design, so the grading is on ids, ordering and recovery, not on any model.",
+    "The reported expected answer has four parts: remap old ids to new ids, copy parents before children, run it as an async job with a job id, and checkpoint so it can resume. Every step below makes one of the four true under load and failure.",
+    "With a security engineer in the room, expect the last dive to be the one pushed on hardest: who may copy what, and whether a copied row can ever leak across tenants."
+  ],
+  steps: {
+    requirements: {
+      board: [
+        { type: "list", title: "Functional (top 3)", ordered: true, items: [
+          "POST creates a copy job and returns a job id at once. The copy has the same structure, new ids and the same content.",
+          "Status and progress are queryable, and a job can be cancelled.",
+          "Repeating the same request does not make two copies."
+        ]},
+        { type: "list", title: "Out of scope", items: [
+          "Cross-tenant copy (a separate feature with an explicit grant), merging a copy back into the original, and live sync between the two. Say them out loud and move on."
+        ]},
+        { type: "defs", title: "Non-functional (quantified, all assumptions)", items: [
+          { term: "Fast submit", desc: "Submit returns in under 200 ms at p99, because it only writes a job row and enqueues." },
+          { term: "Resumable", desc: "The largest copy (1M tasks, 10M responses, 10M grades) finishes in 10 to 15 minutes at a steady 10K rows a second. After any crash, at most one batch of work is lost." },
+          { term: "Consistent snapshot", desc: "The source keeps changing while it is copied. The copy reflects the source at one moment, the job's snapshot time." },
+          { term: "Atomic to readers", desc: "The copy is hidden until it is complete. All of it appears at once or none of it." },
+          { term: "Low impact", desc: "Bulk writes are capped to a share of the database, so live traffic keeps its p99." },
+          { term: "Idempotent submit", desc: "A retried or doubled POST returns the same job, not a second copy." },
+          { term: "Isolated", desc: "The caller needs read on the source and create on the target, and no row ever crosses a tenant." }
+        ]},
+        { type: "math", title: "Capacity math that changes the design", lines: [
+          "Total rows are 1M + 10M + 10M = 21M. At 10K rows a second that is 2,100 seconds, about 35 minutes for one worker.",
+          "To land in 10 to 15 minutes I need about 3 workers on disjoint key ranges. That is the only reason to have more than one.",
+          "A batch of 1,000 rows is 10 batches a second at 10K rows a second. A crash loses at most 1,000 rows, which is 0.1 seconds of work."
+        ], conclusion: "Two numbers decide the design: 35 minutes does not fit a request, so it is a job; and 3 workers share one database, so a limiter caps them." }
+      ],
+      reasoning: [
+        "Say the four-part answer early: remap ids, parents first, async job, checkpoint. Then the rest is detail.",
+        "Name the snapshot question yourself. A copy of a table that is changing is the easy thing to get wrong.",
+        "Responses are immutable and grades are append-only versions. Say which grade versions you copy (the latest) and move on."
+      ],
+      script: [
+        "Before I draw: rows point at each other by id, and the copy can hold about 21 million rows. So I need new ids for every row, I need to copy parents before children, and the work will not fit in one request.",
+        "I will assume the copy is a point-in-time snapshot, the same tenant only, and invisible until complete. Submit returns a job id in under 200 ms, and a crash loses at most one batch.",
+        "At 10K rows a second one worker takes about 35 minutes, so I will use about 3 on separate key ranges and cap their total write rate so live traffic is not hurt."
+      ],
+      contrast: "In a model-backed design the hard numbers are tokens and dollars. Here they are rows per second and the size of the batch that a crash can lose."
+    },
+
+    entities: {
+      board: [
+        { type: "defs", title: "Core entities", items: [
+          { term: "Dataset", desc: "Tenant, name, status (copying, ready, failed) and source_dataset_id. The copy is a new Dataset created in copying." },
+          { term: "Task, Response, Grade", desc: "The tree: tasks hold a payload and a blob reference; responses belong to a task; grades belong to a response and carry a score and a version. Every row also carries dataset_id and tenant_id." },
+          { term: "CopyJob", desc: "Source, target, snapshot_ts, status, phase and idempotency key. One per copy." },
+          { term: "CopyRange", desc: "One slice of a job's key space (3 per phase), with its own cursor and lease. The contended entity: a worker owns one range at a time." },
+          { term: "IdMap", desc: "(job, kind, old_id) to new_id. Lets a child find its copied parent, and is the audit trail." }
+        ]}
+      ],
+      reasoning: [
+        "The tree is the problem: three levels linked by ids. Draw it as parent, child, grandchild before anything else.",
+        "CopyRange is the entity workers race on, so it carries the cursor and the lease. Three ranges is what lets three workers copy without touching the same rows."
+      ],
+      script: [
+        "The data is a tree. A task has responses and a response has grades, and each row points at its parent by id. The copy needs a new id for every row, so I keep an id map.",
+        "The copy job holds the phase and the snapshot time. I split its key space into three ranges, and each range holds a cursor and a lease, so any worker can pick up a range where the last one stopped."
+      ],
+      contrast: "Agentic designs add Step and Trace entities. Here the extra entity is IdMap, which exists only because ids are references."
+    },
+
+    api: {
+      board: [
+        { type: "code", title: "API", code: `
+POST /v1/datasets/{id}/copies     header: Idempotency-Key
+                                  body: { name }
+  -> 202 { job_id, target_dataset_id, status: "queued" }
+     (the same key returns the same job)
+GET  /v1/copy-jobs/{job_id}
+  -> { status, phase, error,
+       progress: { tasks: {done, total}, responses: {...}, grades: {...} } }
+POST /v1/copy-jobs/{job_id}/cancel
+  -> 202 { status: "cancelling" }
+` },
+        { type: "list", title: "Choices to state out loud", items: [
+          "202, not 201: the copy does not exist yet. The client polls the job (pattern `async-job`).",
+          "The Idempotency-Key header makes a retried POST safe (pattern `idempotency`).",
+          "target_dataset_id is returned at once but the dataset reads as not found until it is ready.",
+          "Job ids are unguessable and every GET checks the caller's tenant owns the job."
+        ]}
+      ],
+      reasoning: [
+        "Three endpoints. The interesting choices are the 202 and the idempotency header.",
+        "Mention the job-id ownership check now; it comes back in the security dive."
+      ],
+      script: [
+        "One POST to start a copy, one GET to read the job, one POST to cancel. The POST returns 202 with a job id, because the copy runs in the background.",
+        "It takes an idempotency key, so a client that times out and retries gets the same job. Status shows rows done and total per kind, so progress is real."
+      ],
+      contrast: "An agentic API usually streams. This one returns a handle and the client polls, since the long part is a data move with no user-facing output."
+    },
+
+    dataflow: {
+      board: [
+        { type: "list", title: "The life of one copy", ordered: true, items: [
+          "**Submit.** The API checks authorization, inserts the job row (unique on tenant and idempotency key), creates the target dataset in copying, and enqueues the job id.",
+          "**Lease.** A worker leases one key range of the job and renews the lease while it works.",
+          "**Copy by phase.** Tasks, then responses, then grades. In each phase it reads a keyset batch of 1,000, writes the new rows and the id map, and stores the cursor in one transaction.",
+          "**Finish.** When the last phase ends, one update flips the target to ready. Readers see all of it at once.",
+          "**Fail or cancel.** The target stays hidden. A cleanup job deletes rows by target dataset id."
+        ]}
+      ],
+      reasoning: [
+        "A pipeline of three phases, each a loop of batches. Every deep dive is one arrow in it."
+      ],
+      script: [
+        "Submit writes a job row and returns. A worker then copies tasks, responses and grades in that order, a batch of a thousand at a time, and commits each batch with its cursor. At the end one update makes the copy visible."
+      ],
+      contrast: "For agentic systems this step is the agent loop. Here it is a loop over batches whose only state is a cursor."
+    },
+
+    hld: {
+      board: [
+        { type: "diagram", title: "Dataset copy high-level design", stagesAll: "The whole system: authorize, write a job, workers copy in batches against a snapshot with a shared limiter, and an id map plus cursor make it resumable.", stages: [
+          { title: "One machine", add: ["client", "api", "source", "target"], say: "Start with the version that works on a laptop: the API reads the source rows and writes new rows into a new dataset, inside the request. It breaks three ways: 35 minutes outlives any request timeout, a crash leaves a half copy with no way to resume, and a child cannot find its new parent." },
+          { title: "Async job", add: ["jobs", "queue", "workers"], say: "A request cannot run 35 minutes. The API writes a job row and enqueues its id, then returns 202. A worker leases the job and does the copy. What breaks next: the copy is still not resumable, and children still have no new parent ids." },
+          { title: "Remap and resume", add: ["idmap"], say: "Give every row a new id and record old to new in the id map. Copy parents first so a child can look up its parent. Commit each batch with the cursor in one transaction, so a worker that dies is replaced and resumes from the cursor. What breaks next: the source keeps changing, and three workers can overload the database." },
+          { title: "Snapshot and limiter", add: ["snap", "limiter"], say: "Pin the copy to a snapshot time so rows added after it are ignored, and put a shared limiter in front of the writes so the workers together stay under their share of the database. What breaks next: anyone could submit a copy of anything." },
+          { title: "Authorization", add: ["authz"], say: "Check read on the source and create on the target at submit, and again in the worker, using the tenant from the job row. Then the copy cannot be redirected across a tenant." }
+        ], nodes: [
+          { id: "client", label: "Client", sub: "calls the API", col: 0, row: 1, tone: "external" },
+          { id: "api", label: "Copy API", sub: "202 and job id", col: 1, row: 1, tone: "service" },
+          { id: "authz", label: "Authorization", sub: "source and target", col: 1, row: 0, tone: "guard" },
+          { id: "jobs", label: "Job table", sub: "cursor, lease, key", col: 1, row: 2, tone: "store" },
+          { id: "queue", label: "Job queue", sub: "job ids only", col: 2, row: 1, tone: "queue" },
+          { id: "limiter", label: "Write limiter", sub: "shared rows per sec", col: 2, row: 0, tone: "guard" },
+          { id: "workers", label: "Copy workers", sub: "3 key ranges", col: 3, row: 1, tone: "orchestrator" },
+          { id: "snap", label: "Snapshot time", sub: "fixed per job", col: 3, row: 0, tone: "guard" },
+          { id: "idmap", label: "Id map", sub: "old to new id", col: 3, row: 2, tone: "store" },
+          { id: "source", label: "Source dataset", sub: "tasks, responses", col: 4, row: 0, tone: "store" },
+          { id: "target", label: "Target dataset", sub: "hidden until ready", col: 4, row: 2, tone: "store" }
+        ], edges: [
+          { from: "client", to: "api" },
+          { from: "api", to: "authz", label: "check both" },
+          { from: "api", to: "jobs", label: "insert job" },
+          { from: "api", to: "queue", label: "enqueue", async: true },
+          { from: "queue", to: "workers", label: "lease job" },
+          { from: "workers", to: "jobs", label: "cursor, lease" },
+          { from: "workers", to: "limiter", label: "take rows" },
+          { from: "workers", to: "snap", label: "read as of" },
+          { from: "snap", to: "source", label: "batch scan" },
+          { from: "workers", to: "target", label: "write batch" },
+          { from: "workers", to: "idmap", label: "record ids" }
+        ]},
+        { type: "list", title: "Walk a request through it", ordered: true, items: [
+          "**Submit.** The API checks read on the source and create on the target, inserts the job row and the hidden target dataset, and enqueues the job id. A second POST with the same key hits the unique constraint and reads the first job (pattern `idempotency`).",
+          "**Lease.** A worker leases the job and fixes snapshot_ts on first start. A worker that dies is replaced when the lease expires (pattern `leases`).",
+          "**Read.** It scans a key range with keyset pagination, never OFFSET: `id > cursor ORDER BY id LIMIT 1000`.",
+          "**Remap.** Each new id is derived from the job id and the old id, so a retry computes the same id. The parent's new id comes from the id map (pattern `checkpointing`).",
+          "**Commit.** Rows, id map rows and the new cursor go in one transaction. Cursor and data cannot disagree.",
+          "**Finish.** After grades, one update sets the target to ready."
+        ]},
+        { type: "code", title: "The two statements that carry the design (SQL sketch)", code: `
+-- one batch: rows, map and cursor commit together
+BEGIN;
+INSERT INTO responses (id, task_id, dataset_id, tenant_id, content_ref, ...)
+SELECT uuid5($job, r.id), m.new_id, $target, $tenant, r.content_ref, ...
+  FROM responses r JOIN id_map m
+    ON m.job_id = $job AND m.kind = 'task' AND m.old_id = r.task_id
+ WHERE r.dataset_id = $source AND r.id > $cursor AND r.id <= $range_hi
+   AND r.created_at <= $snapshot_ts
+ ORDER BY r.id LIMIT 1000
+ON CONFLICT (id) DO NOTHING;              -- a retried batch is a no-op
+UPDATE copy_ranges SET cursor = $last_id
+ WHERE job_id = $job AND range_no = $n AND lease_holder = $me;
+COMMIT;
+
+-- the last step: the only moment readers can see the copy
+UPDATE datasets SET status = 'ready' WHERE id = $target AND status = 'copying';
+` },
+        { type: "defs", title: "Fields worth writing next to the stores", items: [
+          { term: "copy_jobs", desc: "`id, tenant_id, source_id, target_id, snapshot_ts, status, phase, idempotency_key`. Unique on `(tenant_id, idempotency_key)`." },
+          { term: "copy_ranges", desc: "`job_id, phase, range_no, range_lo, range_hi, cursor, lease_holder, lease_expires_at`. Primary key `(job_id, phase, range_no)`." },
+          { term: "id_map", desc: "`job_id, kind, old_id, new_id`. Primary key `(job_id, kind, old_id)`." },
+          { term: "tasks, responses, grades", desc: "Each has `dataset_id, tenant_id` and an index on `(dataset_id, id)` for keyset scans, plus `(task_id)` on responses and `(response_id)` on grades." }
+        ]}
+      ],
+      reasoning: [
+        "Build in the order the failures show: one machine, then a job, then ids and cursor, then snapshot and limiter, then authorization.",
+        "Say what breaks before each fix. The interviewer then hears the four-part answer arrive as a progression, not a list.",
+        "Put the one-transaction batch on the board now. The first deep dive depends on it."
+      ],
+      script: [
+        "I will start with one machine: the API reads the source and writes a new dataset inside the request. It breaks because 35 minutes outlives a request, a crash leaves a half copy, and a child cannot find its new parent.",
+        "So I make it a job. The API writes a job row, enqueues the id and returns 202. A worker leases the job and copies. Then I add the id map and the cursor: every row gets a new id, parents are copied first, and each batch commits with its cursor so a replacement worker resumes.",
+        "Next the source changes while I read it, so I pin a snapshot time. Three workers share the database, so a limiter caps their total write rate.",
+        "Last, authorization on both datasets at submit and again in the worker, with the tenant taken from the job row."
+      ],
+      probes: [
+        "Why a queue and a job table? The table holds the cursor and status and is the truth. The queue only wakes a worker, and a lost message is a delay, because a sweeper re-enqueues jobs with an expired lease.",
+        "Why not copy-on-write? A lazy copy is instant but every read walks a parent chain and deletes need tombstones. The requirement is independent change, so I pay for a deep copy."
+      ],
+      contrast: "No model gateway or eval store. Correctness comes from deterministic ids, one transaction per batch and a lease, not from a policy around a model."
+    },
+
+    deepdives: {
+      board: [
+        { type: "dive", title: "Remapping ids and copying in dependency order", diagram: {"cap": "Tasks are copied first and their new ids recorded; a response then looks up its task's new id in the map before it is inserted.", "fail": "Inserting a response before its task is copied either breaks a foreign key or points the copy at the original's task.", "nodes": [{"id": "src", "label": "Source rows", "sub": "task, response", "col": 0, "row": 0, "tone": "store"}, {"id": "w", "label": "Worker", "sub": "new = uuid5(job, old)", "col": 1, "row": 0, "tone": "orchestrator"}, {"id": "map", "label": "Id map", "sub": "old to new", "col": 2, "row": 0, "tone": "store"}, {"id": "tgt", "label": "Target rows", "sub": "parents first", "col": 1, "row": 1, "tone": "store"}, {"id": "bad", "label": "Child first", "sub": "dangling parent id", "col": 2, "row": 1, "tone": "service", "fail": true}], "edges": [{"from": "src", "to": "w", "label": "batch"}, {"from": "w", "to": "map", "label": "record, lookup"}, {"from": "w", "to": "tgt", "label": "insert"}, {"from": "bad", "to": "tgt", "label": "breaks FK"}]}, nfr: "Resumable", problem: "Rows reference each other by id, so a copied child needs its copied parent's new id, and a retried batch must not create new ids.", options: [
+          { name: "Random new id and an in-memory map", take: "Fast, and lost on a crash. After a resume the same old row would get a second new id." },
+          { name: "Persisted id map with a lookup per row", take: "Works for any id type, including auto-increment integers, and gives an audit trail. Costs a write and a read per row." },
+          { name: "Derived id: uuid5(job_id, old_id)", take: "No lookup, and a retry computes the same id, so a repeated insert is a no-op with ON CONFLICT DO NOTHING." }
+        ], pick: "Derived ids for rows whose id we control, and a persisted id map as well, for integer ids and for audit. Copy in order: datasets, tasks, responses, grades. A foreign key enforces the order, so a bug fails loudly instead of corrupting. The cost is one extra write per row into the map." },
+        { type: "dive", title: "A worker dies mid-copy", diagram: {"cap": "Each batch commits rows, id map rows and the cursor together; when a worker dies its lease expires and another resumes from the stored cursor.", "fail": "If the cursor were saved separately, a crash between the two writes would repeat or skip a batch.", "actors": [{"id": "w1", "label": "Worker 1", "tone": "service"}, {"id": "db", "label": "Job and data", "tone": "store"}, {"id": "w2", "label": "Worker 2", "tone": "service"}], "steps": [{"from": "w1", "to": "db", "label": "batch + cursor, one txn"}, {"from": "w1", "to": "db", "label": "renew lease"}, {"over": "w1", "label": "dies mid-batch", "fail": true}, {"over": "db", "label": "txn rolls back, lease expires"}, {"from": "w2", "to": "db", "label": "lease, read cursor"}, {"from": "w2", "to": "db", "label": "redo batch, same ids"}]}, nfr: "Resumable", problem: "A worker crashes in the middle of a 15 minute copy.", options: [
+          { name: "Restart from the beginning", take: "Correct and simple, and a 15 minute copy that fails at minute 14 costs 29 minutes." },
+          { name: "Save the cursor in a separate write", take: "A crash between the data write and the cursor write repeats a batch, or skips one if the order is reversed." },
+          { name: "Cursor in the same transaction as the batch", take: "Cursor and data cannot disagree. A crash after commit repeats nothing; a crash before commit rolls everything back." },
+          { name: "Lease plus renew on the job row", take: "A dead worker is replaced in one lease period. See leases (pattern `leases`) and checkpointing (pattern `checkpointing`)." }
+        ], pick: "Cursor and rows in one transaction, a 30 second lease renewed between batches, and deterministic ids so a redo is harmless. A crash costs at most one batch of 1,000 rows plus the lease time. Cost: the batch transaction holds locks briefly, so keep it small." },
+        { type: "dive", title: "Copying a source that keeps changing", diagram: {"cap": "The job fixes snapshot_ts at start; responses are immutable, so the worker copies rows with created_at at or before it, and grade versions as of it.", "fail": "Copying a live table with no cutoff gives a copy that contains a response but not the grade that was added with it, or the reverse.", "nodes": [{"id": "job", "label": "Job", "sub": "snapshot_ts fixed", "col": 0, "row": 0, "tone": "orchestrator"}, {"id": "src", "label": "Source", "sub": "created_at <= ts", "col": 1, "row": 0, "tone": "store"}, {"id": "live", "label": "Live writers", "sub": "keep adding rows", "col": 1, "row": 1, "tone": "external"}, {"id": "copy", "label": "Copy", "sub": "state at ts", "col": 2, "row": 0, "tone": "store"}, {"id": "lock", "label": "Lock the source", "sub": "blocks writers", "col": 2, "row": 1, "tone": "guard", "fail": true}], "edges": [{"from": "job", "to": "src", "label": "scan as of"}, {"from": "live", "to": "src", "label": "new rows ignored"}, {"from": "src", "to": "copy", "label": "batches"}, {"from": "lock", "to": "live", "label": "stalls"}]}, nfr: "Consistent snapshot", problem: "Rows are added to the source while a 15 minute copy runs.", options: [
+          { name: "Lock the source for the whole copy", take: "A perfect copy, and writers are blocked for 15 minutes. Not acceptable for a live dataset." },
+          { name: "One long database snapshot transaction", take: "Repeatable read gives one consistent view. See the Postgres isolation docs in the refs. But a 15 minute transaction holds back cleanup, and a worker restart loses it." },
+          { name: "Timestamp cutoff on immutable rows", take: "Responses never change, so created_at <= snapshot_ts selects the same set on every read, in any transaction. Grades are append-only versions, so take the version at that time." },
+          { name: "No cutoff, accept drift", take: "Simple, and the copy matches no moment that ever existed." }
+        ], pick: "A timestamp cutoff, snapshot_ts fixed once on the job row. It survives a worker restart and blocks no writer. Cost: it needs rows to be immutable or versioned, and a deleted source row after the snapshot still copies, which is correct for a point-in-time copy." },
+        { type: "dive", title: "Nobody sees a half copy", diagram: {"cap": "The target stays in status copying and is filtered out of every read; one update to ready at the end makes the whole copy visible.", "fail": "If the target were readable while copying, a user could open, edit or export a dataset that is missing rows.", "nodes": [{"id": "copying", "label": "copying", "sub": "hidden from reads", "col": 0, "row": 0, "tone": "store"}, {"id": "ready", "label": "ready", "sub": "one update, visible", "col": 1, "row": 0, "tone": "store"}, {"id": "failed", "label": "failed or cancelled", "sub": "stays hidden", "col": 1, "row": 1, "tone": "store"}, {"id": "clean", "label": "Cleanup job", "sub": "delete by target id", "col": 2, "row": 1, "tone": "orchestrator"}, {"id": "half", "label": "Readable half copy", "sub": "missing rows", "col": 0, "row": 1, "tone": "service", "fail": true}], "edges": [{"from": "copying", "to": "ready", "label": "all phases done"}, {"from": "copying", "to": "failed", "label": "error, cancel"}, {"from": "failed", "to": "clean", "label": "sweep"}, {"from": "half", "to": "copying", "label": "avoid"}]}, nfr: "Atomic to readers", problem: "The copy takes minutes, and a failure or a cancel can leave partial rows.", options: [
+          { name: "Write straight into a visible dataset", take: "Simple, and users see a half copy. A failure leaves junk to explain." },
+          { name: "Hidden status flag, flipped at the end", take: "Reads filter on status = ready. The flip is one small update, so the copy appears at once. A failed job leaves hidden rows to clean up." },
+          { name: "Build in a staging area and swap", take: "Clean, and costs a second write or a rename step. Worth it when a dataset has no status column." }
+        ], pick: "A status flag: copying, then ready in one conditional update. Cancel and failure leave it hidden, and a cleanup job deletes rows by target dataset id. The source was never written, so nothing is undone there. A missing blob fails the job with the row id instead of skipping it, since a silent gap is a corrupt copy." },
+        { type: "dive", title: "Not slowing live traffic", diagram: {"cap": "Every worker takes row tokens from one shared limiter before each batch, so the copy stays at its share of the database.", "fail": "Three unthrottled workers write at full speed and the live API's queries wait behind them.", "nodes": [{"id": "w", "label": "Workers", "sub": "3 key ranges", "col": 0, "row": 0, "tone": "orchestrator"}, {"id": "lim", "label": "Shared limiter", "sub": "10K rows per second", "col": 1, "row": 0, "tone": "guard"}, {"id": "db", "label": "Database", "sub": "live and copy", "col": 2, "row": 0, "tone": "store"}, {"id": "live", "label": "Live traffic", "sub": "p99 slows", "col": 2, "row": 1, "tone": "external", "fail": true}], "edges": [{"from": "w", "to": "lim", "label": "ask for 1,000"}, {"from": "lim", "to": "db", "label": "paced writes"}, {"from": "w", "to": "live", "label": "no limit hurts"}]}, nfr: "Low impact", problem: "Bulk writes of 10K rows a second compete with live queries on the same database.", options: [
+          { name: "Run it as fast as possible", take: "Fastest copy, and live p99 suffers for the length of the job." },
+          { name: "Fixed sleep between batches", take: "Easy. It does not adapt when 3 workers become 6, or when live load rises." },
+          { name: "Shared token bucket for rows per second", take: "One number for the whole system, whatever the worker count. See rate limiting (pattern `rate-limiting`)." },
+          { name: "Run off a read replica and off-peak", take: "Reads come from a replica, so the source primary is spared. Writes to the target still cost the primary." }
+        ], pick: "A shared limiter at 10K rows a second, reads from a replica where lag allows, and a cap on concurrent copy jobs (say 2 per tenant). If the live p99 rises, the limiter lowers its rate. Cost: the largest copy takes a few minutes longer in a busy hour." },
+        { type: "dive", title: "The same request twice", diagram: {"cap": "A unique key on (tenant, idempotency key) lets exactly one insert win; the loser reads the winner's job and returns it.", "fail": "A client that retries a timed-out POST creates two copies and two billing events.", "actors": [{"id": "c1", "label": "Request A", "tone": "external"}, {"id": "c2", "label": "Request B", "tone": "external"}, {"id": "api", "label": "Copy API", "tone": "service"}, {"id": "db", "label": "Job table", "tone": "store"}], "steps": [{"from": "c1", "to": "api", "label": "POST, key K"}, {"from": "c2", "to": "api", "label": "POST, key K", "fail": true}, {"from": "api", "to": "db", "label": "insert job, key K"}, {"over": "db", "label": "one insert wins"}, {"from": "api", "to": "c2", "label": "same job id"}]}, nfr: "Idempotent submit", problem: "A client retries after a timeout, or two clients press the button at once.", options: [
+          { name: "Check if a copy exists, then create", take: "A read followed by a write races: both requests see nothing and both create." },
+          { name: "Unique constraint on (tenant, idempotency key)", take: "The database decides. Exactly one insert wins and the loser reads the winner's row (pattern `idempotency`)." },
+          { name: "Unique on (tenant, name)", take: "Stops two datasets with one name, but it is the wrong key: it blocks a legitimate second copy with another key." }
+        ], pick: "The unique constraint on tenant and idempotency key, with the row storing the request body so a reused key with a different body is rejected with 422. Keys expire after 24 hours. Cost: clients must send a key, and the API returns the stored job for a repeat." },
+        { type: "dive", title: "Authorization and tenant isolation", diagram: {"cap": "Read on the source and create on the target are checked at submit and again in the worker; the worker takes the tenant from the job row, and every insert asserts it.", "fail": "A worker that trusts the request can be pointed at another tenant's dataset, or a job id can be read by anyone who guesses it.", "nodes": [{"id": "api", "label": "API", "sub": "check read + create", "col": 0, "row": 0, "tone": "guard"}, {"id": "job", "label": "Job row", "sub": "tenant_id fixed", "col": 1, "row": 0, "tone": "store"}, {"id": "w", "label": "Worker", "sub": "recheck, assert tenant", "col": 2, "row": 0, "tone": "guard"}, {"id": "leak", "label": "Cross-tenant copy", "sub": "leak", "col": 1, "row": 1, "tone": "external", "fail": true}], "edges": [{"from": "api", "to": "job", "label": "tenant from token"}, {"from": "job", "to": "w", "label": "tenant from row"}, {"from": "leak", "to": "w", "label": "must be refused"}]}, nfr: "Isolated", problem: "A copy touches a lot of data, and a bug or a forged request could move rows across a tenant boundary or expose another tenant's job.", options: [
+          { name: "Check only at submit", take: "Cheap. A permission revoked during a 15 minute copy is not noticed, and a changed job row is trusted." },
+          { name: "Check at submit and again in the worker", take: "Catches a revoked grant. The worker takes tenant_id from the job row, never from a request." },
+          { name: "Row-level security on every table", take: "The database refuses cross-tenant rows even if the code is wrong. A second layer, and slower on bulk writes, so test it." },
+          { name: "Separate audit log and quotas", take: "Records who copied what, and limits abuse: a cap on concurrent jobs and total rows a day per tenant." }
+        ], pick: "All of them. Authorization on both datasets at submit and in the worker; tenant_id on every row, asserted in the insert; job ids that are unguessable and checked against the owner on every GET, to stop IDOR; quotas against a tenant flooding the system; and an audit entry per job. The copy inherits retention and encryption settings. Blobs are shared by reference with a count, and signed URLs are never copied: sign at read time with the reader's permission. Cost: a second permission check per job, and a reference count to maintain." }
+      ],
+      reasoning: [
+        "Lead with ids and order. It is the core of the reported answer and the interviewer will test it first.",
+        "Then the crash, the changing source, atomic visibility, load, duplicate submit, and last security.",
+        "In every dive, say the failure, pick one option and name its cost."
+      ],
+      script: [
+        "The core is ids. I derive each new id from the job id and the old id, so a retry gets the same id and a repeated insert does nothing. I also store the old to new map. Parents are copied first, and a foreign key makes a wrong order fail loudly.",
+        "Each batch of a thousand rows commits with its cursor in one transaction. If a worker dies, its lease expires and another resumes from the cursor. We lose at most one batch.",
+        "The source keeps changing, so I fix a snapshot time on the job and copy rows created at or before it. I do not lock the source, because that blocks writers for the whole copy.",
+        "The target stays hidden until one update makes it ready. A shared limiter keeps the workers from slowing live traffic. The unique key on tenant and idempotency key stops a doubled request.",
+        "For security I check read and create at submit and again in the worker, take the tenant from the job row, assert it on every insert, and keep job ids unguessable and owner-checked."
+      ],
+      probes: [
+        "Why not a long database transaction for the snapshot? It holds back cleanup for 15 minutes and is lost if the worker restarts. A timestamp cutoff on immutable rows survives both.",
+        "What if the source row is deleted after the snapshot? The copy still has it, which is right for a point-in-time copy. If deletes must be honoured, use soft deletes with a deleted_at the cutoff can read.",
+        "What about large blobs? Reference the same object with a reference count instead of copying bytes. It is cheaper, and deletion then needs the count.",
+        "Can a job run twice at once? Only the lease holder of a range can move its cursor, because the update checks lease_holder. A second worker with a stale lease updates zero rows and stops.",
+        "How do you cancel? Set status to cancelling. Workers check it between batches, stop, and cleanup runs as for a failure."
+      ],
+      contrast: "Agentic dives are about grounding, action safety and cost per task. The shape (failure, options, pick) is the same, and here the failures are crashes, drift and cross-tenant writes."
+    }
+  },
+  refs: [
+    { label: "Video, 19 min: Durable Execution, Temporal and Inngest (Jordan has no life)", url: "https://www.youtube.com/watch?v=GT9k8OSjzX8" },
+    { label: "Video, 23 min: Simplifying distributed systems development with Temporal's durable execution (Stripe Developers)", url: "https://www.youtube.com/watch?v=0yZAqIsyskA" },
+    { label: "Stripe: Designing robust and predictable APIs with idempotency (idempotency keys and safe retries)", url: "https://stripe.com/blog/idempotency" },
+    { label: "Google AIP-151: Long-running operations (returning a handle for slow work)", url: "https://google.aip.dev/151" },
+    { label: "PostgreSQL docs: Transaction isolation (Repeatable Read and snapshot isolation)", url: "https://www.postgresql.org/docs/current/transaction-iso.html" }
+  ]
+});
 GUIDE.patternUsage = {
   "notebooklm": {
     uses: [

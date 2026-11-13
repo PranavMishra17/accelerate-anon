@@ -1764,3 +1764,5 @@ The changes:
 - A tab no longer remembers a hash that belongs to another tab.
 
 Why: he studies only from this tab until Monday. No charter deviation. Next: the six reported designs as full guide designs, one commit each.
+
+**12 Nov 2026: the reported Mercor designs as guide designs.** He asked for every reported design in the guide's own format, because he rebuilds a diagram from its progression and does not memorise it: requirements, entities, API, a diagram built up stage by stage (what breaks, then what is added), deep dives each with a diagram, and a video. Landing one commit each so he can study while the rest are built: dataset copy, prompt-injection defences, multi-thread AI chat, tenant-fair orchestration for LLM tasks, ML pipeline orchestration. Each was drafted from its Coding 13 section, checked by a validator for the shape (4 or 5 stages, at most 12 nodes, a security dive, no banned words), read through, and every outside link opened. The Reported tab opens the guide design in place once it lands. No charter deviation.
