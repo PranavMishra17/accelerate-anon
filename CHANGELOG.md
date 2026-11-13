@@ -1766,3 +1766,20 @@ The changes:
 Why: he studies only from this tab until Monday. No charter deviation. Next: the six reported designs as full guide designs, one commit each.
 
 **12 Nov 2026: the reported Mercor designs as guide designs.** He asked for every reported design in the guide's own format, because he rebuilds a diagram from its progression and does not memorise it: requirements, entities, API, a diagram built up stage by stage (what breaks, then what is added), deep dives each with a diagram, and a video. Landing one commit each so he can study while the rest are built: dataset copy, prompt-injection defences, multi-thread AI chat, tenant-fair orchestration for LLM tasks, ML pipeline orchestration. Each was drafted from its Coding 13 section, checked by a validator for the shape (4 or 5 stages, at most 12 nodes, a security dive, no banned words), read through, and every outside link opened. The Reported tab opens the guide design in place once it lands. No charter deviation.
+
+## 2026-11-12: Milestone 2 planned and parked
+
+What: `MILESTONE-2.html` sets the first five weeks of milestone 2. TrenTorch 01 to 08 as
+session A, maths every week, one mechanism question, and two new standing sessions: a
+weekly refresh (a drill aloud, the due multiple-choice review, a short video, notes) and
+3 or 4 LeetCode problems. Milestone 1's leftovers (w4c, w5b, w5c) go into weeks 1 and 2.
+The milestone 1 gate was never taken; parked, to be decided at the start of week 1. Not
+written into the tracker until week 1 starts.
+
+Why: milestone 1 is done but for three sessions, and interviews pushed system design and
+coding well past the plan.
+
+Charter deviation: yes, four. DSA came early through interviews, so it becomes 3 or 4
+problems a week. The refresh session is new and absorbs the weekly systems drill.
+Milestone 2 is split: TrenTorch 09 to 13 and Alaap Part 3 become Mechanism II, and
+Training moves back one. Hours run to about 6h 15m against the charter's 4 to 6.

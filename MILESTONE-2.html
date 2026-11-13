@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Milestone 2 plan</title>
+<link rel="stylesheet" href="site/tokens.css">
+<style>
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: var(--fs-md); line-height: var(--lh-body); }
+  main { max-width: 980px; margin: 0 auto; padding: var(--s6) var(--s4) var(--s7); }
+  h1 { font-size: var(--fs-2xl); margin: 0 0 var(--s2); }
+  h2 { font-size: var(--fs-xl); margin: var(--s7) 0 var(--s3); }
+  h3 { font-size: var(--fs-lg); margin: var(--s5) 0 var(--s2); }
+  p, li { max-width: var(--measure); }
+  .meta { color: var(--muted); font-size: var(--fs-sm); }
+  .parked { border: var(--hair); border-radius: var(--radius); padding: var(--s3) var(--s4); background: var(--surface); }
+  a { color: var(--accent); }
+  table { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
+  th, td { text-align: left; vertical-align: top; padding: var(--s2) var(--s3); border-bottom: var(--hair); }
+  th { color: var(--soft); font-weight: var(--w-strong); }
+  .wrap { overflow-x: auto; }
+  details { border-top: var(--hair); padding: var(--s2) 0; }
+  summary { cursor: pointer; font-weight: var(--w-strong); }
+</style>
+</head>
+<body>
+<main>
+<h1>Milestone 2: Mechanism, the first five weeks</h1>
+<p class="meta">Planned 12 November 2026. Parked: not written into the tracker until the week it starts. Projected start Mon 23 November; weeks are a sequence, not calendar slots.</p>
+
+<div class="parked">
+  <p><b>Status: parked.</b> This is the agreed shape (answers 1a, 2a, 3a). Sessions get written into <code>index.html</code> only when week 1 is about to start, so anything learned between now and then can still change them.</p>
+</div>
+
+<h2>Where milestone 1 ended</h2>
+<ul>
+  <li><b>Done:</b> every milestone 1 session except three, by his account (ticks live in his browser).</li>
+  <li><b>Left over, carried into week 1 and 2:</b> <a href="index.html#/s/w4c">w4c</a> (where embedding numbers come from, Q K V, why divide by &radic;d<sub>k</sub>), <a href="index.html#/s/w5b">w5b</a> (probability, Bayes with base rates, softmax as a distribution), <a href="index.html#/s/w5c">w5c</a> (the source-filter model, Alaap).</li>
+  <li><b>Beyond the plan:</b> system design went far past the five planned sessions (w4d to w5f, 39 wildcard sessions across six interview loops, full designs in the guide). Coding, planned to start from zero in milestone 2, is done: the patterns, problems and algorithms on <a href="CODING.html">CODING.html</a>, the Amazon daily problems and LLD drills, the Mercor reported questions. Requeue Q17 to Q20 are likely cleared by that work; confirm in the first refresh.</li>
+  <li><b>Still open on the requeue:</b> Q2, the two effects of batch normalisation (week 5).</li>
+</ul>
+
+<h3>The milestone 1 gate: parked</h3>
+<p>The plan ended milestone 1 with a timed quiz (the 14 September format) to check the six maths requeue items, the five-minute spoken systems answer and 70% on systems. It was never taken: the interviews took that slot. Parked, not dropped. Decide at the start of week 1 whether to take it, skip it on the strength of the interviews, or fold its questions into the refresh cards. <a href="REQUEUE.md">REQUEUE.md</a> notes that its bar and scoring were never settled either.</p>
+
+<h2>The goal</h2>
+<p>From the roadmap: machine learning stops being metaphor. Write PyTorch and say what every line does. TrenTorch is the spine. Five weeks of session A give about 12.5 hours, so this block covers TrenTorch modules 01 to 08, from tensors to the training loop, and ends with a small network trained from scratch and explained line by line.</p>
+
+<h2>The weekly shape</h2>
+<table>
+  <tr><th>Session</th><th>Length</th><th>What</th></tr>
+  <tr><td>A</td><td>2h 30m</td><td>TrenTorch build. The primary track. Nothing else open.</td></tr>
+  <tr><td>B</td><td>1h 15m</td><td>Maths: exactly what next week's module needs. Every week (charter, commitment 1).</td></tr>
+  <tr><td>C</td><td>45m</td><td>One mechanism question, tied to Alaap. First to drop on a busy week.</td></tr>
+  <tr><td>R</td><td>45m</td><td>Refresh. The same shape every week (below).</td></tr>
+  <tr><td>L</td><td>1h</td><td>LeetCode, 3 or 4 problems. The same shape every week (below).</td></tr>
+</table>
+<p class="meta">About 6h 15m a week, 5h 30m when C drops. Above the charter's 4 to 6 hours; recorded as a deviation.</p>
+
+<h3>R, refresh: four short cards</h3>
+<ol>
+  <li>One systems drill aloud, 15 minutes, from a closed session (replaces the roadmap's weekly drill).</li>
+  <li>The weekly multiple-choice review the tracker already schedules (+1, +3, +7, +11 weeks).</li>
+  <li>One 5 to 10 minute video on the weakest item.</li>
+  <li>One "explain it from my notes" prompt, with My answers open.</li>
+</ol>
+<p>Links into closed sessions and pages, copies nothing. A quick round, not a lesson.</p>
+
+<h3>L, LeetCode: 3 or 4 a week</h3>
+<ol>
+  <li>One recall: a problem solved before, from a blank file, timed.</li>
+  <li>Two in the week's pattern: new problems or variations.</li>
+  <li>One harder one, optional.</li>
+</ol>
+<p>Drawn from CODING.html, the Amazon daily two and the Mercor reported questions, linked rather than rewritten.</p>
+
+<h2>The five weeks</h2>
+<div class="wrap">
+<table>
+  <tr><th>Week</th><th>A: TrenTorch</th><th>B: maths</th><th>C: mechanism</th><th>R: refresh</th><th>L: pattern</th></tr>
+  <tr><td>1</td><td>01 Tensors</td><td>Shapes, broadcasting, matmul as a layer</td><td>w4c: embeddings, Q K V, &radic;d<sub>k</sub> (the attention gap)</td><td>Decide the parked gate; w1a</td><td><a href="CODING.html#hashing">Hashing</a>, <a href="CODING.html#pointers">two pointers</a></td></tr>
+  <tr><td>2</td><td>02 to 03 Activations, layers (why nonlinearity is needed)</td><td>w5b probability, then softmax and log-sum-exp; scaled initial weights (Xavier, He)</td><td>w5c: the source-filter model</td><td>Partitioning (w2a), storage (w3a)</td><td><a href="CODING.html#trees">Trees</a>, <a href="CODING.html#graphs">BFS and DFS</a></td></tr>
+  <tr><td>3</td><td>04 Losses, 05 DataLoader</td><td>Cross-entropy's gradient is p &minus; y; why squared error saturates</td><td>Cross-entropy against squared error, aloud</td><td>Failure (w4a), transactions (w4e)</td><td><a href="CODING.html#binary">Binary search</a>, <a href="CODING.html#heap">heaps</a></td></tr>
+  <tr><td>4</td><td>06 Autograd</td><td>Reverse mode by hand, two layers, with matrices</td><td>Autograd is the chain rule on a tape</td><td>Caching (w5a), streams (w5f), LLD (w5d)</td><td><a href="CODING.html#graphs">Graphs</a>, <a href="CODING.html#intervals">intervals</a></td></tr>
+  <tr><td>5</td><td>07 to 08 Optimisers, training loop; the same network in real PyTorch</td><td>SGD, momentum, Adam as update rules; what the learning rate multiplies</td><td>Batch norm's two effects (Q2)</td><td>Milestone 1 maths; one design aloud, 45 min</td><td><a href="CODING.html#dp">DP</a>, first look; one timed mock</td></tr>
+  <tr><td>Gate</td><td colspan="5">A timed quiz, and the tiny network from scratch, explained line by line.</td></tr>
+</table>
+</div>
+<p class="meta">Week 5 lands near Christmas: a lighter week is allowed and counts (charter, commitment 3).</p>
+
+<h2>Deviations from the charter and roadmap</h2>
+<ol>
+  <li><b>DSA came early.</b> Interviews drove it. The roadmap's DSA foundation becomes 3 or 4 problems a week, up from the 2 a week it planned from milestone 3.</li>
+  <li><b>A weekly refresh session is new.</b> It absorbs the roadmap's one systems drill a week.</li>
+  <li><b>Milestone 2 is split.</b> These five weeks are TrenTorch 01 to 08. Modules 09 to 13 (convolution, tokenisation, embeddings, attention, transformers) and Alaap's speaker identity and navigability (stages 10 to 15 in <a href="ALAAP.html">ALAAP.html</a>) become Mechanism II; Training moves back one.</li>
+  <li><b>Hours run over</b> the charter's floor of 4 to 6, at about 6h 15m.</li>
+</ol>
+
+<h2>After this block</h2>
+<details>
+  <summary>Mechanism II, then Training, then the deep dives</summary>
+  <p><b>Mechanism II:</b> TrenTorch 09 to 13, Alaap Part 1 and Part 3. The same weekly shape.</p>
+  <p><b>Training:</b> the roadmap's milestone 3: TTS internals, evaluation, inference, the capstone.</p>
+  <p><b>Then the deep dives</b> parked in ROADMAP-AHEAD.md: inference engineering with the voice serving stack, systems depth past interview level, space and defence.</p>
+</details>
+
+<h2>Before week 1 starts</h2>
+<ol>
+  <li>Reread CHARTER.md and this page.</li>
+  <li>Decide the parked gate.</li>
+  <li>Write the five weeks into the tracker's PLAN, with steps, sheets, reading and MCQs as milestone 1 has them.</li>
+</ol>
+</main>
+</body>
+</html>
