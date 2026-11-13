@@ -6508,6 +6508,280 @@ def approve(call, decision, args_hash):
     { label: "Design Patterns for Securing LLM Agents against Prompt Injections (paper, arXiv 2506.08837)", url: "https://arxiv.org/abs/2506.08837" }
   ]
 });
+GUIDE.examples.push({
+  id: "chat-context",
+  tabLabel: "AI chat threads",
+  title: "Persistent multi-thread AI chat with context-window management",
+  kind: "Agentic backend design, reported for Mercor",
+  prompt: "Design a persistent AI chat with many threads per user, where each reply is streamed and the conversation history can be far longer than the model's context window.",
+  lens: [
+    "Reported by candidates as a Mercor system design prompt. The interviewer is a security engineer, so expect the last third to be about who can read what, and what a stored message can make the model do.",
+    "The core idea is one sentence: the database holds the whole history forever, and the prompt is a view of it, rebuilt for every reply to a token budget. Everything else is keeping that view correct when sends race, streams die and summaries lag.",
+    "Say the three tools for old context in order: truncate (free, abrupt), summarise (keeps the gist, can drift), retrieve (exact detail, can miss). Use all three in layers."
+  ],
+  steps: {
+    requirements: {
+      board: [
+        { type: "list", title: "Functional (top 3)", ordered: true, items: [
+          "Create, list, rename and delete threads. A user has many, and old ones reopen with full history.",
+          "Send a message and stream the reply token by token.",
+          "The model uses earlier context even after it has left the window."
+        ]},
+        { type: "list", title: "Out of scope", items: [
+          "Tools and agents inside the chat, file uploads, sharing a thread with other users, and memory shared across threads (a small per-user memory is a later extension). Say them and move on."
+        ]},
+        { type: "defs", title: "Non-functional (quantified, all assumptions)", items: [
+          { term: "Fits the window", desc: "The window is about 128K tokens, but I budget 16K for history to hold cost and latency down. Threads reach thousands of messages." },
+          { term: "Fast first token", desc: "First token under 1.5 s at p95, and building the prompt takes under 100 ms. Summaries are never built on the request path." },
+          { term: "Durable", desc: "No message is lost once acknowledged. The user message is stored before the model is called." },
+          { term: "Ordered", desc: "Order inside a thread is strict and gapless, even with two devices sending at once. History reads of the last 50 messages come back in under 100 ms at p99." },
+          { term: "Complete deletion", desc: "Deleting a thread removes messages, summaries and embeddings." },
+          { term: "Isolated", desc: "One user's text never reaches another user's prompt, and stored text is treated as untrusted data." }
+        ]},
+        { type: "math", title: "Capacity math that changes the design", lines: [
+          "A long thread of 3,000 messages at about 150 tokens each is 450K tokens, over three times the 128K window and about 28 times the 16K history budget.",
+          "Stuffing the whole thread costs 450K input tokens per reply, against 16K with a managed prompt. That is about 28 times the input cost on every turn.",
+          "Messages are about 1 KB with metadata, so 10M threads of 200 messages each is about 2 TB. That is a table partitioned by thread_id, not a problem for one Postgres at the start."
+        ], conclusion: "The budget is the design: 16K of history from a thread that can be 450K, built in under 100 ms." }
+      ],
+      reasoning: [
+        "Ask five clarifying questions: thread length, shared memory, streaming, edits and deletes, multiple devices. Each answer sets one requirement above.",
+        "Name the two hard requirements now: the prompt must fit, and two sends to one thread must not fork the conversation.",
+        "Say out loud that a stream can fail halfway, so a reply has a status."
+      ],
+      script: [
+        "Before I draw: threads persist and can be thousands of messages long, the model sees about 128K tokens, and I will budget 16K of that for history so cost and latency stay flat as a thread grows.",
+        "Replies stream, so a reply can die halfway. Users have several devices, so two sends to one thread can race. Deleting a thread must remove everything derived from it.",
+        "The stored history is the truth. The prompt is a view of it that I rebuild on every reply."
+      ],
+      contrast: "In a classic CRUD design the data is the product. Here the hard number is tokens per prompt, and the design question is what to leave out."
+    },
+
+    entities: {
+      board: [
+        { type: "defs", title: "Core entities", items: [
+          { term: "Thread", desc: "Owned by one user. Title, last_message_at and a version. The unit of ordering and of locking." },
+          { term: "Message", desc: "One turn in a thread: seq (gapless, per thread), role, content, token_count, status (complete, partial, failed) and a client_msg_id. Never deleted except by a thread or message delete." },
+          { term: "Summary", desc: "A range of old messages folded into text: covers_from_seq, covers_to_seq, text, version. Derived, so it can always be regenerated." },
+          { term: "Embedding", desc: "A vector per message, tagged with user_id and thread_id. Derived, and used to retrieve old turns by meaning." },
+          { term: "Prompt build", desc: "Not stored. The ordered list of sections produced for one reply, each under its token budget." }
+        ]}
+      ],
+      reasoning: [
+        "Separate source of truth (messages) from derived data (summaries, embeddings). Deletion, repair and failure all follow from that split.",
+        "Message status is what lets a cut-off reply be stored honestly instead of vanishing."
+      ],
+      script: [
+        "Messages are the source of truth, in a gapless order per thread. Summaries and embeddings are derived from them, so I can drop and rebuild either one without losing anything.",
+        "A message has a status because a streamed reply can end partial, and I would rather store that than lose it."
+      ],
+      contrast: "A plain chat app has Thread and Message. The extra entities here, Summary and Embedding, exist only to make a bounded prompt out of an unbounded history."
+    },
+
+    api: {
+      board: [
+        { type: "code", title: "API", code: `
+POST   /v1/threads                 body: { title? }
+  -> 201 { thread_id }
+GET    /v1/threads?cursor          -> threads, newest activity first
+GET    /v1/threads/{id}/messages?before_seq=&limit=
+  -> { messages: [...], next_before_seq }
+POST   /v1/threads/{id}/messages   body: { content, client_msg_id }
+  -> event stream: { message_id, seq }, then deltas, then done
+     (409 if another reply is already running in this thread)
+PATCH  /v1/threads/{id}            body: { title }
+DELETE /v1/threads/{id}
+  -> 202; messages, summaries and embeddings are removed by a background job
+` },
+        { type: "list", title: "Choices to state out loud", items: [
+          "Every route checks that the thread belongs to the caller. A thread id alone is never enough.",
+          "Send takes a client_msg_id, so a retry after a timeout returns the stored message instead of creating a second one.",
+          "The first stream event is the stored user message with its seq. After that line, the message is durable.",
+          "History is paged by seq, not by offset, so a new message never shifts a page."
+        ]}
+      ],
+      reasoning: [
+        "The send call is the interesting one: it is both a write and a long stream.",
+        "Point at client_msg_id and the 409 as the two answers to retries and races."
+      ],
+      script: [
+        "Creating threads and reading history are ordinary. History pages by seq so new messages do not shift the pages.",
+        "Send is the real endpoint. It carries a client_msg_id for retries, stores the user message first, then streams the reply. If another reply is still running in that thread, it gets a 409."
+      ],
+      contrast: "An agentic API often returns 202 and a job id. A chat API keeps the connection open and streams, so the failure to plan for is a dropped connection, not a slow job."
+    },
+
+    dataflow: {
+      board: [
+        { type: "list", title: "The life of one send", ordered: true, items: [
+          "**Authorise and dedupe.** Check the thread belongs to the caller. Look up client_msg_id; if it exists, return the stored message.",
+          "**Store the user message.** In one transaction, take the thread's lock, assign the next seq, insert the message. Stream the first event now.",
+          "**Build the prompt.** Fill sections in a fixed order to their token budgets.",
+          "**Call the model and stream.** Forward deltas to the client while buffering them.",
+          "**Persist the reply.** Insert the assistant message with status complete when the stream ends, or partial if it is cut off.",
+          "**Derive later.** A queue triggers the embedder for the new messages, and the summariser when unsummarised turns pass a threshold."
+        ]}
+      ],
+      reasoning: [
+        "Durability comes before the model call: the user's words are safe even if everything after fails.",
+        "Derived work is off the request path. That is what keeps first-token latency flat."
+      ],
+      script: [
+        "I check the caller, dedupe on the client id, store the user message, and only then build the prompt and call the model. If anything after that fails, the user's message is already safe.",
+        "The reply streams to the client and is buffered for storage. Embeddings and summaries are written afterwards by workers, never while the user waits."
+      ],
+      contrast: "For a tool-using agent this step is a loop of model calls and actions. Here it is one model call, and the effort goes into assembling its input."
+    },
+
+    hld: {
+      board: [
+        { type: "diagram", title: "Persistent chat high-level design", stagesAll: "The whole system: store, build a budgeted prompt, stream with a per-thread lock, then summaries and retrieval written off the request path.", stages: [
+          { title: "One node", add: ["client", "api", "db", "model"], say: "Start with the version that works for a short chat: the API stores each message in Postgres, loads the whole thread, sends it to the model and streams the reply back. Name its limits: past about 128K tokens the call fails, and before that every turn costs more and answers worse." },
+          { title: "Context builder", add: ["ctx"], say: "Whole-thread prompts break on length and cost. Add a builder that fills a fixed token budget: system prompt, then summary, then retrieved turns, then recent turns verbatim, newest first. The prompt is now a view of the database, always the same size." },
+          { title: "Lock and ordering", add: ["lock"], say: "Two devices can send at once, and then two replies are built on the same history. Add a per-thread lock: one in-flight reply, a seq assigned inside the transaction, and a unique key on the client message id so retries are safe." },
+          { title: "Summaries", add: ["queue", "summ"], say: "Without a summary, anything older than the recent turns is gone. Add a queue and a summariser that folds old turns into the thread summary in the background, so the request path never waits for it." },
+          { title: "Retrieval", add: ["embed", "vec"], say: "A summary loses exact details, such as a number from turn 40. Add an embedder and a vector index, filtered to this user and thread, and pull the few most relevant old turns into the prompt." }
+        ], nodes: [
+          { id: "client", label: "Clients", sub: "web, phone", col: 0, row: 1, tone: "external" },
+          { id: "api", label: "Chat API", sub: "auth, store, stream", col: 1, row: 1, tone: "service" },
+          { id: "ctx", label: "Context builder", sub: "token budget", col: 2, row: 1, tone: "orchestrator" },
+          { id: "model", label: "Model", sub: "streams tokens", col: 3, row: 1, tone: "model" },
+          { id: "lock", label: "Thread lock", sub: "one reply at a time", col: 1, row: 0, tone: "guard" },
+          { id: "db", label: "Postgres", sub: "threads, messages", col: 2, row: 2, tone: "store" },
+          { id: "queue", label: "Derive queue", sub: "new message ids", col: 3, row: 2, tone: "queue" },
+          { id: "summ", label: "Summariser", sub: "async, per range", col: 4, row: 2, tone: "service" },
+          { id: "embed", label: "Embedder", sub: "per message", col: 4, row: 3, tone: "service" },
+          { id: "vec", label: "Vector index", sub: "user and thread filter", col: 2, row: 3, tone: "store" }
+        ], edges: [
+          { from: "client", to: "api", label: "send, stream" },
+          { from: "api", to: "db", label: "store message" },
+          { from: "api", to: "lock", label: "acquire" },
+          { from: "api", to: "ctx", label: "build prompt" },
+          { from: "ctx", to: "db", label: "recent, summary" },
+          { from: "ctx", to: "vec", label: "search" },
+          { from: "ctx", to: "model", label: "prompt" },
+          { from: "model", to: "api", label: "tokens" },
+          { from: "api", to: "queue", label: "message ids", async: true },
+          { from: "queue", to: "summ", async: true },
+          { from: "queue", to: "embed", async: true },
+          { from: "summ", to: "db", label: "write summary" },
+          { from: "embed", to: "vec", label: "write vector" }
+        ]},
+        { type: "list", title: "Walk a request through it", ordered: true, items: [
+          "**Send.** The API checks the thread's owner and the client_msg_id, takes the thread lock, and stores the user message with the next seq. It streams that first event.",
+          "**Build.** The builder fills the prompt in order: system prompt and pinned facts, the rolling summary, the top 3 to 5 retrieved older turns, then recent turns verbatim, newest first, until the history budget is used. It reserves room for the reply. See optimistic writes for the seq race (pattern `optimistic`).",
+          "**Stream.** The model's tokens are forwarded to the client and buffered. If the client drops, the API keeps reading and stores the result.",
+          "**Persist.** The assistant message is inserted as complete, or as partial if the stream was cut. The lock is released. See idempotency (pattern `idempotency`).",
+          "**Derive.** Message ids go on a queue. The embedder writes vectors. The summariser folds old turns into the summary once enough have piled up. See async jobs (pattern `async-job`)."
+        ]},
+        { type: "code", title: "The two statements that carry the design (SQL sketch)", code: `
+-- ordered, idempotent append: both constraints do the work
+INSERT INTO messages (thread_id, seq, role, content, client_msg_id, status)
+SELECT $thread, coalesce(max(seq), 0) + 1, 'user', $content, $cmid, 'complete'
+  FROM messages WHERE thread_id = $thread
+ON CONFLICT (thread_id, client_msg_id) DO NOTHING
+RETURNING id, seq;                 -- 0 rows: a retry, read the stored one
+
+-- summary write: only if nothing newer already covers this range
+INSERT INTO summaries (thread_id, covers_from_seq, covers_to_seq, text)
+SELECT $thread, $from, $to, $text
+ WHERE NOT EXISTS (SELECT 1 FROM summaries
+                    WHERE thread_id = $thread AND covers_to_seq >= $to);
+` },
+        { type: "defs", title: "Fields worth writing next to the stores", items: [
+          { term: "messages (Postgres, partitioned by thread_id)", desc: "`id, thread_id, seq, role, content, token_count, status, client_msg_id, created_at`. Unique on `(thread_id, seq)` and on `(thread_id, client_msg_id)`. The token count is stored at write time, so the builder never retokenises." },
+          { term: "summaries (Postgres)", desc: "`thread_id, covers_from_seq, covers_to_seq, text, version`. Index on `(thread_id, covers_to_seq desc)`." },
+          { term: "vector index", desc: "`message_id, user_id, thread_id, vector`. Every query filters on user_id as a hard condition." }
+        ]}
+      ],
+      reasoning: [
+        "Build in the order the failures show up: whole-thread prompt, then the builder, then the lock, then summaries, then retrieval. Say what breaks before each addition.",
+        "Postgres holds the truth. The queue, summaries and vectors are all rebuildable from it.",
+        "Put the unique constraints and the budget order on the board. The deep dives lean on them."
+      ],
+      script: [
+        "I start with one node: an API, Postgres and the model. It stores each message, sends the whole thread to the model and streams back. It works until the thread passes the window, and it costs more on every turn before that.",
+        "So I add a context builder that fills a fixed budget in a fixed order: system prompt, summary, retrieved turns, then recent turns. The prompt stays the same size however long the thread gets.",
+        "Then the race: two devices can send at once. A per-thread lock gives one reply at a time, and unique keys give a gapless seq and safe retries.",
+        "Last, the derived data. A queue feeds a summariser and an embedder off the request path. The summary keeps the gist and the vector index brings back exact old turns."
+      ],
+      probes: [
+        "Why a database as the truth and not the vector store? Because I need strict order, transactions and deletion by thread. A vector store is a search index over data that lives somewhere else.",
+        "Why not a giant window and skip all this? It works at small scale, and then cost and latency grow with every turn and quality drops on very long input. Managing the context costs engineering and is cheaper per turn."
+      ],
+      contrast: "No tool layer, no planner, no eval store. The model is called once per reply, and nearly all the engineering sits in what goes into that call."
+    },
+
+    deepdives: {
+      board: [
+        { type: "dive", title: "Fitting the history into the window", diagram: {"cap": "The builder fills sections in a fixed order to their own budgets and stops when the history budget is used, newest turns first.", "fail": "Stuffing everything fails past the window and costs tokens on every turn; truncating blindly loses the middle of the thread.", "nodes": [{"id": "sys", "label": "System and pinned", "sub": "about 1K tokens", "col": 0, "row": 0, "tone": "guard"}, {"id": "sum", "label": "Summary", "sub": "about 2K tokens", "col": 1, "row": 0, "tone": "store"}, {"id": "ret", "label": "Retrieved turns", "sub": "top 3 to 5, 2K", "col": 2, "row": 0, "tone": "store"}, {"id": "recent", "label": "Recent turns", "sub": "rest of 16K, verbatim", "col": 3, "row": 0, "tone": "service"}, {"id": "stuff", "label": "Whole thread", "sub": "450K tokens", "col": 1, "row": 1, "tone": "model", "fail": true}], "edges": [{"from": "sys", "to": "sum", "label": "then"}, {"from": "sum", "to": "ret", "label": "then"}, {"from": "ret", "to": "recent", "label": "then"}, {"from": "stuff", "to": "recent", "label": "over budget"}]}, nfr: "Fits the window", problem: "A thread is up to 450K tokens and the prompt gets 16K of history, built in under 100 ms.", options: [
+          { name: "Send the whole thread in a large window", take: "Simplest. Cost and latency grow with each turn, and quality drops on very long input." },
+          { name: "Truncate to the last N turns", take: "Free and predictable. It forgets anything earlier, abruptly." },
+          { name: "Rolling summary of old turns", take: "Keeps the gist for a small fixed cost. It loses exact details and can drift if summarised repeatedly." },
+          { name: "Retrieve old turns by meaning", take: "Brings back an exact detail from turn 40. Costs an embedding and a search, and can miss." }
+        ], pick: "All three layers, in a fixed order: system prompt and pinned facts, summary, top 3 to 5 retrieved turns not already in the window, then recent turns newest first until the 16K history budget is used, with room kept for the reply. Count tokens with the model's own tokenizer at write time and store the count; a character estimate drifts. The cost I accept: three moving parts, and a summary that is briefly stale." },
+        { type: "dive", title: "Two sends race on one thread", diagram: {"cap": "Device B waits on the thread lock until A's reply is stored, then builds its prompt on the history that includes A's reply.", "fail": "Without the lock, both build on the same history and produce two replies, a forked conversation.", "actors": [{"id": "a", "label": "Device A", "tone": "external"}, {"id": "b", "label": "Device B", "tone": "external"}, {"id": "api", "label": "Chat API", "tone": "service"}, {"id": "db", "label": "Postgres", "tone": "store"}], "steps": [{"from": "a", "to": "api", "label": "send, id a1"}, {"from": "api", "to": "db", "label": "lock thread, seq 41"}, {"from": "b", "to": "api", "label": "send, id b1"}, {"from": "api", "to": "b", "label": "409, reply running", "fail": true}, {"from": "api", "to": "db", "label": "store reply, seq 42"}, {"over": "db", "label": "lock released"}, {"from": "b", "to": "api", "label": "retry b1, seq 43"}]}, nfr: "Ordered", problem: "Two devices send to one thread at the same moment, and the order must stay strict and gapless.", options: [
+          { name: "Last write wins, no coordination", take: "Cheap, and two replies get built on the same history. The thread forks." },
+          { name: "Lock the thread row in the transaction", take: "Seq is assigned under the lock, so it is gapless. One writer at a time per thread, which is fine since replies take seconds." },
+          { name: "Unique (thread_id, seq) and retry on conflict", take: "No lock held, and the loser retries. Good for the append, but it does not stop two replies from running at once." },
+          { name: "A single-writer queue per thread", take: "Strict order for free. A lot of machinery for a thread that has one human in it." }
+        ], pick: "Lock the thread row for the append and allow one in-flight reply per thread, with the unique (thread_id, seq) constraint as the safety net. A second send gets a 409 or waits a short time, then retries. The cost: a user cannot send a second message while the first reply is still streaming." },
+        { type: "dive", title: "A retried send must not duplicate", diagram: {"cap": "The retry carries the same client_msg_id, hits the unique key, and gets the stored message back.", "fail": "Without the key, a timeout and a retry store the user's message twice and the model answers both.", "actors": [{"id": "c", "label": "Client", "tone": "external"}, {"id": "api", "label": "Chat API", "tone": "service"}, {"id": "db", "label": "Postgres", "tone": "store"}], "steps": [{"from": "c", "to": "api", "label": "send, id m7"}, {"from": "api", "to": "db", "label": "insert, seq 41"}, {"over": "api", "label": "response lost", "fail": true}, {"from": "c", "to": "api", "label": "retry, id m7"}, {"from": "api", "to": "db", "label": "conflict, read seq 41"}, {"from": "api", "to": "c", "label": "stored message"}]}, nfr: "Durable", problem: "A send times out and the client retries, and the first attempt may or may not have been stored.", options: [
+          { name: "No key, treat each POST as new", take: "Simple, and a retry duplicates the message and triggers a second reply." },
+          { name: "Dedupe on content and time", take: "Guesses. A user who types the same word twice is wrongly merged." },
+          { name: "Client-generated client_msg_id with a unique constraint", take: "The database decides, atomically. A retry returns the existing message and, if its reply is stored, that reply. See idempotency (pattern `idempotency`)." }
+        ], pick: "client_msg_id, unique per thread. On a conflict, return the stored user message, and if an assistant reply already exists for it, return or replay that. Keys can expire after a long time, but the unique constraint stays for the life of the thread." },
+        { type: "dive", title: "The stream dies halfway", diagram: {"cap": "The user message is stored before the call, the reply is buffered while it streams, and whatever arrived is stored as partial if the stream is cut.", "fail": "If the reply is stored only at the end, a failure mid-stream loses everything the user already saw.", "actors": [{"id": "c", "label": "Client", "tone": "external"}, {"id": "api", "label": "Chat API", "tone": "service"}, {"id": "m", "label": "Model", "tone": "model"}, {"id": "db", "label": "Postgres", "tone": "store"}], "steps": [{"from": "api", "to": "db", "label": "user message stored"}, {"from": "m", "to": "api", "label": "deltas"}, {"from": "api", "to": "c", "label": "forward deltas"}, {"over": "m", "label": "stream fails", "fail": true}, {"from": "api", "to": "db", "label": "reply, status partial"}, {"from": "c", "to": "api", "label": "continue or retry"}]}, nfr: "Durable", problem: "The model stream fails, the client disconnects, or the API node dies while a reply is half written.", options: [
+          { name: "Store the reply only when it completes", take: "One write and easy. A failure loses the partial text and leaves the user message with no answer." },
+          { name: "Store as it streams, in chunks", take: "Nothing seen is lost. More writes, and the row changes while it streams." },
+          { name: "Store at the end or at failure, with a status", take: "One write per reply in the normal case, and a partial row on failure. Reconnecting clients read the stored state by client_msg_id." }
+        ], pick: "Store the user message first. Buffer the reply, and write it as complete at the end or as partial on any failure, including a client disconnect, since the API keeps reading. If the API node dies, the client reconnects with the same client_msg_id and reads what was stored, then chooses to retry or continue. A partial message is included in later prompts, marked as cut off." },
+        { type: "dive", title: "Summaries without stalling the reply", diagram: {"cap": "A worker folds a range of old turns into the summary after the reply is sent, and writes it only if no newer summary already covers that range.", "fail": "Summarising on the request path adds a second model call before the first token; two workers can write overlapping summaries.", "nodes": [{"id": "q", "label": "Derive queue", "sub": "threshold reached", "col": 0, "row": 0, "tone": "queue"}, {"id": "w", "label": "Summariser", "sub": "prior summary + raw", "col": 1, "row": 0, "tone": "service"}, {"id": "db", "label": "Summaries", "sub": "check covers_to_seq", "col": 2, "row": 0, "tone": "store"}, {"id": "sync", "label": "Summarise inline", "sub": "slow first token", "col": 1, "row": 1, "tone": "model", "fail": true}], "edges": [{"from": "q", "to": "w", "label": "range", "async": true}, {"from": "w", "to": "db", "label": "write if newer"}, {"from": "sync", "to": "db", "label": "blocks reply"}]}, nfr: "Fast first token", problem: "Old turns must be folded into a summary, and the model call to do it must not delay the user's reply.", options: [
+          { name: "Summarise on the request path", take: "Always fresh. Adds a model call before the first token and breaks the 1.5 s target." },
+          { name: "Async job after a threshold", take: "Off the request path. The summary is briefly stale, which is fine because recent turns are verbatim anyway." },
+          { name: "Summarise every turn", take: "Never stale. Costs a model call per message for little gain." }
+        ], pick: "Async: when unsummarised turns pass a threshold (say 20 messages or 4K tokens), a worker summarises that seq range from the prior summary plus the raw turns, never from a summary of a summary alone, which drifts. It writes only if no summary with an equal or higher covers_to_seq exists. Jobs retry from the queue and are safe to repeat. If the worker is down, the builder takes more verbatim turns and truncates. See async jobs (pattern `async-job`) and retries (pattern `retries-dlq`)." },
+        { type: "dive", title: "Deleting everything derived", diagram: {"cap": "Delete marks the thread, returns 202, and a job removes messages, summaries and embeddings; reads and retrieval refuse a deleted thread at once.", "fail": "If only the messages are deleted, embeddings and summaries still hold the text and can surface it in a prompt.", "nodes": [{"id": "del", "label": "Delete request", "sub": "marks thread deleted", "col": 0, "row": 0, "tone": "service"}, {"id": "job", "label": "Delete job", "sub": "idempotent, retried", "col": 1, "row": 0, "tone": "queue"}, {"id": "stores", "label": "Messages, summaries", "sub": "and embeddings", "col": 2, "row": 0, "tone": "store"}, {"id": "left", "label": "Orphan vectors", "sub": "text still found", "col": 1, "row": 1, "tone": "store", "fail": true}], "edges": [{"from": "del", "to": "job", "label": "enqueue", "async": true}, {"from": "job", "to": "stores", "label": "remove all"}, {"from": "left", "to": "stores", "label": "forgotten"}]}, nfr: "Complete deletion", problem: "A user deletes a thread or a message, and copies of its text exist in a summary and in a vector index.", options: [
+          { name: "Delete the message rows only", take: "Easy, and the derived stores still hold the text." },
+          { name: "Soft delete and clean up later", take: "Fast to answer. Reads must check the flag everywhere, or deleted text leaks." },
+          { name: "Mark deleted, then an idempotent job removes every store", take: "Immediate effect from the flag, complete removal from the job, and a repeated run is harmless." }
+        ], pick: "Mark the thread deleted in the same transaction as the 202, so reads and retrieval refuse it at once. A job then deletes messages, summaries and vectors, and is safe to repeat. For a single message delete, also invalidate summaries that cover its seq so they are rebuilt, and remove its vector. Backups age out under the retention policy; say that plainly, since derived stores are the usual miss." },
+        { type: "dive", title: "Tenant isolation and stored prompt injection", diagram: {"cap": "Every query is scoped by user_id, vector search filters on it as a hard condition, and summaries and retrieved turns enter the prompt labelled as untrusted data.", "fail": "A guessable thread id with no owner check, or a global vector search, puts one user's text in another user's prompt.", "nodes": [{"id": "req", "label": "Request", "sub": "user from the token", "col": 0, "row": 0, "tone": "external"}, {"id": "authz", "label": "Owner check", "sub": "every route", "col": 1, "row": 0, "tone": "guard"}, {"id": "scope", "label": "Scoped reads", "sub": "user_id in each query", "col": 2, "row": 0, "tone": "store"}, {"id": "prompt", "label": "Prompt", "sub": "roles kept, data marked", "col": 3, "row": 0, "tone": "model"}, {"id": "idor", "label": "Guessed thread id", "sub": "no owner check", "col": 1, "row": 1, "tone": "external", "fail": true}], "edges": [{"from": "req", "to": "authz", "label": "thread id"}, {"from": "authz", "to": "scope", "label": "allowed"}, {"from": "scope", "to": "prompt", "label": "untrusted text"}, {"from": "idor", "to": "scope", "label": "reads others"}]}, nfr: "Isolated", problem: "A security engineer will ask who can read what, and what a stored message can make the model do.", options: [
+          { name: "Trust the thread id", take: "Ids are guessable or leaked in logs. Reading by id alone is the classic IDOR." },
+          { name: "Check the owner on every query", take: "Take the user from the auth token, never the request body, and put user_id in each query and in the vector filter. Add row-level security as a second layer." },
+          { name: "Treat stored text as data, not instructions", take: "Messages, tool output and retrieved turns can contain instructions, and a summary can launder them into a trusted-looking block. Keep the role on every stored line and mark summaries and retrieved turns as untrusted in the prompt." },
+          { name: "Protect the data itself", take: "Encrypt at rest, redact message content from logs, audit who read or deleted threads, and treat prompts as personal data." }
+        ], pick: "Owner check on every route and a user_id filter as a hard condition on every query, including vector search, with row-level security behind it. Roles preserved on stored lines, and summaries and retrieved turns wrapped as untrusted data. Content redacted from logs and an audit record for reads by staff. Say the limit: marking text as untrusted lowers the risk of prompt injection and does not remove it, so the model gets no tools that act on the user's behalf in this design." }
+      ],
+      reasoning: [
+        "Lead with the context budget. It is the point of the prompt, and the interviewer will push on how you decide what stays in.",
+        "Then the race, the retry, and the cut-off stream: the three ways one send goes wrong.",
+        "Then summaries, deletion, and finish on security, since this interviewer will ask for it."
+      ],
+      script: [
+        "The prompt gets a 16K history budget, filled in a fixed order: system prompt and pinned facts, the summary, a few retrieved older turns, then recent turns verbatim, newest first. Tokens are counted with the model's tokenizer when a message is written, so building the prompt is arithmetic.",
+        "Two devices sending at once is handled by a lock on the thread row. Seq is assigned under it, and one reply runs at a time. A retried send carries a client message id, and a unique key returns the stored message instead of a duplicate.",
+        "The user message is stored before the model is called. If the stream dies, I store what arrived with status partial, and a reconnecting client reads the stored state.",
+        "Summaries are written by a background worker from the prior summary plus the raw turns, and only if no newer one covers the range. Retrieval brings back exact old turns. Delete removes messages, summaries and vectors, and the flag takes effect immediately.",
+        "For security: owner check on every call, user_id as a hard filter on the vector search, stored text marked as untrusted data, and content kept out of logs."
+      ],
+      probes: [
+        "What if the summary is wrong? Raw messages are never deleted, so I can regenerate it. I summarise from raw turns plus the prior summary to limit drift.",
+        "What if the summariser or embedder is down? The thread still works. The builder takes more verbatim turns and truncates, and the jobs retry from the queue.",
+        "Why not embed chunks instead of messages? Per message is simpler. Chunking helps when single messages are very long, so I would add it then.",
+        "Could a summary leak data across users? Not if it is built only from one thread's messages and stored with that thread's id. The risk is a summary that carries an injected instruction, which is why it is marked as untrusted."
+      ],
+      contrast: "Agentic deep dives are about tools, planners and action safety. These are about one model call: what goes in, in what order, and what survives a crash around it."
+    }
+  },
+  refs: [
+    { label: "Video, 17 min: How we solved Context Management in Agents, Sally-Ann Delucia (AI Engineer)", url: "https://www.youtube.com/watch?v=esY99nYXxR4" },
+    { label: "Video, 23 min: Context Engineering for Agents (LangChain)", url: "https://www.youtube.com/watch?v=4GiqzUHD5AA" },
+    { label: "Anthropic: Effective context engineering for AI agents (compaction, retrieval, what to keep in the window)", url: "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" },
+    { label: "MemGPT: Towards LLMs as Operating Systems (memory tiers for contexts beyond the window)", url: "https://arxiv.org/abs/2310.08560" },
+    { label: "Stripe: Designing robust and predictable APIs with idempotency (keys and safe retries)", url: "https://stripe.com/blog/idempotency" }
+  ]
+});
 GUIDE.patternUsage = {
   "notebooklm": {
     uses: [
