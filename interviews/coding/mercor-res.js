@@ -20,7 +20,7 @@
     r(true, "https://realpython.com/python-heapq-module/", 15, "Real Python: the heapq module (part free)", "Min heap only, so how to fake a max heap and how to break ties."),
     r(false, "https://realpython.com/python-deque/", 15, "Real Python: Python's deque (part free)", "Queue and stack operations and their cost, side by side with a list.")
   ];
-  R[C + "onsite-referral"] = [
+  R["mercor-yours/yours-q1"] = [
     v(true, "utDu3Q7Flrw", "NeetCode", 14, "Top 5 most common graph algorithms for coding interviews", "BFS, DFS, topological sort, union find and Dijkstra in one sitting: the menu for this whole part."),
     v(false, "4jyESQDrpls", "Greg Hogg", 33, "Graphs: adjacency list, DFS and BFS in Python", "Builds the adjacency list from an edge list and walks it, the exact first ten lines of a referral network."),
     r(true, "https://www.techinterviewhandbook.org/algorithms/graph/", 10, "Tech Interview Handbook: graph cheatsheet", "Traversal templates in Python, the visited set, and the corner cases (cycles, disconnected parts)."),
@@ -38,12 +38,12 @@
     r(true, "https://www.techinterviewhandbook.org/algorithms/graph/", 10, "Tech Interview Handbook: graph cheatsheet", "Reachability by DFS with a visited set, and the directed versus undirected traps."),
     r(false, "https://cp-algorithms.com/graph/topological-sort.html", 10, "cp-algorithms: topological sorting", "A topological order lets you compute reachability sets in one pass, which is the speed-up for repeated queries.")
   ];
-  R[C + "onsite-planner"] = [
+  R[C + "onsite-scheduler"] = (R[C + "onsite-scheduler"] || []).concat([
     v(true, "TXkDpqjDMHA", "WilliamFiset", 10, "Shortest and longest path on a DAG", "Longest path is a single pass in topological order, which is exactly the earliest finish time of a project."),
     v(false, "ZUFQfFaU-8U", "take U forward", 27, "Shortest path in a directed acyclic graph", "The same topological DP written out in code; skim for the relax loop."),
     r(true, "https://www.geeksforgeeks.org/find-longest-path-directed-acyclic-graph/", 8, "GeeksforGeeks: longest path in a DAG", "The critical path as code: order, then relax each edge once."),
     r(false, "https://cp-algorithms.com/graph/topological-sort.html", 10, "cp-algorithms: topological sorting", "Needed first for the order that the DP walks.")
-  ];
+  ]);
   R[C + "onsite-assign"] = [
     v(true, "XycnarZEBvQ", "ByteQuest", 13, "Heaps visually explained (priority queues)", "Why the next free contractor or the next cheapest task is a heap pop, shown step by step."),
     r(true, "https://www.hellointerview.com/learn/code/heap/overview", 10, "Hello Interview: heap overview", "When a heap is the answer, the two-heap trick and the typical Python code."),
@@ -90,12 +90,12 @@
     v(true, "FNL61tvwBUg", "Tech With Tim", 18, "How to pass coding interviews like the top 1%", "Talking through a problem, naming the cost, handling hints: the whole skill of a discussion-only round."),
     r(true, "https://www.techinterviewhandbook.org/coding-interview-techniques/", 12, "Tech Interview Handbook: techniques to solve coding questions", "Clarify, brute force first, then improve out loud.")
   ];
-  R[A + "onsite-comparator"] = [
+  R["mercor-yours/yours-q4"] = [
     v(true, "wiNfjkMDl3A", "AlgosWithMichael", 7, "Quick select algorithm visualized", "Why partition-based selection is O(n) on average and what sorting would cost instead."),
     r(true, "https://docs.python.org/3/howto/sorting.html", 12, "Python docs: sorting techniques", "key functions versus cmp_to_key, and the stability rule that explains many sort bugs."),
     r(false, "https://en.wikipedia.org/wiki/Strict_weak_ordering", 12, "Wikipedia: weak ordering", "The rules a comparator must follow (irreflexive, transitive); break one and a sort misbehaves.")
   ];
-  R[A + "onsite-exchange"] = [
+  R["mercor-yours/yours-q2"] = [
     v(true, "EFg3u_E6eHU", "Spanning Tree", 9, "How Dijkstra's algorithm works", "Best rate to a target as a shortest path, with the priority queue shown clearly."),
     v(false, "_lHSawdgXpI", "Michael Sambol", 3, "Dijkstra's algorithm in 3 minutes", "A fast recap to say it aloud from."),
     r(true, "https://cp-algorithms.com/graph/dijkstra.html", 15, "cp-algorithms: Dijkstra", "Complexity with a heap, and why negative edges break it."),

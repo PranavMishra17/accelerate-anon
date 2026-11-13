@@ -1795,3 +1795,9 @@ Why: the solo hour has no one to ask, and the reported question names top-k and 
 What: after the run output, "The code review: every decision, and how to stand behind it": the opener for the 30 minutes, then fourteen decisions (graph shape, dropped rows, cycles allowed, BFS, one traversal, the score, the scorer class, tie-breaks, reach, top-k, greedy influencers, flow centrality, tests, the next hour), each as decided, instead of, why, what it costs, if they push, and what would change it.
 
 Why: in the solo hour he decides alone; the review is where he defends each decision, and he wants to know why every line is there before he writes it. No charter deviation.
+
+## 2026-11-13: Mercor coding and algorithms answers, shaped like the interview
+
+What: every reported solo and algorithms answer rewritten in one shape: the problem as you might hear it, how to read it before speaking, a table of clarifying questions with what each answer changes (for the solo round: the gaps you decide alone and write at the top), the crux, the conversation in order, the core code only (every block run, output pasted), the follow-ups, and the push-backs (for the solo round, the full code review). New Coding 14, the method for each round, is the first box of each round on the Reported tab. New sections rv-cache and rv-refund for the two review extensions. One home per question: onsite-referral, onsite-planner, ra-parking, onsite-comparator, onsite-exchange, ra-friend and ra-names folded into their primary sections and removed; their videos moved with them. The million-IDs section in Coding 8 is renamed algo-ids (it shared an id with Coding 7's profile deduplication).
+
+Why: the write-ups were long and repetitive with the answer buried; the real rounds are a conversation and a review, and the problem on the day will differ, so he needs a method and a branch map, not a text to memorise. No charter deviation.

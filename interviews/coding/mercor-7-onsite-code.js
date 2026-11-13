@@ -528,539 +528,258 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
-   "id": "onsite-referral",
-   "title": "2. Referral network",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "**Your worked version of a referral-network round is in [Your worked solutions, Q1 Referral network](#/coding/yours-q1).** It has the try-first box, your thinking and what to say, and the full code with its output. This section keeps the three-part event-and-flow version with its answer boxes."
-    },
-    {
-     "t": "p",
-     "text": "**What it is.** Three parts that build on each other. Part 1 builds a network from referral events and has to survive messy data. Part 2 answers queries on it. Part 3 adds a 'flow centrality' score, and the prompt does not say what that means. That gap is deliberate: the round is checking whether you ask before you code. The prompt is not public, so the shape is right and the numbers are mine."
-    },
-    {
-     "t": "p",
-     "text": "Solve it in your order. At each stage try the box first, then open the answer and the Say it sheet. Set the switch above to Try first if you want the answers shut."
-    },
-    {
-     "t": "p",
-     "text": "**a) Clarify.** Three buckets, each question with the answer you will assume."
-    },
-    {
-     "t": "write",
-     "id": "onsite-referral-a",
-     "q": "Write your questions under each bucket, and the answer you will assume if the interviewer does not give one.",
-     "starter": "1. Primary capabilities (what it must do)\n- \n\n2. Error handling (what goes wrong)\n- \n\n3. Scope boundaries (where it stops)\n- ",
-     "hint": "Capabilities: what an event is, how names arrive, which queries, what 'reach' means, what part 3 means. Errors: every kind of bad row, and a query about someone unknown. Scope: one referrer per user or several, how big, a stream or a batch.",
-     "solution": "1. Primary capabilities\n- What is an event, and how do they arrive?  Likely: a (referrer, user) pair of strings, in a list, in time order.\n- Do names appear for the first time in events, or is there a user list?  Likely: first time in events. If a list is given, a name outside it is unknown.\n- Which queries in part 2?  Likely: who referred a user, direct referrals, the chain above a user, reach, top k by reach.\n- Does 'reach' mean direct referrals or everyone below?  Everyone below, at any depth. Name both: direct is one level, reach is all levels.\n- What does 'flow centrality' mean?  The prompt leaves it open on purpose. Do not guess: use the three readings below, ask which, and pick one if there is no answer.\n\n2. Error handling\n- Someone refers themselves?  Refuse, reason 'self'.\n- The same event twice?  Ignore the second, reason 'duplicate'. It is harmless, but count it.\n- A second, different referrer for a user?  The first event wins. Refuse, reason 'second_referrer'.\n- An event that closes a loop (a refers b, then b refers a)?  Refuse, reason 'cycle'.\n- An empty name, or a name outside the user list?  Refuse, reasons 'bad_event' and 'unknown_user'.\n- A query about a user nobody has heard of?  Neutral answers: None, an empty list, 0. Ask, because the other choice is to raise.\n- Does a refused event leave anything behind?  No. Nothing is changed.\n\n3. Scope boundaries\n- Can a user have two referrers?  No. One referrer each makes the network a forest, and the part 3 formula depends on that.\n- How big?  Say up to 100,000 users. That rules out recursion, which stops near 1,000 levels.\n- A stream or a batch?  A batch in memory. Say what changes for a stream.\n- Saving to disk, threads, deleting or editing a referral?  Out of scope.",
-     "why": "Every question changes a line of code. 'Duplicate' and 'second referrer' are different answers, so they are different reasons. 'One referrer each' decides the data structure and part 3. 'Up to 100,000' decides an iterative walk. The unknown-user answer decides what every query returns.",
-     "say": "**I sort my questions into three buckets: what it must do, what goes wrong, and where it stops.** First, I ask what an event looks like, which queries part 2 wants, and whether reach means direct or everyone below. Then the bad rows: self-referral, a repeat, a second referrer, a loop, an empty or unknown name. I would like each refusal to have a reason, so I can report them. Last, I check that each user has one referrer and about how many users, because that decides the structure. And I ask what 'flow centrality' means, because I would rather ask than guess."
-    },
-    {
-     "t": "p",
-     "text": "**b) Requirements.** Numbered, each one testable."
-    },
-    {
-     "t": "write",
-     "id": "onsite-referral-b",
-     "q": "Write the requirements, numbered, each one testable. Then what is out of scope.",
-     "starter": "1. \n2. \n3. \n",
-     "hint": "One for add and its six outcomes, one for build and the report, one each for the queries, one for the fast reach, one for top k, one for flow, one for size.",
-     "solution": "1. add(referrer, user) returns \"ok\" or the reason it refused.\n   - Reasons: bad_event, unknown_user, self, duplicate, second_referrer, cycle\n   - A refused add changes nothing (test: queries before and after are equal)\n2. build(events) feeds the events in order and returns the network and the refused events grouped by reason.\n   - The first event wins when two disagree (test: a>b then c>b leaves b's referrer as a)\n3. who_referred(u), direct(u) and upline(u) read the network.\n   - Unknown user: None, [], []\n4. reach(u) is the number of users below u at any depth, not counting u.\n   - Test: a leaf is 0, the example root is 6\n5. all_reach() gives every user's reach in one pass and equals reach(u) for each u.\n6. top_k(k) lists the k largest reaches, ties broken by name, and k larger than the user count returns everyone.\n7. flow() gives the chosen centrality for every user, and equals its definition counted by brute force on small networks.\n8. A chain of 100,000 users does not hit the recursion limit.\n9. Out of scope: two referrers per user, deleting a referral, saving, threads.",
-     "why": "Each line becomes a test. 1 and 2 are the messy data, 5 and 7 compare two implementations, 8 is the iterative walk. Requirement 7 is how you check part 3 without an answer key.",
-     "say": "From the answers I get nine requirements, and I can test each one. **The two that I would not skip are 5 and 7: the fast reach has to equal the slow reach, and the flow score has to equal its own definition counted the long way.** That is how I check part 3 when nobody gives me an answer key. The rest are the refusals, the queries and the size. Out of scope: two referrers per user, deleting, saving and threads."
-    },
-    {
-     "t": "p",
-     "text": "**c) Entities.** Keep a noun only if it carries a rule. Everything else is a key, a dict or a list."
-    },
-    {
-     "t": "write",
-     "id": "onsite-referral-c",
-     "q": "List the nouns in the requirements. For each: keep or drop, why, and the data structure it becomes.",
-     "starter": "Event: \nUser: \nReferrer link: \nReferred list: \nNetwork: \nUser list (roster): \nRefusal reason: \nReach, depth, flow score: \nChain (upline): \nLoop: ",
-     "hint": "Ask of each noun: does it have behaviour, or is it only a value? A value becomes a dict, a list or a string, not a class.",
-     "solution": "Event: drop as a class. It is a (referrer, user) tuple, read once and never kept.\nUser: drop as a class. It is a name, used as the key in every dict.\nReferrer link: keep. dict user -> referrer. One entry per user is the rule 'one referrer each'.\nReferred list: keep. dict user -> list of users, in event order. The same edges seen from the other side, so 'who did I refer' is one lookup.\nNetwork: keep. The one class. It owns both dicts, the user list and the rule that no loop forms, so no outside code can break the rule.\nUser list (roster): keep. A set of allowed names, or None when any name is allowed.\nRefusal reason: drop as a class. A string returned by add; build groups the refused events by it in a dict.\nReach, depth, flow score: drop as stored state. Dicts computed on demand, because stored counts go stale the moment an event is added.\nChain (upline): drop. A list built by walking up the referrer dict.\nLoop: drop. It is not a thing in the data, only a reason to refuse an event.",
-     "why": "One class and two dicts carry the whole problem. The reviewer's first question is 'why two dicts' and the answer is in the Referred list line: both directions cost one lookup, and you pay memory for it.",
-     "say": "I underline the nouns. **Only the network earns a class, because it is the only noun that has a rule to protect: no loops and one referrer each.** An event is a pair, a user is a name, and a refusal reason is a string, so I do not make classes for them. The two dicts are the same edges from both sides, so that 'who referred me' and 'who did I refer' are both one lookup. I compute reach and the score on demand instead of storing them, because a stored count is wrong after the next event."
-    },
-    {
-     "t": "p",
-     "text": "**Part 3 first: which flow centrality?** Decide this before the core logic, because it changes what you build. Three readings are plausible. Here they are on one seven-person example (a refers b and c; b refers d and e; d refers f; c refers g)."
-    },
-    {
-     "t": "table",
-     "head": [
-      "Reading",
-      "What it counts",
-      "On the example",
-      "What to ask",
-      "The trap"
-     ],
-     "rows": [
-      [
-       "1. Reach",
-       "People below you",
-       "a 6, b 3, c 1, d 1, rest 0",
-       "Do you mean how many people someone brought in?",
-       "Part 2 already computes it, so part 3 would add nothing. A root always wins."
-      ],
-      [
-       "2. Chains through you",
-       "(people above you) x (people below you): referral chains that pass through you",
-       "b 3, d 2, c 1, rest 0",
-       "Do chains follow the direction of a referral, and are the two ends excluded?",
-       "Running a breadth-first search from every user is O(n x (n + edges)), about 10^10 steps at 100,000 users. Or using the product when a user can have two referrers: it is then wrong."
-      ],
-      [
-       "3. Betweenness, direction ignored",
-       "Pairs of people whose path passes through you, either way",
-       "a 8, b 11, c 5, d 5, rest 0",
-       "Can influence run both ways, and would losing this person split the network?",
-       "A different number, not a different spelling. On a tree it is the sum over pairs of the pieces left when you are removed. Reading 2 code gives the wrong answer for it."
-      ]
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**What candidates report.** One public repo counts shortest paths with dist(s, v) + dist(v, t) = dist(s, t) from a breadth-first search at every node, and excludes the two ends. On a forest where each user has one referrer, that is reading 2. Another repo scores with subtree sizes and calls it 'edge cut contribution', which reads like reading 3 or reading 1. Neither is the official statement. So ask, and say which you picked and why."
-    },
-    {
-     "t": "write",
-     "id": "onsite-referral-readings",
-     "q": "Write the three readings of 'flow centrality' with the score each gives on the example, the one question you ask, which you pick and one line why.",
-     "starter": "Reading 1: \nReading 2: \nReading 3: \n\nI ask: \nI pick: \nBecause: \nIf there is no answer I say: ",
-     "hint": "Start from what already exists: reach is part 2. Then count pairs of people with a chain between them that passes through the user, once along the referral direction and once ignoring direction.",
-     "solution": "Example: a>b, a>c, b>d, b>e, d>f, c>g\n\nReading 1, reach: people below you. a 6, b 3, c 1, d 1, rest 0.\nReading 2, chains through you along the referral direction: (people above you) x (people below you). b 3, d 2, c 1, rest 0.\nReading 3, betweenness ignoring direction: pairs of people whose path passes through you. a 8, b 11, c 5, d 5, rest 0.\n\nI ask: 'Do you want the number of people someone brought in, or how many referral chains pass through them? And do chains follow the arrows, or can influence run both ways?'\nI pick: reading 2.\nBecause: it matches the shortest-path-through-a-node definition candidates report, it follows the direction of a referral, it costs O(n) with one referrer each, and I can check it against its own definition on small networks.\nIf there is no answer I say: 'I am going with reading 2, chains through a user along the referral direction. Here is the one-line change for the other two.'",
-     "why": "The pick is not the point. Asking, showing the readings on one example, and writing down what you chose is. Reading 2 also has a clean check: count, by brute force, the pairs (s, t) where dist(s, v) + dist(v, t) = dist(s, t), and compare.",
-     "say": "**The prompt leaves flow centrality open, so I would ask, and I would show three readings on one example.** Reach is people below you, which is part 2 again. Chains through you is people above times people below, and it follows the arrows. Betweenness ignoring direction is a different number: b is 11, not 3. If nobody answers, I pick chains through you, because it is the shortest-path definition along the referral direction, and I say what changes if a user could have two referrers. I would write the choice as a comment before I code it."
-    },
-    {
-     "t": "p",
-     "text": "**d) Core logic.** Plain English, numbered, per method, with the edge cases. No code yet."
-    },
-    {
-     "t": "write",
-     "id": "onsite-referral-d",
-     "q": "Core logic in plain English, numbered, for each method, and the edge cases. No code yet.",
-     "starter": "add:\n  1.\n  Edge cases:\n\n_closes_loop:\n  1.\n\nall_reach:\n  1.\n\nflow:\n  1.\n",
-     "hint": "add checks in an order from cheapest to dearest. The loop check walks up. all_reach needs parents before children. flow needs the count above each user.",
-     "solution": "add(referrer, user):\n  1. If either name is empty, return \"bad_event\"\n  2. If a roster exists and either name is not in it, return \"unknown_user\"\n  3. If referrer equals user, return \"self\"\n  4. If user already has this same referrer, return \"duplicate\"\n  5. If user already has a different referrer, return \"second_referrer\"\n  6. If _closes_loop(referrer, user), return \"cycle\"\n  7. Store the link in both dicts, add both names to the user list, return \"ok\"\n  Edge cases: the checks run from cheapest to dearest; nothing is written until the last line; a user seen only as a referrer is still a user\n\n_closes_loop(referrer, user):\n  1. Start at the referrer and walk up through the referrer dict\n  2. If the walk meets user, user would become their own ancestor: True\n  3. If the walk reaches someone with no referrer, False\n  Edge case: a chain of 100,000 is a loop, not recursion\n\nreach(user), the slow one:\n  1. Queue the user's direct referrals\n  2. Pop one, count it, queue its referrals\n  3. Return the count\n  Edge case: unknown user gives 0\n\nall_reach, the fast one:\n  1. List every user with each one after their referrer (breadth first from the roots)\n  2. Go through that list backwards, so all of a user's referrals are finished first\n  3. For each user, add their reach plus one to their referrer's reach\n  Edge case: a user nobody referred and who referred nobody has 0\n\ntop_k(k):\n  1. Compute all_reach\n  2. Take the k smallest by (minus reach, name), so the largest reach comes first and ties go alphabetical\n\nflow, reading 2:\n  1. Walk parents first: above[u] = above[referrer] + 1, and 0 for a root\n  2. Multiply above[u] by reach[u] for each user\n  Edge cases: a root has 0 above, a leaf has 0 below, both score 0\n\nflow_bruteforce, for checking only:\n  1. Breadth first from every user to get the distances\n  2. For each pair (s, t) and each other user v, count v when dist(s, v) + dist(v, t) = dist(s, t)",
-     "why": "The order of the checks in add is a design choice you can defend: the cheap ones first, the walk up last, and nothing written before the end. Step 2 of all_reach is the trick that avoids a quadratic walk.",
-     "say": "**Before any code I write the steps for each method in plain English.** For add, the checks go from cheapest to dearest, and nothing is written until the last line, so a refused event leaves no half-edge. The loop check walks up from the referrer, and meeting the new user means a loop. For the fast reach, I list users parents first, then go backwards, so that each user is finished before their parent adds them. The score is the count above times the count below, and I will check it against a brute-force count of the definition."
-    },
-    {
-     "t": "p",
-     "text": "**e) Code.** Top-down: the main method first, naming its helpers. Slow then fast. Complexity said precisely."
-    },
-    {
-     "t": "write",
-     "id": "onsite-referral-e1",
-     "q": "Code, top-down. The class with __init__ and add first, naming the loop check as a helper; then the helper; then build.",
-     "starter": "class ReferralNetwork:\n    def __init__(self, known_users=None):\n        ...\n\n    def add(self, referrer, user):\n        ...\n",
-     "hint": "Six returns in the order you wrote them, then the two stores. add calls self._closes_loop before it writes anything.",
-     "solution": "class ReferralNetwork:\n    \"\"\"Who referred whom. Every user has at most one referrer, so the network is a forest.\"\"\"\n\n    def __init__(self, known_users=None):\n        self.known = None if known_users is None else set(known_users)   # None: any name is allowed\n        self.referrer = {}                  # user -> the one person who referred them\n        self.referred = {}                  # user -> list of users they referred, in event order\n        self.users = dict.fromkeys(known_users or ())   # everyone seen; a dict keeps insertion order\n\n    def add(self, referrer, user):\n        \"\"\"Record 'referrer referred user'. Return \"ok\", or the reason it was refused. Refusing changes nothing.\"\"\"\n        if not referrer or not user:\n            return \"bad_event\"                              # None or empty name: a broken row\n        if self.known is not None and (referrer not in self.known or user not in self.known):\n            return \"unknown_user\"\n        if referrer == user:\n            return \"self\"\n        if self.referrer.get(user) == referrer:\n            return \"duplicate\"                              # the same event again: harmless, counted once\n        if user in self.referrer:\n            return \"second_referrer\"                        # a different referrer: the first event wins\n        if self._closes_loop(referrer, user):\n            return \"cycle\"\n        self.referrer[user] = referrer\n        self.referred.setdefault(referrer, []).append(user)\n        self.users[referrer] = self.users[user] = None\n        return \"ok\"\n\n    def _closes_loop(self, referrer, user):\n        \"\"\"Walk up from the referrer. Meeting `user` means user would become their own ancestor.\"\"\"\n        cur = referrer\n        while cur is not None:\n            if cur == user:\n                return True\n            cur = self.referrer.get(cur)\n        return False\n\n\ndef build(events, known_users=None):\n    \"\"\"Feed every event in order. Return the network and the refused events grouped by reason.\"\"\"\n    net, refused = ReferralNetwork(known_users), {}\n    for referrer, user in events:\n        why = net.add(referrer, user)\n        if why != \"ok\":\n            refused.setdefault(why, []).append((referrer, user))\n    return net, refused\n",
-     "why": "add reads like the requirements: six refusals, then the write. The loop check has a name, so add stays short and the walk is written once, below it. build is eight lines because add already says why it refused.",
-     "say": "**add is the method they will read first, so it reads like the list of rules.** Empty name, unknown name, self, same event again, a different referrer, a loop, and only then do I write to the two dicts. The loop check is a helper that walks up from the referrer. If it meets the new user, that user would become their own ancestor. build feeds events in order and groups the refusals by reason."
-    },
-    {
-     "t": "write",
-     "id": "onsite-referral-e2",
-     "q": "The queries, slow then fast: who_referred, direct, upline, reach (the obvious walk), then all_reach (one pass), top_k and the helper that lists parents first.",
-     "starter": "    def who_referred(self, user):\n        ...\n\n    def reach(self, user):\n        ...\n\n    def all_reach(self):\n        ...\n",
-     "hint": "reach is a queue over the referred dict. all_reach goes backwards over a parents-first list and adds reach + 1 to the parent. top_k is heapq.nsmallest with a key of (-reach, name).",
-     "solution": "    # Part 2: queries. An unknown user gets a neutral answer: None, [], 0.\n    def who_referred(self, user):\n        return self.referrer.get(user)\n\n    def direct(self, user):\n        return list(self.referred.get(user, []))\n\n    def upline(self, user):\n        \"\"\"The chain of referrers above `user`, nearest first.\"\"\"\n        chain, cur = [], self.referrer.get(user)\n        while cur is not None:\n            chain.append(cur)\n            cur = self.referrer.get(cur)\n        return chain\n\n    def reach(self, user):\n        \"\"\"Slow first version: walk the subtree under `user`. O(size of that subtree) per call.\"\"\"\n        count, queue = 0, deque(self.direct(user))\n        while queue:\n            u = queue.popleft()\n            count += 1\n            queue.extend(self.referred.get(u, ()))\n        return count\n\n    def all_reach(self):\n        \"\"\"Fast version for many queries: every user's reach in one pass, O(n).\"\"\"\n        reach = dict.fromkeys(self.users, 0)\n        for u in reversed(self._parents_first()):      # a child is finished before its parent\n            p = self.referrer.get(u)\n            if p is not None:\n                reach[p] += reach[u] + 1               # the parent gains the child and the child's reach\n        return reach\n\n    def top_k(self, k):\n        \"\"\"The k users with the largest reach, ties broken by name. O(n log k).\"\"\"\n        return heapq.nsmallest(k, self.all_reach().items(), key=lambda kv: (-kv[1], kv[0]))\n\n    def _parents_first(self):\n        \"\"\"Every user, each one after their referrer: a breadth-first walk from the roots.\"\"\"\n        queue = deque(u for u in self.users if u not in self.referrer)\n        order = []\n        while queue:\n            u = queue.popleft()\n            order.append(u)\n            queue.extend(self.referred.get(u, ()))\n        return order\n",
-     "why": "reach is correct and costs the size of the subtree on every call, which on a chain of 100,000 is quadratic over all users. all_reach costs one pass. Keeping both lets the fast one be checked against the slow one.",
-     "say": "I write the obvious version first: a queue walk that counts the subtree under one user. **It is correct, and it is slow when I call it for every user, so the fast version is one pass backwards over the users, parents first.** By the time I reach a user, all their referrals have already added themselves, so adding reach plus one to the parent is final. I keep the slow one to check the fast one against. top k uses a heap, so it is n log k, not a full sort."
-    },
-    {
-     "t": "write",
-     "id": "onsite-referral-e3",
-     "q": "Part 3, reading 2: flow() in two passes, then flow_bruteforce() as the definition counted the long way.",
-     "starter": "    # Part 3: flow centrality, reading 2 (chains through a user)\n    def flow(self):\n        ...\n",
-     "hint": "above[u] = above[parent] + 1 on a parents-first list; the score is above times reach. The brute force runs a breadth-first search from every user and counts v when dist(s, v) + dist(v, t) = dist(s, t).",
-     "solution": "    # Part 3: flow centrality, reading B: how many (upstream, downstream) pairs have a chain through you\n    def flow(self):\n        \"\"\"flow(u) = (people above u) * (people below u). Both counts come from one pass each, so O(n).\"\"\"\n        order = self._parents_first()\n        reach = self.all_reach()\n        above = {}\n        for u in order:                                # parents first, so the parent's count is ready\n            p = self.referrer.get(u)\n            above[u] = 0 if p is None else above[p] + 1\n        return {u: above[u] * reach[u] for u in order}\n\n    def flow_bruteforce(self):\n        \"\"\"The definition, word for word: count pairs (s, t) with v on a shortest s-to-t chain. For checking only.\"\"\"\n        dist = {s: self._distances(s) for s in self.users}\n        score = dict.fromkeys(self.users, 0)\n        for s, from_s in dist.items():\n            for t, d_st in from_s.items():\n                for v, d_sv in from_s.items():\n                    if v in (s, t):\n                        continue\n                    d_vt = dist[v].get(t)\n                    if d_vt is not None and d_sv + d_vt == d_st:\n                        score[v] += 1\n        return score\n\n    def _distances(self, start):\n        \"\"\"Breadth-first distances from `start`, following referrals downward.\"\"\"\n        dist, queue = {start: 0}, deque([start])\n        while queue:\n            u = queue.popleft()\n            for c in self.referred.get(u, ()):\n                if c not in dist:\n                    dist[c] = dist[u] + 1\n                    queue.append(c)\n        return dist\n",
-     "why": "flow is two O(n) passes and a multiplication. The product is right only because each user has one referrer, so there is one chain between two users. flow_bruteforce does not use that fact, so if it agrees with flow on random networks, the shortcut is correct.",
-     "say": "**The score is the number above you times the number below you, and the reason it works is that each user has one referrer, so there is exactly one chain between two people.** I computed the number above in one pass and the number below with the fast reach. Then I wrote the definition the long way, a breadth-first search from every user, and compared the two on a few hundred random networks. If a user could have two referrers, the product is wrong and I would count shortest paths with their multiplicities instead."
-    },
-    {
-     "t": "p",
-     "text": "**Complexity, precisely.** add is O(depth of the referrer) because of the loop check: O(1) on a shallow network, O(n) on a chain, so O(n squared) for 100,000 events on a chain. who_referred is O(1), direct is O(children), upline is O(depth). reach(u) is O(size of u's subtree) per call. all_reach, flow and _parents_first are O(n) time and O(n) space. top_k is O(n log k). flow_bruteforce is O(n cubed) and is for checking only."
-    },
-    {
-     "t": "p",
-     "text": "**f) Review.** The line-by-line questions, then the follow-ups under the workbench."
-    },
-    {
-     "t": "write",
-     "id": "onsite-referral-f",
-     "q": "Review. Write the questions a reviewer asks line by line on this code, and your one-line answer to each.",
-     "starter": "1. \n2. \n3. \n4. \n5. ",
-     "hint": "Look at your own lines: the order of the checks in add, setdefault, why a dict for users, why a queue not recursion, what the unknown-user answer is.",
-     "solution": "1. Why is 'duplicate' checked before 'second_referrer'?  The same referrer again is harmless and the other is a conflict, so they must be told apart, and the equal case has to come first.\n2. Why do the checks run in that order?  Cheapest first and the walk up last, so the common bad rows never pay for it.\n3. What does add leave behind when it refuses?  Nothing. Every return happens before the first write.\n4. Why setdefault(referrer, []).append(user)?  A referrer seen for the first time has no list yet. setdefault makes it and returns it in one step.\n5. Why is users a dict and not a set?  Two reasons: a root with referrals is only a key in one dict, so I need one place to loop over everyone, and a dict keeps insertion order, so the output is the same every run.\n6. Why a queue and not recursion?  A chain of 100,000 users is far past Python's recursion limit. The queue lives on the heap.\n7. Why does all_reach go backwards?  A user's reach is final only after all their referrals have added themselves. Parents-first reversed gives children first.\n8. What does reach return for a name nobody has seen?  0, by the answer we agreed in the clarify stage.\n9. Where does flow depend on 'one referrer each'?  In the product: above times below counts chains only when there is one chain between two users.\n10. What would you check with another ten minutes?  A long chain for speed, and add after a refused event to prove the network is unchanged.",
-     "why": "These are the questions asked of the code on screen. The workbench below has the follow-ups about size and changes. Together they cover what the 30-minute review reports describe.",
-     "say": "**In the review I answer from the lines on the screen.** The checks are in a cheap-to-dear order and a refusal writes nothing. setdefault creates the list the first time a referrer appears. The queue is there because a long chain would break recursion. And flow is above times below only because each user has one referrer. If they ask what I would do with more time, I say a speed check on a long chain, and the proof that a refused add changes nothing."
-    },
-    {
-     "t": "problem",
-     "id": "onsite-referral-p",
-     "title": "Referral network",
-     "source": "Mercor-style referral round, rebuilt (three parts)",
-     "minutes": 60,
-     "why": "Part 1 is data modelling on messy rows, part 2 is two walks, part 3 is the question 'what does the interviewer mean'. The round grades that third thing.",
-     "statement": "Part 1. You get a list of referral events, each a pair (referrer, user) meaning the referrer brought in that user. The data is messy. Build the network and refuse, with a reason, any event that is empty, names an unknown user, refers a user to themselves, repeats an event, gives a user a second referrer, or closes a loop. Report how many events were refused for each reason.\n\nPart 2. Answer queries on the network: who referred a user, who a user referred directly, the chain of referrers above a user, the reach of a user (everyone below them at any depth), and the top k users by reach.\n\nPart 3. Add a flow centrality score for every user. The prompt does not say what that means. Ask, name the readings you see, pick one, say why, and implement it cleanly.",
-     "examples": [
-      {
-       "input": "events: a>b, a>c, b>d, b>e, d>f, c>g",
-       "output": "reach(a) = 6, reach(b) = 3, reach(e) = 0",
-       "note": "Reach counts every level below, not only direct referrals."
-      },
-      {
-       "input": "then: x>b",
-       "output": "refused: second_referrer",
-       "note": "b already has a referrer, a. The first event wins."
-      },
-      {
-       "input": "then: f>a",
-       "output": "refused: cycle",
-       "note": "a > b > d > f is already a chain, so f>a would close a loop."
-      },
-      {
-       "input": "ann>bob, ann>bob, cy>bob, bob>bob, bob>ann, (empty)>dee, ann>zed, with roster ann, bob, cy, dee, eve",
-       "output": "ok, duplicate, second_referrer, self, cycle, bad_event, unknown_user",
-       "note": "Every kind of bad row, each with its own reason."
-      }
-     ],
-     "constraints": [
-      "standard library only",
-      "up to about 100,000 users, so no recursion",
-      "no AI; search for syntax only",
-      "write your own checks"
-     ],
-     "starter": "class ReferralNetwork:\n    ...\n\ndef build(events, known_users=None):\n    ...",
-     "hints": [
-      "Level 1: keep two dicts, user to referrer and user to the list of people they referred. Return a reason string from add, and \"ok\" when it worked.",
-      "Level 2: to refuse a loop, walk up from the referrer through the referrer dict. If you meet the new user, refuse the edge. Check duplicate before second_referrer.",
-      "Level 3: for every user's reach at once, list users parents first with a queue, go through that list backwards and add reach + 1 to each parent. The score is (users above) x reach."
-     ],
-     "solution": "from collections import deque\nimport heapq\n\nclass ReferralNetwork:\n    \"\"\"Who referred whom. Every user has at most one referrer, so the network is a forest.\"\"\"\n\n    def __init__(self, known_users=None):\n        self.known = None if known_users is None else set(known_users)   # None: any name is allowed\n        self.referrer = {}                  # user -> the one person who referred them\n        self.referred = {}                  # user -> list of users they referred, in event order\n        self.users = dict.fromkeys(known_users or ())   # everyone seen; a dict keeps insertion order\n\n    def add(self, referrer, user):\n        \"\"\"Record 'referrer referred user'. Return \"ok\", or the reason it was refused. Refusing changes nothing.\"\"\"\n        if not referrer or not user:\n            return \"bad_event\"                              # None or empty name: a broken row\n        if self.known is not None and (referrer not in self.known or user not in self.known):\n            return \"unknown_user\"\n        if referrer == user:\n            return \"self\"\n        if self.referrer.get(user) == referrer:\n            return \"duplicate\"                              # the same event again: harmless, counted once\n        if user in self.referrer:\n            return \"second_referrer\"                        # a different referrer: the first event wins\n        if self._closes_loop(referrer, user):\n            return \"cycle\"\n        self.referrer[user] = referrer\n        self.referred.setdefault(referrer, []).append(user)\n        self.users[referrer] = self.users[user] = None\n        return \"ok\"\n\n    def _closes_loop(self, referrer, user):\n        \"\"\"Walk up from the referrer. Meeting `user` means user would become their own ancestor.\"\"\"\n        cur = referrer\n        while cur is not None:\n            if cur == user:\n                return True\n            cur = self.referrer.get(cur)\n        return False\n\n    # Part 2: queries. An unknown user gets a neutral answer: None, [], 0.\n    def who_referred(self, user):\n        return self.referrer.get(user)\n\n    def direct(self, user):\n        return list(self.referred.get(user, []))\n\n    def upline(self, user):\n        \"\"\"The chain of referrers above `user`, nearest first.\"\"\"\n        chain, cur = [], self.referrer.get(user)\n        while cur is not None:\n            chain.append(cur)\n            cur = self.referrer.get(cur)\n        return chain\n\n    def reach(self, user):\n        \"\"\"Slow first version: walk the subtree under `user`. O(size of that subtree) per call.\"\"\"\n        count, queue = 0, deque(self.direct(user))\n        while queue:\n            u = queue.popleft()\n            count += 1\n            queue.extend(self.referred.get(u, ()))\n        return count\n\n    def all_reach(self):\n        \"\"\"Fast version for many queries: every user's reach in one pass, O(n).\"\"\"\n        reach = dict.fromkeys(self.users, 0)\n        for u in reversed(self._parents_first()):      # a child is finished before its parent\n            p = self.referrer.get(u)\n            if p is not None:\n                reach[p] += reach[u] + 1               # the parent gains the child and the child's reach\n        return reach\n\n    def top_k(self, k):\n        \"\"\"The k users with the largest reach, ties broken by name. O(n log k).\"\"\"\n        return heapq.nsmallest(k, self.all_reach().items(), key=lambda kv: (-kv[1], kv[0]))\n\n    def _parents_first(self):\n        \"\"\"Every user, each one after their referrer: a breadth-first walk from the roots.\"\"\"\n        queue = deque(u for u in self.users if u not in self.referrer)\n        order = []\n        while queue:\n            u = queue.popleft()\n            order.append(u)\n            queue.extend(self.referred.get(u, ()))\n        return order\n\n    # Part 3: flow centrality, reading B: how many (upstream, downstream) pairs have a chain through you\n    def flow(self):\n        \"\"\"flow(u) = (people above u) * (people below u). Both counts come from one pass each, so O(n).\"\"\"\n        order = self._parents_first()\n        reach = self.all_reach()\n        above = {}\n        for u in order:                                # parents first, so the parent's count is ready\n            p = self.referrer.get(u)\n            above[u] = 0 if p is None else above[p] + 1\n        return {u: above[u] * reach[u] for u in order}\n\n    def flow_bruteforce(self):\n        \"\"\"The definition, word for word: count pairs (s, t) with v on a shortest s-to-t chain. For checking only.\"\"\"\n        dist = {s: self._distances(s) for s in self.users}\n        score = dict.fromkeys(self.users, 0)\n        for s, from_s in dist.items():\n            for t, d_st in from_s.items():\n                for v, d_sv in from_s.items():\n                    if v in (s, t):\n                        continue\n                    d_vt = dist[v].get(t)\n                    if d_vt is not None and d_sv + d_vt == d_st:\n                        score[v] += 1\n        return score\n\n    def _distances(self, start):\n        \"\"\"Breadth-first distances from `start`, following referrals downward.\"\"\"\n        dist, queue = {start: 0}, deque([start])\n        while queue:\n            u = queue.popleft()\n            for c in self.referred.get(u, ()):\n                if c not in dist:\n                    dist[c] = dist[u] + 1\n                    queue.append(c)\n        return dist\n\n\ndef build(events, known_users=None):\n    \"\"\"Feed every event in order. Return the network and the refused events grouped by reason.\"\"\"\n    net, refused = ReferralNetwork(known_users), {}\n    for referrer, user in events:\n        why = net.add(referrer, user)\n        if why != \"ok\":\n            refused.setdefault(why, []).append((referrer, user))\n    return net, refused\n",
-     "complexity": "add is O(depth of the referrer), O(n) on a chain. who_referred O(1), direct O(children), upline O(depth). reach(u) is O(subtree under u) per call; looping it over all users is O(n^2) on a chain. all_reach, flow and top_k's input are one O(n) pass; top_k is O(n log k). Space is O(n). flow_bruteforce is O(n^3) and only for checking.",
-     "explain": [
-      "Two dicts store the same edges from both sides. The cost is memory; the gain is that 'who referred me' and 'who did I refer' are each one lookup.",
-      "add returns a reason, not a bool. Every refusal returns before the first write, so a rejected event never leaves a half-edge, and build can report the counts.",
-      "Duplicate comes before second_referrer: the same referrer again is harmless, a different one is a conflict.",
-      "The loop check walks up from the referrer. If it reaches the new user, the new edge would make the user their own ancestor.",
-      "reach is the slow, obvious version, a queue over the subtree. all_reach does the same work for every user in one pass, backwards over a parents-first list.",
-      "flow multiplies the number of people above by the number below. A root has none above and a leaf none below, so both score 0.",
-      "flow_bruteforce counts the definition directly. flow and flow_bruteforce must agree on every network, which the random check tests.",
-      "Output on the example: reach a=6, b=3, c=1, d=1, rest 0; flow b=3, d=2, c=1, rest 0."
-     ],
-     "tests": "events = [(\"a\", \"b\"), (\"a\", \"c\"), (\"b\", \"d\"), (\"b\", \"e\"), (\"d\", \"f\"), (\"c\", \"g\")]\nnet, refused = build(events)\nassert not refused\nassert net.add(\"x\", \"b\") == \"second_referrer\"      # b already has a referrer, a\nassert net.add(\"f\", \"a\") == \"cycle\"                # a > b > d > f is a chain\nassert net.add(\"z\", \"z\") == \"self\"\nassert net.add(\"a\", \"b\") == \"duplicate\"\nassert net.add(\"\", \"q\") == \"bad_event\"\nassert net.who_referred(\"f\") == \"d\" and net.who_referred(\"a\") is None\nassert net.direct(\"b\") == [\"d\", \"e\"] and net.upline(\"f\") == [\"d\", \"b\", \"a\"]\nassert net.reach(\"a\") == 6 and net.reach(\"b\") == 3 and net.reach(\"e\") == 0 and net.reach(\"nobody\") == 0\nreach = net.all_reach()\nassert reach == {u: net.reach(u) for u in net.users}\nprint(\"reach:\", dict(sorted(reach.items())))\nprint(\"flow: \", dict(sorted(net.flow().items())))\nassert net.flow() == net.flow_bruteforce()\nprint(\"top 2:\", net.top_k(2))\n\n# messy real data: every kind of bad row, then the report\nrows = [(\"ann\", \"bob\"), (\"ann\", \"bob\"), (\"cy\", \"bob\"), (\"bob\", \"bob\"), (\"bob\", \"ann\"), (\"\", \"dee\"), (\"bob\", \"eve\"), (\"ann\", \"zed\")]\nnet2, refused2 = build(rows, known_users=[\"ann\", \"bob\", \"cy\", \"dee\", \"eve\"])\nprint({why: len(rs) for why, rs in sorted(refused2.items())})\nprint(\"ok\")\n\nimport random\n\ndef random_events(rng, n_users, n_events):\n    names = [f\"u{i}\" for i in range(n_users)]\n    return [(rng.choice(names + [\"\"]), rng.choice(names)) for _ in range(n_events)]\n\nrng = random.Random(7)\nfor trial in range(300):\n    net, _ = build(random_events(rng, rng.randint(2, 12), rng.randint(1, 30)))\n    for u in net.users:                                       # no loops: a walk up always ends\n        assert u not in net.upline(u)\n        assert len(set(net.upline(u))) == len(net.upline(u))\n    assert net.all_reach() == {u: net.reach(u) for u in net.users}\n    assert net.flow() == net.flow_bruteforce()\nprint(\"300 random networks: loops never form, fast equals slow, flow equals its definition\")\n",
-     "followups": [
-      {
-       "q": "What breaks at a million events?",
-       "a": "Two things. The loop check walks up the referrer chain, so a long chain costs O(depth) per event and about n squared over the stream. And memory: two dicts of strings and a list per referrer is a lot of Python objects, so use integer ids for names and read events from a stream instead of holding the list. The loop check is fixed with union-find, which is the next question. Say the order of magnitude, then say you would measure it before you changed anything."
-      },
-      {
-       "q": "How would you make the loop check fast?",
-       "a": "Use union-find over the trees. The new user has no referrer yet, so they are the root of their own tree. The event closes a loop exactly when the referrer is already in that tree, so the check is find(referrer) == find(user), which is close to O(1). After an accepted event, union the two trees. The code is in the block below this list, and it agrees with the walk up on random streams."
-      },
-      {
-       "q": "Why a queue and not recursion?",
-       "a": "A chain of 100,000 users is far past Python's recursion limit of about 1,000. A queue lives on the heap and has no such limit. Say you know the recursive version is shorter and why you did not use it."
-      },
-      {
-       "q": "What changes if a user can have two referrers?",
-       "a": "It becomes a graph, not a forest. The loop check searches up every parent. Reach counts each user once, with a visited set. And the product formula is no longer right, because there can be several shortest chains between two users: count shortest paths with their multiplicities (Brandes) and say it costs more. Ask before you build it."
-      },
-      {
-       "q": "What if events arrive one at a time and queries are mixed in?",
-       "a": "Keep the counts up to date on every add: walk up from the referrer and add one plus the new user's reach to every ancestor. That makes add O(depth) and reach O(1). Or keep the lazy version and cache all_reach until the next accepted event."
-      },
-      {
-       "q": "Why return a reason and not raise an exception?",
-       "a": "A bad row in real data is expected, not exceptional. Raising would stop a batch of 100,000 rows at the first bad one. A reason lets the loop carry on and report the counts at the end."
-      },
-      {
-       "q": "How did you test it, with no test framework?",
-       "a": "Plain asserts under the class. The seven-person example, one assert per refusal, a check that a refused add changes nothing, and two comparisons of the fast code with the slow code: all_reach with reach, and flow with its brute-force definition on a few hundred random networks. Comparing two implementations catches mistakes in either."
-      }
-     ],
-     "d": "medium",
-     "lc": "employee-importance"
-    },
-    {
-     "t": "code",
-     "id": "onsite-referral-uf",
-     "title": "Faster loop check with union-find (follow-up; runs together with the solution above)",
-     "code": "class Components:\n    \"\"\"Union-find: which tree each user is in, in near O(1) per call.\"\"\"\n\n    def __init__(self):\n        self.up = {}\n\n    def find(self, x):\n        self.up.setdefault(x, x)\n        while self.up[x] != x:\n            self.up[x] = self.up[self.up[x]]          # path halving keeps the chains short\n            x = self.up[x]\n        return x\n\n    def union(self, a, b):\n        self.up[self.find(a)] = self.find(b)\n\n\n# The new user has no referrer yet, so they are the root of their own tree.\n# The event closes a loop exactly when the referrer is already in that tree.\ndef closes_loop_fast(parts, referrer, user):\n    return parts.find(referrer) == parts.find(user)\n\nimport random\nrng = random.Random(3)\nfor trial in range(200):\n    slow, parts = ReferralNetwork(), Components()\n    for _ in range(40):\n        r, u = f\"u{rng.randrange(10)}\", f\"u{rng.randrange(10)}\"\n        if r == u or u in slow.referrer:\n            continue\n        fast = closes_loop_fast(parts, r, u)\n        assert fast == slow._closes_loop(r, u)\n        if slow.add(r, u) == \"ok\":\n            parts.union(r, u)\nprint(\"union-find loop check agrees with the walk up on 200 random streams\")\n"
-    },
-    {
-     "t": "probs",
-     "title": "Related, then harder",
-     "items": [
-      {
-       "n": "Employee Importance",
-       "d": "medium",
-       "lc": "employee-importance",
-       "why": "Reach of one node down a manager tree. This is part 2 with other names."
-      },
-      {
-       "n": "Time Needed to Inform All Employees",
-       "d": "medium",
-       "lc": "time-needed-to-inform-all-employees",
-       "yt": [
-        "zdBYi0p4L5Q",
-        "NeetCodeIO",
-        11
-       ],
-       "why": "Depth along referral chains. The same walk, now carrying a number down."
-      },
-      {
-       "n": "Redundant Connection",
-       "d": "medium",
-       "lc": "redundant-connection",
-       "yt": [
-        "FXWRE67PLL0",
-        "NeetCode",
-        17
-       ],
-       "why": "Union-find to refuse an edge that closes a loop. This is the fast loop check from the follow-up."
-      },
-      {
-       "n": "Redundant Connection II",
-       "d": "hard",
-       "lc": "redundant-connection-ii",
-       "yt": [
-        "U7_ynlauYh0",
-        "InterviewDose",
-        6
-       ],
-       "why": "A directed graph where one node gets two parents or an edge closes a loop. Your add() rules, as one problem."
-      },
-      {
-       "n": "Sum of Distances in Tree",
-       "d": "hard",
-       "lc": "sum-of-distances-in-tree",
-       "yt": [
-        "OCGPug-KirQ",
-        "Timothy H Chang",
-        13
-       ],
-       "why": "The harder follow-up: a score per node from counts below and above it, in O(n). The shape of reading 3."
-      }
-     ]
-    },
-    {
-     "t": "predict",
-     "id": "onsite-referral-pred",
-     "code": "parent = {\"b\": \"a\", \"c\": \"b\"}\ncur, chain = \"c\", []\nwhile cur is not None:\n    chain.append(cur)\n    cur = parent.get(cur)\nprint(chain)\nprint(\"a\" in chain)",
-     "q": "This is the loop check for the event 'c referred a'. What does it print, and is the event accepted?",
-     "answer": "['c', 'b', 'a']\nTrue",
-     "why": "Walking up from c gives c, b, a. The new user a is in the chain, so adding c>a would make a its own ancestor. The event is refused with reason cycle."
-    }
-   ]
-  },
-  {
    "id": "onsite-scheduler",
    "title": "3. Task scheduler",
    "blocks": [
     {
      "t": "p",
-     "text": "**What it is.** A two-part prompt in the same solo hour. Part 1 runs tasks that depend on each other, in order, and refuses a loop. Part 2 adds failures and retries. The graph idea is topological order, which you may know as Course Schedule. The new part is deciding what a failure means for everything behind it. Reports name the two parts but not what part 2 holds, so failures and retries is a reading, not a fact. The prompt is not public, so the shape is right and the numbers are mine."
+     "text": "**The problem, as you might hear it.** You get tasks and what each needs finished first. Return an order in which they can all run, and refuse a loop. Then a second constraint arrives: durations, a limited number of workers, priorities, or failures and retries. 45 minutes, alone, nothing to ask. This is Course Schedule II with a business name. The prompt is reconstructed from reports, and the second part is a reading, not a fact."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**Read it before you speak.**",
+      "**It is a DAG, and the order is a topological sort.** Everything else is a variation on the same pass.",
+      "**What is undefined:** which way a need points, what a loop does, what a bad name does, and what the second constraint is.",
+      "**The size:** about 10,000 tasks means iterative code, no recursion.",
+      "**The trap:** a loop is a data error, not a rare case. Leftover tasks after the pass are the sign, and a message that names the loop is the polish.",
+      "**Part 2 is a test of extension:** it should reuse the order, not rewrite it."
+     ]
+    },
+    {
+     "t": "table",
+     "head": [
+      "The gap in the prompt",
+      "I decide, and write at the top",
+      "If the reviewer wanted otherwise"
+     ],
+     "rows": [
+      [
+       "Which way does 'A: [B]' point?",
+       "deps[t] is what t needs first. B runs before A.",
+       "Flip the map; users already holds the other direction."
+      ],
+      [
+       "A need that is not a task",
+       "Raise KeyError naming both, before anything runs.",
+       "Skip it with a warning."
+      ],
+      [
+       "A loop (including a task needing itself)",
+       "Raise CycleError naming the loop. Nothing runs.",
+       "Return the partial order plus the stuck set."
+      ],
+      [
+       "A need listed twice",
+       "Counts once (the set).",
+       "Reject as bad input."
+      ],
+      [
+       "Order among tasks that are ready together",
+       "Lower priority number, then name. Same answer every run.",
+       "Input order, or any order."
+      ],
+      [
+       "What the second constraint is: durations, workers, priorities, failures",
+       "Durations and the slowest chain first, workers if time. Written at the top.",
+       "Same skeleton: change the heap key or what rides on a task."
+      ],
+      [
+       "Zero or negative days",
+       "Zero allowed, negative raises.",
+       "Allow it."
+      ],
+      [
+       "Empty input, tasks with no links",
+       "Empty gives []. Unlinked tasks all appear.",
+       "-"
+      ],
+      [
+       "Size",
+       "Up to ~10,000 tasks: iterative, no recursion.",
+       "DFS with three colours, recursion limit permitting."
+      ]
+     ]
     },
     {
      "t": "p",
-     "text": "**a) Clarify.** Three buckets, each question with the answer you will assume."
+     "text": "**The crux.** Count how many tasks each one still waits for, queue those at zero, and let each finished task lower its waiters. That is Kahn's algorithm at O(V + E). Two facts do the rest: fewer tasks out than in means a loop, and every second constraint is a small change to the same pass. A priority is the heap key. Durations add finish = max(finish of needs) + days, which is the longest path in a DAG. Workers add a second heap of running tasks."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**The hour, in order.**",
+      "**5 minutes:** read both parts. List what is undefined: direction, loops, ties, what part 2 means.",
+      "**5 minutes:** write the table decisions as a comment at the top.",
+      "**Data model:** plain dicts, deps and days. No Task class.",
+      "**Part 1:** run_order with its two checks. Run it on the sample, then a loop, then an unknown need.",
+      "**Part 2:** finish_times on the same order. Check the total by hand on three tasks.",
+      "**Checks:** asserts for empty, repeated need, self-need and a random graph where every need comes first.",
+      "**If time is left:** the worker version, or the retry rule. Otherwise say it in a comment."
+     ]
     },
     {
      "t": "write",
      "id": "onsite-scheduler-a",
-     "q": "Write your questions under each bucket, and the answer you will assume if the interviewer does not give one.",
-     "starter": "1. Primary capabilities (what it must do)\n- \n\n2. Error handling (what goes wrong)\n- \n\n3. Scope boundaries (where it stops)\n- ",
-     "hint": "Capabilities: what a task is, how dependencies are written, what part 1 returns, one at a time or in parallel. Errors: a loop, an unknown dependency, a task that raises, the tasks behind it. Scope: backoff, timeouts, saving state.",
-     "solution": "1. Primary capabilities\n- What is a task, and how are dependencies given?  Likely: a name, with a dict name -> list of names it needs; the functions are in a second dict.\n- What does part 1 return?  The order as a list. Ties go in input order, so the answer is the same every run.\n- One task at a time, or in parallel?  One at a time. Say that the groups that could run together fall out of the same algorithm.\n- Can a dependency be listed twice?  Yes. Count it once.\n- What does part 2 return?  A result for every task, so nothing is silently missing: status, attempts, last error, and for a skipped task which failure blocked it.\n\n2. Error handling\n- A loop in the dependencies?  Raise before running anything, and name the loop: a -> b -> c -> a.\n- A task needs a name that is not a task?  Raise, naming both.\n- A task has no function?  Raise before running anything.\n- A task raises?  Retry up to a cap, say 2 retries, so 3 calls. Then it is failed.\n- What happens to the tasks that need a failed task?  They are skipped without being run, and so are theirs, all the way down.\n- Do tasks that do not need it still run?  Yes. Failing everything on the first error is the other reading, so ask.\n\n3. Scope boundaries\n- Waiting between retries, or a timeout per call?  Not in the first version. Say backoff with jitter is what you add next.\n- Saving state so a crash does not rerun finished tasks?  Out of scope. Say it is the start of a durable scheduler.\n- Passing one task's result to the next, or cancelling a run?  Out of scope.",
-     "why": "Every question picks a line of code. The cycle answer decides when the error is raised. The failure answers decide the whole of part 2: skip, not stop, and a result per task.",
-     "say": "**I sort my questions into three buckets: what it must do, what goes wrong, where it stops.** A task is a name with a list of what it needs, and part 1 returns an order. Then the failures, which are most of the problem: a loop, an unknown name, a task that raises, and what that does to the tasks behind it. I would like the answer to be that independent tasks still run. Last, I ask to leave backoff and saving state out of the first version, and I say I know they come next."
-    },
-    {
-     "t": "p",
-     "text": "**b) Requirements.** Numbered, each one testable. Part 2 is written as rules first."
-    },
-    {
-     "t": "write",
-     "id": "onsite-scheduler-b",
-     "q": "Write the requirements, numbered, each one testable. Then what is out of scope.",
-     "starter": "1. \n2. \n3. \n",
-     "hint": "Order, the two errors, deterministic output, the retry cap, skipping, the result for every task.",
-     "solution": "1. run_order(deps) returns every task once, each after all the tasks it needs.\n   - Test: for every task, its dependencies come earlier in the list\n   - A dependency listed twice counts once\n   - Ties keep input order, so two runs give the same list\n2. A loop raises CycleError that names the loop (a -> b -> a), before anything runs.\n   - A task that needs itself is a loop\n   - Tasks that are only behind a loop are not in the message\n3. A dependency that is not a task raises KeyError naming both. A task with no function raises before anything runs.\n4. run_all(deps, funcs, max_retries) runs tasks in that order.\n   - A task that raises is called again, at most 1 + max_retries calls in all, and stops at the first success\n5. A task that fails every call is 'failed', with the last error and the number of calls.\n6. Every task that needs a failed or skipped task is 'skipped', is never called, and names the failed task at the start of the chain.\n7. Tasks that do not need a failed task still run.\n8. run_all returns a result for every task, so len(results) equals len(deps).\n9. Out of scope: parallel runs, waiting between tries, timeouts, saving state, passing results between tasks.",
-     "why": "2 and 3 are part 1. 4 to 8 are part 2, and they are written as rules before any code. That is what the reviewer wants to see: the failure behaviour decided in words, then implemented.",
-     "say": "I get nine requirements, and I can test each one. **Requirements 6 and 7 are the heart of part 2: a task behind a failure is skipped and never called, and a task that does not need it still runs.** I also want 8: a result for every task, so nothing disappears from the report. Out of scope: parallel runs, waiting between tries, timeouts and saving state."
-    },
-    {
-     "t": "p",
-     "text": "**c) Entities.** Few classes here, and that is a decision you say out loud."
-    },
-    {
-     "t": "write",
-     "id": "onsite-scheduler-c",
-     "q": "List the nouns. For each: keep or drop, why, and the data structure it becomes.",
-     "starter": "Task: \nDependency: \nOrder: \nCycle: \nAttempt, retry cap: \nStatus: \nResult: \nReady queue: \nScheduler: ",
-     "hint": "A name with a list is a dict entry. What carries a rule, or is returned to the caller, may be a small class.",
-     "solution": "Task: drop as a class. A name (the dict key) with a list of needs (deps) and a function (funcs). Two dicts, so the order can be tested with no functions at all.\nDependency: keep as data. deps[t] is the list of names t needs. The reverse map users[d], the tasks that wait for d, is built once so a finished task reaches only its waiters.\nOrder: drop as a class. A list returned by run_order.\nCycle: keep as an error. CycleError, whose message is the loop. It is raised, not stored.\nAttempt, retry cap: drop. An int in a loop and a parameter max_retries.\nStatus: drop as a class. One of three strings: ok, failed, skipped.\nResult: keep. A small dataclass: status, attempts, error, blocked_by. It is what the caller reads and it is the same shape for every task.\nReady queue: keep as a local. A deque of tasks whose waiting count is zero; it never leaves run_order.\nScheduler: drop. Three functions are enough; a class would only hold state that does not outlive one call.",
-     "why": "No big class here, and that is a decision you say out loud: the state lives for one call, so functions and one dataclass do the work. The one structure to defend is the reverse map: it is why a finished task costs the number of its waiters, not the number of tasks.",
-     "say": "I underline the nouns. **Only the result earns a class, because it is what the caller reads, and the same shape for every task makes a missing task impossible to miss.** A task is a name with a list and a function, so I keep them as two dicts, which lets me test the order without running anything. The reverse map is the one structure worth explaining: it tells a finished task exactly who is waiting for it. I do not write a scheduler class, because nothing needs to outlive one call."
-    },
-    {
-     "t": "p",
-     "text": "**d) Core logic.** Plain English, numbered, per function, with the edge cases. No code yet."
-    },
-    {
-     "t": "write",
-     "id": "onsite-scheduler-d",
-     "q": "Core logic in plain English, numbered, for each function, and the edge cases. No code yet.",
-     "starter": "run_order:\n  1.\n  Edge cases:\n\n_find_cycle:\n  1.\n\nrun_all:\n  1.\n\n_attempt:\n  1.\n",
-     "hint": "Count open dependencies, start from zero, lower the count of the waiters when a task finishes. Leftovers are a cycle or behind one. Retries are a loop of 1 + max_retries calls that stops at the first success.",
-     "solution": "run_order(deps):\n  1. Check every dependency is a task; if not, raise KeyError naming both\n  2. waiting[t] = number of different tasks t needs; users[d] = tasks that need d\n  3. Queue every task with waiting 0, in input order\n  4. Pop one, add it to the order; for each task that waits for it, lower its count, and queue it when it reaches 0\n  5. If the order has fewer tasks than there are, raise CycleError with the loop\n  Edge cases: a repeated dependency counts once (use a set); a task that needs itself never reaches 0; an empty dict gives []\n\n_find_cycle(deps, waiting):\n  1. The leftover tasks are the ones with waiting above 0, in input order\n  2. Every leftover task needs at least one other leftover task\n  3. Start at the first leftover and follow 'needs' links until a name repeats\n  4. The names from the first visit of the repeated one to the repeat are the loop\n  Edge cases: a task behind a loop is not in the message; a self-loop is 'a -> a'\n\nrun_all(deps, funcs, max_retries):\n  1. If any task has no function, raise before running anything\n  2. Get the order; a loop raises here, so nothing has run\n  3. For each task, in order: look for a dependency whose result is not ok\n  4. If there is one: the task is skipped; blocked_by is that dependency if it failed, else whatever blocked it. Do not call it\n  5. Otherwise call _attempt and store its result\n  Edge case: a dependency always has a result already, because the order puts it first\n\n_attempt(fn, max_retries):\n  1. Start with a failed result\n  2. Call fn up to 1 + max_retries times, counting calls\n  3. On an exception, keep its text and go again; on success mark ok, clear the error and stop\n  Edge cases: max_retries 0 means one call; catch Exception, not BaseException, so Ctrl-C still stops the run",
-     "why": "Writing blocked_by as 'the failed task at the start of the chain' is a decision made in step 4. It costs one line and it answers the first question after a failure: why was this skipped?",
-     "say": "**Before any code I write the steps for each function.** For the order, I count what each task still waits for and start from zero, and a repeated dependency counts once. If tasks are left over, they are on a loop or behind one, so I follow needs links from the first leftover until a name repeats, and that is the loop. For running, I decide in words that a task behind a failure is never called, and that it records which failure is to blame. A retry is a loop of one plus the cap, and it stops at the first success."
-    },
-    {
-     "t": "p",
-     "text": "**e) Code.** Top-down: the main function first, naming its helpers. Slow then fast. Complexity said precisely."
-    },
-    {
-     "t": "write",
-     "id": "onsite-scheduler-e1",
-     "q": "Code, top-down. First the slow order (keep scanning), then run_order (count open dependencies) naming its helpers, then the three helpers.",
-     "starter": "def order_slow(deps):\n    ...\n\ndef run_order(deps):\n    ...\n",
-     "hint": "order_slow loops until nothing is left, taking every task whose dependencies are done. run_order calls _check_known and _count_open, then queues zeros. A leftover count means a loop, and _find_cycle names it.",
-     "solution": "from collections import deque\nfrom dataclasses import dataclass\n\n\nclass CycleError(ValueError):\n    \"\"\"The tasks depend on each other in a loop. The message names the loop.\"\"\"\n\n\ndef run_order(deps):\n    \"\"\"An order in which every task comes after the tasks it needs. deps: task -> list of tasks it needs first.\n    Raises KeyError for an unknown dependency and CycleError for a loop, before anything runs. O(tasks + edges).\"\"\"\n    _check_known(deps)\n    waiting, users = _count_open(deps)\n    ready = deque(t for t in deps if waiting[t] == 0)      # no open dependency: can go now\n    order = []\n    while ready:\n        t = ready.popleft()\n        order.append(t)\n        for u in users[t]:                                 # t is done: one fewer thing for u to wait for\n            waiting[u] -= 1\n            if waiting[u] == 0:\n                ready.append(u)\n    if len(order) < len(deps):                             # something never became ready\n        raise CycleError(\" -> \".join(_find_cycle(deps, waiting)))\n    return order\n\n\ndef _check_known(deps):\n    for t, needs in deps.items():\n        for d in needs:\n            if d not in deps:\n                raise KeyError(f\"{t} needs {d}, which is not a task\")\n\n\ndef _count_open(deps):\n    \"\"\"waiting[t]: how many different tasks t still needs. users[d]: the tasks that wait for d.\"\"\"\n    waiting = {t: len(set(needs)) for t, needs in deps.items()}   # set: a repeated dependency counts once\n    users = {t: [] for t in deps}\n    for t, needs in deps.items():\n        for d in set(needs):\n            users[d].append(t)\n    return waiting, users\n\n\ndef _find_cycle(deps, waiting):\n    \"\"\"Leftover tasks are on a loop or behind one. Follow 'needs' links until a name repeats: that is the loop.\"\"\"\n    stuck = [t for t, n in waiting.items() if n > 0]       # a list in input order, so the message is the same every run\n    path, t = [], stuck[0]\n    while t not in path:\n        path.append(t)\n        t = next(d for d in deps[t] if waiting[d] > 0)     # every stuck task has a stuck dependency\n    return path[path.index(t):] + [t]\n\n\ndef order_slow(deps):\n    \"\"\"First version: keep scanning for tasks whose dependencies are all done. O(n^2) on a chain.\"\"\"\n    done, order = set(), []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in done and all(d in done for d in deps[t])]\n        if not ready:\n            raise CycleError(\"stuck: \" + \", \".join(sorted(t for t in deps if t not in done)))\n        for t in ready:\n            done.add(t)\n            order.append(t)\n    return order\n",
-     "why": "The slow version is five lines and obviously right, so it checks the fast one. run_order reads like the steps: check, count, queue, drain, and complain about leftovers. The loop message comes from a helper, not from a guess.",
-     "say": "I write the slow version first: keep scanning for tasks whose dependencies are done. **It is correct and it is quadratic on a chain, so the fast one counts open dependencies and lowers the count of the waiters.** Both are short, and I keep the slow one to check the fast one. If tasks are left over, I do say more than that there is a cycle. I follow needs links from the first leftover until a name repeats, and print that loop, so the person reading the error knows what to fix."
-    },
-    {
-     "t": "write",
-     "id": "onsite-scheduler-e2",
-     "q": "Part 2: Result, then run_all (skip what is behind a failure), then _attempt (the retry loop).",
-     "starter": "@dataclass\nclass Result:\n    ...\n\ndef run_all(deps, funcs, max_retries=2):\n    ...\n\ndef _attempt(fn, max_retries):\n    ...\n",
-     "hint": "run_all gets the order first so a loop raises before anything runs. For each task look for a dependency that is not ok. _attempt is a for loop over range(1, max_retries + 2) with try, except Exception, else.",
-     "solution": "@dataclass\nclass Result:\n    status: str              # \"ok\", \"failed\" or \"skipped\"\n    attempts: int = 0        # times the function was called; 0 for a skipped task\n    error: str = \"\"          # the last error, for a failed task\n    blocked_by: str = \"\"     # for a skipped task: the failed task at the start of the chain\n\n\ndef run_all(deps, funcs, max_retries=2):\n    \"\"\"Run every task in dependency order. Returns task -> Result, in the order they were reached.\"\"\"\n    missing = deps.keys() - funcs.keys()\n    if missing:\n        raise KeyError(\"no function for: \" + \", \".join(sorted(missing)))\n    results = {}\n    for t in run_order(deps):                              # a cycle raises here, before anything has run\n        bad = next((d for d in deps[t] if results[d].status != \"ok\"), None)\n        if bad is not None:                                # a dependency failed or was skipped\n            root = bad if results[bad].status == \"failed\" else results[bad].blocked_by\n            results[t] = Result(\"skipped\", blocked_by=root)\n            continue\n        results[t] = _attempt(funcs[t], max_retries)\n    return results\n\n\ndef _attempt(fn, max_retries):\n    \"\"\"Call fn up to 1 + max_retries times; stop at the first success.\"\"\"\n    result = Result(\"failed\")\n    for n in range(1, max_retries + 2):\n        result.attempts = n\n        try:\n            fn()\n        except Exception as e:                             # not BaseException: Ctrl-C must still stop us\n            result.error = f\"{type(e).__name__}: {e}\"\n        else:\n            result.status, result.error = \"ok\", \"\"\n            return result\n    return result\n",
-     "why": "run_all is the whole policy in nine lines: order first, skip behind a failure, otherwise attempt. _attempt is the whole retry rule. The for-else shape means a success returns at once and a final failure falls out of the loop already marked failed.",
-     "say": "**run_all gets the order first, so a loop raises before anything has run.** Then for each task I look for a dependency that is not ok. If there is one, the task is skipped, never called, and it records the failed task at the start of the chain. Otherwise I call _attempt, which tries up to one plus the cap and stops at the first success. I catch Exception and not BaseException, so Ctrl-C still stops the run. And the result for every task is stored, so nothing goes missing from the report."
-    },
-    {
-     "t": "p",
-     "text": "**Complexity, precisely.** order_slow rescans every task each round: O(n squared) on a chain. run_order visits each task and each dependency once: O(tasks + dependencies) time and space. _find_cycle is O(tasks). run_all adds the work of the functions themselves: at most 1 + max_retries calls per task, and the checks around them are O(dependencies) in all."
-    },
-    {
-     "t": "p",
-     "text": "**f) Review.** The line-by-line questions, then the follow-ups under the workbench."
-    },
-    {
-     "t": "write",
-     "id": "onsite-scheduler-f",
-     "q": "Review. Write the questions a reviewer asks line by line on this code, and your one-line answer to each.",
-     "starter": "1. \n2. \n3. \n4. \n5. ",
-     "hint": "Look at your own lines: the set in the count, the reverse map, why leftovers mean a loop, where status is set to failed, why Exception, what blocked_by holds.",
-     "solution": "1. Why len(set(needs)) and not len(needs)?  A task that lists a dependency twice would wait for a count that never reaches zero and be reported as part of a loop.\n2. Why build the reverse map users?  A finished task then reaches only the tasks that wait for it. Without it every finish would scan all tasks.\n3. Why do leftover tasks mean a loop?  A task is queued only when all its dependencies are done. A task left over has a dependency that never finished, which is a loop or a path from one.\n4. Why does the cycle message not include the tasks behind the loop?  Because _find_cycle follows needs links until a name repeats, and a name repeats only on the loop itself.\n5. Why is the cycle raised before anything runs?  Half a run of a graph with a loop is worse than none: you cannot tell what state it left.\n6. Why range(1, max_retries + 2)?  The first call plus max_retries more: with 2 retries that is 3 calls.\n7. Why except Exception and not BaseException?  A KeyboardInterrupt must stop the run, not be counted as a failed attempt.\n8. Why is a dependency's result always there in run_all?  The order puts every dependency before the task that needs it.\n9. What is blocked_by for a task two steps behind the failure?  The failed task at the start of the chain, copied forward from the skipped one.\n10. What did you not test?  A task that raises something odd, and a very long chain for speed. I would add both with more time.",
-     "why": "These are the questions asked of the code on screen. The workbench below has the follow-ups about parallel runs, backoff and saving state.",
-     "say": "**In the review I answer from the lines on the screen.** The set stops a repeated dependency from waiting forever. The reverse map is why a finished task costs its waiters, not all tasks. Leftover tasks have a dependency that never finished, so the loop is somewhere in what remains, and I follow the links to name it. The retry range is one plus the cap, and I catch Exception so that Ctrl-C still works. If they ask what I did not test, I say a very long chain for speed and an unusual exception, and I would add both next."
+     "q": "Try it first. Say the order algorithm in numbered steps, then what the second constraint changes.",
+     "starter": "1. \n2. \n3. \n\nSecond constraint:\n",
+     "hint": "Count what each task waits for, keep a reverse map, queue the tasks at zero. If fewer come out than exist, there is a loop.",
+     "solution": "1. waiting[t] = how many different tasks t needs. users[d] = who waits for d.\n2. Put every task with waiting 0 into the ready heap.\n3. Pop one, add it to the order, lower the count of each waiter, push those that reach 0.\n4. If fewer tasks came out than exist, the rest are on or behind a loop. Follow stuck needs until a name repeats: that is the loop.\nSecond constraint: priority is the heap key; durations add finish = max(finish of needs) + days; workers add a second heap of running tasks. O(V + E) for the order.",
+     "say": [
+      "**I count what each task still waits for and queue the ones at zero.** Finishing a task lowers its waiters. If fewer tasks come out than exist, the rest are on or behind a loop, and I name it by following stuck needs until a name repeats.",
+      "Whatever the second constraint is, it only changes what the ready queue is keyed on, or what I carry along a task. I would write which one I assumed at the top."
+     ]
     },
     {
      "t": "problem",
      "id": "onsite-scheduler-p",
-     "title": "Task scheduler",
-     "source": "Mercor-style scheduler round, rebuilt (two parts)",
-     "minutes": 45,
-     "why": "Dependency order is a standard graph problem. The value is in part 2: stating the failure rules clearly, which is the same thinking as a real job orchestrator.",
-     "statement": "Part 1. You have tasks, each with a name and a list of the tasks it needs to finish first. Return an order in which all of them can run. If tasks depend on each other in a loop, raise an error that names the loop and run nothing. If a task needs one that does not exist, raise an error that names both.\n\nPart 2. Each task also has a function. Run the tasks in dependency order. If a task raises, retry it up to a cap. If it still fails, mark it failed and skip every task that depends on it, directly or not. Tasks that do not depend on it still run. Return a result for every task: its status, how many times it was called, the last error, and for a skipped task which failure blocked it.",
-     "examples": [
-      {
-       "input": "build needs lint and fetch; lint needs fetch; test needs build; docs needs nothing",
-       "output": "fetch, docs, lint, build, test",
-       "note": "Any order with fetch before lint before build before test is valid. Ties keep input order."
-      },
-      {
-       "input": "a needs b, b needs c, c needs a, d needs nothing",
-       "output": "CycleError: a -> b -> c -> a",
-       "note": "d is fine, but nothing runs because the loop is found first."
-      },
-      {
-       "input": "fetch fails twice then works; build always fails; max_retries = 2",
-       "output": "fetch ok (3 calls), build failed (3 calls), test skipped, blocked by build",
-       "note": "Docs and lint do not need build and still run."
-      }
-     ],
-     "constraints": [
-      "standard library only",
-      "up to about 10,000 tasks",
-      "dependencies may repeat in a list",
-      "functions take no arguments"
-     ],
-     "starter": "def run_order(deps):\n    ...\n\ndef run_all(deps, funcs, max_retries=2):\n    ...",
-     "hints": [
-      "Level 1: a task can run when every task it needs is done. Count how many it still waits for.",
-      "Level 2: also build the reverse map, task to the tasks that wait for it. When a task finishes, lower each waiter's count and queue it at zero.",
-      "Level 3: when the queue is empty and fewer tasks came out than exist, the rest are on or behind a loop. For retries, loop over 1 + max_retries calls with try, except Exception and else, and stop at the first success."
-     ],
-     "solution": "from collections import deque\nfrom dataclasses import dataclass\n\n\nclass CycleError(ValueError):\n    \"\"\"The tasks depend on each other in a loop. The message names the loop.\"\"\"\n\n\ndef run_order(deps):\n    \"\"\"An order in which every task comes after the tasks it needs. deps: task -> list of tasks it needs first.\n    Raises KeyError for an unknown dependency and CycleError for a loop, before anything runs. O(tasks + edges).\"\"\"\n    _check_known(deps)\n    waiting, users = _count_open(deps)\n    ready = deque(t for t in deps if waiting[t] == 0)      # no open dependency: can go now\n    order = []\n    while ready:\n        t = ready.popleft()\n        order.append(t)\n        for u in users[t]:                                 # t is done: one fewer thing for u to wait for\n            waiting[u] -= 1\n            if waiting[u] == 0:\n                ready.append(u)\n    if len(order) < len(deps):                             # something never became ready\n        raise CycleError(\" -> \".join(_find_cycle(deps, waiting)))\n    return order\n\n\ndef _check_known(deps):\n    for t, needs in deps.items():\n        for d in needs:\n            if d not in deps:\n                raise KeyError(f\"{t} needs {d}, which is not a task\")\n\n\ndef _count_open(deps):\n    \"\"\"waiting[t]: how many different tasks t still needs. users[d]: the tasks that wait for d.\"\"\"\n    waiting = {t: len(set(needs)) for t, needs in deps.items()}   # set: a repeated dependency counts once\n    users = {t: [] for t in deps}\n    for t, needs in deps.items():\n        for d in set(needs):\n            users[d].append(t)\n    return waiting, users\n\n\ndef _find_cycle(deps, waiting):\n    \"\"\"Leftover tasks are on a loop or behind one. Follow 'needs' links until a name repeats: that is the loop.\"\"\"\n    stuck = [t for t, n in waiting.items() if n > 0]       # a list in input order, so the message is the same every run\n    path, t = [], stuck[0]\n    while t not in path:\n        path.append(t)\n        t = next(d for d in deps[t] if waiting[d] > 0)     # every stuck task has a stuck dependency\n    return path[path.index(t):] + [t]\n\n\n@dataclass\nclass Result:\n    status: str              # \"ok\", \"failed\" or \"skipped\"\n    attempts: int = 0        # times the function was called; 0 for a skipped task\n    error: str = \"\"          # the last error, for a failed task\n    blocked_by: str = \"\"     # for a skipped task: the failed task at the start of the chain\n\n\ndef run_all(deps, funcs, max_retries=2):\n    \"\"\"Run every task in dependency order. Returns task -> Result, in the order they were reached.\"\"\"\n    missing = deps.keys() - funcs.keys()\n    if missing:\n        raise KeyError(\"no function for: \" + \", \".join(sorted(missing)))\n    results = {}\n    for t in run_order(deps):                              # a cycle raises here, before anything has run\n        bad = next((d for d in deps[t] if results[d].status != \"ok\"), None)\n        if bad is not None:                                # a dependency failed or was skipped\n            root = bad if results[bad].status == \"failed\" else results[bad].blocked_by\n            results[t] = Result(\"skipped\", blocked_by=root)\n            continue\n        results[t] = _attempt(funcs[t], max_retries)\n    return results\n\n\ndef _attempt(fn, max_retries):\n    \"\"\"Call fn up to 1 + max_retries times; stop at the first success.\"\"\"\n    result = Result(\"failed\")\n    for n in range(1, max_retries + 2):\n        result.attempts = n\n        try:\n            fn()\n        except Exception as e:                             # not BaseException: Ctrl-C must still stop us\n            result.error = f\"{type(e).__name__}: {e}\"\n        else:\n            result.status, result.error = \"ok\", \"\"\n            return result\n    return result\n\n\ndef order_slow(deps):\n    \"\"\"First version: keep scanning for tasks whose dependencies are all done. O(n^2) on a chain.\"\"\"\n    done, order = set(), []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in done and all(d in done for d in deps[t])]\n        if not ready:\n            raise CycleError(\"stuck: \" + \", \".join(sorted(t for t in deps if t not in done)))\n        for t in ready:\n            done.add(t)\n            order.append(t)\n    return order\n",
-     "complexity": "order_slow is O(n^2) on a chain. run_order is O(tasks + dependencies) time and space. _find_cycle is O(tasks). run_all adds at most (1 + max_retries) calls per task plus O(dependencies) for the checks.",
-     "explain": [
-      "order_slow is the first version: loop until nothing is left, taking every task whose dependencies are all done. It is correct, and it re-checks the same tasks again and again.",
-      "run_order first checks that every dependency exists. A typo should fail with a clear message, not a KeyError deep inside.",
-      "waiting holds the number of different tasks still needed. The set makes a repeated dependency count once.",
-      "users is the reverse map, so a finished task reaches only the tasks that wait for it.",
-      "The queue holds tasks that are ready now. When a count reaches zero its last dependency has finished.",
-      "If fewer tasks came out than exist, the rest are on or behind a loop. _find_cycle follows needs links from the first leftover until a name repeats, and that slice is the loop.",
-      "run_all gets the order first, so a loop raises before anything has run. A task with a failed or skipped dependency is skipped and never called, so failure flows forward through everything behind it.",
-      "Output on the example: order fetch, docs, lint, build, test; fetch ok in 3 calls, docs ok, lint ok, build failed in 3 calls, test skipped and blocked by build."
-     ],
-     "tests": "deps = {\"build\": [\"lint\", \"fetch\"], \"lint\": [\"fetch\"], \"fetch\": [], \"test\": [\"build\"], \"docs\": []}\norder = run_order(deps)\nassert order.index(\"fetch\") < order.index(\"lint\") < order.index(\"build\") < order.index(\"test\")\nprint(\"order:\", order)\nfor bad in ({\"a\": [\"b\"], \"b\": [\"c\"], \"c\": [\"a\"], \"d\": []}, {\"a\": [\"a\"]}, {\"x\": [\"a\"], \"a\": [\"b\"], \"b\": [\"a\"]}):\n    try:\n        run_order(bad)\n    except CycleError as e:\n        print(\"cycle:\", e)\ntry:\n    run_order({\"a\": [\"zz\"]})\nexcept KeyError as e:\n    print(\"unknown:\", e)\nassert run_order({\"a\": [], \"b\": [\"a\", \"a\"]}) == [\"a\", \"b\"]       # a repeated dependency is fine\n\ncalls = {\"fetch\": 0}\ndef flaky():\n    calls[\"fetch\"] += 1\n    if calls[\"fetch\"] < 3:\n        raise RuntimeError(\"timeout\")\ndef broken():\n    raise RuntimeError(\"disk full\")\nok = lambda: None\nfuncs = {\"fetch\": flaky, \"lint\": ok, \"build\": broken, \"test\": ok, \"docs\": ok}\nresults = run_all(deps, funcs, max_retries=2)\nfor t, r in results.items():\n    print(t, r)\nassert [results[t].status for t in (\"fetch\", \"lint\", \"build\", \"test\", \"docs\")] == [\"ok\", \"ok\", \"failed\", \"skipped\", \"ok\"]\nassert results[\"fetch\"].attempts == 3 and results[\"build\"].attempts == 3 and results[\"test\"].attempts == 0\nassert results[\"test\"].blocked_by == \"build\"\nprint(\"ok\")\n\nimport random\nrng = random.Random(5)\nfor trial in range(300):\n    n = rng.randint(1, 9)\n    names = [f\"t{i}\" for i in range(n)]\n    deps = {t: [d for d in names if rng.random() < 0.25] for t in names}\n    try:\n        order = run_order(deps)\n    except CycleError:\n        try:\n            order_slow(deps)\n        except CycleError:\n            continue\n        raise AssertionError(\"fast says cycle, slow does not\")\n    assert sorted(order) == sorted(names)\n    pos = {t: i for i, t in enumerate(order)}\n    assert all(pos[d] < pos[t] for t in deps for d in deps[t])      # every dependency comes first\n    assert sorted(order_slow(deps)) == sorted(order)\nprint(\"300 random graphs: order valid, cycles agree with the slow version\")\n",
-     "followups": [
-      {
-       "q": "How do you run independent tasks at the same time?",
-       "a": "Process the queue in waves. A wave is the set of tasks ready right now. Submit the whole wave to a thread pool, wait for it, lower the counts for what finished and form the next wave. The code for the waves is in the block below this list. The other way is to submit each task as soon as it is ready and lower the counts in a callback, with a lock around the counts. The wave version is easier to reason about; the callback version wastes less time when task lengths differ."
-      },
-      {
-       "q": "What should the retry do between calls?",
-       "a": "Wait with exponential backoff and a little random jitter, so many retrying tasks do not hit the same service at the same moment. Retry only errors that can pass on a second try, such as a timeout, and not ones that cannot, such as bad input. Both are a line or two, and neither is in the solution so that it stays readable."
-      },
-      {
-       "q": "A task is retried but did half its work the first time. What then?",
-       "a": "It needs to be idempotent: running it twice has the same effect as once. Examples are writing to a file named after the task, or sending an idempotency key with an API call. At work I have written idempotent migrations, so this is the first point I would raise in a real design review."
-      },
-      {
-       "q": "How would you save state so a crash does not rerun finished tasks?",
-       "a": "Write each task's status to disk or a database when it changes. On restart load the statuses, treat ok as done, and continue from the queue. That is the seed of a durable orchestrator, and it leads straight to the job-scheduler design on the system design side."
-      },
-      {
-       "q": "The caller wants to rerun only the failed branch. How?",
-       "a": "Keep failed and skipped as separate statuses, as here, and keep blocked_by. A rerun starts from the tasks that are failed or skipped and treats ok as already done."
-      },
-      {
-       "q": "Why not a depth-first search?",
-       "a": "A depth-first search with three colours (new, visiting, done) also finds loops and gives an order, and names the loop when it meets a visiting node. The cost is recursion depth on a long chain, and it does not give you the groups that could run together for free. Either is acceptable. Say why you picked one."
-      },
-      {
-       "q": "How did you test it, with no test framework?",
-       "a": "Plain asserts under the code. The five-task example, each of the errors, a flaky function that fails twice then works, and a random-graph check: for 300 random graphs every dependency comes before its task, and the fast order agrees with the slow one on whether there is a loop."
-      }
-     ],
+     "title": "Task scheduler: order, loop, then durations",
+     "source": "Mercor-style scheduler round, rebuilt",
      "d": "medium",
      "lc": "course-schedule-ii",
      "yt": [
       "Akt3glAwyfY",
       "NeetCode",
       18
+     ],
+     "minutes": 45,
+     "why": "The core is Kahn's algorithm. The second part changes what you carry along it.",
+     "statement": "Part 1. Tasks with a list of the tasks each needs first. Return an order in which all can run. A loop raises an error naming it and runs nothing. A need that is not a task raises an error naming both.\n\nPart 2 (your pick, written at the top): each task takes some days; return the total time and the slowest chain.",
+     "examples": [
+      {
+       "input": "build needs lint and fetch; lint needs fetch; test needs build; docs needs nothing",
+       "output": "docs, fetch, lint, build, test",
+       "note": "docs and fetch are ready together and pop by name. Any order with fetch before lint before build before test is valid."
+      },
+      {
+       "input": "a needs b, b needs c, c needs a, d needs nothing",
+       "output": "CycleError: a -> b -> c -> a",
+       "note": "d is fine, but nothing runs because the loop is found first."
+      }
+     ],
+     "constraints": [
+      "standard library only",
+      "up to about 10,000 tasks, so no recursion",
+      "a need may repeat in a list"
+     ],
+     "starter": "def run_order(deps, priority=None):\n    ...\n",
+     "hints": [
+      "A task can run when everything it needs is done. Count how many it still waits for.",
+      "Also keep a reverse map, task to the tasks that wait for it. At zero, queue it.",
+      "Fewer tasks out than in means a loop. For durations, finish = max(finish of needs) + days."
+     ],
+     "solution": "import heapq\n\n\nclass CycleError(ValueError):\n    pass\n\n\ndef run_order(deps, priority=None):\n    # deps: task -> tasks it needs first. priority: task -> number, lower goes first among ready tasks.\n    for t, needs in deps.items():\n        for d in needs:\n            if d not in deps:\n                raise KeyError(f\"{t} needs {d}, which is not a task\")\n    waiting = {t: len(set(n)) for t, n in deps.items()}  # set: a repeated need counts once\n    users = {t: [] for t in deps}                         # users[d]: tasks waiting for d\n    for t, needs in deps.items():\n        for d in set(needs):\n            users[d].append(t)\n    key = (lambda t: priority[t]) if priority else (lambda t: 0)\n    ready = [(key(t), t) for t in deps if waiting[t] == 0]\n    heapq.heapify(ready)                                  # ties break by name: same answer every run\n    order = []\n    while ready:\n        _, t = heapq.heappop(ready)\n        order.append(t)\n        for u in users[t]:                                # t is done: u waits for one fewer\n            waiting[u] -= 1\n            if waiting[u] == 0:\n                heapq.heappush(ready, (key(u), u))\n    if len(order) < len(deps):                            # leftovers are on a loop or behind one\n        raise CycleError(\" -> \".join(find_cycle(deps, waiting)))\n    return order\n\n\ndef find_cycle(deps, waiting):\n    stuck = [t for t, n in waiting.items() if n > 0]\n    path, t = [], stuck[0]\n    while t not in path:                                  # every stuck task needs a stuck task\n        path.append(t)\n        t = next(d for d in deps[t] if waiting[d] > 0)\n    return path[path.index(t):] + [t]\n\n\ndef finish_times(deps, days):\n    # second constraint: each task takes days[t]. Longest path in a DAG, in the same order.\n    finish, via = {}, {}\n    for t in run_order(deps):\n        via[t] = max(deps[t], key=lambda d: finish[d], default=None)   # the need that ends last\n        finish[t] = (finish[via[t]] if via[t] is not None else 0) + days[t]\n    path, t = [], max(finish, key=finish.get, default=None)\n    while t is not None:                                  # walk back the slowest chain\n        path.append(t)\n        t = via[t]\n    return (finish[path[0]] if path else 0), path[::-1]\n",
+     "tests": "deps = {\"build\": [\"lint\", \"fetch\"], \"lint\": [\"fetch\"], \"fetch\": [], \"test\": [\"build\"], \"docs\": []}\nprint(\"order:\", run_order(deps))\nprint(\"docs last:\", run_order(deps, {\"fetch\": 0, \"lint\": 1, \"build\": 2, \"test\": 3, \"docs\": 9}))\nfor bad in ({\"a\": [\"b\"], \"b\": [\"c\"], \"c\": [\"a\"], \"d\": []}, {\"a\": [\"a\"]}, {\"x\": [\"a\"], \"a\": [\"b\"], \"b\": [\"a\"]}):\n    try:\n        run_order(bad)\n    except CycleError as e:\n        print(\"cycle:\", e)\ntry:\n    run_order({\"a\": [\"zz\"]})\nexcept KeyError as e:\n    print(\"unknown:\", e)\nassert run_order({\"a\": [], \"b\": [\"a\", \"a\"]}) == [\"a\", \"b\"] and run_order({}) == []\ndays = {\"fetch\": 2, \"lint\": 1, \"build\": 4, \"test\": 3, \"docs\": 2}\nprint(\"duration, critical path:\", finish_times(deps, days))\nassert finish_times(deps, days) == (10, [\"fetch\", \"lint\", \"build\", \"test\"])\nimport random\nrng = random.Random(5)\nfor _ in range(300):\n    names = [f\"t{i}\" for i in range(rng.randint(1, 9))]\n    d = {t: [x for x in names if rng.random() < 0.25] for t in names}\n    try:\n        order = run_order(d)\n    except CycleError:\n        continue\n    pos = {t: i for i, t in enumerate(order)}\n    assert sorted(order) == sorted(names) and all(pos[x] < pos[t] for t in d for x in d[t])\nprint(\"300 random graphs: every need comes before its task\")",
+     "complexity": "run_order is O((V + E) log V) with the heap, O(V + E) with a plain queue. find_cycle is O(V). finish_times adds O(V + E).",
+     "explain": [
+      "waiting counts different needs; the set makes a repeat count once. users lets a finished task reach only its waiters.",
+      "The heap holds tasks ready now. Its key is the priority, then the name, so ties never depend on dict order.",
+      "Everything is checked before anything runs, so a bad input fails with a clear message.",
+      "finish_times reuses the order: a task's finish is known once its needs are done, and via remembers which need ended last."
      ]
     },
     {
      "t": "code",
-     "id": "onsite-scheduler-waves",
-     "title": "Follow-up: the groups that could run together (runs together with the solution above)",
-     "code": "def waves(deps):\n    \"\"\"Groups of tasks that could run at the same time: each group needs only earlier groups.\"\"\"\n    _check_known(deps)\n    waiting, users = _count_open(deps)\n    wave, out, seen = [t for t in deps if waiting[t] == 0], [], 0\n    while wave:\n        out.append(wave)\n        seen += len(wave)\n        nxt = []\n        for t in wave:\n            for u in users[t]:\n                waiting[u] -= 1\n                if waiting[u] == 0:\n                    nxt.append(u)\n        wave = nxt\n    if seen < len(deps):\n        raise CycleError(\" -> \".join(_find_cycle(deps, waiting)))\n    return out\n\ndeps = {\"build\": [\"lint\", \"fetch\"], \"lint\": [\"fetch\"], \"fetch\": [], \"test\": [\"build\"], \"docs\": []}\nprint(waves(deps))\nassert waves(deps) == [[\"fetch\", \"docs\"], [\"lint\"], [\"build\"], [\"test\"]]\n"
+     "title": "Output, run with Python 3",
+     "code": "order: ['docs', 'fetch', 'lint', 'build', 'test']\ndocs last: ['fetch', 'lint', 'build', 'test', 'docs']\ncycle: a -> b -> c -> a\ncycle: a -> a\ncycle: a -> b -> a\nunknown: 'a needs zz, which is not a task'\nduration, critical path: (10, ['fetch', 'lint', 'build', 'test'])\n300 random graphs: every need comes before its task"
+    },
+    {
+     "t": "code",
+     "title": "Follow-up: only w people (runs together with the solution above)",
+     "code": "def with_workers(deps, days, w):\n    # only w people. Start the ready task with the longest chain behind it, whenever someone is free.\n    users = {t: [] for t in deps}\n    for t, needs in deps.items():\n        for d in set(needs):\n            users[d].append(t)\n    tail = {}                                             # own days + the longest chain after it\n    for t in reversed(run_order(deps)):\n        tail[t] = days[t] + max((tail[u] for u in users[t]), default=0)\n    waiting = {t: len(set(n)) for t, n in deps.items()}\n    ready = [(-tail[t], t) for t in deps if waiting[t] == 0]\n    heapq.heapify(ready)\n    running, now, free, start = [], 0, w, {}\n    while ready or running:\n        while ready and free:\n            _, t = heapq.heappop(ready)\n            start[t] = now\n            heapq.heappush(running, (now + days[t], t))\n            free -= 1\n        now = running[0][0]                               # jump to the next finish\n        while running and running[0][0] == now:\n            _, t = heapq.heappop(running)\n            free += 1\n            for u in users[t]:\n                waiting[u] -= 1\n                if waiting[u] == 0:\n                    heapq.heappush(ready, (-tail[u], u))\n    return max((start[t] + days[t] for t in deps), default=0)\n\n\nfor w in (1, 2, 5):\n    print(w, \"people:\", with_workers(deps, days, w), \"days\")\nassert with_workers(deps, days, 1) == sum(days.values())\nassert with_workers(deps, days, 5) == finish_times(deps, days)[0]"
+    },
+    {
+     "t": "code",
+     "title": "Output of the workers block",
+     "code": "1 people: 12 days\n2 people: 10 days\n5 people: 10 days"
+    },
+    {
+     "t": "table",
+     "head": [
+      "They ask",
+      "The change",
+      "Cost"
+     ],
+     "rows": [
+      [
+       "Run independent tasks at the same time",
+       "Process in waves: everything ready now, then lower the counts. Or start each task when ready.",
+       "Same O(V + E). Waves are easier to reason about."
+      ],
+      [
+       "Tasks take days: how long, and which tasks matter",
+       "finish_times above: the slowest chain.",
+       "O(V + E) extra."
+      ],
+      [
+       "Only w people",
+       "Second heap of running tasks, start the ready task with the longest chain behind it. Block above.",
+       "O((V + E) log V)."
+      ],
+      [
+       "A task can fail",
+       "Retry up to a cap. Still failing: mark it failed and skip everything behind it, naming the failure that blocked it.",
+       "O(V + E) plus at most 1 + retries calls per task."
+      ],
+      [
+       "Retries must be safe",
+       "Task is idempotent, or carries an idempotency key. Retry only errors that can pass, with backoff and jitter.",
+       "Code and discipline, no new structure."
+      ],
+      [
+       "Rerun after a crash",
+       "Save each task's status when it changes. On restart treat ok as done.",
+       "One write per task."
+      ],
+      [
+       "Slack: which tasks could slip",
+       "Backward pass in reverse order: late finish = min(late finish of waiters - their days).",
+       "O(V + E)."
+      ]
+     ]
+    },
+    {
+     "t": "faq",
+     "title": "The code review: every decision, and how to stand behind it",
+     "prose": true,
+     "items": [
+      {
+       "q": "1. Counting waits, not depth-first search",
+       "a": "**Decided.** Kahn's algorithm: counts and a queue.\n\n**Instead of.** A DFS with three colours.\n\n**Why.** It gives the order and the loop with no recursion, so a long chain cannot hit Python's limit of about a thousand frames. The leftover tasks tell me a loop exists.\n\n**What it costs.** The loop is found only after the pass, and I rebuild its path from the leftovers.\n\n**If they push.** \"A DFS is also fine: meeting a task still being visited is the loop. I picked counting because the same pass gives me waves and durations.\""
+      },
+      {
+       "q": "2. A heap for the ready set",
+       "a": "**Decided.** A heap keyed by (priority, name).\n\n**Instead of.** A plain deque.\n\n**Why.** Ties would depend on dict order otherwise. With the name as the last key the output is the same on every run, and a priority costs nothing extra.\n\n**What it costs.** O(log V) per task instead of O(1).\n\n**If they push.** \"With no priority a deque is enough and O(V + E). I kept the heap so the priority part is one lambda.\""
+      },
+      {
+       "q": "3. Check everything before running anything",
+       "a": "**Decided.** Unknown needs and loops raise before the first task runs.\n\n**Instead of.** Failing halfway.\n\n**Why.** A half-run plan with side effects is worse than a clear error up front. The message names both tasks, or the loop.\n\n**What it costs.** A pass over the input first.\n\n**If they push.** \"If partial progress is wanted, return the order of the runnable tasks and the stuck set.\""
+      },
+      {
+       "q": "4. The loop is named, not only detected",
+       "a": "**Decided.** Follow a stuck need from a leftover task until a name repeats.\n\n**Instead of.** Raising a bare error.\n\n**Why.** Every leftover task has a leftover need, so the walk must end in a loop. A named loop is something a person can fix.\n\n**What it costs.** It names one loop, not all of them.\n\n**If they push.** \"All of them is strongly connected components: Tarjan, O(V + E). I would name it and not write it.\""
+      },
+      {
+       "q": "5. Durations ride on the same order",
+       "a": "**Decided.** finish = max(finish of needs) + days, and via remembers which need ended last.\n\n**Instead of.** A second traversal, or recursion with memory.\n\n**Why.** Once a task's needs are done their finish is known, so one pass is enough. via gives the slowest chain by walking back.\n\n**What it costs.** Only one slowest chain is returned when several tie.\n\n**If they push.** \"For every task on any slowest chain, add the backward pass for slack: zero slack means critical.\""
+      },
+      {
+       "q": "6. Workers: greedy, and not claimed optimal",
+       "a": "**Decided.** Start the ready task with the longest chain behind it.\n\n**Instead of.** Claiming the best schedule.\n\n**Why.** Minimising the finish time with two or more workers is NP-hard. This list scheduling never takes more than total days / w + the slowest chain, and it is easy to explain.\n\n**What it costs.** Not always the best possible.\n\n**If they push.** \"Exact is a search or an integer program. For an hour, greedy with its bound.\""
+      },
+      {
+       "q": "7. Plain dicts and functions",
+       "a": "**Decided.** deps is a dict of lists, days a dict. No Task class.\n\n**Instead of.** A Task class with a status.\n\n**Why.** The data is two maps and the logic is one pass. A class would hold fields nothing reads.\n\n**What it costs.** No encapsulation.\n\n**If they push.** \"If tasks carried state, such as retries and status, I would add a small dataclass for the result. Not before.\""
+      },
+      {
+       "q": "8. What I tested",
+       "a": "**Decided.** Plain asserts: the sample, each error, an empty input, a repeated need, and 300 random graphs where every need comes before its task.\n\n**Instead of.** A test framework.\n\n**Why.** None is provided, and exact outputs are easy to write because everything is deterministic.\n\n**What it costs.** Does not cover big inputs.\n\n**If they push.** \"I did not time 10,000 tasks. The loops are linear, so I expect it to be fine.\""
+      },
+      {
+       "q": "What I would do with another hour",
+       "a": "1. The failure and retry rule, with status and which task blocked each skipped one.\n\n2. Waves, so independent tasks run together.\n\n3. Slack, so the reviewer can see which tasks may slip.\n\n4. A real test file with a 10,000 task chain.\n\nClose with one plain line: \"I kept it small so every part runs, and I know where each part breaks first.\""
+      }
+     ]
     },
     {
      "t": "probs",
@@ -1100,14 +819,6 @@ window.LOOP_CODING.parts.push({
        "why": "The harder follow-up: with unlimited workers, how long does the whole job take? The longest chain, found in the same pass. It is what 'run independent tasks together' turns into."
       }
      ]
-    },
-    {
-     "t": "predict",
-     "id": "onsite-scheduler-pred",
-     "code": "deps = {\"a\": [], \"b\": [\"a\"], \"c\": [\"a\", \"b\", \"b\"]}\nwaiting = {t: len(set(ds)) for t, ds in deps.items()}\nprint(waiting)",
-     "q": "What does this print? Why does the set matter?",
-     "answer": "{'a': 0, 'b': 1, 'c': 2}",
-     "why": "c lists b twice, but it waits for b once. The reverse map also adds c to b's list once because it loops over the set. If you counted the duplicate, c would wait for 3 and the count would never reach zero, so c would be reported as part of a loop."
     }
    ]
   },
@@ -1117,157 +828,121 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "p",
-     "text": "**What it is.** A graph problem in a business costume. Skills build on other skills, and the question is who is qualified to review whom. The graph ideas are a DAG, reachability and levels, plus what to do when the data has a loop. The solo hour rewards the person who writes the rules down first: the code is short once the rules are clear. The prompt is not public, so the shape is right and the details are mine."
-    },
-    {
-     "t": "p",
-     "text": "**The prompt, as a real one would give it.** \"Every expert on the platform lists skills. Some skills build on others: you need SQL before query tuning, Python before Django. You get the catalog as skill and prerequisites pairs, and each expert's skills. Build a SkillGraph. It should tell us what a skill requires, whether one skill is needed for another, how advanced a skill is, and which experts can review a candidate. Reject a catalog that does not make sense.\""
-    },
-    {
-     "t": "p",
-     "text": "**What is left unsaid.** This is why you clarify first. Each line below changes the code."
+     "text": "**The problem, as you might hear it.** A file describes a small domain: here skills with their prerequisites, and experts with their skills. Part 1 parses it, part 2 builds the structure and rejects a bad one, part 3 answers queries, part 4 answers the real question: which experts can review a candidate. 60 minutes, alone, nothing to ask, four parts each easy to medium. Reported variants: the same shape over referrals, tasks or products. The prompt is reconstructed from reports."
     },
     {
      "t": "list",
      "items": [
-      "Does holding a skill mean you also hold what it builds on?",
-      "What does 'can review' need: every skill the candidate lists, or one of them?",
-      "What is 'how advanced'? The longest chain under it, the count of prerequisites, or something given?",
-      "'What a skill requires': only the direct ones, or all of them at any depth?",
-      "What is 'a catalog that does not make sense'? A loop, a name that is not a skill, a skill that needs itself, a repeated prerequisite?",
-      "How many skills, and is the catalog fixed or does it change while the program runs?",
-      "Can the candidate be an expert in the list? What should an empty candidate list mean?"
+      "**Read it before you speak.**",
+      "**It runs like a product on their input.** Pace and completeness across all four parts count more than one clever idea.",
+      "**Read all four parts first,** then pick data structures that serve every part: two dicts, skill to prerequisites and expert to skills.",
+      "**Hidden structure:** a DAG. Order, closure and level all come from one topological pass.",
+      "**What is undefined:** the format details, what a bad line does, what holding a skill implies, all or any, what level means.",
+      "**The trap:** parsing last. Write the parser first and print what it built, or every later bug hides behind it."
+     ]
+    },
+    {
+     "t": "table",
+     "head": [
+      "The gap in the prompt",
+      "I decide, and write at the top",
+      "If the reviewer wanted otherwise"
+     ],
+     "rows": [
+      [
+       "The file format: separators, comments, blank lines",
+       "Two sections split by ---, lines as name,a;b, # comments and blank lines skipped.",
+       "csv.reader or json.load. Only parse changes."
+      ],
+      [
+       "A bad line: empty name, repeated name",
+       "Skip it, count it, first repeat wins.",
+       "Raise on the first, or the last one wins."
+      ],
+      [
+       "A prerequisite that is not in the catalog",
+       "Raise KeyError naming both skills.",
+       "Add it as a skill with no prerequisites."
+      ],
+      [
+       "A loop, or a skill that needs itself",
+       "Raise CycleError naming the loop, at build time.",
+       "Allow it and group each loop into one node."
+      ],
+      [
+       "An expert skill that is not in the catalog",
+       "Drop it and count it.",
+       "Raise, or keep it as an unknown skill."
+      ],
+      [
+       "Does holding a skill mean holding what it builds on?",
+       "Yes: covers adds everything below.",
+       "No: exact match, set(candidate) <= set(held)."
+      ],
+      [
+       "Can review: every candidate skill, or one?",
+       "Every skill.",
+       "any(): a one-line change, and I would rename the method."
+      ],
+      [
+       "How advanced is a skill?",
+       "The longest chain under it.",
+       "The count of all prerequisites, or a given number."
+      ],
+      [
+       "An empty candidate list",
+       "Everyone can review.",
+       "Nobody can."
+      ],
+      [
+       "File size",
+       "Small: read the whole text.",
+       "Stream the lines. parse already works line by line."
+      ]
      ]
     },
     {
      "t": "p",
-     "text": "**a) Clarify.** Three buckets, each question with the answer you will assume."
+     "text": "**The crux.** Two ideas. First, split the work into stages that each fail their own way: parse the syntax and count bad lines, build and validate the meaning, then answer queries. After that the logic never meets a bad input. Second, the skills form a DAG, so in topological order a skill's closure is its prerequisites' closures plus themselves, and its level is one more than the highest prerequisite. Then needs is a lookup, and can_review is a subset check against what the reviewer covers."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**The hour, in order.**",
+      "**5 minutes:** read all four parts. Pick dicts that serve every part: skill to prerequisites, expert to skills.",
+      "**5 minutes:** write the table decisions as a comment at the top.",
+      "**Part 1, the parser first:** print what it built and how many lines it skipped, before any logic. Run it.",
+      "**Part 2:** SkillGraph with the two checks and the order. Print the levels.",
+      "**Parts 3 and 4:** requires, needs, covers, reviewers. Check one candidate by hand.",
+      "**Checks:** asserts for each error, an empty candidate and a repeated prerequisite, then the real run on the file.",
+      "**If a part is cut,** leave one line in the file saying what is missing. Part 1 working beats all four half done."
+     ]
     },
     {
      "t": "write",
      "id": "onsite-skillgraph-a",
-     "q": "Write your questions under each bucket, and the answer you will assume if the interviewer does not give one.",
-     "starter": "1. Primary capabilities (what it must do)\n- \n\n2. Error handling (what goes wrong)\n- \n\n3. Scope boundaries (where it stops)\n- ",
-     "hint": "Capabilities: what a catalog row looks like, direct or all prerequisites, what 'holding' means, what 'review' needs, what 'level' is. Errors: every kind of bad catalog and a query about an unknown skill. Scope: size, a fixed catalog or a live one.",
-     "solution": "1. Primary capabilities\n- What does the catalog look like?  Likely: a dict, skill -> list of skills it builds on, with every skill as a key. A skill with no prerequisites has an empty list.\n- Does holding a skill imply its prerequisites?  Yes. Someone who holds 'api' is taken to know python and sql. I call this covering.\n- What does 'requires' return?  Everything at any depth, sorted. I will also offer direct ones: they are already stored.\n- What does 'can review' need?  The reviewer's covered skills must include every skill the candidate lists. Ask: one skill or all?\n- What is 'level'?  0 for a skill with no prerequisites, otherwise 1 + the highest level among its prerequisites: the longest chain under it.\n- What does an empty candidate list mean?  Nothing to review, so every expert can. Say it aloud.\n\n2. Error handling\n- A loop?  Raise CycleError at build time and name it: a -> b -> c -> a.\n- A prerequisite that is not a skill?  Raise KeyError naming both.\n- A skill that needs itself?  A loop of one: a -> a.\n- A prerequisite listed twice?  Count it once.\n- A query about a skill that is not in the catalog?  Raise KeyError. A typo should be loud, not an empty answer.\n\n3. Scope boundaries\n- How big?  Say up to 2,000 skills. A closure per skill is at most 4 million entries, fine for one process.\n- Does the catalog change?  Fixed after build. Say what changes if links arrive later: the live extension.\n- Skill levels per person, expiry, weights?  Out of scope.",
-     "why": "Each answer is a line of code. 'Holding implies prerequisites' decides covers. 'All of the candidate's skills' decides the subset test. A bad catalog is rejected when built, so every query after that can trust the graph.",
-     "say": "**I sort my questions into three buckets: what it must do, what goes wrong, and where it stops.** First I ask whether holding a skill means holding what it builds on, what review needs, and what level means, because those three decide the code. Then the bad catalogs: a loop, an unknown name, a repeat. I would like each to fail when the graph is built, with a message that names the problem. Last, I ask how big it is and whether it changes, and I say that I will build it fixed and show how a new link would go in."
-    },
-    {
-     "t": "p",
-     "text": "**b) Requirements.** Numbered, each one testable."
-    },
-    {
-     "t": "write",
-     "id": "onsite-skillgraph-b",
-     "q": "Write the requirements, numbered, each one testable. Then what is out of scope.",
-     "starter": "1. \n2. \n3. \n",
-     "hint": "One for building and refusing, one each for requires, needs, levels, covers and review, one for the unknown query, one for size.",
-     "solution": "1. SkillGraph(catalog) builds the graph or refuses a bad catalog.\n   - A loop raises CycleError that names the loop, before any query is answered\n   - A prerequisite that is not a skill raises KeyError naming both\n   - A repeated prerequisite counts once\n2. requires(s) returns every skill s builds on, at any depth, sorted.\n   - Test: api requires django, http, postgres, python, sql in the example\n3. needs(a, b) says whether a is required, at any depth, for b. A skill does not need itself.\n4. level[s] is 0 with no prerequisites, else 1 + the largest level among them. by_level groups skills by level.\n5. covers(held) is what the person holds plus everything those build on.\n6. can_review(reviewer, candidate) is true when the candidate's skills are all covered by the reviewer.\n7. reviewers(candidate, experts) lists the experts who can review, sorted by name.\n8. A query that names an unknown skill raises KeyError.\n9. The fast requires equals a plain walk down on every skill of random catalogs.\n10. Out of scope: changing the catalog after build (extension), weights, expiry.",
-     "why": "3 and 5 are the reachability questions. 9 is how you check the fast code without an answer key. 1 puts all the validation in one place, so nothing after it has to check again.",
-     "say": "From the answers I get ten requirements and can test each one. **The two I would not skip are the loop being named at build time, and the fast requires equalling a plain walk on random catalogs.** Then covers and can_review, which is where the business rule lives. Out of scope: changing the catalog after the build, which I will show as the live extension."
-    },
-    {
-     "t": "p",
-     "text": "**c) Entities.** Keep a noun only if it carries a rule. Everything else is a key, a dict or a list."
-    },
-    {
-     "t": "write",
-     "id": "onsite-skillgraph-c",
-     "q": "List the nouns in the requirements. For each: keep or drop, why, and the data structure it becomes.",
-     "starter": "Skill: \nPrerequisite link: \nCatalog: \nLevel: \nClosure (everything below): \nExpert: \nCandidate: \nSkills held: \nOrder: \nLoop: ",
-     "hint": "Ask of each noun: does it have behaviour, or is it only a value? Then ask which lookups you do most.",
-     "solution": "Skill: drop as a class. A string, the key in every dict.\nPrerequisite link: keep as data. direct[skill] is the list of skills it builds on, with repeats removed.\nCatalog: keep. The graph is the one class. It owns the dicts and the rule that the graph has no loop, so no caller can hold a bad one.\nLevel: drop as a class. A dict skill -> int, computed once in the build because the graph does not change.\nClosure: keep as a precomputed dict skill -> set of everything below it. It turns 'what does it need' and 'is a needed for b' into one lookup. The price is memory.\nExpert and candidate: drop as classes. A name and a list of skills; experts is a dict name -> list.\nSkills held: drop. A list given to covers, which returns a set.\nOrder: keep as a list on the graph, prerequisites first. It is how the closure and the levels are built in one pass.\nLoop: drop. It is not data, only a reason to refuse the catalog.",
-     "why": "One class and four dicts carry the problem. The reviewer's first question is why you precompute the closure. The answer: queries are many and the graph is fixed, so you pay once at build, and you say what the memory costs.",
-     "say": "I underline the nouns. **Only the graph earns a class, because it is the one thing with a rule to protect: no loops.** A skill is a string, an expert is a name with a list, and a loop is a reason to refuse. The one structure to defend is the closure. I compute it once, in prerequisite order, because the catalog does not change and queries are many. I keep a slow walk beside it so the two can be compared."
-    },
-    {
-     "t": "p",
-     "text": "**d) Core logic.** Plain English, numbered, per function, with the edge cases. No code yet."
-    },
-    {
-     "t": "write",
-     "id": "onsite-skillgraph-d",
-     "q": "Core logic in plain English, numbered, for each function, and the edge cases. No code yet.",
-     "starter": "SkillGraph.__init__:\n  1.\n\n_order:\n  1.\n  Edge cases:\n\n_find_loop:\n  1.\n\ncovers / can_review / reviewers:\n  1.\n",
-     "hint": "Count what each skill still waits for and start from zero. Closure and level are filled in that order. A loop leaves skills over. covers is a union of closures.",
-     "solution": "__init__(prereqs):\n  1. _clean: every prerequisite must be a key, else KeyError naming both; drop repeats, keep order\n  2. _order: prerequisites first, or raise CycleError\n  3. For each skill in that order: below = union of (below[p] + p) over its prerequisites; level = 1 + the largest level of them, or 0 if none\n  Edge cases: a repeat counts once; a skill with no prerequisites has an empty set and level 0\n\n_order(direct):\n  1. waiting[s] = number of prerequisites; users[p] = skills that build on p\n  2. Queue every skill with waiting 0\n  3. Pop one, append to the order, lower the count of every skill that builds on it, queue at 0\n  4. If fewer skills came out than exist, raise CycleError with the loop\n  Edge cases: a self-loop never reaches 0; an empty catalog gives []\n\n_find_loop(direct, waiting):\n  1. Start at any skill with waiting above 0\n  2. Follow a prerequisite that is also left over, until a name repeats\n  3. The names from the first visit of the repeated one, plus the repeat, are the loop\n  Edge cases: skills above a loop are not in the message; a self-loop is 'a -> a'\n\ncovers(held):\n  1. Check every name is a skill\n  2. Start with the held skills; add below[s] for each\n  Edge case: an empty list covers nothing\n\ncan_review(reviewer, candidate):\n  1. Check the candidate's names are skills\n  2. True when every candidate skill is in covers(reviewer)\n\nreviewers(candidate, experts):\n  1. Keep the experts for whom can_review is true; sort by name\n  Edge case: an empty candidate list returns every expert",
-     "why": "Computing below and level in one pass over the order is the design choice. Because each skill's prerequisites are done before it, their sets and levels are final when you read them.",
-     "say": "**Before any code I write the steps for each function.** For the build, I count what each skill still waits for and start from zero, so by the time I reach a skill all its prerequisites have their sets and levels ready. A loop leaves skills over, and I follow links from one of them until a name repeats, and print that. Covering is a union of the sets below what you hold. Reviewing is a subset test against that."
-    },
-    {
-     "t": "p",
-     "text": "**e) Code.** Top-down: the main function first, naming its helpers. Slow then fast where it teaches. Complexity said precisely."
-    },
-    {
-     "t": "write",
-     "id": "onsite-skillgraph-e1",
-     "q": "Code, top-down. The class first: __init__, requires, needs, by_level, covers, can_review, reviewers, naming _clean and _order as helpers. Add the slow requires beside it.",
-     "starter": "class SkillGraph:\n    def __init__(self, prereqs):\n        ...\n\n    def requires(self, skill):\n        ...\n",
-     "hint": "__init__ calls _clean, then _order, then loops over the order filling below and level. can_review is a subset test against covers.",
-     "solution": "from collections import deque\n\nclass CycleError(ValueError):\n    \"\"\"The catalog has a loop. The message names it.\"\"\"\n\n\nclass SkillGraph:\n    \"\"\"Skills and what each one builds on. Fixed when built: a bad catalog fails here, not later.\"\"\"\n\n    def __init__(self, prereqs):\n        self.direct = _clean(prereqs)                    # skill -> list of skills it builds on, no repeats\n        self.order = _order(self.direct)                 # every skill after its prerequisites; raises on a loop\n        self.below = {}                                  # skill -> set of everything it needs, at any depth\n        self.level = {}                                  # skill -> length of the longest chain under it\n        for s in self.order:                             # prerequisites come first, so theirs are ready\n            self.below[s], self.level[s] = set(), 0\n            for p in self.direct[s]:\n                self.below[s] |= self.below[p] | {p}\n                self.level[s] = max(self.level[s], self.level[p] + 1)\n\n    def requires(self, skill):\n        \"\"\"Everything `skill` builds on, at any depth, sorted. A lookup, not a walk.\"\"\"\n        self._known([skill])\n        return sorted(self.below[skill])\n\n    def needs(self, a, b):\n        \"\"\"Is `a` required, at any depth, for `b`?\"\"\"\n        self._known([a, b])\n        return a in self.below[b]\n\n    def by_level(self):\n        \"\"\"Level 0 has no prerequisites; level n sits on a chain of n skills. {level: [skills]}\"\"\"\n        groups = {}\n        for s in self.order:\n            groups.setdefault(self.level[s], []).append(s)\n        return {n: sorted(g) for n, g in sorted(groups.items())}\n\n    def covers(self, held):\n        \"\"\"Everything someone with these skills is taken to have: what they hold, plus all that builds on.\"\"\"\n        self._known(held)\n        have = set(held)\n        for s in held:\n            have |= self.below[s]\n        return have\n\n    def can_review(self, reviewer, candidate):\n        \"\"\"A reviewer can review a candidate if they cover every skill the candidate lists.\"\"\"\n        self._known(candidate)\n        return set(candidate) <= self.covers(reviewer)\n\n    def reviewers(self, candidate, experts):\n        \"\"\"Names of the experts who can review `candidate`, sorted. experts: name -> list of skills.\"\"\"\n        return sorted(name for name, held in experts.items() if self.can_review(held, candidate))\n\n    def _known(self, skills):\n        for s in skills:\n            if s not in self.direct:\n                raise KeyError(f\"unknown skill: {s}\")\n\n    def requires_slow(self, skill):\n        \"\"\"First version: walk down from the skill on every call. O(skills + links) per call.\"\"\"\n        seen, stack = set(), list(self.direct[skill])\n        while stack:\n            s = stack.pop()\n            if s not in seen:\n                seen.add(s)\n                stack.extend(self.direct[s])\n        return sorted(seen)\n",
-     "why": "The class reads like the requirements. __init__ is the only place that does work; every query after it is a lookup or a union. The slow requires is five lines and obviously right, so it checks the fast one.",
-     "say": "I write the class first and name the helpers I have not written yet. **The build does all the work: clean, order, then one pass that fills the sets and the levels.** After that every query is a lookup, a union or a subset test. I keep the slow walk-down as a method so I can check the fast answer against it on random catalogs."
-    },
-    {
-     "t": "write",
-     "id": "onsite-skillgraph-e2",
-     "q": "The helpers: _clean (names and repeats), _order (count what each skill waits for) and _find_loop (name the loop).",
-     "starter": "def _clean(prereqs):\n    ...\n\ndef _order(direct):\n    ...\n\ndef _find_loop(direct, waiting):\n    ...\n",
-     "hint": "Same shape as a task scheduler: waiting counts, a reverse map, a queue. Left-over skills have a left-over prerequisite, so you can always follow one.",
-     "solution": "\n\ndef _clean(prereqs):\n    \"\"\"Check every name is a skill and drop repeats. A skill that needs an unknown name is a data error.\"\"\"\n    direct = {}\n    for s, ps in prereqs.items():\n        for p in ps:\n            if p not in prereqs:\n                raise KeyError(f\"{s} builds on {p}, which is not in the catalog\")\n        direct[s] = list(dict.fromkeys(ps))               # keeps the order, counts a repeat once\n    return direct\n\n\ndef _order(direct):\n    \"\"\"Skills with prerequisites first, by counting what each still waits for. A loop leaves skills over.\"\"\"\n    waiting = {s: len(ps) for s, ps in direct.items()}\n    users = {s: [] for s in direct}                        # users[p]: the skills that build on p\n    for s, ps in direct.items():\n        for p in ps:\n            users[p].append(s)\n    ready = deque(s for s in direct if waiting[s] == 0)\n    order = []\n    while ready:\n        s = ready.popleft()\n        order.append(s)\n        for u in users[s]:\n            waiting[u] -= 1\n            if waiting[u] == 0:\n                ready.append(u)\n    if len(order) < len(direct):\n        raise CycleError(\" -> \".join(_find_loop(direct, waiting)))\n    return order\n\n\ndef _find_loop(direct, waiting):\n    \"\"\"Skills left over are on a loop or above one. Follow 'builds on' links until a name repeats.\"\"\"\n    path, s = [], next(s for s, n in waiting.items() if n > 0)\n    while s not in path:\n        path.append(s)\n        s = next(p for p in direct[s] if waiting[p] > 0)  # a left-over skill always has a left-over prerequisite\n    return path[path.index(s):] + [s]\n",
-     "why": "This is the counting order you know from Course Schedule. The new part is _find_loop, which turns 'there is a loop' into 'here it is'.",
-     "say": "The order is a queue of skills that wait for nothing, and each finished skill lowers the count of the skills built on it. **If skills are left over, each of them has a prerequisite that is also left over, so I can follow those links until a name repeats and that is the loop.** The message then says what to fix, not only that something is wrong."
-    },
-    {
-     "t": "p",
-     "text": "**Complexity, precisely.** Building is O(skills + links) for the order, plus the closure: each union costs the size of the set, so the worst case is O(skills x links) time and O(skills squared) space. requires is O(answer size log answer size) because it sorts; needs is O(1); level is O(1). covers is O(held x skills). reviewers is O(experts x held x skills). requires_slow is O(skills + links) per call."
-    },
-    {
-     "t": "p",
-     "text": "**f) Review.** The line-by-line questions, then the follow-ups under the workbench."
-    },
-    {
-     "t": "write",
-     "id": "onsite-skillgraph-f",
-     "q": "Review. Write the questions a reviewer asks line by line on this code, and your one-line answer to each.",
-     "starter": "1. \n2. \n3. \n4. \n5. ",
-     "hint": "Look at your own lines: why a precomputed closure, why a list for order, why the subset test, why sorted, what the empty candidate means, why unknown skills raise.",
-     "solution": "1. Why precompute the closure and not walk down on each call?  The graph is fixed and queries are many. I pay O(links x size) once and every query is a lookup. If the graph changed often I would walk on demand.\n2. What does the closure cost?  Memory: up to skills squared entries in a chain. At 2,000 skills that is 2 million, fine. At a million I would not.\n3. Why is level 1 + max and not a count of prerequisites?  Level is the longest chain under the skill. A skill with two level-0 prerequisites is level 1, not 2.\n4. Why does the loop leave skills over?  A skill is queued only after all its prerequisites are done. A loop never finishes, so its skills and the skills above it stay waiting.\n5. Why is the message only the loop and not every left-over skill?  _find_loop follows links until a name repeats, which can only happen on the loop itself.\n6. Why a subset test for review?  A reviewer must cover everything the candidate lists. One missing skill means they cannot judge the candidate.\n7. Why check the candidate's names in can_review?  A typo in the candidate's skills would otherwise be silently uncovered and the answer would be a quiet no.\n8. Why sorted in requires?  A set has no order. Sorted output is the same every run, so tests and logs do not flicker.\n9. What does reviewers return for an empty candidate list?  Every expert. An empty set is a subset of anything. I said so in the clarify stage.\n10. What did you not test?  A very large catalog for speed and memory. I would build a chain of 2,000 and time it.",
-     "why": "These are the questions asked of the code on screen. The workbench has the follow-ups about size, changes and the other readings of 'review'.",
-     "say": "**In the review I answer from the lines on the screen.** The closure is precomputed because the graph is fixed and queries are many. Level is the longest chain, so it is 1 plus the maximum. A loop leaves skills over, and following their links names it. Review is a subset test, and an empty candidate list passes everybody, which I agreed in the clarify stage. If they ask what I did not test, it is a chain of 2,000 skills for speed and memory."
-    },
-    {
-     "t": "p",
-     "text": "**Live extension.** In the 30-minute review the reviewer changes the problem and watches how your code takes it. Try the box first."
-    },
-    {
-     "t": "write",
-     "id": "onsite-skillgraph-ext",
-     "q": "Live extension. The reviewer says: 'New links arrive while the program runs. Add a prerequisite to an existing skill, refuse it if it would make a loop, and tell me what an expert should learn next.' Write how your design takes it, then the code.",
-     "starter": "def add_prereq(graph, skill, prereq):\n    ...\n\ndef next_skills(graph, held):\n    ...\n",
-     "hint": "A new link skill -> prereq closes a loop exactly when prereq already builds on skill. You already have that set. Next skills: not covered, and every prerequisite is covered.",
-     "solution": "Why the design takes it: the closure that answers 'is a needed for b' also answers 'would this link close a loop'. The link skill -> prereq makes a loop when prereq already builds on skill, which is one lookup: skill in below[prereq].\n\nThe simplest correct version rebuilds the graph from the changed catalog and leaves the old graph untouched, so a refused or half-finished change never corrupts it. The faster version updates only the skills that build on `skill`: add below[prereq] and prereq to their sets and recompute their levels in order. Say that, and say you would measure before writing it.\n\nNext skills is covers plus a filter over the order: a skill not covered, with every prerequisite covered. Because the order has prerequisites first, easier skills come first.\n\nThe code is in the block under the workbench. It prints the next skills for someone who holds python, the levels before and after sql gets a prerequisite, and the two refusals.",
-     "why": "The extension tests the design, not the typing. If the closure is a lookup, the loop check is free. If the order is kept, 'next' is a filter. A design built only to answer the first questions would need a rewrite here.",
-     "say": "**The closure I built for 'is a needed for b' also answers 'would this link close a loop': the link makes a loop when the prerequisite already builds on the skill.** That is one lookup. For a first version I rebuild the graph and keep the old one, so a refusal cannot corrupt anything. Then I say the faster way, which updates only the skills above the changed one, and that I would measure first. For 'what next', I filter the order for skills not covered whose prerequisites all are."
+     "q": "Try it first. Write the stages from file to answer, and what each stage does with a bad line.",
+     "starter": "Stage 1:\n\nStage 2:\n\nStage 3:\n\nCost:\n",
+     "hint": "Syntax first (split lines), then meaning (unknown names, loops), then the queries. Each stage fails in its own way.",
+     "solution": "1. parse: split the file, skip blanks and comments, split each line on the first comma and on semicolons. A bad line (empty or repeated name) is skipped and counted.\n2. SkillGraph: check every prerequisite is a skill, order the skills by counting what each waits for, and name a loop if skills are left over. Then, in that order, each skill's closure is its prerequisites' closures plus themselves.\n3. load: drop expert skills not in the catalog, counted. Print the counts before any query.\n4. Queries read the closure: needs is a lookup, can_review is a subset check against covers.\nCost: parse O(lines), order O(V + E), closure O(V x E) worst case.",
+     "say": [
+      "**I read the file in three stages: parse, build, load.** Each stage fails its own way: a bad line is skipped and counted, a bad catalog raises with the names, and the queries can trust what they get.",
+      "The closure is stored in topological order, so needs is a lookup and can_review is a subset check. I wrote the rules I assumed at the top of the file."
+     ]
     },
     {
      "t": "problem",
      "id": "onsite-skillgraph-p",
-     "title": "Expert-skill graph",
-     "source": "Mercor-style graph prompt, rebuilt (left vague on purpose)",
+     "title": "Skills from a file: parse, build, query, review",
+     "source": "Mercor-style file build, rebuilt (four parts)",
+     "d": "medium",
      "minutes": 60,
-     "why": "A DAG with reachability, levels and bad data. The reviewer watches whether you decide what 'holds', 'level' and 'review' mean before you write the first line.",
-     "statement": "\"Every expert on the platform lists skills. Some skills build on others: you need SQL before query tuning, Python before Django. You get the catalog as skill and prerequisites pairs, and each expert's skills. Build a SkillGraph. It should tell us what a skill requires, whether one skill is needed for another, how advanced a skill is, and which experts can review a candidate. Reject a catalog that does not make sense.\"",
+     "why": "A file in, answers out. Parsing and validation come first, then a small graph idea. Pace across the parts matters more than any one hard step.",
+     "statement": "A file lists skills with their prerequisites, a line with ---, then experts with their skills. Part 1: parse it, skipping and counting bad lines. Part 2: build the skill graph, rejecting an unknown prerequisite or a loop, naming it. Part 3: requires, needs and the level of a skill. Part 4: which experts can review a candidate who lists some skills.",
      "examples": [
       {
-       "input": "catalog: python, sql, http need nothing; django needs python and http; postgres needs sql; tuning needs postgres; api needs django and postgres",
-       "output": "levels: 0: http, python, sql; 1: django, postgres; 2: api, tuning",
-       "note": "Level is the longest chain under a skill."
-      },
-      {
-       "input": "api requires",
-       "output": "django, http, postgres, python, sql",
+       "input": "api builds on django and postgres; django on python and http; postgres on sql",
+       "output": "api requires: django, http, postgres, python, sql",
        "note": "All depths, sorted."
       },
       {
@@ -1276,62 +951,32 @@ window.LOOP_CODING.parts.push({
        "note": "bo holds tuning, which builds on postgres, and django. cy covers neither."
       },
       {
-       "input": "a needs b, b needs c, c needs a, d needs nothing",
+       "input": "a builds on b, b on c, c on a",
        "output": "CycleError: a -> b -> c -> a",
-       "note": "The loop is named; d plays no part."
+       "note": "The loop is named."
       }
      ],
      "constraints": [
       "standard library only",
-      "up to about 2,000 skills",
-      "no AI; search for syntax only",
-      "write your own checks"
+      "read the whole file as text",
+      "a prerequisite may repeat on a line"
      ],
-     "starter": "class SkillGraph:\n    def __init__(self, prereqs):\n        ...\n\n    def requires(self, skill):\n        ...\n\n    def reviewers(self, candidate, experts):\n        ...",
+     "starter": "def parse(text):\n    ...\n\nclass SkillGraph:\n    ...\n",
      "hints": [
-      "Level 1: store the catalog as a dict. Decide what 'holds' means before you write a query. Reject a bad catalog in __init__.",
-      "Level 2: put the skills in an order where each comes after its prerequisites (count what each waits for). Then fill each skill's set of everything below it from its prerequisites' sets.",
-      "Level 3: a reviewer covers their skills plus everything below them. The candidate's skills must all be in that set. A leftover count after the order means a loop: follow links until a name repeats."
+      "Split lines, then split each on the first comma and on semicolons. Count what you skip.",
+      "Order skills by counting what each still waits for. Leftovers mean a loop.",
+      "In that order, a skill's closure is the union of its prerequisites' closures plus themselves."
      ],
-     "solution": "from collections import deque\n\nclass CycleError(ValueError):\n    \"\"\"The catalog has a loop. The message names it.\"\"\"\n\n\nclass SkillGraph:\n    \"\"\"Skills and what each one builds on. Fixed when built: a bad catalog fails here, not later.\"\"\"\n\n    def __init__(self, prereqs):\n        self.direct = _clean(prereqs)                    # skill -> list of skills it builds on, no repeats\n        self.order = _order(self.direct)                 # every skill after its prerequisites; raises on a loop\n        self.below = {}                                  # skill -> set of everything it needs, at any depth\n        self.level = {}                                  # skill -> length of the longest chain under it\n        for s in self.order:                             # prerequisites come first, so theirs are ready\n            self.below[s], self.level[s] = set(), 0\n            for p in self.direct[s]:\n                self.below[s] |= self.below[p] | {p}\n                self.level[s] = max(self.level[s], self.level[p] + 1)\n\n    def requires(self, skill):\n        \"\"\"Everything `skill` builds on, at any depth, sorted. A lookup, not a walk.\"\"\"\n        self._known([skill])\n        return sorted(self.below[skill])\n\n    def needs(self, a, b):\n        \"\"\"Is `a` required, at any depth, for `b`?\"\"\"\n        self._known([a, b])\n        return a in self.below[b]\n\n    def by_level(self):\n        \"\"\"Level 0 has no prerequisites; level n sits on a chain of n skills. {level: [skills]}\"\"\"\n        groups = {}\n        for s in self.order:\n            groups.setdefault(self.level[s], []).append(s)\n        return {n: sorted(g) for n, g in sorted(groups.items())}\n\n    def covers(self, held):\n        \"\"\"Everything someone with these skills is taken to have: what they hold, plus all that builds on.\"\"\"\n        self._known(held)\n        have = set(held)\n        for s in held:\n            have |= self.below[s]\n        return have\n\n    def can_review(self, reviewer, candidate):\n        \"\"\"A reviewer can review a candidate if they cover every skill the candidate lists.\"\"\"\n        self._known(candidate)\n        return set(candidate) <= self.covers(reviewer)\n\n    def reviewers(self, candidate, experts):\n        \"\"\"Names of the experts who can review `candidate`, sorted. experts: name -> list of skills.\"\"\"\n        return sorted(name for name, held in experts.items() if self.can_review(held, candidate))\n\n    def _known(self, skills):\n        for s in skills:\n            if s not in self.direct:\n                raise KeyError(f\"unknown skill: {s}\")\n\n    def requires_slow(self, skill):\n        \"\"\"First version: walk down from the skill on every call. O(skills + links) per call.\"\"\"\n        seen, stack = set(), list(self.direct[skill])\n        while stack:\n            s = stack.pop()\n            if s not in seen:\n                seen.add(s)\n                stack.extend(self.direct[s])\n        return sorted(seen)\n\n\n\ndef _clean(prereqs):\n    \"\"\"Check every name is a skill and drop repeats. A skill that needs an unknown name is a data error.\"\"\"\n    direct = {}\n    for s, ps in prereqs.items():\n        for p in ps:\n            if p not in prereqs:\n                raise KeyError(f\"{s} builds on {p}, which is not in the catalog\")\n        direct[s] = list(dict.fromkeys(ps))               # keeps the order, counts a repeat once\n    return direct\n\n\ndef _order(direct):\n    \"\"\"Skills with prerequisites first, by counting what each still waits for. A loop leaves skills over.\"\"\"\n    waiting = {s: len(ps) for s, ps in direct.items()}\n    users = {s: [] for s in direct}                        # users[p]: the skills that build on p\n    for s, ps in direct.items():\n        for p in ps:\n            users[p].append(s)\n    ready = deque(s for s in direct if waiting[s] == 0)\n    order = []\n    while ready:\n        s = ready.popleft()\n        order.append(s)\n        for u in users[s]:\n            waiting[u] -= 1\n            if waiting[u] == 0:\n                ready.append(u)\n    if len(order) < len(direct):\n        raise CycleError(\" -> \".join(_find_loop(direct, waiting)))\n    return order\n\n\ndef _find_loop(direct, waiting):\n    \"\"\"Skills left over are on a loop or above one. Follow 'builds on' links until a name repeats.\"\"\"\n    path, s = [], next(s for s, n in waiting.items() if n > 0)\n    while s not in path:\n        path.append(s)\n        s = next(p for p in direct[s] if waiting[p] > 0)  # a left-over skill always has a left-over prerequisite\n    return path[path.index(s):] + [s]\n",
-     "complexity": "Build O(skills + links) for the order plus the closure at worst O(skills x links) time and O(skills squared) space. requires O(answer log answer), needs and level O(1), covers O(held x skills), reviewers O(experts x held x skills).",
+     "solution": "from collections import deque\n\n\nclass CycleError(ValueError):\n    pass\n\n\ndef parse(text):\n    # Stage 1, syntax only. Catalog lines \"skill,pre1;pre2\", a line \"---\", then expert lines \"name,skill1;skill2\".\n    # Blank lines and # comments are skipped. An empty or repeated name is skipped and counted: the first one wins.\n    prereqs, experts, bad = {}, {}, 0\n    target = prereqs\n    for line in text.splitlines():\n        line = line.strip()\n        if not line or line.startswith(\"#\"):\n            continue\n        if line == \"---\":\n            target = experts\n            continue\n        name, _, rest = line.partition(\",\")\n        name = name.strip()\n        if not name or name in target:\n            bad += 1\n            continue\n        target[name] = [x.strip() for x in rest.split(\";\") if x.strip()]\n    return prereqs, experts, bad\n\n\nclass SkillGraph:\n    # Stage 2, meaning. A bad catalog fails here, so every query below can trust it.\n    def __init__(self, prereqs):\n        for s, ps in prereqs.items():\n            for p in ps:\n                if p not in prereqs:\n                    raise KeyError(f\"{s} builds on {p}, which is not in the catalog\")\n        self.direct = {s: list(dict.fromkeys(ps)) for s, ps in prereqs.items()}  # a repeat counts once\n        waiting = {s: len(ps) for s, ps in self.direct.items()}\n        users = {s: [] for s in self.direct}\n        for s, ps in self.direct.items():\n            for p in ps:\n                users[p].append(s)\n        ready = deque(s for s in self.direct if waiting[s] == 0)\n        self.order = []                                   # every skill after its prerequisites\n        while ready:\n            s = ready.popleft()\n            self.order.append(s)\n            for u in users[s]:\n                waiting[u] -= 1\n                if waiting[u] == 0:\n                    ready.append(u)\n        if len(self.order) < len(self.direct):            # leftovers are on a loop or above one\n            raise CycleError(\" -> \".join(find_loop(self.direct, waiting)))\n        self.below, self.level = {}, {}                   # everything a skill needs, and its longest chain\n        for s in self.order:                              # prerequisites are done first\n            self.below[s], self.level[s] = set(), 0\n            for p in self.direct[s]:\n                self.below[s] |= self.below[p] | {p}\n                self.level[s] = max(self.level[s], self.level[p] + 1)\n\n    def requires(self, skill):\n        return sorted(self.below[skill])\n\n    def needs(self, a, b):                                # is a required, at any depth, for b?\n        return a in self.below[b]\n\n    def covers(self, held):                               # holding a skill means holding what it builds on\n        have = set(held)\n        for s in held:\n            have |= self.below[s]\n        return have\n\n    def can_review(self, reviewer, candidate):            # every skill the candidate lists\n        return set(candidate) <= self.covers(reviewer)\n\n    def reviewers(self, candidate, experts):\n        return sorted(n for n, held in experts.items() if self.can_review(held, candidate))\n\n\ndef find_loop(direct, waiting):\n    path, s = [], next(s for s, n in waiting.items() if n > 0)\n    while s not in path:                                  # a leftover skill needs a leftover skill\n        path.append(s)\n        s = next(p for p in direct[s] if waiting[p] > 0)\n    return path[path.index(s):] + [s]\n\n\ndef load(text):\n    # Stage 3: parse, build, then drop expert skills that are not in the catalog, counted.\n    prereqs, experts, bad = parse(text)\n    g = SkillGraph(prereqs)\n    for name, held in experts.items():\n        keep = [s for s in held if s in g.direct]\n        bad += len(held) - len(keep)\n        experts[name] = keep\n    return g, experts, bad\n",
+     "tests": "FILE = \"\"\"\n# skills\npython,\nsql,\nhttp,\ndjango,python;http\npostgres,sql\ntuning,postgres\napi,django;postgres\n---\n# experts\nana,api\nbo,tuning;django\ncy,python\ndee,api;tuning;rust\n,oops\ncy,sql\n\"\"\"\ng, experts, bad = load(FILE)\nprint(\"skills:\", len(g.direct), \"experts:\", len(experts), \"bad lines:\", bad)\nprint(\"api requires:\", g.requires(\"api\"))\nprint(\"levels:\", {s: g.level[s] for s in g.order})\nassert g.needs(\"sql\", \"api\") and not g.needs(\"tuning\", \"api\") and not g.needs(\"api\", \"api\")\nprint(\"reviewers for [django, postgres]:\", g.reviewers([\"django\", \"postgres\"], experts))\nprint(\"reviewers for [tuning]:\", g.reviewers([\"tuning\"], experts))\nassert g.reviewers([], experts) == [\"ana\", \"bo\", \"cy\", \"dee\"]     # empty candidate: everyone\nfor text in (\"a,b\\nb,c\\nc,a\\nd,\", \"a,a\", \"a,zz\"):\n    try:\n        load(text)\n    except (CycleError, KeyError) as e:\n        print(type(e).__name__ + \":\", e)\nassert load(\"a,\\nb,a;a\")[0].level[\"b\"] == 1                      # a repeated prerequisite counts once\nimport random\nrng = random.Random(11)\nfor _ in range(300):\n    names = [f\"s{i}\" for i in range(rng.randint(1, 9))]\n    cat = {s: [p for p in names if rng.random() < 0.2] for s in names}\n    try:\n        h = SkillGraph(cat)\n    except CycleError:\n        continue\n    assert all(h.order.index(p) < h.order.index(s) for s in cat for p in cat[s])\nprint(\"300 random catalogs: every prerequisite comes first\")",
+     "complexity": "parse is O(lines). The order is O(V + E). The closure is O(V x E) time and O(V squared) space in the worst case. requires sorts its answer. can_review is O(candidate skills) after covers.",
      "explain": [
-      "_clean checks every name and removes repeats, so a typo fails at build time with both names.",
-      "_order counts what each skill waits for and queues zeros, as in a task scheduler. Leftovers mean a loop.",
-      "below[s] is the union of (below[p] + p) over its prerequisites; it is final because prerequisites come first in the order.",
-      "level[s] is 1 + the highest level among prerequisites, so it is the longest chain under the skill.",
-      "covers adds below[s] for each skill held. can_review is a subset test against it.",
-      "requires_slow walks down on every call. It exists only to check the fast answer.",
-      "What the checks print: levels: {0: ['http', 'python', 'sql'], 1: ['django', 'postgres'], 2: ['api', 'tuning']} | api requires: ['django', 'http', 'postgres', 'python', 'sql'] | reviewers for [django, postgres]: ['ana', 'bo', 'dee'] | reviewers for [tuning]: ['bo', 'dee'] | loop: a -> b -> c -> a | loop: a -> a | loop: a -> b -> a"
+      "parse never raises on a bad line. It counts it, so one typo does not throw away a good file.",
+      "SkillGraph checks every name first, so a typo fails with both names rather than a KeyError later.",
+      "The order counts what each skill waits for. If fewer skills come out than exist, the rest are on a loop or above one, and find_loop follows them until a name repeats.",
+      "below[s] is built in order, so each prerequisite's closure is ready when it is needed. level is the longest chain under the skill.",
+      "load is the only place that knows about the file and the graph together. Expert skills not in the catalog are dropped and counted."
      ],
-     "tests": "catalog = {\"python\": [], \"sql\": [], \"http\": [], \"django\": [\"python\", \"http\"],\n           \"postgres\": [\"sql\"], \"tuning\": [\"postgres\"], \"api\": [\"django\", \"postgres\"]}\ng = SkillGraph(catalog)\nprint(\"levels:\", g.by_level())\nprint(\"api requires:\", g.requires(\"api\"))\nassert g.needs(\"sql\", \"api\") and not g.needs(\"tuning\", \"api\") and not g.needs(\"api\", \"api\")\nassert g.level[\"tuning\"] == 2 and g.level[\"python\"] == 0\nexperts = {\"ana\": [\"api\"], \"bo\": [\"tuning\", \"django\"], \"cy\": [\"python\"], \"dee\": [\"api\", \"tuning\"]}\nprint(\"reviewers for [django, postgres]:\", g.reviewers([\"django\", \"postgres\"], experts))\nprint(\"reviewers for [tuning]:\", g.reviewers([\"tuning\"], experts))\nassert g.reviewers([], experts) == [\"ana\", \"bo\", \"cy\", \"dee\"]          # an empty candidate list: everyone can review\nfor bad in ({\"a\": [\"b\"], \"b\": [\"c\"], \"c\": [\"a\"], \"d\": []}, {\"a\": [\"a\"]}, {\"x\": [\"a\"], \"a\": [\"b\"], \"b\": [\"a\"]}):\n    try:\n        SkillGraph(bad)\n    except CycleError as e:\n        print(\"loop:\", e)\ntry:\n    SkillGraph({\"a\": [\"zz\"]})\nexcept KeyError as e:\n    print(\"unknown:\", e)\ntry:\n    g.requires(\"rust\")\nexcept KeyError as e:\n    print(\"query:\", e)\nassert SkillGraph({\"a\": [], \"b\": [\"a\", \"a\"]}).level[\"b\"] == 1          # a repeated prerequisite counts once\n\nimport random\nrng = random.Random(11)\n\ndef reaches_self(direct):\n    \"\"\"The definition of a loop, the long way: some skill can walk down to itself.\"\"\"\n    for s in direct:\n        seen, stack = set(), list(direct[s])\n        while stack:\n            t = stack.pop()\n            if t == s:\n                return True\n            if t not in seen:\n                seen.add(t)\n                stack.extend(direct[t])\n    return False\n\ndef level_slow(direct, s):\n    return 0 if not direct[s] else 1 + max(level_slow(direct, p) for p in direct[s])\n\nfor trial in range(300):\n    names = [f\"s{i}\" for i in range(rng.randint(1, 9))]\n    cat = {s: [p for p in names if rng.random() < 0.2] for s in names}\n    try:\n        g2 = SkillGraph(cat)\n    except CycleError:\n        assert reaches_self(cat)\n        continue\n    assert not reaches_self(cat)\n    for s in names:\n        assert g2.requires(s) == g2.requires_slow(s)\n        assert g2.level[s] == level_slow(g2.direct, s)\nprint(\"300 random catalogs: loops found exactly when the definition says, fast requires equals slow, levels agree\")\n",
-     "followups": [
-      {
-       "q": "Why is 'review' every skill and not one skill?",
-       "a": "That was my assumption from the clarify stage. Reviewing a candidate on a skill you do not cover is a guess. If they say one skill is enough, can_review becomes an any() over the candidate's skills, and I would rename the method so nobody mistakes the two."
-      },
-      {
-       "q": "What if the catalog has a million skills?",
-       "a": "The closure is the first thing to break: it can be skills squared in a chain. I would stop storing it and answer needs by a search from b down to a, with a visited set, and cache the answers asked often. Or keep a compressed reachability index. I would measure the memory first."
-      },
-      {
-       "q": "Why is the loop caught at build time and not at query time?",
-       "a": "Every query assumes a DAG. If a loop got through, requires could return a skill as its own prerequisite and level would not exist. One check at the door keeps every later line simple."
-      },
-      {
-       "q": "Could you use a depth-first search?",
-       "a": "Yes. Three colours, new, visiting, done: meeting a visiting skill is a loop and the stack holds its path. The order falls out as post-order. It is recursive on a long chain, which is why I used the counting version."
-      },
-      {
-       "q": "How would you rank reviewers, not only list them?",
-       "a": "Add a score. The number of covered skills the candidate does not list is a rough measure of how senior the reviewer is, and the level of the highest skill held is another. Ask what 'better' means before choosing."
-      },
-      {
-       "q": "How did you test it, with no framework?",
-       "a": "Plain asserts under the class. The seven-skill example by hand, one assert for each error, the empty candidate case, and a random check on 300 catalogs: a loop is raised exactly when some skill can walk down to itself, fast requires equals the plain walk, and level equals a recursive longest chain."
-      }
-     ],
-     "d": "medium",
      "lc": "course-schedule-iv",
      "yt": [
       "cEW05ofxhn0",
@@ -1341,9 +986,110 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "id": "onsite-skillgraph-ext-code",
-     "title": "Live extension: add a link online and suggest the next skills (runs together with the solution above)",
-     "code": "def add_prereq(graph, skill, prereq):\n    \"\"\"A new link arrives: `skill` now builds on `prereq`. Return a new graph, or raise if it would close a loop.\"\"\"\n    graph._known([skill, prereq])\n    if skill == prereq or skill in graph.below[prereq]:     # prereq already builds on skill: this link makes a loop\n        raise CycleError(f\"{skill} -> {prereq} would close a loop\")\n    new = {s: list(ps) for s, ps in graph.direct.items()}\n    new[skill].append(prereq)\n    return SkillGraph(new)                                  # simplest correct: rebuild; the old graph is untouched\n\n\ndef next_skills(graph, held):\n    \"\"\"Skills not yet covered whose prerequisites are all covered: what to learn next, easiest levels first.\"\"\"\n    have = graph.covers(held)\n    return [s for s in graph.order if s not in have and all(p in have for p in graph.direct[s])]\n\n\ng = SkillGraph({\"python\": [], \"sql\": [], \"http\": [], \"django\": [\"python\", \"http\"],\n                \"postgres\": [\"sql\"], \"tuning\": [\"postgres\"], \"api\": [\"django\", \"postgres\"]})\nprint(\"cy holds python, next:\", next_skills(g, [\"python\"]))\ng2 = add_prereq(g, \"sql\", \"python\")                         # sql now builds on python\nprint(\"sql level before and after:\", g.level[\"sql\"], g2.level[\"sql\"], \"| tuning:\", g.level[\"tuning\"], g2.level[\"tuning\"])\nfor edge in ((\"python\", \"api\"), (\"python\", \"python\")):\n    try:\n        add_prereq(g, *edge)\n    except CycleError as e:\n        print(\"refused:\", e)\nassert g.level[\"sql\"] == 0                                  # the old graph did not change\n"
+     "title": "Output, run with Python 3",
+     "code": "skills: 7 experts: 4 bad lines: 3\napi requires: ['django', 'http', 'postgres', 'python', 'sql']\nlevels: {'python': 0, 'sql': 0, 'http': 0, 'postgres': 1, 'django': 1, 'tuning': 2, 'api': 2}\nreviewers for [django, postgres]: ['ana', 'bo', 'dee']\nreviewers for [tuning]: ['bo', 'dee']\nCycleError: a -> b -> c -> a\nCycleError: a -> a\nKeyError: 'a builds on zz, which is not in the catalog'\n300 random catalogs: every prerequisite comes first"
+    },
+    {
+     "t": "code",
+     "title": "Follow-up: add a link online, and suggest the next skills (runs together with the solution above)",
+     "code": "def next_skills(graph, held):\n    # what to learn next: not yet covered, and every prerequisite already covered\n    have = graph.covers(held)\n    return [s for s in graph.order if s not in have and all(p in have for p in graph.direct[s])]\n\n\ndef add_prereq(graph, skill, prereq):\n    # a link arrives online: refuse it if it would close a loop, else rebuild (simplest correct)\n    if skill == prereq or skill in graph.below[prereq]:\n        raise CycleError(f\"{skill} -> {prereq} would close a loop\")\n    new = {s: list(ps) for s, ps in graph.direct.items()}\n    new[skill].append(prereq)\n    return SkillGraph(new)\n\n\nprint(\"cy holds python, next:\", next_skills(g, [\"python\"]))\ng2 = add_prereq(g, \"sql\", \"python\")\nprint(\"sql level before and after:\", g.level[\"sql\"], g2.level[\"sql\"], \"| tuning:\", g.level[\"tuning\"], g2.level[\"tuning\"])\nfor edge in ((\"python\", \"api\"), (\"python\", \"python\")):\n    try:\n        add_prereq(g, *edge)\n    except CycleError as e:\n        print(\"refused:\", e)"
+    },
+    {
+     "t": "code",
+     "title": "Output of the follow-up block",
+     "code": "cy holds python, next: ['sql', 'http']\nsql level before and after: 0 1 | tuning: 2 3\nrefused: python -> api would close a loop\nrefused: python -> python would close a loop"
+    },
+    {
+     "t": "table",
+     "head": [
+      "They ask",
+      "The change",
+      "Cost"
+     ],
+     "rows": [
+      [
+       "A new link arrives while it runs",
+       "Refuse it if the skill is the prerequisite or already below it. Otherwise rebuild. Block above.",
+       "O(V + E) plus the closure per link."
+      ],
+      [
+       "What should this expert learn next",
+       "Skills not covered whose prerequisites are all covered, in order. Block above.",
+       "O(V + E)."
+      ],
+      [
+       "A million skills",
+       "Stop storing the closure. Answer needs by a search with a visited set and cache the common answers.",
+       "Time per query, memory saved."
+      ],
+      [
+       "Rank the reviewers",
+       "Ask what better means. Score by the highest level held, or by how many covered skills the candidate lacks.",
+       "O(experts x skills)."
+      ],
+      [
+       "The file is huge",
+       "Stream it line by line. parse already works one line at a time, so it only keeps the maps.",
+       "Constant memory per line."
+      ],
+      [
+       "CSV or JSON instead",
+       "Swap parse for csv.reader or json.load. Nothing after it changes.",
+       "None."
+      ],
+      [
+       "Show why one skill needs another",
+       "Keep a parent in the search and print the chain.",
+       "O(V + E) per question."
+      ]
+     ]
+    },
+    {
+     "t": "faq",
+     "title": "The code review: every decision, and how to stand behind it",
+     "prose": true,
+     "items": [
+      {
+       "q": "1. Parse, build and load are three stages",
+       "a": "**Decided.** parse handles syntax, SkillGraph handles meaning, load joins them.\n\n**Instead of.** One function that reads and validates together.\n\n**Why.** Each stage can be run and printed alone, and a failure says which kind it is. The queries never see a bad input.\n\n**What it costs.** Three names to read instead of one.\n\n**If they push.** \"For an hour it was the quickest way to keep every part running. I printed the counts after stage one before writing the next.\""
+      },
+      {
+       "q": "2. Bad lines are skipped and counted",
+       "a": "**Decided.** An empty or repeated name is skipped, counted, and the first repeat wins.\n\n**Instead of.** Raising on the first bad line, or skipping silently.\n\n**Why.** One typo should not throw away a good file, and a silent skip hides bugs. The count comes back with the result.\n\n**What it costs.** The count says how many, not which.\n\n**If they push.** \"If silent loss matters I would log each line with its reason, or add a strict flag that raises.\""
+      },
+      {
+       "q": "3. A bad catalog raises; a bad expert skill is dropped",
+       "a": "**Decided.** An unknown prerequisite or a loop raises. An unknown expert skill is dropped and counted.\n\n**Instead of.** One rule for both.\n\n**Why.** The catalog is the source of truth and everything depends on it, so it must be right. An expert list is user input, and one odd skill should not stop the rest.\n\n**What it costs.** An expert may lose a skill without anyone noticing, except in the count.\n\n**If they push.** \"If the reviewer wants strict, load raises on both. It is one line.\""
+      },
+      {
+       "q": "4. The loop is caught at build and named",
+       "a": "**Decided.** Count what each skill waits for, and name the loop from the leftovers.\n\n**Instead of.** Checking at query time.\n\n**Why.** Every query assumes a DAG. If a loop got in, requires could list a skill as its own prerequisite and a level would not exist. One check at the door keeps every later line simple.\n\n**What it costs.** Names one loop, not all.\n\n**If they push.** \"A depth-first search with three colours also finds it. I used counting because it gives the order I need anyway.\""
+      },
+      {
+       "q": "5. The closure is stored in order",
+       "a": "**Decided.** below[s] is the union of its prerequisites' closures plus themselves, built once.\n\n**Instead of.** Walking down on every query.\n\n**Why.** needs becomes a lookup and can_review a subset check. The order guarantees each prerequisite is ready first.\n\n**What it costs.** O(V squared) memory in a long chain.\n\n**If they push.** \"At a million skills I would stop storing it and search on demand with a cache.\""
+      },
+      {
+       "q": "6. Holding a skill means holding what it builds on",
+       "a": "**Decided.** covers adds everything below the held skills.\n\n**Instead of.** Exact match.\n\n**Why.** Someone who can do an API can do the SQL under it. Without this, the senior experts would never qualify.\n\n**What it costs.** If the data lists every skill already, this is redundant.\n\n**If they push.** \"If exact match is wanted, covers returns set(held). One line.\""
+      },
+      {
+       "q": "7. Can review needs every candidate skill",
+       "a": "**Decided.** A subset check.\n\n**Instead of.** any().\n\n**Why.** Reviewing a skill you do not cover is a guess. All is the safe reading.\n\n**What it costs.** Strict: a candidate with one odd skill has no reviewers.\n\n**If they push.** \"I would ask which they meant. any() is a one-line change, and I would rename the method so nobody mixes them up.\""
+      },
+      {
+       "q": "8. An empty candidate list gives everyone",
+       "a": "**Decided.** The subset check is true for an empty set.\n\n**Instead of.** Nobody.\n\n**Why.** It falls out of the definition, and I state it in a comment so it is not a surprise.\n\n**What it costs.** Looks odd in a report.\n\n**If they push.** \"Easy to special-case if they want nobody.\""
+      },
+      {
+       "q": "9. What I tested",
+       "a": "**Decided.** Plain asserts: each error, the empty candidate, a repeated prerequisite, and 300 random catalogs where every prerequisite comes first.\n\n**Instead of.** A framework.\n\n**Why.** None is provided, and outputs are exact because everything is deterministic.\n\n**What it costs.** No big file was timed.\n\n**If they push.** \"The loops are linear in the file. I expect it to be fine, and I would time it with a generated file.\""
+      },
+      {
+       "q": "What I would do with another hour",
+       "a": "1. next_skills and add_prereq as real functions, with the loop check.\n\n2. Reviewer ranking, once the product meaning is clear.\n\n3. csv and json readers behind the same parse.\n\n4. A test file that includes a generated large catalog.\n\nClose with one plain line: \"I kept each stage small so it runs on its own, and I know where each part breaks first.\""
+      }
+     ]
     },
     {
      "t": "probs",
@@ -1398,303 +1144,6 @@ window.LOOP_CODING.parts.push({
         23
        ],
        "why": "The harder follow-up: a value carried along every path of a DAG, and -1 when there is a loop. The level computation, with a table per node."
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "id": "onsite-planner",
-   "title": "5. Project dependency planner",
-   "blocks": [
-    {
-     "t": "p",
-     "text": "**What it is.** The task scheduler's older sibling. Tasks have a duration and wait for other tasks, and the question is how long the whole project takes and which tasks are the bottleneck. It is longest path in a DAG with a business name: earliest finish, critical path and slack. The solo hour grades whether you ask what 'bottleneck' means before you code. The prompt is not public, so the shape is right and the numbers are mine."
-    },
-    {
-     "t": "p",
-     "text": "**The prompt, as a real one would give it.** \"A project is a set of tasks. Each task takes some days and waits for other tasks to finish first. Work out how long the project takes, when each task can start and finish, and which tasks are the bottleneck. Refuse a plan that cannot be done.\""
-    },
-    {
-     "t": "p",
-     "text": "**What is left unsaid.** This is why you clarify first. Each line below changes the code."
-    },
-    {
-     "t": "list",
-     "items": [
-      "Are there as many people as we need, or a fixed number?",
-      "What are the units: whole days, fractions? Can a task take zero days?",
-      "'The bottleneck': one path, every task on any longest path, or how much each task can slip?",
-      "If two chains tie for longest, which one do you return?",
-      "What is a plan that cannot be done: a loop, a wait on a task that does not exist, negative days?",
-      "Can there be several tasks with nothing before them, or several at the end?",
-      "How many tasks? What should an empty plan return?"
-     ]
-    },
-    {
-     "t": "p",
-     "text": "**a) Clarify.** Three buckets, each question with the answer you will assume."
-    },
-    {
-     "t": "write",
-     "id": "onsite-planner-a",
-     "q": "Write your questions under each bucket, and the answer you will assume if the interviewer does not give one.",
-     "starter": "1. Primary capabilities (what it must do)\n- \n\n2. Error handling (what goes wrong)\n- \n\n3. Scope boundaries (where it stops)\n- ",
-     "hint": "Capabilities: the input shape, units, people, what 'bottleneck' returns, ties. Errors: loop, unknown wait, negative days. Scope: how many tasks, fixed people, the later question of fewer people.",
-     "solution": "1. Primary capabilities\n- What does a task look like?  Likely: a dict, name -> (days, list of names it waits for).\n- How many people?  As many as needed, so independent tasks overlap. Say that fewer people is a different problem, and offer it as the extension.\n- Units?  Whole days, zero allowed (a milestone).\n- What is 'the bottleneck'?  Return the project length and one critical path, and also the slack of every task: 0 slack means critical. That covers the one-path and the all-tasks readings.\n- A tie between two longest chains?  Return the first in input order; slack still shows both.\n- What does the empty plan return?  Length 0, no critical path.\n\n2. Error handling\n- A loop?  CycleError that names the loop, before computing anything.\n- A wait on a task that is not there?  KeyError naming both.\n- Negative days?  ValueError.\n- A wait listed twice?  Count it once.\n\n3. Scope boundaries\n- How many tasks?  Say up to 100,000. That rules out recursion.\n- Dates, calendars, weekends, costs?  Out of scope.\n- Resource limits and re-planning when a task slips?  Out of scope for the first version; fewer people is the likely extension.",
-     "why": "'As many people as needed' is the answer that makes this a longest-path problem and not a packing problem. 'Slack for every task' answers the bottleneck question in both readings with one extra pass. The tie rule makes the output the same every run.",
-     "say": "**I sort my questions into three buckets: what it must do, what goes wrong, and where it stops.** First I ask how many people there are, because with as many as needed this is longest path, and with a fixed number it is much harder. Then what bottleneck means. I would return the length, one critical path, and the slack of each task, so both readings are covered. Then the bad plans: a loop, an unknown wait, negative days. I would like each to fail before anything is computed."
-    },
-    {
-     "t": "p",
-     "text": "**b) Requirements.** Numbered, each one testable."
-    },
-    {
-     "t": "write",
-     "id": "onsite-planner-b",
-     "q": "Write the requirements, numbered, each one testable. Then what is out of scope.",
-     "starter": "1. \n2. \n3. \n",
-     "hint": "One for the refusals, one each for start and finish, the length, the critical path, slack, determinism, size, and the empty plan.",
-     "solution": "1. plan(tasks) refuses a bad plan before computing.\n   - A loop raises CycleError naming it (a -> b -> c -> a)\n   - An unknown wait raises KeyError naming both; negative days raise ValueError\n2. start[t] is the largest finish among the tasks t waits for, or 0 with none. finish[t] is start[t] + days.\n   - Test: nothing starts before everything it waits for has finished\n3. length is the largest finish. An empty plan has length 0.\n   - Test: it equals the longest chain of durations found the long way on random plans\n4. slack[t] is how many days t can slip without moving the end. It is never negative.\n5. critical is one chain of tasks whose days add up to the length, and every task on it has slack 0.\n6. Ties go to the first task in input order, so two runs give the same answer.\n7. A chain of 100,000 tasks does not hit the recursion limit.\n8. Out of scope: fixed workers, calendars, cost (workers is the extension).",
-     "why": "3 is the check without an answer key: the fast length against a brute-force longest chain. 5 is two checks at once: the sum and the zero slack. 7 decides an iterative order.",
-     "say": "From the answers I get eight requirements and can test each one. **The two I would not skip are the length equalling a brute-force longest chain on random plans, and the critical path summing to the length with zero slack all along.** Out of scope: calendars, cost, and a fixed number of people, which I will offer as the extension."
-    },
-    {
-     "t": "p",
-     "text": "**c) Entities.** Keep a noun only if it carries a rule. Here only the answer earns a class."
-    },
-    {
-     "t": "write",
-     "id": "onsite-planner-c",
-     "q": "List the nouns in the requirements. For each: keep or drop, why, and the data structure it becomes.",
-     "starter": "Task: \nWait (dependency): \nDuration: \nStart, finish: \nSlack: \nCritical path: \nOrder: \nPlan (the answer): \nLoop: ",
-     "hint": "The input is plain data. What is returned together and read by name may be a small class.",
-     "solution": "Task: drop as a class. A dict key with a (days, waits) pair, so the data is easy to write in a test.\nWait: keep as data. The list in the pair; the reverse map users[t], the tasks that wait for t, is built once because both passes need it.\nDuration: drop. An int in the pair.\nStart, finish: keep as two dicts, filled in one pass over the order. They are the forward pass.\nSlack: keep as a dict from the backward pass: latest finish minus earliest finish.\nCritical path: drop as stored state. A list traced back from the task that finishes last, because it can be read off start and finish.\nOrder: keep as a local list. Waits first, so each pass reads values that are already final.\nPlan: keep. A small dataclass of length, start, finish, slack and critical, so the caller reads by name.\nLoop: drop. A reason to raise.",
-     "why": "No class for tasks, one dataclass for the answer. The two dicts and the order are the forward pass. The reverse map is shared by the order and the backward pass, so it is built in one helper.",
-     "say": "I underline the nouns. **Only the plan earns a class, because it is what the caller reads and it has five named parts.** A task is a pair, so I can write test data in one line. The order and the reverse map are the two structures that matter: the forward pass goes through the order, the backward pass goes through it in reverse, and both use the reverse map. The critical path I do not store, because I can read it off the finishes."
-    },
-    {
-     "t": "p",
-     "text": "**d) Core logic.** Plain English, numbered, per function, with the edge cases. No code yet."
-    },
-    {
-     "t": "write",
-     "id": "onsite-planner-d",
-     "q": "Core logic in plain English, numbered, for each function, and the edge cases. No code yet.",
-     "starter": "plan:\n  1.\n\n_order:\n  1.\n  Edge cases:\n\n_slack:\n  1.\n\n_critical_path:\n  1.\n",
-     "hint": "Forward pass in order: start is the largest finish of the waits. Backward pass in reverse: late finish is the smallest late start of the users. The path walks back from the last finisher to a wait that ends when it starts.",
-     "solution": "plan(tasks):\n  1. _check: unknown waits and negative days fail first\n  2. _order: waits first, or CycleError\n  3. Forward: for each task in order, start = the largest finish among its waits (0 if none); finish = start + days\n  4. length = the largest finish (0 if empty)\n  5. _slack: backward pass\n  6. _critical_path: trace back\n  Edge cases: a zero-day task has start equal to finish; a task with no waits starts at 0\n\n_order(tasks):\n  1. open_waits[t] = number of different tasks t waits for; users = reverse map\n  2. Queue tasks with 0 open waits, in input order\n  3. Pop, append to the order, lower the count of its users, queue at 0\n  4. Fewer in the order than tasks: raise CycleError with the loop\n  Edge case: a repeated wait counts once (set)\n\n_slack(tasks, order, finish, length):\n  1. Go through the order in reverse, so the users of a task are done first\n  2. late finish = the smallest of (late finish of a user minus the user's days); with no users, the project length\n  3. slack = late finish minus earliest finish\n  Edge case: a task with no users and not on the longest chain gets slack = length minus its finish\n\n_critical_path(tasks, start, finish):\n  1. Pick the task with the largest finish; ties go to the first in input order\n  2. While the task has a wait whose finish equals its start, step back to the first such wait\n  3. Return the steps reversed\n  Edge case: empty plan gives []",
-     "why": "Slack is the quiet hero: it needs no new idea, only the same order walked backwards. And 'a wait whose finish equals my start' is the exact test for 'this wait is what held me up'.",
-     "say": "**Before any code I write the steps for each function.** Forward pass, in order: a task starts when its last wait finishes. Backward pass, in reverse order: a task can finish as late as the earliest start of anything that waits for it. The difference is the slack. For the path, I start at the task that finishes last and step back to a wait that ends exactly when this task starts. That is the wait that held it up."
-    },
-    {
-     "t": "p",
-     "text": "**e) Code.** Top-down: the main function first, naming its helpers. Slow then fast where it teaches. Complexity said precisely."
-    },
-    {
-     "t": "write",
-     "id": "onsite-planner-e1",
-     "q": "Code, top-down. The Plan dataclass, then plan() with the forward pass, naming _check, _order, _slack and _critical_path.",
-     "starter": "@dataclass\nclass Plan:\n    ...\n\ndef plan(tasks):\n    ...\n",
-     "hint": "Order first. Then one loop over the order for start and finish. The helpers do the rest.",
-     "solution": "from collections import deque\nfrom dataclasses import dataclass\n\nclass CycleError(ValueError):\n    \"\"\"The tasks wait for each other in a loop. The message names it.\"\"\"\n\n\n@dataclass\nclass Plan:\n    length: int        # days from the first start to the last finish\n    start: dict        # task -> earliest start day\n    finish: dict       # task -> earliest finish day\n    slack: dict        # task -> days it can slip without moving the end; 0 means critical\n    critical: list     # one longest chain of tasks, first to last\n\n\ndef plan(tasks):\n    \"\"\"tasks: name -> (days, [names it waits for]). Assumes as many people as you need.\n    Raises KeyError, ValueError or CycleError on bad input, before computing anything.\"\"\"\n    _check(tasks)\n    order = _order(tasks)                                   # every task after the tasks it waits for\n    start, finish = {}, {}\n    for t in order:                                         # waits come first, so their finish is known\n        days, waits = tasks[t]\n        start[t] = max((finish[w] for w in waits), default=0)\n        finish[t] = start[t] + days\n    length = max(finish.values(), default=0)\n    slack = _slack(tasks, order, finish, length)\n    return Plan(length, start, finish, slack, _critical_path(tasks, start, finish))\n",
-     "why": "plan reads like the steps: check, order, forward pass, length, then the two helpers. The forward pass is four lines because the order already guarantees every wait is final.",
-     "say": "I write the answer class and then plan itself, and I name the helpers before I write them. **The forward pass is one loop over the order, and it is short because the order guarantees that every wait has already finished.** Length is the largest finish. The slack and the path come from helpers that I write next."
-    },
-    {
-     "t": "write",
-     "id": "onsite-planner-e2",
-     "q": "The helpers: _check, _order (and its reverse map and loop name), _slack (the backward pass) and _critical_path. Then the slow longest chain for checking.",
-     "starter": "def _check(tasks):\n    ...\n\ndef _order(tasks):\n    ...\n\ndef _slack(tasks, order, finish, length):\n    ...\n\ndef _critical_path(tasks, start, finish):\n    ...\n",
-     "hint": "_slack walks reversed(order) and takes a min over the users. _critical_path is a loop that stops when no wait ends at the start. The slow version is a recursive max with no memo.",
-     "solution": "\n\ndef _check(tasks):\n    for t, (days, waits) in tasks.items():\n        if days < 0:\n            raise ValueError(f\"{t} has negative days: {days}\")\n        for w in waits:\n            if w not in tasks:\n                raise KeyError(f\"{t} waits for {w}, which is not a task\")\n\n\ndef _order(tasks):\n    \"\"\"Tasks with what they wait for first, by counting open waits. A loop leaves tasks over.\"\"\"\n    open_waits = {t: len(set(waits)) for t, (days, waits) in tasks.items()}   # set: a repeat counts once\n    users = _users(tasks)\n    ready = deque(t for t in tasks if open_waits[t] == 0)\n    order = []\n    while ready:\n        t = ready.popleft()\n        order.append(t)\n        for u in users[t]:\n            open_waits[u] -= 1\n            if open_waits[u] == 0:\n                ready.append(u)\n    if len(order) < len(tasks):\n        raise CycleError(\" -> \".join(_find_loop(tasks, open_waits)))\n    return order\n\n\ndef _users(tasks):\n    \"\"\"users[t]: the tasks that wait for t.\"\"\"\n    users = {t: [] for t in tasks}\n    for t, (days, waits) in tasks.items():\n        for w in set(waits):\n            users[w].append(t)\n    return users\n\n\ndef _find_loop(tasks, open_waits):\n    path, t = [], next(t for t, n in open_waits.items() if n > 0)\n    while t not in path:\n        path.append(t)\n        t = next(w for w in tasks[t][1] if open_waits[w] > 0)   # a left-over task waits for a left-over task\n    return path[path.index(t):] + [t]\n\n\ndef _slack(tasks, order, finish, length):\n    \"\"\"Backward pass. late[t] is the latest finish that still ends the project on time.\"\"\"\n    users = _users(tasks)\n    late = {}\n    for t in reversed(order):                                # the tasks that wait for t are done first\n        late[t] = min((late[u] - tasks[u][0] for u in users[t]), default=length)\n    return {t: late[t] - finish[t] for t in tasks}\n\n\ndef _critical_path(tasks, start, finish):\n    \"\"\"Start at the task that finishes last, then step back to a wait that ends exactly when this one starts.\"\"\"\n    if not tasks:\n        return []\n    t = max(tasks, key=lambda x: finish[x])                  # ties: the first in input order\n    path = [t]\n    while True:\n        prev = next((w for w in tasks[t][1] if finish[w] == start[t]), None)\n        if prev is None:\n            return path[::-1]\n        path.append(prev)\n        t = prev\n\n\ndef longest_slow(tasks):\n    \"\"\"Every chain, the long way, with no memory. Exponential: for checking tiny cases only.\"\"\"\n    def ending_at(t):\n        days, waits = tasks[t]\n        return days + max((ending_at(w) for w in waits), default=0)\n    return max((ending_at(t) for t in tasks), default=0)\n",
-     "why": "Both passes are the same walk in opposite directions. The slow version is three lines and exponential, which is fine for a check on nine tasks.",
-     "say": "The order is the counting queue again, and it also builds the reverse map. **The backward pass is the same order read backwards: a task can finish as late as the earliest late start among the tasks that wait for it.** The path steps back through exact fits. For the check I write the longest chain the long way, a recursive maximum with no memory, which is exponential and fine for nine tasks."
-    },
-    {
-     "t": "p",
-     "text": "**Complexity, precisely.** plan is O(tasks + waits) time and space: one order, one forward pass, one backward pass, one trace. _critical_path is O(path length x waits per task). longest_slow is exponential in the worst case and is for checking only. schedule (the extension) is O((tasks + waits) log tasks) because of the heaps."
-    },
-    {
-     "t": "p",
-     "text": "**f) Review.** The line-by-line questions, then the follow-ups under the workbench."
-    },
-    {
-     "t": "write",
-     "id": "onsite-planner-f",
-     "q": "Review. Write the questions a reviewer asks line by line on this code, and your one-line answer to each.",
-     "starter": "1. \n2. \n3. \n4. \n5. ",
-     "hint": "Look at your own lines: why max with a default, why set in the count, why reversed, what slack zero means, why input order breaks ties.",
-     "solution": "1. Why max(..., default=0) for the start?  A task with no waits has nothing to take a maximum of. It starts at day 0.\n2. Why set(waits) in the count?  A wait listed twice would never reach zero and the task would look like part of a loop.\n3. Why is the forward pass correct in one loop?  The order puts every wait before the task, so every finish it reads is already final.\n4. Why reversed(order) for slack?  A task's late finish needs the late start of everything that waits for it. In reverse order those are done first.\n5. What does a slack of 0 mean?  Delaying that task by a day delays the whole project by a day. It sits on some longest chain.\n6. Can two chains tie, and what do you return?  Yes. critical is the first by input order; every task with slack 0 is on some longest chain, so slack shows both.\n7. Why does _critical_path compare finish[w] == start[t]?  That is the wait that ended exactly when this task began: it is what held the task up. A wait that ended earlier did not.\n8. Why default=length for a task nothing waits for?  The project ends at the length, so the latest it may finish is the length.\n9. What happens to a zero-day task?  It starts and finishes the same day and can sit on a critical path with no length of its own.\n10. What did you not test?  A chain of 100,000 for speed, and a plan with several tied critical paths for the tie rule.",
-     "why": "These are the questions asked of the code on screen. The workbench has the follow-ups about fewer people, a task slipping and dates.",
-     "say": "**In the review I answer from the lines on the screen.** The default is there because a task with no waits has nothing to take a maximum of. The forward pass is one loop because the order puts every wait first. Slack is the backward pass, and zero slack means the task is critical. The path compares a wait's finish with this task's start, which finds the wait that held it up. What I did not test is a long chain for speed and a tie between two longest chains."
-    },
-    {
-     "t": "p",
-     "text": "**Live extension.** In the 30-minute review the reviewer changes the problem and watches how your code takes it. Try the box first."
-    },
-    {
-     "t": "write",
-     "id": "onsite-planner-ext",
-     "q": "Live extension. The reviewer says: 'You assumed as many people as needed. Now there are only w people. How long does the project take?' Write how your design takes it, then the code.",
-     "starter": "def schedule(tasks, workers):\n    ...\n",
-     "hint": "You already have the order, the reverse map and the open-wait counts. Add two heaps: tasks that are ready, most urgent first, and tasks running, earliest finish first. 'Most urgent' is the longest chain still behind it.",
-     "solution": "Why the design takes it: the order, the reverse map and the counts of open waits are exactly what a simulation needs. The new parts are two heaps. Ready tasks sit in one, with the longest chain behind them first. Running tasks sit in another, by finish day. When someone is free, start the most urgent ready task. Then jump to the next finish, free that person and release the tasks that were waiting.\n\nThe urgent-first rule is a heuristic: with a limit on people, the best schedule is NP-hard in general. Say that, and say the guarantee: any greedy that never leaves a person idle while a task is ready takes at most total days / w + the critical path. Graham's bound says it is within a factor 2 - 1/w of the best.\n\nOn the example it prints 20 days for 1 person (the sum), 13 for 2, 11 for 3 and for 7. A better order for 2 people exists in this example (api and db first, then ui, which gives 11), so the greedy is not optimal, and it is good to say that before they find it.",
-     "why": "The extension tests whether you kept the order and the counts as separate pieces. It also tests honesty: a greedy rule is a heuristic, and you name what it guarantees and what it does not.",
-     "say": "**I already have the order, the reverse map and the open-wait counts, so I only add two heaps: ready tasks, most urgent first, and running tasks, by finish day.** When someone is free I start the most urgent ready task, then I jump to the next finish. This is a heuristic. With a limit on people the best schedule is a hard problem, so I say what the greedy guarantees: no more than total over w plus the critical path. And I say that on this example it is not the best."
-    },
-    {
-     "t": "problem",
-     "id": "onsite-planner-p",
-     "title": "Project dependency planner",
-     "source": "Mercor-style planning prompt, rebuilt (left vague on purpose)",
-     "minutes": 60,
-     "why": "Longest path in a DAG with a business name. The round grades whether you ask what the bottleneck is and how many people there are before you code.",
-     "statement": "\"A project is a set of tasks. Each task takes some days and waits for other tasks to finish first. Work out how long the project takes, when each task can start and finish, and which tasks are the bottleneck. Refuse a plan that cannot be done.\"",
-     "examples": [
-      {
-       "input": "design 3d; api 4d, ui 5d, db 2d wait for design; tests 3d waits for api, db; deploy 1d waits for tests, ui; docs 2d waits for nothing",
-       "output": "length 11; critical: design, api, tests, deploy",
-       "note": "3 + 4 + 3 + 1 = 11."
-      },
-      {
-       "input": "slack of ui, db, docs in that plan",
-       "output": "ui 2, db 2, docs 9",
-       "note": "ui can slip 2 days before deploy is held up."
-      },
-      {
-       "input": "a waits for b, b for c, c for a, d waits for nothing",
-       "output": "CycleError: a -> b -> c -> a",
-       "note": "Nothing is computed."
-      },
-      {
-       "input": "an empty plan",
-       "output": "length 0, no critical path",
-       "note": "Say it aloud; it is a decision."
-      }
-     ],
-     "constraints": [
-      "standard library only",
-      "up to about 100,000 tasks, so no recursion",
-      "no AI; search for syntax only",
-      "write your own checks"
-     ],
-     "starter": "def plan(tasks):\n    ...",
-     "hints": [
-      "Level 1: put the tasks in an order where each comes after the tasks it waits for. A task starts when the last of its waits finishes.",
-      "Level 2: for slack, walk the same order backwards. A task may finish as late as the earliest late start among the tasks that wait for it.",
-      "Level 3: the critical path starts at the task that finishes last and steps back to a wait whose finish equals this task's start. Zero slack means critical."
-     ],
-     "solution": "from collections import deque\nfrom dataclasses import dataclass\n\nclass CycleError(ValueError):\n    \"\"\"The tasks wait for each other in a loop. The message names it.\"\"\"\n\n\n@dataclass\nclass Plan:\n    length: int        # days from the first start to the last finish\n    start: dict        # task -> earliest start day\n    finish: dict       # task -> earliest finish day\n    slack: dict        # task -> days it can slip without moving the end; 0 means critical\n    critical: list     # one longest chain of tasks, first to last\n\n\ndef plan(tasks):\n    \"\"\"tasks: name -> (days, [names it waits for]). Assumes as many people as you need.\n    Raises KeyError, ValueError or CycleError on bad input, before computing anything.\"\"\"\n    _check(tasks)\n    order = _order(tasks)                                   # every task after the tasks it waits for\n    start, finish = {}, {}\n    for t in order:                                         # waits come first, so their finish is known\n        days, waits = tasks[t]\n        start[t] = max((finish[w] for w in waits), default=0)\n        finish[t] = start[t] + days\n    length = max(finish.values(), default=0)\n    slack = _slack(tasks, order, finish, length)\n    return Plan(length, start, finish, slack, _critical_path(tasks, start, finish))\n\n\n\ndef _check(tasks):\n    for t, (days, waits) in tasks.items():\n        if days < 0:\n            raise ValueError(f\"{t} has negative days: {days}\")\n        for w in waits:\n            if w not in tasks:\n                raise KeyError(f\"{t} waits for {w}, which is not a task\")\n\n\ndef _order(tasks):\n    \"\"\"Tasks with what they wait for first, by counting open waits. A loop leaves tasks over.\"\"\"\n    open_waits = {t: len(set(waits)) for t, (days, waits) in tasks.items()}   # set: a repeat counts once\n    users = _users(tasks)\n    ready = deque(t for t in tasks if open_waits[t] == 0)\n    order = []\n    while ready:\n        t = ready.popleft()\n        order.append(t)\n        for u in users[t]:\n            open_waits[u] -= 1\n            if open_waits[u] == 0:\n                ready.append(u)\n    if len(order) < len(tasks):\n        raise CycleError(\" -> \".join(_find_loop(tasks, open_waits)))\n    return order\n\n\ndef _users(tasks):\n    \"\"\"users[t]: the tasks that wait for t.\"\"\"\n    users = {t: [] for t in tasks}\n    for t, (days, waits) in tasks.items():\n        for w in set(waits):\n            users[w].append(t)\n    return users\n\n\ndef _find_loop(tasks, open_waits):\n    path, t = [], next(t for t, n in open_waits.items() if n > 0)\n    while t not in path:\n        path.append(t)\n        t = next(w for w in tasks[t][1] if open_waits[w] > 0)   # a left-over task waits for a left-over task\n    return path[path.index(t):] + [t]\n\n\ndef _slack(tasks, order, finish, length):\n    \"\"\"Backward pass. late[t] is the latest finish that still ends the project on time.\"\"\"\n    users = _users(tasks)\n    late = {}\n    for t in reversed(order):                                # the tasks that wait for t are done first\n        late[t] = min((late[u] - tasks[u][0] for u in users[t]), default=length)\n    return {t: late[t] - finish[t] for t in tasks}\n\n\ndef _critical_path(tasks, start, finish):\n    \"\"\"Start at the task that finishes last, then step back to a wait that ends exactly when this one starts.\"\"\"\n    if not tasks:\n        return []\n    t = max(tasks, key=lambda x: finish[x])                  # ties: the first in input order\n    path = [t]\n    while True:\n        prev = next((w for w in tasks[t][1] if finish[w] == start[t]), None)\n        if prev is None:\n            return path[::-1]\n        path.append(prev)\n        t = prev\n\n\ndef longest_slow(tasks):\n    \"\"\"Every chain, the long way, with no memory. Exponential: for checking tiny cases only.\"\"\"\n    def ending_at(t):\n        days, waits = tasks[t]\n        return days + max((ending_at(w) for w in waits), default=0)\n    return max((ending_at(t) for t in tasks), default=0)\n",
-     "complexity": "O(tasks + waits) time and space for plan. _critical_path is O(path x waits per task). longest_slow is exponential and only a check.",
-     "explain": [
-      "_check rejects unknown waits and negative days before anything is computed.",
-      "_order counts open waits and queues zeros. A repeated wait counts once. Leftovers mean a loop and are named.",
-      "The forward loop sets start to the largest finish among the waits and finish to start + days.",
-      "_slack is the backward pass: latest finish = the smallest latest start of the users, or the length for the last tasks.",
-      "_critical_path starts at the last finisher and steps back to the wait that ended exactly when this task started.",
-      "longest_slow tries every chain with no memory and exists only to check plan on small random plans.",
-      "What the checks print: length: 11 | critical: ['design', 'api', 'tests', 'deploy'] | finish: {'design': 3, 'docs': 2, 'api': 7, 'ui': 8, 'db': 5, 'tests': 10, 'deploy': 11} | slack: {'design': 0, 'api': 0, 'ui': 2, 'db': 2, 'tests': 0, 'deploy': 0, 'docs': 9} | loop: a -> b -> c -> a | loop: a -> a | KeyError: 'a waits for zz, which is not a task'"
-     ],
-     "tests": "tasks = {\"design\": (3, []), \"api\": (4, [\"design\"]), \"ui\": (5, [\"design\"]), \"db\": (2, [\"design\"]),\n         \"tests\": (3, [\"api\", \"db\"]), \"deploy\": (1, [\"tests\", \"ui\"]), \"docs\": (2, [])}\np = plan(tasks)\nprint(\"length:\", p.length)\nprint(\"critical:\", p.critical)\nprint(\"finish:\", p.finish)\nprint(\"slack:\", p.slack)\nassert p.length == 11 and p.critical == [\"design\", \"api\", \"tests\", \"deploy\"]\nassert p.slack[\"ui\"] == 2 and p.slack[\"db\"] == 2 and p.slack[\"docs\"] == 9\nassert sum(tasks[t][0] for t in p.critical) == p.length\nassert plan({}).length == 0 and plan({\"a\": (0, [])}).critical == [\"a\"]\nfor bad in ({\"a\": (1, [\"b\"]), \"b\": (1, [\"c\"]), \"c\": (1, [\"a\"]), \"d\": (1, [])}, {\"a\": (1, [\"a\"])}):\n    try:\n        plan(bad)\n    except CycleError as e:\n        print(\"loop:\", e)\nfor bad in ({\"a\": (1, [\"zz\"])}, {\"a\": (-1, [])}):\n    try:\n        plan(bad)\n    except (KeyError, ValueError) as e:\n        print(type(e).__name__ + \":\", e)\n\nimport random\nrng = random.Random(21)\nfor trial in range(300):\n    n = rng.randint(1, 9)\n    names = [f\"t{i}\" for i in range(n)]\n    ts = {names[i]: (rng.randint(0, 5), [w for w in names[:i] if rng.random() < 0.3]) for i in range(n)}\n    pl = plan(ts)\n    assert pl.length == longest_slow(ts)                                   # fast equals the long way\n    assert all(pl.slack[t] >= 0 for t in ts)\n    assert sum(ts[t][0] for t in pl.critical) == pl.length                 # the path really is that long\n    assert all(pl.slack[t] == 0 for t in pl.critical)\n    assert all(pl.finish[w] <= pl.start[t] for t in ts for w in ts[t][1])   # nothing starts before its waits end\nprint(\"300 random plans: length equals the long way, critical tasks have no slack, no task starts early\")\n",
-     "followups": [
-      {
-       "q": "How many people do you need so that nothing waits for a person?",
-       "a": "The most tasks running at once in the earliest-start plan. Sweep over the start and finish days and count. For the example that is 3 at day 3: api, ui and db."
-      },
-      {
-       "q": "A task slips by 3 days. What happens to the end?",
-       "a": "If its slack is 3 or more, nothing. Otherwise the end moves by 3 minus the slack. That is the whole use of slack: you answer without re-planning. To be sure, add 3 to its days and run plan again, and compare."
-      },
-      {
-       "q": "What if durations are uncertain?",
-       "a": "Give each task an optimistic, likely and pessimistic number, plan with the mean, and report the chance a near-critical path overtakes the critical one. That is the idea behind PERT. Ask first whether they want a single number or a range."
-      },
-      {
-       "q": "Why not a recursive longest path with memory?",
-       "a": "It is shorter and also correct. At 100,000 tasks in a chain it hits Python's recursion limit. The order-based pass has no such limit and does the same work."
-      },
-      {
-       "q": "What does the plan look like with calendar dates?",
-       "a": "Keep the day numbers as they are and map them to dates at the end, skipping weekends. Do not mix calendars into the algorithm: it makes every comparison harder to test."
-      },
-      {
-       "q": "How did you test it, with no framework?",
-       "a": "Plain asserts under the code. The seven-task example by hand, one assert for each error, empty and zero-day cases, and a random check on 300 plans: length equals the brute-force longest chain, the critical path sums to the length with zero slack, no task starts before its waits finish."
-      }
-     ],
-     "d": "hard",
-     "lc": "parallel-courses-iii",
-     "yt": [
-      "a_NlRPnqCrg",
-      "NeetCodeIO",
-      12
-     ]
-    },
-    {
-     "t": "code",
-     "id": "onsite-planner-ext-code",
-     "title": "Live extension: only w people (runs together with the solution above)",
-     "code": "import heapq\n\n\ndef schedule(tasks, workers):\n    \"\"\"Only `workers` people. Greedy: when someone is free, start the ready task with the longest chain behind it.\n    Returns (days in all, start day of each task).\"\"\"\n    if workers < 1:\n        raise ValueError(\"workers must be at least 1\")\n    _check(tasks)\n    order = _order(tasks)\n    users = _users(tasks)\n    tail = {}                                                # task -> its own days plus the longest chain after it\n    for t in reversed(order):\n        tail[t] = tasks[t][0] + max((tail[u] for u in users[t]), default=0)\n    pos = {t: i for i, t in enumerate(tasks)}                # input order breaks ties, so runs repeat\n    open_waits = {t: len(set(tasks[t][1])) for t in tasks}\n    ready = [(-tail[t], pos[t], t) for t in tasks if open_waits[t] == 0]\n    heapq.heapify(ready)\n    running, start, now, free = [], {}, 0, workers\n    while ready or running:\n        while ready and free:                                # give every free person the most urgent ready task\n            _, _, t = heapq.heappop(ready)\n            start[t] = now\n            heapq.heappush(running, (now + tasks[t][0], pos[t], t))\n            free -= 1\n        now = running[0][0]                                  # jump to the next finish\n        while running and running[0][0] == now:              # all that end now free a person and release waiters\n            _, _, t = heapq.heappop(running)\n            free += 1\n            for u in users[t]:\n                open_waits[u] -= 1\n                if open_waits[u] == 0:\n                    heapq.heappush(ready, (-tail[u], pos[u], u))\n    return max((start[t] + tasks[t][0] for t in tasks), default=0), start\n\n\ntasks = {\"design\": (3, []), \"api\": (4, [\"design\"]), \"ui\": (5, [\"design\"]), \"db\": (2, [\"design\"]),\n         \"tests\": (3, [\"api\", \"db\"]), \"deploy\": (1, [\"tests\", \"ui\"]), \"docs\": (2, [])}\ntotal = sum(d for d, _ in tasks.values())\nfor w in (1, 2, 3, 7):\n    days, st = schedule(tasks, w)\n    print(w, \"people:\", days, \"days\")\nassert schedule(tasks, 1)[0] == total and schedule(tasks, 7)[0] == plan(tasks).length\n\nimport random\nrng = random.Random(8)\nfor trial in range(300):\n    n = rng.randint(1, 10)\n    names = [f\"t{i}\" for i in range(n)]\n    ts = {names[i]: (rng.randint(0, 5), [w for w in names[:i] if rng.random() < 0.3]) for i in range(n)}\n    w = rng.randint(1, 4)\n    days, st = schedule(ts, w)\n    cp = plan(ts).length\n    assert days >= cp and days * w >= sum(d for d, _ in ts.values())       # no schedule beats these two limits\n    assert days <= sum(d for d, _ in ts.values()) / w + cp                 # list scheduling never does worse than this\n    assert all(st[x] >= st[y] + ts[y][0] for x in ts for y in ts[x][1])    # waits respected\n    for t in ts:                                                           # never more than w people at once\n        busy = sum(1 for u in ts if st[u] <= st[t] < st[u] + ts[u][0])\n        assert busy <= w\nprint(\"300 random plans with 1 to 4 people: waits respected, never more than w at once, within the known bound\")\n"
-    },
-    {
-     "t": "probs",
-     "title": "Related, then harder",
-     "items": [
-      {
-       "n": "Course Schedule II",
-       "d": "medium",
-       "lc": "course-schedule-ii",
-       "yt": [
-        "Akt3glAwyfY",
-        "NeetCode",
-        18
-       ],
-       "why": "The order itself. The first pass of plan, before any durations."
-      },
-      {
-       "n": "Find All Possible Recipes from Given Supplies",
-       "d": "medium",
-       "lc": "find-all-possible-recipes-from-given-supplies",
-       "yt": [
-        "AQrsAc3EcyQ",
-        "NeetCodeIO",
-        20
-       ],
-       "why": "A counting order with starting items and a name-to-index map. The same queue, with real-world names."
-      },
-      {
-       "n": "Parallel Courses III",
-       "d": "hard",
-       "lc": "parallel-courses-iii",
-       "yt": [
-        "a_NlRPnqCrg",
-        "NeetCodeIO",
-        12
-       ],
-       "why": "Earliest finish with durations and as many people as needed. This is plan's forward pass, nearly line for line."
-      },
-      {
-       "n": "Longest Increasing Path in a Matrix",
-       "d": "hard",
-       "lc": "longest-increasing-path-in-a-matrix",
-       "yt": [
-        "wCc_nd-GiEc",
-        "NeetCode",
-        18
-       ],
-       "why": "Longest path in a DAG you have to find first: cells are tasks, 'bigger neighbour' is the wait. Memory or an order, as here."
-      },
-      {
-       "n": "Largest Color Value in a Directed Graph",
-       "d": "hard",
-       "lc": "largest-color-value-in-a-directed-graph",
-       "yt": [
-        "xLoDjKczUSk",
-        "NeetCodeIO",
-        23
-       ],
-       "why": "The harder follow-up: a table carried along the order, and -1 for a loop. It is the same pass with more to carry."
       }
      ]
     }
@@ -3437,124 +2886,79 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "p",
-     "text": "**What it is.** A one-way street of spots. Each car tries its preferred spot and, if it is taken, only moves forward. The question is whether everyone parks, and where. It looks like a loop, and it is one, until the input is large: then the walk forward is the cost. PracHub lists it as a Mercor question (a reconstruction, 25 Sep 2026); the round it belonged to is not stated, so practise it here and do not assume it is the solo hour."
-    },
-    {
-     "t": "p",
-     "text": "**The prompt, as a real one would give it.** \"Cars arrive one at a time on a one-way street with numbered spots. Each car tries its preferred spot first and moves only forward when it is taken. Decide whether every car can park.\""
-    },
-    {
-     "t": "p",
-     "text": "**What is left unsaid.** Each line changes the code."
+     "text": "**The problem, as you might hear it.** Cars arrive one at a time on a one-way street with numbered spots. Each car tries its preferred spot and, if it is taken, moves only forward. Decide whether every car parks, and where each one ends up.\n\nReported variants: the same street where each car accepts a list of spots; cars that leave. PracHub reconstruction (25 Sep 2026), round not stated, so practise it as a solo hour but do not assume it is."
     },
     {
      "t": "list",
      "items": [
-      "How many spots and how many cars? Can there be more cars than spots?",
-      "What happens to a car that reaches the end: it leaves, or is that an error?",
-      "Is a preference always a valid spot? What if it is not?",
-      "Do you return only yes or no, or the spot each car got?",
-      "Can cars leave? (The live extension.)",
-      "How large is the input: is walking forward spot by spot fast enough?"
+      "**Read it before you speak.**",
+      "**The input** is a list of preferences in arrival order. Order decides where a car lands. It does not decide whether everyone parks.",
+      "**The hidden structure** is a pointer per spot to the first free spot at or after it. Taking a spot moves its pointer forward by one. That is union-find.",
+      "**What is undefined:** the output, a car that runs off the end, a bad preference, more cars than spots, whether cars can leave.",
+      "**The size that decides it** is the input. Walking forward costs O(n) per car, so a million cars that all want spot 0 is the trap.",
+      "**Write the slow walk first.** It is your spec and your oracle for the fast version."
+     ]
+    },
+    {
+     "t": "table",
+     "head": [
+      "The gap in the prompt",
+      "I decide, and write at the top",
+      "If the reviewer wanted otherwise"
+     ],
+     "rows": [
+      [
+       "What does it return?",
+       "The spot each car got, None for a car that did not park. all_park gives the yes or no.",
+       "Only a bool: all_park already is that. Only a count: count the non-None."
+      ],
+      [
+       "A car runs off the end",
+       "It does not park and gets None. Not an error.",
+       "Raise: one line where the sentinel is hit."
+      ],
+      [
+       "A preference outside 0 to n-1",
+       "Raise ValueError. It is a caller bug, not a car.",
+       "Treat it as None: drop the check."
+      ],
+      [
+       "More cars than spots",
+       "Allowed. The extra cars get None.",
+       "Reject up front: compare len(prefs) with n."
+      ],
+      [
+       "How big is the input",
+       "Up to about a million. The fast version is the answer, the slow walk is the oracle.",
+       "A hundred cars: keep only the walk, it is clearer."
+      ],
+      [
+       "Can cars leave",
+       "No. Out of scope, and I say so in a comment.",
+       "Yes: union-find cannot free a spot, so switch to a sorted set of free spots."
+      ],
+      [
+       "One preferred spot, or a list",
+       "One spot. A list is a different problem (a matching).",
+       "A list: augmenting paths, in the follow-ups."
+      ]
      ]
     },
     {
      "t": "p",
-     "text": "**a) Clarify.** Three buckets."
+     "text": "**The crux.** Do not walk. Keep nxt[i], the first free spot at or after i, with n meaning off the end. A car jumps to the root of its preference, takes it, and points it at the next spot. Path compression keeps every jump short, so the whole run is close to O(n + m). For the yes or no alone there is a second idea: with n cars and n spots, everyone parks if and only if for every k at least k cars prefer one of the first k spots. Arrival order never changes that answer."
     },
     {
-     "t": "write",
-     "id": "onsite-carpark-clarify",
-     "q": "Write your questions under each bucket, each with the answer you expect.",
-     "starter": "1. Primary capabilities\n- \n\n2. Error handling\n- \n\n3. Scope boundaries\n- \n",
-     "hint": "Spots and cars, what the output is, the end of the street, invalid preferences, departures, input size.",
-     "solution": "1. Primary capabilities\n- n spots numbered 0 to n-1, m cars in arrival order, each with a preferred spot. -> yes\n- Output: the spot each car got (None if it could not park), and whether all parked. -> both\n\n2. Error handling\n- A car that runs off the end does not park; it is not an error. -> None for that car\n- A preference outside 0..n-1 is invalid input. -> raise ValueError\n\n3. Scope boundaries\n- Cars never leave in the base problem. -> departures are the extension\n- n and m up to about a million: walking forward may be too slow. -> needs the fast version",
-     "why": "The end-of-street rule and the input size decide the code: one says None instead of an error, the other says the walk forward needs a shortcut.",
-     "say": "**I want to pin down the output and the scale first.** Do you want yes or no, or where each car parked? And how big can this get, because walking forward spot by spot is fine for a hundred cars and not for a million."
-    },
-    {
-     "t": "p",
-     "text": "**b) Requirements.**"
-    },
-    {
-     "t": "write",
-     "id": "onsite-carpark-reqs",
-     "q": "Write the requirements, numbered, each one testable.",
-     "starter": "1. \n2. \n3. ",
-     "hint": "Preferred spot first, forward only, None off the end, all_park, invalid input.",
-     "solution": "1. Each car takes its preferred spot if free.\n2. Otherwise it takes the first free spot after it, never one before.\n3. A car with no free spot at or after its preference gets None.\n4. all_park(n, prefs) is True exactly when no car gets None.\n5. A preference outside 0..n-1 raises ValueError.\n6. Fast enough for about a million cars.\nOut of scope: cars leaving (extension), spot sizes.",
-     "why": "Requirement 2 is the whole rule; requirement 6 is why the fast version exists.",
-     "say": "**Six requirements; the second is the rule and the sixth is the trap.** Forward only, never back, and it has to be fast for big inputs."
-    },
-    {
-     "t": "p",
-     "text": "**c) Entities.**"
-    },
-    {
-     "t": "write",
-     "id": "onsite-carpark-entities",
-     "q": "List the nouns. For each: keep or drop, why, and the data structure.",
-     "starter": "Spot: \nCar: \nStreet: \n",
-     "hint": "No class is needed. What remembers which spots are taken, and how do you find the next free one quickly?",
-     "solution": "Spot: a number 0..n-1. Taken or free: a list of booleans (slow), or a next-free pointer per spot (fast).\nCar: only its preference; a number in a list. Drop as a class.\nStreet: the n spots. A function's state, not a class, in the base problem.\nNext-free pointer: nxt[i] = the first free spot at or after i, with n as 'off the end'. This is the structure that makes it fast.",
-     "why": "Choosing no class is a decision to say out loud. The one structure that matters is the next-free pointer.",
-     "say": "**I don't think this needs classes: it's a function over a list.** The interesting structure is a pointer per spot to the next free one, so a car can jump there."
-    },
-    {
-     "t": "p",
-     "text": "**d) Core logic in English.**"
-    },
-    {
-     "t": "write",
-     "id": "onsite-carpark-logic",
-     "q": "Write the steps for the slow version, then the fast one, then the insight about yes or no.",
-     "starter": "Slow:\n1. \n\nFast:\n1. \n\nInsight:\n",
-     "hint": "Slow: walk forward. Fast: union-find on 'next free'. Insight: count how many cars prefer each prefix of spots.",
-     "solution": "Slow:\n1. For each car, start at its preference and step forward while the spot is taken.\n2. Take the first free spot, or None if you pass the end.\nCost: O(n x m) in the worst case (every car prefers spot 0).\n\nFast:\n1. nxt[i] starts as i for every spot, and nxt[n] = n is the end.\n2. A car finds the root of its preference: follow nxt until a spot points to itself.\n3. Compress the path so the next car jumps straight there.\n4. Taking spot s sets nxt[s] = s + 1.\nCost: about O(m + n) (union-find with path compression).\n\nInsight (n cars, n spots): everyone parks if and only if, for every k, at least k cars prefer one of the first k spots. So arrival order never changes the yes or no; only the counts do.",
-     "why": "Saying the slow version and its worst case first earns the fast one. The counting insight is the line that sets you apart.",
-     "say": "**First the obvious version: walk forward. Its worst case is everyone wanting spot zero, which is quadratic.** So I keep a pointer to the next free spot and compress it as I go, which is union-find. And for yes or no there's a neat fact: it only depends on how many cars want each prefix, not on the order they arrive."
-    },
-    {
-     "t": "p",
-     "text": "**e) Code.** Main function first."
-    },
-    {
-     "t": "write",
-     "id": "onsite-carpark-code",
-     "q": "Write park_fast, then all_park. Name the helper, then write it.",
-     "starter": "def park_fast(n, prefs):\n    ...\n",
-     "hint": "A list nxt of n + 1 pointers; first_free(i) follows and compresses; taking s sets nxt[s] = s + 1.",
-     "solution": "import random\n\n\ndef park_slow(n: int, prefs: list) -> list:\n    \"\"\"Spots 0..n-1 on a one-way street. Car i tries prefs[i], then only moves forward.\n    Returns the spot each car got, None for a car that could not park.\"\"\"\n    taken = [False] * n\n    got = []\n    for p in prefs:\n        if not 0 <= p < n:\n            raise ValueError(f\"no spot {p}\")\n        s = p\n        while s < n and taken[s]:          # walk forward past taken spots\n            s += 1\n        if s < n:\n            taken[s] = True\n            got.append(s)\n        else:\n            got.append(None)                # fell off the end of the street\n    return got\n\n\ndef park_fast(n: int, prefs: list) -> list:\n    \"\"\"Same rule. nxt[i] points at the first free spot at or after i (n means past the end),\n    so a car jumps straight there instead of walking spot by spot.\"\"\"\n    nxt = list(range(n + 1))                # every spot is free at first; n is the sentinel\n\n    def first_free(i: int) -> int:\n        root = i\n        while nxt[root] != root:            # follow the pointers to a free spot\n            root = nxt[root]\n        while nxt[i] != root:               # path compression: point the whole chain at it\n            nxt[i], i = root, nxt[i]\n        return root\n\n    got = []\n    for p in prefs:\n        if not 0 <= p < n:\n            raise ValueError(f\"no spot {p}\")\n        s = first_free(p)\n        if s == n:\n            got.append(None)\n        else:\n            got.append(s)\n            nxt[s] = s + 1                  # taken: the next free spot is at or after s + 1\n    return got\n\n\ndef all_park(n: int, prefs: list) -> bool:\n    return None not in park_fast(n, prefs)\n\n\ndef all_park_by_counting(n: int, prefs: list) -> bool:\n    \"\"\"The insight: for n cars and n spots, everyone parks iff, for every k,\n    at least k cars prefer one of the first k spots. Order of arrival does not matter.\"\"\"\n    if len(prefs) != n:\n        return all_park(n, prefs)\n    count = [0] * n\n    for p in prefs:\n        count[p] += 1\n    seen = 0\n    for k in range(n):\n        seen += count[k]\n        if seen < k + 1:\n            return False\n    return True\n",
-     "why": "Both versions are kept so the review can compare them, and all_park_by_counting shows the insight in code.",
-     "say": "**The slow one is the spec; the fast one must give the same answers.** I check them against each other on random inputs."
-    },
-    {
-     "t": "p",
-     "text": "**f) Review.**"
-    },
-    {
-     "t": "write",
-     "id": "onsite-carpark-review",
-     "q": "What would the reviewer ask, line by line?",
-     "starter": "",
-     "hint": "Why n + 1 pointers? Why path compression? What if a preference is invalid? Prove the counting rule.",
-     "solution": "Why n + 1 pointers? The extra one is 'off the end', so first_free never needs a bounds check.\nWhy compress the path? Without it, the pointers form long chains and the worst case is quadratic again.\nWhy set nxt[s] = s + 1 and not find the next free now? Lazy: the next car that needs it finds it and compresses.\nInvalid preference? Raises ValueError: a typo in the input should not silently park a car somewhere.\nWhy does order not matter for yes or no? Every spot ends up taken by someone whenever enough cars want it or an earlier spot; the counting rule depends only on the multiset of preferences. Tested by shuffling.\nHow did you test it? 500 random cases, slow against fast, counting against simulation, and a shuffle check.",
-     "why": "These are the questions a reviewer asks when the code is right: why each line exists.",
-     "say": "**The n plus one is the end-of-street sentinel, and compression is what keeps it fast.** I tested fast against slow on random inputs, and shuffled the arrival order to check the yes-or-no never changes."
-    },
-    {
-     "t": "p",
-     "text": "**Live extension: cars leave.** Union-find cannot un-take a spot, so the structure changes: a sorted set of free spots, where 'first free at or after p' is a search. With a balanced tree or a segment tree each arrival and departure is O(log n)."
-    },
-    {
-     "t": "write",
-     "id": "onsite-carpark-ext",
-     "q": "Cars can now leave. What changes, and what is the cost?",
-     "starter": "",
-     "hint": "Union-find only merges. Keep the free spots sorted.",
-     "solution": "import bisect\n\n\nclass Street:\n    \"\"\"Cars arrive and leave. A sorted list of free spots answers 'first free at or after p'.\"\"\"\n\n    def __init__(self, n: int):\n        self.n = n\n        self.free = list(range(n))           # sorted; a balanced tree or segment tree makes each step O(log n)\n        self.where = {}                      # car id -> spot, so leaving is one lookup\n\n    def arrive(self, car, pref: int):\n        i = bisect.bisect_left(self.free, pref)   # first free spot at or after pref\n        if i == len(self.free):\n            return None\n        spot = self.free.pop(i)\n        self.where[car] = spot\n        return spot\n\n    def leave(self, car) -> None:\n        spot = self.where.pop(car)\n        bisect.insort(self.free, spot)       # the spot is free again; later cars can take it\n\n\nst = Street(4)\nprint(st.arrive(\"a\", 1), st.arrive(\"b\", 1), st.arrive(\"c\", 1))   # 1 2 3\nst.leave(\"b\")\nprint(st.arrive(\"d\", 1), st.arrive(\"e\", 3))                       # 2 None\n",
-     "why": "The extension changes the data structure, not the rule: that is the point to say.",
-     "say": "**Departures break union-find, because it can only merge.** So I keep the free spots sorted and search for the first one at or after the preference: log n each way with a proper tree."
+     "t": "list",
+     "items": [
+      "**The hour, in order.**",
+      "Read the prompt twice and every part. Write the decisions above as a comment block at the top, before any code.",
+      "Data model: no classes. A list nxt of size n + 1 and a list of results. Say so in the comment.",
+      "Write the slow walk, run it on the example, keep it as the oracle.",
+      "Write the fast version with first_free and path compression. Check it equals the walk on random inputs.",
+      "Add the counting check for the yes or no and compare it with the simulation.",
+      "Leave ten minutes: read every line as the reviewer, fix names, write the what-I-would-do-next note."
+     ]
     },
     {
      "t": "problem",
@@ -3563,7 +2967,6 @@ window.LOOP_CODING.parts.push({
      "source": "PracHub reconstruction, 25 Sep 2026 (round not stated)",
      "minutes": "45",
      "d": "medium",
-     "why": "Rule-following and efficient spot handling for large inputs.",
      "statement": "Cars arrive one at a time on a one-way street with spots 0 to n-1. Each car tries its preferred spot and moves only forward when it is taken. Return the spot each car got (None if it could not park), and decide whether all cars parked.",
      "examples": [
       {
@@ -3574,7 +2977,7 @@ window.LOOP_CODING.parts.push({
       {
        "input": "n = 3, prefs = [1, 1, 2] and [1, 0, 0]",
        "output": "all_park: False, True",
-       "note": "Only one car wants spot 0 or earlier in the first case, but spot 0 needs a car."
+       "note": "In the first, nobody can take spot 0."
       }
      ],
      "constraints": [
@@ -3587,63 +2990,98 @@ window.LOOP_CODING.parts.push({
      "hints": [
       "Level 1: write the walk-forward version first; it is your spec.",
       "Level 2: keep a pointer from each spot to the next free one, with n meaning off the end.",
-      "Level 3: follow the pointers and compress the path (union-find); taking s sets its pointer to s + 1."
+      "Level 3: follow the pointers and compress the path; taking s sets its pointer to s + 1."
      ],
-     "solution": "import random\n\n\ndef park_slow(n: int, prefs: list) -> list:\n    \"\"\"Spots 0..n-1 on a one-way street. Car i tries prefs[i], then only moves forward.\n    Returns the spot each car got, None for a car that could not park.\"\"\"\n    taken = [False] * n\n    got = []\n    for p in prefs:\n        if not 0 <= p < n:\n            raise ValueError(f\"no spot {p}\")\n        s = p\n        while s < n and taken[s]:          # walk forward past taken spots\n            s += 1\n        if s < n:\n            taken[s] = True\n            got.append(s)\n        else:\n            got.append(None)                # fell off the end of the street\n    return got\n\n\ndef park_fast(n: int, prefs: list) -> list:\n    \"\"\"Same rule. nxt[i] points at the first free spot at or after i (n means past the end),\n    so a car jumps straight there instead of walking spot by spot.\"\"\"\n    nxt = list(range(n + 1))                # every spot is free at first; n is the sentinel\n\n    def first_free(i: int) -> int:\n        root = i\n        while nxt[root] != root:            # follow the pointers to a free spot\n            root = nxt[root]\n        while nxt[i] != root:               # path compression: point the whole chain at it\n            nxt[i], i = root, nxt[i]\n        return root\n\n    got = []\n    for p in prefs:\n        if not 0 <= p < n:\n            raise ValueError(f\"no spot {p}\")\n        s = first_free(p)\n        if s == n:\n            got.append(None)\n        else:\n            got.append(s)\n            nxt[s] = s + 1                  # taken: the next free spot is at or after s + 1\n    return got\n\n\ndef all_park(n: int, prefs: list) -> bool:\n    return None not in park_fast(n, prefs)\n\n\ndef all_park_by_counting(n: int, prefs: list) -> bool:\n    \"\"\"The insight: for n cars and n spots, everyone parks iff, for every k,\n    at least k cars prefer one of the first k spots. Order of arrival does not matter.\"\"\"\n    if len(prefs) != n:\n        return all_park(n, prefs)\n    count = [0] * n\n    for p in prefs:\n        count[p] += 1\n    seen = 0\n    for k in range(n):\n        seen += count[k]\n        if seen < k + 1:\n            return False\n    return True\n",
-     "tests": "print(park_fast(5, [2, 2, 0, 4, 4]))    # [2, 3, 0, 4, None]\nprint(park_fast(3, [0, 0, 0]))          # [0, 1, 2]\nprint(all_park(3, [1, 1, 2]), all_park(3, [1, 0, 0]))   # False True\n",
-     "complexity": "Slow: O(n x m) worst case. Fast: about O(n + m) with path compression. The counting check is O(n).",
+     "solution": "def park(n, prefs):\n    \"\"\"One-way street, spots 0..n-1. Car i takes the first free spot at or after prefs[i].\n    Returns the spot each car got, None if it ran off the end.\"\"\"\n    nxt = list(range(n + 1))           # nxt[i]: first free spot >= i; n = past the end\n\n    def first_free(i):\n        root = i\n        while nxt[root] != root:       # follow pointers to a free spot\n            root = nxt[root]\n        while nxt[i] != root:          # compress the path for later cars\n            nxt[i], i = root, nxt[i]\n        return root\n\n    got = []\n    for p in prefs:\n        if not 0 <= p < n:\n            raise ValueError(f\"no spot {p}\")\n        s = first_free(p)\n        got.append(s if s < n else None)\n        if s < n:\n            nxt[s] = s + 1             # taken: next free is after it\n    return got\n\n\ndef all_park(n, prefs):\n    return None not in park(n, prefs)\n\n\ndef all_park_counting(n, prefs):\n    \"\"\"n cars, n spots: everyone parks iff for every k, at least k cars prefer the first k spots.\"\"\"\n    count = [0] * n\n    for p in prefs:\n        count[p] += 1\n    seen = 0\n    for k in range(n):\n        seen += count[k]\n        if seen < k + 1:\n            return False\n    return True\n\n\ndef match(ok, n):\n    \"\"\"Follow-up: car i accepts any spot in ok[i]. A car may push the holder of its spot elsewhere.\"\"\"\n    owner = [None] * n\n\n    def try_car(c, seen):\n        for s in ok[c]:\n            if s not in seen:\n                seen.add(s)\n                if owner[s] is None or try_car(owner[s], seen):\n                    owner[s] = c\n                    return True\n        return False\n\n    for c in range(len(ok)):\n        if not try_car(c, set()):\n            return None                # car c cannot be placed\n    got = [None] * len(ok)\n    for s, c in enumerate(owner):\n        if c is not None:\n            got[c] = s\n    return got\n",
+     "tests": "import random\nprint(park(5, [2, 2, 0, 4, 4]))\nprint(all_park(3, [1, 1, 2]), all_park(3, [1, 0, 0]))\nfor _ in range(500):\n    n = random.randint(1, 8)\n    prefs = [random.randrange(n) for _ in range(n)]\n    assert all_park(n, prefs) == all_park_counting(n, prefs)\nprint(\"counting agrees with simulation on 500 random cases\")\nprint(match([[0, 1], [0]], 2))\nprint(match([[0, 1], [0, 1], [0, 1]], 2))\n",
+     "complexity": "Walk: O(n x m) worst case. park: about O(n + m) with path compression. Counting check: O(n + m). match (a list of spots per car): O(cars x total list length).",
      "explain": [
       "The sentinel spot n means no bounds check.",
       "Path compression keeps every later car's jump short.",
-      "For n cars and n spots, all park iff for every k at least k cars prefer one of the first k spots, so arrival order never changes the yes or no."
-     ],
-     "followups": [
-      {
-       "q": "Cars can leave.",
-       "a": "Union-find cannot un-take a spot; use a sorted set of free spots (a balanced tree or segment tree), O(log n) per arrival or departure."
-      },
-      {
-       "q": "Cars may also move backward when the end is full.",
-       "a": "Wrap around: treat the street as a circle, nxt of n - 1 points to 0, and stop when you return to the start."
-      }
+      "match is the follow-up where each car accepts a list: a car may push the holder of its spot to another spot it accepts."
      ]
     },
     {
-     "t": "probs",
-     "title": "Related, then harder",
+     "t": "code",
+     "title": "Output, run with Python 3",
+     "code": "[2, 3, 0, 4, None]\nFalse True\ncounting agrees with simulation on 500 random cases\n[1, 0]\nNone"
+    },
+    {
+     "t": "table",
+     "head": [
+      "They ask",
+      "The change",
+      "Cost"
+     ],
+     "rows": [
+      [
+       "Cars can leave",
+       "Keep free spots in a sorted set (balanced tree or segment tree). Arrival takes the first free at or after p, departure inserts.",
+       "O(log n) per event. Union-find cannot un-take a spot."
+      ],
+      [
+       "Each car accepts a list of spots",
+       "Bipartite matching: try a spot, if held ask its holder to move, with a seen set. Greedy fails: cars [0, 1] and [0] give [0, None] but [1, 0] works.",
+       "O(cars x total list length). Backtracking is exponential on a no."
+      ],
+      [
+       "The list is a run of spots",
+       "Greedy is right again: sweep spots left to right, give each to the waiting car whose run ends soonest (a heap).",
+       "O((cars + spots) log cars)"
+      ],
+      [
+       "Why a no, not only a no",
+       "The car that failed plus the holders of every spot its search visited accept fewer spots than they have cars.",
+       "Same search, a little bookkeeping"
+      ],
+      [
+       "The street is a circle",
+       "nxt of n - 1 points to 0. Stop when you come back to the start.",
+       "One line, one more stop condition"
+      ],
+      [
+       "A million cars",
+       "Already the design: park is near linear, and first_free is iterative so there is no recursion limit.",
+       "O(n) memory"
+      ]
+     ]
+    },
+    {
+     "t": "faq",
+     "title": "The code review: every decision, and how to stand behind it",
+     "prose": true,
      "items": [
       {
-       "n": "Find if Path Exists in Graph",
-       "d": "easy",
-       "lc": "find-if-path-exists-in-graph",
-       "yt": [
-        "knLFe7hEp3Y",
-        "Greg Hogg",
-        13
-       ],
-       "why": "Union-find warm-up: the same find with path compression."
+       "q": "1. A next-free pointer per spot, not the walk",
+       "a": "**Decided.** A pointer per spot, compressed as I follow it. The slow walk stayed as my test oracle.\n\n**Instead of.** Walking forward spot by spot.\n\n**Why.** The walk is O(n) per car, so a million cars that all want spot 0 is about a trillion steps. The pointers make each car close to constant.\n\n**What it costs.** More code, and it only moves forward: a spot can never be freed.\n\n**If they push.** \"For a hundred cars I would ship the walk. It is shorter and obviously right. The fast one is for the stated size.\""
       },
       {
-       "n": "Redundant Connection",
-       "d": "medium",
-       "lc": "redundant-connection",
-       "yt": [
-        "FXWRE67PLL0",
-        "NeetCode",
-        17
-       ],
-       "why": "Union-find as the main idea, with the same find."
+       "q": "2. None for a car that runs off the end",
+       "a": "**Decided.** None in its slot. all_park is None not in the result.\n\n**Instead of.** Raising, or a special spot number.\n\n**Why.** Running out of street is a normal outcome, not a bug. A list with None keeps the position of every car.\n\n**What it costs.** The caller must check for None.\n\n**If they push.** \"If you want an error, it is one line at the sentinel.\""
       },
       {
-       "n": "Accounts Merge",
-       "d": "medium",
-       "lc": "accounts-merge",
-       "yt": [
-        "6st4IxEF-90",
-        "NeetCodeIO",
-        18
-       ],
-       "why": "Harder: union-find over keys you discover as you go."
+       "q": "3. ValueError for a preference outside 0 to n-1",
+       "a": "**Decided.** Raise.\n\n**Instead of.** Clamping it, or skipping the car.\n\n**Why.** Clamping hides a caller bug and changes who parks.\n\n**What it costs.** One bad row stops the batch.\n\n**If they push.** \"If bad rows are expected I would return them in a second list, and say how many I dropped.\""
+      },
+      {
+       "q": "4. No classes",
+       "a": "**Decided.** Two lists and functions.\n\n**Instead of.** A Street class with park and leave.\n\n**Why.** The state is one list. A class would be a wrapper with no behaviour of its own.\n\n**What it costs.** No encapsulation if this grows.\n\n**If they push.** \"The moment cars can leave I would make it a class, because there is state to protect.\""
+      },
+      {
+       "q": "5. A second method for the yes or no",
+       "a": "**Decided.** The counting check, tested against the simulation on random inputs.\n\n**Instead of.** One method and trusting it.\n\n**Why.** Two independent methods that agree on 500 random cases is cheap evidence the pointers are right.\n\n**What it costs.** Extra code the answer does not need.\n\n**If they push.** \"In real code I would keep it as a test only.\""
+      },
+      {
+       "q": "6. Path compression written with loops, not recursion",
+       "a": "**Decided.** Two while loops.\n\n**Instead of.** A recursive find.\n\n**Why.** A chain of a million spots would hit Python's recursion limit.\n\n**What it costs.** A little harder to read.\n\n**If they push.** \"I put a one-line comment on each loop for that reason.\""
+      },
+      {
+       "q": "7. The list-of-spots follow-up is a different algorithm",
+       "a": "**Decided.** If asked, say greedy fails, then move to matching with a seen set.\n\n**Instead of.** Greedy 'first free spot it accepts', or backtracking.\n\n**Why.** Cars [0, 1] and [0] break greedy. Backtracking is exponential on a no: it took 986,409 tries on 10 cars sharing 9 spots. Matching does not search like that.\n\n**What it costs.** Matching is O(cars x total list length), slower than the one-spot case.\n\n**If they push.** \"A run of spots has a greedy that is right, with a heap. I would ask which shape the lists have.\""
+      },
+      {
+       "q": "What I would do with another hour",
+       "a": "Tests for an invalid preference, an empty street and n = 0. Cars leaving, with a sorted set. A short comment on why arrival order never changes the yes or no. And one line in the header for every decision above."
       }
      ]
     }
@@ -3759,6 +3197,393 @@ window.LOOP_CODING.parts.push({
       "I think the review is the same conversation I have been having while I build: why this, what it costs, what I left out.",
       "When I am asked about a line, I read it aloud and say what it does on an empty input and on an unknown name.",
       "When I do not know, I say what I would check and how, and I do it, if there is time."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "rv-cache",
+   "title": "Review extension: make this cache thread-safe",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "**The problem, as you might hear it.** \"Here is your code. It has a cache or a memoizer around a slow call. Make it thread-safe. Where does the lock go?\" They want the exact race named, not only the word lock.\n\nReported variants: a memoizer decorator; a cache with expiry; the same across several processes."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**Read it before you speak.**",
+      "**The race** is check then act. Two threads see a miss, both compute, both write. A single dict read or write is fine in CPython; the two steps together are not.",
+      "**The lock protects the decision, not the call.** A lock held during the slow call blocks every other key.",
+      "**What is undefined:** one process or many, how long the compute takes, how often the same key repeats, whether the value can be computed twice.",
+      "**The trap** is one global lock around everything. It is correct, and it is also serial.",
+      "**The second trap** is the missing second check: after you win the key lock, another thread may already have stored the value."
+     ]
+    },
+    {
+     "t": "table",
+     "head": [
+      "What I must establish",
+      "If they say",
+      "Then I"
+     ],
+     "rows": [
+      [
+       "One process or many",
+       "One process, threads",
+       "Python locks are enough. Go on."
+      ],
+      [
+       "One process or many",
+       "Many processes or machines",
+       "A lock in my memory protects nothing. The cache needs a shared store with an atomic add-if-absent (Redis SET NX, or an insert with a unique key in the database)."
+      ],
+      [
+       "Read-heavy or not",
+       "Mostly hits, few misses",
+       "A hit takes only the short guard and returns. The key lock is only on a miss."
+      ],
+      [
+       "Read-heavy or not",
+       "Many misses on different keys",
+       "Per-key locks, so different keys compute in parallel. One global lock would serialise them."
+      ],
+      [
+       "Can the value be computed twice",
+       "No: it costs money or has side effects",
+       "One lock per key and a second check inside it, so the compute runs once."
+      ],
+      [
+       "Can the value be computed twice",
+       "Yes: it is cheap and pure",
+       "Skip the key locks. Guard only the dict and let the last write win. Say it is a decision."
+      ],
+      [
+       "Does the value expire",
+       "Yes",
+       "Store an expiry time and check it inside the key lock. Expired means recompute under the same lock."
+      ],
+      [
+       "What if the compute raises",
+       "Do not cache the error",
+       "Store nothing and release the lock. The next caller retries."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**The crux.** Two locks with two jobs. A short guard protects the dicts and is never held during the slow call. A lock per key makes the slow call run once for that key. Inside the key lock, check again, because another thread may have finished while you waited. Then eight threads asking for one key compute once, and different keys compute in parallel."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**The conversation, in order.**",
+      "Say the race in one sentence: both threads miss, both compute, both write.",
+      "Ask the questions above. If there is no answer, say my assumption: threads, one process, the value must be computed once.",
+      "Offer the simple fix first: one lock around the whole get. Correct and serial. Say what it costs.",
+      "Move to the guard plus a lock per key with the second check. About 15 lines.",
+      "Test: eight threads on one key, count the calls. Then four keys, check they overlap in time.",
+      "Follow-ups: expiry, errors, many processes, memory growth."
+     ]
+    },
+    {
+     "t": "problem",
+     "id": "rv-cache-p",
+     "title": "Make the memoizer thread-safe",
+     "minutes": "20",
+     "d": "medium",
+     "statement": "A memoizer wraps a slow function. Make it safe to call from many threads so the slow function runs once per key, without blocking other keys.",
+     "examples": [
+      {
+       "input": "8 threads ask for key 1",
+       "output": "fn runs once",
+       "note": "With no lock it ran 8 times in the test below."
+      }
+     ],
+     "constraints": [
+      "standard library only",
+      "threading"
+     ],
+     "starter": "class Memo:\n    def __init__(self, fn):\n        ...\n\n    def get(self, key):\n        ...\n",
+     "hints": [
+      "Level 1: name the race first.",
+      "Level 2: one lock per key, and a short guard for the dicts.",
+      "Level 3: check again after you get the key lock."
+     ],
+     "solution": "import threading\n\n\nclass Memo:\n    \"\"\"Compute fn(key) once per key, even with many threads asking at the same time.\"\"\"\n\n    def __init__(self, fn):\n        self.fn = fn\n        self.vals = {}\n        self.locks = {}\n        self.guard = threading.Lock()       # protects the two dicts only, never held during fn\n\n    def get(self, key):\n        with self.guard:\n            if key in self.vals:\n                return self.vals[key]\n            lock = self.locks.setdefault(key, threading.Lock())\n        with lock:                          # one thread per key computes, the rest wait here\n            with self.guard:\n                if key in self.vals:        # someone finished while we waited\n                    return self.vals[key]\n            v = self.fn(key)                # slow call: other keys are not blocked\n            with self.guard:\n                self.vals[key] = v\n            return v                        # if fn raised, nothing is stored and the next caller retries\n",
+     "tests": "import time\n\ncalls = []\n\ndef slow(k):\n    calls.append(k)\n    time.sleep(0.2)\n    return k * 2\n\ndef run(keys):\n    m = Memo(slow)\n    ts = [threading.Thread(target=m.get, args=(k,)) for k in keys]\n    t0 = time.time()\n    [t.start() for t in ts]\n    [t.join() for t in ts]\n    return round(time.time() - t0, 1)\n\nrun([1] * 8)\nprint(\"same key x8: fn ran\", len(calls), \"time\")\ncalls.clear()\nsecs = run([1, 2, 3, 4])\nprint(\"4 different keys: fn ran\", len(calls), \"times in about\", secs, \"s (parallel)\")\n\nplain = {}\ncalls2 = []\ndef racy(k):\n    if k not in plain:\n        calls2.append(k)\n        time.sleep(0.05)\n        plain[k] = k\nts = [threading.Thread(target=racy, args=(1,)) for _ in range(8)]\n[t.start() for t in ts]; [t.join() for t in ts]\nprint(\"no lock, same key x8: fn ran\", len(calls2), \"times\")\n",
+     "complexity": "O(1) per hit. A miss waits only for the same key. Memory grows by one lock per key.",
+     "explain": [
+      "The guard is never held during fn.",
+      "The second check is what makes it once-only.",
+      "The locks dict grows with the keys: delete the lock after the value is stored if keys are unbounded."
+     ]
+    },
+    {
+     "t": "code",
+     "title": "Output, run with Python 3",
+     "code": "same key x8: fn ran 1 time\n4 different keys: fn ran 4 times in about 0.2 s (parallel)\nno lock, same key x8: fn ran 8 times"
+    },
+    {
+     "t": "table",
+     "head": [
+      "They ask",
+      "The change",
+      "Cost"
+     ],
+     "rows": [
+      [
+       "A future per key instead of a lock",
+       "Store a Future in the dict under the guard. The first caller computes, the rest wait on it.",
+       "No lock per key, same result. Cancelling and errors need care."
+      ],
+      [
+       "Expiry",
+       "Store (value, expires_at). Check inside the key lock. Expired means recompute under the same lock.",
+       "A timestamp per key; use a monotonic clock."
+      ],
+      [
+       "Memory grows forever",
+       "Bound the size. functools.lru_cache is thread-safe but can still compute a key twice, so wrap it or evict by hand.",
+       "An eviction policy to choose"
+      ],
+      [
+       "Many processes",
+       "Atomic add-if-absent in Redis or the database. The winner computes, the others wait or poll.",
+       "A network call per miss. A winner that dies needs a lock timeout."
+      ],
+      [
+       "The compute raises",
+       "Do not store. The next caller retries. Optionally cache the failure briefly.",
+       "Risk of a retry storm"
+      ],
+      [
+       "Async code instead of threads",
+       "Same shape with an asyncio.Lock per key, or a task per key.",
+       "Do not mix thread locks into the event loop."
+      ]
+     ]
+    },
+    {
+     "t": "faq",
+     "title": "Push-backs, and what to say",
+     "prose": true,
+     "items": [
+      {
+       "q": "Why not one lock around everything?",
+       "a": "**Decided.** A guard for the dicts and a lock per key.\n\n**Instead of.** A single global lock.\n\n**Why.** The global lock is correct but serial: a 2-second compute for key A blocks key B.\n\n**What it costs.** More code, and one lock per key in memory.\n\n**If they push.** \"If the cache is hit often and computed rarely, the global lock is fine. I would say that and pick it if they confirm.\""
+      },
+      {
+       "q": "Why check again inside the key lock?",
+       "a": "**Decided.** A second check.\n\n**Instead of.** Trusting the first check.\n\n**Why.** Between the first check and getting the key lock, another thread may have stored the value. Without the second check the compute runs twice, a moment later.\n\n**What it costs.** One more dict lookup under the guard.\n\n**If they push.** \"It is the double-checked pattern. Both checks take the guard, so it is safe.\""
+      },
+      {
+       "q": "Is a plain dict safe in CPython?",
+       "a": "I think a single get or set is, because of the GIL, and check then act is not, because it is two operations. I do not lean on the GIL for correctness: it is an implementation detail and free-threaded builds remove it."
+      },
+      {
+       "q": "What if there are many worker processes?",
+       "a": "Then the lock is wasted, since each process has its own memory. I would move the add-if-absent into Redis (SET with NX and a timeout) or into a unique row in the database, and say what happens if the winner dies: the timeout expires and another worker takes over."
+      },
+      {
+       "q": "What I would do with another hour",
+       "a": "Add expiry and a size bound, delete the per-key lock once the value is stored, and write a test with a function that raises once and then works."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "rv-refund",
+   "title": "Review extension: the refund or payment can run twice",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "**The problem, as you might hear it.** \"Your code issues a refund (or a payment). A client retry, a double click or a crashed worker can make it run twice. Fix it.\" The answer is not a lock. It is making the second call a safe replay.\n\nReported variants: a refund endpoint; a queue consumer that gets the same message twice; a payment retried after a timeout."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**Read it before you speak.**",
+      "**The input** is a request that moves money, sent by a client that cannot tell whether the first try worked.",
+      "**The hidden structure** is at-least-once delivery. Retries are normal, so the receiver must make a repeat harmless.",
+      "**What is undefined:** who makes the key, how long keys are kept, what a key reused with different data means, whether the gateway also dedupes.",
+      "**The trap** is check then insert: read, see nothing, insert. Two callers do it at once. The unique constraint, not the check, is the guard.",
+      "**The second trap** is the crash between moving the money and recording it."
+     ]
+    },
+    {
+     "t": "table",
+     "head": [
+      "What I must establish",
+      "If they say",
+      "Then I"
+     ],
+     "rows": [
+      [
+       "Who makes the key",
+       "The client, one per logical request",
+       "Store it with a unique constraint. A retry carries the same key."
+      ],
+      [
+       "Who makes the key",
+       "The server, from the request contents",
+       "Hash of order id and amount. Say the risk: two real refunds of the same amount collapse into one."
+      ],
+      [
+       "Same key, different data",
+       "It can happen",
+       "Reject with an error. Never silently return the first result."
+      ],
+      [
+       "Does the gateway take a key",
+       "Yes",
+       "Pass mine through. A crash between the call and my record is then safe: the retry reaches the gateway with the same key."
+      ],
+      [
+       "Does the gateway take a key",
+       "No",
+       "Record intent, call, record the result, and reconcile pending rows by asking the gateway. This is the hard case, and I say so."
+      ],
+      [
+       "A crash left a pending row",
+       "Retries must finish it",
+       "A retry finds pending, calls the gateway with the same key, marks it done."
+      ],
+      [
+       "Two requests at the same instant",
+       "Both arrive together",
+       "The unique insert lets one in. The other finds the row and follows the same path."
+      ],
+      [
+       "How long keys live",
+       "Days",
+       "A TTL or a cleanup job, longer than the longest client retry window."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**The crux.** Write the intent first, then act. A row keyed by an idempotency key with a unique constraint decides who owns the request, in the database, atomically. A repeat finds the row and returns its result, or finishes the work if the first attempt died. Passing the same key to the gateway makes the crash window safe. Exactly once is built from at-least-once plus a safe replay."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**The conversation, in order.**",
+      "Say the failure: the request runs twice and the money moves twice.",
+      "Ask who makes the key, what the gateway does, and what happens on a crash. State my assumption if there is no answer.",
+      "Reject the obvious fix: check then insert has the same race. Use a unique constraint.",
+      "Write the table and the function. States: pending, then done.",
+      "Test: call twice, then crash once and retry. Count what the gateway actually did.",
+      "Follow-ups: key expiry, queue consumers, reconciliation, a state machine for refund states."
+     ]
+    },
+    {
+     "t": "problem",
+     "id": "rv-refund-p",
+     "title": "Make the refund idempotent",
+     "minutes": "20",
+     "d": "medium",
+     "statement": "refund(db, key, order_id, amount, gateway) moves money through a gateway. It may be called twice with the same key, or die after the money moved. Make the money move once.",
+     "examples": [
+      {
+       "input": "refund with key k1 twice",
+       "output": "same ref, one transfer"
+      },
+      {
+       "input": "gateway fails after moving money, then a retry",
+       "output": "the retry returns the ref, still one transfer"
+      }
+     ],
+     "constraints": [
+      "standard library only",
+      "sqlite3 stands in for the real database"
+     ],
+     "starter": "def refund(db, key, order_id, amount, gateway):\n    ...\n",
+     "hints": [
+      "Level 1: add a table with the key as the primary key.",
+      "Level 2: insert pending before you call the gateway.",
+      "Level 3: on a repeat, return the stored result, or finish the pending one with the same key."
+     ],
+     "solution": "import sqlite3\n\n\ndef setup():\n    db = sqlite3.connect(\":memory:\")\n    db.execute(\"\"\"CREATE TABLE refunds (\n        idem_key TEXT PRIMARY KEY,          -- the unique constraint is the lock\n        order_id TEXT, amount INTEGER, status TEXT, ref TEXT)\"\"\")\n    return db\n\n\ndef refund(db, key, order_id, amount, gateway):\n    \"\"\"Safe to call twice, or after a crash. gateway(key, amount) must also dedupe on key.\"\"\"\n    try:\n        db.execute(\"INSERT INTO refunds VALUES (?, ?, ?, 'pending', NULL)\", (key, order_id, amount))\n        db.commit()                         # the intent is on disk before any money moves\n    except sqlite3.IntegrityError:          # this key was seen before\n        pass\n    oid, amt, status, ref = db.execute(\n        \"SELECT order_id, amount, status, ref FROM refunds WHERE idem_key = ?\", (key,)).fetchone()\n    if (oid, amt) != (order_id, amount):\n        raise ValueError(\"key reused for a different request\")\n    if status == \"done\":\n        return ref                          # replay: return the first result\n    ref = gateway(key, amount)              # pending (first call, or a crash left it): same key, safe\n    db.execute(\"UPDATE refunds SET status = 'done', ref = ? WHERE idem_key = ?\", (ref, key))\n    db.commit()\n    return ref\n",
+     "tests": "moved = {}                                  # what the fake gateway actually did, by key\nfail_once = [True]\n\ndef gateway(key, amount):\n    moved.setdefault(key, amount)           # a real gateway ignores a repeated key\n    if fail_once[0] and key == \"k2\":\n        fail_once[0] = False\n        raise TimeoutError(\"died after the money moved\")\n    return \"ref-\" + key\n\ndb = setup()\nprint(refund(db, \"k1\", \"o1\", 500, gateway), refund(db, \"k1\", \"o1\", 500, gateway))\ntry:\n    refund(db, \"k2\", \"o2\", 700, gateway)\nexcept TimeoutError as e:\n    print(\"first try failed:\", e)\nprint(\"retry:\", refund(db, \"k2\", \"o2\", 700, gateway))\nprint(\"money moved once per key:\", moved)\ntry:\n    refund(db, \"k1\", \"o1\", 999, gateway)\nexcept ValueError as e:\n    print(\"rejected:\", e)\n",
+     "complexity": "One insert, one read, one update and one gateway call per request.",
+     "explain": [
+      "The primary key is the lock.",
+      "pending is written before money moves, so a crash leaves a trace to finish.",
+      "The gateway gets the same key, so its own dedupe covers the window between the call and our record."
+     ]
+    },
+    {
+     "t": "code",
+     "title": "Output, run with Python 3",
+     "code": "ref-k1 ref-k1\nfirst try failed: died after the money moved\nretry: ref-k2\nmoney moved once per key: {'k1': 500, 'k2': 700}\nrejected: key reused for a different request"
+    },
+    {
+     "t": "table",
+     "head": [
+      "They ask",
+      "The change",
+      "Cost"
+     ],
+     "rows": [
+      [
+       "A queue delivers the message twice",
+       "Same idea: the message id is the key, and the consumer is the same function.",
+       "A processed-messages table"
+      ],
+      [
+       "A state machine for the refund",
+       "States pending, done, failed, with allowed moves. An update is guarded by the current state in its WHERE clause.",
+       "More states to test"
+      ],
+      [
+       "How long do I keep keys",
+       "Longer than the longest retry window, then delete by age.",
+       "A cleanup job. A key reused after expiry is a new request."
+      ],
+      [
+       "The gateway does not dedupe",
+       "Record intent, call, record result, and reconcile old pending rows against the gateway on a timer.",
+       "A reconciliation job and a window of uncertainty"
+      ],
+      [
+       "Retries with backoff",
+       "The client retries with the same key and waits longer each time, with jitter.",
+       "Latency for the user"
+      ],
+      [
+       "Two requests with the same key at once",
+       "The unique insert admits one. The other waits for done or returns pending.",
+       "A pending response to handle"
+      ]
+     ]
+    },
+    {
+     "t": "faq",
+     "title": "Push-backs, and what to say",
+     "prose": true,
+     "items": [
+      {
+       "q": "Why a unique constraint and not a check in code?",
+       "a": "**Decided.** The primary key on the idempotency key.\n\n**Instead of.** SELECT then INSERT.\n\n**Why.** Two callers can both see no row and both insert. The database decides it atomically.\n\n**What it costs.** An IntegrityError path to handle.\n\n**If they push.** \"A lock in code only works inside one process. The constraint works for everything that uses the database.\""
+      },
+      {
+       "q": "Why write pending before calling the gateway?",
+       "a": "**Decided.** Record the intent first.\n\n**Instead of.** Call the gateway, then record.\n\n**Why.** If the process dies after the call and before the record, there is no trace and the retry moves the money again.\n\n**What it costs.** A pending row that may need finishing.\n\n**If they push.** \"The retry finishes it with the same key, so the gateway dedupes.\""
+      },
+      {
+       "q": "What if the same key comes with a different amount?",
+       "a": "**Decided.** Raise an error.\n\n**Instead of.** Return the first result.\n\n**Why.** It is a client bug. Returning the first result hides it, and the client thinks the new amount went through.\n\n**What it costs.** A rejected request.\n\n**If they push.** \"The last line of the test shows it.\""
+      },
+      {
+       "q": "Is this exactly once?",
+       "a": "No. Delivery is at least once. The effect is once, because a repeat is a safe replay. Exactly-once delivery does not exist over a network, and I say that."
+      },
+      {
+       "q": "What I would do with another hour",
+       "a": "Add key expiry, a state machine with a failed state and a retry limit, a reconciliation job for pending rows older than a minute, and a test with two threads using the same key at once."
+      }
      ]
     }
    ]

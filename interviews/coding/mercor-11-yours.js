@@ -32,83 +32,111 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "p",
-     "text": "**The problem (Q1, solo coding hour, 60 minutes).** You are given experts (id to name and skills) and referrals, a list of (from_id, to_id) pairs meaning from_id will vouch for to_id. Edges are directed. The list may contain duplicates, self-loops and ids not present in experts. Honesty note from your write-up: this prompt is reconstructed from candidate reports of the Mercor onsite, not Mercor's actual prompt."
+     "text": "**The problem, as you might hear it.** You get experts (id, name, skills) and referrals (from_id, to_id: from vouches for to). Build the graph, find the shortest referral path between two people, rank everyone reachable within some hops by skill match, then pick the top-k referrers by reach and k influencers. 60 minutes, alone, nothing to ask. Reported variants: add referrals one at a time (no self-referral, one referrer each, no cycle), growth simulation in days, minimum bonus by binary search, flow centrality. This prompt is reconstructed from reports, not Mercor's own."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**Read it before you speak.**",
+      "**It is a directed graph, and every question starts from one person.** One BFS from a start gives hops and a parent for everyone reachable. Path, ranking and reach all read from that one result.",
+      "**The data is messy:** duplicates, self-loops, ids not in experts. Cycles are possible, so every traversal carries a visited set.",
+      "**Five words are undefined:** reach, the top-k tie rule, influencer, flow centrality, and the score. Nobody answers, so each gets one line at the top of the file.",
+      "**Size decides top-k.** A BFS per person is O(V x (V + E)): fine for thousands, slow for millions. Say it before the reviewer does.",
+      "**The trap:** other reports say one referrer and no cycles. Then it is a forest, reach is a subtree size, and top-k is one pass. Write which one you assumed."
+     ]
+    },
+    {
+     "t": "table",
+     "head": [
+      "The gap in the prompt",
+      "I decide, and write at the top",
+      "If the reviewer wanted otherwise"
+     ],
+     "rows": [
+      [
+       "Are edges one way, and can a person have several referrers?",
+       "One way. Several referrers and cycles allowed; a visited set keeps BFS safe.",
+       "Strict version: add_referral rejects self, a second referrer and a cycle. See the block below."
+      ],
+      [
+       "Bad rows: duplicates, self-loops, unknown ids",
+       "Drop them, count them, return the count with the graph.",
+       "Raise on the first, or log each with its reason."
+      ],
+      [
+       "Which shortest path when there are several?",
+       "The first one found under sorted neighbour order.",
+       "Return all: keep a list of parents per node."
+      ],
+      [
+       "What counts as reach?",
+       "Everyone under you at any depth, not counting you.",
+       "Direct referrals only: len(graph[p]). Or count closer people more."
+      ],
+      [
+       "Top-k ties, and k larger than the people",
+       "Reach descending, then id. Return fewer if there are fewer.",
+       "A real signal as the tie-break, such as seniority."
+      ],
+      [
+       "The score, and experts with no matching skill",
+       "2 x matches - hops. Keep no-match experts, they come last.",
+       "Drop them, or weigh hops more. It is a product call."
+      ],
+      [
+       "What is an influencer?",
+       "Greedy unique reach: each pick adds the most people not yet covered, stop when nobody adds any.",
+       "Top k by reach. Worse, two big groups can overlap."
+      ],
+      [
+       "What is flow centrality?",
+       "For each pair, the people strictly inside the one shortest path BFS finds.",
+       "All shortest paths share credit (Brandes), or direction ignored (betweenness)."
+      ],
+      [
+       "max_hops = 0, unknown start",
+       "Return [].",
+       "Raise a clear error."
+      ]
+     ]
     },
     {
      "t": "p",
-     "text": "**Part 1, build the graph (15 min).** build_graph(experts, referrals) returns an adjacency structure of your choice. Duplicate edges collapse to one. Self-loops are dropped. Edges touching an unknown id are dropped, and counted. Neighbors come out in a deterministic order."
+     "text": "**The crux.** BFS reaches a node by the fewest hops the first time it sees it, so one BFS gives the shortest path, the hop counts for ranking and the reach, all at O(V + E). Everything else is a read-out of that. The one extra idea is influencers: picking the best k exactly is maximum coverage, which is hard, and greedy is the standard answer with a proof that it covers at least 63 percent (1 - 1/e) of the best possible."
     },
     {
-     "t": "p",
-     "text": "**Part 2, shortest referral path (20 min).** shortest_path(graph, start_id, target_id) returns the list of expert ids from start to target inclusive, using the fewest hops, by breadth-first search. If several shortest paths exist, return the one found first under your deterministic neighbor order. start_id == target_id returns [start_id]. Unreachable or unknown ids return []. It must terminate on cyclic graphs."
-    },
-    {
-     "t": "p",
-     "text": "**Part 3, rank reachable candidates (25 min).** rank_candidates(graph, experts, start_id, required_skills, max_hops) returns a ranked list of expert ids (excluding start_id) reachable within max_hops, each with its hop count and score. Score = 2 x (number of required skills the expert has) - hop_count. Sort by score descending, then hop_count ascending, then expert_id ascending. An expert with no matching required skill still appears, with its possibly negative score. max_hops = 0 returns []. Demo: a main() that prints the shortest path from e1 to e6 and the ranked candidates from e1 for [python, evals] within 3 hops. No stubbing: every function must run on the sample data."
-    },
-    {
-     "t": "p",
-     "text": "**Part 4, top-k referrers.** top_k_referrers(graph, k) returns the k people with the largest reach: everyone under them at any depth. You are given only this line. In the solo hour there is nobody to ask, so you decide and write the decision at the top of the code: reach excludes the person, ties break by id."
-    },
-    {
-     "t": "p",
-     "text": "**Part 5, influencers.** influencers(graph, k) picks k people who together reach the most people. Written down: greedy unique reach. Each pick is the person who adds the most people not already covered; stop early when nobody adds anyone. A follow-up some reports name is flow centrality: who sits between the most pairs. Written down: count the people strictly inside the one shortest path BFS finds for each pair."
+     "t": "list",
+     "items": [
+      "**The hour, in order.**",
+      "**5 minutes:** read all five parts. List every undefined word.",
+      "**5 minutes:** write the decisions from the table as a comment at the top. Then stick to them.",
+      "**Data model:** dict of id to sorted neighbour list. build_graph returns the graph and the dropped count. Run it on the sample and print it.",
+      "**Parts 1 and 2:** bfs_parents, then shortest_path as a walk back. Run main. Check an unreachable target and start equal to target.",
+      "**Part 3:** the scorer, then rank_candidates reading the hops. Check one case by hand.",
+      "**Parts 4 and 5:** reach, top_k_referrers, influencers. Flow centrality only if there is time.",
+      "**Last 10 minutes:** asserts for the edge cases, main prints everything, and a comment listing what you would change first."
+     ]
     },
     {
      "t": "write",
      "id": "mercor-yours-q1-w",
-     "q": "Try it first. Write how you would build it: the graph, the path and the ranking, and what you would say about why BFS and shortest path are two functions.",
-     "starter": "Graph:\n\nShortest path:\n\nRanking:\n\nCost:\n",
-     "hint": "One BFS gives parent and distance for every reachable node. The path is a walk back through the parents. The ranking reads the distances.",
-     "solution": "1. build_graph: a dict of expert id to a sorted list of neighbours. Use a set while building so duplicates collapse. Drop self-loops and unknown ids, and count them.\n2. bfs_parents: one BFS records parent and hop count for every reachable node. The visited set stops cycles.\n3. shortest_path: no new traversal. Walk the parent chain from the target back to the start and reverse it.\n4. rank_candidates: reuse the hop counts from the same BFS. Score = 2 x matches - hops. Sort by score descending, hops ascending, id ascending.\n5. Scoring sits in its own class, so the formula can change without touching the graph or the traversal.\nCost: build O(E). BFS O(V + E) time, O(V) space. Ranking adds O(R log R) for R reachable candidates.",
+     "q": "Try it first. Write the graph, the path and the ranking, and why BFS and shortest path are two functions.",
+     "starter": "Graph:\n\nBFS gives:\n\nPath:\n\nRanking:\n\nCost:\n",
+     "hint": "One BFS gives parent and distance for every reachable node. The path walks the parents back. The ranking reads the distances.",
+     "solution": "1. build_graph: dict of id to sorted neighbour list, built with sets so duplicates collapse. Drop self-loops and unknown ids, and count them.\n2. bfs_parents: one BFS, parent and hops for every reachable node. The visited set stops cycles.\n3. shortest_path: walk the parent chain from the target back to the start, reverse it. No second traversal.\n4. rank_candidates: read the hops from the same BFS. Score = 2 x matches - hops. Sort by score desc, hops asc, id asc.\nCost: build O(E), BFS O(V + E), ranking adds O(R log R).",
      "say": [
-      "**I built the graph as a dict of sorted neighbor lists, so duplicates collapse and traversal order is deterministic.** One BFS produces parent and distance maps; shortest path is a walk back through the parents, and ranking reuses the same distances.",
-      "Scoring sits in its own class behind a simple interface, like a cache eviction policy, so weights, seniority or a learned scorer can change without touching the graph or the traversal. At scale I would return top-k with a heap and cache traversals per source instead of precomputing all pairs."
-     ]
-    },
-    {
-     "t": "faq",
-     "title": "Your thinking, the cases and what to say",
-     "prose": true,
-     "items": [
-      {
-       "q": "BFS and shortest path are two functions, and they do reuse each other",
-       "a": "They answer different questions. BFS is a traversal: starting from one node, it visits every reachable node in increasing hop order and records facts along the way. Shortest path is a query: given two nodes, return the actual route between them.\n\nBFS alone does not hand you a path. It hands you a parent map: for every node, the node you arrived from. Because BFS reaches each node by the fewest hops first, following parent links from the target back to the start rebuilds a shortest path. That walk-back is all shortest_path does. It never traverses the graph itself.\n\nThe one-sentence version for the review: BFS computes parent and distance for every reachable node once; shortest_path and ranking are both cheap read-outs of that single traversal.\n\nWhy not merge them into one function? Reuse: one BFS from a start node serves the path query, the ranking query and any distance query. Testability: the parent map can be checked on its own, and the walk-back can be checked on a hand-made parent map with no graph at all. Termination: the visited set lives in BFS, in one place, so every caller inherits cycle safety, and this graph has cycles (e2 -> e3 -> e2)."
-      },
-      {
-       "q": "Parts 4 and 5: what I decided, and why greedy",
-       "a": "There is no one to clarify with, so each undefined word gets a one-line decision in a comment at the top of the code, and the code follows it. Reach is BFS from the person, minus the person. Top-k sorts by reach descending, then id, so it is deterministic.\n\nInfluencers: picking the k people who together cover the most is set cover, which is hard to solve exactly. Greedy is the standard answer: take whoever adds the most new people, add them and everyone under them to covered, repeat. It is a few lines, it is explainable, and it is known to be close to the best. The trap is ranking by plain reach: two people with big reach who cover the same people waste a pick.\n\nFlow centrality, if it comes up: for every pair, walk back the BFS path and count the people in the middle. Say aloud that this counts one shortest path per pair, not all of them, and that counting all of them (Brandes) is the next step if they want it."
-      },
-      {
-       "q": "What the built graph looks like, and the dictionary moves",
-       "a": "The graph is a plain dictionary: outer key is an expert id, value is the sorted list of ids that expert vouches for. For the sample data, after duplicates collapse and the self-loop and unknown-id edge are dropped: e1: [e2]; e2: [e3, e6]; e3: [e2, e4]; e4: [e6]; e5: [e4]; e6: []. So graph[\"e2\"] is [\"e3\", \"e6\"], everyone Ben vouches for, in sorted order. Sorted order is what makes BFS deterministic: the same input always produces the same path and the same ranking.\n\ngraph.get(node, []) gives the neighbors of a node, or an empty list if the node has no entry. No KeyError, no if-check first.\n\n{eid: set() for eid in experts} starts every expert with an empty neighbor set, including experts nobody refers to, so e6 exists in the graph with no outgoing edges. graph.setdefault(src, set()) is the alternative to pre-filling: it returns the neighbor set for src, creating an empty one first if src has no entry yet.\n\nA set for neighbors while building: adding a duplicate edge to a set is a no-op, so deduplication costs no code. set(expert[\"skills\"]) & set(required_skills) is set intersection, the skills both sides share. Its length is the match count in the score."
-      },
-      {
-       "q": "Edge cases handled, and the one lambda",
-       "a": "Handled in code: duplicate edges, self-loops, unknown ids on either end, start equal to target, unreachable target, cycles, experts with no outgoing edges, max_hops = 0, and no-match experts kept in the ranking with negative scores rather than filtered.\n\nThe lambda key=lambda row: (-row[2], row[1], row[0]) sorts each (id, hops, score) row by score descending (the minus sign flips it), then hops ascending, then id ascending. A lambda is a small anonymous function used once, inline."
-      },
-      {
-       "q": "How the scoring works, in four cases",
-       "a": "With required skills [python, evals] and score = 2 x matches - hops: A, ideal and close (2 matches, 1 hop) scores 3. B, ideal and far (2 matches, 3 hops) scores 1. C, misaligned and close (0 matches, 1 hop) scores -1. D, misaligned and far (0 matches, 3 hops) scores -3.\n\nRanking: A ahead of B ahead of C ahead of D. The line that matters is B beating C: one matching skill is worth 2 hops in this formula, so skill beats proximity. That is a product decision, not a math truth. If the product wanted proximity to win, the hop weight goes up. Say exactly that in the review.\n\nAdding seniority changes one term, nothing else: score = 2 x matches - hops + seniority bonus, with senior +1, mid 0, junior -1. It is one extra term inside the scorer class. BFS, the graph and the sort never see it.\n\nNo NLP libraries are needed, and that is a deliberate choice. Skills here are structured tags, not free text, so matching is set intersection and seniority is a number: deterministic arithmetic. That determinism is what you want when a score feeds an evaluation endpoint. NLP would only enter if skills arrived as free text (\"built LLM evals\" versus \"evals\"), and even then the first move is a synonym map, not a library. Embeddings would make scores non-reproducible, which is the opposite of what this system needs."
-      },
-      {
-       "q": "Scalability and extensibility",
-       "a": "Three abstractions, each behind an interface. Scorer as a policy class: as a cache abstracts its eviction policy (LRU, LFU), ranking abstracts its scoring policy. Swap SimpleScorer for SeniorityScorer, or a learned model later, without touching traversal. That buys isolated unit tests, weight tuning without code changes and A/B testing of ranking policies in production.\n\nGraph store behind an interface: BFS only ever asks one question, give me the neighbors of this node. The in-memory dict is one implementation; a database or graph store is another, fetching neighbors per node instead of loading the whole graph.\n\nTraversal as a parameter: referrals are unweighted today, so BFS is right. If referrals ever gain weights (strength of vouch), swap the queue for a heap and BFS becomes Dijkstra, with ranking and scoring untouched.\n\nScaling the computation itself. Top-k with a heap: if only the top 10 are shown, do not sort all V candidates; a bounded heap gives O(V log k) instead of O(V log V). One BFS, many answers: the parent and distance maps from a single BFS answer every path and ranking query from that source. Cache them per source; never precompute all-pairs paths, because referrals change and stale caches are the production bug. Incremental updates: a new referral edits one adjacency entry, so invalidate only the cached traversals whose source can reach that edge. Early exit: for a single path query, BFS can stop the moment the target is first reached, since it is already shortest. Ranking cannot early-exit; it needs the full neighborhood up to max_hops."
-      },
-      {
-       "q": "Complexity",
-       "a": "Build: O(E). BFS: O(V + E) time, O(V) extra space for queue, visited, parent and distance. Ranking adds an O(R log R) sort over R reachable candidates."
-      }
+      "**I built the graph as a dict of sorted neighbour lists, so duplicates collapse and the order is the same every run.** One BFS gives parent and distance; the path is a walk back through the parents and the ranking reads the same distances.",
+      "Where the prompt left a word undefined I wrote my decision at the top of the file and coded to it. The two places I would look first are the score weights and top-k, which runs a BFS per person."
      ]
     },
     {
      "t": "problem",
      "id": "mercor-yours-q1-p",
-     "title": "Referral network, the full library and demo (parts 1 to 5)",
+     "title": "Referral network, your code: parts 1 to 5 and the flow follow-up",
      "source": "Your Q1 write-up (Muse), run with Python 3.12",
      "d": "medium",
      "minutes": 60,
-     "why": "The complete running solution from your write-up. Try the box above first, then open the solution to compare.",
+     "why": "Your own code from the Q1 write-up, cut to the core functions. Open it after the box above.",
      "statement": "Build build_graph, bfs_parents, shortest_path, a scorer class, rank_candidates, then top_k_referrers, influencers and the flow centrality follow-up, for the experts and referrals in the tests box, and run main().",
      "examples": [
       {
@@ -126,7 +154,7 @@ window.LOOP_CODING.parts.push({
      "hints": [
       "Build with sets, then sort each neighbor list. BFS records parent and dist; the path is a walk back through parent."
      ],
-     "solution": "from collections import deque\n\n\ndef build_graph(experts, referrals):\n    # graph is a dict: expert_id -> set of neighbor ids.\n    # A set is used while building so duplicate edges collapse for free.\n    graph = {eid: set() for eid in experts}\n    dropped = 0\n    for src, dst in referrals:\n        if src == dst:  # self-loop: drop\n            dropped += 1\n            continue\n        if src not in experts or dst not in experts:\n            dropped += 1  # unknown id: drop\n            continue\n        graph[src].add(dst)  # duplicate adds are no-ops\n    # Convert sets to sorted lists: deterministic neighbor order,\n    # so BFS results are reproducible run after run.\n    return {eid: sorted(n) for eid, n in graph.items()}, dropped\n\n\ndef bfs_parents(graph, start_id):\n    # BFS explores in increasing hop order, so the first time\n    # we reach a node we used the fewest possible hops.\n    # parent[child] = the node we came from. Walking parent\n    # links back to start_id rebuilds the path.\n    queue = deque([start_id])\n    visited = {start_id}  # visited stops cycles looping forever\n    parent = {start_id: None}\n    dist = {start_id: 0}\n    while queue:\n        node = queue.popleft()\n        for nbr in graph.get(node, []):\n            if nbr not in visited:\n                visited.add(nbr)\n                parent[nbr] = node\n                dist[nbr] = dist[node] + 1\n                queue.append(nbr)\n    return parent, dist\n\n\ndef shortest_path(graph, start_id, target_id):\n    # This does NOT traverse again. It reuses bfs_parents,\n    # then walks the parent chain from target back to start.\n    if start_id not in graph or target_id not in graph:\n        return []\n    if start_id == target_id:\n        return [start_id]\n    parent, _dist = bfs_parents(graph, start_id)\n    if target_id not in parent:\n        return []\n    path = []\n    node = target_id\n    while node is not None:\n        path.append(node)\n        node = parent[node]\n    path.reverse()\n    return path\n\n\nclass SimpleScorer:\n    # The scoring policy, abstracted into its own class, the\n    # same move as abstracting a cache eviction policy behind\n    # an interface. rank_candidates only calls .score(...);\n    # it never knows the formula.\n    def score(self, expert, hops, required_skills):\n        have = set(expert[\"skills\"])\n        matches = len(have & set(required_skills))\n        return 2 * matches - hops\n\n\nclass SeniorityScorer(SimpleScorer):\n    # Extension: swap this in and ranking changes, while\n    # build_graph, BFS and shortest_path stay untouched.\n    BONUS = {\"senior\": 1, \"mid\": 0, \"junior\": -1}\n\n    def score(self, expert, hops, required_skills):\n        base = super().score(expert, hops, required_skills)\n        return base + self.BONUS.get(expert.get(\"seniority\", \"mid\"), 0)\n\n\ndef rank_candidates(graph, experts, start_id, required_skills,\n                    max_hops, scorer=None):\n    if max_hops == 0 or start_id not in graph:\n        return []\n    scorer = scorer or SimpleScorer()\n    _parent, dist = bfs_parents(graph, start_id)\n    ranked = []\n    for eid, hops in dist.items():\n        if eid == start_id or hops > max_hops:\n            continue  # no-match experts still appear; see loop\n        s = scorer.score(experts[eid], hops, required_skills)\n        ranked.append((eid, hops, s))\n    # score desc, then hops asc, then id asc: a total order\n    ranked.sort(key=lambda row: (-row[2], row[1], row[0]))\n    return ranked\n\n# ---- Part 4 and 5: top-k referrers and influencers ----\n# Decided and written down (solo round, nobody to ask):\n# - reach = how many people sit under a person, at any depth (BFS, self not counted)\n# - top-k ties break by id, so the answer is the same every run\n# - influencers = greedy unique reach: each pick adds the most people not yet covered,\n#   counting the pick themselves\n\n\ndef reach(graph, start_id):\n    _parent, dist = bfs_parents(graph, start_id)\n    return len(dist) - 1  # dist includes start_id itself\n\n\ndef top_k_referrers(graph, k):\n    rows = [(eid, reach(graph, eid)) for eid in graph]\n    rows.sort(key=lambda row: (-row[1], row[0]))  # reach desc, id asc\n    return rows[:k]\n\n\ndef influencers(graph, k):\n    # who each person reaches, computed once\n    under = {}\n    for eid in graph:\n        _parent, dist = bfs_parents(graph, eid)\n        under[eid] = set(dist)  # includes eid: a pick covers themselves\n    covered, picked = set(), []\n    for _ in range(k):\n        best, best_gain = None, 0\n        for eid in sorted(graph):  # sorted: ties go to the smaller id\n            if eid in covered:\n                continue\n            gain = len(under[eid] - covered)\n            if gain > best_gain:\n                best, best_gain = eid, gain\n        if best is None:\n            break  # nobody adds anyone new\n        picked.append((best, best_gain))\n        covered |= under[best]\n    return picked\n\n\n# ---- Follow-up: flow centrality ----\n# Decided: count, for every pair (s, t), the people strictly between them on the\n# one shortest path BFS finds. Not every shortest path, which is heavier to count.\ndef flow_centrality(graph):\n    count = {eid: 0 for eid in graph}\n    for s in graph:\n        parent, dist = bfs_parents(graph, s)\n        for t in dist:\n            if t == s:\n                continue\n            node = parent[t]\n            while node != s:  # walk back, counting the middle people\n                count[node] += 1\n                node = parent[node]\n    return sorted(count.items(), key=lambda row: (-row[1], row[0]))",
+     "solution": "from collections import deque\n\n\ndef build_graph(experts, referrals):\n    # graph is a dict: expert_id -> set of neighbor ids.\n    # A set is used while building so duplicate edges collapse for free.\n    graph = {eid: set() for eid in experts}\n    dropped = 0\n    for src, dst in referrals:\n        if src == dst:  # self-loop: drop\n            dropped += 1\n            continue\n        if src not in experts or dst not in experts:\n            dropped += 1  # unknown id: drop\n            continue\n        graph[src].add(dst)  # duplicate adds are no-ops\n    # Convert sets to sorted lists: deterministic neighbor order,\n    # so BFS results are reproducible run after run.\n    return {eid: sorted(n) for eid, n in graph.items()}, dropped\n\n\ndef bfs_parents(graph, start_id):\n    # BFS explores in increasing hop order, so the first time\n    # we reach a node we used the fewest possible hops.\n    # parent[child] = the node we came from. Walking parent\n    # links back to start_id rebuilds the path.\n    queue = deque([start_id])\n    visited = {start_id}  # visited stops cycles looping forever\n    parent = {start_id: None}\n    dist = {start_id: 0}\n    while queue:\n        node = queue.popleft()\n        for nbr in graph.get(node, []):\n            if nbr not in visited:\n                visited.add(nbr)\n                parent[nbr] = node\n                dist[nbr] = dist[node] + 1\n                queue.append(nbr)\n    return parent, dist\n\n\ndef shortest_path(graph, start_id, target_id):\n    # This does NOT traverse again. It reuses bfs_parents,\n    # then walks the parent chain from target back to start.\n    if start_id not in graph or target_id not in graph:\n        return []\n    if start_id == target_id:\n        return [start_id]\n    parent, _dist = bfs_parents(graph, start_id)\n    if target_id not in parent:\n        return []\n    path = []\n    node = target_id\n    while node is not None:\n        path.append(node)\n        node = parent[node]\n    path.reverse()\n    return path\n\n\nclass SimpleScorer:\n    # The scoring policy, abstracted into its own class, the\n    # same move as abstracting a cache eviction policy behind\n    # an interface. rank_candidates only calls .score(...);\n    # it never knows the formula.\n    def score(self, expert, hops, required_skills):\n        have = set(expert[\"skills\"])\n        matches = len(have & set(required_skills))\n        return 2 * matches - hops\n\n\ndef rank_candidates(graph, experts, start_id, required_skills,\n                    max_hops, scorer=None):\n    if max_hops == 0 or start_id not in graph:\n        return []\n    scorer = scorer or SimpleScorer()\n    _parent, dist = bfs_parents(graph, start_id)\n    ranked = []\n    for eid, hops in dist.items():\n        if eid == start_id or hops > max_hops:\n            continue  # no-match experts still appear; see loop\n        s = scorer.score(experts[eid], hops, required_skills)\n        ranked.append((eid, hops, s))\n    # score desc, then hops asc, then id asc: a total order\n    ranked.sort(key=lambda row: (-row[2], row[1], row[0]))\n    return ranked\n\n# ---- Part 4 and 5: top-k referrers and influencers ----\n# Decided and written down (solo round, nobody to ask):\n# - reach = how many people sit under a person, at any depth (BFS, self not counted)\n# - top-k ties break by id, so the answer is the same every run\n# - influencers = greedy unique reach: each pick adds the most people not yet covered,\n#   counting the pick themselves\n\n\ndef reach(graph, start_id):\n    _parent, dist = bfs_parents(graph, start_id)\n    return len(dist) - 1  # dist includes start_id itself\n\n\ndef top_k_referrers(graph, k):\n    rows = [(eid, reach(graph, eid)) for eid in graph]\n    rows.sort(key=lambda row: (-row[1], row[0]))  # reach desc, id asc\n    return rows[:k]\n\n\ndef influencers(graph, k):\n    # who each person reaches, computed once\n    under = {}\n    for eid in graph:\n        _parent, dist = bfs_parents(graph, eid)\n        under[eid] = set(dist)  # includes eid: a pick covers themselves\n    covered, picked = set(), []\n    for _ in range(k):\n        best, best_gain = None, 0\n        for eid in sorted(graph):  # sorted: ties go to the smaller id\n            if eid in covered:\n                continue\n            gain = len(under[eid] - covered)\n            if gain > best_gain:\n                best, best_gain = eid, gain\n        if best is None:\n            break  # nobody adds anyone new\n        picked.append((best, best_gain))\n        covered |= under[best]\n    return picked\n\n\n# ---- Follow-up: flow centrality ----\n# Decided: count, for every pair (s, t), the people strictly between them on the\n# one shortest path BFS finds. Not every shortest path, which is heavier to count.\ndef flow_centrality(graph):\n    count = {eid: 0 for eid in graph}\n    for s in graph:\n        parent, dist = bfs_parents(graph, s)\n        for t in dist:\n            if t == s:\n                continue\n            node = parent[t]\n            while node != s:  # walk back, counting the middle people\n                count[node] += 1\n                node = parent[node]\n    return sorted(count.items(), key=lambda row: (-row[1], row[0]))",
      "complexity": "Build O(E). One BFS O(V + E). Ranking adds O(R log R). Top-k and influencers run a BFS from every person: O(V(V + E)), plus O(k V^2) set work for the greedy picks. Flow centrality is O(V(V + E)) plus the walk-backs.",
      "explain": [
       "The only import is deque from collections, a queue with fast pops from the left. No third-party libraries are needed anywhere.",
@@ -137,8 +165,63 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "title": "Output, run with Python 3.12",
+     "title": "Output, run with Python 3",
      "code": "graph: {'e1': ['e2'], 'e2': ['e3', 'e6'], 'e3': ['e2', 'e4'], 'e4': ['e6'], 'e5': ['e4'], 'e6': []}\ndropped edges: 2\npath e1->e6: ['e1', 'e2', 'e6']\npath e1->e1: ['e1']\npath e1->e5: []\nranked from e1 for ['python', 'evals'] within 3 hops:\n  e2 hops=1 score=1\n  e4 hops=3 score=1\n  e3 hops=2 score=0\n  e6 hops=2 score=0\ntop 3 referrers by reach: [('e1', 4), ('e2', 3), ('e3', 3)]\ninfluencers, k=2: [('e1', 5), ('e5', 1)]\nflow centrality: [('e2', 4), ('e3', 2), ('e4', 1), ('e1', 0), ('e5', 0), ('e6', 0)]"
+    },
+    {
+     "t": "code",
+     "title": "If the rule is one referrer and no cycles: the check on add, and union-find",
+     "code": "def add_referral(referrer_of, a, b):\n    # a vouches for b. The strict version: one referrer each, no self, no cycle.\n    if a == b:\n        return \"self\"\n    if b in referrer_of:\n        return \"second_referrer\"\n    cur = a\n    while cur is not None:  # walk up from a; meeting b would make b its own ancestor\n        if cur == b:\n            return \"cycle\"\n        cur = referrer_of.get(cur)\n    referrer_of[b] = a\n    return \"ok\"\n\n\ndef find(up, x):  # union-find: the loop check in near O(1)\n    up.setdefault(x, x)\n    while up[x] != x:\n        up[x] = up[up[x]]\n        x = up[x]\n    return x\n\n\n# b has no referrer yet, so b is the root of its own tree.\n# The edge a -> b closes a loop exactly when a is already in that tree:\n#   closes_loop = find(up, a) == find(up, b)\n# After accepting it: up[find(up, b)] = find(up, a)\n\nr = {}\nassert [add_referral(r, \"a\", \"b\"), add_referral(r, \"b\", \"c\"), add_referral(r, \"c\", \"a\"),\n        add_referral(r, \"x\", \"b\"), add_referral(r, \"z\", \"z\")] == [\"ok\", \"ok\", \"cycle\", \"second_referrer\", \"self\"]\nup = {}\nassert find(up, \"a\") != find(up, \"b\")\nup[find(up, \"b\")] = find(up, \"a\")\nassert find(up, \"a\") == find(up, \"b\")\nprint(\"add_referral and union-find ok\")"
+    },
+    {
+     "t": "table",
+     "head": [
+      "They ask",
+      "The change",
+      "Cost"
+     ],
+     "rows": [
+      [
+       "Each person has one referrer and no cycles",
+       "add_referral walks up from the referrer and refuses if it meets the new person. Block above.",
+       "O(depth) per add. Union-find: near O(1)."
+      ],
+      [
+       "It is a forest: faster top-k",
+       "Reach is the subtree size. One post-order pass fills it for everyone.",
+       "O(V + E) instead of V BFS runs. Heap of size k: heapq.nlargest."
+      ],
+      [
+       "Cycles are allowed: still fast",
+       "Collapse each strongly connected component to one node, then count on what is left.",
+       "O(V + E)."
+      ],
+      [
+       "Simulate growth in days",
+       "Each day every active referrer brings x people. Loop days and stop at the target.",
+       "O(days)."
+      ],
+      [
+       "Smallest bonus that reaches the target",
+       "More bonus never gives fewer referrals, so the answer is monotone. Binary search the bonus and simulate each.",
+       "O(log range x one simulation)."
+      ],
+      [
+       "Best k influencers exactly",
+       "Maximum coverage: hard. Keep greedy, speed it with a heap of stale gains re-checked at the top.",
+       "Gains only shrink, so most re-checks are skipped."
+      ],
+      [
+       "True flow centrality",
+       "Brandes: one BFS per person that also counts shortest paths, then a backward pass sharing credit.",
+       "O(V x E) unweighted."
+      ],
+      [
+       "Weighted vouches",
+       "Swap the deque for a heap: Dijkstra. Nothing else changes.",
+       "O((V + E) log V)."
+      ]
+     ]
     },
     {
      "t": "faq",
@@ -215,11 +298,105 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "p",
-     "text": "**The problem (Q2, algorithms round, 30 minutes, discussion only).** You are given a list of exchange rates. Each rate is a triple [from, to, rate], meaning 1 unit of from equals rate units of to. For example [USD, GBP, 0.77] means 1 USD = 0.77 GBP. Given the rates, a source currency and a target currency, return the exchange rate from source to target. You may chain through intermediate currencies, and you may use a rate in reverse by taking its reciprocal. The table is consistent, so the answer is unique apart from floating-point rounding."
+     "text": "**The problem, as you might hear it.** You get a list of exchange rates, each [from, to, rate], meaning 1 unit of from is rate units of to. Given a source and a target currency, return the rate from source to target. You may chain through other currencies and use a rate in reverse. The same currency gives 1.0, no chain gives -1.0, and there are up to 10,000 rates. Reported variant (PracHub, Medium, onsite): the table is consistent. A follow-up the problem leads to, not reported wording: the best rate when quotes disagree, and arbitrage."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**Read it before you speak.**",
+      "Currencies are nodes and a rate is an edge with a multiplier, not a distance. Every rate also gives a reverse edge at 1 over the rate.",
+      "The hidden structure is a graph with cycles: the reverse edge makes A to B to A the moment it exists. What saves the maths is consistency: the product around any cycle is 1, so every path gives the same answer.",
+      "So I need any path, not the shortest or best one. That is the whole answer when the table is consistent.",
+      "Undefined: is the reverse always 1 over the rate, or a separate quote with a spread? Is the table consistent? What do I return for the same currency when it is not in the table?",
+      "Size: at most 10,000 rates is at most 20,000 directed edges, so BFS is trivial. The questions worth time are many queries and changing rates.",
+      "Traps: Dijkstra (the cost is a product, not a sum), saying there are no cycles, and float equality."
+     ]
+    },
+    {
+     "t": "table",
+     "head": [
+      "Ask",
+      "If they say",
+      "Then I"
+     ],
+     "rows": [
+      [
+       "Is the reverse rate 1 over the rate?",
+       "Yes, always",
+       "Add a reciprocal edge for every rate and I am done."
+      ],
+      [
+       "",
+       "No, a separate quote with a spread",
+       "Keep the given quote and add 1 over the rate only where none is given. Chains can now disagree, so the best rate matters."
+      ],
+      [
+       "Is the table consistent?",
+       "Yes",
+       "Any path gives the same product. BFS from the source, multiply on the way back. O(V + E)."
+      ],
+      [
+       "",
+       "No, or not sure",
+       "The question becomes the best rate. Work in logs: the best product is the shortest path on -log(rate). Use Bellman-Ford, because a rate above 1 is a negative edge. A cycle with product above 1 is arbitrage."
+      ],
+      [
+       "Source equals target?",
+       "Yes",
+       "Return 1.0 first, even if the currency is not in the table."
+      ],
+      [
+       "Unknown currency or no chain?",
+       "Return -1.0",
+       "Check membership before the BFS. If BFS finds no parent for the target, return -1.0."
+      ],
+      [
+       "How many queries?",
+       "One",
+       "Build the graph and BFS. O(V + E)."
+      ],
+      [
+       "",
+       "Many",
+       "Build once. Cache the parent map per source, or use a weighted union-find where each currency stores its value in units of its root. A query is a ratio of two values, near constant time."
+      ],
+      [
+       "Do rates change?",
+       "Yes, live",
+       "Overwrite one edge pair and drop any cached parent map that could reach it. Union-find cannot delete, so I rebuild it."
+      ],
+      [
+       "Is there a fee per hop?",
+       "Yes",
+       "Multiply by (1 - fee) per hop. Now hop count matters, so the best path matters again."
+      ],
+      [
+       "Do I need the chain as well as the rate?",
+       "Yes",
+       "The parent map already holds it. It is an audit trail."
+      ],
+      [
+       "Precision?",
+       "Real money",
+       "Decimal, or logs. Floats are fine inside a 1e-6 relative tolerance."
+      ]
+     ]
     },
     {
      "t": "p",
-     "text": "**Rules.** If source equals target, return 1.0, even if neither currency appears in the rates. If no chain of rates connects source to target, return -1.0. Positive answers are accepted within a relative error of 1e-6. Constraints: len(rates) is at most 10000; currency codes are 3 letters; each given rate is between 1e-3 and 1e3; exact answers lie between 1e-9 and 1e9. Example: rates [[USD, GBP, 0.77], [GBP, EUR, 1.2]], source USD, target EUR gives 0.924. Be ready to explain chained conversions, unknown or unreachable currencies, and the time and space complexity. Honesty note from your write-up: reconstructed from candidate reports, not a leaked Mercor paper."
+     "text": "**The crux.** It is a graph where the weights multiply. Because every rate has a reciprocal and the table is consistent, every path from source to target multiplies to the same number, so I need any path, found with BFS, and I multiply the rate into each node on the way back. That is O(V + E). If the table can disagree, I need the best path: take logs so products become sums, and use Bellman-Ford, since a rate above 1 gives a negative edge and breaks Dijkstra. A cycle whose rates multiply to more than 1 is free money."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**The conversation, in order.**",
+      "Restate and ask: reverse rate, consistency, the same-currency and unknown-currency rules, how many queries.",
+      "Brute force: try every chain from source to target. Exponential, and I do not need it.",
+      "The idea: model as a graph, add reciprocal edges, say why any path is enough (the product around a cycle is 1).",
+      "Code: build_graph, bfs_parents with a visited set, get_rate walking the parents back.",
+      "Test on a small case: USD to GBP 0.77, GBP to EUR 1.2, EUR to INR 90.0. USD to EUR is 0.924 with float dust.",
+      "Follow-ups from the table below: many queries, changing rates, then best rate and arbitrage."
+     ]
     },
     {
      "t": "write",
@@ -234,48 +411,13 @@ window.LOOP_CODING.parts.push({
      ]
     },
     {
-     "t": "faq",
-     "title": "Your thinking, the traps and what to say",
-     "prose": true,
-     "items": [
-      {
-       "q": "The one insight to say out loud, and how to think about it in order",
-       "a": "Consistency is what makes this easy, not the absence of cycles. Cycles do exist (A to B to A, via the reciprocal edge). What saves the math is that the product around any cycle is 1, because a rate times its reciprocal is 1. So every path from source to target multiplies to the same answer. You do not need a shortest path at all. You need any path, plus its product.\n\nIn order: 1. Model it as a graph. Currencies are nodes. A rate is a weighted edge. The weight is the multiplier, not a distance.\n\n2. Make it bidirectional. For every given A to B at rate r, also add B to A at 1 / r. That single move is what lets you traverse D to C when only C to D was given.\n\n3. Find any path. BFS (or DFS) from source. Consistency guarantees the product is the same whichever path you find.\n\n4. Recover the product. Track each node's parent and the edge rate into it. Walk back from target to source, multiplying as you go.\n\n5. Handle the edges of the problem. Source equals target: 1.0. Unknown currency or unreachable target: -1.0."
-      },
-      {
-       "q": "What the graph actually looks like, and what setdefault does",
-       "a": "It is a nested dictionary. The outer key is a currency. Its value is another dictionary: neighbor currency to the rate for that hop. For rates USD to GBP 0.77, GBP to EUR 1.2, EUR to INR 90.0 the built graph is: USD: {GBP: 0.77}; GBP: {USD: 1.2987, EUR: 1.2}; EUR: {GBP: 0.8333, INR: 90.0}; INR: {EUR: 0.0111}. Read it as: graph[\"GBP\"][\"EUR\"] is 1.2, and graph[\"EUR\"][\"GBP\"] is 1 / 1.2 = 0.8333. Every lookup you will ever do in BFS is of exactly that shape: give me the inner dict for this node, then iterate its items.\n\ngraph.setdefault(src, {}) means: give me the neighbors dict for src, and if src has no entry yet, create an empty dict for it first, then give me that. It returns the inner dict, so [dst] = rate writes the edge straight into it. Without it you would write the same check by hand every time: if src not in graph: graph[src] = {} and then graph[src][dst] = rate. The alternative is defaultdict(dict), which creates the inner dict automatically. setdefault is more explicit about what is happening, which is why it reads better when you are explaining code out loud.\n\nThe confusion this removes: there are only ever two levels. Level 1: currency to its neighbors dict. Level 2: neighbor to rate. If you feel lost mid-traversal, ask: am I holding a node (a string), an inner dict, or a rate (a float)? Every variable in the solution is one of those three."
-      },
-      {
-       "q": "Why parent tracking, instead of carrying the product in the queue?",
-       "a": "Both work. Carrying (node, product_so_far) in the queue is shorter. Parent tracking was chosen deliberately, for three reasons you can defend.\n\nYou can show the path. The parent map reconstructs USD to GBP to EUR, not only 0.924. In a finance system that chain is an audit trail.\n\nOne BFS answers every target. The parent map holds a path to every reachable node, so repeat queries from the same source are free.\n\nIt separates concerns. Traversal finds structure; the walk-back does arithmetic. Each half is testable on its own."
-      },
-      {
-       "q": "Two traps, corrected",
-       "a": "Tempting claim: there are no cycles, so the math works. Why it is wrong: cycles exist the moment you add reciprocal edges, A to B to A. Consistency is what saves you, since the product around any cycle is 1. If the table were ever inconsistent, no path would be trustworthy.\n\nTempting claim: Dijkstra will not work because the graph is bidirectional. Why it is wrong: bidirectionality is irrelevant to Dijkstra. Dijkstra fails here because it minimizes sums and your cost is a product. Taking logs turns products into sums, but log(rate) is negative when rate is below 1, so plain Dijkstra still breaks. And it is unnecessary: consistency means any path is correct.\n\nAnd the reverse-edge worry, settled: yes, when you step A to B, B's neighbor list contains A again at the reciprocal rate. You never follow it back, because A is already in visited. No special do-not-go-back logic is needed. The visited set is that logic."
-      },
-      {
-       "q": "Complexity",
-       "a": "build_graph: O(E) time, O(V + E) space, two directed edges per rate. bfs_parents: O(V + E) time, O(V) for queue, visited and parent. Walk-back: O(path length), at most O(V), O(1) space. Overall per query O(V + E) time and space.\n\nWith at most 10,000 rates, that is at most 20,000 directed edges. BFS here is trivially fast. Say so plainly, then pivot: the interesting scaling questions are about many queries, changing rates and where the graph lives."
-      },
-      {
-       "q": "Scalability and extensibility",
-       "a": "Build once, query many times. As written, get_rate rebuilds the graph on every call. In a real service you build it once, hold it, and each query pays only for its BFS. Go one step further and cache the parent map per source: ten queries from USD become one BFS, because that one map already contains the path, and therefore the product, to every reachable currency.\n\nHide the store behind one question. BFS only ever asks: give me the neighbors of this node. Put that behind an interface, a neighbors(node) method, and the in-memory nested dict becomes one implementation. A database-backed store, where neighbors are fetched per node instead of loading the whole graph, becomes another. BFS itself never changes.\n\nHandle rates changing. Real rates update constantly. Add add_rate and remove_rate that edit one edge pair in place instead of rebuilding everything, and invalidate any cached parent map whose source could reach that edge. In production, stale rates, not raw speed, are the bug that costs money.\n\nMind precision at scale. Floats drift over long chains, which is why the tolerance exists. For real money you would switch to Decimal, or work in log space where products become sums and long chains stay numerically tame.\n\nThe extension that reuses everything: arbitrage. The whole solution rests on consistency. If the table ever stops being consistent, different paths give different answers, and the same graph now supports a new question: is there free money? In log space, an inconsistent cycle becomes a negative cycle, and Bellman-Ford finds it. Same graph, same build, new traversal.\n\nWhat else abstracts cleanly. Traversal strategy: BFS today; because consistency makes path choice irrelevant, DFS or an iterative deepening variant could be swapped in behind the same bfs_parents-shaped contract. Path reconstruction: returning the chain alongside the rate is a separate small function over the parent map. Validation at build time: reject non-positive rates and malformed codes inside build_graph, in one place."
-      },
-      {
-       "q": "Review checklist: say these before they ask",
-       "a": "Consistency, not acyclicity, is the load-bearing assumption.\n\nThe visited set, not special-case code, prevents the A-B-A loop.\n\nDijkstra is the wrong tool because the cost is a product, not a sum.\n\nParent tracking buys you the path, the audit trail and all-targets-from-one-BFS.\n\nFloat dust is expected; the 1e-6 tolerance absorbs it; Decimal is the production answer.\n\nScale story: build once, cache per source, hide the store, invalidate on rate change.\n\nExtension story: an inconsistent table means arbitrage, found with Bellman-Ford in log space."
-      }
-     ]
-    },
-    {
      "t": "problem",
      "id": "mercor-yours-q2-p",
-     "title": "Exchange rate via chained conversions, the full solution",
+     "title": "Exchange rate via chained conversions",
      "source": "Your Q2 write-up (Muse), run with Python 3.12",
      "d": "medium",
      "minutes": 30,
-     "why": "Four pieces: build the graph, BFS that records parents, get_rate that walks them back, and main. Try the box above first.",
+     "why": "Build the graph with reciprocal edges, BFS that records parents, then walk back multiplying. His code, unchanged.",
      "statement": "Write get_rate(rates, source, target) that returns the chained exchange rate, 1.0 for the same currency and -1.0 when no chain connects them.",
      "examples": [
       {
@@ -303,8 +445,147 @@ window.LOOP_CODING.parts.push({
     },
     {
      "t": "code",
-     "title": "Output, run with Python 3.12",
+     "title": "Output, run with Python 3",
      "code": "0.9239999999999999\n1.0822510822510822\n83.16\n1.0\n-1.0"
+    },
+    {
+     "t": "table",
+     "head": [
+      "They ask",
+      "The change",
+      "Cost"
+     ],
+     "rows": [
+      [
+       "Many queries",
+       "Build the graph once. Cache the parent map per source: one BFS answers every target from it.",
+       "O(V + E) per new source, then a walk-back per query."
+      ],
+      [
+       "Weighted union-find instead of BFS",
+       "Each currency stores its value in units of its root. A query divides two stored values.",
+       "Near constant per query. No path out, and no delete."
+      ],
+      [
+       "Rates change",
+       "Overwrite one edge pair, drop affected cached parent maps.",
+       "A rebuild of any cache that could reach the edge."
+      ],
+      [
+       "The best rate when quotes disagree",
+       "Logs, then Bellman-Ford on -log(rate). Dijkstra works only if every rate is at most 1.",
+       "O(V x E), against O(V + E) for BFS."
+      ],
+      [
+       "Is there arbitrage?",
+       "In log space a cycle with product above 1 is a negative cycle. Bellman-Ford finds it with one more pass.",
+       "One extra pass over the edges."
+      ],
+      [
+       "Stale quotes",
+       "Keep a timestamp per quote and prefer the newest, or reject one past a limit.",
+       "A field per edge."
+      ],
+      [
+       "Fees or spread",
+       "Multiply (1 - fee) per hop, keep the given reverse quote.",
+       "The best path now matters, so BFS is not enough."
+      ],
+      [
+       "The store is a database",
+       "Put BFS behind neighbors(node). The nested dict is one implementation, a database lookup another.",
+       "A call per node visited."
+      ]
+     ]
+    },
+    {
+     "t": "faq",
+     "title": "Push-backs, and what to say",
+     "prose": true,
+     "items": [
+      {
+       "q": "BFS with a parent map, not the product in the queue",
+       "a": "**Decided.** Record (parent, rate) for each node and multiply while walking back.\n\n**Instead of.** Carrying (node, product_so_far) in the queue, which is shorter.\n\n**Why.** It gives the path as an audit trail, one BFS answers every target from the same source, and traversal and arithmetic stay separate so each can be tested alone.\n\n**What it costs.** A parent map of size V.\n\n**If they push.** Both are correct, and I would switch if a reviewer wanted the shorter code."
+      },
+      {
+       "q": "Any path, not a shortest path",
+       "a": "**Decided.** I do not use Dijkstra.\n\n**Instead of.** Dijkstra or a best-path search.\n\n**Why.** Consistency makes every path give the same product. Dijkstra minimises sums, and the cost here is a product.\n\n**What it costs.** None while the table is consistent.\n\n**If they push.** If the table can disagree, the answer is the best rate and it needs logs and Bellman-Ford."
+      },
+      {
+       "q": "Cycles exist, so why does the maths work?",
+       "a": "**Decided.** I say consistency is the load-bearing assumption.\n\n**Instead of.** Saying there are no cycles.\n\n**Why.** The reverse edges create cycles at once, A to B to A. The product around any cycle is 1, so the path I pick does not matter. The visited set stops the walk going back.\n\n**What it costs.** If the table is ever inconsistent, no path is trustworthy.\n\n**If they push.** Check consistency when the graph is built if the data source is not trusted."
+      },
+      {
+       "q": "A dict of dicts with setdefault",
+       "a": "**Decided.** graph[src][dst] = rate, creating the inner dict on first use.\n\n**Instead of.** A class or a list of edges.\n\n**Why.** It is the smallest structure that gives neighbors in O(1), and setdefault avoids a membership test.\n\n**What it costs.** No encapsulation.\n\n**If they push.** In a live service I would wrap it, with add_rate in one place."
+      },
+      {
+       "q": "Same currency checked first",
+       "a": "**Decided.** Return 1.0 before looking anything up.\n\n**Instead of.** Letting an unknown currency fall to -1.0.\n\n**Why.** The rule says the same currency is 1.0 even if it is not in the table.\n\n**What it costs.** None.\n\n**If they push.** State the order of checks out loud."
+      },
+      {
+       "q": "Float dust and the tolerance",
+       "a": "**Decided.** Floats, with the 1e-6 relative tolerance.\n\n**Instead of.** Decimal.\n\n**Why.** 0.77 x 1.2 prints 0.9239999999999999, which the tolerance absorbs.\n\n**What it costs.** Long chains drift a little.\n\n**If they push.** For real money I would use Decimal or logs."
+      },
+      {
+       "q": "The graph is rebuilt on every call",
+       "a": "**Decided.** As written, yes, for one clear function.\n\n**Instead of.** A class that builds once.\n\n**Why.** It keeps the code short for the hour.\n\n**What it costs.** O(E) per query that I do not need.\n\n**If they push.** Build once, cache parent maps per source, or use the union-find version."
+      },
+      {
+       "q": "What I would do with another hour",
+       "a": "**Decided.** Build once and cache, then validate the table for consistency.\n\n**Instead of.** More features.\n\n**Why.** Many queries and bad data are the real production risks.\n\n**What it costs.** Time.\n\n**If they push.** Add the best-rate and arbitrage version only if the table can disagree."
+      }
+     ]
+    },
+    {
+     "t": "probs",
+     "title": "Related, then harder",
+     "items": [
+      {
+       "n": "Evaluate Division",
+       "d": "medium",
+       "lc": "evaluate-division",
+       "yt": [
+        "Uei1fwDoyKk",
+        "NeetCodeIO",
+        18
+       ],
+       "why": "Part 1 exactly: equations are exchange rates, queries are conversions."
+      },
+      {
+       "n": "Network Delay Time",
+       "d": "medium",
+       "lc": "network-delay-time",
+       "yt": [
+        "EaphyqKU4PQ",
+        "NeetCode",
+        20
+       ],
+       "why": "Shortest path from one source with weights. The warm-up for Dijkstra and Bellman-Ford."
+      },
+      {
+       "n": "Path with Maximum Probability",
+       "d": "medium",
+       "lc": "path-with-maximum-probability",
+       "yt": [
+        "kPsDTGcrzGM",
+        "NeetCodeIO",
+        14
+       ],
+       "why": "A best product over a path, as in part 2. Probabilities are at most 1, so Dijkstra is allowed here; rates above 1 are why you need Bellman-Ford."
+      },
+      {
+       "n": "Cheapest Flights Within K Stops",
+       "d": "medium",
+       "lc": "cheapest-flights-within-k-stops",
+       "yt": [
+        "5eIK3zUdYmE",
+        "NeetCode",
+        21
+       ],
+       "why": "The harder follow-up: Bellman-Ford with a cap on the number of edges. It teaches why the loop runs V - 1 rounds."
+      }
+     ]
     }
    ]
   },
@@ -314,93 +595,291 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "p",
-     "text": "**The problem (Q4, algorithms round, discussion only, about 30 minutes, no code).** You need to sort a list of items. You have a comparison function that tells you which of two items is bigger, but it is faulty: it gives the wrong answer some of the time. How do you sort the list? That is the whole question. What the items are, how often it is wrong, whether the wrongness is random or repeatable, whether you can see the values and what a comparison costs are all left for you to ask. The notes come from your 14-page mock interview story; it has no code, so there is no code block in this section."
+     "text": "**The problem, as you might hear it.** You need to sort a list of items. You have a comparison function that says which of two items is bigger, but it is wrong some of the time, maybe about 10 percent. How do you sort the list? No code, 30 minutes, a discussion. Reported variants: top k only, minimise the number of calls, calls that are slow, and a paid API that is right 90 percent of the time (chapter 4 plans that one)."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**Read it before you speak.**",
+      "The only thing I can see is the comparator. Items are nodes, each answer is a directed edge, and a true order has no cycles. That is the hidden structure.",
+      "Everything hangs on one undefined word: wrong how? If I ask the same pair twice, do I get a different answer (random noise) or the same answer (a fixed fault)?",
+      "Random noise is cheap to beat: repeat and average. A fixed fault is not: repeating returns the same lie, so the only new information is other comparisons.",
+      "The size that decides the algorithm is the cost of a call. Cheap means I can compare all pairs, n(n-1)/2. Paid or slow means I stay near n log n.",
+      "The trap: a cycle proves a lie but never says which edge it is, and nothing flags a wrong answer when it arrives. Do not say I will log the bad ones and flip them."
+     ]
+    },
+    {
+     "t": "table",
+     "head": [
+      "Ask",
+      "If they say",
+      "Then I"
+     ],
+     "rows": [
+      [
+       "Same pair twice, same answer?",
+       "Different answers (random)",
+       "Repeat each pair m times, odd m, take the majority. At 10 percent wrong, 15 votes leave a pair wrong about 3 times in 100,000. Or keep win counts over repeated rounds."
+      ],
+      [
+       "",
+       "Same answer every time (fixed)",
+       "Repeating is useless, so I stop paying for it. Compare many different pairs, rank by win count, and use cycles as the lie detector."
+      ],
+      [
+       "Can I see the values or any true answer?",
+       "No, the comparator is all I have",
+       "Transitivity is my only check: a over b and b over c must give a over c. A cycle contradicts it."
+      ],
+      [
+       "",
+       "A few trusted items or a slow exact check",
+       "Use them as anchors and spot checks, not as the sort."
+      ],
+      [
+       "How often is it wrong?",
+       "About 10 percent, no bound given",
+       "Rank by wins, and say the result is close to the true order, not guaranteed exact."
+      ],
+      [
+       "",
+       "At most k answers wrong",
+       "Exact recovery is possible: find the smallest set of at most k edges whose flip makes the graph acyclic. If two such sets exist, the data cannot tell them apart, and I say so."
+      ],
+      [
+       "How exact must the order be?",
+       "Fully sorted",
+       "I need a bound on the faults, or I say I can only promise consistency."
+      ],
+      [
+       "",
+       "Roughly right is fine",
+       "One win-count pass is enough. I report the largest distance an item can sit from its true place."
+      ],
+      [
+       "What does a call cost?",
+       "Cheap",
+       "All n(n-1)/2 pairs, then win counts. For n = 40 that is 780 calls."
+      ],
+      [
+       "",
+       "Paid or slow",
+       "Merge sort first (about n log2 n calls, roughly 213 for n = 40), then spend extra calls only where cycles show up. For slow calls, batch each round."
+      ],
+      [
+       "Can it say equal?",
+       "Yes",
+       "A tie breaks the strict order. I count it as half a win to each side."
+      ],
+      [
+       "Do I need all of them sorted?",
+       "Only the best k",
+       "A bracket with votes on the best item's matches (about log2 n of them) beats sorting everyone."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**The crux.** Two cases, two tools. If a repeated question can get a different answer, the errors are noise: ask each pair m times and keep the majority, or keep win counts and average them. With 10 percent wrong, the average is right once there are enough repetitions. If the same pair always gets the same answer, repeating changes nothing. Then compare many different pairs and rank each item by how many it wins, its win rate. Only about 10 percent of edges are lies, so every item's win count is mostly right and the errors wash out. A true order has no cycle, so every cycle (a over b over c over a) proves a lie inside it. It does not say which edge, so I fix the ranking, not single edges."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**The conversation, in order.**",
+      "Restate in one breath, then ask the first question: same pair twice, same answer? Then: can I see the values, how exact must it be, what does a call cost, how often is it wrong.",
+      "Brute force: sort with it once. Merge sort is O(n log n) calls, and any comparison sort needs at least that many. One early lie can move an item far, and nothing tells me which answer was the lie.",
+      "The model: items are nodes, each comparison is a directed edge, a true order has no cycles. Draw three items to show it: a cycle accuses all its edges and convicts none.",
+      "Branch on the answer from move 1. Random: vote. Fixed: all pairs, rank by wins, count the cycles.",
+      "Costs and the honest limit: sorting is n log2 n, certainty-seeking is n squared, finding the fewest edges to flip is NP-hard (minimum feedback arc set), so I use wins as the cheap heuristic. A run of lies that agree with each other makes no cycle, and I cannot see it.",
+      "Code only if asked: four small functions and a test on 40 items.",
+      "Take the follow-ups from the table below."
+     ]
     },
     {
      "t": "write",
      "id": "mercor-yours-q4-clarify-w",
-     "q": "Try it first. Write the clarifying questions you would ask before designing anything, and what each answer would change.",
+     "q": "Try it first. Write the questions you would ask before designing anything, and what each answer changes.",
      "starter": "1. \n2. \n3. \n4. \n",
-     "hint": "The most important one: if I compare the same pair twice, do I get the same answer? Then what other truth I have, how exact the order must be, and what a call costs.",
-     "solution": "Random or repeatable? Repeatable and deterministic. Same pair, same wrong answer, every time. It is a systematic fault, logic that is wrong on some cases, not noise or corruption in transit.\nAny other source of truth? No. You cannot see the values. You may call the comparator on any pair, as often as you like.\nHow exact? Fully sorted, exact order. Assume a true total order exists underneath the faults.\nCost of a comparison? Not fixed by the question. Treat count as the currency: state your cost assumption out loud, and say how your answer changes if calls are slow.\nDeterminism kills retry-and-vote. No oracle kills validation against truth. Whatever survives has to detect wrongness using only the comparator arguing with itself.",
-     "why": "The first answer decides the whole plan: random faults can be voted away, repeatable ones cannot.",
+     "hint": "The first one: if I compare the same pair twice, do I get the same answer? Then what other truth I have, how exact the order must be, and what a call costs.",
+     "solution": "Random or fixed? Fixed: same pair, same wrong answer, every time, so a systematic fault, not noise.\nAny other source of truth? No. I cannot see the values, but I can call the comparator on any pair, as often as I like.\nHow exact? Fully sorted, assuming a true total order underneath.\nWhat does a call cost? Not given. I state my assumption and say how the answer changes if calls are slow.\nA fixed fault kills retry and vote, and no oracle kills checking against truth. What survives is catching the comparator contradicting itself.",
      "say": [
-      "**Before I design anything, the answer depends entirely on how it is faulty.** Can I ask a few things about the fault, what I am allowed to use, and how exact the result needs to be?",
-      "That one move buys thinking time without stalling, signals that you know underspecification is where real systems break, and hands the interviewer the role they expect to play in this round: answering, narrowing, and watching how you update."
+      "**Before I design anything, the answer depends on how it is wrong.** Can I ask what kind of fault it is, what I am allowed to use, and how exact the result must be?"
      ]
     },
     {
-     "t": "write",
-     "id": "mercor-yours-q4-w",
-     "q": "Try it first. With deterministic faults and no oracle, write your whole answer: the model, how you detect lies, what you do about them, the cost and the limit.",
-     "starter": "Model:\n\nDetection:\n\nRepair:\n\nCost:\n\nLimit:\n",
-     "hint": "Transitivity is the only validator. What shape does a contradiction take in a graph of claims? What does one cycle prove, and what can it not tell you?",
-     "solution": "1. Clarify the error model. Deterministic faults, no oracle, exact order wanted, comparison count is the cost.\n2. Sort through the comparator. Merge sort, O(n log n) comparisons. Record every comparison made.\n3. Build the directed graph: edge A to B means A bigger than B, per the comparator.\n4. Find the cycles. Each cycle proves at least one faulty edge inside it.\n5. Score edges by cycle participation. Reverse the highest-scoring edge. Rebuild and repeat until the graph is acyclic. This is a greedy approach to minimum feedback arc set.\n6. Topologically sort the now-acyclic graph.\n7. Spend extra comparisons only around previously cyclic regions. Do not pay O(n squared) everywhere by default.\n8. Close with the limit: consistent chains of faults create no cycles and are undetectable. Guarantee consistency; claim exact truth only under a stated bound on the number of faults.",
-     "say": [
-      "**First I clarify the fault: it is deterministic, so retrying never helps, and there is no oracle, so I can only catch the comparator contradicting itself.** I model comparisons as a directed graph. A true order has no cycles, so a cycle proves a lie inside it.",
-      "I sort in n log n, build the graph, score edges by how many cycles they sit in, flip the worst, and repeat until it is a DAG, then topological sort is my order. That is minimum feedback arc set, which is NP-hard, so the greedy score is the practical answer. And I am honest about the limit: faults that agree with each other form no cycle, so exact recovery needs a bound on how many faults there are."
+     "t": "problem",
+     "id": "mercor-yours-q4-p",
+     "title": "Rank with a comparator that lies, random and fixed",
+     "source": "Core of the Q4 answer, run with Python 3",
+     "d": "medium",
+     "minutes": 20,
+     "why": "Two liars, the vote that fixes one, the win count that handles the other, and the cycle check that proves a lie.",
+     "statement": "Write random_liar and fixed_liar (wrong 10 percent of the time), vote(cmp, m), rank_by_wins(items, cmp) and cycles(items, cmp), then show what each fixes.",
+     "examples": [
+      {
+       "input": "40 items, 10 percent wrong, 15 votes",
+       "output": "random: exact order; fixed: same lies as without votes",
+       "note": "A fixed liar gives the same answer again, so the votes cannot change it."
+      }
+     ],
+     "constraints": [
+      "standard library only",
+      "items are comparable numbers, so the true order is known for testing"
+     ],
+     "starter": "def rank_by_wins(items, cmp):\n    ...\n",
+     "hints": [
+      "Compare every pair once, give the winner a point, sort by points.",
+      "A cycle needs three items, so look at triples in both orientations."
+     ],
+     "solution": "import random\nfrom itertools import combinations\n\n\ndef random_liar(p=0.9, seed=0):\n    \"\"\"Wrong with chance 1 - p, a fresh coin on every call.\"\"\"\n    rng = random.Random(seed)\n    return lambda a, b: (a > b) if rng.random() < p else (a < b)\n\n\ndef fixed_liar(p=0.9, seed=0):\n    \"\"\"The same pair always gets the same answer: each pair's lie is decided once.\"\"\"\n    rng, lies = random.Random(seed), {}\n    def cmp(a, b):\n        lie = lies.setdefault((min(a, b), max(a, b)), rng.random() > p)\n        return (a > b) != lie\n    return cmp\n\n\ndef vote(cmp, m):\n    \"\"\"Random liar: ask m times (odd), go with the majority.\"\"\"\n    return lambda a, b: sum(cmp(a, b) for _ in range(m)) * 2 > m\n\n\ndef rank_by_wins(items, cmp):\n    \"\"\"Fixed liar: compare every pair once, rank by win count.\"\"\"\n    wins = dict.fromkeys(items, 0)\n    for a, b in combinations(items, 2):\n        wins[a if cmp(a, b) else b] += 1\n    return sorted(items, key=wins.get, reverse=True)\n\n\ndef cycles(items, cmp):\n    \"\"\"Every 3-cycle a>b>c>a proves at least one lie among its three edges.\"\"\"\n    return [t for t in combinations(items, 3)\n            if any(cmp(x, y) and cmp(y, z) and cmp(z, x)\n                   for x, y, z in (t, (t[0], t[2], t[1])))]",
+     "complexity": "rank_by_wins: O(n^2) calls and O(n log n) to sort the counts. vote: m times the calls. cycles: O(n^3) triples, fine for a demo, sampled in practice.",
+     "explain": [
+      "fixed_liar decides each pair's lie once and keeps it, so asking again returns the same answer. That is the case the interviewer is probing.",
+      "rank_by_wins is a heuristic, not an exact repair: it gives a close order, and the largest place error is printed so you can quote it."
+     ],
+     "tests": "items = list(range(40))\nwant = sorted(items, reverse=True)\n\ndef off(order):  # biggest distance any item sits from its true place\n    return max(abs(order.index(x) - want.index(x)) for x in items)\n\nc = random_liar()\nprint(\"random, 1 vote, ranked by wins: max place error\", off(rank_by_wins(items, c)))\nprint(\"random, 15 votes, ranked by wins:\", rank_by_wins(items, vote(random_liar(), 15)) == want)\n\nf = fixed_liar()\nprint(\"fixed, 15 votes, same lies every time:\", rank_by_wins(items, vote(f, 15)) == rank_by_wins(items, f))\nprint(\"fixed, ranked by wins: max place error\", off(rank_by_wins(items, f)))\nprint(\"fixed, 3-cycles found:\", len(cycles(items, f)), \"of\", 40 * 39 * 38 // 6, \"triples\")\nprint(\"honest comparator, 3-cycles found:\", len(cycles(items, lambda a, b: a > b)))"
+    },
+    {
+     "t": "code",
+     "title": "Output, run with Python 3",
+     "code": "random, 1 vote, ranked by wins: max place error 6\nrandom, 15 votes, ranked by wins: True\nfixed, 15 votes, same lies every time: True\nfixed, ranked by wins: max place error 6\nfixed, 3-cycles found: 935 of 9880 triples\nhonest comparator, 3-cycles found: 0"
+    },
+    {
+     "t": "table",
+     "head": [
+      "They ask",
+      "The change",
+      "Cost"
+     ],
+     "rows": [
+      [
+       "What if at most k answers are wrong?",
+       "Add redundancy, then search for the smallest set of at most k flips that leaves the graph acyclic.",
+       "Dense comparisons up to n(n-1)/2, and a search that grows quickly with k."
+      ],
+      [
+       "What if the faults were random after all?",
+       "Repeat each pair an odd number of times and take the majority. The error falls exponentially in m.",
+       "m times the calls, so m x n log2 n with a sort."
+      ],
+      [
+       "Calls are slow",
+       "Batch a whole round of comparisons into one parallel step. Wall time becomes rounds, not calls.",
+       "Same calls, fewer waits. Needs a comparator that takes a batch."
+      ],
+      [
+       "Only the best, or the top k",
+       "A bracket, with votes on the best item's matches (about log2 n of them).",
+       "About (n-1) x m calls for the best, far below a full sort at the same accuracy."
+      ],
+      [
+       "Calls cost money",
+       "Sort once, then vote only where pairs are close or a cycle appears.",
+       "Between n log2 n and the full vote cost. See chapter 4."
+      ],
+      [
+       "Near-equal items are wrong more often",
+       "Votes fix none of it for a fixed fault. I accept an unordered band of near-equal items and say how wide.",
+       "No extra calls. The result is a partial order."
+      ],
+      [
+       "Can I use the library sort?",
+       "Not directly. Java can throw because the comparator breaks its contract, C++ std::sort is undefined, Python returns some order. Wrap the comparator in a cached, consistent one, or sort by win count.",
+       "Memory for the cache, about one entry per call."
+      ],
+      [
+       "Make it exact with any number of lies",
+       "I cannot, and I say so: consistent lies leave no cycle. Best effort ranking plus the cycles that remain.",
+       "None. The honest limit is the point."
+      ]
      ]
     },
     {
      "t": "faq",
-     "title": "Your story, branches and Q&A",
+     "title": "Push-backs, and what to say",
      "prose": true,
      "items": [
       {
-       "q": "What round this is, and how to use the story",
-       "a": "This is not the coding round and not system design. The Mercor algorithms block is about 30 minutes, verbal, discussion only. No code is written. The interviewer is listening for how you clarify an underspecified problem, how you model it, how you reason about cost and scalability, and whether you are honest about what cannot be solved. A perfect construction delivered without the limits scores worse than a good construction with the limits named clearly.\n\nRead the story once, end to end. It follows the exact path of a real attempt: the question, the clarifying questions, the interviewer answers, the first ideas that fail, the linked list that becomes a directed graph, the cycle that proves a lie, and the moment when you realise the cycle cannot tell you which edge is the lie. Then rehearse from the back: the 30-second answer, the branch map and the Q&A. In the room you will not recite this; you will walk the same path, faster, out loud.\n\nThe one sentence to carry in: transitivity is your only validator. Everything here, the graph, the cycles, the flipping, the cost and the honest limit, follows from that single fact."
+       "q": "Why ask 'same pair twice' first?",
+       "a": "**Decided.** It is the first question, before any design.\n\n**Instead of.** Assuming the faults are random and voting.\n\n**Why.** Random faults are averaged away, fixed ones are not. Every later answer depends on it.\n\n**What it costs.** One sentence of the interview.\n\n**If they push.** If they will not say, I name both plans and say which I take if I must guess."
       },
       {
-       "q": "The question as you will hear it, and your opening 20 seconds",
-       "a": "There is no handout, no starter code, and no Part 1 and Part 2. The interviewer says it in one breath, roughly: You need to sort a list of items. You have a comparison function that tells you which of two items is bigger, but it is faulty. It gives the wrong answer some of the time. How do you sort the list?\n\nNotice what is missing: what the items are, how often it is wrong, whether the wrongness is random or repeatable, whether you can see the values, whether exact order matters, and what a comparison costs. None of that is an accident. The gaps are the test. A candidate who starts sorting immediately has failed the first minute. A candidate who starts asking has passed it.\n\nDo not fill the silence with a sort. Say what you heard, then clarify. Why the question is built this way: in production, comparators really do lie, such as a buggy ranking function, a stale ML scorer, a human labeler with a bias, or a service returning cached judgments. Nobody hands you the error model. Eliciting it is the job the question is simulating."
+       "q": "Why not log the wrong ones and flip them?",
+       "a": "**Decided.** I never do that.\n\n**Instead of.** Keeping a log of comparisons that were wrong and a cache of corrected answers.\n\n**Why.** Nothing marks a wrong answer. A lie looks exactly like the truth, and with a fixed fault the cache stores the lie for ever.\n\n**What it costs.** I give up that tidy production story.\n\n**If they push.** Say it as a dead end I tried and dropped, and move to the graph."
       },
       {
-       "q": "The four clarifications, and why each matters",
-       "a": "1. Is the fault random or repeatable? If I compare the same pair twice, do I get the same answer both times, or can it change? This is the most important question in the round. Random faults can be averaged away with repetition and majority vote. Repeatable faults cannot: asking again returns the same lie, so repetition is worthless and you need a completely different weapon.\n\n2. Can I see the values, or is the comparator my only window? If you could inspect the values, there would be no problem at all. The question only exists if the comparator is all you have.\n\n3. How exact does the order need to be? Exact total order, or approximately sorted, top-k correct, small displacements tolerated? Exactness decides whether a heuristic answer is a solution or a failure.\n\n4. What does a comparison cost, and how many can I make? Cheap and unlimited, or slow, paid or rate-limited? The cost model decides whether you minimise the number of calls first, or spend calls freely to buy certainty."
+       "q": "Why not reverse the edge that closed the cycle?",
+       "a": "**Decided.** I treat the cycle as evidence against all its edges.\n\n**Instead of.** Flipping the newest edge.\n\n**Why.** A cycle proves at least one lie inside it. The edge that closed it may be the only true one, and the lie may be an older edge I already built on.\n\n**What it costs.** I need more comparisons so edges are corroborated by paths outside the cycle.\n\n**If they push.** A four-item example: true order A over B over C over D, the lie is C over A. The cycle A, B, C holds two true edges. Add A over D and B over D, which are true: no new cycles, and flipping C over A leaves one clean order."
       },
       {
-       "q": "Second-wave questions, and the fork each answer creates",
-       "a": "What does wrong look like, a flipped answer, or can it also say equal? A comparator that only flips is a cleaner problem than one that can also collapse distinct items into ties. Ties break the total-order assumption your graph will rely on.\n\nIs there a bound on how many comparisons are wrong, at most k, or some fraction? This decides whether exact recovery is even possible. Few errors: cycles will betray them and repair is realistic. Unbounded errors: no algorithm can promise the true order, and the honest answer becomes a best-effort ranking plus that admission.\n\nAre the faults clustered or spread out? A comparator wrong only on a narrow family of items leaves most of the order trustworthy and concentrates suspicion. Faults spread evenly are the worst case.\n\nDo I sort once, or does this run repeatedly on new batches? Repeated batches let you learn: log suspect pairs, build evidence across runs, and eventually fix or route around the faulty cases.\n\nHow to ask without stalling: ask the first four, start working, and let the second wave arrive naturally as your design needs each answer. Interviewers read a long upfront interrogation as avoidance. They read a question asked at the exact moment the design forks as engineering.\n\nThe forks. Faults random per call: repeat each comparison, take majority vote, then sort normally; the graph is unnecessary. Faults deterministic (the real case): repetition is useless, so model comparisons as a graph and use transitivity. Approximate order acceptable: sort once, repair only the cycles you find, ship. At most k comparisons wrong: exact recovery becomes a real target, so find the smallest set of flips that removes every inconsistency."
+       "q": "Why rank by wins, not sort once?",
+       "a": "**Decided.** Compare all pairs and rank by win count.\n\n**Instead of.** One merge sort, n log2 n calls.\n\n**Why.** Each item takes part in n-1 comparisons, about 10 percent of them lies, so its count is mostly right. A sort uses each item in only about log2 n comparisons, so one lie can move an item a long way.\n\n**What it costs.** n(n-1)/2 calls instead of n log2 n: 780 against about 213 at n = 40.\n\n**If they push.** If calls are costly, sort first and spend the extra calls only near cycles."
       },
       {
-       "q": "Two honest dead ends come first",
-       "a": "Chapter 1: I will log the bad ones and flip them. The first instinct sounds like production engineering: keep using the faulty comparator, log the comparisons it gets wrong, flip those results, cache the corrected answers, and validate in batches. It collapses on one question from the interviewer: how do you know a comparison was wrong? The comparator only gives you its answer. Nothing tells you it lied. There is no flag on a wrong answer. A lie from this comparator looks exactly like the truth. And the cache makes it worse, because the fault is deterministic, so the cache faithfully stores and replays the same wrong answer forever. Say this out loud when you see it: naming why your own idea fails is scored, not penalised.\n\nChapter 2: I will compare the values myself. The second instinct is to step around the comparator: 3 is bigger than 2, 100 is bigger than 5, use math. The interviewer closes this door in one line: if you can see the values, you do not need a comparator and there is no problem. The premise is that you cannot. The items might be documents ranked by relevance, candidates ranked by a model, products ranked by a black-box service.\n\nWhat the dead ends teach: you have exactly one instrument, it sometimes lies, its lies are repeatable, and no alarm rings when it lies. So detection can only come from the comparator contradicting itself. Where can a comparator contradict itself? Only across multiple comparisons, never inside a single one. That is the doorway to the real solution."
+       "q": "Why not run the sort again and combine?",
+       "a": "**Decided.** I do not.\n\n**Instead of.** Repeating the whole sort.\n\n**Why.** A fixed fault makes the same comparisons and the same wrong order every run. Repeating helps only against randomness.\n\n**What it costs.** Wasted calls.\n\n**If they push.** Say: that is exactly the random case, and there I do vote."
       },
       {
-       "q": "The linked list that had to become a graph",
-       "a": "Chapter 3: start with chains, then watch them break. The natural first model is a linked list. Compare A and B, link them in order. Compare C and D, start a second chain. Soon you hold several ordered chains, and merging chains is familiar work. Then you compare A against D, two items from different chains. A chain can only say what sits next to what. But this comparison relates items with other items in between, and future comparisons will keep cutting across chains like that. The structure you need is not a set of chains. It is a network of relations.\n\nChapter 4: the directed graph. Upgrade the model, and say the upgrade out loud: a linked list is too weak for this. Every comparison is a relation between any two items, so I need a directed graph. Each item is a node. If the comparator says A is bigger than B, I draw an edge from A to B. The graph is the record of everything the comparator has claimed. It stores claims, not truth, which is exactly why its shape can expose a lie.\n\nTwo properties now do all the work. A true total order, drawn this way, is a directed acyclic graph: edges flow consistently from bigger to smaller and can never loop back. And a true order is transitive: if A beats B and B beats C, then A must beat C. Your graph inherits both tests for free."
+       "q": "Can you tell which edge is a lie?",
+       "a": "**Decided.** I say no, not from one cycle.\n\n**Instead of.** Claiming I can name the bad edge.\n\n**Why.** A single comparison has nothing to agree with, so detection needs at least three items and a transitivity check. Even then a cycle names its edges as suspects, not culprits.\n\n**What it costs.** I score edges by how many cycles they sit in and treat the top ones as likeliest.\n\n**If they push.** Minimum feedback arc set is NP-hard, so I say best effort."
       },
       {
-       "q": "A cycle is the sound of the comparator lying",
-       "a": "Ask the interviewer's own Socratic question before they ask you: if the comparator says A is less than B, and B is less than C, what must it say about A and C? It must say A is less than C. If it says anything else, it has contradicted itself, and a contradiction is detectable without any oracle, because a true order cannot contain one.\n\nIn graph language, a contradiction is a cycle. Follow the edges around and you return to where you started, which would mean an item is bigger than itself. That is impossible in any real ordering.\n\nThe central fact of the whole question: if the graph has a cycle, at least one edge in that cycle is a faulty comparison. No exceptions. And cycles are the only evidence of faultiness you can ever obtain, because they are the only way the comparator can disagree with itself. Example: A beats B, B beats C, but C beats A. All three cannot be true. At least one edge is a lie, even though no single comparison looked wrong.\n\nThis is also where your spanning-tree instinct belongs. A tree has no cycles, so a cycle-free skeleton of your graph is at least self-consistent. But a tree throws away exactly the redundant edges that create cycles, and the redundancy is the evidence. Keep the full graph for detection; use tree-like, acyclic structure only at the end, when you extract the final order.\n\nHow do you find cycles in the room? Name a method plainly: depth-first search watching for a back edge, or repeated topological removal, peeling off nodes with no incoming edges; whatever remains is trapped in cycles. You will not implement it. Naming a correct method is enough for a verbal round."
+       "q": "What can this never catch?",
+       "a": "**Decided.** I volunteer the limit before they ask.\n\n**Instead of.** Promising exact order.\n\n**Why.** Lies that agree with each other, for example a comparator wrong on every pair involving one item, create no cycle. Redundancy detects errors only when the faults disagree.\n\n**What it costs.** I can only promise consistency, and exactness under a stated bound on the faults.\n\n**If they push.** Interviewers score an honest limit above a perfect construction that hides it."
       },
       {
-       "q": "The cycle accuses everyone in it, and no one",
-       "a": "Chapter 6: so I reverse the edge that closed the cycle. The next instinct is tidy: when a new comparison creates a cycle, that new edge must be the faulty one, so reverse it. It survives about five seconds. The cycle only proves that at least one edge in the loop is wrong. The edge that closed the cycle might be the only truthful one, and the lie might be an older edge you trusted and built on. As you put it in the mock: it is not necessarily the new one, maybe some other edge in the circle needs reversal.\n\nSay exactly that in the room, because it converts a wrong move into a strong one. The cycle gives you a suspect set, not a culprit. Any single-edge flip inside the cycle breaks that cycle, but flipping the wrong edge fixes the shape while corrupting the order, and the graph cannot tell you that you did it. Detection is certain. Identification is inference. Keep those two words separate throughout the interview; conflating them is the main way candidates overclaim on this question.\n\nChapter 7: the shared-edge insight, your best idea in the session. Suppose you collect many comparisons and the graph contains three cycles. Some edges sit in only one cycle. But imagine one edge sits in two of the three, so every loop of contradiction passes through it. Reversing that single edge breaks both cycles at once. An edge that explains the most contradictions is the most likely lie.\n\nSay: score every edge by how many cycles it participates in. Flip the highest-scoring edge first, rebuild, and repeat until no cycles remain. One flip that resolves multiple cycles is more likely to be the true fault than a flip that resolves only one.\n\nThis heuristic has a principled name, and naming it elevates the answer: you are looking for the minimum feedback arc set, the smallest set of edges whose reversal makes the graph acyclic. Under the assumption that faults are rare, the smallest explanation is the best bet. Be ready for the follow-up, because it always comes: that problem is NP-hard in general. So the honest production answer is the heuristic, cycle-participation scoring, greedy flipping, re-checking, not an exact search."
+       "q": "What I would do with another hour",
+       "a": "**Decided.** Test the ranking against a bound on place error and a cost model.\n\n**Instead of.** More theory.\n\n**Why.** Numbers are what make a verbal answer credible.\n\n**What it costs.** Time.\n\n**If they push.** I would add the sampled cycle search for large n and the batched version for slow calls."
+      }
+     ]
+    },
+    {
+     "t": "probs",
+     "title": "Related, then harder",
+     "items": [
+      {
+       "n": "Kth Largest Element in a Stream",
+       "d": "easy",
+       "lc": "kth-largest-element-in-a-stream",
+       "yt": [
+        "hOjcdrqMoQ8",
+        "NeetCode",
+        12
+       ],
+       "why": "A heap of size k, the small-k answer, with the comparator hidden inside."
       },
       {
-       "q": "The logistics: what it costs, and the honest limit",
-       "a": "First, correct the cost of sorting itself. Merge sort does not cost log n comparisons. It costs O(n log n): log n levels of merging, n comparisons per level. And that is not merge sort being wasteful: any comparison-based sort needs at least Omega(n log n) comparisons in the worst case, even with a perfect comparator. The faulty comparator does not lower that floor. It only adds verification work on top of it.\n\nHow much redundancy do you buy? Sort only (merge sort): O(n log n), a candidate order and only the comparisons the sort happened to make, so few overlapping paths and few cycles, little evidence to detect lies with. Sort, then probe around suspicion: O(n log n) plus targeted extras, spending extra comparisons only where cycles or near-inconsistencies appear, the practical middle ground. Compare all pairs: O(n squared), maximum redundancy and the richest cycle evidence, expensive, and still inference when a cycle appears.\n\nIf each comparison call is slow, a service round-trip or a model call, add the wall-clock point: comparisons at the same level of merge sort are independent, so batch and parallelise them. Minimise the number of calls first, then the time per call by running independent calls together.\n\nThe honest limit: wrong, acyclic and invisible. Suppose A to B is wrong, and B to C is also wrong, in a matching direction, and A to C is wrong in the matching direction too. The three claims agree with each other perfectly. The graph is acyclic. No cycle forms. And the order is still wrong. Say it this plainly: cycles are sufficient evidence of a fault, but they are not necessary. A set of faults that is internally consistent creates no cycle and cannot be detected by any method that only uses this comparator. So without a bound on how many comparisons are wrong, I cannot guarantee the exact true order. I can guarantee consistency, and, if faults are few, I can very likely recover the truth.\n\nThat paragraph is not a concession speech. On this question, it is the summit. The question is designed so that certainty is impossible, specifically to see whether you will claim it anyway."
+       "n": "Sort an Array",
+       "d": "medium",
+       "lc": "sort-an-array",
+       "yt": [
+        "MsYZSinhuFo",
+        "NeetCodeIO",
+        18
+       ],
+       "why": "Write merge sort by hand and count the calls. The first layer of the talk track starts here."
       },
       {
-       "q": "A worked miniature",
-       "a": "Four items, true order A > B > C > D. The comparator lies once: it says C > A. Your comparisons give A>B, B>C, C>D and the lie C>A. The graph contains the cycle A>B>C>A. The lie sits in that cycle, but so do two truthful edges. Now add one more comparison, A>D (truthful), and B>D (truthful): no new cycles. The lie remains the edge whose removal leaves a graph perfectly consistent with a single clean order, and each truthful edge in the cycle is corroborated by paths outside it. Flip C>A to A>C, the graph becomes acyclic, and topological sort returns A, B, C, D. One lie, caught by contradiction, identified by being the least corroborated edge in its cycle."
+       "n": "Kth Largest Element in an Array",
+       "d": "medium",
+       "lc": "kth-largest-element-in-an-array",
+       "yt": [
+        "XEmy13g1Qxc",
+        "NeetCode",
+        19
+       ],
+       "why": "Heap of size k against quickselect: the two answers to 'top k without sorting'."
       },
       {
-       "q": "Why this is the answer: the deeper logic",
-       "a": "Redundancy is the only error-correction mechanism that exists. Every error-detecting system works the same way: say the same thing twice, in forms that must agree, and check the agreement. A checksum, a parity bit, a repeated measurement: all are redundancy plus a consistency rule. Here, the consistency rule is transitivity, and the redundancy is overlapping comparison paths. A single comparison carries no redundancy, which is why a single comparison can never be validated. The graph is the machine that manufactures and checks redundancy.\n\nThat is also why more comparisons buy detection, not certainty. Each extra comparison adds paths, and each path is a new chance for a lie to contradict something. All-pairs comparison maximises contradiction surface. But a lie that is consistent with everything else has contradicted nothing, at any budget. Detection power scales with spend; identifiability never becomes absolute.\n\nThe spanning-tree instinct, resolved. A tree on n nodes has n-1 edges and zero cycles: zero redundancy, zero detection. The sort itself already gives you roughly that much structure. Everything beyond the tree, every extra edge that closes a loop, is pure evidence. So the design question is really: how much evidence do you buy, and where?\n\nThe assumption doing the heavy lifting is sparsity. Minimum feedback arc set is the right target only because faults are assumed few, so the smallest set of flips that restores consistency is likely the true fault set. If faults were dense, the smallest explanation could easily be a set of truthful edges, and flipping them would corrupt a mostly-right order into a consistently wrong one. Name the assumption and its failure mode together."
-      },
-      {
-       "q": "Where the conversation can go next: six branches",
-       "a": "1. What if at most k comparisons are wrong? Then exact recovery becomes well-posed. I need enough redundancy that any k flips cannot produce a consistent alternative order, practically denser comparisons, and I search for the unique flip-set of size at most k that makes the graph acyclic. If two different flip-sets that small both work, the data genuinely cannot distinguish them, and I would say so.\n\n2. What if the faults were random after all? Completely different problem, and easier. I repeat each comparison an odd number of times and take the majority; error probability collapses exponentially in the repetitions. Then any standard sort works. Cost is the repetition factor times n log n.\n\n3. What about equal items, ties? Ties turn the graph into a preorder: equal items should be mutually reachable or explicitly grouped. I would model equal as its own claim, cluster items the comparator calls equal, and sort the clusters, while noting a faulty equal can hide a real difference that no cycle will expose.\n\n4. Comparisons are a paid API, minimise calls. Then I sort with the fewest comparisons I can, reuse every result in the graph (never pay for the same pair twice, since answers are deterministic) and buy extra comparisons only inside cyclic regions, where each call has the highest chance of changing the answer.\n\n5. Items keep arriving, streaming. I keep the graph and insert each new item against a few well-connected existing items rather than all of them. Each insertion either lands consistently or creates cycles that localise suspicion near the new item. Periodically I re-run the flip repair on the affected region only.\n\n6. You own this comparator service. What do you do on Monday? The graph method is the band-aid that ships a correct order today. The fix is upstream: log the suspect edges the cycles identify, reproduce them, find the edge cases in the comparator logic, and add transitivity checks as a permanent monitor, random triples sampled continuously, alerting when the violation rate moves."
-      },
-      {
-       "q": "Q&A: follow-ups answered at interview length",
-       "a": "Why not run the sort several times and combine results? Because the comparator is deterministic, every run makes the identical comparisons and returns the identical wrong order. Repetition only helps against randomness. There is none here.\n\nCan you detect a faulty comparison from a single pair? No. A single claim has nothing to agree or disagree with. Detection needs at least a triangle: three items, three comparisons and a transitivity check.\n\nHow do you find cycles, concretely? Depth-first search and watch for an edge back into the current path, or peel the graph topologically, repeatedly removing nodes with no incoming edges; the nodes that survive are in or downstream of cycles. In this round, naming the method is the answer.\n\nYou flip an edge and a new cycle appears. Now what? Expected, not a failure. Flips change the graph, and the repair is iterative by design: score, flip the worst edge, re-check, repeat until acyclic. If flipping cycles forever, that signals faults are not sparse, the core assumption has broken, and I would stop and say the error rate is too high for this method.\n\nIs the flipped edge definitely the faulty one? No, it is the most likely one under the fewest-faults assumption. I would present it as maximum-likelihood repair, not identification. Overclaiming here is the trap the question sets.\n\nWhat is the total complexity? Comparisons dominate: O(n log n) for the sort plus whatever probing budget I choose, up to O(n squared) for all pairs. Cycle detection is linear in nodes plus edges per pass. The exact optimisation, fewest flips, is NP-hard, which is why the shipped version is the greedy heuristic.\n\nWhat if n is small? Then pay for everything: all pairs, full cycle evidence, and if the graph is small enough, an exact search over flip sets instead of the greedy heuristic. Small n is where certainty gets closest."
-      },
-      {
-       "q": "How you are scored, the traps and the rehearsal",
-       "a": "What the interviewer is listening for. Clarification before construction: the error-model question, random or repeatable, is the single highest-value sentence of the round. A model, not a procedure: the directed graph is the moment the answer becomes a model of claims rather than a sorting recipe. Detection versus identification: a cycle proves a lie exists but not which edge it is. Correct cost fluency: sorting is O(n log n), certainty-seeking is O(n squared), the exact repair is NP-hard. An honest limit, volunteered: consistent faults are invisible, and if the interviewer has to extract this from you, it counts for half. A heuristic with a reason: cycle-participation scoring, justified by the fewest-faults assumption.\n\nTraps to avoid. Do not say merge sort costs log n comparisons; it is n log n, and also the lower bound for any comparison sort. Do not propose retrying, voting or caching as a fix for deterministic faults. Do not claim the edge that closed the cycle is the faulty one; it is a suspect. Do not present a spanning tree as the detector; redundancy is the detector. Do not promise the exact order without an error bound; promise consistency, and likelihood under sparse faults.\n\nRehearsal checklist. 1. Say the question back and ask the four clarifications without notes. 2. Walk the story in order (dead ends, linked list, graph, cycle, which edge, shared edge, cost, limit) in under eight minutes. 3. Deliver the 30-second answer three times, out loud, timed. 4. Pick two branches at random and answer each in under a minute. 5. End every practice run with the limit paragraph. It is your closing line, not an apology.\n\nFinal posture: pause before each answer, headline first, then the reasoning, then the limit."
+       "n": "Merge k Sorted Lists",
+       "d": "hard",
+       "lc": "merge-k-sorted-lists",
+       "yt": [
+        "q5a5OiGbT6Q",
+        "NeetCode",
+        11
+       ],
+       "why": "The harder follow-up: a heap of heads is a tournament in disguise, n log k calls. It is the bridge to the bracket."
       }
      ]
     }
@@ -412,7 +891,84 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "p",
-     "text": "**The problem (Q5).** A hidden tree has n nodes, numbered 1 to n. You can query any node, and the query returns the distance from that node to every other node. You get at most ceil(n/2) queries. Reconstruct all the edges of the tree. This one was parked in the log and is now solved."
+     "text": "**The problem, as you might hear it.** A hidden tree has n nodes, numbered 1 to n. You can query any node, and the query returns the distance from that node to every other node. You get at most ceil(n / 2) queries. Reconstruct every edge of the tree."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**Read it before you speak.** One query returns a whole row of distances, not one number. Distance 1 in a row means a neighbour: an edge.",
+      "The hidden structure is a tree, and a tree is bipartite. Colour every node by the parity of its distance from node 1: every edge joins an even node to an odd node.",
+      "The size that decides it: ceil(n / 2) is about half the nodes. In a star, node 1 has n - 1 neighbours, so querying its neighbours breaks the budget at once.",
+      "What is undefined: edges as unordered pairs or with directions (the task says edges, so unordered), labels 1 to n, and that it is surely a tree.",
+      "The trap: breadth-first search, or querying half of each neighbour list. A star breaks the first, a double star breaks the second."
+     ]
+    },
+    {
+     "t": "table",
+     "head": [
+      "Ask",
+      "If they say",
+      "Then I"
+     ],
+     "rows": [
+      [
+       "What does a query return?",
+       "The distance from that node to every node",
+       "One row gives all of that node's neighbours (the 1s). Node 1's row also gives the parity of every node."
+      ],
+      [
+       "Is it a tree?",
+       "Yes: connected, n - 1 edges",
+       "Then it is bipartite, and every edge crosses the even and odd split, measured from any node."
+      ],
+      [
+       "",
+       "It might have cycles",
+       "Parity breaks on an odd cycle: an edge can join two nodes of the same parity and hide. I say so and ask for a tree."
+      ],
+      [
+       "What is the budget?",
+       "At most ceil(n / 2) queries",
+       "Query node 1, then the smaller parity side. The sides add up to n, so the smaller one is at most n / 2."
+      ],
+      [
+       "",
+       "Fewer than that",
+       "This method queries a set that touches every edge, which on a path is about n / 2. I say that, and ask if the limit is tight, rather than guess."
+      ],
+      [
+       "What do I return?",
+       "The edges",
+       "A set of unordered pairs (min, max). A parent and a child are both at distance 1: I do not need to tell them apart."
+      ],
+      [
+       "Are the labels 1 to n?",
+       "Yes",
+       "A row is a list indexed by label, so position v - 1 holds node v."
+      ],
+      [
+       "Can n be 1 or 2?",
+       "Yes",
+       "n = 1: no edges, one query. n = 2: node 1's row shows the edge and no more queries are needed."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**The crux.** Parity. Query node 1 and split every node by the parity of its distance. Every edge joins an even node to an odd node, so every edge has one end on each side, and querying every node on one side finds every edge: that node reports the other end at distance 1. Query the smaller side. The two sides add up to n, so the smaller one is at most n / 2, and counting the query of node 1 the total is at most ceil(n / 2)."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**The conversation, in order.**",
+      "**Restate.** 'One query gives the whole distance row, distance 1 means an edge, and I choose which nodes to query so that every edge has a queried end.'",
+      "**Brute force.** 'Query every node: n queries, every edge found. Twice too many.'",
+      "**Wrong ideas, quickly.** 'BFS from node 1: a star has n - 1 neighbours, so it breaks the budget. Half of each neighbour list: in a double star it can skip a centre and lose all of its leaves.'",
+      "**The idea.** 'The parity of the distance from node 1 splits the nodes in two, every edge crosses it, so one whole side touches every edge. I take the smaller side.'",
+      "**Code.** 'Query 1, split, query the smaller side, read the 1s.' Node 1 is already queried, so it is not asked again.",
+      "**Test on a small case, aloud.** 'Path 1 to 7: even side 1, 3, 5, 7 and odd side 2, 4, 6. The odd side is smaller, so 1 + 3 = 4 queries, and the limit is 4. A star is 1 query.'",
+      "**Follow-ups.** The second table."
+     ]
     },
     {
      "t": "write",
@@ -427,32 +983,13 @@ window.LOOP_CODING.parts.push({
      ]
     },
     {
-     "t": "faq",
-     "title": "Your thinking, the cases and the formal solution",
-     "prose": true,
-     "items": [
-      {
-       "q": "The thinking",
-       "a": "The first idea is the distance map: one query hands you the distance from that node to every node at once, not a single distance. From that map, the neighbours of the queried node are exactly the nodes at distance 1. A parent and a child both sit at distance 1, and one query cannot tell them apart. That is fine, because the task asks for edges, not directions. An edge is an edge whichever endpoint is the parent.\n\nThe next instinct is breadth-first search: query the distance-1 nodes, then their distance-1 nodes, and keep going. That finds edges, but it does not respect the budget. In a star, node 1 has n-1 neighbours, and querying all of them already breaks the limit.\n\nThe detour to drop is the longest path. Whether the tree is skewed or balanced, whether the diameter runs through the root or sits inside a subtree, none of it changes the approach. The shape of the tree is irrelevant.\n\nThe crux is parity. Fix node 1 and query it. Every node is now at an even or an odd distance from 1. Every edge in the tree joins an even node to an odd node, because the path from 1 to one endpoint runs through the other, so their distances differ by exactly 1. So if you query every node on one side of that split, every edge has a queried endpoint, and the distance-1 rule reads it off.\n\nThe check that kills the halving idea is the double star: two centres A and B joined to each other, each with a bunch of leaves. Query A, take half of its neighbours, and if B lands in the half you skip, B never gets queried and every edge from B to its leaves is lost. Parity does not have that hole, because B is at distance 1 and its leaves are at distance 2, so one of the two sides is queried in full."
-      },
-      {
-       "q": "What to say in the round, and the cases to have ready",
-       "a": "Lead with the budget and the observation, not with the procedure. Say: a query returns the whole distance map, distance 1 means an edge, and the problem is choosing which nodes to query. Then state the parity fact and the procedure. Name the trick plainly: the parity split turns the query budget into a vertex cover, and the smaller side is at most half the nodes.\n\nStar with centre 1: one query finds every edge. The even side is only node 1.\n\nPath, the skewed case: the two sides split about half and half, and the bound is tight but holds.\n\nDouble star: the case that breaks naive breadth-first halving. Parity handles it because every edge crosses the cut.\n\nn equals 1: no edges, one query, done.\n\nNode 1 is a leaf or the centre: it does not matter, parity is relative to node 1 either way.\n\nIf the interviewer pushes on why the smaller side is enough, the answer is the cut argument: no edge has both endpoints on the same side, so no edge can hide from the queried side. If they push on the count, the answer is the arithmetic: the two sides add to n, so the smaller side plus the node 1 query is at most ceil(n/2)."
-      },
-      {
-       "q": "The formal solution, correctness and cost",
-       "a": "1. Query node 1. Split all nodes into even and odd distance from 1.\n\n2. Query every node on the smaller side. Node 1 is on the even side and is already queried. Total queries: 1 plus the size of the odd side if that side is smaller, else the size of the even side. Either way at most ceil(n/2).\n\n3. For every queried node u, for every node v with distance 1 from u, add edge (u, v).\n\n4. The result is all n-1 edges of the tree.\n\nCorrectness: every edge joins an even node to an odd node, so every edge has an endpoint on the queried side, and that endpoint reports the other endpoint at distance 1. No false edges appear, because distance 1 in a tree means adjacent. The count bound: the two sides add to n, so the smaller side has at most n/2 nodes, and adding the node 1 query keeps the total at or below ceil(n/2).\n\nComplexity. Queries: at most ceil(n/2), and that is the resource the problem measures. Time: each query returns n distances and you scan them, so O(n) per query and O(n^2) total. Space: O(n) for the distance arrays and the edge set."
-      }
-     ]
-    },
-    {
      "t": "problem",
      "id": "mercor-yours-q5-p",
-     "title": "Lost Tree, the solution with a judge that checks the query limit",
-     "source": "Your Q5 write-up (Muse), run with Python 3.12",
+     "title": "Lost Tree, with a judge that checks the query limit",
+     "source": "Your Q5 write-up (Muse), run with Python 3",
      "d": "hard",
      "minutes": 30,
-     "why": "The judge is a simulator of the hidden tree, so the solution can be run and checked against random trees, a path, a star, a double star and a binary tree.",
+     "why": "The judge is a simulator of the hidden tree, so the solution runs against random trees, a path, a star, a double star and a binary tree.",
      "statement": "Write solve(n, query) that returns the set of all edges as (min, max) pairs, using query(v) at most ceil(n / 2) times.",
      "examples": [
       {
@@ -465,22 +1002,95 @@ window.LOOP_CODING.parts.push({
       "standard library only",
       "at most ceil(n / 2) queries"
      ],
-     "starter": "def solve(n, query):\n    ...\n",
+     "starter": "def solve(n, query):\n    ...",
      "hints": [
       "Query node 1, split nodes by parity of distance, query the smaller side and read the distance-1 entries."
      ],
-     "solution": "import math\nimport random\nfrom collections import deque\n\n\nclass TreeJudge:\n    # The judge: a hidden tree that answers distance queries.\n    # In the real problem this is the interactor; here it is a\n    # simulator so the solution can be run and checked.\n    def __init__(self, n, edges):\n        self.n = n\n        self.adj = {v: [] for v in range(1, n + 1)}\n        for a, b in edges:\n            self.adj[a].append(b)\n            self.adj[b].append(a)\n        self.queries_used = 0\n\n    def query(self, v):\n        # BFS from v; returns a distance list indexed 1..n.\n        self.queries_used += 1\n        dist = {v: 0}\n        q = deque([v])\n        while q:\n            u = q.popleft()\n            for w in self.adj[u]:\n                if w not in dist:\n                    dist[w] = dist[u] + 1\n                    q.append(w)\n        return [dist[i] for i in range(1, self.n + 1)]\n\n\ndef random_tree(n, rng):\n    # Random recursive tree: each new node attaches to a uniform\n    # earlier node. Produces varied shapes, sometimes skewed.\n    edges = []\n    for v in range(2, n + 1):\n        edges.append((v, rng.randint(1, v - 1)))\n    return edges\n\n\ndef solve(n, query):\n    # 1. Query node 1. Its answer splits every node into even\n    #    and odd distance from 1.\n    d1 = query(1)\n    even = [v for v in range(1, n + 1) if d1[v - 1] % 2 == 0]\n    odd = [v for v in range(1, n + 1) if d1[v - 1] % 2 == 1]\n\n    # 2. Query every node on the smaller side. Node 1 is on the\n    #    even side and is already queried, so it is skipped there.\n    #    Cost: 1 + len(odd) if the odd side is smaller, else\n    #    len(even). Either way at most ceil(n / 2).\n    if len(odd) < len(even):\n        to_query = odd\n    else:\n        to_query = [v for v in even if v != 1]\n\n    # 3. Read the edges off the answers: distance 1 means an edge.\n    #    The answer for node 1 counts too; its distance-1 nodes\n    #    are its neighbours.\n    answers = {1: d1}\n    for u in to_query:\n        answers[u] = query(u)\n\n    edges = set()\n    for u, du in answers.items():\n        for v in range(1, n + 1):\n            if du[v - 1] == 1:\n                edges.add((min(u, v), max(u, v)))\n    return edges",
-     "complexity": "At most ceil(n/2) queries. O(n) per query, O(n^2) total. O(n) space.",
+     "solution": "import math\nimport random\nfrom collections import deque\n\n\ndef solve(n, query):\n    # 1. Query node 1. Its answer splits every node into even\n    #    and odd distance from 1.\n    d1 = query(1)\n    even = [v for v in range(1, n + 1) if d1[v - 1] % 2 == 0]\n    odd = [v for v in range(1, n + 1) if d1[v - 1] % 2 == 1]\n\n    # 2. Query every node on the smaller side. Node 1 is on the\n    #    even side and is already queried, so it is skipped there.\n    #    Cost: 1 + len(odd) if the odd side is smaller, else\n    #    len(even). Either way at most ceil(n / 2).\n    if len(odd) < len(even):\n        to_query = odd\n    else:\n        to_query = [v for v in even if v != 1]\n\n    # 3. Read the edges off the answers: distance 1 means an edge.\n    #    The answer for node 1 counts too; its distance-1 nodes\n    #    are its neighbours.\n    answers = {1: d1}\n    for u in to_query:\n        answers[u] = query(u)\n\n    edges = set()\n    for u, du in answers.items():\n        for v in range(1, n + 1):\n            if du[v - 1] == 1:\n                edges.add((min(u, v), max(u, v)))\n    return edges\n",
+     "complexity": "At most ceil(n / 2) queries. O(n) per query, O(n^2) total. O(n) space.",
      "explain": [
-      "TreeJudge is the hidden tree: query(v) runs a BFS and counts the query.",
-      "The test box here prints one summary line for the 1,000 random trees; your write-up printed one line per run. The checks are the same."
+      "The first query splits the nodes into even and odd distance from node 1.",
+      "Node 1 is on the even side and already queried, so the even side costs len(even) - 1 more queries, the odd side len(odd) more.",
+      "Every queried row gives its node's neighbours: the entries equal to 1.",
+      "TreeJudge, random_tree and the checks are in the tests: the judge counts queries and the check asserts the limit."
      ],
-     "tests": "def check(n, edges, label):\n    judge = TreeJudge(n, edges)\n    found = solve(n, judge.query)\n    want = {(min(a, b), max(a, b)) for a, b in edges}\n    assert found == want, (label, found ^ want)\n    assert judge.queries_used <= math.ceil(n / 2), (label, judge.queries_used)\n    return judge.queries_used\n\n\nif __name__ == \"__main__\":\n    rng = random.Random(11)\n    runs = 0\n    for n in range(1, 51):\n        for _ in range(20):\n            check(n, random_tree(n, rng), \"random\")\n            runs += 1\n    print(f\"random trees: {runs} runs, n = 1 to 50, all within ceil(n/2) queries\")\n    for label, n, edges in [\n        (\"path\", 7, [(1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)]),\n        (\"star\", 8, [(1, i) for i in range(2, 9)]),\n        (\"double-star\", 10, [(1, 2)] + [(1, i) for i in range(3, 7)]\n         + [(2, i) for i in range(7, 11)]),\n        (\"binary-tree\", 15, [(i, 2 * i) for i in range(1, 8) if 2 * i <= 15]\n         + [(i, 2 * i + 1) for i in range(1, 8) if 2 * i + 1 <= 15]),\n    ]:\n        used = check(n, edges, label)\n        print(f\"{label}: n={n}, queries={used}, limit={math.ceil(n / 2)}, edges={len(edges)} ok\")\n    print(\"ALL PASS\")"
+     "tests": "class TreeJudge:\n    # The judge: a hidden tree that answers distance queries.\n    # In the real problem this is the interactor; here it is a\n    # simulator so the solution can be run and checked.\n    def __init__(self, n, edges):\n        self.n = n\n        self.adj = {v: [] for v in range(1, n + 1)}\n        for a, b in edges:\n            self.adj[a].append(b)\n            self.adj[b].append(a)\n        self.queries_used = 0\n\n    def query(self, v):\n        # BFS from v; returns a distance list indexed 1..n.\n        self.queries_used += 1\n        dist = {v: 0}\n        q = deque([v])\n        while q:\n            u = q.popleft()\n            for w in self.adj[u]:\n                if w not in dist:\n                    dist[w] = dist[u] + 1\n                    q.append(w)\n        return [dist[i] for i in range(1, self.n + 1)]\n\n\ndef random_tree(n, rng):\n    # Random recursive tree: each new node attaches to a uniform\n    # earlier node. Produces varied shapes, sometimes skewed.\n    edges = []\n    for v in range(2, n + 1):\n        edges.append((v, rng.randint(1, v - 1)))\n    return edges\n\n\ndef check(n, edges, label):\n    judge = TreeJudge(n, edges)\n    found = solve(n, judge.query)\n    want = {(min(a, b), max(a, b)) for a, b in edges}\n    assert found == want, (label, found ^ want)\n    assert judge.queries_used <= math.ceil(n / 2), (label, judge.queries_used)\n    return judge.queries_used\n\n\nif __name__ == \"__main__\":\n    rng = random.Random(11)\n    runs = 0\n    for n in range(1, 51):\n        for _ in range(20):\n            check(n, random_tree(n, rng), \"random\")\n            runs += 1\n    print(f\"random trees: {runs} runs, n = 1 to 50, all within ceil(n/2) queries\")\n    for label, n, edges in [\n        (\"path\", 7, [(1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)]),\n        (\"star\", 8, [(1, i) for i in range(2, 9)]),\n        (\"double-star\", 10, [(1, 2)] + [(1, i) for i in range(3, 7)]\n         + [(2, i) for i in range(7, 11)]),\n        (\"binary-tree\", 15, [(i, 2 * i) for i in range(1, 8) if 2 * i <= 15]\n         + [(i, 2 * i + 1) for i in range(1, 8) if 2 * i + 1 <= 15]),\n    ]:\n        used = check(n, edges, label)\n        print(f\"{label}: n={n}, queries={used}, limit={math.ceil(n / 2)}, edges={len(edges)} ok\")\n    print(\"ALL PASS\")\n"
     },
     {
      "t": "code",
-     "title": "Output, run with Python 3.12",
+     "title": "Output, run with Python 3",
      "code": "random trees: 1000 runs, n = 1 to 50, all within ceil(n/2) queries\npath: n=7, queries=4, limit=4, edges=6 ok\nstar: n=8, queries=1, limit=4, edges=7 ok\ndouble-star: n=10, queries=5, limit=5, edges=9 ok\nbinary-tree: n=15, queries=5, limit=8, edges=14 ok\nALL PASS"
+    },
+    {
+     "t": "table",
+     "head": [
+      "They ask",
+      "The change",
+      "Cost"
+     ],
+     "rows": [
+      [
+       "Return the rooted tree",
+       "From node 1's row, the end of an edge with the smaller distance is the parent.",
+       "Free: row 1 is in hand"
+      ],
+      [
+       "The graph is connected and bipartite, not a tree",
+       "Same method: distance 1 still means an edge and every edge still crosses the cut. The smaller side is still at most n / 2.",
+       "Same ceil(n / 2) queries"
+      ],
+      [
+       "The graph has an odd cycle",
+       "Parity no longer covers every edge. A different method is needed; I would ask for the spec.",
+       "Not solved by this method"
+      ],
+      [
+       "Weighted edges",
+       "Distance 1 no longer means an edge, and parity of a weighted distance proves nothing. Different problem.",
+       "Not solved by this method"
+      ],
+      [
+       "A tighter budget",
+       "I know no better than a set of nodes touching every edge. Ask if the bound is tight.",
+       "On a path, about n / 2 queries"
+      ],
+      [
+       "Reading the rows is slow",
+       "Each row has n entries, so one scan is O(n); at most ceil(n / 2) rows.",
+       "O(n^2) total, the size of what is read"
+      ]
+     ]
+    },
+    {
+     "t": "faq",
+     "title": "Push-backs, and what to say",
+     "prose": true,
+     "items": [
+      {
+       "q": "1. Why parity and not breadth-first search from node 1?",
+       "a": "**Decided.** Split by the parity of the distance from node 1 and query the smaller side.\n\n**Instead of.** Querying the neighbours of node 1, then theirs.\n\n**Why.** BFS finds the edges but does not respect the budget. In a star, node 1 has n - 1 neighbours, and querying them already breaks the limit.\n\n**What it costs.** Nothing: parity needs the same first query.\n\n**If they push.** \"The shape of the tree does not matter: skewed or balanced, the parity split is the same.\""
+      },
+      {
+       "q": "2. Why is the smaller side enough?",
+       "a": "**Decided.** Query every node on one side.\n\n**Instead of.** Querying nodes until I think every edge is seen.\n\n**Why.** No edge has both ends on the same side, so none can hide from the queried side. That end reports the other at distance 1.\n\n**What it costs.** Nothing.\n\n**If they push.** \"It is a cut argument: the parity split is a cut that every edge crosses.\""
+      },
+      {
+       "q": "3. Why is the count at most ceil(n / 2)?",
+       "a": "**Decided.** Count node 1's query and the smaller side.\n\n**Instead of.** Hoping it is about half.\n\n**Why.** The two sides add up to n. If the odd side is smaller it has at most (n - 1) / 2 nodes, plus the query of node 1. If the even side is smaller, node 1 is on it and already queried, so it costs len(even).\n\n**What it costs.** Nothing.\n\n**If they push.** \"Path with 7 nodes: odd side 3, plus node 1, is 4, and the limit is 4. It is tight.\""
+      },
+      {
+       "q": "4. Why not query half of each neighbour list?",
+       "a": "**Decided.** Parity.\n\n**Instead of.** Halving each node's neighbours.\n\n**Why.** A double star: two centres A and B joined to each other, each with leaves. Query A, take half its neighbours, and if B falls in the half you skip, B is never queried and every edge from B to its leaves is lost. Parity has no such hole: B is at distance 1 and its leaves at distance 2, so one of the two sides is queried in full.\n\n**What it costs.** Nothing.\n\n**If they push.** \"Parity gives a guarantee. Halving gives a hope.\""
+      },
+      {
+       "q": "5. A parent and a child are both at distance 1. How do you tell them apart?",
+       "a": "**Decided.** I do not. The task asks for edges, not directions.\n\n**Instead of.** Working out a root and orienting edges.\n\n**Why.** An edge is an edge whichever end is the parent. If they want the rooted tree, node 1's row orients every edge for free.\n\n**What it costs.** Nothing.\n\n**If they push.** \"The end with the smaller distance from node 1 is the parent.\""
+      },
+      {
+       "q": "6. What I would do with another hour",
+       "a": "**Decided.** Check every labelled tree up to about n = 7, not only random ones, and print the query count against the bound.\n\n**Instead of.** Trusting 1,000 random trees.\n\n**Why.** Random trees hit the tight cases rarely. All small trees include every path, star and double star.\n\n**What it costs.** A Prufer sequence decoder, about ten lines.\n\n**If they push.** \"The random run already covers n from 1 to 50, 20 trees each.\""
+      }
+     ]
     }
    ]
   },
@@ -490,7 +1100,104 @@ window.LOOP_CODING.parts.push({
    "blocks": [
     {
      "t": "p",
-     "text": "**The problem (Q8).** Design a data structure with insert(val), remove(val) and getRandom(), each O(1) on average, with getRandom returning any element with equal probability. Then: what changes if duplicates are allowed?"
+     "text": "**The problem, as you might hear it.** Design a data structure with insert(val), remove(val) and getRandom(), each O(1) on average, where getRandom returns any element with equal probability. Then: what changes if duplicates are allowed? Then: what if elements have weights?"
+    },
+    {
+     "t": "list",
+     "items": [
+      "**Read it before you speak.** Three operations pull in different directions. A hash map finds by value in O(1) but cannot pick a random one. An array picks by index in O(1) but cannot find or delete by value. The answer is both.",
+      "The hidden structure is a dense array: 'uniform' means every slot is equally likely, so there must be no holes.",
+      "What is undefined: what insert and remove return for a repeat or a missing value, what getRandom does when empty, whether O(1) is average or worst case, whether duplicates are allowed, and whether getRandom is uniform over copies or over distinct values.",
+      "The size that decides it: nothing is large here. The point is the cost of each operation, so I say it for each.",
+      "The trap: list.remove(val) or deleting from the middle. It is O(n), because everything after the hole shifts left."
+     ]
+    },
+    {
+     "t": "table",
+     "head": [
+      "Ask",
+      "If they say",
+      "Then I"
+     ],
+     "rows": [
+      [
+       "What do insert and remove return?",
+       "True if it changed the set, else False",
+       "Both look in the map first, so the False cases cost O(1)."
+      ],
+      [
+       "What does getRandom do when empty?",
+       "Raise",
+       "randrange(0) raises ValueError. If they want None, it is one guard line."
+      ],
+      [
+       "Is O(1) average or worst case?",
+       "Average",
+       "A list append is amortised O(1) and dict operations are average O(1). I say it so the claim is exact."
+      ],
+      [
+       "Are duplicates allowed?",
+       "No",
+       "A list plus a dict from value to index."
+      ],
+      [
+       "",
+       "Yes, remove one copy",
+       "The dict holds a set of indices per value. A counter says how many copies there are, not where."
+      ],
+      [
+       "Uniform over what?",
+       "Over copies (5, 5, 7: 5 twice as likely)",
+       "The same array. Every slot is equally likely and 5 holds two slots."
+      ],
+      [
+       "",
+       "Over distinct values",
+       "Keep a RandomizedSet of the distinct values and a count per value. Remove from the set when the count reaches 0."
+      ],
+      [
+       "Do elements have weights?",
+       "Small integers",
+       "Store each value weight times. Memory grows with the total weight."
+      ],
+      [
+       "",
+       "Any weights, updates and samples both common",
+       "A Fenwick tree over the weights: sample by a prefix-sum search, every operation O(log n)."
+      ],
+      [
+       "",
+       "Many samples, rare updates",
+       "The alias method: O(1) a sample, O(n) to rebuild after any change."
+      ],
+      [
+       "Several threads?",
+       "Yes",
+       "One lock around each operation. The swap in remove is several writes that another thread must not see half done."
+      ],
+      [
+       "Does a test need a fixed seed?",
+       "Yes",
+       "Pass in a random.Random, so a test can seed it."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**The crux.** A dense array for getRandom, plus a map from value to index so remove finds its slot in O(1). Remove does not shift: it copies the last element into the hole, fixes that element's entry in the map, and pops the end. With duplicates the map holds a set of indices per value, and the move updates that set. Weights break the O(1): there is no simple structure with exact sampling and O(1) updates, so the choice is O(log n) everything (Fenwick) or O(1) sampling with O(n) rebuilds (alias)."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**The conversation, in order.**",
+      "**Restate and ask.** 'Insert, remove and random, all O(1) on average, uniform. What do insert and remove return, and what does getRandom do when empty?'",
+      "**Brute force and its cost.** 'A list: random is O(1), but find and delete by value are O(n). A set: find and delete are O(1), but random needs a copy to a list, O(n).'",
+      "**The idea.** 'Keep both: the list for random, a dict from value to index for find. Delete by swapping with the last element.'",
+      "**Code, small.** About fifteen lines. I say the three steps of remove aloud as I write them: move the last into the hole, fix its index, pop.",
+      "**Test on a small case, aloud.** 'insert 1, 2, 2, remove 1, remove 1, insert 3 gives True, True, False, True, False, True.' Then draws: 30,000 over three values, each near 10,000.",
+      "**Duplicates.** Set of indices per value. Pick any copy with set.pop(). Skip the move when the removed copy is already last.",
+      "**Weights.** Say the two choices and the trade, then stop: it is a discussion."
+     ]
     },
     {
      "t": "write",
@@ -505,36 +1212,13 @@ window.LOOP_CODING.parts.push({
      ]
     },
     {
-     "t": "faq",
-     "title": "Your thinking and the extension",
-     "prose": true,
-     "items": [
-      {
-       "q": "Why this fits the Mercor round",
-       "a": "This came up as Night 21 in the Amazon loop prep. It is the same shape as the Mercor algorithms round: discussion-only, a resource constraint, find the structure that makes it possible. Same family as the friend-network API budget and the faulty comparator: the interviewer states a resource constraint and asks for the structure that makes it possible, then pushes on the extension. No code is written in the round; the discussion is the answer."
-      },
-      {
-       "q": "The core idea",
-       "a": "Two pieces. A dense array holds the values, because only an array gives O(1) random access by index. A map from value to its index in the array makes remove O(1), because you look up the index directly instead of scanning. The trick for remove is swap-with-last: copy the last element into the hole, fix its map entry, pop the end."
-      },
-      {
-       "q": "Stage 2, duplicates allowed",
-       "a": "The map now stores a set of indices per value, since a value can sit in several slots. A counter dict is not enough: a count says how many copies exist, not where they are, and remove still has to find one.\n\nIn remove, pick any one occurrence: set.pop() gives an index in O(1), and which one does not matter. Then the same swap-with-last trick, but update the moved element's index set: drop its old index (the last slot) and add the new one (the hole). Skip the move when the removed copy already was the last element."
-      },
-      {
-       "q": "Extension: weighted getRandom (made up, not from any report)",
-       "a": "New requirement: each value carries a weight, and getRandom returns each value with probability proportional to its weight. Operations become insert(val, weight), remove(val), updateWeight(val, newWeight).\n\nNaive: expand each value into weight copies in the array. Works only for tiny integer weights; memory is O(total weight).\n\nHonest answer: prefix sums plus binary search. Keep weights aligned with the array, sample r in [0, total weight), binary search for the bucket. With a Fenwick tree, point updates and prefix-sum search are both O(log n), so every operation is O(log n). You give up O(1) once weights enter.\n\nAlternative: the alias method gives O(1) sampling, but the alias table costs O(n) to build, so every insert or remove pays O(n) to rebuild. It wins only when sampling is far more frequent than updates.\n\nThe line to hold in the round: exact weighted sampling with O(1) updates does not exist. The choice is O(log n) everything (Fenwick) or O(1) sampling with O(n) rebuilds (alias)."
-      }
-     ]
-    },
-    {
      "t": "problem",
      "id": "mercor-yours-q8-p",
      "title": "RandomizedSet and RandomizedCollection",
-     "source": "Your Q8 write-up (Muse), run with Python 3.12",
+     "source": "Your Q8 write-up (Muse), run with Python 3",
      "d": "medium",
      "minutes": 25,
-     "why": "Stage 1 without duplicates, stage 2 with them. Your write-up said the code was verified with a uniformity spot check but did not print it, so the tests box here is one written for this page.",
+     "why": "Without duplicates, then with them. Your write-up said the code was spot-checked for uniformity but did not print it, so the tests here are written for this page.",
      "statement": "Write RandomizedSet with insert, remove and getRandom, each O(1) on average, then RandomizedCollection that allows duplicates.",
      "examples": [
       {
@@ -548,23 +1232,98 @@ window.LOOP_CODING.parts.push({
       "O(1) on average",
       "getRandom is uniform"
      ],
-     "starter": "class RandomizedSet:\n    ...\n",
+     "starter": "class RandomizedSet:\n    ...",
      "hints": [
       "A list plus a dict from value to index. Remove by moving the last element into the hole."
      ],
-     "solution": "import random\nfrom collections import defaultdict\n\n\nclass RandomizedSet:\n    def __init__(self):\n        # nums: dense array, the only thing getRandom touches.\n        self.nums = []\n        # pos: value -> index. The auxiliary structure.\n        self.pos = {}\n\n    def insert(self, val):\n        if val in self.pos:\n            return False\n        self.pos[val] = len(self.nums)\n        self.nums.append(val)\n        return True\n\n    def remove(self, val):\n        if val not in self.pos:\n            return False\n        # THE TRICK: swap with last. Deleting from the middle\n        # of a list is O(n) because everything after the hole\n        # shifts left. Copy the last element into the hole,\n        # fix up its index in the map, pop the end, O(1).\n        idx = self.pos[val]\n        last = self.nums[-1]\n        self.nums[idx] = last\n        self.pos[last] = idx\n        self.nums.pop()\n        del self.pos[val]\n        return True\n\n    def getRandom(self):\n        # Uniform: every slot equally likely, no holes.\n        return self.nums[random.randrange(len(self.nums))]\n\n\nclass RandomizedCollection:\n    def __init__(self):\n        self.nums = []\n        # value -> set of indices where that value occurs.\n        self.pos = defaultdict(set)\n\n    def insert(self, val):\n        self.pos[val].add(len(self.nums))\n        self.nums.append(val)\n        return True\n\n    def remove(self, val):\n        if not self.pos[val]:\n            return False\n        # Pick ANY one occurrence. set.pop() gives an index\n        # in O(1); which one does not matter.\n        idx = self.pos[val].pop()\n        # Same swap-with-last trick, but update the moved\n        # element index set: drop its old index (the last\n        # slot) and add the new one (the hole). Skip the move\n        # when the removed copy already was the last element.\n        if idx != len(self.nums) - 1:\n            last = self.nums[-1]\n            self.nums[idx] = last\n            self.pos[last].discard(len(self.nums) - 1)\n            self.pos[last].add(idx)\n        self.nums.pop()\n        return True\n\n    def getRandom(self):\n        return self.nums[random.randrange(len(self.nums))]",
+     "solution": "import random\nfrom collections import defaultdict\n\n\nclass RandomizedSet:\n    def __init__(self):\n        self.nums = []\n        self.pos = {}\n\n    def insert(self, val):\n        if val in self.pos:\n            return False\n        self.pos[val] = len(self.nums)\n        self.nums.append(val)\n        return True\n\n    def remove(self, val):\n        if val not in self.pos:\n            return False\n        idx = self.pos[val]\n        last = self.nums[-1]\n        self.nums[idx] = last\n        self.pos[last] = idx\n        self.nums.pop()\n        del self.pos[val]\n        return True\n\n    def getRandom(self):\n        return self.nums[random.randrange(len(self.nums))]\n\n\nclass RandomizedCollection:\n    def __init__(self):\n        self.nums = []\n        self.pos = defaultdict(set)\n\n    def insert(self, val):\n        self.pos[val].add(len(self.nums))\n        self.nums.append(val)\n        return True\n\n    def remove(self, val):\n        if not self.pos[val]:\n            return False\n        idx = self.pos[val].pop()\n        if idx != len(self.nums) - 1:\n            last = self.nums[-1]\n            self.nums[idx] = last\n            self.pos[last].discard(len(self.nums) - 1)\n            self.pos[last].add(idx)\n        self.nums.pop()\n        return True\n\n    def getRandom(self):\n        return self.nums[random.randrange(len(self.nums))]\n",
      "complexity": "insert, remove and getRandom are O(1) on average. Space O(n).",
      "explain": [
-      "RandomizedSet.remove copies the last element into the hole, updates its index in the map and pops the end.",
+      "RandomizedSet.remove copies the last element into the hole, updates its index in the map and pops the end. Deleting from the middle of a list would shift everything after it, O(n).",
       "RandomizedCollection keeps a set of indices per value and skips the move when the removed copy is already last.",
-      "getRandom on an empty structure raises, as in your write-up; add a guard if the interviewer wants an empty answer."
+      "getRandom on an empty structure raises. Add a guard if the interviewer wants an empty answer."
      ],
-     "tests": "from collections import Counter\n\nrandom.seed(7)\ns = RandomizedSet()\nprint(s.insert(1), s.insert(2), s.insert(2), s.remove(1), s.remove(1), s.insert(3))\nprint(sorted(s.nums), s.pos)\n\n# uniformity spot check: 3 values, 30,000 draws, each should be near 10,000\ns = RandomizedSet()\nfor v in (10, 20, 30, 40):\n    s.insert(v)\ns.remove(20)\ndraws = Counter(s.getRandom() for _ in range(30000))\nprint(\"set draws:\", sorted(draws.items()))\nassert all(9000 < c < 11000 for c in draws.values()) and 20 not in draws\n\n# duplicates: 5, 5, 7 -> 5 should come up about twice as often as 7\nc = RandomizedCollection()\nfor v in (5, 5, 7):\n    c.insert(v)\ndraws = Counter(c.getRandom() for _ in range(30000))\nprint(\"collection draws:\", sorted(draws.items()))\nassert 19000 < draws[5] < 21000 and 9000 < draws[7] < 11000\nprint(c.remove(5), c.remove(5), c.remove(5), c.nums)\nassert c.nums == [7] and c.pos[7] == {0}\n\n# random operations checked against a plain list\nref, c = [], RandomizedCollection()\nfor _ in range(5000):\n    v = random.randrange(6)\n    if random.random() < 0.55:\n        c.insert(v)\n        ref.append(v)\n    else:\n        ok = c.remove(v)\n        assert ok == (v in ref)\n        if ok:\n            ref.remove(v)\n    assert sorted(c.nums) == sorted(ref)\n    for val, idxs in c.pos.items():\n        assert all(c.nums[i] == val for i in idxs)\nprint(\"5000 random operations match a plain list\")"
+     "tests": "from collections import Counter\n\nrandom.seed(7)\ns = RandomizedSet()\nprint(s.insert(1), s.insert(2), s.insert(2), s.remove(1), s.remove(1), s.insert(3))\nprint(sorted(s.nums), s.pos)\n\n# uniformity spot check: 3 values, 30,000 draws, each should be near 10,000\ns = RandomizedSet()\nfor v in (10, 20, 30, 40):\n    s.insert(v)\ns.remove(20)\ndraws = Counter(s.getRandom() for _ in range(30000))\nprint(\"set draws:\", sorted(draws.items()))\nassert all(9000 < c < 11000 for c in draws.values()) and 20 not in draws\n\n# duplicates: 5, 5, 7 -> 5 should come up about twice as often as 7\nc = RandomizedCollection()\nfor v in (5, 5, 7):\n    c.insert(v)\ndraws = Counter(c.getRandom() for _ in range(30000))\nprint(\"collection draws:\", sorted(draws.items()))\nassert 19000 < draws[5] < 21000 and 9000 < draws[7] < 11000\nprint(c.remove(5), c.remove(5), c.remove(5), c.nums)\nassert c.nums == [7] and c.pos[7] == {0}\n\n# random operations checked against a plain list\nref, c = [], RandomizedCollection()\nfor _ in range(5000):\n    v = random.randrange(6)\n    if random.random() < 0.55:\n        c.insert(v)\n        ref.append(v)\n    else:\n        ok = c.remove(v)\n        assert ok == (v in ref)\n        if ok:\n            ref.remove(v)\n    assert sorted(c.nums) == sorted(ref)\n    for val, idxs in c.pos.items():\n        assert all(c.nums[i] == val for i in idxs)\nprint(\"5000 random operations match a plain list\")\n"
     },
     {
      "t": "code",
-     "title": "Output, run with Python 3.12",
+     "title": "Output, run with Python 3",
      "code": "True True False True False True\n[2, 3] {2: 0, 3: 1}\nset draws: [(10, 10061), (30, 9936), (40, 10003)]\ncollection draws: [(5, 19924), (7, 10076)]\nTrue True False [7]\n5000 random operations match a plain list"
+    },
+    {
+     "t": "table",
+     "head": [
+      "They ask",
+      "The change",
+      "Cost"
+     ],
+     "rows": [
+      [
+       "Duplicates",
+       "A set of indices per value; pick any copy with set.pop().",
+       "Still O(1) on average, one set per value"
+      ],
+      [
+       "Weighted getRandom",
+       "A Fenwick tree over the weights, kept aligned with the array.",
+       "Every operation O(log n)"
+      ],
+      [
+       "Weighted, many samples and rare updates",
+       "The alias method.",
+       "O(1) a sample, O(n) rebuild per change"
+      ],
+      [
+       "Remove a random element and return it",
+       "Pick an index, swap with last, pop.",
+       "O(1)"
+      ],
+      [
+       "k distinct random elements",
+       "random.sample(nums, k) on the array.",
+       "About O(k) when k is small against n"
+      ],
+      [
+       "Thread safe",
+       "One lock around each operation.",
+       "Callers wait for each other"
+      ]
+     ]
+    },
+    {
+     "t": "faq",
+     "title": "Push-backs, and what to say",
+     "prose": true,
+     "items": [
+      {
+       "q": "1. Why a list and a dict, not one of them?",
+       "a": "**Decided.** A dense list for getRandom and a dict from value to index for remove.\n\n**Instead of.** A list alone, or a set alone.\n\n**Why.** Only an array gives O(1) random access by index. Only a map gives O(1) find by value. Each alone makes one operation O(n).\n\n**What it costs.** Two copies of each value's reference, so about twice the memory of one structure.\n\n**If they push.** \"A set with random.choice(list(s)) is O(n) a call.\""
+      },
+      {
+       "q": "2. Why swap with the last element in remove?",
+       "a": "**Decided.** Copy the last element into the hole, fix its map entry, pop the end.\n\n**Instead of.** list.remove, or pop(index) from the middle.\n\n**Why.** Deleting from the middle shifts everything after the hole: O(n). Swapping with the last keeps the array dense and costs O(1).\n\n**What it costs.** The order of the elements changes. getRandom does not care.\n\n**If they push.** \"If order mattered I would need a different structure.\""
+      },
+      {
+       "q": "3. Why a set of indices per value, not a counter, for duplicates?",
+       "a": "**Decided.** A dict from value to a set of indices.\n\n**Instead of.** A dict from value to a count.\n\n**Why.** A count says how many copies exist, not where they are, and remove must find one slot. set.pop() gives any index in O(1), and which copy goes does not matter.\n\n**What it costs.** A set object per distinct value.\n\n**If they push.** \"A count works only if the interviewer wants uniform over distinct values.\""
+      },
+      {
+       "q": "4. Why skip the move when the removed copy is already last?",
+       "a": "**Decided.** Check idx against the last slot first.\n\n**Instead of.** Always moving the last element.\n\n**Why.** If the removed copy is the last slot, there is nothing to move. Doing the move anyway would add that slot's index back into the value's set right before the slot is popped, leaving a stale index.\n\n**What it costs.** One comparison.\n\n**If they push.** \"The 5,000 random operations in the test check every index against the array.\""
+      },
+      {
+       "q": "5. What does O(1) mean here?",
+       "a": "**Decided.** O(1) on average.\n\n**Instead of.** Claiming O(1) worst case.\n\n**Why.** A list append is amortised O(1) and a dict lookup is O(1) on average. The array occasionally grows by copying.\n\n**What it costs.** A rare slow call.\n\n**If they push.** \"If they need worst case, I would preallocate and say it costs memory.\""
+      },
+      {
+       "q": "6. Weighted: Fenwick or alias?",
+       "a": "**Decided.** I say both, with the trade, and ask whether samples or updates dominate.\n\n**Instead of.** Claiming O(1) everything.\n\n**Why.** Expanding values into weight copies is O(total weight) memory. A Fenwick tree makes sample and update O(log n). The alias method samples in O(1) but rebuilds in O(n), so it wins only when updates are rare.\n\n**What it costs.** O(log n) on every operation, or an O(n) rebuild.\n\n**If they push.** \"There is research on dynamic samplers with near constant expected time. I would name it, not build it in thirty minutes.\""
+      },
+      {
+       "q": "7. What I would do with another hour",
+       "a": "**Decided.** A lock, a seedable random, and a Fenwick version of getRandom with a uniformity check.\n\n**Instead of.** Stopping at the unweighted code.\n\n**Why.** The follow-ups are threads and weights, and each has a small answer I can check.\n\n**What it costs.** About thirty lines.\n\n**If they push.** \"The uniformity check is a spot check: draws near n / 3 each, as in the test.\""
+      }
+     ]
     }
    ]
   }
