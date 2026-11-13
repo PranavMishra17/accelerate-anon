@@ -35,7 +35,10 @@ flow, the high-level design and deep dives, each with a time budget), fifteen de
 patterns holding nearly a hundred techniques, each with its own mechanism diagram, and seven
 designs worked end to end: NotebookLM, a prior authorisation agent, an email and calendar
 agent, a coding agent, a voice agent for patient calls, Ticketmaster, and an agent-evaluation
-product. A design reads one step at a time, with the board, how to get there, what to say,
+product. It has since grown to twenty, among them the designs candidates report for backend
+rounds: a job scheduler, candidate search, contractor payouts, a dataset copy API,
+prompt-injection defences, multi-thread AI chat, tenant-fair orchestration for LLM work and ML
+pipeline orchestration. A design reads one step at a time, with the board, how to get there, what to say,
 and the follow-ups to expect. The high-level design builds up in stages, every deep dive draws
 its chosen fix with the failure point marked (as a sequence diagram where timing is the point),
 and the main patterns each design uses are drawn in that design's own parts.

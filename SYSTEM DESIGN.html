@@ -7062,6 +7062,293 @@ take(tenant_bucket, n) and take(global_bucket, n)  or  return WAIT(ms)
     { label: "Amazon Builders' Library: Fairness in multi-tenant systems (quotas, admission control, load shedding)", url: "https://builder.aws.com/content/3Eupj3d2bo4fEvlzYbICMZNhQ3B/fairness-in-multi-tenant-systems" }
   ]
 });
+GUIDE.examples.push({
+  id: "ml-pipeline",
+  tabLabel: "ML pipelines",
+  title: "ML pipeline orchestration",
+  kind: "Backend design for ML work, reported for Mercor",
+  prompt: "Design an orchestration system for ML pipelines: a pipeline is a DAG of steps (ingest, validate, train, evaluate, register), each step produces artifacts, runs can take hours on expensive machines, and people need to know exactly what produced a model.",
+  lens: [
+    "Candidates reported this prompt for the backend design round. It is the job scheduler with the interesting part moved: the dangers are wasted hours, lost lineage and a bad model reaching production, not a duplicate run.",
+    "I assume a worker pool with leases and retries already exists (the job scheduler design). I spend this design on five things: immutable artifacts, caching by input hash, lineage, long expensive steps, and the gate before registry.",
+    "The one sentence to say early: a step is a pure function from (code, parameters, input artifacts) to output artifacts, so I can cache it, rerun it and explain it."
+  ],
+  steps: {
+    requirements: {
+      board: [
+        { type: "list", title: "Functional (top 3)", ordered: true, items: [
+          "Define a pipeline as a DAG of steps (ingest, validate, train, evaluate, register) and run it on a schedule, on new data, or by hand.",
+          "Every step writes versioned artifacts (datasets, checkpoints, models, reports). A rerun, or a resume after a failure, skips every step whose inputs have not changed.",
+          "For any model, answer: which code, data, parameters and evaluation produced it. Promote a model to production only through a gate."
+        ]},
+        { type: "list", title: "Out of scope", items: [
+          "The worker pool, leases and retry policy (assume they exist), model serving, feature stores, and the training code itself. Say so in one breath and move on."
+        ]},
+        { type: "defs", title: "Non-functional (quantified, all assumptions)", items: [
+          { term: "Cheap reruns", desc: "A rerun with nothing changed does no compute, and a change in one step reruns only that step and what depends on it." },
+          { term: "Immutable artifacts", desc: "No reader ever sees a half-written artifact, and an artifact never changes after it is committed." },
+          { term: "Traceable", desc: "From any model, the full upstream graph (code version, data version, parameters, evaluation) in under a second, and the reverse: every model built from a given dataset." },
+          { term: "Survives long steps", desc: "A 6 hour training step that loses its machine loses at most 15 minutes of work." },
+          { term: "Fair GPU use", desc: "A big hyperparameter sweep never blocks a production retrain." },
+          { term: "Safe promotion", desc: "A model reaches production only after passing evaluation against a threshold and the current baseline, and every promotion is atomic and audited." },
+          { term: "Secure", desc: "A training step cannot write to production, and a swapped model file is detected." }
+        ]},
+        { type: "math", title: "Capacity math that changes the design", lines: [
+          "200 pipelines, about 5 steps each, run daily: 1,000 step instances a day, about 12 a minute. The scheduler is not the problem, so do not partition it.",
+          "A train step is 4 GPUs for 6 hours, which is 24 GPU-hours. If 1 in 20 steps is a train step, that is about 50 a day, 1,200 GPU-hours a day, roughly 50 GPUs busy all day.",
+          "A rerun that cache-hits 4 of 5 steps saves 80 percent of the steps, but the one step left is the expensive one if it changed, so the cache matters most for ingest and features upstream of a changed train step.",
+          "A 15 minute checkpoint interval caps a crash loss at 15 minutes of 4 GPUs, 1 GPU-hour, instead of up to 24."
+        ], conclusion: "Two numbers decide the design: 50 GPUs for 1,200 GPU-hours means GPU capacity is queued and shared, and 6 hour steps mean checkpoints are required, not optional." }
+      ],
+      reasoning: [
+        "Say out loud that the worker pool is assumed. The interviewer has seen the job scheduler. Showing that you separate it out is the signal.",
+        "Name the five cost centres early: cache misses, GPU hours, lost checkpoints, lineage gaps, bad promotions.",
+        "Do math only where it changes a decision. Here it says: no scheduler sharding, yes queueing and checkpoints."
+      ],
+      script: [
+        "I will assume a worker pool with leases and retries already exists, so I do not spend time on it. The design is about what flows through it: artifacts, cache keys, lineage and promotion.",
+        "Three things: define and run a DAG of steps, skip steps whose inputs have not changed, and tell anyone exactly what produced a model.",
+        "For scale I will assume 200 pipelines a day, about 1,000 step instances, and 50 train steps of 24 GPU-hours each. The scheduler is easy at that rate. The cost is GPU hours, so caching, queueing and checkpoints are where the design goes.",
+        "I will treat a bad model reaching production as the worst outcome, so promotion is gated."
+      ],
+      contrast: "In an LLM design the money is tokens and the risk is the model's output. Here the money is GPU hours and the risk is not knowing, or not being able to reproduce, what made a model."
+    },
+
+    entities: {
+      board: [
+        { type: "defs", title: "Core entities", items: [
+          { term: "Pipeline", desc: "A versioned DAG definition: steps, edges, default parameters and a code reference (a git commit). Immutable per version." },
+          { term: "Run", desc: "One execution of a pipeline version with concrete parameters and a trigger. Has a run_key so a duplicate trigger returns the same run." },
+          { term: "Step instance", desc: "One step in one run: status, attempt, step key, input artifact ids, output artifact ids, and a compute class (cpu or gpu)." },
+          { term: "Artifact", desc: "An immutable, content-addressed file or directory: dataset, features, checkpoint, model, report. Records its content hash and which step instance produced it." },
+          { term: "Lineage edge", desc: "A row saying step instance S consumed artifact A, or produced it. The graph that answers what made this model." },
+          { term: "Model version", desc: "A registered model: an artifact, its evaluation report, a stage (candidate, staging, production), and who approved it." }
+        ]},
+        { type: "defs", title: "The step key", items: [
+          { term: "step_key", desc: "hash(step code version, parameters, input artifact hashes, container image digest). Same key means same inputs means the output may be reused." }
+        ]}
+      ],
+      reasoning: [
+        "The step key is the entity that matters. Write its formula on the board now, because both caching and lineage depend on it.",
+        "Artifacts are nouns that never change; step instances are the verbs that do. That split is the design."
+      ],
+      script: [
+        "Pipeline is the definition and Run is one execution. A step instance is one step inside one run. The thing steps pass to each other is an artifact, and an artifact is immutable and named by its content hash.",
+        "The step key is hash of code version, parameters, input artifact hashes and the container image digest. If I have already produced an output for that key, I do not run the step again."
+      ],
+      contrast: "Agentic designs add Step, ToolCall and Trace entities for a model's reasoning. Here the extra entities are Artifact and Lineage edge, because the audit question is about data, not thought."
+    },
+
+    api: {
+      board: [
+        { type: "code", title: "API", code: `
+POST /v1/pipelines/{id}/runs     body: { params, run_key }
+  -> 202 { run_id }              (the same run_key returns the same run)
+GET  /v1/runs/{id}               -> { status, steps: [{ step, status, attempt, cache: hit|miss }] }
+POST /v1/runs/{id}/retry         body: { from_step }   (failed step and everything after it)
+GET  /v1/artifacts/{id}          -> { uri, content_hash, kind, produced_by }
+GET  /v1/artifacts/{id}/lineage?dir=up|down
+  -> { inputs: [...], produced_by, consumers: [...] }
+POST /v1/models/{name}/{version}/promote   body: { stage, expected_current }
+  -> 200, or 409 when production changed underneath
+
+Worker side (the pool assumed):
+POST /v1/steps/claim             -> { step, step_key, input_uris[], output_prefix, attempt }
+POST /v1/steps/{id}/complete     body: { attempt, outputs: [{ path, content_hash }] }
+` },
+        { type: "list", title: "Choices to state out loud", items: [
+          "A run trigger takes a run_key, so a retried trigger or a double-fired schedule never creates two runs.",
+          "The worker never decides about the cache. The orchestrator computes the step key and answers hit or miss before a worker is ever asked.",
+          "Complete carries the content hash of each output, so the orchestrator can verify what the worker claims it wrote.",
+          "Promote takes expected_current, an optimistic check, so two racing promotions cannot both win."
+        ]}
+      ],
+      reasoning: [
+        "Two contracts again: users start runs and read lineage; workers claim and complete steps. Keep the worker contract thin because the pool is assumed.",
+        "Point at lineage and promote as the two endpoints this design owns."
+      ],
+      script: [
+        "Users trigger runs with a run_key, read a run's step status, retry from a step, and query lineage up or down. Promote is a separate call with an expected current version.",
+        "Workers claim a step, get its input locations and an output prefix, and complete it with the hash of every output. The orchestrator decides about caching before it hands out the step."
+      ],
+      contrast: "An agentic API streams tokens back. This one is quiet for hours, so the status read and the cache field matter more than a stream."
+    },
+
+    dataflow: {
+      board: [
+        { type: "list", title: "The life of one step", ordered: true, items: [
+          "**Ready.** All upstream steps are done, so the orchestrator knows every input artifact id and hash.",
+          "**Keyed.** It computes the step key from code version, parameters, input hashes and image digest.",
+          "**Cache check.** If an artifact set already exists for that key, the step is marked done with cache: hit and its outputs are linked. No worker is used.",
+          "**Run.** Otherwise a worker claims it, reads the inputs, and writes outputs under a temporary prefix. A long step writes checkpoints.",
+          "**Commit.** The outputs are hashed and moved to their content address. The artifact rows, the lineage edges and the step status change in one transaction.",
+          "**Gate and promote.** After evaluate, the report goes to the gate. Pass, then the model is registered as a candidate, and a person promotes it."
+        ]}
+      ],
+      reasoning: [
+        "Each arrow is a place hours of compute can be lost or a wrong output can be trusted. The deep dives walk those arrows.",
+        "The cache check happens before any worker is spent. Say that in one sentence; it is the central saving."
+      ],
+      script: [
+        "A step goes ready, keyed, cache check, run, commit, then gate. The cache check happens before I spend any machine time. The commit is one transaction that makes the artifact, its lineage and the step status appear together, so nobody reads a half-written output."
+      ],
+      contrast: "For agentic systems this step is the agent loop. Here it is a build system: keyed, cached, committed, with a gate at the end."
+    },
+
+    hld: {
+      board: [
+        { type: "diagram", title: "ML pipeline orchestration high-level design", stagesAll: "The whole system: a runner that keys steps, an artifact store with a cache by step key, a GPU queue with quotas, an evaluation gate, and a registry with human approval.", stages: [
+          { title: "One node", add: ["client", "api", "db", "runner"], say: "Start with the version that works on one machine: an API writes a run to Postgres, and a runner executes the steps in order, writing files to local disk. Name its limits: every rerun recomputes everything, a crash mid-train restarts from zero, files are overwritten so nothing says what made a model, and one box has one GPU." },
+          { title: "Artifacts and cache", add: ["store", "workers"], say: "Reruns waste hours and nothing is traceable. Move outputs to an immutable, content-addressed artifact store. The runner computes a step key from code, parameters and input hashes, and skips the step when an artifact exists for that key. Steps go to a worker pool with leases (assumed, from the job scheduler), and every commit writes lineage edges to the database." },
+          { title: "GPU queue", add: ["gpuq", "gpus"], say: "A sweep of 200 train steps fills every GPU and a production retrain waits behind it. Put train steps behind a GPU queue with priority and per-team quotas. Long steps write checkpoints to the artifact store, so a preempted or crashed step resumes instead of restarting." },
+          { title: "Evaluation gate", add: ["gate", "registry"], say: "A finished model is not a good model. After evaluate, a gate compares the metric to a threshold and to the current production baseline. A pass registers a candidate in the model registry, which keeps the previous production version for rollback." },
+          { title: "Human approval", add: ["human"], say: "A metric cannot see everything, and the identity that trained must not be the one that promotes. Production needs a named approver, and the promote call carries the version it expects to replace, so two racing promotions cannot both win." }
+        ], nodes: [
+          { id: "client", label: "Triggers", sub: "schedule, data, person", col: 0, row: 1, tone: "external" },
+          { id: "api", label: "Pipeline API", sub: "runs, lineage", col: 1, row: 1, tone: "service" },
+          { id: "db", label: "Postgres", sub: "runs, steps, lineage", col: 2, row: 1, tone: "store" },
+          { id: "runner", label: "Runner", sub: "key, check cache", col: 2, row: 0, tone: "orchestrator" },
+          { id: "workers", label: "Workers", sub: "pool with leases", col: 3, row: 1, tone: "service" },
+          { id: "store", label: "Artifact store", sub: "immutable, by hash", col: 3, row: 2, tone: "store" },
+          { id: "gpuq", label: "GPU queue", sub: "priority, team quota", col: 4, row: 1, tone: "queue" },
+          { id: "gpus", label: "GPU pool", sub: "expensive machines", col: 4, row: 2, tone: "external" },
+          { id: "gate", label: "Eval gate", sub: "threshold, baseline", col: 4, row: 0, tone: "guard" },
+          { id: "registry", label: "Model registry", sub: "stages, rollback", col: 4, row: 3, tone: "store" },
+          { id: "human", label: "Approver", sub: "promotes to prod", col: 3, row: 3, tone: "human" }
+        ], edges: [
+          { from: "client", to: "api" },
+          { from: "api", to: "db", label: "insert run" },
+          { from: "runner", to: "db", label: "ready steps" },
+          { from: "runner", to: "workers", label: "dispatch on miss" },
+          { from: "workers", to: "store", label: "write outputs" },
+          { from: "workers", to: "db", label: "lineage, status" },
+          { from: "workers", to: "gpuq", label: "train steps" },
+          { from: "gpuq", to: "gpus", label: "admit" },
+          { from: "gpus", to: "store", label: "checkpoints" },
+          { from: "workers", to: "gate", label: "eval report", async: true },
+          { from: "gate", to: "registry", label: "register" },
+          { from: "gate", to: "human", label: "needs approval" },
+          { from: "human", to: "registry", label: "promote" }
+        ]},
+        { type: "list", title: "Walk a request through it", ordered: true, items: [
+          "**Trigger.** The API inserts the run, keyed by run_key, and the runner marks the steps with no parents ready.",
+          "**Key and check.** For each ready step the runner computes the step key. If the database holds a committed artifact set for that key, the step is done with no worker. This is the cache.",
+          "**Run.** On a miss a worker claims the step (pattern `worker-pool`, with leases from pattern `leases`). A train step goes through the GPU queue first.",
+          "**Checkpoint.** The training loop writes a checkpoint to the artifact store every 15 minutes (pattern `checkpointing`).",
+          "**Commit.** The worker hashes the outputs, moves them to their addresses, and inserts the artifact rows, lineage edges and the done status in one transaction.",
+          "**Gate.** The evaluate step's report goes to the gate. A pass makes a candidate in the registry. A named person promotes it, with the expected current version (pattern `optimistic`)."
+        ]},
+        { type: "code", title: "The two statements that carry the design (pseudocode and SQL sketch)", code: `
+-- cache check: has this exact work been done before?
+SELECT output_artifact_ids FROM step_cache WHERE step_key = $key;   -- hit: skip the step
+
+-- commit: outputs, lineage and status appear together or not at all
+BEGIN;
+  INSERT INTO artifacts (id, uri, content_hash, produced_by)
+       VALUES ($id, $uri, $hash, ($run, $step)) ON CONFLICT (content_hash) DO NOTHING;
+  INSERT INTO lineage (artifact_id, step_run, role) VALUES ($id, $step_run, 'output');
+  UPDATE step_instances SET status = 'done', output_ids = $ids
+   WHERE run_id = $run AND step = $step AND attempt = $attempt AND status = 'running';
+  INSERT INTO step_cache (step_key, output_artifact_ids) VALUES ($key, $ids);
+COMMIT;
+` },
+        { type: "defs", title: "Fields worth writing next to the stores", items: [
+          { term: "step_instances (Postgres)", desc: "`run_id, step, attempt, status, step_key, compute_class, lease_expires_at, started_at, ended_at, error_class`. Key `(run_id, step)`. Index on `step_key`." },
+          { term: "artifacts and lineage (Postgres)", desc: "`artifacts(id, uri, content_hash unique, kind, size)`, `lineage(artifact_id, step_run, role)` indexed both ways, so up and down queries are one lookup." },
+          { term: "model_registry (Postgres)", desc: "`name, version, artifact_id, eval_report_id, stage, approved_by, updated_version`. Key `(name, version)`. The previous production row is kept." },
+          { term: "artifact store (object storage)", desc: "Objects named by content hash, written once, never overwritten. Large directories get a manifest object listing their parts and hashes." }
+        ]}
+      ],
+      reasoning: [
+        "Build in the order the costs show up: one box, then reuse and lineage, then GPU scarcity, then the gate, then approval. Say what breaks at each stage before you fix it.",
+        "Postgres is small and sufficient: 1,000 step instances a day. Do not draw a sharded scheduler; the job scheduler design already showed you can.",
+        "Put the step key and the single commit transaction on the board now. The first two dives depend on them."
+      ],
+      script: [
+        "I will start with one machine: an API, Postgres, and a runner that executes steps in order and writes files to disk. It works, and it breaks four ways: every rerun recomputes everything, a crash in training restarts from zero, files are overwritten so nothing says what made a model, and one box means one GPU.",
+        "So I move outputs to an immutable, content-addressed store and compute a step key per step. If an artifact set exists for that key, I skip the step. Every commit writes lineage in the same transaction. Steps run on a worker pool with leases, which I am assuming.",
+        "Next, GPU time is scarce. Train steps go through a queue with priority and team quotas, and they checkpoint to the store so a crash loses minutes, not hours.",
+        "Then the gate: after evaluate I compare to a threshold and to the current production model, and a pass makes a candidate in the registry. Last, production needs a named approver and an expected-version check, so two promotions cannot race."
+      ],
+      probes: [
+        "Why not use only a workflow engine? Reasons to adopt one are fine (pattern `workflow-engine`). I would still need the content-addressed cache, lineage and the gate, because those are about ML artifacts and not about task execution. The engine does the running; I add what the engine does not know.",
+        "Why a database and an object store, not one? Metadata needs transactions and queries (by key, by artifact, up and down). Bytes need cheap, large, write-once storage. Joining them by content hash keeps each simple.",
+        "Where does the scheduler's own state go? Postgres. A new orchestrator resumes by scanning for ready steps, so a crash costs seconds."
+      ],
+      contrast: "No model gateway or guard layer around a prompt. The guard here sits at the end of the pipeline: an evaluation gate and an approval before production."
+    },
+
+    deepdives: {
+      board: [
+        { type: "dive", title: "Skipping finished work: caching by step key", diagram: {"cap": "The runner hashes code version, parameters, input artifact hashes and image digest into a step key. A key that already has committed outputs is a hit and the step costs nothing.", "fail": "Keyed by name or date, a cache returns a stale result after data changes in place, or reruns everything because nothing is trusted.", "nodes": [{"id": "inputs", "label": "Inputs", "sub": "code, params, hashes", "col": 0, "row": 0, "tone": "store"}, {"id": "runner", "label": "Runner", "sub": "hash, look up", "col": 1, "row": 0, "tone": "orchestrator"}, {"id": "cache", "label": "Step cache", "sub": "key to output ids", "col": 2, "row": 0, "tone": "store"}, {"id": "worker", "label": "Worker", "sub": "only on a miss", "col": 2, "row": 1, "tone": "service"}, {"id": "stale", "label": "In-place data", "sub": "same name, new bytes", "col": 0, "row": 1, "tone": "external", "fail": true}], "edges": [{"from": "inputs", "to": "runner", "label": "step key"}, {"from": "runner", "to": "cache", "label": "lookup"}, {"from": "runner", "to": "worker", "label": "miss"}, {"from": "stale", "to": "inputs", "label": "hash lies"}]}, nfr: "Cheap reruns", problem: "A rerun after a small change should not redo hours of work, and a cache must never return a result that no longer matches its inputs.", options: [
+          { name: "Cache by step name and run date", take: "Easy to build and wrong: a changed parameter or new data gives a stale hit, so people stop trusting the cache and clear it by hand." },
+          { name: "Cache by hash of code, parameters and input content", take: "Any change to any input changes the key, so a hit is a proof the work is identical. Needs inputs that are artifacts with hashes, not paths that change in place." },
+          { name: "Cache by file modification time", take: "Cheap, and breaks on copies, restores and clocks. Make is the example; it is fine for builds on one machine." },
+          { name: "Mark steps that read the clock or random state as never cached", take: "A step that reads the current time, or a seed it does not record, is not a pure function. Either record the seed as a parameter or never cache it." }
+        ], pick: "A step key of hash(step code version, parameters, input artifact content hashes, container image digest). Inputs must be artifacts, never mutable paths. Steps that are not pure are marked no_cache, and the seed is a parameter. Say the cost: the key needs the whole input hash, so a 2 TB dataset is hashed once when ingested and referenced by that hash afterward. A cache hit on a downstream step is checked against the artifact still existing, not only the row." },
+        { type: "dive", title: "No half-written artifact is ever read", diagram: {"cap": "The worker writes under a temporary prefix, hashes it, moves it to its content address, then inserts artifact, lineage and status in one transaction. Readers only follow committed rows.", "fail": "A worker killed after a partial write leaves a file that a downstream step reads as if it were whole.", "actors": [{"id": "w", "label": "Worker", "tone": "service"}, {"id": "store", "label": "Artifact store", "tone": "store"}, {"id": "db", "label": "Postgres", "tone": "store"}, {"id": "next", "label": "Next step", "tone": "service"}], "steps": [{"from": "w", "to": "store", "label": "write to tmp/attempt-3"}, {"from": "w", "to": "store", "label": "hash, move to by-hash"}, {"from": "w", "to": "db", "label": "txn: artifact, lineage, done"}, {"from": "next", "to": "db", "label": "read committed ids"}, {"from": "next", "to": "store", "label": "fetch by hash"}, {"over": "w", "label": "killed before the txn", "fail": true}, {"over": "store", "label": "tmp orphan, swept later"}]}, nfr: "Immutable artifacts", problem: "A worker crashes halfway through writing a large output, and a later step must never see it as a real input.", options: [
+          { name: "Write to the final path directly", take: "Simple, and a crash leaves a truncated file at the real address. Readers cannot tell." },
+          { name: "Write to a temp path, then rename", take: "A rename is atomic on one filesystem and on most object stores via a copy, but the database row can still disagree with the file." },
+          { name: "Temp write, content hash, then one database transaction", take: "The artifact exists for a reader only when its row exists. Orphaned temp files are garbage and a sweeper removes them. Retries are safe because the same content hash is a no-op on conflict. See idempotency keys (pattern `idempotency`)." }
+        ], pick: "Write under a per-attempt temp prefix, verify the hash, move to the content address, then commit artifact, lineage and step status in one transaction. A step reads only committed artifact ids. The commit also checks the attempt number, so a late, stale worker is rejected. A sweeper deletes temp prefixes older than a day. Cost: an extra copy or move for large outputs." },
+        { type: "dive", title: "What produced this model: lineage", diagram: {"cap": "Every commit records which artifacts a step consumed and produced, so a model walks back to its data, code and parameters, and a dataset walks forward to every model built from it.", "fail": "If lineage is reconstructed from logs after the fact, an input recorded by path or date cannot be proven to be the one used.", "nodes": [{"id": "data", "label": "Dataset v7", "sub": "hash a1f", "col": 0, "row": 0, "tone": "store"}, {"id": "train", "label": "Train step", "sub": "code abc, lr 0.01", "col": 1, "row": 0, "tone": "service"}, {"id": "model", "label": "Model v12", "sub": "hash 9c2", "col": 2, "row": 0, "tone": "store"}, {"id": "reg", "label": "Registry", "sub": "candidate", "col": 2, "row": 1, "tone": "guard"}, {"id": "logs", "label": "Rebuilt from logs", "sub": "guesswork", "col": 0, "row": 1, "tone": "external", "fail": true}], "edges": [{"from": "data", "to": "train", "label": "consumed"}, {"from": "train", "to": "model", "label": "produced"}, {"from": "model", "to": "reg", "label": "registered"}, {"from": "logs", "to": "train", "label": "no proof"}]}, nfr: "Traceable", problem: "A model misbehaves in production, or a dataset is found to be bad. Someone must say exactly what produced the model, and which other models used that data.", options: [
+          { name: "Log what ran and search the logs", take: "Easy to add, and answers become guesses when logs age out or a path was reused." },
+          { name: "Record lineage edges at commit time", take: "The consumed and produced artifact ids are written in the same transaction as the output. The record is exact because it is a side effect of the step succeeding, not a separate report." },
+          { name: "A metadata store with typed artifacts and events", take: "The same idea as the first option made formal. TFX ML Metadata and others store artifacts, executions and events, and answer both directions." }
+        ], pick: "Lineage rows written in the commit transaction, indexed in both directions, so up (what made it) and down (what used it) are single index lookups. Each step instance also stores its code ref, parameters and image digest. A model version links to its evaluation report. For a deletion request or a poisoned dataset, one downward query lists every dependent model, and the registry can roll each back. Cost: one extra row per input and output per step." },
+        { type: "dive", title: "A 6 hour training step loses its machine", diagram: {"cap": "The training loop saves a checkpoint to the artifact store every 15 minutes. After a crash or preemption, attempt 2 loads the latest checkpoint and continues.", "fail": "Without checkpoints, a failure at hour 5 repeats 5 hours of 4 GPUs and the queue fills with retries.", "actors": [{"id": "a1", "label": "Train attempt 1", "tone": "service"}, {"id": "store", "label": "Artifact store", "tone": "store"}, {"id": "db", "label": "Postgres", "tone": "store"}, {"id": "a2", "label": "Train attempt 2", "tone": "service"}], "steps": [{"from": "a1", "to": "store", "label": "checkpoint, epoch 10"}, {"from": "a1", "to": "store", "label": "checkpoint, epoch 20"}, {"over": "a1", "label": "preempted at epoch 27", "fail": true}, {"over": "db", "label": "lease expires, attempt 2"}, {"from": "a2", "to": "store", "label": "load latest, epoch 20"}, {"from": "a2", "to": "store", "label": "continue, then commit model"}]}, nfr: "Survives long steps", problem: "A step runs for hours on expensive machines that can be preempted or fail, and a restart from zero wastes the budget.", options: [
+          { name: "Retry from the start", take: "Simple, and at 24 GPU-hours a step the retries cost more than the failure." },
+          { name: "Checkpoint on a fixed interval to the artifact store", take: "Bounds the loss to one interval. Needs the code to save and restore the full state: weights, optimizer, data position and random seed. See checkpointing (pattern `checkpointing`)." },
+          { name: "Checkpoint only when a preemption notice arrives", take: "Cheap when it works. Spot machines may give 30 seconds, which is not enough for a large model, and a crash gives none." }
+        ], pick: "Checkpoint every 15 minutes to the artifact store, treated as an artifact with its own hash. Attempt 2 loads the latest committed checkpoint for that step key, including the data position and seed so the run is reproducible. Keep the last 3 and delete the rest after the step commits. Say the cost: a checkpoint of a large model takes a few minutes of write time, so size the interval to about 5 percent overhead. Distinguish errors: a preemption or out-of-memory retries, a schema mismatch fails fast to a person. See retries and the dead-letter queue (pattern `retries-dlq`)." },
+        { type: "dive", title: "A sweep must not block production: scarce GPUs", diagram: {"cap": "Train steps wait in a queue with priority classes and per-team quotas. Production retrains go first and a team may hold only its share, so a sweep fills the idle remainder.", "fail": "With one shared FIFO, a 200-step sweep holds every GPU for hours and a production retrain waits behind it.", "nodes": [{"id": "sweep", "label": "Team A sweep", "sub": "200 train steps", "col": 0, "row": 0, "tone": "external"}, {"id": "prod", "label": "Prod retrain", "sub": "1 train step", "col": 0, "row": 1, "tone": "external"}, {"id": "q", "label": "Quota queue", "sub": "priority, share cap", "col": 1, "row": 0, "tone": "guard"}, {"id": "gpus", "label": "GPU pool", "sub": "50 GPUs", "col": 2, "row": 0, "tone": "external"}, {"id": "fifo", "label": "One FIFO", "sub": "prod waits for sweep", "col": 1, "row": 1, "tone": "queue", "fail": true}], "edges": [{"from": "sweep", "to": "q", "label": "capped at share"}, {"from": "prod", "to": "q", "label": "high priority"}, {"from": "q", "to": "gpus", "label": "admit"}, {"from": "prod", "to": "fifo", "label": "stuck"}]}, nfr: "Fair GPU use", problem: "GPU capacity is the scarcest resource, and one team's sweep or a long step can starve a production retrain.", options: [
+          { name: "One shared FIFO", take: "Simple, and the biggest submitter sets everyone's wait." },
+          { name: "Priority classes", take: "Production goes first. Low priority can starve, so add aging or a reserved slice. A running job is not preempted, so a 6 hour step holds its GPUs." },
+          { name: "Per-team quotas with borrowing", take: "Each team has a guaranteed share and may use idle capacity beyond it, giving it back as steps finish. Caps one team from taking everything. See rate limiting (pattern `rate-limiting`) and bulkheads (pattern `bulkhead`)." },
+          { name: "Gang scheduling", take: "A 4-GPU step must get all 4 at once, or it holds some and deadlocks others. Admit only when the full set is free." }
+        ], pick: "Priority class first (production, then scheduled, then experiments, with a reserved slice so experiments never starve), then per-team quotas with borrowing, gang admission for multi-GPU steps, and a maximum runtime per step. A sweep of 200 steps submits a bounded number at a time. Cost: some GPUs sit idle while the queue waits for a full gang, so keep the shape of the pool in mind." },
+        { type: "dive", title: "A model reaches production only through the gate", diagram: {"cap": "The gate compares the metric to a threshold and to the current production model. A pass makes a candidate, a named approver promotes with the version they expect to replace, and a racing second promotion gets a 409.", "fail": "Without the expected-version check, two runs promote at once and the second silently replaces a model it never compared against.", "actors": [{"id": "gate", "label": "Eval gate", "tone": "guard"}, {"id": "human", "label": "Approver", "tone": "human"}, {"id": "reg", "label": "Registry", "tone": "store"}, {"id": "b", "label": "Second run", "tone": "service"}], "steps": [{"from": "gate", "to": "human", "label": "report, baseline diff"}, {"from": "human", "to": "reg", "label": "promote v12, expected v11"}, {"over": "reg", "label": "production is v12"}, {"from": "b", "to": "reg", "label": "promote v13, expected v11", "fail": true}, {"over": "reg", "label": "409, re-evaluate vs v12"}]}, nfr: "Safe promotion", problem: "A model that passes one metric can still be worse than what is running, and two runs can race to replace the production model.", options: [
+          { name: "Promote on a threshold alone", take: "Simple, and a fixed threshold misses a regression on a slice, or blocks an improvement the metric cannot see." },
+          { name: "Threshold plus comparison to the current production model", take: "Evaluate both on the same held-out data and require no regression on the key slices. The baseline moves as production moves." },
+          { name: "Add a human approval for production", take: "Slower, and catches what metrics miss. Keep it to production only; staging can be automatic." },
+          { name: "Optimistic check on promote", take: "The promote call names the version it expects to replace. If production changed, the call fails with 409 and the run re-evaluates against the new baseline. See optimistic concurrency (pattern `optimistic`)." }
+        ], pick: "Threshold and baseline comparison on fixed evaluation data and key slices, a human approver for production, and a promote with expected_current so two promotions cannot race. The registry keeps the previous production version, so rollback is a promote of the old one. Every promotion writes who, when, the report and the lineage to an audit log. Cost: a day's delay if approval waits on a person." },
+        { type: "dive", title: "Security: who can write what, and what a model file can do", diagram: {"cap": "Each step runs with its own identity that reads only its inputs and writes only its output prefix. Artifacts are verified by hash and signed, and untrusted model files are loaded in a sandbox.", "fail": "A shared credential lets a train step write to production, and a swapped model file is loaded without a check.", "nodes": [{"id": "id", "label": "Step identity", "sub": "inputs read, one prefix", "col": 0, "row": 0, "tone": "guard"}, {"id": "store", "label": "Signed artifacts", "sub": "hash checked on read", "col": 1, "row": 0, "tone": "store"}, {"id": "sandbox", "label": "Sandboxed load", "sub": "safe format first", "col": 2, "row": 0, "tone": "guard"}, {"id": "reg", "label": "Registry", "sub": "approver only", "col": 2, "row": 1, "tone": "store"}, {"id": "swap", "label": "Swapped model", "sub": "supply chain", "col": 0, "row": 1, "tone": "external", "fail": true}], "edges": [{"from": "id", "to": "store", "label": "scoped access"}, {"from": "store", "to": "sandbox", "label": "verified bytes"}, {"from": "sandbox", "to": "reg", "label": "no train write"}, {"from": "swap", "to": "store", "label": "hash mismatch"}]}, nfr: "Secure", problem: "Training pipelines hold sensitive data and produce files that run code when loaded. A security engineer will ask what a compromised step can reach.", options: [
+          { name: "One service account for the whole platform", take: "Simple, and any step can read all data and write to production. One bug is a full breach." },
+          { name: "A short-lived identity per step instance", take: "Scoped to its input artifacts and its own output prefix. The train step has no write permission on the registry. Credentials expire when the step ends." },
+          { name: "Verify and sign artifacts", take: "Check the content hash on every read and sign model artifacts at commit. A swapped file is a supply-chain attack, and the hash catches it." },
+          { name: "Safe formats and a sandbox", take: "Loading a pickled model runs arbitrary code. Prefer safe formats, and load untrusted artifacts in a sandbox with no network and no credentials." }
+        ], pick: "A step identity per step instance with least privilege, hash verification and signing on every artifact, safe model formats with a sandbox for anything untrusted, and container images pinned by digest. Separation of duties: the identity that trains cannot promote, and every promotion is in an audit log. Personal data in training sets is access controlled, and lineage lists every model for a deletion request. No secrets in parameters or logs. Cost: more identities to issue and a few seconds to verify large artifacts." }
+      ],
+      reasoning: [
+        "Lead with caching by step key. It is the idea the whole design rests on, and the place a careful interviewer finds a hole: a step that is not pure.",
+        "Then the commit, lineage, checkpoints, GPU fairness, the gate, and security. Each maps to one non-functional requirement.",
+        "End on security, since he is a security engineer: say what a compromised step can reach, and what a model file can do."
+      ],
+      script: [
+        "The core idea is the step key: hash of code version, parameters, input artifact hashes and image digest. If I have produced outputs for that key, I skip the step. That only works if inputs are immutable artifacts and steps are pure, so I mark any step that reads the clock or an unrecorded seed as never cached.",
+        "Outputs are written to a temp path, hashed, and committed with their lineage and status in one transaction. No reader sees a half-written file, and lineage is a side effect of success, so it is exact.",
+        "A 6 hour train step checkpoints every 15 minutes to the artifact store, so a preemption loses 15 minutes, not 6 hours. GPUs go through a queue with priority and team quotas.",
+        "A model passes a threshold and a comparison to production, then a named person promotes it with the version they expect to replace. Racing promotions get a 409. I keep the previous production version so rollback is a promote.",
+        "For security: a short-lived identity per step, hash checks and signatures on artifacts, a sandbox for unsafe model files, and no step that trains can also promote."
+      ],
+      probes: [
+        "Can you guarantee a rerun gives the same model? Only if the step is pure: fixed seeds, pinned image and library versions, and deterministic operations. GPU training often has nondeterministic kernels, so the cache returns the earlier model, which is the point, and a fresh run may differ slightly. Say that honestly.",
+        "What if the input data changes in place at the source? The ingest step reads it and writes an artifact with a content hash. A changed source gives a different hash, a new key and a rerun downstream. Never read the live source below ingest.",
+        "How do you delete a dataset for a legal request? A downward lineage query lists every artifact and model built from it. Delete or rebuild those, and the audit log shows what was removed.",
+        "What if the orchestrator crashes? State is in Postgres. A new one scans for ready steps, and running workers keep their leases. Nothing is lost because nothing is held in memory.",
+        "What does the cache cost to store? Artifacts are the expensive part. Give each a retention rule: keep anything linked to a production model forever, and expire intermediates after 30 days, with a rerun rebuilding them if needed."
+      ],
+      contrast: "Agentic deep dives are about grounding, action safety and prompt injection. The shape (failure, options, pick) is the same, and here the failures are wasted compute, untraceable models and a bad promotion."
+    }
+  },
+  refs: [
+    { label: "Video, 22 min: Apache Airflow, DAGs and Batches (Jordan has no life)", url: "https://www.youtube.com/watch?v=9TDR-17wFY4" },
+    { label: "TensorFlow ML Metadata: artifacts, executions and lineage (record what produced a model, reuse completed steps)", url: "https://www.tensorflow.org/tfx/guide/mlmd" },
+    { label: "DVC docs: running pipelines (a stage is skipped when its commands, dependencies and parameters are unchanged)", url: "https://doc.dvc.org/user-guide/pipelines/running-pipelines" },
+    { label: "Apache Airflow docs: DAGs (the reference vocabulary for steps, dependencies and trigger rules)", url: "https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html" }
+  ]
+});
 GUIDE.patternUsage = {
   "notebooklm": {
     uses: [
