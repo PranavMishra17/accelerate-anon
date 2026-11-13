@@ -1751,3 +1751,16 @@ The changes:
 - `#/reported/<id>` opens that box in place.
 
 No charter deviation.
+
+**12 Nov 2026: Reported tab reshaped after his review, with a critique first.** He asked for one place to work in for the two days before the onsite, and named what was wrong: too many boxes, long answers that scrolled the buttons away, GTM answers that looped between pages, and designs without a video or a build-up.
+
+The changes:
+- **Merged, 47 boxes to 37.** The four-part build joins the file-parsing build; k hops joins the friend network; a million IDs, usernames and the ID service are one membership question; the sort warm-up is a line pointing at Rounds.
+- **The question and its buttons stay under the tabs** while a box is open, with Close. A solution with several parts shows one at a time behind a switcher (the comparator box went from about 9,300 px to about 1,850).
+- **A Python input kit before the solo hour** (Coding 7, 1b): a file path or stdin, lines, JSON and CSV, bad rows skipped and counted, checks before the real run, and a 15-minute drill. All code ran.
+- **A video on every design**, each checked with `tools/yt.py`. The job scheduler's three deep dives that had no diagram now have one.
+- **GTM is the research's likely prompts**: the first four open his own answer (drafts in the gitignored private file), the rest are pointers. The solution pane is gone. Three videos on speaking and discovery sit under the round's heading.
+- **The paywalled Hello Interview multi-step page is replaced** by a free video and article on durable execution.
+- A tab no longer remembers a hash that belongs to another tab.
+
+Why: he studies only from this tab until Monday. No charter deviation. Next: the six reported designs as full guide designs, one commit each.

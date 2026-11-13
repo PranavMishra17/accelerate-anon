@@ -364,12 +364,20 @@ details.pq.rev > summary .qt::before { content: ""; display: inline-block; width
 .rp-box > summary .rp-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--muted); align-self: center; }
 .rp-box.done > summary .rp-dot { background: var(--ok); border-color: var(--ok); }
 .rp-box.done > summary .rp-qt { color: var(--muted); }
-.rp-box[open] > summary { border-bottom: 1px solid var(--rule); }
+.rp-box[open] > summary { border-bottom: 1px solid var(--rule); position: sticky; top: var(--top); z-index: 5; background: var(--surface); border-radius: var(--radius-lg, 10px) var(--radius-lg, 10px) 0 0; }
+.rp-box > summary .rp-acts { grid-column: 1 / -1; margin: 0; display: none; }
+.rp-box[open] > summary .rp-acts { display: flex; }
+.rp-acts .rp-gap { flex: 1 1 auto; }
+.rp-sw { display: flex; flex-wrap: wrap; gap: var(--s2); margin: var(--s4) 0 0; }
+.rp-sol-sec[hidden] { display: none; }
+.rp-say { max-width: var(--measure); margin: 0 0 var(--s3); }
+.rp-res { margin: var(--s3) 0 var(--s4); }
+.rp-in > .rp-res { margin-top: 0; }
 .rp-in { padding: var(--s4); max-width: 920px; }
 .rp-in .rp-h { font-size: var(--fs-sm); color: var(--muted); margin: var(--s4) 0 var(--s1); }
 .rp-in .rp-h:first-child { margin-top: 0; }
 .rp-try { width: 100%; min-height: 8em; font: inherit; padding: var(--s2) var(--s3); border: 1px solid var(--rule); border-radius: var(--radius); background: var(--bg); color: var(--ink); resize: vertical; box-sizing: border-box; }
-.rp-acts { display: flex; flex-wrap: wrap; gap: var(--s2); margin: var(--s3) 0 0; }
+.rp-acts { flex-wrap: wrap; gap: var(--s2); align-items: center; }
 .rp-btn { font: inherit; font-size: var(--fs-sm); padding: var(--s1) var(--s3); border: 1px solid var(--rule); border-radius: 999px; background: var(--bg); color: var(--ink); cursor: pointer; }
 .rp-btn:hover { border-color: var(--accent); color: var(--accent); }
 .rp-btn.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
@@ -387,7 +395,7 @@ details.pq.rev > summary .qt::before { content: ""; display: inline-block; width
 .rp-base .rp-ev { font-size: var(--fs-sm); color: var(--muted); white-space: nowrap; }
 .rp-base li.done a { color: var(--muted); text-decoration: line-through; }
 .rp-count { color: var(--soft); }
-@media (max-width: 600px) { .rp-box > summary, .rp-base li { grid-template-columns: auto minmax(0, 1fr); } .rp-box > summary .rp-ev, .rp-base .rp-ev { grid-column: 2; white-space: normal; } }
+@media (max-width: 600px) { .rp-box > summary, .rp-base li { grid-template-columns: auto minmax(0, 1fr); } .rp-box[open] > summary .rp-qt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } .rp-box > summary .rp-ev, .rp-base .rp-ev { grid-column: 2; white-space: normal; } }
 /* prep: the list of rows, and one card per question with its follow-ups stepped on the right */
 .prows { list-style: none; margin: 0; padding: 0; }
 .prows li { border-bottom: var(--hair); }
@@ -1673,9 +1681,11 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
   }
   /* ---------------------------------------------------------------- reported
      Every question reported for this loop (LOOP.reported), by round, after the baseline. Each question is one box
-     that opens in place, one at a time: the question, your attempt (kept in this browser), then two buttons. The
-     approach shows the short version; the full solution draws the linked coding sections inside the same box, and
-     anything that lives on another page (the guide, a session) opens in a new tab so this page keeps your place. */
+     that opens in place, one at a time: its video if it has one, your attempt (kept in this browser), then the
+     approach, the full solution and, where private/loops/<module>.js has one, your own answer (x.asset keys into
+     LOOP_PRIVATE[loop].assets). The question and those buttons stay stuck under the tabs while the box is open, with
+     Close. A solution with several parts shows one at a time behind a switcher; pages of this site are drawn in a
+     frame inside the box, and only other sites open in a new tab. A round's `res` draws videos under its blurb. */
   var RP_KEY = "accelerate.reported." + LOOP.id;
   function rpState() { var v; try { v = JSON.parse(localStorage.getItem(RP_KEY) || "{}") || {}; } catch (e) { v = {}; } v.done = v.done || {}; v.base = v.base || {}; v["try"] = v["try"] || {}; return v; }
   function rpSave(st) { try { localStorage.setItem(RP_KEY, JSON.stringify(st)); } catch (e) {} }
@@ -1688,42 +1698,63 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
     var a = el("a", "", esc(l.label)); a.href = l.href; a.target = "_blank"; a.rel = "noopener"; return a;
   }
   function rpSolution(x, box) {
-    var inline = [], out = [];
+    var secs = [], out = [];
     (x.solve || []).forEach(function (l) {
       var m = /^#\/(coding|lld)\/([a-z0-9-]+)$/.exec(l.href), hit = m && rpSection(m[2]);
-      if (hit) { inline.push({ l: l, hit: hit }); } else { out.push(l); }
+      var w = el("div", "rp-sol-sec"), filled = false;
+      if (hit) {
+        secs.push({ label: l.label, node: w, fill: function () {
+          if (filled) { return; } filled = true;
+          hit.sec.blocks.forEach(function (b) { try { w.appendChild(cdBlock(b)); } catch (e) { console.error("reported block", hit.sec.id, e); } });
+        } });
+      } else if (/^(\.\.\/|#\/)/.test(l.href)) {
+        /* Pages of this site (the guide, a session, another tab of this page) are drawn inside the box too. */
+        secs.push({ label: l.label, node: w, fill: function () {
+          if (filled) { return; } filled = true;
+          var f = el("iframe", "rp-frame"); f.src = /^#/.test(l.href) ? location.pathname + l.href : l.href; f.title = l.label;
+          w.appendChild(f);
+          var o = el("p", "rp-out"); o.appendChild(rpOutLink({ label: "Open it full size in a new tab", href: l.href })); w.appendChild(o);
+        } });
+      } else { out.push(l); }
     });
-    inline.forEach(function (o) {
-      var w = el("div", "rp-sol-sec");
-      w.appendChild(el("h3", "", esc(o.l.label)));
-      o.hit.sec.blocks.forEach(function (b) { try { w.appendChild(cdBlock(b)); } catch (e) { console.error("reported block", o.hit.sec.id, e); } });
-      box.appendChild(w);
-    });
-    /* Pages of this site (the guide, a session, another tab of this page) are drawn inside the box too. */
-    out = out.filter(function (l) {
-      if (!/^(\.\.\/|#\/)/.test(l.href)) { return true; }
-      var w = el("div", "rp-sol-sec");
-      w.appendChild(el("h3", "", esc(l.label)));
-      var f = el("iframe", "rp-frame"); f.src = /^#/.test(l.href) ? location.pathname + l.href : l.href; f.loading = "lazy"; f.title = l.label;
-      w.appendChild(f);
-      var o = el("p", "rp-out"); o.appendChild(rpOutLink({ label: "Open it full size in a new tab", href: l.href })); w.appendChild(o);
-      box.appendChild(w);
-      return false;
-    });
+    /* Several parts: one at a time, behind a switcher, so the box stays short. */
+    var sw = secs.length > 1 ? el("div", "rp-sw") : null, btns = [];
+    function show(i) {
+      secs.forEach(function (sx, j) { sx.node.hidden = j !== i; if (btns[j]) { btns[j].classList.toggle("on", j === i); } });
+      secs[i].fill();
+    }
+    if (sw) {
+      secs.forEach(function (sx, i) {
+        var b = el("button", "rp-btn", esc(sx.label)); b.type = "button";
+        b.addEventListener("click", function () { show(i); });
+        btns.push(b); sw.appendChild(b);
+      });
+      box.appendChild(sw);
+    }
+    secs.forEach(function (sx) { if (!sw) { sx.node.insertBefore(el("h3", "", esc(sx.label)), sx.node.firstChild); } box.appendChild(sx.node); });
+    if (secs.length) { show(0); }
     if (out.length) {
-      var p = el("p", "rp-out", inline.length ? "Also, in a new tab: " : "This one lives on another site, opening in a new tab: ");
+      var p = el("p", "rp-out", secs.length ? "Also, in a new tab: " : "This one lives on another site, opening in a new tab: ");
       out.forEach(function (l, i) { if (i) { p.appendChild(document.createTextNode(", ")); } p.appendChild(rpOutLink(l)); });
       box.appendChild(p);
     }
-    if ((x.src || []).length) {
-      var q = el("p", "rp-out", "Reported in: ");
-      x.src.forEach(function (l, i) { if (i) { q.appendChild(document.createTextNode(", ")); } q.appendChild(rpOutLink({ label: l.label, href: l.url })); });
-      box.appendChild(q);
-    }
+    rpSources(x, box);
+  }
+  function rpSources(x, box) {
+    if (!(x.src || []).length) { return; }
+    var q = el("p", "rp-out", "Reported in: ");
+    x.src.forEach(function (l, i) { if (i) { q.appendChild(document.createTextNode(", ")); } q.appendChild(rpOutLink({ label: l.label, href: l.url })); });
+    box.appendChild(q);
+  }
+  /* Your own answers to a question, from the gitignored private file: x.asset lists keys of LOOP_PRIVATE[loop].assets. */
+  function rpAssets(x) {
+    var all = ((window.LOOP_PRIVATE && window.LOOP_PRIVATE[LOOP.id]) || {}).assets || {};
+    return (x.asset || []).map(function (k) { return all[k]; }).filter(Boolean);
   }
   function rpBox(x, st, onDone) {
     var d = el("details", "rp-box" + (st.done[x.id] ? " done" : "")); d.id = x.id; d.setAttribute("name", "reported");
-    d.appendChild(el("summary", "", '<span class="rp-dot" aria-hidden="true"></span><span class="rp-qt">' + inl(x.q) + '</span><span class="rp-ev">' + esc(x.ev || "") + "</span>"));
+    var sum = el("summary", "", '<span class="rp-dot" aria-hidden="true"></span><span class="rp-qt">' + inl(x.q) + '</span><span class="rp-ev">' + esc(x.ev || "") + "</span>");
+    d.appendChild(sum);
     var drawn = false;
     d.addEventListener("toggle", function () {
       if (!d.open) { return; }
@@ -1731,37 +1762,60 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       if (!drawn) {
         drawn = true;
         var inn = el("div", "rp-in");
+        var vid = (x.video || []).length && window.Res && Res.render(x.video);
+        if (vid) { var vw = el("div", "rp-res"); vw.appendChild(vid); inn.appendChild(vw); }
         if (x.detail) { inn.appendChild(el("p", "", inl(x.detail))); }
         inn.appendChild(el("div", "rp-h", "Your attempt. Say it aloud first, then the outline here."));
         var ta = el("textarea", "rp-try"); ta.value = st["try"][x.id] || "";
         ta.addEventListener("input", function () { st["try"][x.id] = ta.value; rpSave(st); });
         inn.appendChild(ta);
-        var acts = el("div", "rp-acts"), panes = {};
-        function pane(key, label, fill) {
+        /* The buttons live in the summary, which sticks under the tabs while the box is open; a click on one
+           must not fold the box, so the summary's own toggle is cancelled for clicks that start here. */
+        var acts = el("div", "rp-acts"), panes = [];
+        acts.addEventListener("click", function (e) { e.preventDefault(); });
+        function pane(label, fill) {
           var b = el("button", "rp-btn", label); b.type = "button";
-          var p = el("div", "rp-pane"); p.hidden = true; var filled = false;
+          var p = el("div", "rp-pane"); p.hidden = true; var filled = false, me = { b: b, p: p };
           b.addEventListener("click", function () {
-            if (!filled) { filled = true; fill(p); }
-            p.hidden = !p.hidden; b.classList.toggle("on", !p.hidden);
+            var open = p.hidden;
+            panes.forEach(function (o) { o.p.hidden = true; o.b.classList.remove("on"); });
+            if (open) { if (!filled) { filled = true; fill(p); } p.hidden = false; b.classList.add("on"); glideTo(d); }
           });
-          acts.appendChild(b); panes[key] = p;
+          acts.appendChild(b); panes.push(me);
         }
-        pane("ap", "Show the approach", function (p) {
+        var mine = rpAssets(x), solved = (x.solve || []).length > 0;
+        if (mine.length) {
+          pane(mine.length > 1 ? "Show your answers" : "Show your answer", function (p) {
+            mine.forEach(function (a) {
+              var w = el("div", "rp-sol-sec");
+              w.appendChild(el("h3", "", esc(a.title) + (a.len ? ' <span class="rp-ev">' + esc(a.len) + "</span>" : "")));
+              (a.say || []).forEach(function (t) { w.appendChild(el("p", "rp-say", inl(t))); });
+              if ((a.notes || []).length) { var ul = el("ul"); a.notes.forEach(function (t) { ul.appendChild(el("li", "", inl(t))); }); w.appendChild(ul); }
+              p.appendChild(w);
+            });
+          });
+        }
+        pane(solved ? "Show the approach" : "Show the pointers", function (p) {
           if (x.tests) { p.appendChild(el("div", "rp-h", "What it tests")); p.appendChild(el("p", "", inl(x.tests))); }
           if ((x.approach || []).length) {
-            p.appendChild(el("div", "rp-h", "The approach"));
+            p.appendChild(el("div", "rp-h", solved ? "The approach" : "Pointers"));
             var ul = el("ul"); x.approach.forEach(function (t) { ul.appendChild(el("li", "", inl(t))); }); p.appendChild(ul);
           }
+          if (!solved) { rpSources(x, p); }
         });
-        pane("sol", "Show the full solution", function (p) { rpSolution(x, p); });
+        if (solved) { pane("Show the full solution", function (p) { rpSolution(x, p); }); }
+        acts.appendChild(el("span", "rp-gap"));
         var dn = el("button", "rp-btn", st.done[x.id] ? "Done. Undo" : "Mark done"); dn.type = "button";
         dn.addEventListener("click", function () {
           if (st.done[x.id]) { delete st.done[x.id]; } else { st.done[x.id] = 1; }
           rpSave(st); dn.textContent = st.done[x.id] ? "Done. Undo" : "Mark done"; d.classList.toggle("done", !!st.done[x.id]); onDone();
         });
         acts.appendChild(dn);
-        inn.appendChild(acts);
-        inn.appendChild(panes.ap); inn.appendChild(panes.sol);
+        var cl = el("button", "rp-btn", "Close"); cl.type = "button";
+        cl.addEventListener("click", function () { d.open = false; glideTo(d); });
+        acts.appendChild(cl);
+        sum.appendChild(acts);
+        panes.forEach(function (o) { inn.appendChild(o.p); });
         d.appendChild(inn);
       }
       glideTo(d);
@@ -1796,6 +1850,8 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       h.appendChild(el("h2", "", esc(r.title) + ' <span class="rp-ev">' + r.items.length + " questions</span>"));
       if (r.blurb) { h.appendChild(el("p", "", inl(r.blurb))); }
       host.appendChild(h); nav.push(["rp-" + r.id, r.title]);
+      var rres = (r.res || []).length && window.Res && Res.render(r.res);
+      if (rres) { var rw = el("div", "rp-res"); rw.appendChild(rres); host.appendChild(rw); }
       r.items.forEach(function (x) { var b = rpBox(x, st, count); host.appendChild(b); if (x.id === anchor) { target = b; } });
     });
     if ((R.sources || []).length) {
@@ -4573,7 +4629,8 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       main.appendChild(el("p", "", "This page could not be drawn. The console has the details."));
     }
     curTab = r.tab; document.body.setAttribute("data-tab", r.tab);
-    var lh = cdState().lastHash || {}; lh[r.tab] = location.hash; cdSave("lastHash", lh);
+    /* Remember where this tab was left, unless the hash belongs to another tab (an unknown route falls back to Overview). */
+    var lh = cdState().lastHash || {}; if (location.hash.indexOf(link(r.tab)) === 0) { lh[r.tab] = location.hash; } else { delete lh[r.tab]; } cdSave("lastHash", lh);
     drawTabs(r.tab); drawSide(r.tab); drawToday(); progress();
     var key = /^(daily|plan|coding|lld)$/.test(r.tab) ? location.hash : r.tab + "/" + (r.tab === "sessions" ? r.anchor : "");
     var target = r.anchor && r.tab !== "sessions" ? document.getElementById(r.anchor) : null;

@@ -375,6 +375,159 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
+   "id": "onsite-io",
+   "title": "1b. Read the input, run the file",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "**What it is.** One first-hand report says the deciding twist of the solo hour was that the code had to run on the provided input, end to end, with nothing stubbed. So before any algorithm there are four small jobs: get the data in (a file path, stdin, or a literal in the prompt), turn text into the types you need, refuse or skip bad rows, and print an answer when the file is run. None of it is hard and all of it is easy to fumble with no search. This section is the Python for it, standard library only, written so you can type it from memory in five minutes."
+    },
+    {
+     "t": "p",
+     "text": "**Where the input comes from.** Ask in the first minute, or read the prompt for it. It is one of three, and one function covers the first two."
+    },
+    {
+     "t": "table",
+     "head": [
+      "The input is",
+      "You run",
+      "You read it with"
+     ],
+     "rows": [
+      [
+       "A file they give you",
+       "`python solution.py input.csv`",
+       "`open(sys.argv[1], newline=\"\", encoding=\"utf-8\")`"
+      ],
+      [
+       "Piped in",
+       "`python solution.py < input.csv`",
+       "`sys.stdin` (it is already an open file: loop over it, or pass it to `json.load` or `csv.DictReader`)"
+      ],
+      [
+       "Typed at a prompt",
+       "`python solution.py`, then type",
+       "`input()` for one line; rare in this round"
+      ],
+      [
+       "A literal in the prompt",
+       "`python solution.py`",
+       "Paste it as a constant at the top, and still write `load()` so the reviewer can swap in a file"
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**The three readers.** Lines of fields, JSON, and CSV cover every report. Each one returns plain Python (lists, tuples, dicts) and says on stderr what it skipped, so standard output stays clean for the answer."
+    },
+    {
+     "t": "code",
+     "id": "onsite-io-readers",
+     "title": "Three readers, with their checks (runs as it is)",
+     "code": "import csv, io, json, sys\n\ndef read_lines(stream):\n    \"\"\"'USD GBP 0.77' per line -> [('USD', 'GBP', 0.77)]. Blank lines and # comments are skipped.\"\"\"\n    out = []\n    for n, line in enumerate(stream, 1):\n        line = line.strip()\n        if not line or line.startswith(\"#\"):\n            continue\n        parts = line.split()\n        if len(parts) != 3:\n            print(f\"line {n}: expected 3 fields, got {len(parts)}\", file=sys.stderr)\n            continue\n        try:\n            out.append((parts[0], parts[1], float(parts[2])))\n        except ValueError:\n            print(f\"line {n}: bad number {parts[2]!r}\", file=sys.stderr)\n    return out\n\ndef read_json(stream):\n    \"\"\"{\"tasks\": [{\"id\": \"a\", \"deps\": [\"b\"]}]} -> the list of task dicts.\"\"\"\n    data = json.load(stream)               # json.loads(text) for a string\n    return data[\"tasks\"] if isinstance(data, dict) else data\n\ndef read_csv(stream):\n    \"\"\"A header row, then rows -> a list of dicts. Every value is a string: convert it yourself.\"\"\"\n    return [{k: (v or \"\").strip() for k, v in rec.items()} for rec in csv.DictReader(stream)]\n\nif __name__ == \"__main__\":\n    assert read_lines(io.StringIO(\"USD GBP 0.77\\n\\n# note\\nbad row\\nEUR USD x\\n\")) == [(\"USD\", \"GBP\", 0.77)]\n    assert read_json(io.StringIO('{\"tasks\": [{\"id\": \"a\", \"deps\": []}]}')) == [{\"id\": \"a\", \"deps\": []}]\n    assert read_csv(io.StringIO(\"id,score\\n a , 3\\n\")) == [{\"id\": \"a\", \"score\": \"3\"}]\n    print(\"ok\")\n"
+    },
+    {
+     "t": "list",
+     "items": [
+      "**Everything arrives as text.** `int(x)` and `float(x)` raise `ValueError` on junk: catch it per row, not around the whole loop.",
+      "**`line.split()` with no argument** splits on any run of spaces or tabs and drops the newline. `line.split(\",\")` keeps spaces and the newline: `strip()` first.",
+      "**CSV: pass `newline=\"\"` to `open`** and let the `csv` module handle quotes and commas inside fields. Do not split CSV by hand.",
+      "**`csv.DictReader`** uses the first row as keys. A short row gives `None` for the missing fields, which is why the reader does `(v or \"\").strip()`.",
+      "**JSON:** `json.load(stream)` for a file, `json.loads(text)` for a string. Keys are always strings, so `{\"1\": ...}` needs `int(k)`.",
+      "**Print diagnostics to stderr** (`print(..., file=sys.stderr)`), the answer to stdout. Then `python solution.py in.csv > out.txt` still shows you the counts."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**The whole file, once.** The same four sections as the kit's layout, with reading as section 1. The checks run first on a small sample held in a string (`io.StringIO` turns a string into a stream, so `load` does not care where its input comes from), and then the real run happens. If a check fails, the file stops before it prints a wrong answer."
+    },
+    {
+     "t": "code",
+     "id": "onsite-io-file",
+     "title": "solution.py: read, build, answer, checks (runs as it is)",
+     "code": "\"\"\"Referral reach from a file. Run it with:\n    python solution.py referrals.csv        (a path as the first argument)\n    python solution.py < referrals.csv      (or the same data on stdin)\n\nCLARIFIED (asked, or assumed and said aloud):\n- A row is referrer,candidate. The first line is a header.\n- A bad row (a missing name, a self-referral, a second referrer) is skipped and counted, not an error.\nDATA MODEL: children = dict referrer -> list of candidates; parent = dict candidate -> referrer.\n\"\"\"\nimport csv\nimport sys\nfrom collections import defaultdict, deque\n\n\n# ---- 1. read ----\ndef open_input(argv):\n    \"\"\"The file named on the command line, or stdin when there is none.\"\"\"\n    if len(argv) > 1:\n        return open(argv[1], newline=\"\", encoding=\"utf-8\")\n    return sys.stdin\n\n\ndef load(stream):\n    \"\"\"Rows of the CSV as (referrer, candidate), stripped. Returns (rows, skipped).\"\"\"\n    rows, skipped = [], 0\n    for rec in csv.DictReader(stream):\n        a = (rec.get(\"referrer\") or \"\").strip()\n        b = (rec.get(\"candidate\") or \"\").strip()\n        if not a or not b:\n            skipped += 1          # a missing field\n            continue\n        rows.append((a, b))\n    return rows, skipped\n\n\n# ---- 2. build ----\ndef build(rows):\n    \"\"\"The graph, refusing a self-referral and a second referrer. Returns (children, parent, refused).\"\"\"\n    children, parent, refused = defaultdict(list), {}, 0\n    for a, b in rows:\n        if a == b or b in parent:\n            refused += 1\n            continue\n        parent[b] = a\n        children[a].append(b)\n    return children, parent, refused\n\n\n# ---- 3. answer ----\ndef reach(children, start):\n    \"\"\"How many people sit under start, by BFS.\"\"\"\n    seen, queue = set(), deque([start])\n    while queue:\n        for c in children.get(queue.popleft(), []):\n            if c not in seen:\n                seen.add(c)\n                queue.append(c)\n    return len(seen)\n\n\ndef main(argv):\n    stream = open_input(argv)\n    try:\n        rows, skipped = load(stream)\n    finally:\n        if stream is not sys.stdin:\n            stream.close()\n    children, parent, refused = build(rows)\n    print(f\"read {len(rows)} rows, skipped {skipped}, refused {refused}\", file=sys.stderr)\n    for name in sorted(children, key=lambda n: (-reach(children, n), n)):\n        print(name, reach(children, name))\n\n\n# ---- 4. checks, then the real run ----\nif __name__ == \"__main__\":\n    import io\n    sample = \"referrer,candidate\\nana,ben\\nana,cy\\nben,dee\\n,eve\\ncy,cy\\ndee,ben\\n\"\n    rows, skipped = load(io.StringIO(sample))\n    assert skipped == 1, skipped\n    children, parent, refused = build(rows)\n    assert refused == 2, refused                   # cy,cy and the second referrer for ben\n    assert reach(children, \"ana\") == 3 and reach(children, \"ben\") == 1\n    main(sys.argv)\n"
+    },
+    {
+     "t": "table",
+     "head": [
+      "When it breaks",
+      "What you see",
+      "What to do, with no search"
+     ],
+     "rows": [
+      [
+       "Wrong path",
+       "`FileNotFoundError`",
+       "Run from the folder the file is in; `python -c \"import os; print(os.listdir())\"` shows what is there."
+      ],
+      [
+       "Nothing printed",
+       "The file ends without calling `main`",
+       "Check the last lines sit under `if __name__ == \"__main__\":` and are indented."
+      ],
+      [
+       "A traceback",
+       "The last line is the error, the lines above are the path to it",
+       "Read from the bottom: the error, then the first frame that is your file and its line number."
+      ],
+      [
+       "A wrong number",
+       "No error",
+       "`python -i solution.py input.csv`, then call your functions by hand; or put `breakpoint()` on the line and use `p name`, `n`, `c`."
+      ],
+      [
+       "A signature you forgot",
+       "",
+       "`python -c \"import csv; help(csv.DictReader)\"`. It is allowed: it is not a search."
+      ],
+      [
+       "Deep recursion on a long chain",
+       "`RecursionError`",
+       "Use a loop with a stack or a deque; that is why the reach above is BFS."
+      ]
+     ]
+    },
+    {
+     "t": "write",
+     "q": "Drill, 15 minutes, no search: from a blank file, read referrals.csv (header referrer,candidate), skip rows with a missing name, refuse a self-referral and a second referrer, and print each referrer with their reach, largest first. It must run both as `python solution.py referrals.csv` and with the file piped in.",
+     "starter": "\"\"\"Referral reach from a file. Run it with:\n    python solution.py referrals.csv\n    python solution.py < referrals.csv\n\"\"\"\nimport csv\nimport sys\n\n\n# ---- 1. read ----\ndef open_input(argv):\n    ...\n\n\ndef load(stream):\n    ...\n\n\n# ---- 2. build ----\n\n\n# ---- 3. answer ----\n\n\n# ---- 4. checks, then the real run ----\nif __name__ == \"__main__\":\n    ...\n",
+     "hint": "open_input returns open(argv[1]) or sys.stdin. load loops over csv.DictReader(stream) and returns the good rows and a skipped count. build keeps parent (candidate to referrer) and children (referrer to list). reach is BFS over children. Checks use io.StringIO on a six-line sample, then main(sys.argv).",
+     "solution": "\"\"\"Referral reach from a file. Run it with:\n    python solution.py referrals.csv        (a path as the first argument)\n    python solution.py < referrals.csv      (or the same data on stdin)\n\nCLARIFIED (asked, or assumed and said aloud):\n- A row is referrer,candidate. The first line is a header.\n- A bad row (a missing name, a self-referral, a second referrer) is skipped and counted, not an error.\nDATA MODEL: children = dict referrer -> list of candidates; parent = dict candidate -> referrer.\n\"\"\"\nimport csv\nimport sys\nfrom collections import defaultdict, deque\n\n\n# ---- 1. read ----\ndef open_input(argv):\n    \"\"\"The file named on the command line, or stdin when there is none.\"\"\"\n    if len(argv) > 1:\n        return open(argv[1], newline=\"\", encoding=\"utf-8\")\n    return sys.stdin\n\n\ndef load(stream):\n    \"\"\"Rows of the CSV as (referrer, candidate), stripped. Returns (rows, skipped).\"\"\"\n    rows, skipped = [], 0\n    for rec in csv.DictReader(stream):\n        a = (rec.get(\"referrer\") or \"\").strip()\n        b = (rec.get(\"candidate\") or \"\").strip()\n        if not a or not b:\n            skipped += 1          # a missing field\n            continue\n        rows.append((a, b))\n    return rows, skipped\n\n\n# ---- 2. build ----\ndef build(rows):\n    \"\"\"The graph, refusing a self-referral and a second referrer. Returns (children, parent, refused).\"\"\"\n    children, parent, refused = defaultdict(list), {}, 0\n    for a, b in rows:\n        if a == b or b in parent:\n            refused += 1\n            continue\n        parent[b] = a\n        children[a].append(b)\n    return children, parent, refused\n\n\n# ---- 3. answer ----\ndef reach(children, start):\n    \"\"\"How many people sit under start, by BFS.\"\"\"\n    seen, queue = set(), deque([start])\n    while queue:\n        for c in children.get(queue.popleft(), []):\n            if c not in seen:\n                seen.add(c)\n                queue.append(c)\n    return len(seen)\n\n\ndef main(argv):\n    stream = open_input(argv)\n    try:\n        rows, skipped = load(stream)\n    finally:\n        if stream is not sys.stdin:\n            stream.close()\n    children, parent, refused = build(rows)\n    print(f\"read {len(rows)} rows, skipped {skipped}, refused {refused}\", file=sys.stderr)\n    for name in sorted(children, key=lambda n: (-reach(children, n), n)):\n        print(name, reach(children, name))\n\n\n# ---- 4. checks, then the real run ----\nif __name__ == \"__main__\":\n    import io\n    sample = \"referrer,candidate\\nana,ben\\nana,cy\\nben,dee\\n,eve\\ncy,cy\\ndee,ben\\n\"\n    rows, skipped = load(io.StringIO(sample))\n    assert skipped == 1, skipped\n    children, parent, refused = build(rows)\n    assert refused == 2, refused                   # cy,cy and the second referrer for ben\n    assert reach(children, \"ana\") == 3 and reach(children, \"ben\") == 1\n    main(sys.argv)\n",
+     "why": "The reading is separate from the building, so each has its own check and the reviewer can see where a bad row goes. The loader takes a stream, not a path, which is what lets one function serve a file, stdin and a test string. The real referral problem adds the cycle check (walk up from the referrer before adding an edge); here a second referrer is refused, which already keeps this small graph a forest.",
+     "say": "**I get the data in first and print what I built, before any algorithm.** One function opens the file named on the command line or falls back to stdin. One reads rows and counts what it skipped. One builds the graph and refuses what breaks a rule. Then the answer, and asserts on a small sample that run before the real input. So when I run it on their file, the first line tells me how many rows I read and how many I refused."
+    },
+    {
+     "t": "res",
+     "items": [
+      {
+       "kind": "read",
+       "req": true,
+       "label": "Python docs: csv (reader, DictReader, the newline rule)",
+       "url": "https://docs.python.org/3/library/csv.html",
+       "m": 5,
+       "why": "The two calls you need and why open() takes newline=\"\". Read the DictReader paragraph once."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Python docs: json (load, loads, what maps to what)",
+       "url": "https://docs.python.org/3/library/json.html",
+       "m": 5,
+       "why": "The conversion table: JSON objects become dicts with string keys, arrays become lists."
+      },
+      {
+       "kind": "read",
+       "req": false,
+       "label": "Python docs: sys (argv, stdin, stderr)",
+       "url": "https://docs.python.org/3/library/sys.html",
+       "m": 3,
+       "why": "Only three names from this page: sys.argv, sys.stdin, sys.stderr."
+      }
+     ]
+    }
+   ]
+  },
+  {
    "id": "onsite-referral",
    "title": "2. Referral network",
    "blocks": [
