@@ -139,6 +139,73 @@ window.LOOP_CODING.parts.push({
      "t": "code",
      "title": "Output, run with Python 3.12",
      "code": "graph: {'e1': ['e2'], 'e2': ['e3', 'e6'], 'e3': ['e2', 'e4'], 'e4': ['e6'], 'e5': ['e4'], 'e6': []}\ndropped edges: 2\npath e1->e6: ['e1', 'e2', 'e6']\npath e1->e1: ['e1']\npath e1->e5: []\nranked from e1 for ['python', 'evals'] within 3 hops:\n  e2 hops=1 score=1\n  e4 hops=3 score=1\n  e3 hops=2 score=0\n  e6 hops=2 score=0\ntop 3 referrers by reach: [('e1', 4), ('e2', 3), ('e3', 3)]\ninfluencers, k=2: [('e1', 5), ('e5', 1)]\nflow centrality: [('e2', 4), ('e3', 2), ('e4', 1), ('e1', 0), ('e5', 0), ('e6', 0)]"
+    },
+    {
+     "t": "faq",
+     "title": "The code review: every decision, and how to stand behind it",
+     "prose": true,
+     "items": [
+      {
+       "q": "How the 30 minutes go, and the opener",
+       "a": "The reviewer has read your code. They will ask why, over and over, and they are checking three things: that every choice was a choice, that you know what it costs, and that you can say what you would change without getting defensive. A working solution gets you into the room; this is what is judged.\n\nOpen with about a minute, before they ask anything: \"I treated it as a pipeline. Build a clean graph and count what I dropped. One BFS gives parent and hop count for every reachable person, and everything else reads from that: the path walks back the parents, ranking reads the hop counts, reach is the size of the BFS. Where the prompt left a word undefined, I wrote my decision as a comment at the top and coded to it. The two places I would look first are the scoring weights, which are a product decision, and top-k, which runs a BFS per person.\"\n\nThen let them steer. For each question: the decision, the alternative you considered, why, and what it costs. Concede fast when they are right, then say how you would change it. \"Fair, I would do X\" is a strong answer, not a weak one."
+      },
+      {
+       "q": "1. The graph is a dict of sorted neighbour lists",
+       "a": "**Decided.** A plain dict from expert id to a sorted list of the ids they vouch for, built with sets first.\n\n**Instead of.** A Graph class, networkx, or keeping sets.\n\n**Why.** Sets while building make duplicate edges free to drop. Sorting at the end makes every traversal deterministic: the same input gives the same path and the same ranking every run, which is what makes the output testable. A dict of lists is the smallest thing that works and the reviewer reads it in one glance.\n\n**What it costs.** Sorting is O(d log d) per person at build time, paid once. No encapsulation: any code can edit the dict.\n\n**If they push.** \"In a live system I would wrap it in a class with add_referral, so the rules are enforced in one place. For an hour, functions over a dict kept every part runnable.\""
+      },
+      {
+       "q": "2. Bad rows are dropped and counted, not raised",
+       "a": "**Decided.** Self-loops and edges with an unknown id are skipped; duplicates collapse; build_graph returns how many were dropped.\n\n**Instead of.** Raising on the first bad row, or dropping silently.\n\n**Why.** One bad row should not throw away a batch of good ones, so I keep going. But silent dropping hides bugs, so the count comes back with the graph and main prints it. It is the middle ground: robust, and still visible.\n\n**What it costs.** The count says how many, not which or why.\n\n**If they push.** \"If silent data loss matters here, I would log each dropped row with its reason, or add a strict flag that raises. Which is right depends on whether this data comes from a person or a pipeline.\""
+      },
+      {
+       "q": "3. Cycles and several referrers are allowed",
+       "a": "**Decided.** The graph accepts any directed edge that passes the checks, including e2 -> e3 -> e2.\n\n**Instead of.** Enforcing one referrer per person and no cycles, as some versions of this prompt ask.\n\n**Why.** 'Vouches for' can be mutual, so I did not invent a rule the prompt did not give me. Every traversal carries a visited set, so cycles are safe: nothing loops forever.\n\n**What it costs.** Reach can no longer be a subtree size (see top-k), and a referral tree view is not available.\n\n**If they push.** \"If the rule is one referrer and no cycles, add_referral checks two things before adding a -> b: b has no referrer yet, and walking up from a through the referrers never reaches b. That walk is O(depth). Then the graph is a forest.\""
+      },
+      {
+       "q": "4. BFS, iterative, with a deque",
+       "a": "**Decided.** Breadth-first search with collections.deque and a visited set.\n\n**Instead of.** DFS, or recursion.\n\n**Why.** BFS visits people in order of hops, so the first time it reaches someone is by the fewest hops. That one property gives both the shortest path and the hop counts for ranking. Iterative, because recursion in Python stops around a thousand levels and a long referral chain would crash it. A deque, because list.pop(0) shifts the whole list every time.\n\n**What it costs.** O(V) extra memory for the queue, visited, parent and distance.\n\n**If they push.** \"DFS would find a path, not the shortest one. For weighted vouches I would swap the deque for a heap and it becomes Dijkstra; nothing else changes.\""
+      },
+      {
+       "q": "5. One BFS returns parent and distance; everything reads from it",
+       "a": "**Decided.** bfs_parents is the only function that traverses. shortest_path walks back the parents; rank_candidates and reach read the distances.\n\n**Instead of.** Each query doing its own traversal.\n\n**Why.** Cycle safety lives in one place. Each piece is testable alone: the walk-back can be tested on a hand-made parent map with no graph at all. And one BFS from a person answers every question about that person.\n\n**What it costs.** shortest_path explores the whole reachable graph even when the target is one hop away.\n\n**If they push.** \"For a single path query I would stop the BFS the moment the target is reached; it is already the shortest. I did not, to keep one traversal for everything.\""
+      },
+      {
+       "q": "6. The score is 2 x matched skills minus hops",
+       "a": "**Decided.** score = 2 x (required skills the expert has) - hop count. Experts with no match stay in the list with a negative score.\n\n**Instead of.** Filtering out no-match experts, normalising, or weighting hops more.\n\n**Why.** The 2 means one matching skill is worth two hops: a skilled person three hops away beats an unskilled friend one hop away. That is a product decision and I say it as one. Keeping no-match experts means ranking returns everything reachable and the caller decides what to cut; ranking should not also filter.\n\n**What it costs.** The weights are a guess. Negative scores look odd in a list.\n\n**If they push.** \"The weight is the knob. If proximity matters more, because a direct vouch is a stronger signal, raise the hop weight. I would tune it against hires that worked out, not by intuition.\""
+      },
+      {
+       "q": "7. Scoring sits in a small class",
+       "a": "**Decided.** SimpleScorer with one score method, passed into rank_candidates; SeniorityScorer shows a change.\n\n**Instead of.** The formula inline in rank_candidates.\n\n**Why.** The formula is the part most likely to change. Behind one method it can change, be tested on its own, or be swapped for an A/B test, without touching the graph or BFS.\n\n**What it costs.** A class for one method is close to over-engineering in an hour.\n\n**If they push.** \"Fair: a plain function passed as a parameter does the same job. I used a class because seniority showed state could come in. Either way the point is that rank_candidates never knows the formula.\" Concede this one quickly if pushed."
+      },
+      {
+       "q": "8. Every sort has a full tie-break",
+       "a": "**Decided.** Ranking sorts by score descending, then hops ascending, then id ascending. Top-k sorts by reach descending, then id.\n\n**Instead of.** Sorting by the main key only.\n\n**Why.** Without a final tie-break, equal scores come out in whatever order the dict produced, so two runs or two machines can disagree and a test cannot pin the output. The id as the last key makes it a total order.\n\n**What it costs.** Ties by id are arbitrary: they favour e1 over e9 for no real reason.\n\n**If they push.** \"If ties should mean something, the tie-break becomes a real signal, like most recent referral or seniority. The id is there to be deterministic, not to be fair.\""
+      },
+      {
+       "q": "9. Reach means everyone under you, at any depth, not counting you",
+       "a": "**Decided.** reach(p) is the number of people BFS reaches from p, minus p.\n\n**Instead of.** Direct referrals only, or depth-weighted reach (closer counts more).\n\n**Why.** 'Who brought the most people in' should credit the people your referrals brought in too. It counts each person once even when several paths lead to them, because visited dedupes.\n\n**What it costs.** A top referrer can be credited for a large network they barely touched.\n\n**If they push.** \"Direct count is one line if that is what they meant. If indirect should count less, weight each person by a decay per hop, which BFS already gives me the hops for.\""
+      },
+      {
+       "q": "10. Top-k runs a BFS from every person",
+       "a": "**Decided.** Compute reach for everyone, sort, take the first k. Ties by id; k larger than the number of people returns everyone.\n\n**Instead of.** Something faster.\n\n**Why.** It is correct on any graph, cycles included, and it is five lines in an hour.\n\n**What it costs.** O(V x (V + E)). Fine for thousands of people, slow for millions. A full sort where a heap of size k would do.\n\n**If they push.** \"This is the one I would change first. If the graph is a forest, one referrer and no cycles, reach is subtree size: one post-order pass gives everyone's reach in O(V + E). With cycles, collapse each cycle into one node first (strongly connected components), then do the same on what is left. And heapq.nlargest(k, ...) instead of a full sort.\""
+      },
+      {
+       "q": "11. Influencers are picked greedily by new people covered",
+       "a": "**Decided.** Pick the person who adds the most people not yet covered, counting themselves; mark them and everyone under them covered; repeat k times; stop early when nobody adds anyone.\n\n**Instead of.** The top k by reach.\n\n**Why.** Two people with big reach who cover the same group would waste a pick; greedy avoids that. Choosing the best k exactly is the maximum coverage problem, which is too slow to solve exactly at any real size. Greedy is the standard answer, and it is proven to get at least about 63 percent (1 - 1/e) of the best possible coverage.\n\n**What it costs.** A BFS from everyone to build the 'under' sets, O(V x (V + E)), and up to O(V squared) memory for those sets. Each round scans everyone: O(k x V) set differences.\n\n**If they push.** \"Gains only shrink as more is covered, so a heap of stale gains that are re-checked only when they reach the top (lazy greedy) skips most of the scanning. I kept the plain version because it is easy to verify.\""
+      },
+      {
+       "q": "12. Flow centrality counts one shortest path per pair",
+       "a": "**Decided.** For every pair, walk back the one shortest path BFS found and add one to each person strictly in the middle.\n\n**Instead of.** True betweenness centrality, which splits credit across all shortest paths.\n\n**Why.** It is ten lines on top of bfs_parents, and it answers the question 'who sits between people' in a way I can explain.\n\n**What it costs.** When several shortest paths exist, only the first one in sorted order gets credit, so the numbers depend on id order.\n\n**If they push.** \"The exact version is Brandes' algorithm: one BFS per person that also counts how many shortest paths reach each node, then a backward pass that shares credit. O(V x E) for an unweighted graph. I would name it and say it is the next step, not write it in the hour.\""
+      },
+      {
+       "q": "13. What I tested, and what I would add",
+       "a": "Tested in main on the sample: a duplicate edge, a self-loop, an unknown id, a cycle (e2 and e3), an unreachable person (e5 from e1), start equal to target, ties in the ranking.\n\nI would add, as asserts or a test file: max_hops = 0 returns []; k = 0 and k larger than everyone for top-k; an empty graph; a person with no edges; influencers stopping early when nobody adds anyone; and one larger random graph where top-k's reach is checked against a brute force.\n\nIf they ask how you know it is right: \"Every function is deterministic, so I can write exact expected outputs. I checked the small cases by hand and the printed output matches.\""
+      },
+      {
+       "q": "14. What I would do with another hour",
+       "a": "Say these in order of value, not all of them:\n\n1. Top-k in O(V + E) with subtree sizes, after collapsing cycles.\n2. A Graph class with add_referral that enforces the rules in one place.\n3. A real test file covering the cases above.\n4. Cache each person's BFS result, and on a new referral invalidate only the people who can reach its source.\n5. Lazy greedy for influencers.\n\nClose with one plain line: \"I kept it simple so every part runs end to end, and I know where each part breaks first.\""
+      }
+     ]
     }
    ]
   },
