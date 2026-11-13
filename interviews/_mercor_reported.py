@@ -108,7 +108,7 @@ REPORTED = {
                [L("Coding 7: read the input, run the file", C + "onsite-io"), L("Coding 7: the no-IDE drill kit", C + "onsite-kit")], []),
              Q("r-referral", "Referral network: add referrals as a graph (no self-referral, one referrer each, no cycles), then reach by BFS, top-k referrers, and influencers.",
                "6 reports, 2 first-hand", "Graph modelling, cycle checks, BFS, and asking what an undefined term (flow centrality) means before coding.",
-               ["Clarify first: what counts as reach, ties in top-k, and the exact influencer definition.",
+               ["No one to clarify with: write each decision as a comment at the top (what reach counts, the top-k tie rule, which influencer definition), then code to it.",
                 "Store referrer of each candidate and children lists; reject self, second referrer, and any edge that closes a cycle (walk up from the referrer).",
                 "Reach is BFS over children; top-k sorts by reach with a stated tie rule.",
                 "Influencers two ways: greedy unique reach (set cover), and flow centrality (pairs whose shortest path passes through v).",

@@ -1783,3 +1783,9 @@ Charter deviation: yes, four. DSA came early through interviews, so it becomes 3
 problems a week. The refresh session is new and absorbs the weekly systems drill.
 Milestone 2 is split: TrenTorch 09 to 13 and Alaap Part 3 become Mechanism II, and
 Training moves back one. Hours run to about 6h 15m against the charter's 4 to 6.
+
+## 2026-11-13: Mercor Q1 write-up gains top-k and influencers
+
+What: his referral-network solution (Coding 11, Q1) adds part 4, top-k referrers by reach (ties by id), part 5, influencers by greedy unique reach, and a short flow-centrality follow-up, all on his own graph and BFS, with the run output refreshed. Written as a solo task: each undefined word gets a one-line decision at the top of the code instead of a clarification. The Reported box's approach now says the same.
+
+Why: the solo hour has no one to ask, and the reported question names top-k and influencers. Kept to a size he can write unaided in an hour. No charter deviation.
