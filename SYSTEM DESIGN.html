@@ -6221,6 +6221,293 @@ UPDATE datasets SET status = 'ready' WHERE id = $target AND status = 'copying';
     { label: "PostgreSQL docs: Transaction isolation (Repeatable Read and snapshot isolation)", url: "https://www.postgresql.org/docs/current/transaction-iso.html" }
   ]
 });
+GUIDE.examples.push({
+  id: "prompt-injection",
+  tabLabel: "Prompt injection",
+  title: "Prompt-injection defences for a tool-calling agent",
+  kind: "Agentic security design, reported for Mercor",
+  prompt: "Design the defences against prompt injection for an agent that reads untrusted content (email, documents, web pages) and calls tools with side effects.",
+  lens: [
+    "Reported by candidates as a design prompt. The interviewer is a security engineer, so the whole design is a security design: what a fooled model can and cannot do.",
+    "The honest opening is that no prompt fixes this. The model has no hard line between instructions and data, so you assume it will be fooled and limit what a fooled model can reach.",
+    "The frame to keep in your pocket is three things together: private data, untrusted content, and a way to send data out. Remove one and the worst attacks stop."
+  ],
+  steps: {
+    requirements: {
+      board: [
+        { type: "list", title: "Functional (top 3)", ordered: true, items: [
+          "Run an agent task on behalf of one signed-in user. The agent reads email, documents and web pages, and calls tools: read-only (search, read file), write inside the user's data, and external (send email, HTTP).",
+          "Every tool call is checked by code outside the model against what this run and this user may do. Irreversible or external actions need the user's approval.",
+          "Every tool call is recorded, with which untrusted input came before it."
+        ]},
+        { type: "list", title: "Out of scope", items: [
+          "Training the model to resist injection, a full jailbreak defence, and sandboxing code execution. Say them out loud and move on."
+        ]},
+        { type: "defs", title: "Trust, and what is trusted", items: [
+          { term: "Trusted", desc: "The system prompt and the signed-in user's own message. Nothing else." },
+          { term: "Untrusted", desc: "Web pages, email, documents, tool results, other users' content, and anything a tool returns. All of it is data, never instructions." },
+          { term: "Goal", desc: "A successful injection can waste a step but cannot leak data or cause a harmful action. The claim is containment, not prevention." }
+        ]},
+        { type: "defs", title: "Non-functional (quantified, all assumptions)", items: [
+          { term: "Containment", desc: "A fooled model cannot cause an action the user did not authorize. This is the main requirement." },
+          { term: "Least privilege", desc: "A run holds only the tools its task needs, read-only by default, with grants that expire." },
+          { term: "Authorization on every call", desc: "Each tool call runs with the end user's identity and scope, never a broad service account. No credential ever appears in the model's context." },
+          { term: "Fast check", desc: "The policy check adds under 20 ms per call, and fails closed if it is down." },
+          { term: "Auditable", desc: "The log is append-only and complete for every call, and a compromised run can be stopped and its grants revoked within seconds." }
+        ]},
+        { type: "math", title: "Numbers that change the design", lines: [
+          "A run makes about 20 tool calls, and 1,000 runs are live at once, so the policy check sees about 2,000 calls in flight and a few thousand a second at peak.",
+          "At 20 ms each, a check that is a rule lookup in memory is fine. A model-based check would cost 500 ms or more per call and be wrong sometimes.",
+          "If 1 in 50 approval prompts is a real attack and the user sees 5 a day, they click yes on all of them by the second week."
+        ], conclusion: "Two decisions follow: the policy check must be plain deterministic code, and approvals must be rare, reserved for irreversible and external actions." }
+      ],
+      reasoning: [
+        "Say the frame first: private data, untrusted content, a way out. The design is about never letting all three meet in one run without a check in between.",
+        "State that prevention is not the claim. A security engineer trusts a design that says what happens when the model is fooled.",
+        "The numbers justify one thing: the check is code, not a model."
+      ],
+      script: [
+        "Before I draw anything: I will assume the model can be fooled. It reads text and cannot tell data from instructions, so I will not rely on a better prompt. I will limit what a fooled model can do.",
+        "I assume each run acts for one user with that user's permissions. Only the system prompt and the user's own message are trusted. Web pages, email, documents and tool results are all untrusted.",
+        "The requirement is containment: a successful injection may waste a step, but it cannot leak data or take a harmful action. The policy check has to be plain code, under 20 ms, and fail closed."
+      ],
+      contrast: "A classic backend design protects against bad callers. Here the caller is trusted and the bad input arrives in the data the agent reads, so the boundary runs through the middle of the agent."
+    },
+
+    entities: {
+      board: [
+        { type: "defs", title: "Core entities", items: [
+          { term: "Tool", desc: "Name, JSON schema for its arguments, and a side-effect class: read, write or external. A flag says whether it needs approval." },
+          { term: "Grant", desc: "What a principal may do with a tool: tool, scope (which folders, which recipients, which domains), and an expiry." },
+          { term: "Run", desc: "One agent task for one user. Holds the allowed tool list fixed from the trusted task, a step count, and a status." },
+          { term: "Tool call", desc: "One proposed call: tool, arguments, an args hash, the trust label of the input that preceded it, status, and who approved it. Append-only." },
+          { term: "Approval", desc: "A user's yes for exactly one call and its args hash. It expires and cannot be reused." },
+          { term: "Content item", desc: "A piece of untrusted text, with its source and a trust label, so provenance follows it into memory and summaries." }
+        ]}
+      ],
+      reasoning: [
+        "The entity that matters is the tool call with its trust label. It lets the log answer which untrusted input came before this action.",
+        "Grant and Run are separate: a grant is standing policy, a run narrows it to one task."
+      ],
+      script: [
+        "A Tool carries its side-effect class. A Grant says which scope a principal has on a tool. A Run narrows those grants to the one task and fixes its tool list from the trusted request.",
+        "A Tool call is the audit unit. It stores the args hash and whether untrusted content came before it. An Approval is bound to one call's args hash, so changing the args voids it."
+      ],
+      contrast: "A classic design has users, resources and permissions. The extra entities here are the trust label on content and the approval bound to one set of arguments."
+    },
+
+    api: {
+      board: [
+        { type: "code", title: "API", code: `
+POST /v1/runs            body: { task, allowed_tools? }
+  -> 202 { run_id }                     (allowed_tools can only narrow the user's grants)
+GET  /v1/runs/{id}       -> { status, steps,
+                              pending_approval: { call_id, tool, args } }
+POST /v1/runs/{id}/approvals/{call_id}
+                         body: { decision: approve | deny }
+  -> 200            (applies to exactly that call and its args hash)
+POST /v1/runs/{id}/stop  -> 200         (revokes the run's grants)
+
+Internal, from the agent loop to the policy check:
+POST /internal/check     body: { run_id, tool, args, input_trust }
+  -> { decision: allow | deny | needs_approval, reason }
+` },
+        { type: "list", title: "Choices to state out loud", items: [
+          "allowed_tools on submit can only narrow what the user already has. It can never widen it.",
+          "The model never calls a tool. It proposes a call, and the executor decides. The check returns allow, deny or needs_approval from fixed rules.",
+          "Approval names a call id and is bound to its args hash. If the args change, a new approval is needed.",
+          "Stop revokes grants, so a compromised run loses access in seconds, not at its next expiry."
+        ]}
+      ],
+      reasoning: [
+        "Two surfaces: the user-facing run API and the internal check. The internal check is where the security lives.",
+        "The check answers from rules per tool and per user, so its answer is the same every time for the same input."
+      ],
+      script: [
+        "Users start a run, watch it, approve or deny a pending call, and stop it. The task can narrow the tools but never widen them.",
+        "Behind that, every proposed call goes to a check that returns allow, deny or needs approval from a fixed rule set. An approval is for one call and its exact arguments."
+      ],
+      contrast: "Most agent APIs return a stream and stop there. This one exposes the pending approval and the stop call, because the human and the kill switch are part of the defence."
+    },
+
+    dataflow: {
+      board: [
+        { type: "list", title: "The life of one tool call", ordered: true, items: [
+          "**Task.** The user's message is trusted. The allowed tool list is fixed from it before any untrusted text is read.",
+          "**Read.** The agent reads untrusted content. Raw text goes only to a tool-less quarantine model, which returns a validated summary.",
+          "**Propose.** The model proposes a tool call. It has no credentials and cannot run it.",
+          "**Check.** Code checks the tool against the run's list, the arguments against schema and scope, and whether the call needs approval.",
+          "**Approve.** For irreversible or external calls, the user sees the exact call and approves its args hash.",
+          "**Run and filter.** The executor runs the call with the user's scoped token, applies egress rules to anything leaving, and filters the result before it goes back to the model.",
+          "**Log.** The call, its trust label and its result are appended to the audit log."
+        ]}
+      ],
+      reasoning: [
+        "Each arrow is a place an attacker can push. The deep dives are those arrows.",
+        "The order matters: tools are fixed before untrusted text is read."
+      ],
+      script: [
+        "The task fixes the allowed tools first. Then the agent reads untrusted text through a quarantine step. The model proposes a call, code checks it, the user approves the risky ones, the executor runs it with scoped credentials, and everything is logged."
+      ],
+      contrast: "In a classic design the data flow is request to response. Here every step is also a trust decision about whether text is data or an instruction."
+    },
+
+    hld: {
+      board: [
+        { type: "diagram", title: "Injection-defence high-level design", stagesAll: "The whole system: plan fixed from the trusted task, quarantine for untrusted text, a deterministic policy check, user approval, scoped tools, egress filter and audit log.", stages: [
+          { title: "One agent loop", add: ["user", "agent", "model", "tools"], say: "Start with the version that works: the user sends a task, the agent loop calls the model, and the model's tool calls run directly with one service account. It breaks the first time the agent reads a web page that says to email the user's files to someone, because the model obeys it and the service account can do it." },
+          { title: "Trust boundary", add: ["content", "quar"], say: "Untrusted text is mixed into the model's context as if it were an instruction. Mark it as data, and send raw text only to a quarantine model with no tools, which returns a validated structured summary. This helps and is not a guarantee, so it is not the defence." },
+          { title: "Policy check and grants", add: ["policy", "grants"], say: "A fooled model can still propose any call. Put plain code between the model and the tools: a deterministic allow or deny rule set per tool and per user, using grants, schemas and allowlists. The task fixes the tool list, so a summarise-this-page run has no email tool at all." },
+          { title: "Approval for irreversible calls", add: ["approve"], say: "An allowed call can still be harmful, like sending mail to an allowlisted but wrong person. Irreversible and external calls go to the user with the exact arguments, and the approval is bound to that args hash." },
+          { title: "Egress and audit", add: ["egress", "audit"], say: "Data can still leave through a URL, an image or a link. An egress filter allows only listed destinations and strips markdown images and external URLs from output. Every call, with its trust label, goes to an append-only audit log so a compromise can be traced and stopped." }
+        ], nodes: [
+          { id: "user", label: "User", sub: "trusted task", col: 0, row: 1, tone: "human" },
+          { id: "agent", label: "Agent loop", sub: "proposes, never runs", col: 1, row: 1, tone: "orchestrator" },
+          { id: "model", label: "Model", sub: "treated as untrusted", col: 1, row: 0, tone: "model" },
+          { id: "content", label: "Untrusted content", sub: "email, web, files", col: 0, row: 0, tone: "external" },
+          { id: "quar", label: "Quarantine model", sub: "no tools, summary only", col: 2, row: 0, tone: "model" },
+          { id: "policy", label: "Policy check", sub: "allow, deny, confirm", col: 2, row: 1, tone: "guard" },
+          { id: "grants", label: "Grants and tools", sub: "scope, expiry", col: 2, row: 2, tone: "store" },
+          { id: "approve", label: "User approval", sub: "bound to args hash", col: 3, row: 0, tone: "human" },
+          { id: "tools", label: "Tool executor", sub: "user's scoped token", col: 3, row: 1, tone: "service" },
+          { id: "egress", label: "Egress filter", sub: "allowlist, strip URLs", col: 4, row: 1, tone: "guard" },
+          { id: "audit", label: "Audit log", sub: "append-only", col: 3, row: 2, tone: "store" }
+        ], edges: [
+          { from: "user", to: "agent", label: "task" },
+          { from: "agent", to: "model", label: "prompt" },
+          { from: "content", to: "quar", label: "raw text" },
+          { from: "quar", to: "agent", label: "validated summary" },
+          { from: "agent", to: "policy", label: "proposed call" },
+          { from: "policy", to: "grants", label: "look up" },
+          { from: "policy", to: "approve", label: "needs confirm" },
+          { from: "policy", to: "tools", label: "allow" },
+          { from: "approve", to: "tools", label: "approved" },
+          { from: "tools", to: "egress", label: "outbound" },
+          { from: "tools", to: "audit", label: "every call", async: true }
+        ]},
+        { type: "list", title: "Walk a request through it", ordered: true, items: [
+          "**Task.** The user asks to summarise today's email. The task fixes the tool list: read mail and a summary tool, no send. Grants only narrow, never widen.",
+          "**Read.** Mail bodies go to the quarantine model, which has no tools. It returns a structured summary. The tool-holding model never sees the raw text.",
+          "**Attack.** One email says to forward the inbox to an outside address. The quarantine output is a summary, so the instruction is not an instruction. If the model proposes a send anyway, the policy check denies it: send is not in this run's list.",
+          "**Check.** A call that is in the list is validated against its schema and scope: allowlisted recipients, bounded sizes, no internal addresses. Plain code answers allow, deny or needs_approval.",
+          "**Approve.** An external or irreversible call shows the user the exact arguments. The yes is for that args hash only.",
+          "**Run.** The executor holds the credential, runs with the user's permissions, applies egress rules, and filters the result before the model sees it. Every step is appended to the audit log."
+        ]},
+        { type: "code", title: "The check that carries the design (pseudocode)", code: `
+def check(run, call):
+    tool = TOOLS.get(call.tool)
+    if tool is None or tool.name not in run.allowed_tools:
+        return deny("tool not in this run")
+    grant = GRANTS.get(run.user_id, tool.name)
+    if grant is None or grant.expired():
+        return deny("no grant")
+    if not schema_ok(tool, call.args) or not in_scope(grant, call.args):
+        return deny("args out of scope")
+    if tool.side_effect == "external" or tool.requires_approval:   # irreversible writes set the flag
+        return needs_approval(call.id, hash(call.args))
+    return allow()                       # a missing answer is deny, never allow
+
+def approve(call, decision, args_hash):
+    return decision == "approve" and args_hash == hash(call.args)
+` },
+        { type: "defs", title: "Fields worth writing next to the stores", items: [
+          { term: "tools", desc: "`name, json_schema, side_effect (read, write, external), requires_approval`. PK on name." },
+          { term: "grants", desc: "`principal, tool, scope, expires_at`. Index on `(principal, tool)`. Scope is data the check reads, such as allowed recipient domains." },
+          { term: "tool_calls (append-only)", desc: "`id, run_id, tool, args_hash, args, result_ref, input_trust (trusted, untrusted), status, approved_by, created_at`. Index on `(run_id, created_at)`. No updates, only new rows." }
+        ]}
+      ],
+      reasoning: [
+        "Build in the order the attacks show up: obey a page, mix of data and instructions, any call is possible, allowed call is harmful, data leaves. Say what breaks at each stage before you fix it.",
+        "Say plainly that quarantine and data markers help and are not the defence. The defence is the check, the approval and the egress rules, none of which depend on guessing intent.",
+        "The model never holds a credential. Say it twice."
+      ],
+      script: [
+        "I will start with one agent loop and one service account. It works, and it breaks the first time the agent reads a page that says to send the user's files out, because the model obeys it and the account can do it.",
+        "So I draw a trust boundary. Untrusted text goes only to a quarantine model with no tools, which returns a validated summary. I say clearly this helps and is not a guarantee.",
+        "Then the real defence: plain code between the model and the tools. It is a deterministic allow or deny rule set per tool and per user, with grants, schemas and allowlists. The task fixes the tool list before anything untrusted is read.",
+        "Irreversible and external calls go to the user with the exact arguments. Last, an egress filter and an append-only audit log, so data cannot leave through a link and every call can be traced."
+      ],
+      probes: [
+        "Why not use a model to judge whether a call looks malicious? It is probabilistic, it can itself be injected, and it costs hundreds of milliseconds. Use it as an extra signal, never as the check itself.",
+        "Why a quarantine model and not only a marker? A marker asks the model to behave. Quarantine removes the tools from the model that reads the raw text, so the worst it can do is write a bad summary, which is validated against a schema."
+      ],
+      contrast: "A classic design puts the check at the API edge. Here the check sits between a model that may be fooled and the tools, and it never depends on the model's judgment."
+    },
+
+    deepdives: {
+      board: [
+        { type: "dive", title: "Indirect injection through retrieved content", diagram: {"cap": "Hidden text in an email reaches only a tool-less quarantine model; the tool-holding agent receives a validated summary and the tool list was already fixed from the trusted task.", "fail": "Raw email text enters the agent's context, the model follows the hidden instruction, and it proposes a send the user never asked for.", "actors": [{"id": "mail", "label": "Email", "tone": "external"}, {"id": "quar", "label": "Quarantine model", "tone": "model"}, {"id": "agent", "label": "Agent", "tone": "orchestrator"}, {"id": "pol", "label": "Policy check", "tone": "guard"}], "steps": [{"over": "agent", "label": "tool list fixed from the task"}, {"from": "mail", "to": "quar", "label": "body with hidden text"}, {"from": "quar", "to": "agent", "label": "validated summary only"}, {"from": "agent", "to": "pol", "label": "propose send", "fail": true}, {"over": "pol", "label": "deny: send not in this run"}]}, nfr: "Containment", problem: "A page, email or document the agent reads contains instructions, and the user never sees them.", options: [
+          { name: "Mark untrusted text as data in the prompt", take: "Cheap and it lowers the hit rate, but it asks the model to behave. Not a guarantee, so never the defence on its own." },
+          { name: "Injection classifier on inputs", take: "Catches known phrasings, with misses and false positives. A useful extra signal, and an attacker can rephrase until it passes." },
+          { name: "Quarantine model with no tools", take: "A second call reads the raw text and returns only a structured, schema-checked summary. The model that holds tools never sees the raw text." },
+          { name: "Plan first, read after", take: "Fix the allowed actions from the trusted task, then read untrusted data, so the data cannot add new actions. Blocks injected actions and also blocks tasks that must adapt to what they read." }
+        ], pick: "Quarantine for raw text, a task-fixed tool list, and a marker plus a classifier as extra signals. The cost is one more model call and about 300 ms for runs that read untrusted content. Say the limit: a bad summary can still mislead the user, but it cannot act." },
+        { type: "dive", title: "Least privilege per run", diagram: {"cap": "Each run gets only the tools its task needs from the user's grants, read-only by default, with an expiry.", "fail": "One broad agent with every tool means any injection can reach send, delete and pay.", "nodes": [{"id": "task", "label": "Trusted task", "sub": "summarise this page", "col": 0, "row": 0, "tone": "human"}, {"id": "narrow", "label": "Run tool list", "sub": "read only, expires", "col": 1, "row": 0, "tone": "guard"}, {"id": "grants", "label": "User grants", "sub": "what the user may do", "col": 2, "row": 0, "tone": "store"}, {"id": "all", "label": "All tools, always", "sub": "any injection can send", "col": 1, "row": 1, "tone": "service", "fail": true}], "edges": [{"from": "task", "to": "narrow", "label": "derive"}, {"from": "narrow", "to": "grants", "label": "subset of"}, {"from": "all", "to": "grants", "label": "no narrowing"}]}, nfr: "Least privilege", problem: "A fooled model should be able to reach as little as possible.", options: [
+          { name: "One agent with every tool", take: "Simple, and every injection reaches every tool." },
+          { name: "Per-user static grants", take: "Bounds the user's total reach, but a read-only task still holds the send tool." },
+          { name: "Per-task tool list, narrowed from the grants", take: "A summarise run has no email tool, so no injection can send mail. The list is fixed before untrusted text is read." },
+          { name: "Break the three-way combination", take: "If a run reads untrusted content and holds private data, drop the outbound channel or put it behind approval. Remove one of the three and the worst attacks stop." }
+        ], pick: "Per-task tool lists, read-only by default, grants that expire in minutes, and no outbound tool in any run that reads untrusted content unless the user approves it. The cost is that some tasks need two runs: one to read, one to act." },
+        { type: "dive", title: "Irreversible actions need a person", diagram: {"cap": "The user sees the exact call and approves its args hash; the executor re-hashes the arguments at run time and runs only on a match.", "fail": "A general yes lets an attacker change the recipient or the body after the user approved, and the swapped call runs.", "actors": [{"id": "agent", "label": "Agent", "tone": "orchestrator"}, {"id": "pol", "label": "Policy check", "tone": "guard"}, {"id": "user", "label": "User", "tone": "human"}, {"id": "exec", "label": "Executor", "tone": "service"}], "steps": [{"from": "agent", "to": "pol", "label": "send to a@x.com"}, {"from": "pol", "to": "user", "label": "show exact call, hash h1"}, {"from": "user", "to": "pol", "label": "approve h1"}, {"from": "agent", "to": "exec", "label": "run with changed args", "fail": true}, {"over": "exec", "label": "hash h2 not h1, refused"}]}, nfr: "Containment", problem: "Some calls cannot be undone: send, delete, pay, share externally.", options: [
+          { name: "Approve every call", take: "Safe on paper. Users click yes without reading, so approvals stop meaning anything." },
+          { name: "Approve nothing, trust the checks", take: "Fast, and one allowlisted but wrong recipient does damage that cannot be reversed." },
+          { name: "Approve only irreversible and external calls", take: "A few a day, so each one is read. Needs a clear view of the exact arguments." },
+          { name: "Bind the approval to the args hash", take: "The yes is for one call. If the arguments change, the approval is void." }
+        ], pick: "Approval only for irreversible and external calls, shown with the exact arguments, bound to the args hash and to a short expiry. The cost is a pause on those calls, and a model-written description is never shown instead of the real arguments." },
+        { type: "dive", title: "Egress control", diagram: {"cap": "Outbound calls go only to listed destinations, and model output is stripped of external URLs and markdown images before display.", "fail": "A rendered image URL with the user's data in the query string leaks it with no tool call at all.", "nodes": [{"id": "out", "label": "Model output", "sub": "text, links, images", "col": 0, "row": 0, "tone": "model"}, {"id": "filter", "label": "Egress filter", "sub": "allowlist, strip URLs", "col": 1, "row": 0, "tone": "guard"}, {"id": "ok", "label": "Listed destination", "sub": "allowed domains", "col": 2, "row": 0, "tone": "external"}, {"id": "leak", "label": "Image URL with data", "sub": "?q=secret", "col": 1, "row": 1, "tone": "external", "fail": true}], "edges": [{"from": "out", "to": "filter", "label": "check"}, {"from": "filter", "to": "ok", "label": "allowed only"}, {"from": "out", "to": "leak", "label": "unfiltered"}]}, nfr: "Containment", problem: "Data can leave without a tool call: a link the user clicks, or an image the client loads.", options: [
+          { name: "Trust the model not to include data", take: "It is the thing that was fooled." },
+          { name: "Allowlist for tool destinations", take: "Recipients and domains come from grants. Blocks sends and fetches to attacker addresses, and internal addresses too, which stops fetch-based SSRF." },
+          { name: "Strip or rewrite URLs and images in output", take: "Closes the render channel. Costs some useful links, so allow listed domains." },
+          { name: "Size and rate limits per tool", take: "Caps what a loop can move out before someone notices." }
+        ], pick: "Destination allowlist per grant, no markdown images or external URLs rendered from model output, internal addresses blocked, and size and rate limits per tool. The cost is a blocked legitimate link now and then, which the user can open by hand." },
+        { type: "dive", title: "Tenant isolation and authorization of tool calls", diagram: {"cap": "Every tool call runs with the end user's own short-lived token, so the tool's own access control decides what that user may touch.", "fail": "A broad service account lets an injected call read another user's mailbox: the agent becomes a confused deputy.", "actors": [{"id": "agent", "label": "Agent run (user A)", "tone": "orchestrator"}, {"id": "pol", "label": "Policy check", "tone": "guard"}, {"id": "exec", "label": "Executor", "tone": "service"}, {"id": "api", "label": "Mail API", "tone": "external"}], "steps": [{"from": "agent", "to": "pol", "label": "read mailbox of user B", "fail": true}, {"over": "pol", "label": "scope is user A only: deny"}, {"from": "agent", "to": "exec", "label": "read my mailbox"}, {"from": "exec", "to": "api", "label": "user A short-lived token"}, {"over": "api", "label": "API enforces user A's access"}]}, nfr: "Authorization on every call", problem: "A fooled model asks for data or an action that belongs to someone else, or uses a tool with more power than the user has.", options: [
+          { name: "One service account for all tools", take: "Easy. Any injected call has the service account's reach, across every tenant. The classic confused deputy." },
+          { name: "Check the user in the prompt", take: "The model is told whose data to use. It can be told otherwise by an injection, so this is not a control." },
+          { name: "End user's token, scoped and short-lived", take: "The tool's own access control decides, so the agent can never do more than the user can. Costs token exchange and refresh." },
+          { name: "Policy check on tenant and scope", take: "Plain code rejects any argument that names another tenant or an out-of-scope resource, before the call is made. Defence in depth with the token." }
+        ], pick: "The executor holds credentials and mints a per-run token for the end user with a 5 minute expiry, and the policy check rejects arguments outside the user's tenant and scope. The model never sees a token. Secrets stay out of prompts and logs. The cost is token mint latency, a few milliseconds when cached." },
+        { type: "dive", title: "Tool trust and memory poisoning", diagram: {"cap": "Tool definitions are pinned and reviewed, tool results are untrusted data, and stored memory keeps the trust label of its source.", "fail": "A third-party tool description carries instructions, and a poisoned summary saved in memory comes back later as if the user said it.", "nodes": [{"id": "def", "label": "Pinned tool defs", "sub": "reviewed, hashed", "col": 0, "row": 0, "tone": "store"}, {"id": "res", "label": "Tool result", "sub": "untrusted data", "col": 1, "row": 0, "tone": "external"}, {"id": "mem", "label": "Memory item", "sub": "carries trust label", "col": 2, "row": 0, "tone": "store"}, {"id": "bad", "label": "Unlabelled memory", "sub": "read back as trusted", "col": 1, "row": 1, "tone": "store", "fail": true}], "edges": [{"from": "def", "to": "res", "label": "known tools only"}, {"from": "res", "to": "mem", "label": "save with label"}, {"from": "res", "to": "bad", "label": "no provenance"}]}, nfr: "Containment", problem: "Untrusted text can arrive through a tool's description, a tool's result, or the agent's own memory later.", options: [
+          { name: "Trust a tool server and its descriptions", take: "A third-party server can change its description and carry instructions." },
+          { name: "Pin and review tool definitions", take: "A definition is hashed at review. A changed one is refused until reviewed. Slower to add tools." },
+          { name: "Treat results as untrusted", take: "A tool result goes through the same quarantine as a web page. Some cost, no exceptions." },
+          { name: "Provenance on stored memory", take: "Every saved item keeps its source and trust label. Untrusted items cannot be promoted to instructions." }
+        ], pick: "Pinned, hashed tool definitions, tool results treated as untrusted, and provenance on every stored item. The cost is a review step for each new tool and some context lost when untrusted items are not promoted." },
+        { type: "dive", title: "Audit log and stopping a compromised run", diagram: {"cap": "Every call is appended to a write-once log with its trust label; stop revokes the run's grants and rotates reachable credentials.", "fail": "No record of what untrusted input came before an action, so you cannot tell what was leaked or how.", "actors": [{"id": "run", "label": "Agent run", "tone": "orchestrator"}, {"id": "log", "label": "Audit log", "tone": "store"}, {"id": "mon", "label": "Monitor", "tone": "service"}, {"id": "ops", "label": "On-call", "tone": "human"}], "steps": [{"from": "run", "to": "log", "label": "call, trust label, result"}, {"from": "mon", "to": "log", "label": "denied sends spike"}, {"from": "mon", "to": "ops", "label": "alert"}, {"from": "ops", "to": "run", "label": "stop, revoke grants"}, {"over": "log", "label": "replay: which input came first"}]}, nfr: "Auditable", problem: "An injection succeeds anyway, and you need to find out what happened and shut it down in seconds.", options: [
+          { name: "Application logs", take: "Mutable, incomplete, easy to lose. Does not say which untrusted input preceded a call." },
+          { name: "Append-only table of tool calls", take: "Complete, ordered, with the trust label and args hash. Large, so keep it hot for 30 days and archive." },
+          { name: "Alert on denies and approval rates", take: "A burst of denied sends in one run is the signal of an attack in progress." },
+          { name: "Grants with short expiry plus a stop call", take: "Revoke in seconds, and everything lapses by default in minutes." }
+        ], pick: "Append-only call log with trust labels, alerts on denied calls per run and on approval volume, a stop call that revokes grants and rotates reachable credentials, and grants that expire in minutes. Side-effecting tools take an idempotency key from the call id (pattern `idempotency`), so a replay after a crash does not send twice. See monitoring (pattern `monitoring`). The cost is log storage and a fail-closed policy service that must be highly available." }
+      ],
+      reasoning: [
+        "Lead with indirect injection. It is the serious one because the user never sees the attacker's text, and it is what the interviewer will push on first.",
+        "Then least privilege, approvals, egress, authorization and tenant isolation, tool and memory trust, and the audit trail. Each dive maps to one non-functional requirement.",
+        "In every dive say what is structural and what is only a signal. Structural limits do not depend on guessing intent."
+      ],
+      script: [
+        "Indirect injection is the serious case, because the text is in the page or the email and the user never sees it. I mark it as data, which helps and is not a guarantee. Raw text goes only to a quarantine model with no tools, and the tool list was fixed from the trusted task before it was read.",
+        "Least privilege: a summarise run has no email tool, so no injection can send mail. Grants only narrow and expire in minutes. If a run reads untrusted content and holds private data, I remove the outbound channel or put it behind approval.",
+        "Approvals only for irreversible and external calls, shown with the exact arguments and bound to the args hash, so they stay rare and mean something. Egress is an allowlist, and I strip external URLs and images from output.",
+        "On authorization: the executor holds the credentials and runs with the end user's own short-lived token, never a broad service account, and the check rejects arguments outside the user's tenant. Everything is logged with a trust label, and stop revokes the grants."
+      ],
+      probes: [
+        "Can you prevent prompt injection? No. The model has no hard line between data and instructions. You contain it: scoped tools, a deterministic check, approvals and egress rules, so a fooled model has little to reach.",
+        "Direct against indirect injection? Direct is the user typing it, which is a jailbreak aimed at the model's rules. Indirect is a third party attacking the user through content the agent reads. Different threat, different controls.",
+        "What if the policy service is down? Fail closed: no answer means no tool call. The agent can still reason and summarise.",
+        "Detectors against structural limits? Detectors are probabilistic. Structural limits like scoped tools and egress rules do not depend on guessing intent. Use detectors as an extra signal.",
+        "Security against autonomy? More approvals are safer and train users to click yes. Reserve them for irreversible and external calls."
+      ],
+      contrast: "A classic design's deep dives are about crashes and clocks. Here every dive is about who controls what the agent does, and the check is plain code because the model is the part that can be fooled."
+    }
+  },
+  refs: [
+    { label: "Video, 11 min: Securing AI Agents, How to Prevent Hidden Prompt Injection Attacks (IBM Technology)", url: "https://www.youtube.com/watch?v=5ZA1lTxTH3c" },
+    { label: "Video, 34 min: Design Patterns for Securing LLM Agents Against Prompt Injection (Donato Capitella)", url: "https://www.youtube.com/watch?v=2Er7bmyhPfM" },
+    { label: "Simon Willison: The lethal trifecta for AI agents (private data, untrusted content, external communication)", url: "https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" },
+    { label: "OWASP LLM01:2025 Prompt Injection (risks and mitigations, including approval for high-risk actions)", url: "https://genai.owasp.org/llmrisk/llm01-prompt-injection/" },
+    { label: "Design Patterns for Securing LLM Agents against Prompt Injections (paper, arXiv 2506.08837)", url: "https://arxiv.org/abs/2506.08837" }
+  ]
+});
 GUIDE.patternUsage = {
   "notebooklm": {
     uses: [
