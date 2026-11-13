@@ -6782,6 +6782,286 @@ SELECT $thread, $from, $to, $text
     { label: "Stripe: Designing robust and predictable APIs with idempotency (keys and safe retries)", url: "https://stripe.com/blog/idempotency" }
   ]
 });
+GUIDE.examples.push({
+  id: "tenant-fair",
+  tabLabel: "Tenant-fair LLM work",
+  title: "Tenant-fair orchestration for slow LLM tasks",
+  kind: "Backend design with model quotas, reported for Mercor",
+  prompt: "Design durable, tenant-fair orchestration for slow LLM tasks: many tenants submit large batches, the model provider enforces rate limits and quotas, and progress must survive crashes and resume.",
+  lens: [
+    "Candidates reported this prompt as a variant of the workflow and scheduler question. The new part is that the scarce resource is not workers, it is the provider's requests and tokens per minute, shared by every tenant.",
+    "I assume a worker pool with leases and retries already exists (the job scheduler design covers it). Spend the 45 minutes on three things: whose turn is it, may we call the provider now, and what survives a crash.",
+    "A security engineer will hear a shared quota and ask what one tenant can do to the others. Have the noisy neighbour and the shared provider key ready before the question comes."
+  ],
+  steps: {
+    requirements: {
+      board: [
+        { type: "list", title: "Functional (top 3)", ordered: true, items: [
+          "A tenant submits tasks, singly or in batches of up to a million, and reads status and results.",
+          "Each task is a series of steps, and each step makes one or more model calls that take seconds to minutes.",
+          "Operators set a weight, a concurrency cap and a queue limit per tenant."
+        ]},
+        { type: "list", title: "Out of scope", items: [
+          "Worker leases, cron and task dependencies (the job scheduler design), billing, and choosing between models. Say the worker pool exists and move on."
+        ]},
+        { type: "defs", title: "Non-functional (quantified, all assumptions)", items: [
+          { term: "Fairness", desc: "A tenant with weight w gets about w over the sum of active weights of the capacity, within 10 percent. A quiet tenant's task starts within about one scheduling round." },
+          { term: "Provider limits", desc: "Never exceed the provider's requests and tokens per minute. 429 responses stay under 1 percent of calls." },
+          { term: "Resumable", desc: "After any crash a task restarts from its last finished step, and a lost worker's task is picked up within one 60 second lease." },
+          { term: "No double pay", desc: "A retry never buys the same model call twice, as far as the provider honours the key." },
+          { term: "Fast dispatch", desc: "A dispatch decision takes under 10 ms and the system holds 10M queued tasks." },
+          { term: "Tenant isolation", desc: "No tenant sees, delays beyond its share, or spends another tenant's data or quota." }
+        ]},
+        { type: "math", title: "Numbers that change the design", lines: [
+          "Assume the provider gives 10,000 requests and 2M tokens a minute for the whole account. A task averages 4 calls and 3,000 tokens a call.",
+          "Tokens bind first: 2M / 12,000 tokens per task is about 165 tasks a minute, or under 3 a second.",
+          "A tenant that queues 1M tasks at that rate needs about 4 days of the whole account. Everyone behind it in one FIFO waits 4 days."
+        ], conclusion: "The bottleneck is tokens per minute, not workers, so fairness has to be measured in tokens and the queue has to be per tenant." }
+      ],
+      reasoning: [
+        "Name the scarce resource first. Here it is the provider quota, and it is shared across tenants.",
+        "Ask whether tenants are equal. If not, the answer is weights, and that picks the scheduler.",
+        "Keep the numbers few: tokens per minute and the size of a flood. Both drive a decision below."
+      ],
+      script: [
+        "Before I draw: I will assume a worker pool with leases and retries already exists. I want to spend the time on fairness, quotas and resuming.",
+        "I assume the provider limits the whole account to 10,000 requests and 2M tokens a minute. With 12,000 tokens a task that is under 3 tasks a second, so tokens are the bottleneck and I will measure fairness in tokens.",
+        "One tenant with a million queued tasks would hold the account for days. So a shared FIFO is out, and I need a queue per tenant and a fair way to pick between them.",
+        "Tenants have weights from their plan. Fairness and no starvation come first, then throughput."
+      ],
+      contrast: "In the classic scheduler the limit is claims per second per database shard. Here it is an external, shared, token-based quota that you do not control."
+    },
+
+    entities: {
+      board: [
+        { type: "defs", title: "Core entities", items: [
+          { term: "Tenant", desc: "The fairness unit. Weight, max_concurrency, max_queued, tpm_limit." },
+          { term: "Task", desc: "One unit of work for one tenant. Status, priority, est_tokens, attempts, lease. Pinned to one tenant forever." },
+          { term: "Step", desc: "One stage of a task, keyed by (task_id, step_no). Holds status, a pointer to its stored output, and tokens used. The unit of resume." },
+          { term: "Model call", desc: "One request to the provider, with an idempotency key built from the task and step. Cost is estimated before and measured after." },
+          { term: "Bucket", desc: "A token bucket in Redis: capacity, refill rate, current tokens. One per tenant and one global for the provider." },
+          { term: "Usage record", desc: "Tokens and requests per tenant per minute. Feeds estimates, billing and the usage API." }
+        ]}
+      ],
+      reasoning: [
+        "Split Task from Step. Resume is a statement about steps, and the paid call is a statement about the step.",
+        "Say where each entity lives: durable ones in Postgres, hot counters in Redis."
+      ],
+      script: [
+        "A Tenant owns a weight and caps. A Task belongs to one tenant and is a list of Steps. Each step stores its output when it finishes, and that is what lets a task resume.",
+        "The Buckets are small hot counters in Redis. Everything I cannot afford to lose is in Postgres."
+      ],
+      contrast: "An agentic design has an open-ended trace of tool calls. Here the steps are known up front, so resume is a lookup, not a replay."
+    },
+
+    api: {
+      board: [
+        { type: "code", title: "API", code: `
+POST /v1/tasks          body: { input, priority, idempotency_key }
+  -> 202 { task_id }
+  -> 429 { retry_after }    when the tenant's queue is full
+POST /v1/batches        body: { tasks: [ ... up to 10,000 ] }
+  -> 202 { batch_id, accepted, rejected }
+GET  /v1/tasks/{id}     -> { status, step, result_ref }
+GET  /v1/usage          -> { running, queued, tokens_this_minute, limit }
+
+Internal (worker side):
+dispatch(task_id)       -> { task_id, resume_from_step, call_budget }
+record_step(task_id, step_no, output_ref, tokens_used)
+` },
+        { type: "list", title: "Choices to state out loud", items: [
+          "A full queue returns 429 with a retry time at submit. Rejecting early is cheaper than accepting work that waits for days.",
+          "Batches are accepted in chunks and the response says how many were taken, so a client with a million tasks does not need one giant request.",
+          "The dispatch response carries resume_from_step, so a worker never decides on its own where to start.",
+          "The usage endpoint lets a tenant see its own limit. It reads only that tenant's keys."
+        ]}
+      ],
+      reasoning: [
+        "Two contracts again: the one clients see and the one workers see. The client one carries the admission control.",
+        "Point at the early 429 as the first line of defence against a flood."
+      ],
+      script: [
+        "Clients submit single tasks or chunks of a batch with an idempotency key. If their queue is full, they get a 429 with a retry time, which is cheaper than holding work for days.",
+        "Workers are told which task and which step to resume from. They store each step's output before they move to the next."
+      ],
+      contrast: "A chat API streams tokens back. This one returns 202 and a status, because the user is not waiting on the call."
+    },
+
+    dataflow: {
+      board: [
+        { type: "list", title: "The life of one task", ordered: true, items: [
+          "**Admitted.** The API checks the tenant's queue limit and task size, writes the task, and adds its id to that tenant's queue.",
+          "**Picked.** The dispatcher chooses the next tenant by deficit round robin and takes its head task, if the tenant is under its concurrency cap.",
+          "**Gated.** Before a model call, the worker takes estimated tokens from the tenant bucket and the global bucket. If either is short, the task waits.",
+          "**Called.** The worker calls the provider with an idempotency key made from the task and step.",
+          "**Settled.** The real token count replaces the estimate in the buckets, and the step output is stored.",
+          "**Done or resumed.** After the last step the task is done. After a crash the next worker restarts at the first unfinished step."
+        ]}
+      ],
+      reasoning: [
+        "Six states, and each arrow is where a deep dive lives: picked is fairness, gated is quota, called is double pay, settled is resume."
+      ],
+      script: [
+        "A task is admitted, picked by the fair dispatcher, gated by two buckets, called with an idempotency key, then settled and stored. Each of those arrows is a place where I can fail, so each is a deep dive."
+      ],
+      contrast: "In an agentic flow this step is the loop of think, act, observe. Here it is a fixed pipeline with two gates in front of every paid call."
+    },
+
+    hld: {
+      board: [
+        { type: "diagram", title: "Tenant-fair LLM orchestration, high-level design", stagesAll: "The whole system: admission, per-tenant queues, a fair dispatcher, two token buckets, a 429 governor, and stored step outputs.", stages: [
+          { title: "One queue, one worker", add: ["client", "api", "db", "workers", "model"], say: "Start with what works on a laptop: the API writes tasks to Postgres, one FIFO, and a worker takes them in order and calls the model. It breaks in four ways: a crash repeats paid calls, one tenant fills the line, nothing keeps us under the provider limit, and a 429 has no handler." },
+          { title: "Stored steps", add: ["steps"], say: "A crash restarts a task from the top and pays for every finished call again. So each step writes its output to a steps table before the next step starts. A restart reads the table and skips to the first unfinished step." },
+          { title: "Tenant queues and fair dispatch", add: ["tq", "disp"], say: "One FIFO lets a tenant with a million tasks starve the rest. Give each tenant its own queue, and add a dispatcher that picks the next tenant by deficit round robin, weighted and counted in tokens." },
+          { title: "Token buckets", add: ["redis", "bucket"], say: "Fair order does not stop us calling the provider too fast. Add a bucket per tenant and one global bucket in Redis. A call must take tokens from both. If a bucket is short, the task waits instead of failing." },
+          { title: "429 governor and usage", add: ["gate", "ledger"], say: "Estimates are wrong, and the provider can still say 429. The governor lowers the global refill rate when a 429 arrives and raises it slowly when calls succeed, and the ledger records real tokens per tenant so the estimates get better." }
+        ], nodes: [
+          { id: "client", label: "Tenants", sub: "batches of tasks", col: 0, row: 1, tone: "external" },
+          { id: "api", label: "Task API", sub: "admission, limits", col: 1, row: 1, tone: "service" },
+          { id: "db", label: "Postgres", sub: "tasks, tenants", col: 1, row: 2, tone: "store" },
+          { id: "steps", label: "Step outputs", sub: "one row per step", col: 1, row: 3, tone: "store" },
+          { id: "tq", label: "Tenant queues", sub: "one line per tenant", col: 2, row: 0, tone: "queue" },
+          { id: "disp", label: "Fair dispatcher", sub: "deficit round robin", col: 2, row: 1, tone: "orchestrator" },
+          { id: "redis", label: "Redis state", sub: "deficits, buckets", col: 2, row: 2, tone: "store" },
+          { id: "bucket", label: "Token buckets", sub: "tenant plus global", col: 3, row: 0, tone: "guard" },
+          { id: "workers", label: "Worker pool", sub: "leases assumed", col: 3, row: 1, tone: "service" },
+          { id: "model", label: "Model provider", sub: "RPM and TPM limits", col: 4, row: 1, tone: "model" },
+          { id: "gate", label: "429 governor", sub: "slow down, recover", col: 4, row: 0, tone: "guard" },
+          { id: "ledger", label: "Usage ledger", sub: "tokens per minute", col: 4, row: 2, tone: "store" }
+        ], edges: [
+          { from: "client", to: "api" },
+          { from: "api", to: "db", label: "write task" },
+          { from: "api", to: "tq", label: "enqueue id" },
+          { from: "workers", to: "db", label: "claim, finish" },
+          { from: "workers", to: "model", label: "call, key" },
+          { from: "workers", to: "steps", label: "store output" },
+          { from: "tq", to: "disp", label: "head task" },
+          { from: "disp", to: "redis", label: "deficit" },
+          { from: "disp", to: "workers", label: "dispatch" },
+          { from: "workers", to: "bucket", label: "take tokens" },
+          { from: "bucket", to: "redis" },
+          { from: "model", to: "gate", label: "429, headers" },
+          { from: "gate", to: "bucket", label: "set refill" },
+          { from: "workers", to: "ledger", label: "settle", async: true }
+        ]},
+        { type: "list", title: "Walk a request through it", ordered: true, items: [
+          "**Submit.** The API checks the tenant's max_queued and the task's size and token cap, writes the task, and pushes its id to that tenant's queue.",
+          "**Pick.** The dispatcher visits active tenants in turn. Each visit adds quantum times weight to the tenant's deficit. While the head task's estimated tokens fit in the deficit, dispatch it and subtract the cost. See the worker pool (pattern `worker-pool`).",
+          "**Reserve.** The worker asks Redis to take the estimated tokens from the tenant bucket and the global bucket in one atomic script. See rate limiting (pattern `rate-limiting`).",
+          "**Call.** The worker sends the request with an idempotency key of task id plus step number. See idempotency keys (pattern `idempotency`).",
+          "**Settle and store.** The worker refunds or charges the difference between estimate and actual tokens, writes the step output, and moves on. See checkpointing (pattern `checkpointing`).",
+          "**Crash.** If the worker dies, its lease expires and the next worker reads the steps table and starts at the first unfinished step."
+        ]},
+        { type: "code", title: "The two things that carry the design (pseudocode)", code: `
+# fair pick: deficit round robin, cost in tokens
+for tenant in active_tenants_in_order():
+    deficit[tenant] += QUANTUM * weight[tenant]
+    while queue[tenant] and running[tenant] < max_conc[tenant]
+          and est_tokens(head(queue[tenant])) <= deficit[tenant]:
+        task = pop(queue[tenant])
+        deficit[tenant] -= est_tokens(task)
+        dispatch(task)
+    if not queue[tenant]: deficit[tenant] = 0      # idle tenants bank nothing
+
+# reserve: one Lua script, atomic, takes from both or neither
+take(tenant_bucket, n) and take(global_bucket, n)  or  return WAIT(ms)
+` },
+        { type: "defs", title: "Fields worth writing next to the stores", items: [
+          { term: "tasks (Postgres)", desc: "`id, tenant_id, status, priority, est_tokens, attempts, lease_expires_at, created_at`. Indexes on `(tenant_id, status, created_at)` and `(status, lease_expires_at)`." },
+          { term: "task_steps (Postgres)", desc: "`task_id, step_no, status, output_ref, tokens_used`. Primary key `(task_id, step_no)`." },
+          { term: "tenant state and buckets (Redis)", desc: "`deficit, running_count`, and per bucket `tokens, last_refill, rate, burst`. Rebuilt from Postgres if lost." },
+          { term: "usage_ledger (Postgres)", desc: "`tenant_id, minute, tokens, requests`. Primary key `(tenant_id, minute)`." }
+        ]}
+      ],
+      reasoning: [
+        "Build in the order the failures show up: crash, then flood, then provider speed, then provider pushback.",
+        "State the layering aloud: admission decides what can wait, the dispatcher decides whose turn, the buckets decide whether to call now.",
+        "Keep the dispatcher stateless. Its state is in Redis and Postgres, so a restart costs one round of fairness."
+      ],
+      script: [
+        "I will start with the laptop version: an API, Postgres and one worker taking tasks in order. It breaks four ways. A crash repeats paid calls, one tenant fills the line, nothing stops us exceeding the provider limit, and a 429 has no answer.",
+        "First, store each step's output before the next step. A restart then skips the finished work and pays only for the step in flight.",
+        "Second, a queue per tenant and a dispatcher using deficit round robin, with cost counted in tokens and a weight per tenant.",
+        "Third, two token buckets in Redis, one per tenant for the plan and one global for the provider. A call needs both.",
+        "Last, a governor that lowers the global rate on a 429 and creeps back up, and a ledger of real usage."
+      ],
+      probes: [
+        "Why not one priority queue ordered by tenant? A tenant with a million tasks still sits at the head by timestamp, and priority by tenant needs a heap per decision. Per-tenant queues make the pick O(1) per tenant.",
+        "Why Redis for the buckets and not Postgres? A bucket takes thousands of updates a second, and Redis does an atomic check-and-take in one round trip. Postgres is the record of tasks, not the hot counter."
+      ],
+      contrast: "No guard layer, grounding or eval gate. The control is quantitative: per-tenant shares, buckets and feedback from the provider."
+    },
+
+    deepdives: {
+      board: [
+        { type: "dive", title: "One tenant floods the line", diagram: {"cap": "Each tenant has its own queue; the dispatcher visits tenants in turn, adds quantum times weight to the deficit, and sends head tasks while their token cost fits.", "fail": "In a shared FIFO a tenant with 1M tasks puts every other tenant's task behind 4 days of work.", "nodes": [{"id": "a", "label": "Tenant A", "sub": "1M tasks, weight 1", "col": 0, "row": 0, "tone": "external"}, {"id": "b", "label": "Tenant B", "sub": "10 tasks, weight 3", "col": 0, "row": 1, "tone": "external"}, {"id": "drr", "label": "Deficit round robin", "sub": "cost in tokens", "col": 1, "row": 0, "tone": "orchestrator"}, {"id": "w", "label": "Worker pool", "sub": "capped per tenant", "col": 2, "row": 0, "tone": "service"}, {"id": "fifo", "label": "One FIFO", "sub": "B waits behind A", "col": 1, "row": 1, "tone": "queue", "fail": true}], "edges": [{"from": "a", "to": "drr", "label": "own queue"}, {"from": "b", "to": "drr", "label": "own queue"}, {"from": "drr", "to": "w", "label": "dispatch"}, {"from": "b", "to": "fifo", "label": "stuck"}]}, nfr: "Fairness", problem: "One tenant submits a million tasks and every other tenant waits behind it.", options: [
+          { name: "One shared FIFO", take: "Simple, and the biggest tenant sets everyone's latency." },
+          { name: "Plain round robin across tenants", take: "A tenant with big tasks gets more tokens than one with small tasks, because each turn sends one task regardless of cost." },
+          { name: "Weighted fair queueing", take: "More exact on latency, but it needs virtual-time bookkeeping and a heap. More than this needs." },
+          { name: "Deficit round robin in tokens", take: "Each active tenant gets quantum times weight each round and spends it on head tasks. O(1) per decision, handles variable cost, and an idle tenant resets to zero so it banks no credit." }
+        ], pick: "Deficit round robin with cost in estimated tokens, plus a concurrency cap per tenant so a slow tenant cannot hold every worker. It is work-conserving: capacity a tenant does not use goes to the next. A quiet tenant waits about one round, which is the number of active tenants times a quantum. See bulkheads (pattern `bulkhead`)." },
+        { type: "dive", title: "Staying under the provider limit", diagram: {"cap": "A call takes estimated tokens from the tenant bucket and the global bucket in one atomic script; after the reply the bucket is corrected with the actual count.", "fail": "Without the global bucket every tenant is under its own limit and the sum still exceeds the provider's.", "actors": [{"id": "w", "label": "Worker", "tone": "service"}, {"id": "r", "label": "Redis buckets", "tone": "store"}, {"id": "m", "label": "Provider", "tone": "model"}], "steps": [{"from": "w", "to": "r", "label": "take 3,000 from both"}, {"from": "r", "to": "w", "label": "ok, or wait 400 ms"}, {"from": "w", "to": "m", "label": "call"}, {"from": "m", "to": "w", "label": "reply, 2,400 used"}, {"from": "w", "to": "r", "label": "refund 600"}, {"over": "r", "label": "two workers racing without a script", "fail": true}]}, nfr: "Provider limits", problem: "Requests and tokens per minute are limits on the whole account, and the real token count is known only after the reply.", options: [
+          { name: "Check the usage counter, then call", take: "Two workers can both see room and both spend it. Needs one atomic check-and-take." },
+          { name: "Fixed window per minute", take: "Easy, and a burst across a window edge can double the rate." },
+          { name: "Token bucket with reserve then settle", take: "Capacity is the burst size and the refill rate is the limit. Take the estimate first, correct with the actual count after. Over-estimate and capacity sits idle; under-estimate and you meet 429s." },
+          { name: "Sliding window log", take: "Exact, and it stores every call. Heavy at this rate." }
+        ], pick: "Two token buckets in Redis, a per-tenant one for the plan and a global one for the provider, taken together in one Lua script so two dispatchers cannot spend the last tokens. Reserve the estimate, then settle with the real count. Cost accepted: some capacity is idle while estimates run high, and the settle step must run even when the call fails. See rate limiting (pattern `rate-limiting`)." },
+        { type: "dive", title: "The provider says 429", diagram: {"cap": "A 429 lowers the global refill rate and honours Retry-After; the failed task goes back to its own queue, and other tenants are unaffected because their buckets still hold their shares.", "fail": "If every worker retries at once, the retry wave causes more 429s and a good tenant's call is rejected because of a bad tenant's burst.", "nodes": [{"id": "m", "label": "Provider", "sub": "429, Retry-After", "col": 0, "row": 0, "tone": "model"}, {"id": "g", "label": "Governor", "sub": "cut rate, regrow", "col": 1, "row": 0, "tone": "guard"}, {"id": "b", "label": "Global bucket", "sub": "refill lowered", "col": 2, "row": 0, "tone": "guard"}, {"id": "t", "label": "Task retry", "sub": "own queue, backoff", "col": 1, "row": 1, "tone": "queue"}, {"id": "storm", "label": "Retry storm", "sub": "all at once", "col": 0, "row": 1, "tone": "service", "fail": true}], "edges": [{"from": "m", "to": "g", "label": "429"}, {"from": "g", "to": "b", "label": "multiply by 0.5"}, {"from": "m", "to": "t", "label": "retry later"}, {"from": "storm", "to": "m", "label": "no jitter"}]}, nfr: "Provider limits", problem: "Even with buckets, estimates drift, other clients share the key, and the provider returns 429.", options: [
+          { name: "Retry at once", take: "A storm. It makes the limit worse and delays everybody." },
+          { name: "Backoff per task", take: "Spreads retries, with full jitter and a cap. Needed, and it does not lower the aggregate rate, so the next call may still 429." },
+          { name: "Adjust the global rate (AIMD)", take: "Cut the refill rate by half on a 429, add a small step on every success. Convergence is slow, and it protects every tenant, not only the one that triggered it." }
+        ], pick: "Both: jittered backoff for the failed task, which returns to its own tenant's queue and loses no turn it was owed, and an AIMD rule on the global refill rate that honours Retry-After. Keep the cut off the per-tenant buckets so a good tenant is not punished for the account's trouble. Alert when 429s pass 1 percent of calls. See retries and dead letters (pattern `retries-dlq`)." },
+        { type: "dive", title: "Crash and resume", diagram: {"cap": "Each step stores its output before the next begins; after a crash the next worker reads the steps table and starts at the first unfinished step.", "fail": "Without stored steps a restart begins at step 1 and pays for every finished call again.", "actors": [{"id": "w1", "label": "Worker 1", "tone": "service"}, {"id": "db", "label": "Steps table", "tone": "store"}, {"id": "w2", "label": "Worker 2", "tone": "service"}], "steps": [{"from": "w1", "to": "db", "label": "step 1 output stored"}, {"from": "w1", "to": "db", "label": "step 2 output stored"}, {"over": "w1", "label": "dies during step 3", "fail": true}, {"over": "db", "label": "lease expires"}, {"from": "w2", "to": "db", "label": "read: 2 steps done"}, {"over": "w2", "label": "resume at step 3"}]}, nfr: "Resumable", problem: "A worker dies in the middle of a task that has already paid for several calls.", options: [
+          { name: "Restart from the top", take: "Simple, and pays again for every finished call, which at this price is the failure." },
+          { name: "Checkpoint the whole task now and then", take: "Cheaper to write, and still repeats everything since the last checkpoint." },
+          { name: "Store each step's output when it finishes", take: "At most one step is repeated, and it costs one write per step. The output may be large, so store a pointer to blob storage and keep the row small." }
+        ], pick: "A row per step in task_steps, written before the next step starts, in the same transaction as the status change. A lost lease returns the task to its tenant's queue and the dispatcher passes resume_from_step. A crash costs at most one repeated step plus one lease period, 60 seconds here. See checkpointing (pattern `checkpointing`) and leases (pattern `leases`)." },
+        { type: "dive", title: "A retry that pays twice", diagram: {"cap": "The call carries a key of task id and step number; a retry with the same key returns the stored reply instead of starting a second paid call.", "fail": "A worker dies after the provider answered but before the step was stored, and the retry buys the same answer again.", "actors": [{"id": "w", "label": "Worker", "tone": "service"}, {"id": "s", "label": "Steps table", "tone": "store"}, {"id": "p", "label": "Provider", "tone": "model"}], "steps": [{"from": "w", "to": "p", "label": "call, key t7:s3"}, {"from": "p", "to": "w", "label": "reply"}, {"over": "w", "label": "dies before storing", "fail": true}, {"from": "w", "to": "s", "label": "retry: step 3 missing"}, {"from": "w", "to": "p", "label": "call again, key t7:s3"}, {"over": "p", "label": "same key: no second charge, if honoured"}]}, nfr: "No double pay", problem: "The model replied, the worker died before it stored the output, and the retry would pay for the same call.", options: [
+          { name: "Hope it is rare", take: "It is rare per call, and at millions of calls it is a bill every month." },
+          { name: "Store before replying is impossible", take: "You cannot write the output before you have it. A gap always exists between reply and store." },
+          { name: "Idempotency key on the call", take: "If the provider honours it, a retry returns the same result. Many providers do not, so check the docs and say so." },
+          { name: "Record intent before the call", take: "Write step status started with the key before the call. After a crash a started step means the call may have been paid, so look for a reply by key first." }
+        ], pick: "Write status started with the key, call with that key, then write the output. On recovery a started step is retried with the same key. Say the honest limit out loud: where the provider ignores keys, at most one call per crash is paid twice, and the ledger shows it. See idempotency keys (pattern `idempotency`)." },
+        { type: "dive", title: "Tenant isolation and abuse", diagram: {"cap": "Every key and every query carries the tenant id, quotas bound what one tenant can queue or spend, and prompts and outputs are encrypted and never logged.", "fail": "A query without a tenant filter, or a shared cache of outputs, lets one tenant read another's prompts, and a flood from one key gets the whole account banned.", "nodes": [{"id": "a", "label": "Tenant A", "sub": "authenticated", "col": 0, "row": 0, "tone": "external"}, {"id": "api", "label": "Task API", "sub": "tenant from the token", "col": 1, "row": 0, "tone": "guard"}, {"id": "store", "label": "Queues and rows", "sub": "tenant id in every key", "col": 2, "row": 0, "tone": "store"}, {"id": "limits", "label": "Caps and buckets", "sub": "queue, size, tokens", "col": 1, "row": 1, "tone": "guard"}, {"id": "leak", "label": "Unfiltered query", "sub": "reads other tenants", "col": 2, "row": 1, "tone": "service", "fail": true}], "edges": [{"from": "a", "to": "api", "label": "token"}, {"from": "api", "to": "store", "label": "scoped access"}, {"from": "api", "to": "limits", "label": "check"}, {"from": "leak", "to": "store", "label": "no filter"}]}, nfr: "Tenant isolation", problem: "Security question: what can one tenant do to another, or to the shared account, through this system?", options: [
+          { name: "Trust the application to filter", take: "One missed filter leaks data. Make the tenant id part of every queue and cache key, and use row-level security in Postgres so the database enforces it." },
+          { name: "Limits only at the edge", take: "The API rejects floods, and nothing protects a path that skips the API. Enforce again in the dispatcher with per-tenant caps and buckets." },
+          { name: "One shared provider key", take: "Simple, and one tenant's abuse can get the whole account throttled or banned. Per-tenant keys or sub-accounts contain it, at the cost of managing keys." },
+          { name: "Log everything for debugging", take: "Convenient, and it puts prompts and personal data into logs with a wider audience than the data itself." }
+        ], pick: "Tenant id taken from the authenticated token, never from the request body, in every key and query, with row-level security. Admission caps: max_queued, a size limit and a token cap per task. A content filter at admission for the shared key, and per-tenant keys for the largest tenants. Logs hold task ids and token counts, never prompts or outputs. Treat task input as untrusted text, since a prompt injection in one tenant's task must not reach another's context. Keep an audit log of who read which result." },
+        { type: "dive", title: "Ten million queued tasks", diagram: {"cap": "The dispatcher keeps only counters per tenant in Redis and reads each tenant's head from its own queue; beyond about 10,000 decisions a second, shard dispatchers by tenant hash.", "fail": "A dispatcher that scans the whole task table for the next task cannot decide in 10 ms with 10M rows queued.", "nodes": [{"id": "q", "label": "Tenant queues", "sub": "head read only", "col": 0, "row": 0, "tone": "queue"}, {"id": "d1", "label": "Dispatcher 1", "sub": "tenants hash 0 to 7", "col": 1, "row": 0, "tone": "orchestrator"}, {"id": "d2", "label": "Dispatcher 2", "sub": "tenants hash 8 to 15", "col": 1, "row": 1, "tone": "orchestrator"}, {"id": "scan", "label": "Full table scan", "sub": "too slow", "col": 0, "row": 1, "tone": "store", "fail": true}], "edges": [{"from": "q", "to": "d1", "label": "head task"}, {"from": "q", "to": "d2", "label": "head task"}, {"from": "scan", "to": "d2", "label": "10M rows"}]}, nfr: "Fast dispatch", problem: "The dispatcher must decide in under 10 ms while 10M tasks are queued.", options: [
+          { name: "Query Postgres for the next task", take: "Fine at thousands of rows, slow at millions without the right index, and a hot table under load." },
+          { name: "Per-tenant queues in Redis, ids only", take: "The pick reads only the head of each active tenant's list. Cost scales with active tenants, not queued tasks." },
+          { name: "Shard dispatchers by tenant hash", take: "Adds throughput past one process and keeps fairness within a shard. Fairness across shards needs the global bucket, which is shared already." }
+        ], pick: "Redis lists of task ids per tenant, with Postgres as the record that can rebuild them, one dispatcher to about 10,000 decisions a second, then shard by tenant hash. Cost accepted: fairness between shards is approximate, bounded by the global bucket. A sweeper re-enqueues tasks that are queued in Postgres but missing from Redis." }
+      ],
+      reasoning: [
+        "Lead with the flood. It is the first thing a security engineer or any interviewer asks, and it picks the scheduler.",
+        "Then the two quota dives, resume, double pay, isolation and scale. Each maps to one requirement by name.",
+        "End on scale only if there is time. The first four carry the design."
+      ],
+      script: [
+        "The flood first. I give each tenant its own queue and pick with deficit round robin. Each round a tenant earns quantum times its weight, and spends it on head tasks in tokens, so big tasks do not beat small ones. An empty queue resets the deficit. A concurrency cap stops a slow tenant holding every worker.",
+        "For provider limits I use two buckets in Redis, per tenant and global, taken together in one atomic script. I reserve the estimate and settle with the real count. On a 429 I back off the task with jitter and cut the global rate, and I leave the per-tenant buckets alone so good tenants are not punished.",
+        "For crashes, each step's output is stored before the next. A lost worker costs one repeated step. To avoid paying twice, the call carries a key made from task and step, and I write started before I call.",
+        "For isolation, the tenant id comes from the token and sits in every key and query, with row-level security. Admission caps bound what one tenant can queue, and logs never hold prompts."
+      ],
+      probes: [
+        "What if Redis loses its state? Buckets refill full, which may cause a burst of 429s. The governor and backoff absorb it, and deficits restart at zero, so fairness is lost for one round.",
+        "What if the provider is down for an hour? Open a circuit breaker, stop dispatching, and let queues grow to their caps. New submits get a 429 when the cap is reached. Nothing fails, and the backlog drains by weight.",
+        "How do you handle an interactive tenant with a latency need? A separate priority class with a reserved slice of the global bucket, so batch load cannot starve it and it cannot take everything.",
+        "How do you size the estimate? Start with the prompt length plus a typical output, then use the ledger's per-task-type average. The settle step corrects the bucket, so a wrong estimate costs idle capacity or a 429, not a wrong bill.",
+        "Is it fair across tenants with different weights? Within 10 percent of weight over the sum of active weights, when everyone has work. When some are idle, DRR hands their share to the rest."
+      ],
+      contrast: "Agentic dives are about grounding, action safety and eval gates. These are about shares, buckets and feedback, and the safety question is what one tenant can do to the rest."
+    }
+  },
+  refs: [
+    { label: "Video, 5 min: Solving problems with multi-tenant queueing with concurrency keys (Inngest)", url: "https://www.youtube.com/watch?v=uoXqqMkuiP0" },
+    { label: "Stripe: Scaling your API with rate limiters (token buckets, load shedding, concurrency limits)", url: "https://stripe.com/blog/rate-limiters" },
+    { label: "OpenAI docs: Rate limits (requests and tokens per minute, 429 handling, backoff)", url: "https://developers.openai.com/api/docs/guides/rate-limits" },
+    { label: "Amazon Builders' Library: Fairness in multi-tenant systems (quotas, admission control, load shedding)", url: "https://builder.aws.com/content/3Eupj3d2bo4fEvlzYbICMZNhQ3B/fairness-in-multi-tenant-systems" }
+  ]
+});
 GUIDE.patternUsage = {
   "notebooklm": {
     uses: [
