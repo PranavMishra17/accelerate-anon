@@ -3088,6 +3088,197 @@ window.LOOP_CODING.parts.push({
    ]
   },
   {
+   "id": "onsite-gridk",
+   "title": "13. Shortest grid path, removing at most k walls",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "**The problem, as you might hear it.** A grid of 0s (open) and 1s (walls). Walk from the top-left to the bottom-right, one step up, down, left or right at a time. You may remove at most k walls. Return the fewest steps, or -1 if it cannot be done. Only the title was reported (a GitHub bank, 30 Aug 2026), with no spec, role or stage: this wording is LeetCode 1293's, not Mercor's, so treat the shape as the practice and the details as yours to decide."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**Read it before you speak.**",
+      "**The hidden structure** is BFS, but a cell alone is not a state: reaching a cell with 2 removals left is better than with 0. The state is (row, col, removals left).",
+      "**What is undefined:** the grid format, whether the start or end can be a wall, what an impossible case returns, a 1 x 1 grid.",
+      "**The size that decides it** is rows x cols x (k + 1) states. With k up to rows + cols the plain state BFS is fine for 40 x 40, and two shortcuts make it fast.",
+      "**Write the full-state BFS first.** It is short, obviously right, and it is the oracle for the pruned version."
+     ]
+    },
+    {
+     "t": "table",
+     "head": [
+      "The gap in the prompt",
+      "I decide, and write at the top",
+      "If the reviewer wanted otherwise"
+     ],
+     "rows": [
+      [
+       "The grid format",
+       "A list of lists of 0 and 1.",
+       "Strings like '0101': read each row with [int(ch) for ch in row]."
+      ],
+      [
+       "The start or end is a wall",
+       "Treated like any cell: entering a wall costs a removal. The start is where you stand, so it costs nothing.",
+       "Charge the start too: begin with k - grid[0][0], and return -1 if that is negative."
+      ],
+      [
+       "Impossible",
+       "Return -1.",
+       "Raise: one line at the end."
+      ],
+      [
+       "A 1 x 1 grid",
+       "0 steps.",
+       "Same."
+      ],
+      [
+       "Diagonal moves",
+       "No, four directions.",
+       "Add the four diagonal offsets; the BFS is unchanged."
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**The crux.** BFS over (row, col, removals left), so the first time you reach the end is the fewest steps. Two shortcuts. First, if k is at least rows + cols - 2, you can remove every wall on a straight path, so the answer is rows + cols - 2 without searching. Second, keep best[r][c], the most removals left you have reached that cell with. BFS reaches cells in order of steps, so a later arrival with no more removals left is never better: skip it. That turns rows x cols x k states into close to rows x cols in practice."
+    },
+    {
+     "t": "list",
+     "items": [
+      "**The hour, in order.**",
+      "Write the decisions above as a comment block at the top.",
+      "Write slow(grid, k): BFS with a seen set of (r, c, left). Run it on the example.",
+      "Write shortest_path with the straight-line shortcut and the best[r][c] pruning. Assert it equals slow on random grids.",
+      "Leave ten minutes: read every line as the reviewer, name the state out loud, write the what-I-would-do-next note."
+     ]
+    },
+    {
+     "t": "problem",
+     "id": "onsite-gridk-p",
+     "title": "Shortest grid path, removing at most k walls",
+     "source": "Title only in a GitHub bank, 30 Aug 2026; wording from LeetCode 1293",
+     "minutes": "40",
+     "d": "hard",
+     "statement": "Given a grid of 0s and 1s and an integer k, return the fewest steps from the top-left to the bottom-right cell, moving up, down, left or right, if you may remove at most k walls (1s). Return -1 if it cannot be done.",
+     "examples": [
+      {
+       "input": "grid = [[0,0,0],[1,1,0],[0,0,0],[0,1,1],[0,0,0]], k = 1",
+       "output": "6",
+       "note": "Remove the wall at (3, 2): 6 steps. With k = 0 the walk round takes 10."
+      },
+      {
+       "input": "grid = [[0,1,1],[1,1,1],[1,0,0]], k = 1",
+       "output": "-1",
+       "note": "Every path crosses at least two walls."
+      }
+     ],
+     "constraints": [
+      "standard library only",
+      "grid up to 40 x 40, k up to rows x cols",
+      "no AI; search for syntax only",
+      "write your own checks"
+     ],
+     "starter": "def shortest_path(grid, k):\n    ...\n",
+     "hints": [
+      "A cell is not enough as a BFS state: add the removals left.",
+      "If k covers a straight path, return rows + cols - 2. Otherwise, skip any arrival with no more removals left than the best seen at that cell."
+     ],
+     "solution": "from collections import deque\n\n# Decisions, written before the code (no one to ask):\n# - grid is a list of lists of 0 (open) and 1 (wall); move up, down, left, right.\n# - Return the fewest steps from top-left to bottom-right, removing at most k walls; -1 if impossible.\n# - A 1 x 1 grid is 0 steps. The start and end cells are treated like any other cell.\n\n\ndef shortest_path(grid, k):\n    rows, cols = len(grid), len(grid[0])\n    if rows == 1 and cols == 1:\n        return 0\n    # Enough removals to walk straight there: the shortest possible path is the answer.\n    if k >= rows + cols - 2:\n        return rows + cols - 2\n    # BFS over states (row, col, removals left). best[r][c] is the most removals left\n    # with which we have reached (r, c). BFS reaches cells in order of steps, so arriving\n    # later with no more removals left can never do better: skip it.\n    best = [[-1] * cols for _ in range(rows)]\n    best[0][0] = k\n    queue = deque([(0, 0, k, 0)])\n    while queue:\n        r, c, left, steps = queue.popleft()\n        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n            nr, nc = r + dr, c + dc\n            if not (0 <= nr < rows and 0 <= nc < cols):\n                continue\n            nleft = left - grid[nr][nc]          # a wall costs one removal\n            if nleft < 0 or nleft <= best[nr][nc]:\n                continue\n            if nr == rows - 1 and nc == cols - 1:\n                return steps + 1\n            best[nr][nc] = nleft\n            queue.append((nr, nc, nleft, steps + 1))\n    return -1\n\n\ndef slow(grid, k):\n    \"\"\"The oracle: BFS over every (row, col, left) state, no pruning.\"\"\"\n    rows, cols = len(grid), len(grid[0])\n    seen = {(0, 0, k)}\n    queue = deque([(0, 0, k, 0)])\n    while queue:\n        r, c, left, steps = queue.popleft()\n        if (r, c) == (rows - 1, cols - 1):\n            return steps\n        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n            nr, nc = r + dr, c + dc\n            if 0 <= nr < rows and 0 <= nc < cols:\n                nleft = left - grid[nr][nc]\n                if nleft >= 0 and (nr, nc, nleft) not in seen:\n                    seen.add((nr, nc, nleft))\n                    queue.append((nr, nc, nleft, steps + 1))\n    return -1\n",
+     "tests": "import random\n\ng1 = [[0, 0, 0], [1, 1, 0], [0, 0, 0], [0, 1, 1], [0, 0, 0]]\ng2 = [[0, 1, 1], [1, 1, 1], [1, 0, 0]]\nprint(shortest_path(g1, 1), shortest_path(g1, 0), shortest_path(g2, 1), shortest_path(g2, 2))\nassert shortest_path(g1, 1) == 6 and shortest_path(g2, 1) == -1 and shortest_path([[0]], 0) == 0\nrng = random.Random(7)\nfor _ in range(400):\n    r, c = rng.randint(1, 6), rng.randint(1, 6)\n    g = [[1 if rng.random() < 0.4 else 0 for _ in range(c)] for _ in range(r)]\n    g[0][0] = 0\n    k = rng.randint(0, 4)\n    assert shortest_path(g, k) == slow(g, k), (g, k)\nprint(\"fast agrees with the oracle on 400 random grids\")\n",
+     "complexity": "O(rows x cols x (k + 1)) states in the worst case; the pruning keeps it near O(rows x cols) in practice. Space the same.",
+     "explain": [
+      "The straight-line shortcut is exact: a path of rows + cols - 2 steps crosses at most that many walls.",
+      "best[r][c] stores removals left, and a bigger number is better, so it starts at -1.",
+      "The oracle has no pruning and checks every state; the random test compares the two on 400 grids."
+     ]
+    },
+    {
+     "t": "code",
+     "title": "Output, run with Python 3",
+     "code": "6 10 -1 4\nfast agrees with the oracle on 400 random grids"
+    },
+    {
+     "t": "table",
+     "head": [
+      "They ask",
+      "The change",
+      "Cost"
+     ],
+     "rows": [
+      [
+       "Return the path, not the length",
+       "Store the parent state for each state you push; walk back from the end.",
+       "A dict of parents, O(states)."
+      ],
+      [
+       "Walls cost different amounts",
+       "The cost is no longer one per step: Dijkstra on (cost, r, c, left) with a heap.",
+       "O(states log states)."
+      ],
+      [
+       "Many queries on the same grid",
+       "Precompute nothing general; cache answers per (k) if k repeats. Say the honest limit.",
+       "Memory per cached k."
+      ],
+      [
+       "Minimise walls removed instead of steps",
+       "0-1 BFS: open cells cost 0, walls cost 1, a deque with appendleft for 0.",
+       "O(rows x cols)."
+      ]
+     ]
+    },
+    {
+     "t": "faq",
+     "title": "The code review: every decision, and how to stand behind it",
+     "prose": true,
+     "items": [
+      {
+       "q": "1. The state is (row, col, removals left)",
+       "a": "**Decided.** BFS over three-part states.\n\n**Instead of.** BFS over cells with a visited set.\n\n**Why.** Two arrivals at the same cell can differ in what they can still do. A plain visited set would throw away the one with more removals left and miss the shortest path.\n\n**What it costs.** Up to k + 1 times the states.\n\n**If they push.** \"A cell-only visited set is wrong here: I can show a grid where it returns -1 and the answer exists.\""
+      },
+      {
+       "q": "2. best[r][c] instead of a seen set of triples",
+       "a": "**Decided.** Keep the most removals left per cell and skip anything not better.\n\n**Instead of.** seen = set of (r, c, left), which the oracle uses.\n\n**Why.** BFS reaches cells in order of steps, so a later arrival with fewer or equal removals left is dominated. That cuts the states sharply.\n\n**What it costs.** An argument the reviewer has to follow; the oracle and the random test are my evidence.\n\n**If they push.** \"Both are correct; the triple set is simpler to read, and I would ship it for small grids.\""
+      },
+      {
+       "q": "3. The straight-line shortcut",
+       "a": "**Decided.** If k >= rows + cols - 2, return rows + cols - 2 at once.\n\n**Why.** No path is shorter than that, and that path crosses at most that many walls. It turns the worst case (huge k) into constant time.\n\n**If they push.** \"It is an optimisation, not needed for correctness; the BFS gives the same answer.\""
+      }
+     ]
+    },
+    {
+     "t": "probs",
+     "title": "Related, then harder",
+     "items": [
+      {
+       "n": "Shortest Path in Binary Matrix",
+       "d": "medium",
+       "lc": "shortest-path-in-binary-matrix",
+       "yt": [
+        "YnxUdAO7TAo",
+        "NeetCodeIO",
+        13
+       ],
+       "why": "Grid BFS with a visited set: the base for this one."
+      },
+      {
+       "n": "Shortest Path in a Grid with Obstacles Elimination",
+       "d": "hard",
+       "lc": "shortest-path-in-a-grid-with-obstacles-elimination",
+       "yt": [
+        "ID9YJXy3OJk",
+        "Algorithms Made Easy",
+        17
+       ],
+       "why": "This problem exactly."
+      }
+     ]
+    }
+   ]
+  },
+  {
    "id": "onsite-review",
    "title": "13. What the reviewer asks",
    "blocks": [
