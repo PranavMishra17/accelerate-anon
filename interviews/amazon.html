@@ -379,6 +379,23 @@ details.pq.rev > summary .qt::before { content: ""; display: inline-block; width
 .rp-q .rp-ql { font-size: var(--fs-sm); color: var(--muted); margin: var(--s3) 0 var(--s1); }
 .rp-q ul, .rp-q ol { margin: 0; padding-left: var(--s5); }
 .rp-q li { margin-bottom: var(--s1); }
+/* The skim: what to ask, the roadmap in the order you say it, the cost, the limit. The rest folds under it. */
+.skim { margin: 0 0 var(--s3); }
+.skim .lab { margin: var(--s3) 0 var(--s1); }
+.skim ul.sk-ask { list-style: none; margin: 0; padding: 0; }
+.skim ul.sk-ask li { padding: var(--s1) 0; border-top: 1px dotted var(--rule); color: var(--muted); }
+.skim ul.sk-ask li:first-child { border-top: none; }
+.skim ul.sk-ask b { color: var(--ink); }
+.skim ol.sk-road { margin: 0; padding: 0; list-style: none; counter-reset: sk; }
+.skim ol.sk-road li { counter-increment: sk; display: flex; gap: var(--s3); padding: var(--s2) 0; border-top: 1px solid var(--rule); }
+.skim ol.sk-road li:first-child { border-top: none; }
+.skim ol.sk-road li::before { content: counter(sk); flex: none; width: 1.6em; height: 1.6em; border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; font-size: var(--fs-sm); color: var(--muted); }
+.skim ol.sk-road p { margin: 0; }
+.skim ol.sk-road span { color: var(--muted); }
+.skim .sk-cost { margin: var(--s3) 0 0; padding: var(--s2) var(--s3); background: var(--surface); font-family: var(--mono); font-size: var(--fs-code); }
+.skim .sk-limit { margin: var(--s2) 0 0; }
+details.cd-fold { margin: var(--s3) 0; border-top: 1px solid var(--ink); }
+details.cd-fold > summary { cursor: pointer; padding: var(--s2) 0; font-weight: 600; }
 .rp-q pre { margin: 0; padding: var(--s2) var(--s3); background: var(--code-bg); color: var(--code-ink); border-radius: var(--radius-sm); font-family: var(--mono); font-size: var(--fs-code); white-space: pre-wrap; }
 .rp-in .rp-h { font-size: var(--fs-sm); color: var(--muted); margin: var(--s4) 0 var(--s1); }
 .rp-in .rp-h:first-child { margin-top: 0; }
@@ -1724,7 +1741,7 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       if (hit) {
         secs.push({ label: l.label, node: w, fill: function () {
           if (filled) { return; } filled = true;
-          hit.sec.blocks.forEach(function (b) { if (x.statement && isProblemPara(b)) { return; } try { w.appendChild(cdBlock(b)); } catch (e) { console.error("reported block", hit.sec.id, e); } });
+          hit.sec.blocks.forEach(function (b) { if ((x.statement && isProblemPara(b)) || b.t === "skim") { return; } try { w.appendChild(cdBlock(b)); } catch (e) { console.error("reported block", hit.sec.id, e); } });
         } });
       } else if (/^(\.\.\/|#\/)/.test(l.href)) {
         /* Pages of this site (the guide, a session, another tab of this page) are drawn inside the box too. */
@@ -1758,6 +1775,10 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       box.appendChild(p);
     }
     rpSources(x, box);
+  }
+  function rpSkim(x) {
+    var first = (x.solve || []).map(function (l) { var m = /^#\/coding\/([a-z0-9-]+)$/.exec(l.href); return m && rpSection(m[1]); }).filter(Boolean)[0];
+    return first && first.sec.blocks.filter(function (b) { return b.t === "skim"; })[0];
   }
   function rpSources(x, box) {
     if (!(x.src || []).length) { return; }
@@ -1844,7 +1865,9 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
         }
         pane(solved ? "Show the approach" : "Show the pointers", function (p) {
           if (x.tests) { p.appendChild(el("div", "rp-h", "What it tests")); p.appendChild(el("p", "", inl(x.tests))); }
-          if ((x.approach || []).length) {
+          var sk = rpSkim(x);
+          if (sk) { p.appendChild(cdSkim(sk)); }
+          else if ((x.approach || []).length) {
             p.appendChild(el("div", "rp-h", solved ? "The approach" : "Pointers"));
             var ul = el("ul"); x.approach.forEach(function (t) { ul.appendChild(el("li", "", inl(t))); }); p.appendChild(ul);
           }
@@ -3514,12 +3537,27 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
       m("dia", "0 0 16 10", [1, 5], 14, 9, "M1 5L8 1L15 5L8 9z", "fill:var(--surface);stroke:var(--muted);stroke-width:1", "auto") + "</defs></svg>";
     document.body.appendChild(d.firstChild);
   }
+  function cdSkim(b) {
+    var w = el("div", "skim cd-blk");
+    if ((b.clarify || []).length) {
+      w.appendChild(el("div", "lab", "Clarify first"));
+      var ul = el("ul", "sk-ask"); b.clarify.forEach(function (c) { ul.appendChild(el("li", "", inl(c[0]) + " <b>" + inl(c[1]) + "</b>")); }); w.appendChild(ul);
+    }
+    if ((b.road || []).length) {
+      w.appendChild(el("div", "lab", "Roadmap, in the order you say it"));
+      var ol = el("ol", "sk-road"); b.road.forEach(function (r) { ol.appendChild(el("li", "", "<p><b>" + inl(r[0]) + "</b> <span>" + inl(r[1]) + "</span></p>")); }); w.appendChild(ol);
+    }
+    if (b.cost) { w.appendChild(el("p", "sk-cost", "<b>Cost</b> " + esc(b.cost))); }
+    if (b.limit) { w.appendChild(el("p", "sk-limit", "<b>Name the limit before they do.</b> " + inl(b.limit))); }
+    return w;
+  }
   function cdBlock(b) {
     switch (b.t) {
       case "turn": return cdTurn(b);
       case "say": var sy = el("div", "say-sheet cd-blk"); b.lines.forEach(function (x) { sy.appendChild(el("p", "", inl(x))); }); return sy;
       case "bridge": return cdBridge(b);
       case "p": return el("p", "", inl(b.text));
+      case "skim": return cdSkim(b);
       case "list": var ul = el("ul");
         b.items.forEach(function (s) { var m = /^([^:]{1,48}):\s(.+)$/.exec(s); ul.appendChild(el("li", "", m ? "<strong>" + inl(m[1]) + ":</strong> " + inl(m[2]) : inl(s))); });
         return ul;
@@ -3619,14 +3657,19 @@ textarea.wb-ta { min-height: 44vh; margin-top: var(--s2); }
         else { learn.push(b); }
       });
       var stmt = stmtForSection(s.id);
-      function put(b) { if (stmt && isProblemPara(b)) { sec.appendChild(rpStatement(stmt)); stmt = null; return; } try { sec.appendChild(cdBlock(b)); } catch (e) { console.error("coding block", s.id, b, e); } }
+      var tgt = sec;
+      function put(b) {
+        if (stmt && isProblemPara(b)) { sec.appendChild(rpStatement(stmt)); stmt = null; return; }
+        try { tgt.appendChild(cdBlock(b)); } catch (e) { console.error("coding block", s.id, b, e); }
+        if (b.t === "skim") { tgt = el("details", "cd-fold"); tgt.appendChild(el("summary", "", "The full working: branches, crux, code, follow-ups, push-backs")); sec.appendChild(tgt); }
+      }
       if (stmt && !s.blocks.some(isProblemPara)) { sec.appendChild(rpStatement(stmt)); stmt = null; }
       /* A part with flow: true is a sequence of stages (clarify, requirements, entities, logic, code):
          every box stays under its own stage heading, in the order written. */
       if (cur.flow) { s.blocks.forEach(function (b) { put(b); if (b.t === "p" && /^\*\*[a-f]\) /.test(b.text || "") && sec.lastChild) { sec.lastChild.classList.add("cd-stage"); } }); }
       else {
         learn.forEach(put);
-        if (drill.length) { sec.appendChild(el("div", "lab cd-drill", "Practise")); drill.forEach(put); }
+        if (drill.length) { tgt.appendChild(el("div", "lab cd-drill", "Practise")); drill.forEach(put); }
       }
       var rsec = resFor(cur.id + "/" + s.id, "Watch and read"); if (rsec) { sec.appendChild(rsec); }
       host.appendChild(sec);

@@ -301,16 +301,49 @@ window.LOOP_CODING.parts.push({
      "text": "**The problem, as you might hear it.** You get a list of exchange rates, each [from, to, rate], meaning 1 unit of from is rate units of to. Given a source and a target currency, return the rate from source to target. You may chain through other currencies and use a rate in reverse. The same currency gives 1.0, no chain gives -1.0, and there are up to 10,000 rates. Reported variant (PracHub, Medium, onsite): the table is consistent. A follow-up the problem leads to, not reported wording: the best rate when quotes disagree, and arbitrage."
     },
     {
-     "t": "list",
-     "items": [
-      "**Read it before you speak.**",
-      "Currencies are nodes and a rate is an edge with a multiplier, not a distance. Every rate also gives a reverse edge at 1 over the rate.",
-      "The hidden structure is a graph with cycles: the reverse edge makes A to B to A the moment it exists. What saves the maths is consistency: the product around any cycle is 1, so every path gives the same answer.",
-      "So I need any path, not the shortest or best one. That is the whole answer when the table is consistent.",
-      "Undefined: is the reverse always 1 over the rate, or a separate quote with a spread? Is the table consistent? What do I return for the same currency when it is not in the table?",
-      "Size: at most 10,000 rates is at most 20,000 directed edges, so BFS is trivial. The questions worth time are many queries and changing rates.",
-      "Traps: Dijkstra (the cost is a product, not a sum), saying there are no cycles, and float equality."
-     ]
+     "t": "skim",
+     "clarify": [
+      [
+       "Is the reverse rate 1 over the rate?",
+       "Yes: add a reciprocal edge. No, a separate quote: chains can disagree."
+      ],
+      [
+       "Is the table consistent?",
+       "Yes: any path works. No: the question becomes the best rate."
+      ],
+      [
+       "One query or many?",
+       "Many: build once and cache, or a weighted union-find."
+      ],
+      [
+       "Same currency, unknown currency?",
+       "1.0 first, even if it is not in the table; -1.0 when no chain."
+      ]
+     ],
+     "road": [
+      [
+       "A directed weighted graph.",
+       "Currency is a node, a rate is a multiplier edge, plus its reciprocal."
+      ],
+      [
+       "BFS from the source.",
+       "Record (parent, rate) per node, then multiply walking back from the target."
+      ],
+      [
+       "Why any path is enough.",
+       "Cycles exist (A to B to A), but consistency makes the product around any cycle 1."
+      ],
+      [
+       "Edge cases out loud.",
+       "Same currency 1.0; unknown or unreachable -1.0; compare floats with a tolerance, never ==."
+      ],
+      [
+       "Rates disagree.",
+       "Take logs: the best product is a shortest path on -log(rate). Bellman-Ford, because a rate above 1 is a negative edge; a cycle above 1 is arbitrage."
+      ]
+     ],
+     "cost": "one query O(V + E) · many queries union-find, near O(1) each · best rate Bellman-Ford O(V x E) · tolerance 1e-6",
+     "limit": "Dijkstra minimises sums of non-negative weights; here the cost is a product and rates above 1 break it."
     },
     {
      "t": "table",
@@ -385,18 +418,6 @@ window.LOOP_CODING.parts.push({
     {
      "t": "p",
      "text": "**The crux.** It is a graph where the weights multiply. Because every rate has a reciprocal and the table is consistent, every path from source to target multiplies to the same number, so I need any path, found with BFS, and I multiply the rate into each node on the way back. That is O(V + E). If the table can disagree, I need the best path: take logs so products become sums, and use Bellman-Ford, since a rate above 1 gives a negative edge and breaks Dijkstra. A cycle whose rates multiply to more than 1 is free money."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**The conversation, in order.**",
-      "Restate and ask: reverse rate, consistency, the same-currency and unknown-currency rules, how many queries.",
-      "Brute force: try every chain from source to target. Exponential, and I do not need it.",
-      "The idea: model as a graph, add reciprocal edges, say why any path is enough (the product around a cycle is 1).",
-      "Code: build_graph, bfs_parents with a visited set, get_rate walking the parents back.",
-      "Test on a small case: USD to GBP 0.77, GBP to EUR 1.2, EUR to INR 90.0. USD to EUR is 0.924 with float dust.",
-      "Follow-ups from the table below: many queries, changing rates, then best rate and arbitrage."
-     ]
     },
     {
      "t": "write",
@@ -598,15 +619,49 @@ window.LOOP_CODING.parts.push({
      "text": "**The problem, as you might hear it.** You need to sort a list of items. You have a comparison function that says which of two items is bigger, but it is wrong some of the time, maybe about 10 percent. How do you sort the list? No code, 30 minutes, a discussion. Reported variants: top k only, minimise the number of calls, calls that are slow, and a paid API that is right 90 percent of the time (chapter 4 plans that one)."
     },
     {
-     "t": "list",
-     "items": [
-      "**Read it before you speak.**",
-      "The only thing I can see is the comparator. Items are nodes, each answer is a directed edge, and a true order has no cycles. That is the hidden structure.",
-      "Everything hangs on one undefined word: wrong how? If I ask the same pair twice, do I get a different answer (random noise) or the same answer (a fixed fault)?",
-      "Random noise is cheap to beat: repeat and average. A fixed fault is not: repeating returns the same lie, so the only new information is other comparisons.",
-      "The size that decides the algorithm is the cost of a call. Cheap means I can compare all pairs, n(n-1)/2. Paid or slow means I stay near n log n.",
-      "The trap: a cycle proves a lie but never says which edge it is, and nothing flags a wrong answer when it arrives. Do not say I will log the bad ones and flip them."
-     ]
+     "t": "skim",
+     "clarify": [
+      [
+       "Same pair asked twice, same answer?",
+       "This one question picks the tool: random errors are fixed by repeating, fixed errors only by structure."
+      ],
+      [
+       "How often is it wrong?",
+       "About 10 percent: mostly right. At 50 percent there is no signal at all."
+      ],
+      [
+       "Can I cache answers?",
+       "Yes, and I should when errors are fixed: each pair costs one call, ever."
+      ],
+      [
+       "All sorted, or only the best k?",
+       "Only k changes where the calls go: to the boundary."
+      ]
+     ],
+     "road": [
+      [
+       "A plain sort is wrong.",
+       "One bad comparison misplaces an element, and one comparison can never tell you it lied."
+      ],
+      [
+       "Random errors: repeat and vote.",
+       "Ask each pair m times and keep the majority, then sort normally."
+      ],
+      [
+       "Fixed errors: rank by wins.",
+       "Compare many pairs and rank each item by its win rate. About 10 percent of edges lie, so the counts are mostly right."
+      ],
+      [
+       "A cycle is the lie detector.",
+       "a over b over c over a proves a lie inside it, but not which edge. So I fix the ranking, not single edges."
+      ],
+      [
+       "Top k and slow calls.",
+       "A tournament for candidates, then spend the remaining calls on the k-th against the (k+1)-th. Slow calls: independent pairs in parallel rounds."
+      ]
+     ],
+     "cost": "all pairs O(n^2) calls · one knockout O(n) · m votes multiply calls by m · exact recovery is minimum feedback arc set, NP-hard",
+     "limit": "Consistent lies make no cycle, so they are invisible. An exact order is not achievable in general; I give the most likely one."
     },
     {
      "t": "table",
@@ -681,19 +736,6 @@ window.LOOP_CODING.parts.push({
     {
      "t": "p",
      "text": "**The crux.** Two cases, two tools. If a repeated question can get a different answer, the errors are noise: ask each pair m times and keep the majority, or keep win counts and average them. With 10 percent wrong, the average is right once there are enough repetitions. If the same pair always gets the same answer, repeating changes nothing. Then compare many different pairs and rank each item by how many it wins, its win rate. Only about 10 percent of edges are lies, so every item's win count is mostly right and the errors wash out. A true order has no cycle, so every cycle (a over b over c over a) proves a lie inside it. It does not say which edge, so I fix the ranking, not single edges."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**The conversation, in order.**",
-      "Restate in one breath, then ask the first question: same pair twice, same answer? Then: can I see the values, how exact must it be, what does a call cost, how often is it wrong.",
-      "Brute force: sort with it once. Merge sort is O(n log n) calls, and any comparison sort needs at least that many. One early lie can move an item far, and nothing tells me which answer was the lie.",
-      "The model: items are nodes, each comparison is a directed edge, a true order has no cycles. Draw three items to show it: a cycle accuses all its edges and convicts none.",
-      "Branch on the answer from move 1. Random: vote. Fixed: all pairs, rank by wins, count the cycles.",
-      "Costs and the honest limit: sorting is n log2 n, certainty-seeking is n squared, finding the fewest edges to flip is NP-hard (minimum feedback arc set), so I use wins as the cheap heuristic. A run of lies that agree with each other makes no cycle, and I cannot see it.",
-      "Code only if asked: four small functions and a test on 40 items.",
-      "Take the follow-ups from the table below."
-     ]
     },
     {
      "t": "write",
@@ -894,14 +936,49 @@ window.LOOP_CODING.parts.push({
      "text": "**The problem, as you might hear it.** A hidden tree has n nodes, numbered 1 to n. You can query any node, and the query returns the distance from that node to every other node. You get at most ceil(n / 2) queries. Reconstruct every edge of the tree."
     },
     {
-     "t": "list",
-     "items": [
-      "**Read it before you speak.** One query returns a whole row of distances, not one number. Distance 1 in a row means a neighbour: an edge.",
-      "The hidden structure is a tree, and a tree is bipartite. Colour every node by the parity of its distance from node 1: every edge joins an even node to an odd node.",
-      "The size that decides it: ceil(n / 2) is about half the nodes. In a star, node 1 has n - 1 neighbours, so querying its neighbours breaks the budget at once.",
-      "What is undefined: edges as unordered pairs or with directions (the task says edges, so unordered), labels 1 to n, and that it is surely a tree.",
-      "The trap: breadth-first search, or querying half of each neighbour list. A star breaks the first, a double star breaks the second."
-     ]
+     "t": "skim",
+     "clarify": [
+      [
+       "What does a query return?",
+       "The distance from that node to every node."
+      ],
+      [
+       "Is it a tree?",
+       "Connected, n - 1 edges. Cycles would break the parity trick."
+      ],
+      [
+       "What is the budget?",
+       "At most ceil(n / 2) queries."
+      ],
+      [
+       "Can n be 1 or 2?",
+       "Yes: no edges, or one."
+      ]
+     ],
+     "road": [
+      [
+       "Querying every node is n queries and loses.",
+       "The budget is half that."
+      ],
+      [
+       "Query node 1 and split by parity.",
+       "Even distance on one side, odd on the other."
+      ],
+      [
+       "Every edge joins even to odd.",
+       "Its two ends differ by one in distance from node 1."
+      ],
+      [
+       "Query every node on the smaller side.",
+       "A node reports each neighbour at distance 1, so every edge is found."
+      ],
+      [
+       "Count the queries.",
+       "The smaller side is at most n / 2; with node 1 the total is at most ceil(n / 2)."
+      ]
+     ],
+     "cost": "at most ceil(n / 2) queries · O(n) per query, O(n^2) total · O(n) space",
+     "limit": "The trick needs a tree. In a graph with an odd cycle two neighbours can share a parity."
     },
     {
      "t": "table",
@@ -956,19 +1033,6 @@ window.LOOP_CODING.parts.push({
     {
      "t": "p",
      "text": "**The crux.** Parity. Query node 1 and split every node by the parity of its distance. Every edge joins an even node to an odd node, so every edge has one end on each side, and querying every node on one side finds every edge: that node reports the other end at distance 1. Query the smaller side. The two sides add up to n, so the smaller one is at most n / 2, and counting the query of node 1 the total is at most ceil(n / 2)."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**The conversation, in order.**",
-      "**Restate.** 'One query gives the whole distance row, distance 1 means an edge, and I choose which nodes to query so that every edge has a queried end.'",
-      "**Brute force.** 'Query every node: n queries, every edge found. Twice too many.'",
-      "**Wrong ideas, quickly.** 'BFS from node 1: a star has n - 1 neighbours, so it breaks the budget. Half of each neighbour list: in a double star it can skip a centre and lose all of its leaves.'",
-      "**The idea.** 'The parity of the distance from node 1 splits the nodes in two, every edge crosses it, so one whole side touches every edge. I take the smaller side.'",
-      "**Code.** 'Query 1, split, query the smaller side, read the 1s.' Node 1 is already queried, so it is not asked again.",
-      "**Test on a small case, aloud.** 'Path 1 to 7: even side 1, 3, 5, 7 and odd side 2, 4, 6. The odd side is smaller, so 1 + 3 = 4 queries, and the limit is 4. A star is 1 query.'",
-      "**Follow-ups.** The second table."
-     ]
     },
     {
      "t": "write",
@@ -1103,14 +1167,49 @@ window.LOOP_CODING.parts.push({
      "text": "**The problem, as you might hear it.** Design a data structure with insert(val), remove(val) and getRandom(), each O(1) on average, where getRandom returns any element with equal probability. Then: what changes if duplicates are allowed? Then: what if elements have weights?"
     },
     {
-     "t": "list",
-     "items": [
-      "**Read it before you speak.** Three operations pull in different directions. A hash map finds by value in O(1) but cannot pick a random one. An array picks by index in O(1) but cannot find or delete by value. The answer is both.",
-      "The hidden structure is a dense array: 'uniform' means every slot is equally likely, so there must be no holes.",
-      "What is undefined: what insert and remove return for a repeat or a missing value, what getRandom does when empty, whether O(1) is average or worst case, whether duplicates are allowed, and whether getRandom is uniform over copies or over distinct values.",
-      "The size that decides it: nothing is large here. The point is the cost of each operation, so I say it for each.",
-      "The trap: list.remove(val) or deleting from the middle. It is O(n), because everything after the hole shifts left."
-     ]
+     "t": "skim",
+     "clarify": [
+      [
+       "Duplicates allowed?",
+       "No: this design. Yes: a set of indices per value."
+      ],
+      [
+       "Uniform over copies or values?",
+       "With 5, 5, 7: over copies 5 is twice as likely."
+      ],
+      [
+       "Average or worst-case O(1)?",
+       "A hash map only promises average."
+      ],
+      [
+       "Weights?",
+       "They break O(1): pick the trade."
+      ]
+     ],
+     "road": [
+      [
+       "Neither structure alone works.",
+       "An array gives random access but O(n) remove; a map gives O(1) remove but no random access."
+      ],
+      [
+       "Keep both.",
+       "The array holds the values; the map holds value to index."
+      ],
+      [
+       "Insert.",
+       "Append, record the index."
+      ],
+      [
+       "Remove: swap with the last.",
+       "Copy the last element into the hole, fix its index in the map, pop the end."
+      ],
+      [
+       "getRandom.",
+       "A uniform index over a dense array is uniform over the values."
+      ]
+     ],
+     "cost": "all three O(1) average · space O(n) · weighted: Fenwick O(log n) everything, or alias O(1) sampling with O(n) rebuilds",
+     "limit": "Removing the last element itself: the swap must not write back the entry I am about to delete."
     },
     {
      "t": "table",
@@ -1185,19 +1284,6 @@ window.LOOP_CODING.parts.push({
     {
      "t": "p",
      "text": "**The crux.** A dense array for getRandom, plus a map from value to index so remove finds its slot in O(1). Remove does not shift: it copies the last element into the hole, fixes that element's entry in the map, and pops the end. With duplicates the map holds a set of indices per value, and the move updates that set. Weights break the O(1): there is no simple structure with exact sampling and O(1) updates, so the choice is O(log n) everything (Fenwick) or O(1) sampling with O(n) rebuilds (alias)."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**The conversation, in order.**",
-      "**Restate and ask.** 'Insert, remove and random, all O(1) on average, uniform. What do insert and remove return, and what does getRandom do when empty?'",
-      "**Brute force and its cost.** 'A list: random is O(1), but find and delete by value are O(n). A set: find and delete are O(1), but random needs a copy to a list, O(n).'",
-      "**The idea.** 'Keep both: the list for random, a dict from value to index for find. Delete by swapping with the last element.'",
-      "**Code, small.** About fifteen lines. I say the three steps of remove aloud as I write them: move the last into the hole, fix its index, pop.",
-      "**Test on a small case, aloud.** 'insert 1, 2, 2, remove 1, remove 1, insert 3 gives True, True, False, True, False, True.' Then draws: 30,000 over three values, each near 10,000.",
-      "**Duplicates.** Set of indices per value. Pick any copy with set.pop(). Skip the move when the removed copy is already last.",
-      "**Weights.** Say the two choices and the trade, then stop: it is a discussion."
-     ]
     },
     {
      "t": "write",

@@ -1807,3 +1807,9 @@ Why: the write-ups were long and repetitive with the answer buried; the real rou
 What: interviews/_mercor_statements.py holds one canonical statement per reported coding, algorithms and design question (24): the prompt as the interviewer gives it, deduplicated from all reports into one, with its parts in order, what you are given, what it must do, scale and limits, an example, and what is out of scope. The template draws it as "The question" at the top of each Reported box (rpStatement) and in place of the opening "The problem" paragraph of the Coding section that answers it, so it lives in one place.
 
 Why: the questions were one-liners, sometimes about the question rather than the question; he could not start from them. No charter deviation.
+
+## 2026-11-14: Mercor algorithms answers lead with a skim
+
+What: each of the eight algorithms sections (comparator, paid comparator, exchange rate, friend network, a million IDs, Lost Tree, RandomizedSet, weighted top-k) opens with a new `skim` block, in the style of his own skim page: what to ask first with the answer that changes the algorithm, the roadmap in the order to say it, the cost line and the limit to name first. The 'Read it before you speak' and 'The conversation, in order' lists it replaces were dropped; the branch table, crux, code, follow-ups and push-backs fold under it on the Coding tab. On the Reported tab, Show the approach draws the skim and Show the full solution the rest. His page is copied to private/mercor-algorithms.html (gitignored) and linked at the top of the algorithms round.
+
+Why: the full write-ups were right but slow to skim before the round. No charter deviation.

@@ -140,14 +140,49 @@ window.LOOP_CODING.parts.push({
      "text": "**The problem, as you might hear it.** You can see a social network only through an API: friends(user) returns that user's friends, each call is a network round trip, and the API has a restriction on it. Reach the part of the network you need with as few calls as possible. Reported variants: everyone within k hops of a user (PracHub, 25 Sep 2026); the shortest path between two users, at most k hops."
     },
     {
-     "t": "list",
-     "items": [
-      "**Read it before you speak.** The input is a graph you cannot see, only probe. The cost is calls, not CPU: the question is which users you ever need to ask about.",
-      "The hidden structure is a layered search. A call on user u names all of u's friends, so you learn a user one hop further out without asking about that user.",
-      "What is undefined: what a call returns (all friends, a page, a batch), what 'restricted' means (a rate limit, a budget, errors), a set within k hops or a path between two users, and whether friendship goes both ways.",
-      "The size that decides it: with about 12 friends each, every hop multiplies the users by about 12. One ball of radius 4 is the whole network; two balls of radius 2 are a few hundred users.",
-      "The trap: asking about the outermost layer. It is the biggest layer, and for the set within k hops you do not need it."
-     ]
+     "t": "skim",
+     "clarify": [
+      [
+       "What does one call return?",
+       "All friends, one page of them, or a batch of users: it sets the cost unit."
+      ],
+      [
+       "Everyone within k hops, or a path between two users?",
+       "Two different searches."
+      ],
+      [
+       "Do friendships go both ways?",
+       "If not, an edge seen from one side does not count from the other."
+      ],
+      [
+       "Rate limit or total budget?",
+       "A limit paces calls; a budget caps them and I return best-so-far."
+      ]
+     ],
+     "road": [
+      [
+       "The API is the graph.",
+       "Every call expands one user. There is no adjacency list for free."
+      ],
+      [
+       "Within k hops: BFS with a depth cap.",
+       "Call every user below distance k and no one else; users at k are named by those lists."
+      ],
+      [
+       "Cache every call.",
+       "A fetched list is never fetched twice, across queries too."
+      ],
+      [
+       "Path between two users: bidirectional BFS.",
+       "Expand the smaller frontier, meet in the middle. Two balls of radius d / 2 are far smaller than one of radius d."
+      ],
+      [
+       "Plumbing last.",
+       "Pages, rate limits and resume wrap the one call."
+      ]
+     ],
+     "cost": "within k one call per user below distance k · plain path about b^d calls · bidirectional about 2 b^(d/2) · measured 81 calls against 1,806",
+     "limit": "One celebrity can spend the whole budget in one expansion: I cap or defer very high-degree users and say so."
     },
     {
      "t": "table",
@@ -227,19 +262,6 @@ window.LOOP_CODING.parts.push({
     {
      "t": "p",
      "text": "**The crux.** Two ideas. First, never ask about a user whose list you do not need. For the set within k hops that is every user below distance k and no one else: the users at distance k are named by those lists, and any user below k may have a friend at k that only they can tell you about, so no algorithm that has only friends(u) asks fewer. Second, for a path between two users a ball grows about 12 times a hop, so two balls of half the radius are far smaller than one ball of the full radius. Everything else (pages, rate limits, resume) is plumbing around one call."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**The conversation, in order.**",
-      "**Restate and ask.** 'The only view of the graph is friends(u), each call costs, and I want the set within k hops, or a path? What does a call return, is friendship both ways, what is the restriction?' The table above is what I do with the answers.",
-      "**Brute force and its cost.** 'BFS from s with a seen set. Each user is asked once, so calls equal users reached: about 12 to the d.'",
-      "**The better idea.** For the set: stop asking at distance k, and say why that is the minimum. For a path: two balls, smaller frontier first.",
-      "**Restrictions, as they name them.** Pages, token bucket, backoff with jitter, budget, batch. Each wraps the call, so the search does not change.",
-      "**Code, small.** within_k is a layered loop. degrees is two dicts, two frontiers and a level at a time. The exit: after a whole level the smallest total is exact.",
-      "**Test on a small case, aloud.** a-b, a-c, b-d, c-d, d-e: a to e is 3, and None with k = 2. Then the numbers from a larger run.",
-      "**Follow-ups.** The second table. Say what changes and what it costs."
-     ]
     },
     {
      "t": "write",
@@ -434,14 +456,49 @@ window.LOOP_CODING.parts.push({
      "text": "**The problem, as you might hear it.** A service receives user IDs, or usernames that must be unique, and for each one must answer 'is this new?' and record it. A million of them. Balance latency, memory and accuracy. Reported variants: check and insert for a million user IDs (PracHub, 4 Oct 2026); unique usernames, first with memory to spare, then with the names on disk."
     },
     {
-     "t": "list",
-     "items": [
-      "**Read it before you speak.** Two operations, one step: 'is it new' and 'record it' must be a single atomic action. Check, then insert, is the bug.",
-      "The hidden structure is a set. The real question is what each mistake costs: a false 'new' makes a duplicate user; a false 'seen' costs a read if you confirm it, and a customer if you do not.",
-      "What is undefined: dense integers or strings, whether two spellings are one name (case, Unicode), one process or many servers, memory or disk, deletes and reuse, whether it must survive a restart.",
-      "The size that decides it: a million ids is small. A Python set holds them in about 62 MB, a Bloom filter at 1 percent in 1.2 MB, a bitmap of dense integers in 125 KB. A billion is where memory stops.",
-      "The trap: reaching for a Bloom filter first. It is a speed-up in front of the exact record, never the record. 'Not in it' is certain; 'in it' means maybe."
-     ]
+     "t": "skim",
+     "clarify": [
+      [
+       "Must the answer be exact?",
+       "Yes: an exact store. A rare false 'seen' is fine: a Bloom filter in front."
+      ],
+      [
+       "What are the ids?",
+       "Dense integers fit a bitmap; usernames need normalising first (case, Unicode)."
+      ],
+      [
+       "One process or many servers?",
+       "One: a lock. Many: a unique key in the database."
+      ],
+      [
+       "Does it fit in memory, survive a restart?",
+       "No: names on disk, a sorted index or LSM."
+      ]
+     ],
+     "road": [
+      [
+       "Exact and in memory: a hash set.",
+       "A million ids is tens of MB; dense integers fit a bitmap."
+      ],
+      [
+       "Correctness is one atomic add-if-absent.",
+       "Never check, then insert: two callers both see 'new'."
+      ],
+      [
+       "A Bloom filter is only a speed-up.",
+       "'No' is certain, so a new id skips the exact store; 'maybe' still asks it."
+      ],
+      [
+       "Size the filter.",
+       "9.6 bits and 7 hashes per id give 1 percent: 1.2 MB per million."
+      ],
+      [
+       "As a service.",
+       "Shard by hash of the id, a unique key per shard, the filter in front to skip misses."
+      ]
+     ],
+     "cost": "check and insert O(1) average, one lock · Bloom k hashes per id · memory: the set plus 1.2 MB per million ids",
+     "limit": "A Bloom filter cannot delete. Ids that are removed and reused need a counting filter or a rebuild."
     },
     {
      "t": "table",
@@ -516,19 +573,6 @@ window.LOOP_CODING.parts.push({
     {
      "t": "p",
      "text": "**The crux.** One atomic add-if-absent is the correctness: a lock in one process, a unique key in a database across servers. The Bloom filter is only a speed-up in front. 'No' is certain, so a new id skips the exact record 99 times in 100; 'maybe' still asks the record. It never reports a duplicate as new, because add only sets bits and never clears them. Size it by bits per id: 9.6 bits and 7 hashes give 1 percent, so a million ids take 1.2 MB."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**The conversation, in order.**",
-      "**Restate and ask.** 'Check and insert a million ids, many callers. Exact or approximate? Integers or strings? One process or many? Memory or disk? Are ids deleted?'",
-      "**Brute force.** 'A hash set and a lock. A million ids is about 62 MB and every check is O(1). That is the answer unless a number says otherwise.'",
-      "**Make it atomic.** 'Check then insert lets two threads both say new. One step under a lock, or a unique key.'",
-      "**Memory is tight.** 'A Bloom filter in front of the exact record: no false new, a small false maybe, confirmed against the record.' Quote 9.6 bits for 1 percent.",
-      "**Code, small.** normalise, a Bloom of fifteen lines, check_and_insert under the lock.",
-      "**Test on a small case, aloud.** Ana, ANA, 'ana ' and a fullwidth A are one name. Eight threads, 5,000 ids, 5,000 'new'. Fresh ids: about 1 percent say maybe.",
-      "**Follow-ups.** The second table: deletes, two servers, a billion ids."
-     ]
     },
     {
      "t": "write",
@@ -733,15 +777,49 @@ window.LOOP_CODING.parts.push({
      "text": "**The problem, as you might hear it.** You have a pile of candidates, each with skills and levels, and a job with a weight on each skill. Return the best k. Reported (JobMentis question bank, Mercor onsite coding): the top k candidates by a weighted skill score from resume JSON, and whether a candidate matches a job's mandatory and optional skills. No report gives the follow-ups, so ties, streaming and changing weights below are the pushes the problem leads to, not reported wording."
     },
     {
-     "t": "list",
-     "items": [
-      "**Read it before you speak.**",
-      "The input is a set of candidates, each a map of skill to level, plus a weight per skill. The score is a sum of weight times level.",
-      "The structure is a selection problem, not a sort: I need k of n, and I never need the order of the other n - k.",
-      "Undefined: mandatory versus optional skills, ties, k bigger than n, negative or missing weights, whether the data is a stream.",
-      "The sizes that decide it are n and k. n in the millions and k of 10 points to a heap of k, not a sort.",
-      "The trap: a max-heap puts the best at the root, which tells you nothing about who to drop. The root must be the worst of the kept k."
-     ]
+     "t": "skim",
+     "clarify": [
+      [
+       "How big are n and k?",
+       "k small, n large: a heap. k close to n: sort."
+      ],
+      [
+       "What is a mandatory skill?",
+       "A filter, the candidate is out; or only a bonus."
+      ],
+      [
+       "What about ties?",
+       "Earlier arrival wins, so the output is the same every run."
+      ],
+      [
+       "A stream, or changing weights?",
+       "Stream: the heap holds. Weights change: rescore."
+      ]
+     ],
+     "road": [
+      [
+       "Score every candidate once.",
+       "The weighted sum over skills, after the mandatory filter."
+      ],
+      [
+       "A min-heap of at most k.",
+       "Its root is the worst of the best k."
+      ],
+      [
+       "Push or replace.",
+       "Not full: push. Otherwise replace the root only if the candidate beats it."
+      ],
+      [
+       "Ties ride on the tuple.",
+       "(score, minus arrival, id): higher score first, then the earlier arrival."
+      ],
+      [
+       "Sort the k at the end.",
+       "Across machines: each shard keeps its k, one heap merges them."
+      ]
+     ],
+     "cost": "O(n log k) time, O(k) space · sorting everyone O(n log n) · shard merge shards x k items",
+     "limit": "Changing weights invalidate every score: the heap is rebuilt, not patched."
     },
     {
      "t": "table",
@@ -816,18 +894,6 @@ window.LOOP_CODING.parts.push({
     {
      "t": "p",
      "text": "**The crux.** Keep a min-heap of at most k items so its root is the worst of the best k. For each candidate, score it. If the heap is not full, push. Otherwise, if the candidate beats the root, replace the root. At the end, sort the k items. That is O(n log k) time and O(k) space, against O(n log n) to sort everyone. The tie rule rides on the tuple order: (score, minus arrival, id), so a higher score wins and, at equal scores, the earlier arrival wins."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**The conversation, in order.**",
-      "Restate and ask: n and k, how the score works, mandatory versus optional, ties, a stream or fixed data.",
-      "Brute force: score everyone, sort, take k. O(n log n). Fine for thousands, wasteful when k is 10 and n is a million.",
-      "The better idea: a min-heap of k. The root is the worst of the kept, so it is what a new candidate must beat.",
-      "Code top_k, a few lines. Say the tuple, say why strictly better.",
-      "Test on a small case: three candidates with the same score, k = 2, the first two come back. Then compare against a full sort on many.",
-      "Follow-ups from the table: a changing weight, a changing candidate, shards, a stream."
-     ]
     },
     {
      "t": "write",

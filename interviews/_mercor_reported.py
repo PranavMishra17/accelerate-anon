@@ -158,7 +158,7 @@ REPORTED = {
                [L("Coding 7: what the reviewer asks", C + "onsite-review")], [BLIND_AUG, ACE]),
          ]},
         {"id": "algo", "title": "Algorithms: the talk round",
-         "blurb": "30 minutes, discussion only or a whiteboard. Correctness, then complexity, then the cost under a constraint: API calls, comparator calls, wall-clock, memory. The warm-up on a fast sort and the slowest possible sort is on [Rounds](#/rounds), round 2: bogosort is expected O(n * n!).",
+         "blurb": "**Skim it first:** [Nine problems, one page each](../private/mercor-algorithms.html), your own page, kept on this machine only. Each box below opens the same way: what to ask, the roadmap in the order you say it, the cost and the limit; the full working and code fold under it. 30 minutes, discussion only or a whiteboard. Correctness, then complexity, then the cost under a constraint: API calls, comparator calls, wall-clock, memory. The warm-up on a fast sort and the slowest possible sort is on [Rounds](#/rounds), round 2: bogosort is expected O(n * n!).",
          "items": [
              Q("m-algo", "The method: how to read any new algorithms question, find the clarifying questions, branch on the answers, and run the 30 minutes.",
                "read first", "That you see the hidden structure, ask the questions that change the algorithm, and say the cost of every idea.",

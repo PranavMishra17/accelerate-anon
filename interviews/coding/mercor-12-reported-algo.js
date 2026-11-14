@@ -40,15 +40,49 @@ window.LOOP_CODING.parts.push({
      "text": "**The problem, as you might hear it.** There is a hidden order over n items. You have a call before(a, b) that is right 90 percent of the time and costs one cent. Sort the items, or find the best one, and tell me the algorithm, how accurate it is and what it costs. Reported variants: part 1 is one call per comparison (what is fatal, how does accuracy change as n grows), part 2 repeats and votes to get the same accuracy for fewer calls, and the follow-up is what happens if the same pair always gets the same answer."
     },
     {
-     "t": "list",
-     "items": [
-      "**Read it before you speak.**",
-      "Money turns it into a budget problem. Calls are the currency, and the budget picks the algorithm.",
-      "Is the error random (a fresh coin each ask) or fixed (same pair, same answer)? Random: voting works. Fixed: voting buys nothing, see chapter 3.",
-      "Accurate has four meanings and they cost very different amounts: the whole list exact, the best one, the top k, or most pairs in order.",
-      "The knobs are n and delta, the chance of any mistake I will accept. A union bound turns delta into a per-comparison error.",
-      "The trap: 90 percent per call is not 90 percent for the sort. With one vote, the chance that all 384 comparisons for n = 64 are right is 0.9 to the power 384, far below one in a billion."
-     ]
+     "t": "skim",
+     "clarify": [
+      [
+       "Random or repeatable errors?",
+       "Random: a fresh coin each ask, so voting works. Repeatable: back to ranking by wins."
+      ],
+      [
+       "Accurate means what?",
+       "The whole order, the best one, or the top k. Each needs a different number of correct comparisons."
+      ],
+      [
+       "What chance of any mistake is allowed?",
+       "A number like 5 percent. It sets the votes per comparison."
+      ],
+      [
+       "Is 90 percent the same for every pair?",
+       "If close items are worse, spend the votes there."
+      ]
+     ],
+     "road": [
+      [
+       "One call per comparison fails as n grows.",
+       "A sort makes about n log2 n decisions; at 10 percent each, some are wrong."
+      ],
+      [
+       "Vote to cut the error.",
+       "A majority of m asks is a binomial tail: 3 asks give 0.028, 5 give 0.0086, 15 give 0.000034."
+      ],
+      [
+       "Union bound sets m.",
+       "With c decisive comparisons, make each wrong with chance at most delta / c."
+      ],
+      [
+       "Count the decisive comparisons.",
+       "A full sort needs about n log2 n, the best item about log2 n. At n = 64: 4,992 cents against 441."
+      ],
+      [
+       "Spend where it matters.",
+       "For top k, vote hardest near the boundary."
+      ]
+     ],
+     "cost": "sort n ceil(log2 n) comparisons x m votes · best item n - 1 matches x m · each extra pair of votes cuts the error by about a third",
+     "limit": "Voting needs fresh errors. If the same pair always answers the same, more cents buy nothing."
     },
     {
      "t": "table",
@@ -118,19 +152,6 @@ window.LOOP_CODING.parts.push({
     {
      "t": "p",
      "text": "**The crux.** Voting turns a 10 percent error into a tiny one, and the exact chance is a binomial tail. A majority of 1 ask is wrong 0.1 of the time, 3 asks 0.028, 5 asks 0.0086, 15 asks 0.000034. Each extra pair of votes cuts the error by about a third. Then decide which comparisons must be right. A union bound says: if each of c decisive comparisons is wrong with chance at most delta divided by c, some one is wrong with chance at most delta. A full sort has about n log2 n of them. The best item has only about log2 n. That gap, 4,992 cents against 441 at n = 64, is the answer to the budget question."
-    },
-    {
-     "t": "list",
-     "items": [
-      "**The conversation, in order.**",
-      "Restate and ask: random or fixed errors, what accurate means, what chance of a mistake I may accept, and how big n is.",
-      "Brute force: one call per comparison, merge sort, n log2 n cents (384 at n = 64). Cheap, but almost never exactly sorted.",
-      "The better idea: vote m times per comparison and take the majority. Show the binomial numbers: 0.1, 0.028, 0.0086.",
-      "Plan for each meaning of accurate: m from delta divided by the decisive comparisons, then cents are comparisons times m.",
-      "Code only if asked: the error formula, votes_needed, two planners, a voting comparison and a bracket.",
-      "Check it by running it: 1,000 runs of the bracket at the planned votes, measured accuracy against the plan.",
-      "Follow-ups: stop voting early on easy pairs, repeatable errors, a fixed budget."
-     ]
     },
     {
      "t": "write",
