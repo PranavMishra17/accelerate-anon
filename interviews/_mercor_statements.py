@@ -38,34 +38,11 @@ STATEMENTS = {
   ]
  },
  "r-scheduler": {
-  "ask": "You are given a set of tasks and, for each task, the tasks that must finish before it can start. Write run_order(deps) that returns an order in which every task can run. If the dependencies contain a loop, raise an error that names the loop and run nothing. If a task needs something that is not a task, raise an error naming both. You have 45 minutes, you work alone, and there is no one to ask. When the first part works, a second constraint is added; write which one you assume at the top of the file, and build it on the same code rather than rewriting.",
+  "ask": "Write run_order(deps). deps maps each task name to the list of tasks that must finish before it starts, for example {\"build\": [\"lint\", \"fetch\"], \"lint\": [\"fetch\"], \"fetch\": []}. Return a list with every task once, each after everything it needs. If the dependencies contain a loop, raise an error that names the loop. If a task needs something that is not in deps, raise an error naming both. Up to 10,000 tasks. Standard library only; put your own asserts at the bottom of the file.",
   "parts": [
-   "Part 1: run_order(deps). A valid order, a clear error for a loop, a clear error for a need that is not a task.",
-   "Part 2 (added after part 1 works): each task takes some number of days. Return the total time to finish everything and the slowest chain.",
-   "Other second constraints the interviewer may use instead: a limited number of workers, priorities among ready tasks, or tasks that fail and are retried."
+   "Part 2, once part 1 runs: each task also takes a number of days, given as days = {\"build\": 2, ...}. Tasks with nothing between them can run at the same time. Return the total days to finish everything and the chain of tasks that sets that total."
   ],
-  "given": [
-   "deps: dict of task name (str) to the list of task names it needs first; a need may be listed twice",
-   "days: dict of task name to a non-negative int (part 2)",
-   "optional priority: dict of task name to a number, lower goes first among tasks that are ready together"
-  ],
-  "must": [
-   "Every task appears once, after everything it needs.",
-   "A loop, including a task that needs itself, raises an error naming the loop, before anything runs.",
-   "A need that is not a task raises an error naming the task and the need.",
-   "Tasks with no links still appear; empty input gives an empty order.",
-   "Where several tasks are ready together, the same order every run.",
-   "Standard library only, your own asserts at the bottom."
-  ],
-  "scale": [
-   "Up to about 10,000 tasks, so no recursion.",
-   "45 minutes, alone, nothing to ask.",
-   "State the complexity in a comment."
-  ],
-  "example": "deps: build needs [lint, fetch]; lint needs [fetch]; test needs [build]; docs needs []; fetch needs []\norder: docs, fetch, lint, build, test (any order with fetch, lint, build, test in that sequence is valid)\n\ndeps: a needs [b]; b needs [c]; c needs [a]; d needs []\nresult: CycleError naming a -> b -> c -> a, and nothing runs",
-  "out": [
-   "Actually executing the tasks, unless the second part is the retry version."
-  ]
+  "example": "run_order({\"build\": [\"lint\", \"fetch\"], \"lint\": [\"fetch\"], \"test\": [\"build\"], \"fetch\": []})\n-> [\"fetch\", \"lint\", \"build\", \"test\"]\n\nrun_order({\"a\": [\"b\"], \"b\": [\"c\"], \"c\": [\"a\"]})\n-> error: loop a -> b -> c -> a\n\nrun_order({\"a\": [\"x\"]})\n-> error: a needs x, which is not a task\n\nPart 2, days = {\"fetch\": 1, \"lint\": 1, \"build\": 2, \"test\": 3}\n-> 7 days, chain fetch -> lint -> build -> test"
  },
  "r-fileparse": {
   "ask": "You are given a text file that lists skills with the skills they build on, then a line with ---, then experts with the skills they hold. Read the file and build it up in four parts, each runnable before you start the next. You have 60 minutes, you work alone, and there is no one to ask. Treat it as a small product on a real file: bad lines happen, and the program must say what it did with them.",
