@@ -665,3 +665,28 @@ STATEMENTS = {
   ]
  }
 }
+
+STATEMENTS["k-io"] = {
+ "ask": "Write solution.py from a blank file, in 15 minutes, with no search. It reads referrals.csv, whose first line is the header referrer,candidate. Skip any row with a missing name. Refuse a self-referral, and refuse a second referrer for a candidate who already has one. Then print each referrer and how many people sit under them at any depth, largest first, one per line. It must run both ways: with the file as an argument, and with the file piped in.",
+ "parts": [
+  "Before you start: read Coding 7, section 1b (five minutes), then close it. In your editor, open a folder holding referrals.csv (the example below), an empty solution.py and test_solution.py.",
+  "Minute 0 to 5: open_input(argv) returns the file named in argv[1], or sys.stdin when there is none. load(stream) loops over csv.DictReader(stream) and returns (rows, skipped).",
+  "Minute 5 to 10: build(rows) refuses the bad edges and returns (children, parent, refused). reach(children, start) counts the people under start with a BFS.",
+  "Minute 10 to 15: main(argv) prints one stderr line, 'read N rows, skipped S, refused R', then each referrer and their reach. Under if __name__ == \"__main__\": put asserts on a six-line sample held in io.StringIO, then call main(sys.argv).",
+  "Then run the three commands below. If something fails, read the traceback from the bottom."
+ ],
+ "given": [
+  "referrals.csv: a header row referrer,candidate, then one referral per row; names can have spaces around them, and some rows are bad.",
+  "Run commands: python solution.py referrals.csv, then Get-Content referrals.csv | python solution.py (PowerShell has no <), then python test_solution.py."
+ ],
+ "must": [
+  "Standard library only: csv, sys, io, collections.",
+  "Strip every name. A row with an empty referrer or candidate is skipped and counted.",
+  "Counts go to stderr and the answer to stdout, so > out.txt captures only the answer.",
+  "Ties in the output break by name, so the output is the same every run."
+ ],
+ "scale": [
+  "15 minutes, no search, no AI. python -c \"import csv; help(csv.DictReader)\" is allowed: it is not a search."
+ ],
+ "example": "referrals.csv\nreferrer,candidate\nana,ben\nana,cy\nben,dee\nben,eli\n,eve\ncy,cy\ndee,ben\ncy,fay\nfay,gus\ngus,hal\n ivy , jo\n\nstderr: read 10 rows, skipped 1, refused 2\nstdout:\nana 7\ncy 3\nben 2\nfay 2\ngus 1\nivy 1"
+}
