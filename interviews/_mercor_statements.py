@@ -45,35 +45,14 @@ STATEMENTS = {
   "example": "run_order({\"build\": [\"lint\", \"fetch\"], \"lint\": [\"fetch\"], \"test\": [\"build\"], \"fetch\": []})\n-> [\"fetch\", \"lint\", \"build\", \"test\"]\n\nrun_order({\"a\": [\"b\"], \"b\": [\"c\"], \"c\": [\"a\"]})\n-> error: loop a -> b -> c -> a\n\nrun_order({\"a\": [\"x\"]})\n-> error: a needs x, which is not a task\n\nPart 2, days = {\"fetch\": 1, \"lint\": 1, \"build\": 2, \"test\": 3}\n-> 7 days, chain fetch -> lint -> build -> test"
  },
  "r-fileparse": {
-  "ask": "You are given a text file that lists skills with the skills they build on, then a line with ---, then experts with the skills they hold. Read the file and build it up in four parts, each runnable before you start the next. You have 60 minutes, you work alone, and there is no one to ask. Treat it as a small product on a real file: bad lines happen, and the program must say what it did with them.",
+  "ask": "skills.txt lists skills, one per line as name,prerequisite;prerequisite, then a line ---, then experts as name,skill;skill (the file is in the example below). Write a program that reads this file and answers questions about it. Lines may be blank, start with # (a comment), or be bad: report what you did with every line you skip. Python, standard library only, write your own tests. 60 minutes. Build it in four parts; each must run before you start the next.",
   "parts": [
-   "Part 1: parse(text). Read the catalog and the experts, skip blank lines and comments, and skip and count bad lines (an empty name, a repeated name).",
-   "Part 2: build the skill graph. Reject a prerequisite that is not in the catalog, and reject a loop, naming it.",
-   "Part 3: for a skill, answer what it requires (every prerequisite at any depth), who needs it, and its level (how deep its chain of prerequisites goes).",
-   "Part 4: given a candidate who lists some skills, return the experts who can review them: those who hold a skill the candidate lists or one that builds on it."
+   "Part 1: parse(text) returns (prereqs, experts, bad): two dicts of name to list of skills, and the number of bad lines. A bad line has no name, or repeats a name already seen.",
+   "Part 2: build the skill graph. If a skill builds on something that is not in the list, raise an error naming both. If the skills form a loop, raise an error naming the loop.",
+   "Part 3: requires(skill) returns every skill it builds on, at any depth, sorted. needs(a, b) says whether b requires a. level(skill) is the length of its longest chain of prerequisites (python 0, django 1, api 2).",
+   "Part 4: reviewers(candidate_skills) returns, sorted, the experts who can review a candidate: an expert covers a skill if they hold it or hold a skill that builds on it, and must cover every skill the candidate lists."
   ],
-  "given": [
-   "text: the whole file as one string",
-   "catalog lines: skill,pre1;pre2 (prerequisites separated by semicolons, may repeat on a line)",
-   "a line containing only ---, then expert lines: name,skill1;skill2",
-   "lines starting with # and blank lines are comments"
-  ],
-  "must": [
-   "Bad input is counted and reported, never a crash.",
-   "A prerequisite that is not in the catalog raises an error naming both skills.",
-   "A loop raises an error that names it.",
-   "Queries return sorted lists, so output is the same every run.",
-   "Standard library only, your own asserts at the bottom; no tests are provided."
-  ],
-  "scale": [
-   "60 minutes, alone, nothing to ask.",
-   "Read all four parts first, so one data structure serves them all.",
-   "Pace matters: ship part 1 working before part 2, and leave a note for anything you cut."
-  ],
-  "example": "file:\n  api,django;postgres\n  django,python;http\n  postgres,sql\n  python,\n  http,\n  sql,\n  tuning,postgres\n  ---\n  ana,api\n  bo,tuning;django\n  cy,python\n  dee,api;tuning\nrequires(api): django, http, postgres, python, sql\ncandidate [django, postgres] can be reviewed by: ana, bo, dee\n\nfile with: a,b / b,c / c,a\nresult: CycleError: a -> b -> c -> a",
-  "out": [
-   "Reading from stdin or arguments beyond what you need to run the file."
-  ]
+  "example": "skills.txt\npython,\nsql,\ndjango,python\napi,django;sql\n---\nana,api\ncy,python\n\nrequires(\"api\")          -> [\"django\", \"python\", \"sql\"]\nneeds(\"python\", \"api\")  -> True\nlevel(\"api\")             -> 2\nreviewers([\"django\"])    -> [\"ana\"]\n\na,b / b,c / c,a  -> error: loop a -> b -> c -> a\na,zz             -> error: a builds on zz, which is not a skill"
  },
  "r-carpark": {
   "ask": "Cars arrive one at a time on a one-way street with spots numbered 0 to n-1. Each car goes to its preferred spot; if that spot is taken, it keeps driving forward until it finds a free one. If it runs past the last spot, it does not park. Write park(n, prefs) that returns the spot each car got (None if it could not park), and all_park(n, prefs) that says whether every car parked. You have 45 minutes, no AI, and you write your own checks.",
