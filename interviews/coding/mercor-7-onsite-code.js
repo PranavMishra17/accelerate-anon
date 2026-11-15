@@ -3401,15 +3401,45 @@ window.LOOP_CODING.parts.push({
      "text": "**The problem, as you might hear it.** \"Here is your code. It has a cache or a memoizer around a slow call. Make it thread-safe. Where does the lock go?\" They want the exact race named, not only the word lock.\n\nReported variants: a memoizer decorator; a cache with expiry; the same across several processes."
     },
     {
-     "t": "list",
-     "items": [
-      "**Read it before you speak.**",
-      "**The race** is check then act. Two threads see a miss, both compute, both write. A single dict read or write is fine in CPython; the two steps together are not.",
-      "**The lock protects the decision, not the call.** A lock held during the slow call blocks every other key.",
-      "**What is undefined:** one process or many, how long the compute takes, how often the same key repeats, whether the value can be computed twice.",
-      "**The trap** is one global lock around everything. It is correct, and it is also serial.",
-      "**The second trap** is the missing second check: after you win the key lock, another thread may already have stored the value."
-     ]
+     "t": "skim",
+     "clarify": [
+      [
+       "Threads or processes?",
+       "Threads: locks in memory. Processes: an atomic add-if-absent in a shared store."
+      ],
+      [
+       "Can the slow call fail?",
+       "Then store nothing, so the next caller retries."
+      ],
+      [
+       "Is a duplicate call harmful, or only wasteful?",
+       "A model call that costs money: run it once per key."
+      ]
+     ],
+     "road": [
+      [
+       "Name the race.",
+       "Two threads both see the key missing, both run fn, both write. Check then act with no lock."
+      ],
+      [
+       "One big lock is correct but slow.",
+       "Holding it during fn makes every key wait for every other key."
+      ],
+      [
+       "A short guard for the dicts.",
+       "self.guard protects vals and locks only, and is never held during fn."
+      ],
+      [
+       "A lock per key for the slow call.",
+       "locks.setdefault(key, Lock()) under the guard; one thread per key computes, the rest wait on that key only."
+      ],
+      [
+       "Check again inside the key lock.",
+       "Another thread may have finished while you waited; return its value instead of computing."
+      ]
+     ],
+     "cost": "one fn call per key · different keys in parallel · a lock object per key (drop it after the value is stored if keys are many)",
+     "limit": "Locks live in one process. Across servers the answer is an atomic set-if-absent in Redis or a unique row, not a threading.Lock."
     },
     {
      "t": "table",
@@ -3593,15 +3623,45 @@ window.LOOP_CODING.parts.push({
      "text": "**The problem, as you might hear it.** \"Your code issues a refund (or a payment). A client retry, a double click or a crashed worker can make it run twice. Fix it.\" The answer is not a lock. It is making the second call a safe replay.\n\nReported variants: a refund endpoint; a queue consumer that gets the same message twice; a payment retried after a timeout."
     },
     {
-     "t": "list",
-     "items": [
-      "**Read it before you speak.**",
-      "**The input** is a request that moves money, sent by a client that cannot tell whether the first try worked.",
-      "**The hidden structure** is at-least-once delivery. Retries are normal, so the receiver must make a repeat harmless.",
-      "**What is undefined:** who makes the key, how long keys are kept, what a key reused with different data means, whether the gateway also dedupes.",
-      "**The trap** is check then insert: read, see nothing, insert. Two callers do it at once. The unique constraint, not the check, is the guard.",
-      "**The second trap** is the crash between moving the money and recording it."
-     ]
+     "t": "skim",
+     "clarify": [
+      [
+       "Does the gateway accept an idempotency key?",
+       "Most do: pass the same key, and a repeat moves no money."
+      ],
+      [
+       "What must a repeat return?",
+       "The first result, the same reference."
+      ],
+      [
+       "Can the same key carry a different request?",
+       "No: reject it, it is a client bug."
+      ]
+     ],
+     "road": [
+      [
+       "Name the two failures.",
+       "A retry calls the gateway again; a crash between gateway and INSERT leaves money moved with no record."
+      ],
+      [
+       "Write the intent first.",
+       "INSERT a row (key, order, amount, 'pending') and commit before any money moves."
+      ],
+      [
+       "The unique key is the lock.",
+       "The second INSERT with the same key fails with IntegrityError: the database decides who owns the request, atomically."
+      ],
+      [
+       "Replay or finish.",
+       "Read the row: different request, reject; 'done', return its ref; 'pending', call the gateway with the same key, then mark it done."
+      ],
+      [
+       "Where the guarantee comes from.",
+       "The unique constraint plus the gateway's own key. Exactly once is at-least-once plus a safe replay."
+      ]
+     ],
+     "cost": "one row per refund · one extra read per call · no lock held across the network call",
+     "limit": "If the gateway ignores keys, a crash after the transfer can still pay twice: then reconcile against the gateway's records before retrying."
     },
     {
      "t": "table",

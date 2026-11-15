@@ -84,53 +84,22 @@ STATEMENTS = {
   ]
  },
  "r-review-cache": {
-  "ask": "You wrote a memoizer for a slow function. Take this version of it. Two threads call get(1) at the same moment. How many times does the slow function run, and what is the bug? Make it safe for many threads, so the slow function runs once per key, without making calls for different keys wait for each other. Where does the lock go, and what does it protect?",
+  "ask": "Here is a memoizer around a slow function (the code is below). It now runs in a web server with many threads. Is it safe? Make it thread-safe: the slow function must run once per key even when many threads ask at once, and calls for different keys must not wait for each other. Tell me where each lock goes and what it protects. Talk it through, then write the fix. About 15 minutes.",
   "parts": [
-   "Part 1: name the race in the code below.",
-   "Part 2: fix it with a lock, and say how long the lock is held.",
-   "Follow-up: a failing call, expiry, a cache that grows without bound, and several processes instead of threads."
+   "Then: the slow function raises. What is stored, and what does the next caller see?",
+   "Then: entries must expire after a time, or the cache must not grow without bound.",
+   "Then: it runs in several processes or servers, not threads."
   ],
-  "given": [
-   "a class Memo with get(key), shown below, written without any lock"
-  ],
-  "must": [
-   "The slow function runs once per key even with many threads asking at once.",
-   "Calls for different keys run in parallel.",
-   "If the slow function raises, nothing is stored and the next caller retries."
-  ],
-  "scale": [
-   "30-minute review after the solo hour.",
-   "About 20 minutes on this question."
-  ],
-  "example": "def get(self, key):\n    if key in self.vals:          # two threads both miss here\n        return self.vals[key]\n    v = self.fn(key)              # both compute\n    self.vals[key] = v            # both write\n    return v\n\n8 threads ask for key 1: fn runs 8 times.",
-  "out": [
-   "Eviction policy, unless the reviewer asks."
-  ]
+  "example": "The code you are shown:\n\nclass Memo:\n    def __init__(self, fn):\n        self.fn = fn          # a slow function, e.g. a model call\n        self.vals = {}\n\n    def get(self, key):\n        if key in self.vals:\n            return self.vals[key]\n        v = self.fn(key)\n        self.vals[key] = v\n        return v\n\nWhat happens now: 8 threads call get(1) at once.\nAll 8 miss, all 8 run fn(1), all 8 write. fn ran 8 times."
  },
  "r-review-refund": {
-  "ask": "Look at this refund function. The caller retries on a timeout, so it can be called twice with the same request, and the process can die after the gateway moved the money but before you wrote it down. As written, what happens in each case? Change it so the money moves once, and tell me where the guarantee comes from.",
+  "ask": "Here is the refund function from your service (the code is below). The caller retries when a request times out, so the same refund can arrive twice. The process can also die after the gateway moved the money and before the row is written. What happens in each case? Fix it so the money moves once, and tell me where that guarantee comes from. About 15 minutes.",
   "parts": [
-   "Part 1: say what goes wrong on a repeat call and on a crash after the transfer.",
-   "Part 2: make it idempotent: what you store, and where uniqueness is enforced.",
-   "Follow-up: the same key arrives with a different amount, two requests with the same key arrive at the same time, and the gateway call times out with the result unknown."
+   "Then: the same key arrives with a different amount.",
+   "Then: two requests with the same key arrive at the same moment.",
+   "Then: the gateway call times out and you do not know if the money moved."
   ],
-  "given": [
-   "refund(db, key, order_id, amount, gateway), shown below, with no protection against a repeat",
-   "gateway(key, amount) moves the money and returns a reference; a real one also ignores a repeated key"
-  ],
-  "must": [
-   "Calling twice with the same key moves the money once and returns the same reference.",
-   "A crash after the transfer, then a retry, still moves the money once.",
-   "The same key with a different request is rejected."
-  ],
-  "scale": [
-   "30-minute review after the solo hour.",
-   "About 20 minutes on this question."
-  ],
-  "example": "def refund(db, key, order_id, amount, gateway):\n    ref = gateway(key, amount)    # money moves here\n    db.execute(\"INSERT INTO refunds VALUES (?, ?, ?, ?)\", (key, order_id, amount, ref))\n    return ref                    # dies before the insert: nothing records the transfer\n\nrefund twice with key k1: expected one transfer and the same ref both times.",
-  "out": [
-   "Partial refunds and ledger accounting."
-  ]
+  "example": "The code you are shown:\n\ndef refund(db, key, order_id, amount, gateway):\n    ref = gateway(key, amount)      # moves the money\n    db.execute(\"INSERT INTO refunds VALUES (?, ?, ?, ?)\",\n               (key, order_id, amount, ref))\n    db.commit()\n    return ref\n\ngateway(key, amount) moves the money and returns a reference.\nThe refunds table has columns (key, order_id, amount, ref).\n\nWhat happens now:\nA retry after a timeout calls gateway again: the customer is refunded twice.\nA crash after gateway and before INSERT: the money moved, no row, and the retry refunds again."
  },
  "r-review-defend": {
   "ask": "Walk me through the code you wrote in the last hour, from the top. Start with the data you chose and what must always be true about it, then take each function in one line. Pick the line you are least sure of and tell me what happens there on an empty input and on an unknown name. What would you change with another hour, and what did you cut?",
