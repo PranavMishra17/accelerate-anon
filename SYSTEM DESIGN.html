@@ -327,6 +327,23 @@ a.nn-chip:hover { border-color: var(--accent); color: var(--accent); }
 }
 .blk pre code { background: none; padding: 0; font-size: inherit; }
 .blk-note { background: var(--sunken); color: var(--soft); padding: 10px 14px; border-radius: var(--radius); max-width: 84ch; }
+/* At 100x: what breaks, why, the fix. The row that breaks first is marked. A phone stacks each row. */
+.blk-scale { container-type: inline-size; }
+.blk-scale table { width: 100%; min-width: 0; border-collapse: collapse; border: 0; background: none; border-radius: 0; }
+.blk-scale th { text-align: left; font-size: var(--fs-sm); color: var(--muted); font-weight: var(--w-strong); padding: 0 var(--s3) var(--s1) 0; }
+.blk-scale td { vertical-align: top; padding: var(--s2) var(--s3) var(--s2) 0; border-top: var(--hair); color: var(--soft); }
+.blk-scale td:first-child { color: var(--ink); font-weight: var(--w-strong); width: 18%; }
+.blk-scale td:last-child { color: var(--ink); width: 34%; }
+.blk-scale .first-break { display: block; font-size: var(--fs-sm); color: var(--warn); font-weight: var(--w-strong); }
+.board.folded > .blk-scale { grid-column: 1 / -1; }
+.board.folded .blk-scale tbody tr:nth-child(n+4) { display: none; }
+@container (max-width: 640px) {
+  .blk-scale thead { display: none; }
+  .blk-scale table, .blk-scale tbody, .blk-scale tr, .blk-scale td { display: block; width: auto !important; }
+  .blk-scale tr { border-top: var(--hair); padding: var(--s2) 0; }
+  .blk-scale td { border-top: 0; padding: 2px 0; }
+  .blk-scale td[data-h]::before { content: attr(data-h) ": "; color: var(--muted); font-weight: var(--w-strong); }
+}
 .blk-math .conclusion { margin-top: 10px; padding: 10px 14px; background: var(--sunken); border-radius: var(--radius); max-width: 84ch; }
 
 .dive { border: var(--hair); border-radius: var(--radius-lg); padding: var(--s3) var(--s4) var(--s4); }
@@ -8622,6 +8639,1564 @@ function renderDive(block) {
     block.pick ? h("p", { class: "pick" }, h("strong", null, LABELS.pick), inline(block.pick)) : null);
 }
 
+/* SCALE:BEGIN */
+/* Step 7, At 100x, per design id: board (assumption note, scale table, what does not break), reasoning, script. The private alfred entry lives in private/sd.js. */
+GUIDE.scale = {
+ "ticketmaster": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Assume one hot on-sale today is about 1M people for 50K seats. At 100x, that's **100M people hitting one event**, or many hot on-sales running at once."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Waiting room",
+      "100M people arriving within minutes",
+      "If the queue holds a server connection or a database row per person, it falls over before booking even starts",
+      "Make it a **signed queue token**: position, event and expiry, issued from the edge, with no per-person server state. An admission controller lets people in at the rate the booking service can take, in batches sized to the seats left"
+     ],
+     [
+      "Bots",
+      "Most of the 100x is bots",
+      "Bots take queue places and seats",
+      "Proof of humanity before the queue, a queue token bound to one account and device, per-account ticket limits, and bot scoring at the edge"
+     ],
+     [
+      "Seat map reads",
+      "Millions refreshing availability",
+      "Reading Redis for every seat on every refresh multiplies into billions of reads",
+      "Publish an **availability snapshot per section** (a bitmap) once a second through the CDN or pub/sub. The map is roughly right, and the truth is decided at reserve time"
+     ],
+     [
+      "Redis holds",
+      "One event's seats all in one place, plus 100x events",
+      "One hot event can concentrate load on one Redis node, and losing it loses the holds",
+      "Shard keys by event and section across a Redis cluster with replicas. Postgres's conditional \"book only if available\" update stays the correctness backstop, so a lost hold can't cause a double booking"
+     ],
+     [
+      "Mass hold expiry",
+      "Thousands of holds expire in the same second",
+      "Seats flood back and the whole queue stampedes for them",
+      "Release expired seats through the admission controller in batches, not as a free-for-all"
+     ],
+     [
+      "Payment provider",
+      "50K charges within minutes, times many events",
+      "The provider's rate limits, and a payment that outlasts its hold",
+      "Queue charges with idempotency keys, spread them over several payment providers, and make the hold last longer than the slowest payment"
+     ],
+     [
+      "Postgres bookings",
+      "100x events and bookings",
+      "One primary carries every event's confirms",
+      "**Shard by event_id**. One event's writes are capped by its seat count, so per-shard load is bounded"
+     ],
+     [
+      "Event pages, search",
+      "100x reads",
+      "Origin and Elasticsearch load",
+      "The CDN caches the static page and availability is fetched separately; add Elasticsearch replicas; search lagging behind CDC is acceptable"
+     ],
+     [
+      "Gateway",
+      "Traffic spikes",
+      "Raw request volume",
+      "Autoscale, rate limit at the edge, and turn people away early with a friendly \"queue is full\" page"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "Reserving one seat is a single set-if-absent on one key, which spreads across Redis naturally."
+    ]
+   }
+  ],
+  "reasoning": [
+   "The waiting room and the seat map are single stateful hot spots: one event concentrates everyone.",
+   "The payment provider is a shared external limit.",
+   "Booking itself is per seat, so it scales by sharding on event_id."
+  ],
+  "script": [
+   "At 100x the hard part is the front door, not the booking: a stateless token queue at the edge, bot defence, and snapshot availability. Correctness stays with one conditional update in Postgres."
+  ]
+ },
+ "job-scheduler": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Assume about 1M jobs an hour today. At 100x, that's **about 30K jobs a second**, with many workers and tenants."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Postgres as the ready queue",
+      "Tens of thousands of claims a second",
+      "Constant row updates bloat the table, every claim fights over the same index, and thousands of idle workers polling is a load of its own",
+      "Keep Postgres as the **record**; move the ready queue to a broker (Kafka, Redis streams or SQS), sharded by tenant or job hash. Workers wait on the broker instead of polling. Partition the jobs table by time"
+     ],
+     [
+      "Heartbeats and leases",
+      "100K workers heartbeating every 10 s",
+      "About 10K lease writes a second on the record database",
+      "Move leases to a store built for TTLs (Redis or an etcd-style store), renew in batches, use longer leases with jitter"
+     ],
+     [
+      "Fencing token",
+      "Same rule, many more systems receiving the work",
+      "The token only protects anything if the place the work writes to checks it",
+      "Keep the token monotonic per job and make every writing system reject stale tokens; where one can't check, give it idempotency keys instead"
+     ],
+     [
+      "Time-based scheduler",
+      "Millions of cron entries",
+      "One leader scanning \"what's due now\" can't keep up",
+      "Shard schedules by hash range across scheduler instances, use a timing wheel, and precompute each job's next fire time"
+     ],
+     [
+      "Everyone at midnight",
+      "A burst at :00",
+      "A thundering herd of jobs all firing at once",
+      "Add jitter by default and spread load inside a window; tenants opt in to exact times"
+     ],
+     [
+      "DAG tracker",
+      "Huge DAGs with big fan-in",
+      "One \"remaining dependencies\" counter row becomes a hot spot",
+      "Keep a remaining-dependencies counter per node, updated atomically and driven by events; shard large DAGs"
+     ],
+     [
+      "Retries",
+      "A downstream outage",
+      "Retries multiply the load on the thing that's already down",
+      "Retry budgets, exponential backoff with jitter, and a circuit breaker per job type"
+     ],
+     [
+      "DLQ",
+      "100x poison jobs",
+      "One shared DLQ hides each tenant's failures",
+      "A DLQ per tenant and job type, alerts, and replay tooling that is rate limited"
+     ],
+     [
+      "Job history",
+      "Billions of rows",
+      "The hot table grows without limit",
+      "Append to a log and object storage, keep only recent history hot, analyse in a warehouse"
+     ],
+     [
+      "Fairness",
+      "A noisy tenant",
+      "One tenant floods the queue",
+      "Per-tenant queues with quotas, plus weighted fair dispatch (the deficit round robin from the orchestration design)"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "Workers are stateless, so you add more."
+    ]
+   }
+  ],
+  "reasoning": [
+   "The ready queue and the leases are single stateful hot spots on the record database.",
+   "Job history is data that grows forever.",
+   "Workers are per job, so they scale by adding machines."
+  ],
+  "script": [
+   "The queue and the leases leave Postgres first. Postgres stays the record of truth, a broker does dispatch, and a TTL store holds leases."
+  ]
+ },
+ "candidate-search": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today it's 300K profiles and about 1 search a second. At 100x, that's **30M profiles and about 100 searches a second**."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "LLM rerank cost",
+      "100/s x $0.025 = **$216K a day**",
+      "Cost, and the provider's rate limits",
+      "By now you have labels, so **fine-tune a cross-encoder** to replace most LLM reranks. Keep the LLM only for the top 10, skip it when L2 is confident, and cache results"
+     ],
+     [
+      "Vector index",
+      "90M vectors, about 370 GB plus graph overhead",
+      "No longer fits on one node",
+      "**Quantize** (int8 or product quantization, 4 to 32x smaller), **shard** the index by tenant or hash, query every shard and merge the top results"
+     ],
+     [
+      "Filtered recall",
+      "Tight filters on a huge index",
+      "Approximate search loses recall under filters",
+      "Partition by common filters (tenant, region); use exact search on small filtered sets"
+     ],
+     [
+      "Reasons",
+      "100x explanations",
+      "Cost",
+      "Generate them only when a row is opened, on a small model"
+     ],
+     [
+      "Embedding model change",
+      "Re-embedding 90M vectors",
+      "Days of backfill",
+      "Blue/green index, a throttled backfill, flip the alias once recall checks pass"
+     ],
+     [
+      "Ingestion",
+      "About 3M profile changes a day (about 35/s)",
+      "Fine, but the queue needs more workers",
+      "Autoscale the indexers; the fast lane for availability flags is unchanged"
+     ],
+     [
+      "Evaluation",
+      "Many more tenants and roles",
+      "The labelled set no longer covers the variety",
+      "A labelled set per segment, a sampled LLM judge, and a calibration slice per role family"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The Postgres live check (one indexed query for 30 ids) and the stateless search service."
+    ]
+   }
+  ],
+  "reasoning": [
+   "The LLM rerank is a shared external limit: cost and the provider's rate limits.",
+   "The vector index is data that grows past one node.",
+   "The search service is per request, so it scales by adding machines."
+  ],
+  "script": [
+   "At 100x the LLM rerank is the cost wall, so the labels I collected pay off: a fine-tuned cross-encoder takes over, and the vector index gets quantized and sharded."
+  ]
+ },
+ "contractor-payouts": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today it's 20K payouts a week, the provider allows 50 requests a second, and a batch takes 7 minutes. At 100x: **2M payouts a week**."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Provider rate limit",
+      "2M / 50/s = **about 11 hours** per batch",
+      "The batch no longer fits in a morning, and every on-demand payout waits behind it",
+      "Negotiate a higher limit, use the provider's **bulk payout API** (one file of thousands of payouts), use several providers or accounts, and spread batches across the week and time zones"
+     ],
+     [
+      "One sender",
+      "Several senders needed",
+      "They must share one rate budget",
+      "Several senders claiming payouts, with a shared token bucket in Redis"
+     ],
+     [
+      "Hash chain on the ledger",
+      "About 8M ledger rows a week",
+      "One global chain forces every ledger write through a single point in order",
+      "**One chain per partition** (per contractor shard or per day), with a combined hash of all chains (a Merkle root) saved daily to write-once storage"
+     ],
+     [
+      "Ledger size",
+      "About 400M rows a year",
+      "One unpartitioned table gets slow",
+      "Partition by month; still one Postgres at first, shard by contractor later"
+     ],
+     [
+      "Provider outage",
+      "Thousands of unknowns at once",
+      "Lookups compete with sends for the same rate limit",
+      "Lookups get a reserved share of the budget, oldest unknowns first, and an alarm on the oldest one's age"
+     ],
+     [
+      "Reconciliation",
+      "2M report lines a day",
+      "One nightly full match gets slow and finds problems late",
+      "Reconcile incrementally per partition through the day as reports arrive"
+     ],
+     [
+      "Webhooks",
+      "100x inbound",
+      "Request handlers get flooded",
+      "Accept, store and acknowledge them, then process from a queue"
+     ],
+     [
+      "Fraud",
+      "100x more targets",
+      "Manual review can't keep up",
+      "Automatic anomaly scoring on bank-detail changes, per-contractor velocity caps, and the release gate run per batch"
+     ],
+     [
+      "Support and status reads",
+      "100x contractors checking status",
+      "Reads load the primary",
+      "Serve them from a read replica"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The core correctness. Each approved line is paid once (unique index), each payout has one idempotency key, and intent is recorded before the provider call. All of that is per payout and scales with it."
+    ]
+   }
+  ],
+  "reasoning": [
+   "The provider's rate limit is a shared external limit.",
+   "The global hash chain is a single stateful hot spot.",
+   "The ledger is data that grows forever."
+  ],
+  "script": [
+   "Correctness scales for free because it's per payout. The provider's limit breaks first, so bulk payouts and several providers. Then the ledger needs partitioned hash chains and incremental reconciliation."
+  ]
+ },
+ "dataset-copy": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today the largest copy is 21M rows with 3 workers at 10K rows a second each. At 100x: **2.1B-row datasets, or 100x more copies running at once**."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Copying everything up front",
+      "2.1B rows / 30K/s = **about 19 hours**, and storage doubles with every copy",
+      "Too slow and too expensive",
+      "Switch to **copy-on-write**: the new dataset points at the source's snapshot and copies a row only when it's edited. Or use storage-level branching. This was hard part H2's alternative"
+     ],
+     [
+      "Database write capacity",
+      "Many copies share one primary",
+      "The rate limiter protects live traffic, but copies queue for hours",
+      "Shard datasets across databases so each copy stays inside its shard, with a fair queue of copies per tenant"
+     ],
+     [
+      "Cleanup on cancel",
+      "Deleting 2B rows",
+      "A huge throttled delete takes days",
+      "**Partition by dataset_id**: the copy fills its own partition, going live means attaching it, and cleanup means dropping it, which is instant"
+     ],
+     [
+      "Row version history",
+      "Grows with every edit",
+      "Storage and slower snapshot reads",
+      "Delete versions older than the oldest snapshot any active copy still needs"
+     ],
+     [
+      "Finalizer count check",
+      "Counting 2B rows",
+      "Slow",
+      "Sum the row counts each chunk recorded as it committed"
+     ],
+     [
+      "Shared files (images, audio)",
+      "Huge numbers of shared references",
+      "Reference-count rows become hot spots",
+      "Batch the count updates, or clean up files by periodically marking what's still referenced"
+     ],
+     [
+      "Index maintenance",
+      "Inserts into live tables",
+      "Every inserted row also updates every index on the table",
+      "Load into a fresh partition, build indexes after loading, then attach"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "Ids derived from the job and old id, and committing each batch with its cursor. Both are per row and per batch, so they scale."
+    ]
+   }
+  ],
+  "reasoning": [
+   "Copying up front is data that grows with every copy.",
+   "The shared primary is a single stateful hot spot.",
+   "Ids and batch cursors are per row, so they scale."
+  ],
+  "script": [
+   "At 100x, copying everything stops making sense: 19 hours and double the storage. So copy-on-write on the same row versions, with each dataset in its own partition so going live and cleaning up are instant."
+  ]
+ },
+ "notebooklm": {
+  "board": [
+   {
+    "type": "note",
+    "text": "The design gives no user count, so assume 100K daily active users, 10 chat turns each: about 1M turns a day (12 a second), one new source per user a day. At 100x, that's **100M turns a day (about 1.2K a second) and 10M new sources a day**."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Chat model spend and rate limits",
+      "1.2K turns/s x 10K tokens = **12M input tokens a second**, and 100M x $0.01 = **$1M a day**",
+      "One provider's tokens-per-minute limit is far below this, and a free tier at under 2 cents a turn stops being viable",
+      "Several providers behind the model gateway with failover. A small model for query rewrite and routing. Prompt caching on the stable prefix for small notebooks. Per-user daily quotas on the free tier"
+     ],
+     [
+      "Embedding and ingestion",
+      "10M sources x 15K tokens = **150B embedding tokens a day**, about 300M chunks",
+      "The embedding provider's limit, and one ingest queue with a shared worker pool, so one user's textbook upload delays everyone",
+      "Batch embedding APIs, or a self-hosted embedding model on GPUs. Cache embeddings by content hash. Per-tenant queues with a priority lane for small files, and autoscaled workers"
+     ],
+     [
+      "Retrieval index (pgvector)",
+      "About 300M chunks a day, **about 110B chunks a year** (roughly 670 TB of raw vectors)",
+      "The vectors no longer fit on one Postgres, and index builds and vacuum fall behind the writes",
+      "Move to a dedicated vector store, **sharded by notebook_id** (a notebook is only a few hundred chunks, so each query touches one shard). Quantize to int8, and keep cold notebooks on cheap storage loaded on first use"
+     ],
+     [
+      "Audio overviews (TTS)",
+      "2% of users a day: about 200K overviews and **4M TTS calls a day**",
+      "TTS provider limits and cost, and a minutes-long job per user that the daily quota only partly bounds",
+      "Queue the workflow starts, spread TTS across providers, and keep the idempotent per-segment checkpoints so a retry never pays twice. Tighter quotas by plan"
+     ],
+     [
+      "Chat history in Postgres",
+      "About 200M messages and citations a day, **70B a year**",
+      "The hot table grows without limit and the primary slows",
+      "Partition by time, shard by user_id, and move messages older than a few months to object storage, loaded on demand"
+     ],
+     [
+      "Traces and the eval set",
+      "About 500M model calls a day, **about 2.5 TB of traces a day**",
+      "Storage cost, and a 300-pair golden set no longer covers the variety of sources and languages",
+      "Sample traces, keep full traces only for flagged turns, tier retention. A golden set per source type and language, with a sampled verifier on production turns"
+     ],
+     [
+      "Groundedness verifier",
+      "5% of 100M turns = **5M verifier calls a day**",
+      "A percentage sample grows with traffic, so the checker becomes a second large model bill",
+      "Sample a fixed number a day, stratified by source type and notebook size, and run it on 100% of eval runs"
+     ],
+     [
+      "Raw file storage",
+      "10M sources at about 2 MB = **about 20 TB a day**",
+      "Cost grows forever, and duplicates (the same public PDF) are stored again",
+      "Dedupe by content hash for the raw bytes only (never share retrieval across users), and lifecycle old files to cold storage"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The chat orchestrator and the notebook service are per request and stateless, and isolation holds because every search is scoped to one notebook_id, so more shards do not change it."
+    ]
+   }
+  ],
+  "reasoning": [
+   "Chat spend, embeddings and TTS are shared external limits: tokens, provider rate limits and cost.",
+   "The vector index, chat history and traces are data that grows forever.",
+   "The chat orchestrator is per request and the index shards by notebook, so those scale by adding machines."
+  ],
+  "script": [
+   "At 100x the model bill and the provider limits break first, so several providers and a small model for the cheap steps. Then the index outgrows pgvector, and it shards cleanly by notebook because a query never crosses notebooks."
+  ]
+ },
+ "prior-auth": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today it's about 2M requests a year, 8K a business day, and about 1.2B input tokens a day if whole records go to the model (the design's figures). At 100x, that's **800K cases a business day, 120B input tokens a day**, with an assumed $1 per 1M input tokens."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Model tokens and provider limits",
+      "120B tokens a day, about **4M tokens a second** over a working day, **$120K a day**",
+      "No single provider's tokens-per-minute limit covers it, and a BAA with zero retention narrows the choice of vendors",
+      "More deterministic exits before any model call. Cache the timeline by document hash. Use a small model for extraction. Send **standard requests (7-day window) through batch APIs** and keep real-time capacity for expedited ones. Spread across several BAA-covered providers"
+     ],
+     [
+      "Clinician review queue",
+      "Assume 30% routed: **240K tasks a day**, about 7.5K clinicians at 15 minutes each",
+      "People are the limit, and the 72-hour and 7-day clocks do not move",
+      "Raise the auto-approve share policy by policy as shadow data proves precision, pre-fill the assessment, route by specialty, and order the queue by time left to the deadline"
+     ],
+     [
+      "OCR and document processing",
+      "800K cases x about 200 pages = **160M pages a day**, about 1.9K pages a second",
+      "A shared OCR pool and the first stage every case waits on",
+      "Extract text directly from born-digital PDFs and OCR only scans, cache by document hash, and autoscale the pool as its own queue"
+     ],
+     [
+      "Case workflow engine",
+      "800K workflows a day, each with a durable deadline timer",
+      "One workflow cluster holds every case's history and timers",
+      "Shard workflow clusters by payer or tenant, keep histories small by storing documents and assessments outside them"
+     ],
+     [
+      "Raw payload store",
+      "About 50 MB a case (assumed) = **40 TB a day**",
+      "Immutable, encrypted storage that grows forever, with resubmitted attachments stored again",
+      "Lifecycle to cold write-once storage after the decision window, and dedupe attachments by hash"
+     ],
+     [
+      "Audit log",
+      "About 50 events a case = **40M rows a day, 14.6B a year**",
+      "A Postgres audit table grows without limit, and replay needs the old rows",
+      "Append to object storage as write-once partitions by day, index in a warehouse, and keep only recent rows in Postgres"
+     ],
+     [
+      "Auto-approve audit sample",
+      "5% of 400K auto-approvals = **20K audits a day**",
+      "A flat percentage uses the same clinicians the review queue needs",
+      "Sample a statistically sized number per policy per month, not a fixed percentage, and keep the per-policy kill switch"
+     ],
+     [
+      "Case DB and policy calibration",
+      "Hundreds of payers and policies, each with its own threshold",
+      "One Case DB primary, and thresholds that need labelled data per policy",
+      "Shard the Case DB by payer, partition by month, and add a policy to automation only after its own shadow run"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The decision structure: no deny path in the automated code, one determination per case (unique constraint), and criteria judged one at a time. All of it is per case, so it scales with cases."
+    ]
+   }
+  ],
+  "reasoning": [
+   "Model tokens and the clinician queue are shared external limits; the queue is a human one that machines cannot add.",
+   "The audit log and raw payloads are data that grows forever.",
+   "Each case's gate and constraints are per case, so they scale by adding machines."
+  ],
+  "script": [
+   "At 100x the tokens and the clinicians are the limits, not QPS. Batch the standard cases, exit more of them before the model, and let the audit sample shrink to a statistical size per policy."
+  ]
+ },
+ "email-agent": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today it's 100K users and 10M inbound emails a day (about 115 a second), with a model budget under 10 cents a user a day (the design's figures). At 100x, that's **10M users and 1B emails a day, about 11.6K a second**."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Model cost and rate limits",
+      "Sending all mail to a large model: 1B x 2K = **2T tokens a day**. Budget ceiling: 10M users x $0.10 = **$1M a day**",
+      "Provider limits are far below this, and any growth in the share of mail needing a large-model draft breaks the ceiling",
+      "Tier harder: rules first, a small model for the rest, and the large model only for needs-attention mail. Draft **when the user opens the thread**, not on arrival. Several providers, and batch APIs for non-urgent triage"
+     ],
+     [
+      "Gmail and Calendar API quotas",
+      "1B new messages a day: about 11.6K push notifications a second, each a delta fetch",
+      "Provider quotas are per project and per user, so a flood of fetches gets throttled",
+      "Coalesce pushes per user in a short window, fetch only the history delta, back off on 429, and ask the providers for higher quotas as a customer"
+     ],
+     [
+      "Mail and calendar cache",
+      "1B messages x about 20 KB (assumed) = **20 TB a day**",
+      "The cache grows forever, and the provider is the source of truth anyway",
+      "Cache metadata, snippets and embeddings for recent mail only, fetch bodies on demand, expire by age, and shard by user_id"
+     ],
+     [
+      "SMS and notifications",
+      "Assume 3 texts a user a day: 30M a day, about **$240K a day** at $0.008",
+      "Carrier throughput limits per number, and a cost that rivals the model bill",
+      "Push or app notifications by default, digest several items into one text, use number pools, and a second SMS provider"
+     ],
+     [
+      "Per-user orchestration",
+      "Many users' morning bursts: an SMS command and a triage run on the same calendar at once",
+      "Concurrent runs for one user race on the same events, and a hot user can monopolise workers",
+      "Route all work for one user through a per-user queue keyed by user_id, one run at a time, with per-user rate limits"
+     ],
+     [
+      "Action outbox and reconciliation",
+      "About 10M actions a day (assumed 1 per user), 115 a second",
+      "One outbox table is a single hot spot, and reconciliation searches sent mail through the same provider quota",
+      "Shard the outbox by user_id, and reconcile only on crash recovery. Use client-supplied event ids on calendar so most retries need no search"
+     ],
+     [
+      "Traces and evals",
+      "About 200M plan, tool and verdict rows a day (assumed 20 a user)",
+      "Trace storage grows forever, and the fixture-inbox suite covers few real inbox shapes",
+      "Sample and redact traces, tier retention, grow the scenario set from sampled real cases, and keep replaying verdict diffs before each release"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The verdict gate and the injection defence (quarantined reader plus taint tracking). They are per action, deterministic code, so more traffic only needs more instances of them."
+    ]
+   }
+  ],
+  "reasoning": [
+   "Model cost, provider quotas and SMS are shared external limits.",
+   "Per-user ordering and the outbox are stateful hot spots, fixed by sharding on user_id.",
+   "The cache, traces and eval set are data that grows forever; the gate itself is per action."
+  ],
+  "script": [
+   "At 100x the cost of reading everyone's mail breaks first, so triage gets tighter tiers and drafting waits until the user opens the thread. After that it's the Gmail quotas, and keeping all of one user's work in order."
+  ]
+ },
+ "coding-agent": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today it's 10K tasks a day, 30B to 50B input tokens a day before caching, and 10K concurrent sandboxes at 2 vCPU (the design's figures). At 100x, that's **1M tasks a day, 3T to 5T input tokens a day, 1M concurrent sandboxes and 2M vCPUs**."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Model tokens and cost",
+      "About 4T tokens a day = **46M tokens a second**, about 1K model turns a second. Assuming $3 per 1M and 90% cached at a tenth of the price: **about $2.3M a day**",
+      "Provider tokens-per-minute limits, and cost that is dominated by re-sent context",
+      "Several providers and committed capacity. Keep the append-only transcript so the prefix stays cached, use a small model for compaction and subagent exploration, and enforce org-level budgets as well as per-task caps"
+     ],
+     [
+      "Sandbox fleet",
+      "1M concurrent microVMs = 2M vCPUs, about **31K hosts** at 64 vCPUs",
+      "One fleet and one warm pool cannot be managed or filled fast enough, and cloud instance quotas bind",
+      "**Cells**: independent regional fleets with their own warm pool, snapshot cache and egress proxy, each sized for a bounded number of sandboxes. Pause and snapshot a sandbox while the agent waits on a slow step, and tear down the moment a run ends"
+     ],
+     [
+      "Task leases",
+      "1M live leases renewed every 30 s = **about 33K writes a second** on the Task table",
+      "Heartbeats update the same Postgres rows that hold task state, so the record database becomes the queue",
+      "Keep Postgres as the record. Put leases in a TTL store (Redis or etcd), renew in batches with jitter, and write the Task row only on state changes"
+     ],
+     [
+      "Snapshots",
+      "Assume a snapshot every 10 turns: 8M a day at about 200 MB = **1.6 PB a day**",
+      "Write bandwidth and storage far exceed the value of keeping them",
+      "Incremental copy-on-write snapshots, take them only before risky commands and at a slower cadence, and delete them when the run ends"
+     ],
+     [
+      "Git provider and package registries",
+      "1M clones or fetches, pushes and PR opens a day, plus installs",
+      "Per-installation and secondary rate limits, and registry limits on dependency installs",
+      "Mirror repos and packages inside each cell and start from the nightly base snapshot. Queue pushes and PR creation with backoff"
+     ],
+     [
+      "Event streams",
+      "1M live per-task streams, about 5K events a second",
+      "One Redis holding every stream is a single stateful hot spot",
+      "Shard streams by task_id across a Redis cluster, set a TTL on finished streams, and fan out to viewers through a separate SSE tier"
+     ],
+     [
+      "Transcripts and traces",
+      "80M turns a day x about 10 KB = **about 800 GB a day**",
+      "Hot storage grows forever, and the internal suite no longer represents the repos and languages",
+      "Append to object storage, keep recent runs hot, sample for evals, and build suite segments per language and repo type. The gate runs on cached results where it can"
+     ],
+     [
+      "Noisy tenants",
+      "A few customers launching thousands of tasks at once",
+      "They take the warm pool and the model quota from everyone else",
+      "Per-tenant concurrency caps, a reserved share per cell, and fair dispatch across tenants"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The agent loop. Workers are stateless and restart from the transcript checkpoint, so adding workers needs no coordination."
+    ]
+   }
+  ],
+  "reasoning": [
+   "Model tokens and the Git provider are shared external limits.",
+   "The task leases and the single event stream are stateful hot spots on shared stores.",
+   "Snapshots and transcripts are data that grows forever; the loop itself is per task and scales by adding workers."
+  ],
+  "script": [
+   "At 100x the bill is tokens and the fleet is sandboxes. Several providers and a cached prefix for the first, cells for the second. The task leases leave Postgres, which stays the record."
+  ]
+ },
+ "voice-agent": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today it's 5M call minutes a day, 10K calls at once, about 950 workers and 1,000 model requests a second at peak (the design's figures). At 100x, that's **500M minutes a day, 1M calls at once, about 95K workers and 100K model requests a second**, about $55M a day at $0.11 a minute."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "STT, LLM and TTS providers",
+      "1M concurrent streams per stage, **100K LLM requests/s = 200M input tokens a second**",
+      "No single provider has the concurrent-stream and token limits, and one provider's bad hour hits every call",
+      "Several providers per stage behind breakers, with failover on the next turn. Cache the tenant's prompt prefix, use a small model on the spoken path, and self-host STT and TTS on GPUs for the biggest tenants. Bring-your-own keys move the limits onto each tenant's own account"
+     ],
+     [
+      "Telephony trunks",
+      "Concurrent channels for 1M calls, and about 2K new calls a second (170M calls a day)",
+      "Carrier limits on concurrent channels and on calls per second, per trunk",
+      "Several carriers and regional trunks, tenants' own SIP trunks, pacing for outbound campaigns, and capacity bought ahead of the peak hour"
+     ],
+     [
+      "Dispatcher and worker fleet",
+      "About 95K workers at 15 calls each, about 2K placements a second",
+      "One dispatcher that every worker reports load to is a single stateful hot spot, and a new worker takes tens of seconds to start",
+      "**Cells**: one dispatcher per region and cell, each placing about 10K calls on its own workers. Scale up early on slots in use and keep a warm buffer"
+     ],
+     [
+      "Latency budget under load",
+      "800 ms voice to voice, with provider queueing at peak",
+      "Time to first token rises when providers are loaded, and an overfull worker stutters every call on it",
+      "Workers decline new calls above 0.7 load, breakers on first-token time switch the next turn to a faster model, and workers sit in the same region as the providers"
+     ],
+     [
+      "Key broker and KMS",
+      "About 2K key leases a second at the start of calls",
+      "KMS decrypt rate limits, and one broker for every tenant",
+      "Shard brokers by region and tenant, and cache the decrypted data key for a short time inside the broker. Plaintext still reaches only the one call's process"
+     ],
+     [
+      "Media edge",
+      "**About 130 Gbps** of G.711 both ways",
+      "A global media edge cannot take it, and recordings add load",
+      "Regional SIP and WebRTC edges scaled per region, with audio going straight from the worker to storage"
+     ],
+     [
+      "Call records and recordings",
+      "About **250 TB of audio a day**, about 3B turn rows a day",
+      "Storage and the turn table grow forever",
+      "Recordings straight to object storage with lifecycle by tenant retention. Turn timings in a columnar store, and Postgres only for call status"
+     ],
+     [
+      "After-call jobs and webhooks",
+      "170M analysis runs and signed webhooks a day, about 2K a second",
+      "Analysis is another model bill, and a tenant endpoint that is down builds a retry backlog",
+      "A queue per tenant, backoff with a circuit breaker, a cheaper or batch model for analysis, and analysis only on sampled or flagged calls by default"
+     ],
+     [
+      "Noisy tenants and evals",
+      "A large outbound campaign at 100x, and many more agent versions published",
+      "One tenant can take the warm slots in a region, and simulated callers on every publish multiply",
+      "Per-tenant concurrency caps, paced campaign queues, a reserved share of slots, and text scenarios on publish with audio runs nightly"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "One call. A single process owns it for its whole life, and the turn loop, barge-in and tool calls are per call, so adding workers inside a cell changes nothing for any call."
+    ]
+   }
+  ],
+  "reasoning": [
+   "Providers and telephony trunks are shared external limits, and so is the latency budget when they are loaded.",
+   "The dispatcher and key broker are single stateful hot spots, fixed by cells.",
+   "Recordings and turn rows are data that grows forever; the call process itself scales by adding workers."
+  ],
+  "script": [
+   "At 100x the platform is limited by what it rents: speech and model providers, then telephony trunks. So several providers per stage, the tenants' own keys, and cells so no dispatcher or region carries all 1M calls."
+  ]
+ },
+ "virtual-assistant": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today it is 50K conversations a day, about 300K turns, 10 turns a second at peak. At 100x that is **5M conversations and 30M turns a day, about 1,000 turns a second at peak** (4,000 in bursts)."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "LLM fallback cost and rate limits",
+      "20% of turns = 6M calls a day x $0.25 per 1K = **$1,500 a day**, and about 200 calls a second at peak",
+      "Cost is still modest, but 200 concurrent LLM calls at about 1 s each hit the provider's tokens-per-minute and request limits, and a throttled call stalls a customer mid-turn",
+      "Several providers or regions behind one router, a quota per tenant and channel, and **retrain the classifier on the LLM's labels** so fewer turns are uncertain. When the LLM is throttled, take the confirm-or-ask path instead of waiting"
+     ],
+     [
+      "Bank APIs and the fulfilment gateway",
+      "1,000 turns a second, a large share ending in a balance or transaction read",
+      "The bank's core APIs have their own limits and were never sized for an assistant at this rate; a slow backend holds the dialogue open",
+      "Per-API rate budgets in the gateway, a short cache for balance reads, a circuit breaker per API so the assistant says so and offers a callback, and idempotency keys kept on every write"
+     ],
+     [
+      "Identity service",
+      "Many more OTP and app-link challenges a minute",
+      "OTP providers and voice-ID vendors rate limit and charge per check",
+      "Several OTP providers, step-up only when the intent needs it, and reuse a verified session for the conversation's life"
+     ],
+     [
+      "Contact centre handoffs",
+      "At an assumed 15% handoff, **750K handoffs a day** (7.5K today)",
+      "People do not scale 100x. The queue grows and handoff stops being a safe exit",
+      "Raise containment with resolution tracked beside it, offer callbacks and tickets by default, prioritise fraud and high-stakes handoffs, and staff by intent"
+     ],
+     [
+      "Session state store",
+      "Millions of live sessions, each read and written every turn",
+      "One store becomes a hot spot, and a lost session loses a half-finished payment",
+      "Shard by conversation_id across a Redis cluster with replicas and a TTL, and write confirmed money steps to the record database as well"
+     ],
+     [
+      "Transcript store",
+      "30M turns x about 2 KB (assumed) = **60 GB a day**, about 5.4 TB over 90 days",
+      "One database holds it hot, and review and labelling queries slow everything",
+      "Append redacted turns to a log and object storage by day, keep a recent window hot, analyse in a warehouse, and sample for labelling"
+     ],
+     [
+      "Error analysis loop",
+      "100x more flagged conversations",
+      "Reviewer time did not grow, so the weekly loop covers a tiny share",
+      "Cluster first, review the biggest clusters, let a calibrated LLM judge pre-label, and keep humans on the never-break money paths"
+     ],
+     [
+      "Voice channel",
+      "At an assumed 20K voice calls a day today, **16,000 concurrent calls** at peak (160 today)",
+      "ASR and TTS streams and telephony trunks are shared external limits, and the 1 to 1.5 s turn budget has no spare time under queueing",
+      "Reserve ASR capacity per region, add carriers, keep the keypad and menu fallback, and shed the LLM fallback first under load"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The dialogue manager and classifier are per turn and stateless around the session store, so they scale by adding machines. The rule that code authorises money, not a model, does not change."
+    ]
+   }
+  ],
+  "reasoning": [
+   "The LLM fallback, the bank APIs, ASR and telephony are shared external limits.",
+   "The session store and the handoff queue are single stateful hot spots; transcripts are data that grows forever.",
+   "The classifier and the dialogue manager are per turn, so they scale by adding machines."
+  ],
+  "script": [
+   "At 100x the model path and the bank's own APIs are the limits, not the dialogue logic. Providers get multiplied, the classifier absorbs the LLM's labels, and handoff stays a human-capacity problem, so containment is measured with resolution."
+  ]
+ },
+ "faq-assistant": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today it is 20,000 questions a day, 0.6 a second at peak, about $160 a day. At 100x that is **2M questions a day, about 60 a second at peak** (220 in bursts)."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Generator model cost and limits",
+      "2M x $0.008 = **about $16K a day** upper bound; 1,800 tokens in each is about 3.6B input tokens a day and about 6M tokens a minute at peak",
+      "A shared provider limit on tokens per minute, and a bill that now matters",
+      "**Cache answers** for repeated questions keyed by normalised question and content release, route simple questions to a smaller model, use several providers, and skip the model when retrieval finds no passage"
+     ],
+     [
+      "Cache invalidation",
+      "Most traffic is the same few hundred questions",
+      "A cached answer outlives the content it came from, which breaks the freshness promise",
+      "Key the cache on the content release id, so an approved change flips every affected answer at once, and expire any answer whose source is past its review date"
+     ],
+     [
+      "Retrieval and index",
+      "100x content, if the library grows: about 480K chunks, about 2 GB of vectors (assumed)",
+      "Still small. The real risk is retrieval quality dropping as near-duplicate versions and similar documents multiply",
+      "Keep only live versions in the index, filter by product and jurisdiction, add a rerank step, and monitor retrieval hit rate by topic. Shard only if the index outgrows one node"
+     ],
+     [
+      "Compliance review",
+      "100x content changes",
+      "People approve content, and a review queue is the freshness limit, not the system",
+      "Tiered review by risk, templated content, diff-based review so a reviewer sees only what changed, and a clear owner per document"
+     ],
+     [
+      "Evaluation set",
+      "More products, regions and languages",
+      "A labelled set for today's questions no longer covers the traffic",
+      "A labelled set per segment, a sampled LLM judge checked against human labels, and a release gate per segment"
+     ],
+     [
+      "Answer log",
+      "2M answers a day x about 5 KB (assumed) = **10 GB a day**",
+      "Every answer stores passages, versions and text for audit, so the hot table grows without limit",
+      "Append to a log and object storage by day, keep recent answers hot, and keep the audit trail replayable from the stored ids"
+     ],
+     [
+      "Contact centre",
+      "Refusals and account questions routed to a person grow with traffic",
+      "People do not scale 100x",
+      "Offer callbacks and tickets, improve content coverage from the refusal log, and watch the wrong-refusal rate"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The grounding rule and the audit trail. Every claim must cite an approved passage, and that check runs per answer, so it scales with traffic."
+    ]
+   }
+  ],
+  "reasoning": [
+   "The generator model is a shared external limit: tokens per minute and cost.",
+   "The review queue is a single human hot spot; the answer log is data that grows forever.",
+   "Retrieval and the grounding check are per request, so they scale by adding machines."
+  ],
+  "script": [
+   "At 100x the answer model is the cost and rate-limit wall, so I cache by content release and route to smaller models. Correctness stays per answer, and the people who approve content become the freshness limit."
+  ]
+ },
+ "voice-ivr": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today it is 20,000 calls a day, 160 concurrent at peak, 10 handoffs a minute. At 100x that is **2M calls a day, 16,000 concurrent at peak** (32,000 with 2x headroom) and **1,000 handoffs a minute**."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Telephony trunks and media gateways",
+      "**32,000 concurrent SIP channels** (320 planned today)",
+      "Carriers cap channels per trunk, and each call is a live media stream a gateway must hold open",
+      "Several carriers and regions, trunks sized per region, media gateways autoscaled on concurrent calls, and a keypad menu fallback when capacity is short"
+     ],
+     [
+      "Streaming ASR",
+      "16,000 concurrent audio streams",
+      "A provider's or GPU pool's concurrency limit is a shared external limit; a throttled stream adds latency to every turn",
+      "Reserve capacity per region, add a second ASR provider, use partial transcripts to start work early, and degrade to the keypad rather than queue a caller"
+     ],
+     [
+      "Latency budget under load",
+      "Turn budget is about 1,060 ms against a 1.5 s ceiling, leaving about 440 ms",
+      "Queueing at ASR, TTS and the backend eats the spare time, and a turn needing the LLM (about 981 ms) cannot fit",
+      "Shed the LLM path first (acknowledgement, then a clarifying question), keep backend reads cached, and alert on p95 per stage"
+     ],
+     [
+      "Human agents",
+      "**1,000 transfers a minute**; at 6 minutes each, about 6,000 agents busy at peak (60 today)",
+      "People do not scale 100x, so a warm transfer becomes a long hold",
+      "Raise self-service by intent, offer callbacks when the wait passes a limit, route by skill, and make the handoff summary shorten handle time"
+     ],
+     [
+      "Session store",
+      "16,000 live sessions with a read and write every turn",
+      "One store is a hot spot, and a lost session drops a half-finished payment",
+      "Shard by call id across a Redis cluster with replicas, and write confirmed money steps to the record database"
+     ],
+     [
+      "Core banking reads",
+      "Balance and transaction reads at call volume",
+      "Core APIs have their own rate limits and were not sized for this",
+      "Per-API rate budgets in the gateway, short caches for reads, and a circuit breaker so the assistant says so and offers a callback"
+     ],
+     [
+      "Call audio and transcripts",
+      "2M calls x 4 min x about 8 KB a second (assumed) = **about 3.8 TB of audio a day**",
+      "Regulated records pile up in one store, and redaction must keep up",
+      "Object storage by day with a retention limit, redact before any store, keep transcripts hot only for a recent window, and sample for review"
+     ],
+     [
+      "Cell blast radius",
+      "One region or carrier failing takes thousands of calls",
+      "Everything shares one pool today",
+      "**Cells**: each region runs the full stack with its own trunks, ASR and session store, and traffic fails over between cells"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The dialogue logic, the classifier and the fulfilment gateway rules. They run per turn, so they scale with the number of calls."
+    ]
+   }
+  ],
+  "reasoning": [
+   "Telephony trunks and ASR concurrency are shared external limits.",
+   "The session store and the agent queue are stateful hot spots; call audio is data that grows forever.",
+   "Dialogue logic is per turn, so it scales by adding machines, cut into cells."
+  ],
+  "script": [
+   "At 100x the phone network and speech recognition are the limits. Concurrent streams, trunks and ASR capacity come first, the latency budget goes second, and people are the bottleneck behind the handoff."
+  ]
+ },
+ "convo-analytics": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today it is 200K conversations and 1.6M turns a day, about 53 turns a second at peak, 24,000 flagged failures and 600 labels a day. At 100x that is **160M turns a day, about 5,300 a second at peak**, and **2.4M flagged conversations a day**."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Human labelling",
+      "600 labels a day against **2.4M flagged**: 0.025% reviewed",
+      "Reviewer time is the bottleneck and did not grow 100x",
+      "Cluster harder (about 150 clusters become tens of thousands), label a few per cluster, use a calibrated LLM judge to pre-label with human spot checks, and rank by volume times cost"
+     ],
+     [
+      "Redactor on the hot path",
+      "5,300 turns a second through NER and regex",
+      "It sits before every store, so slow redaction backs up the whole pipeline, and a failure drops the turn",
+      "Stateless redactor workers autoscaled behind a queue, a regex fast path with a model only for uncertain spans, and a dead-letter queue and alert for redaction failures"
+     ],
+     [
+      "Transcript store",
+      "160M turns x 2 KB = **320 GB a day**, **28.8 TB** over 90 days",
+      "One store holds it hot, and review and clustering queries compete",
+      "Append to a log and object storage partitioned by day, keep a recent window hot, and delete at the retention limit"
+     ],
+     [
+      "Clustering and embedding",
+      "Embedding 2.4M flagged conversations a day",
+      "Embedding cost, and a clustering job that no longer fits one node",
+      "Embed only flagged and sampled turns, use incremental or mini-batch clustering over a rolling window, and name clusters with a small model on a few exemplars"
+     ],
+     [
+      "Dashboards",
+      "Containment and cost over 160M turns a day",
+      "Queries on raw turn rows are slow and costly",
+      "Pre-aggregate by intent, channel and version into a warehouse, and keep one written definition per metric"
+     ],
+     [
+      "Evaluation set",
+      "Many more intents, channels and languages",
+      "A frozen set sized for today's traffic no longer covers where regressions appear",
+      "A frozen set per segment, sized for the effect you care about, with a new slice added from each cluster fix before release"
+     ],
+     [
+      "Retrain and release",
+      "Many more candidate models and thresholds",
+      "The gate and the gradual rollout take calendar time, and a model cycle of a week no longer keeps up",
+      "Per-segment releases, shadow on live traffic, automated gates for non-critical intents, and a never-break suite for money and fraud"
+     ],
+     [
+      "Event ingestion",
+      "5,300 events a second, 4x bursts",
+      "Logging must never slow a customer turn",
+      "A partitioned log keyed by conversation_id, async emit from the assistant, and batch retry for dropped batches"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The privacy rule. Redaction happens before any store, per turn, and it scales with traffic."
+    ]
+   }
+  ],
+  "reasoning": [
+   "Human labelling capacity is a shared limit that does not grow with traffic.",
+   "The redactor is a hot path on the front door; the transcript store is data that grows forever.",
+   "Clustering and dashboards are batch jobs that scale by partitioning and pre-aggregating."
+  ],
+  "script": [
+   "At 100x storage and compute scale out, but a person labelling 600 a day does not. So I cluster harder, pre-label with a calibrated judge, and shard the evaluation set so a release still means something."
+  ]
+ },
+ "kitaru": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today a cohort is 500 sessions at 15 model calls each: 7,500 live calls a run, a few hundred dollars. At 100x that is **50,000-session cohorts, or 100x as many experiment runs**: about **750K live model calls a run**."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Live model calls",
+      "750K calls x an assumed $0.03 = **about $22K a run** (about $225 today), before repeat runs for variance",
+      "Cost scales with cohort size times steps, and the provider's tokens-per-minute limit caps how fast a run can finish",
+      "Several providers, the provider's **batch API** for replays that are not interactive, a per-experiment budget, a sampled sub-cohort first, and caching of identical calls inside a run"
+     ],
+     [
+      "Repeat runs for variance",
+      "Model calls are nondeterministic, so each change needs several runs",
+      "Repeats multiply the already-largest cost",
+      "Sequential testing that stops once the result is clear, repeats only on sessions near the pass line, and a fixed seed or temperature where the model allows it"
+     ],
+     [
+      "Task queue and leases",
+      "Hundreds of thousands of tasks, workers heartbeating",
+      "The queue lives in Postgres, so lease writes and claim queries contend on one table",
+      "Keep Postgres as the record, move the ready queue to a broker, renew leases in batches with jitter, and shard queues by tenant"
+     ],
+     [
+      "Postgres sessions and nodes",
+      "50K sessions x about 30 nodes (assumed) = 1.5M node rows per cohort, and every run adds replay sessions",
+      "The nodes table grows without limit and the cache_key lookup gets slower",
+      "Partition nodes by time and tenant, index cache_key per cohort, and move payloads to the blob store with only selectors and keys in Postgres"
+     ],
+     [
+      "Blob store and payloads",
+      "Large tool and model payloads per node",
+      "Storage and read cost grow with every replay",
+      "Content-address payloads so identical ones are stored once, tier old runs to cold storage, and keep only a baseline plus a summary of old replays"
+     ],
+     [
+      "Importers from trace sources",
+      "Importing millions of sessions from Langfuse or LangSmith",
+      "The source's API rate limits are a shared external limit",
+      "Paged, resumable imports with a rate budget per source, and a bulk export where the source offers one"
+     ],
+     [
+      "Workers in the customer environment",
+      "Thousands of agent subprocesses at once",
+      "Each worker is the customer's own compute, with its own environment setup cost",
+      "Reuse environments across tasks, autoscale on queue depth, and keep user code off the control plane"
+     ],
+     [
+      "Divergence under change",
+      "Many more changed agents diverging from the recording",
+      "A tool call with no recorded answer needs a policy, and the share of such calls grows with the cohort",
+      "Report the divergence rate per replay, route the divergent cases to a snapshot bench or a live-tool policy, and never count a silent live call as a pass"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The tool path. Recorded answers are lookups by cache_key, cheap and safe, and the control plane stores and schedules without running user code."
+    ]
+   }
+  ],
+  "reasoning": [
+   "Live model calls and import API limits are shared external limits.",
+   "The Postgres task queue and the nodes table are stateful hot spots, and data that grows forever.",
+   "Tool replay and the control plane are per request, so they scale by adding machines."
+  ],
+  "script": [
+   "At 100x the live model calls are the wall, in cost and in provider limits. Batch APIs, several providers, sampling and stopping early come first. Then the queue and the nodes table leave the one Postgres."
+  ]
+ },
+ "ai-interviewer": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today it's 5,000 interviews a day, about 250 live at the peak hour. At 100x, that's **500,000 interviews a day and about 25,000 live at once**."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Grading tokens and rate limits",
+      "44K input tokens an interview x 500K = **22B tokens a day**, about 250K tokens a second averaged",
+      "A shared provider limit: tokens per minute for eight judges per interview, plus panels on borderline skills, hit the account ceiling and queue past the 15 minute target",
+      "Spread judges over several providers and accounts, use the **batch API** (grading is offline, often half price), keep the transcript in the cached prefix, use a small model on easy skills and a panel only on borderline ones"
+     ],
+     [
+      "Reviewer time",
+      "10% flagged = 50,000 a day x 6 min = **5,000 reviewer hours a day, about 700 full-time**",
+      "The review rate is the scarce resource, and it scales one for one with interviews",
+      "Review only what the judges are unsure about: raise auto-confirm for skills whose judge matches the gold set, send low-precision signals to a sample instead of a queue, and set the flag threshold from reviewer capacity"
+     ],
+     [
+      "Live voice capacity",
+      "25,000 live interviews, about 800 model calls a second, 2.5x the 10K calls in the voice platform design",
+      "Realtime model, STT, TTS and telephony or WebRTC sessions are shared external limits, and a peak hour can run out of them",
+      "Several providers per stage, regional cells, pre-warmed workers, and **spread starts** (interviews are scheduled, so offer slots instead of a rush). Text mode as the overflow path"
+     ],
+     [
+      "Audio storage",
+      "10 MB a voice interview x 500K = **5 TB a day**, 150 TB in the 30 day window",
+      "Data that grows with every interview, and a deletion request has to find it",
+      "Lifecycle rules in object storage, a lower bitrate, audio kept only for the review and appeal window, and flagged interviews copied to a longer tier"
+     ],
+     [
+      "Transcript and grade tables",
+      "20M turns and 4M grades a day, about 1.5B grades a year",
+      "One database holds every turn, signal, grade and report forever",
+      "Partition by time and shard by application_id, keep only recent sessions hot, move old transcripts and grades to object storage, and keep hashes and versions in the audit record"
+     ],
+     [
+      "Answer overlap",
+      "Each new answer compared with every other candidate's",
+      "The comparison grows with the total number of answers, so a brute-force scan stops being possible",
+      "An approximate nearest-neighbour index sharded by role, compared only inside a role and a time window, with candidates above a similarity threshold sent to review"
+     ],
+     [
+      "Question bank exposure",
+      "100x more candidates share questions faster",
+      "Items leak within days, and retiring them fast empties the bank",
+      "A bigger bank per skill, items made from templates with fresh slot values and a fixed difficulty, exposure caps, and retire on near-duplicate answers across unrelated candidates"
+     ],
+     [
+      "Gold set and blind sample",
+      "3% blind human sample = **15,000 interviews a day**, about 190 reviewers",
+      "A fixed percentage costs more than the whole review budget, and one gold set no longer covers the roles, languages and accents",
+      "A fixed count of blind checks per skill and per judge version instead of a percentage, a gold set per segment, and an alert only on the segments that move"
+     ],
+     [
+      "Drift and fairness checks",
+      "Many more groups, roles and judge versions",
+      "Weekly re-grading and group gap checks multiply by every segment",
+      "Run them per segment on a schedule, sample within each, and keep the shadow run of a new judge to a stratified two week slice"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The live interview itself. One worker owns one interview and the state machine reads only that session's plan and clock, so it scales by adding workers. The aggregator and quote check are plain code per report."
+    ]
+   }
+  ],
+  "reasoning": [
+   "Grading tokens and live voice sessions are shared external limits.",
+   "Reviewer time and the answer-overlap scan are single points that grow with every interview.",
+   "Audio, transcripts and grades are data that grows forever; the live state machine is per session, so it scales by adding workers."
+  ],
+  "script": [
+   "At 100x, grading tokens and reviewer hours break first, and both scale with interviews. Batch grading over several providers, and review only what the calibrated judges are unsure about. Audio and transcripts move out of the record database."
+  ]
+ },
+ "prompt-injection": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today it's about 1,000 runs live at once, 20 tool calls each, a few thousand policy checks a second. At 100x, that's **100,000 live runs, 2M calls in flight and a few hundred thousand checks a second**. Assume 1 call in 10 reads untrusted text."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Quarantine model",
+      "About 30K quarantine calls a second at an assumed 2K tokens: **tens of millions of tokens a second**",
+      "Every untrusted email, page or document goes through a tool-less model first. That is a shared provider limit and a cost line that grows with every read",
+      "A **small model** for the quarantine step, cache summaries by content hash for public pages and shared documents, skip the model for results that a schema can validate, and spread over several providers"
+     ],
+     [
+      "Policy check on the hot path",
+      "A few hundred thousand checks a second at under 20 ms, and it fails closed",
+      "One central policy service is both a bottleneck and a single point whose outage stops every run",
+      "Run the check as a **library or sidecar next to each executor**, with rules and grants cached by version. It stays deterministic, and a cell that cannot refresh its rules fails closed on its own"
+     ],
+     [
+      "Grant store and revocation",
+      "100K runs, each with grants that must die within seconds of a stop",
+      "One grants table is read on every check and written on every stop, and a slow revoke leaves a compromised run alive",
+      "Short-lived signed grants per run, a revocation list pushed to every cell, a per-run kill that drops the run's credentials, and expiry as the backstop"
+     ],
+     [
+      "Approval prompts",
+      "100x users means 100x real attacks and 100x prompts",
+      "A user who sees five prompts a day clicks yes on all of them by the second week, so the human check stops working",
+      "Raise the bar for needs_approval: scoped standing grants (allowlisted recipients, folders, domains), one approval for a batch, a prompt that shows the exact args and the untrusted source, and rate limits on prompts per user"
+     ],
+     [
+      "Audit log",
+      "20 calls x 100K runs: **billions of rows a day**, each with a trust label",
+      "An append-only table on the record database grows without limit, and the log is also what you search during an incident",
+      "Stream to a log and object storage, a hash chain per run, keep recent days hot and indexed by run_id and by source, and warehouse the rest for incident search"
+     ],
+     [
+      "Content provenance",
+      "Trust labels on every item and every summary that enters memory",
+      "Labels have to follow content into summaries and stores, and that metadata grows with the content",
+      "Store the label with the content item, partition by user and time, and expire untrusted items with the memory they feed"
+     ],
+     [
+      "Egress and tool executors",
+      "Every outbound URL, email and HTTP call",
+      "One egress filter is a shared hop, and one allowlist cannot serve every tenant",
+      "A stateless egress proxy fleet, an allowlist per tenant and per run, and tool executors sharded by run so one noisy run cannot starve the rest"
+     ],
+     [
+      "Red-team and rules coverage",
+      "More tools, more tenants and many more attackers",
+      "The planted attacks in the eval set no longer cover the real ones, and rules written for ten tools do not describe two hundred",
+      "Feed flagged attempts from the audit log back into the attack set, a rule template per side-effect class, and canary tokens in private data to catch exfiltration"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The containment idea itself. Each call is checked against its own run's fixed tool list and the user's grants, with no state shared between runs, so adding checker capacity scales it. The model is treated as untrusted at any size."
+    ]
+   }
+  ],
+  "reasoning": [
+   "The quarantine model is a shared external limit: tokens and cost per read.",
+   "The central policy service, the grant store and the approval prompts are single hot spots, one per decision.",
+   "The audit log and provenance labels are data that grows forever; the per-call check is per run, so it scales by adding machines."
+  ],
+  "script": [
+   "At 100x the cost of reading untrusted text breaks first, so the quarantine becomes a small cached model. Then the policy check moves next to each executor, so it scales without becoming a single point, and the audit log leaves the record database."
+  ]
+ },
+ "chat-context": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Assume 100 sends a second today and 10M threads of 200 messages (about 2 TB). At 100x, that's **10,000 replies a second, 1B threads and 200B messages (about 200 TB)**."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Model tokens and cost",
+      "10K replies/s x 16K tokens = **160M input tokens a second**, about $41M a day at an assumed $3 per million, uncached",
+      "A shared provider limit on tokens per minute, and a bill that scales with every reply",
+      "Keep the prompt prefix stable (system prompt, pinned facts, summary) so the **cache** covers most of it (a cached read costs about a tenth), route short or simple turns to a small model, and use several providers and accounts"
+     ],
+     [
+      "Open streams",
+      "10K replies a second x about 10 s = **100K open streams**",
+      "Each reply holds a connection and a buffer, so streaming nodes run out of sockets and memory, and a node crash cuts thousands of replies",
+      "Stateless streaming gateways in front of the Chat API, autoscaled on open connections, with the reply buffered in storage so a reconnect with the same client_msg_id resumes"
+     ],
+     [
+      "Postgres messages",
+      "20K inserts a second (user plus assistant), **200B rows and 200 TB**",
+      "One primary takes every insert and one table holds every thread",
+      "**Shard by thread_id** (or user_id) so the thread lock and seq stay on one shard, partition by time, and move cold threads to object storage, read back on reopen"
+     ],
+     [
+      "Summariser",
+      "About 1K range summaries a second at an assumed 20 messages each, around 5M tokens a second",
+      "A second model call per 20 messages, and a backlog means the request path loses its summary",
+      "Use the **batch API** for summaries (they are never on the request path), raise the threshold for short threads, skip dormant threads and summarise on reopen, and size workers on queue age"
+     ],
+     [
+      "Embedder and vector index",
+      "20K messages a second embedded, 200B vectors at about 4 KB each: **800 TB**",
+      "A global vector index no longer fits on one node, and most threads never need retrieval",
+      "Embed a thread only after it passes the history budget (a thread under 16K tokens is sent whole), **quantize**, shard by user, and filter on user_id as a hard condition"
+     ],
+     [
+      "Derive queue",
+      "About 40K events a second",
+      "One queue or one consumer group falls behind, and ordering per thread matters to the summariser",
+      "Partition the queue by thread_id, so one thread's events stay in order, and autoscale consumers on lag"
+     ],
+     [
+      "Thread deletion",
+      "Millions of deletes a day across messages, summaries and vectors on many shards",
+      "The background job backlog grows, and a delete leaves derived text surfacing in retrieval",
+      "Mark the thread deleted at once so reads and retrieval refuse it, then drop its partition or rows per shard, and for users who ask to leave, encrypt per user and delete the key"
+     ],
+     [
+      "Thread list and history reads",
+      "100x list and page reads",
+      "Newest-activity sorts and page reads load the primary",
+      "Read replicas, an index on (user_id, last_message_at), and pages by seq so no read scans a thread"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "Building the prompt. It reads the summary plus a few recent and retrieved turns, so it costs the same for a 3,000 message thread as for a 30 message one, and the per-thread lock lives on one shard and scales with sharding."
+    ]
+   }
+  ],
+  "reasoning": [
+   "Model tokens and cost are a shared external limit.",
+   "The messages table and the vector index are data that grows forever and outgrow one node; the open streams are the single stateful part to keep out of the API nodes.",
+   "Prompt building and the thread lock are per thread, so they scale by sharding on thread_id."
+  ],
+  "script": [
+   "The prompt is a fixed 16K view of a growing history, so per-reply cost stays flat, but at 100x the tokens still add up. Cache the stable prefix, shard messages by thread, and embed only the threads that outgrow the window."
+  ]
+ },
+ "tenant-fair": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today the account has 10,000 requests and 2M tokens a minute (about 165 tasks a minute), and assume 1,000 tenants and 10M queued tasks. At 100x, that's **100,000 tenants and 1B queued tasks**, about 12T tokens of work."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "Provider quota",
+      "12T tokens at 2M a minute is **about 11 years**; even at 100x the quota (200M a minute) it is **about 42 days**",
+      "The scarce resource is a shared external limit, and fairness only shares a total that is too small",
+      "Several providers and accounts, the **batch API** (a separate, cheaper quota with a 24 hour window), cached prompts, a small model for easy steps, per-tenant keys for the biggest tenants, and admission that quotes an ETA from the tenant's queue and weight"
+     ],
+     [
+      "Queue in Redis",
+      "1B task ids, tens of GB",
+      "Redis lists of every queued id no longer fit, and a restart rebuilds from Postgres for a long time",
+      "Keep in Redis only a **window of the next few thousand ids per tenant**; the rest stays in Postgres, partitioned by tenant, and a refill job tops the window up"
+     ],
+     [
+      "Dispatch rounds",
+      "100,000 tenants in the ring",
+      "A quiet tenant waits one round, and a round is active tenants x a quantum, so the wait grows 100x with the ring",
+      "Put only **active tenants** in the ring, add a plan tier above tenants (weighted by tier), and shard dispatchers by tenant hash with each shard leased a share of the global bucket"
+     ],
+     [
+      "Global bucket",
+      "Every call takes and settles tokens from one key per provider",
+      "One Redis key is a hot spot, and several providers each need their own bucket and refill rate",
+      "A bucket per provider and account, and each dispatcher shard takes **leases of tokens** in chunks, settling the real counts back in batches"
+     ],
+     [
+      "task_steps and outputs",
+      "1B tasks x about 4 steps = **4B step rows**, plus every stored model output",
+      "The record table and the outputs grow forever on one database",
+      "Partition by tenant and time, shard by tenant, store outputs in object storage with a pointer, and expire outputs after the tenant's retention window"
+     ],
+     [
+      "Shared provider key",
+      "100x more tenants behind one key",
+      "One tenant's abuse can get the whole account throttled or suspended, and a 429 hits everyone",
+      "Cells: tenants grouped per provider account, a content filter at admission, and per-tenant keys for large tenants so their trouble stays theirs"
+     ],
+     [
+      "Usage records",
+      "100K tenants x 1,440 minutes = **144M rows a day**",
+      "A per-minute table grows without limit and slows billing and the usage API",
+      "Write to a time-series or log store, roll up to hours and days, and keep minute detail for a short window"
+     ],
+     [
+      "429 handling",
+      "Many accounts and providers",
+      "One global AIMD rate is wrong for several accounts, and a retry wave on one account hits its neighbours",
+      "AIMD per provider account, honour Retry-After, jittered backoff, and keep the cut off the per-tenant buckets"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "Resume and double pay. A step row per task and an idempotency key per call are per task, so they scale with it, and one deficit round robin pass is a constant-time decision."
+    ]
+   }
+  ],
+  "reasoning": [
+   "The provider quota and the shared key are shared external limits.",
+   "The Redis queue, the dispatch ring and the global bucket are single stateful hot spots.",
+   "task_steps, outputs and usage records are data that grows forever; the per-task resume and idempotency key scale by adding machines."
+  ],
+  "script": [
+   "At 100x the provider's quota is the wall, not the scheduler, so more providers, the batch API and ETAs at admission. Then keep only the head of each queue in Redis, ring only the active tenants, and give each dispatcher shard a lease of tokens."
+  ]
+ },
+ "ml-pipeline": {
+  "board": [
+   {
+    "type": "note",
+    "text": "Today it's 200 pipelines a day, about 50 train steps of 24 GPU-hours, so 1,200 GPU-hours a day and roughly 50 GPUs busy. At 100x, that's **20,000 pipelines, 5,000 train steps and 120,000 GPU-hours a day, about 5,000 GPUs busy**."
+   },
+   {
+    "type": "scale",
+    "rows": [
+     [
+      "GPU supply",
+      "**About 5,000 GPUs** all day; at an assumed $2 an hour that is about **$240K a day** (from $2.4K)",
+      "GPUs are a shared external limit, and one cloud region may not have 5,000 free",
+      "Capacity in several regions and clouds, **spot or preemptible GPUs** (safe because of checkpoints), priority classes and per-team quotas with borrowing, gang admission, early stopping on sweeps, and a cache hit rate watched as a cost number"
+     ],
+     [
+      "Checkpoint traffic",
+      "About 1,250 train steps running, each writing an assumed 20 GB every 15 min: **about 28 GB a second** of writes, and 75 TB for the last three",
+      "Checkpoints from every step land at once on one object store prefix and one network path, and they slow the training they protect",
+      "Write to local NVMe and upload asynchronously, shard checkpoints, stagger the start offsets, use hash-spread prefixes, and keep the last 3 only"
+     ],
+     [
+      "Artifact storage",
+      "Datasets, features, checkpoints and models for 100K step instances a day",
+      "Content-addressed artifacts are never changed, so storage only grows",
+      "Retention by lineage: keep what a registered model or a pinned run can reach, expire the rest on a schedule, move old ones to a cold tier, and delete temp prefixes with a sweeper"
+     ],
+     [
+      "Sweeps and fairness",
+      "Sweeps of 20,000 steps, from many teams",
+      "A pending queue of that size, and a team with a big sweep still starves the others unless quotas bind",
+      "A sweep controller that keeps a **bounded number in flight**, weighted fair sharing of GPU-hours across teams (the same deficit round robin as in the tenant-fair design), and a reserved slice for production retrains"
+     ],
+     [
+      "Lineage queries",
+      "About 500K lineage edges a day, and a popular dataset with 100K downstream models",
+      "A poisoned dataset walks millions of edges, and the same upstream walk runs on every model page",
+      "Partition edges by time, **snapshot the ancestor set** into each model version at registration, and use a graph index or a materialized closure for the downstream walk"
+     ],
+     [
+      "Evaluation and registry",
+      "Thousands of candidate models a day, one human approver for production",
+      "Evaluation also needs GPUs, and the human approval queue becomes the bottleneck. A fixed eval set stops covering the new models",
+      "Automatic promotion to staging on threshold and baseline, a human only for production, fixed eval data plus slices per segment, and a canary stage before full promotion"
+     ],
+     [
+      "Step identities",
+      "100K step instances a day, each with its own identity",
+      "The token service has its own rate limits, and a per-step identity multiplies calls to it",
+      "Workload identities from the cluster (one per namespace or team), cached short-lived credentials, and a path prefix per step instance for writes"
+     ],
+     [
+      "Metadata database",
+      "Runs, step instances and lineage on one Postgres",
+      "Fine for the scheduler's rate, but the history of runs and step instances grows forever",
+      "Partition runs by month, keep recent history hot and the rest in a warehouse, and shard by team only when the primary is saturated"
+     ]
+    ],
+    "first": 0
+   },
+   {
+    "type": "list",
+    "title": "What does not break",
+    "items": [
+     "The step key and immutable artifacts. A step is a pure function of its inputs, so caching, rerunning and explaining it are per step, and the scheduler's rate (100K step instances a day) is still small."
+    ]
+   }
+  ],
+  "reasoning": [
+   "GPU supply is a shared external limit.",
+   "Checkpoint traffic, the sweep queue and the human approver are single hot spots.",
+   "Artifacts, lineage and run history are data that grows forever; the step key and caching are per step, so they scale by adding machines."
+  ],
+  "script": [
+   "At 100x the scheduler is still easy and the GPUs are the problem: 5,000 of them, so several regions, spot with checkpoints, and fair quotas. Then the checkpoint traffic, artifact retention and lineage snapshots."
+  ]
+ }
+};
+/* SCALE:END */
+
 const BLOCK_RENDERERS = {
   list: (block) => h("div", { class: "blk blk-list" },
     blockTitle(block.title),
@@ -8641,6 +10216,16 @@ const BLOCK_RENDERERS = {
     block.conclusion ? h("p", { class: "conclusion" }, inline(block.conclusion)) : null),
   note: (block) => h("p", { class: "blk blk-note" }, inline(block.text)),
   diagram: renderDiagram,
+  /* { type: "scale", rows: [[what, at 100x, why, fix]], first }: the At 100x table. */
+  scale: (block) => h("div", { class: "blk blk-scale" },
+    blockTitle(block.title),
+    h("table", null,
+      h("thead", null, h("tr", null, ["What", "At 100x", "Why it breaks", "Fix"].map((c) => h("th", null, c)))),
+      h("tbody", null, ensureArray(block.rows, "scale rows").map((r, i) => h("tr", null,
+        h("td", null, inline(r[0]), i === (block.first ?? 0) ? h("span", { class: "first-break" }, "Breaks first") : null),
+        h("td", { "data-h": "At 100x" }, inline(r[1])),
+        h("td", { "data-h": "Why" }, inline(r[2])),
+        h("td", { "data-h": "Fix" }, inline(r[3]))))))),
   dive: renderDive,
   /* { type: "fig", key } draws FIGURES.DIA[key] from figures/figures.js, the same figure the tracker and loop pages show. */
   fig: (block) => {
@@ -9235,9 +10820,18 @@ function renderFrameworkView() {
 /* ------------------------------------------------------------------ */
 
 /* The tabs of a design: the framework's six steps, then the patterns it uses. */
+/* Step 7, after the deep dives: what breaks at 100x scale. Its content is GUIDE.scale[design id]. */
+const SCALE_STEP = { id: "scale", n: 7, name: "At 100x", time: "~3 min", optional: true,
+  goal: "Multiply the load by 100 and say what breaks first, why, and the fix. Per-request logic scales by adding machines; what breaks is a shared external limit, a single stateful hot spot, or data that grows forever." };
+
 function designSteps(example) {
   const L = patternLabels();
   const steps = GUIDE.framework.map((step) => ({ id: step.id, n: step.n, name: step.name, step }));
+  const scale = GUIDE.scale && GUIDE.scale[example.id];
+  if (scale) {
+    example.steps.scale = scale;
+    steps.push({ id: "scale", n: 7, name: SCALE_STEP.name, step: SCALE_STEP });
+  }
   if (GUIDE.patterns && patternUsageFor(example.id)) steps.push({ id: L.usageAnchor, n: "+", name: L.navLabel });
   return steps;
 }

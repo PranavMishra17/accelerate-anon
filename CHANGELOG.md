@@ -1813,3 +1813,9 @@ Why: the questions were one-liners, sometimes about the question rather than the
 What: each of the eight algorithms sections (comparator, paid comparator, exchange rate, friend network, a million IDs, Lost Tree, RandomizedSet, weighted top-k) opens with a new `skim` block, in the style of his own skim page: what to ask first with the answer that changes the algorithm, the roadmap in the order to say it, the cost line and the limit to name first. The 'Read it before you speak' and 'The conversation, in order' lists it replaces were dropped; the branch table, crux, code, follow-ups and push-backs fold under it on the Coding tab. On the Reported tab, Show the approach draws the skim and Show the full solution the rest. His page is copied to private/mercor-algorithms.html (gitignored) and linked at the top of the algorithms round.
 
 Why: the full write-ups were right but slow to skim before the round. No charter deviation.
+
+## 2026-11-15: every system design gets an At 100x step
+
+What: a seventh step after the deep dives in all 20 guide designs (and the private alfred_ design): the volume today and at 100x, a table of what breaks, why and the fix with the first break marked, what does not break, and the line to say. A new `scale` board block draws the table and stacks each row on a phone. Ticketmaster, the job scheduler, candidate search, payouts and dataset copy carry his own text; the other fifteen were written from each design's own numbers, with assumptions stated.
+
+Why: he asked for it on every design; the 100x question is the standard closing probe and the pattern (shared external limit, single hot spot, data that grows forever) carries across designs. No charter deviation.
