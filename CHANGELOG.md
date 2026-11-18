@@ -1822,3 +1822,9 @@ Why: he asked for it on every design; the 100x question is the standard closing 
 
 
 **18 Nov 2026: Mercor onsite recorded.** Round 3 on the Mercor Rounds tab now holds the 16 November onsite as asked: the slice runner (coding, with what he did, the live follow-up he wrote as pseudocode, and the linear solution to keep), the task scheduler with per-workflow runs, long steps, external waits and human approval (design), friend distance through a paged API with heavy-tailed counts (algorithms), and the four GTM questions. Each links to its Reported box. Why: one record of what was asked, for the next loop that touches it. No charter deviation.
+
+## 18 Nov 2026: Amazon round 4 recorded
+
+- What: Round 4 on the Amazon Rounds tab (Thu 12 Nov): an LRU cache worded as profiles and latest logins, solved with a map and a doubly linked list, O(1); a runnable sketch with sentinels and the follow-ups to keep. The loop summary now reads all four rounds done.
+- Why: he asked to log it; every other round was already recorded.
+- Charter: no deviation.
