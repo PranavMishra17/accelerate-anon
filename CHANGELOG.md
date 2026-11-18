@@ -1819,3 +1819,6 @@ Why: the full write-ups were right but slow to skim before the round. No charter
 What: a seventh step after the deep dives in all 20 guide designs (and the private alfred_ design): the volume today and at 100x, a table of what breaks, why and the fix with the first break marked, what does not break, and the line to say. A new `scale` board block draws the table and stacks each row on a phone. Ticketmaster, the job scheduler, candidate search, payouts and dataset copy carry his own text; the other fifteen were written from each design's own numbers, with assumptions stated.
 
 Why: he asked for it on every design; the 100x question is the standard closing probe and the pattern (shared external limit, single hot spot, data that grows forever) carries across designs. No charter deviation.
+
+
+**18 Nov 2026: Mercor onsite recorded.** Round 3 on the Mercor Rounds tab now holds the 16 November onsite as asked: the slice runner (coding, with what he did, the live follow-up he wrote as pseudocode, and the linear solution to keep), the task scheduler with per-workflow runs, long steps, external waits and human approval (design), friend distance through a paged API with heavy-tailed counts (algorithms), and the four GTM questions. Each links to its Reported box. Why: one record of what was asked, for the next loop that touches it. No charter deviation.
